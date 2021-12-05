@@ -14,15 +14,54 @@ const error = debug('dxos:react-framework:error');
 const logError = (f: string, ...args: any[]) => error.enabled ? error(f, ...args) : console.error(f, ...args);
 
 /**
- * Root-level error boundary.
- * https://reactjs.org/docs/error-boundaries.html
- *
- * NOTE: Must currently be a Component.
- * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
+ * Wrapper for global error handling.
+ * https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
  */
+const GlobalErrorWrapper = ({
+  children,
+  indicator: ErrorIndicator
+}: {
+  children: ReactNode | ReactNode[],
+  indicator?: React.FC<ErrorIndicatorProps> | null
+}) => {
+  const { errors, addError, resetErrors } = useContext(ErrorContext)!;
+
+  // Register global error handlers.
+  // TODO(burdon): Post errors to monitoring service.
+  useEffect(() => {
+    window.onerror = (message, source, lineno, colno, error?: Error) => {
+      logError('onerror', message);
+      addError(error!);
+      return true; // Prevent default.
+    };
+
+    const listener = (event: any) => {
+      logError('unhandledrejection', event.reason);
+      addError(event.reason);
+      event.preventDefault();
+    };
+
+    window.addEventListener('unhandledrejection', listener);
+    return () => {
+      window.removeEventListener('unhandledrejection', listener as any);
+    };
+  }, []);
+
+  return (
+    <>
+      {children}
+      {ErrorIndicator && (
+        <ErrorIndicator
+          errors={errors}
+          onReset={resetErrors}
+        />
+      )}
+    </>
+  );
+};
 
 // TODO(burdon): Configure error indicator.
-// TODO(burdon): Add Loading indicator (that can be reset downstream).
+// TODO(burdon): Configure loading indicator (that can be reset downstream).
 
 interface ErrorBoundaryProps {
   indicator?: React.FC<ErrorIndicatorProps> | null
@@ -38,7 +77,8 @@ interface ErrorBoundaryState {
 }
 
 /**
- * Cannot be implemented via hooks.
+ * Root-level error boundary.
+ * NOTE: Must currently be a Component.
  * https://reactjs.org/docs/error-boundaries.html
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
@@ -104,50 +144,3 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     );
   }
 }
-
-/**
- * Wrapper for global error handling.
- * https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
- */
-const GlobalErrorWrapper = ({
-  children,
-  indicator: ErrorIndicator
-}: {
-  children: ReactNode | ReactNode[],
-  indicator?: React.FC<ErrorIndicatorProps> | null
-}) => {
-  const { errors, addError, resetErrors } = useContext(ErrorContext)!;
-
-  // Register global error handlers.
-  // TODO(burdon): Post errors to monitoring service.
-  useEffect(() => {
-    window.onerror = (message, source, lineno, colno, error?: Error) => {
-      logError('onerror', message);
-      addError(error!);
-      return true; // Prevent default.
-    };
-
-    const listener = (event: any) => {
-      logError('unhandledrejection', event.reason);
-      addError(event.reason);
-      event.preventDefault();
-    };
-
-    window.addEventListener('unhandledrejection', listener);
-    return () => {
-      window.removeEventListener('unhandledrejection', listener as any);
-    };
-  }, []);
-
-  return (
-    <>
-      {children}
-      {ErrorIndicator && (
-        <ErrorIndicator
-          errors={errors}
-          onReset={resetErrors}
-        />
-      )}
-    </>
-  );
-};
