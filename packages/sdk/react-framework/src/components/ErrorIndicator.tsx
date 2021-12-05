@@ -11,7 +11,15 @@ import {
   colors
 } from '@mui/material';
 
-export const ErrorIndicator = ({ errors, onReset }: { errors: Error[], onReset?: () => void }) => {
+export interface ErrorIndicatorProps {
+  errors: Error[]
+  onReset?: () => void
+}
+
+export const ErrorIndicator = ({
+  errors,
+  onReset
+}: ErrorIndicatorProps) => {
   if (!errors.length) {
     return null;
   }
@@ -19,8 +27,8 @@ export const ErrorIndicator = ({ errors, onReset }: { errors: Error[], onReset?:
   return (
     <Box sx={{
       position: 'absolute',
-      right: 1,
-      bottom: 1
+      right: 0,
+      bottom: 0
     }}>
       <IconButton
         size='small'
