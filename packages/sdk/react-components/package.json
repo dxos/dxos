@@ -22,7 +22,7 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isplainobject": "^4.0.6",
     "qrcode.react": "~1.0.1",

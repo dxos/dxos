@@ -53,7 +53,7 @@
     "@types/debug": "^4.1.1",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "faker": "^5.1.0",
     "immutability-helper": "^3.0.2",
     "mobile-detect": "~1.4.5",

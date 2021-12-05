@@ -22,7 +22,7 @@
     "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

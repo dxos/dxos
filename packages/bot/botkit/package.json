@@ -19,7 +19,7 @@
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "esbuild": "^0.11.23"
   },
   "devDependencies": {

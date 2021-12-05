@@ -29,7 +29,7 @@
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "assert": "^2.0.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
     "simple-peer": "9.11.0",

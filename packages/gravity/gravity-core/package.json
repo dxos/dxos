@@ -31,7 +31,7 @@
     "@types/debug": "^4.1.1",
     "@types/fs-extra": "^9.0.4",
     "assert": "^2.0.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "dotenv": "^8.2.0",
     "download": "^7.1.0",
     "esbuild": "^0.11.23",
