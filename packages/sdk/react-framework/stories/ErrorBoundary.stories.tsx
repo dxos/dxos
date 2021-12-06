@@ -103,6 +103,7 @@ export const Primary = () => {
 
   return (
     <ErrorBoundary
+      // indicator={null}
       onReset={async () => {
         await clientRef.current!.reset();
       }}
