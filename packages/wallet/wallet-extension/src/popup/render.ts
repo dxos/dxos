@@ -5,11 +5,11 @@
 import EventEmitter from 'events';
 import ReactDOM from 'react-dom';
 
-import { inDev } from './utils/helpers';
+import { inDev } from './utils';
 
-const render = (app: JSX.Element) => {
-  const ee = new EventEmitter();
-  if (!ee.off) {
+export const render = (app: JSX.Element) => {
+  const eventEmitter = new EventEmitter();
+  if (!eventEmitter.off) {
     throw new Error('off is missing on EventEmitter - insufficient node polyfills.');
   } // Check if `node` polyfills are correct.
 
@@ -21,5 +21,3 @@ const render = (app: JSX.Element) => {
     module.hot.accept();
   }
 };
-
-export default render;

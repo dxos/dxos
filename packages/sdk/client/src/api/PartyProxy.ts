@@ -32,6 +32,15 @@ export class PartyProxy {
     }
   }
 
+  /**
+   * Returns the ECHO version of the party if we are running in local mode.
+   *
+   * @deprecated
+   */
+  get impl (): EchoParty {
+    return this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
+  }
+
   async open () {
     if (this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.init();

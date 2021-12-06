@@ -6,7 +6,11 @@ import { createContext } from 'react';
 
 import { Client } from '@dxos/client';
 
+interface ClientContextProps {
+  client: Client
+}
+
 /**
  * https://reactjs.org/docs/context.html#reactcreatecontext
  */
-export const ClientContext = createContext<Client | undefined>(undefined);
+export const ClientContext = createContext<ClientContextProps | undefined>(undefined);

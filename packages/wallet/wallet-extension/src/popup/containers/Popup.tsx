@@ -6,7 +6,7 @@ import React from 'react';
 
 import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/material';
 
-import Root from './Root';
+import { Root } from './Root';
 
 const baseTheme = createMuiTheme({
   components: {
@@ -25,11 +25,9 @@ const baseTheme = createMuiTheme({
 
 export const Popup = () => {
   return (
-  <ThemeProvider theme={baseTheme}>
-    <CssBaseline />
-    <Root />
-  </ThemeProvider>
+    <ThemeProvider theme={baseTheme}>
+      <CssBaseline />
+      <Root />
+    </ThemeProvider>
   );
 };
-
-export default Popup;
