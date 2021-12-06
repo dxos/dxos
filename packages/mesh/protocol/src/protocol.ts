@@ -121,6 +121,7 @@ export class Protocol {
           await this.streamOptions?.onhandshake?.(this);
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
+          await this._onConnected();
         } catch (err: any) {
           process.nextTick(() => this._stream.destroy(err));
         }
@@ -341,6 +342,13 @@ export class Protocol {
         process.nextTick(() => this._stream.destroy(err));
       }
     });
+  }
+
+  private async _onConnected () {
+    for (const [name, extension] of this._extensionMap) {
+      log(`handshake extension "${name}": connected`);
+      await extension.onConnected();
+    }
   }
 
   private _openConnection () {
