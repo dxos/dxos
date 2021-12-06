@@ -32,6 +32,7 @@ module.exports = {
 
       // TODO(burdon): Not working.
       webpackConfig.devServer = {
+        ...webpackConfig.devServer,
         open: false
       };
 
