@@ -5,7 +5,7 @@ set -euo pipefail
 [[ -e ~/.dx/profile/default ]] || dx profile init --name $DX_PROFILE --template-url "$DX_PROFILE_URL"
 DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
 
-for APP_PATH in "packages/sdk/demos" "packages/sdk/tutorials/apps/tasks-app"
+for APP_PATH in "packages/demos" "packages/tutorials/tutorials-tasks-app"
 do
   cd $APP_PATH
 

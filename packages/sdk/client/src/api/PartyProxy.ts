@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
@@ -82,20 +80,18 @@ export class PartyProxy {
   // }
 
   queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
-    const party = this._serviceProvider.echo.getParty(this._partyKey);
-    assert(party, 'Party not found');
-    return party!.queryMembers(...args);
+    return this.impl.queryMembers(...args);
   }
 
   setTitle (...args: Parameters<EchoParty['setTitle']>) {
-    const party = this._serviceProvider.echo.getParty(this._partyKey);
-    assert(party, 'Party not found');
-    return party!.setTitle(...args);
+    return this.impl.setTitle(...args);
   }
 
   setProperty (...args: Parameters<EchoParty['setProperty']>) {
-    const party = this._serviceProvider.echo.getParty(this._partyKey);
-    assert(party, 'Party not found');
-    return party!.setProperty(...args);
+    return this.impl.setProperty(...args);
+  }
+
+  getProperty (...args: Parameters<EchoParty['getProperty']>) {
+    return this.impl.getProperty(...args);
   }
 }
