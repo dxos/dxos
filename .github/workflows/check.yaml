@@ -1,7 +1,7 @@
 on:
   push:
 
-name: check
+name: Build, test, lint
 jobs:
   check:
     runs-on: [self-hosted, dind-actions-runner]
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          clean: true
+          clean: false
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          clean: true
+          clean: false
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          clean: true
+          clean: false
       - name: Check, Install and Test
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
@@ -108,3 +108,4 @@ jobs:
         run: |
           sudo apt-get install -y lsof
           kill $(lsof -t -i:3000) || true
+          kill $(lsof -t -i:8080) || true

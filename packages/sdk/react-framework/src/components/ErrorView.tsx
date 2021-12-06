@@ -20,6 +20,8 @@ import {
 import { CopyToClipboard } from '@dxos/react-components';
 
 const DEFAULT_TITLE = 'Runtime Error';
+
+// TODO(burdon): Config.
 const DEFAULT_ISSUE_LINK = 'https://github.com/dxos/sdk/issues/new';
 
 const Code = styled('div')(({ theme }) => ({

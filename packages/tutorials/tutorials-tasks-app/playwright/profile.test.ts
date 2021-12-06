@@ -4,16 +4,15 @@
 
 import { firefox } from 'playwright';
 
-import { Browser, TaskApp } from './utils';
+import { baseUrl, Browser, TaskApp } from './utils';
 
 describe('Profile Test Cases', () => {
-  const initialUrl = 'http://localhost:3000/';
   let alice: TaskApp;
 
   before(() => {
     alice = new TaskApp(new Browser());
 
-    return alice.browser.launch(firefox, initialUrl);
+    return alice.browser.launch(firefox, baseUrl);
   });
 
   after(() => alice.browser.get().close());

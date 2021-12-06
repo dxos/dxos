@@ -19,7 +19,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "assert": "^2.0.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
