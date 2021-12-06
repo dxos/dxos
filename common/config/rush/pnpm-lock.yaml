@@ -20,7 +20,7 @@ importers:
       '@dxos/signal': link:../../mesh/signal
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
@@ -40,7 +40,7 @@ importers:
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -70,7 +70,7 @@ importers:
     devDependencies:
       '@dxos/eslint-plugin': 1.0.20_eslint@7.26.0+typescript@4.5.2
       '@types/assert': 1.5.4
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.23
       '@types/lodash.merge': 4.6.6
       '@types/node': 14.14.45
@@ -82,7 +82,7 @@ importers:
     specifiers:
       '@dxos/eslint-plugin': ~1.0.20
       '@types/assert': ^1.5.4
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ~4.6.6
       '@types/node': ^14.0.9
@@ -215,7 +215,7 @@ importers:
       debug: 4.3.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       earljs: 0.1.10
@@ -224,7 +224,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.3.3
@@ -276,7 +276,7 @@ importers:
       '@mui/lab': 5.0.0-alpha.48_e04118610eda033f1ee88460ea4d497a
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       clsx: 1.1.1
       d3: 5.16.0
       debug: 4.3.3
@@ -342,7 +342,7 @@ importers:
       '@mui/material': ^5.0.1
       '@mui/styles': ^5.0.1
       '@types/d3': ~7.0.0
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
@@ -382,7 +382,7 @@ importers:
       '@dxos/echo-db': link:../../../echo/echo-db
       '@dxos/network-manager': link:../../../mesh/network-manager
       '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/lodash.defaultsdeep': 4.6.6
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -399,7 +399,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot-deprecated': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/mocha': ~8.2.2
       debug: ^4.3.3
@@ -438,7 +438,7 @@ importers:
       '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
       '@dxos/registry-client': link:../../../sdk/registry-client
       '@types/chance': 1.1.1
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/download': 6.2.4
       '@types/fs-extra': 9.0.11
       '@types/js-yaml': 3.12.6
@@ -481,7 +481,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/chance': ^1.1.0
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/download': ^6.2.4
       '@types/fs-extra': ^9.0.4
       '@types/js-yaml': ^3.12.5
@@ -794,7 +794,7 @@ importers:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/json-stable-stringify': 1.0.32
       '@types/lodash': 4.14.175
       '@types/node': 14.14.45
@@ -832,7 +832,7 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/lodash': ^4.14.175
       '@types/memdown': ^3.0.0
@@ -856,7 +856,7 @@ importers:
       '@dxos/feed-store': link:../feed-store
       '@dxos/proto': link:../../common/proto
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/node': 14.14.45
       '@types/readable-stream': 2.3.9
       debug: 4.3.3
@@ -883,7 +883,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/chance': ^1.1.0
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
@@ -935,7 +935,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.0
       '@types/from2': 2.3.1
       '@types/jest': 26.0.23
@@ -955,7 +955,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/from2': ~2.3.1
       '@types/jest': ^26.0.7
@@ -1003,7 +1003,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': link:../feed-store
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/node': 14.14.45
       debug: 4.3.3
     devDependencies:
@@ -1017,7 +1017,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       debug: ^4.3.3
@@ -1028,7 +1028,7 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/lodash': 4.14.175
       '@types/node': 14.14.45
       debug: 4.3.3
@@ -1045,7 +1045,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/lodash': ^4.14.175
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -1159,7 +1159,7 @@ importers:
       '@dxos/protocol-plugin-bot-deprecated': link:../../deprecated/bot/protocol-plugin-bot-deprecated
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/fs-extra': 9.0.11
       assert: 2.0.0
       debug: 4.3.3
@@ -1199,7 +1199,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/download': ^6.2.4
       '@types/fs-extra': ^9.0.4
       '@types/js-yaml': ^3.12.5
@@ -1231,7 +1231,7 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.0
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
@@ -1276,7 +1276,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
       '@types/expect': ~24.3.0
@@ -1335,7 +1335,7 @@ importers:
     devDependencies:
       '@dxos/network-generator': link:../network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     specifiers:
@@ -1344,7 +1344,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       debug: ^4.3.3
@@ -1399,7 +1399,7 @@ importers:
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       earljs: 0.1.10
@@ -1419,7 +1419,7 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/simple-peer': 9.11.3
@@ -1453,7 +1453,7 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/assert': 1.5.4
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
@@ -1466,7 +1466,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/assert': ^1.5.4
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -1527,7 +1527,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../protocol
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
@@ -1549,7 +1549,7 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       buffer-json-encoding: ^1.0.2
@@ -1573,7 +1573,7 @@ importers:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.0
       '@types/jest': 26.0.23
       '@types/pify': 3.0.2
@@ -1592,7 +1592,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
       '@types/pify': ^3.0.2
@@ -1673,7 +1673,7 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@geut/discovery-swarm-webrtc': 4.3.0
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.0
       '@types/jest': 26.0.23
       '@types/lodash.debounce': 4.0.6
@@ -1693,7 +1693,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@geut/discovery-swarm-webrtc': ^4.0.2
       '@hyperswarm/dht': ^4.0.1
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
       '@types/lodash.debounce': ~4.0.6
@@ -1769,7 +1769,7 @@ importers:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/expect': 24.3.0
       '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
@@ -1799,7 +1799,7 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
@@ -1879,7 +1879,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.4.0
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       assert: 2.0.0
       debug: 4.3.3
       react-display-name: 0.2.5
@@ -1919,7 +1919,7 @@ importers:
       '@mui/material': ^5.0.1
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/level-js': ~4.0.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -1966,7 +1966,7 @@ importers:
       '@mui/lab': 5.0.0-alpha.48_e04118610eda033f1ee88460ea4d497a
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/system': 5.0.1_b0225674030c82891a5af23896d2c054
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/faker': 5.5.5
       '@types/lodash.isplainobject': 4.0.6
       '@types/qrcode.react': 1.0.2
@@ -1996,7 +1996,7 @@ importers:
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
       '@mui/system': ^5.0.1
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/lodash.isplainobject': ^4.0.6
       '@types/qrcode.react': ^1.0.2
@@ -2047,7 +2047,7 @@ importers:
       '@mui/lab': 5.0.0-alpha.48_e04118610eda033f1ee88460ea4d497a
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/system': 5.0.1_b0225674030c82891a5af23896d2c054
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.isplainobject': 4.0.6
       '@types/react': 17.0.24
@@ -2078,7 +2078,7 @@ importers:
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
       '@mui/system': ^5.0.1
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
       '@types/react': ^17.0.24
@@ -2109,7 +2109,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.4.0
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/debug': 4.1.5
+      '@types/debug': 4.1.7
       '@types/lodash': 4.14.175
       '@types/node': 14.14.45
       '@types/react': 17.0.24
@@ -2126,7 +2126,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/debug': ^4.1.1
+      '@types/debug': ^4.1.7
       '@types/lodash': ^4.14.175
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
@@ -8353,9 +8353,11 @@ packages:
     dev: true
     resolution:
       integrity: sha512-7rMMuS5unvbvFCJXAkQXIxWTo2OUlmVXN5q7sfQFesuVICY55PSP6hhbUhWjTTNpfTTB3iLALsIYDFe7KUNABw==
-  /@types/debug/4.1.5:
+  /@types/debug/4.1.7:
+    dependencies:
+      '@types/ms': 0.7.31
     resolution:
-      integrity: sha512-Q1y515GcOdTHgagaVFhHnIFQ38ygs/kmxdNpvpou+raI9UO3YZcHDngBSYKQklcKlvA7iuQlmIKbzvmxcOE9CQ==
+      integrity: sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==
   /@types/decompress/4.2.3:
     dependencies:
       '@types/node': 14.14.45
@@ -8682,6 +8684,9 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==
+  /@types/ms/0.7.31:
+    resolution:
+      integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
   /@types/node-fetch/2.5.10:
     dependencies:
       '@types/node': 14.14.45
