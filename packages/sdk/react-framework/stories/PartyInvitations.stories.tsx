@@ -9,8 +9,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import {
-  ClientInitializer,
-  ErrorBoundary,
+  ClientProvider,
   ProfileInitializer,
   useClient,
   useParties,
@@ -19,6 +18,7 @@ import {
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
+  ErrorBoundary,
   FrameworkContextProvider,
   JoinPartyDialog,
   PartySharingDialog
@@ -112,7 +112,7 @@ export const Primary = () => {
           display: 'flex',
           justifyContent: 'space-around'
         }}>
-          <ClientInitializer>
+          <ClientProvider>
             <ProfileInitializer>
               <FrameworkContextProvider>
                 <Column>
@@ -120,15 +120,15 @@ export const Primary = () => {
                 </Column>
               </FrameworkContextProvider>
             </ProfileInitializer>
-          </ClientInitializer>
+          </ClientProvider>
 
-          <ClientInitializer>
+          <ClientProvider>
             <ProfileInitializer>
               <Column>
                 <Receiver />
               </Column>
             </ProfileInitializer>
-          </ClientInitializer>
+          </ClientProvider>
         </Box>
       </ErrorBoundary>
     </FullScreen>
@@ -146,7 +146,7 @@ const AutoInvitationGenerator = ({
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
-      const invitation = await client.createInvitation(party.key, secretProvider, {
+      const invitation = await client.echo.createInvitation(party.key, { secretProvider }, {
         onFinish: () => {
           resetPin();
         }
@@ -175,7 +175,7 @@ export const Secondary = () => {
           display: 'flex',
           justifyContent: 'space-around'
         }}>
-          <ClientInitializer>
+          <ClientProvider>
             <ProfileInitializer>
               <Column>
                 <AutoInvitationGenerator
@@ -183,9 +183,9 @@ export const Secondary = () => {
                 />
               </Column>
             </ProfileInitializer>
-          </ClientInitializer>
+          </ClientProvider>
 
-          <ClientInitializer>
+          <ClientProvider>
             <ProfileInitializer>
               <Column>
                 {invitationCode && (
@@ -195,7 +195,7 @@ export const Secondary = () => {
                 )}
               </Column>
             </ProfileInitializer>
-          </ClientInitializer>
+          </ClientProvider>
         </Box>
       </ErrorBoundary>
     </FullScreen>

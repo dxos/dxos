@@ -13,8 +13,6 @@ import {
   Typography
 } from '@mui/material';
 
-import { ErrorBoundary } from '@dxos/react-client';
-
 import { Dialog, DialogProps } from '../src';
 
 export default {
@@ -131,7 +129,7 @@ export const Primary = () => {
   }
 
   return (
-    <ErrorBoundary>
+    <Box>
       <Button onClick={reset}>Reset</Button>
 
       <Dialog
@@ -142,7 +140,7 @@ export const Primary = () => {
           }
         }}
       />
-    </ErrorBoundary>
+    </Box>
   );
 };
 
@@ -154,7 +152,7 @@ export const Secondary = () => {
   }
 
   return (
-    <ErrorBoundary>
+    <Box>
       <Button onClick={reset}>Reset</Button>
 
       <Box sx={{
@@ -166,6 +164,6 @@ export const Secondary = () => {
           {...dialogProps}
         />
       </Box>
-    </ErrorBoundary>
+    </Box>
   );
 };

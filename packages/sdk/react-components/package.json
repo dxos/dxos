@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -12,6 +12,7 @@
     "src"
   ],
   "scripts": {
+    "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",
@@ -35,6 +36,8 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.0",
     "@dxos/react-client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",

@@ -4,11 +4,11 @@
 
 import React, { useEffect } from 'react';
 
-import { ClientInitializer, ErrorBoundary, useClient } from '../src';
-import { ClientPanel, ThemeProvider } from './helpers';
+import { ClientProvider, useClient } from '../src';
+import { ClientPanel } from './helpers';
 
 export default {
-  title: 'react-client/ClientInitializer'
+  title: 'react-client/ClientProvider'
 };
 
 const TestApp = () => {
@@ -27,12 +27,16 @@ const TestApp = () => {
 
 export const Primary = () => {
   return (
-    <ThemeProvider>
-      <ErrorBoundary>
-        <ClientInitializer config={{}}>
-          <TestApp />
-        </ClientInitializer>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <ClientProvider>
+      <TestApp />
+    </ClientProvider>
+  );
+};
+
+export const Secondary = () => {
+  return (
+    <ClientProvider config={() => ({})}>
+      <TestApp />
+    </ClientProvider>
   );
 };

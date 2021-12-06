@@ -562,10 +562,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/demos",
-      "projectFolder": "packages/sdk/demos"
-    },
-    {
       "packageName": "@dxos/react-client",
       "projectFolder": "packages/sdk/react-client",
       "shouldPublish": true,
@@ -594,10 +590,6 @@
       "projectFolder": "packages/sdk/registry-client",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/tutorials-tasks-app",
-      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
     },
 
     //
@@ -780,6 +772,19 @@
       "projectFolder": "packages/deprecated/bot/test-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // tutorials
+    //
+
+    {
+      "packageName": "@dxos/demos",
+      "projectFolder": "packages/demos"
+    },
+    {
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/tutorials/tutorials-tasks-app"
     },
 
     //

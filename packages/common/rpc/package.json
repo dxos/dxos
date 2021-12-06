@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "Tiny RPC library.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -26,6 +26,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "debug": "^4.1.1"
   },
   "devDependencies": {

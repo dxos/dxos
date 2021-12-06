@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { select } from '@storybook/addon-knobs';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { MemoryRouter, NavLink, Switch, Route } from 'react-router-dom';
+
+import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 import { FullScreen } from '@dxos/gem-core';
@@ -29,12 +30,8 @@ import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
 
 export default {
-  title: 'Devtools'
+  title: 'Devtools/Topology'
 };
-
-export interface SwarmsTabProps {
-  swarmInfo: SwarmInfo[]
-}
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
   const networkManager = new NetworkManager({
@@ -58,8 +55,27 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   };
 };
 
-const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topology }) => {
-  const [controlPeer, setControlPeer] = useState<{ swarm: Swarm, map: SwarmMapper, signal: SignalManager, log: ConnectionLog }>();
+const topologyMap: Record<string, (topic: PublicKey) => any> = {
+  'Fully-connected': () => new FullyConnectedTopology(),
+  'MMST': () => new MMSTTopology(),
+  'Star': (topic) => new StarTopology(topic)
+};
+
+const GraphDemo = ({ topic }: { topic: PublicKey }) => {
+  const [topologyType, setTopologyType] = useState('Fully-connected');
+  const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
+
+  const [controlPeer, setControlPeer] = useState<{
+    swarm: Swarm,
+    map: SwarmMapper,
+    signal: SignalManager,
+    log: ConnectionLog
+  }>();
+
+  useEffect(() => {
+    setTopology(topologyMap[topologyType](topic));
+  }, [topologyType]);
+
   useEffect(() => {
     void createPeer(topic, topic, topology).then(peer => setControlPeer(peer));
   }, []);
@@ -124,6 +140,15 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
     <FullScreen>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         <div>
+          <Select
+            value={topologyType}
+            onChange={(event: SelectChangeEvent) => setTopologyType(event.target.value)}
+          >
+            {Object.keys(topologyType).map((topologyType) => (
+              <MenuItem key={topologyType} value={topologyType}>{topologyType}</MenuItem>
+            ))}
+          </Select>
+
           <div style={{ position: 'absolute' }}>
             <button onClick={() => addPeers(1)}>Add peer</button>
             <button onClick={() => addPeers(5)}>Add 5 peers</button>
@@ -160,27 +185,7 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
   );
 };
 
-export const withGraph = () => {
+export const Primary = () => {
   const [topic] = useState(() => PublicKey.random());
-
-  const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
-
-  const topologySelect = select('Topology', ['Fully-connected', 'MMST', 'Star'], 'Fully-connected');
-  useEffect(() => {
-    switch (topologySelect) {
-      case 'Fully-connected': {
-        setTopology(() => () => new FullyConnectedTopology());
-        break;
-      }
-      case 'MMST': {
-        setTopology(() => () => new MMSTTopology());
-        break;
-      }
-      case 'Star': {
-        setTopology(() => () => new StarTopology(topic));
-      }
-    }
-  }, [topologySelect]);
-
-  return <GraphDemo topic={topic} topology={topology} />;
+  return <GraphDemo topic={topic} />;
 };

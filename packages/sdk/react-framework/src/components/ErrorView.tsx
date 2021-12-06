@@ -31,26 +31,32 @@ const Code = styled('div')(({ theme }) => ({
   backgroundColor: theme.palette.action.hover
 }));
 
+export interface ErrorViewProps {
+  onReload?: () => void
+  onReset?: () => void
+  error: Error | null
+  title?: string
+  context?: any
+  issueLink?: string
+}
+
+const reload = () => {
+  window.location.reload();
+};
+
 /**
  * View component used to handle crashed app situations.
  * Allows the user to either restart the app or reset storage.
  * Used in `ErrorBoundary`
  */
 export const ErrorView = ({
-  onRestart,
+  onReload = reload,
   onReset,
   error,
   title = DEFAULT_TITLE,
   issueLink = DEFAULT_ISSUE_LINK,
   context
-}: {
-  onRestart?: () => void,
-  onReset?: () => void,
-  error: Error | null,
-  title?: string,
-  issueLink?: string,
-  context?: any
-}) => {
+}: ErrorViewProps) => {
   const isDev = process.env.NODE_ENV === 'development';
   if (!error) {
     return null;
@@ -116,18 +122,21 @@ export const ErrorView = ({
         {(isDev && onReset) && (
           <Button
             variant='text'
-            onClick={onReset}
+            onClick={async () => {
+              await onReset();
+              onReload();
+            }}
           >
             Reset storage
           </Button>
         )}
-        {onRestart && (
+        {onReload && (
           <Button
             variant='contained'
             color='primary'
-            onClick={onRestart}
+            onClick={onReload}
           >
-            Restart
+            Reload
           </Button>
         )}
       </DialogActions>

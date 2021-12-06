@@ -14,7 +14,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Database } from '..';
 import { DataServiceRouter } from './data-service-router';
-import { FeedDatabaseBackend, RemoteDatabaseBacked } from './database-backend';
+import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
 describe('Database', () => {
   describe('remote', () => {
@@ -38,7 +38,7 @@ describe('Database', () => {
 
       const frontend = new Database(
         modelFactory,
-        new RemoteDatabaseBacked(dataServiceRouter, partyKey)
+        new RemoteDatabaseBackend(dataServiceRouter, partyKey)
       );
       await frontend.init();
       afterTest(() => frontend.destroy());
@@ -61,7 +61,7 @@ describe('Database', () => {
 
       // Mutate model
       await Promise.all([
-        item!.model.modelUpdate.waitForCount(1),
+        item!.model.update.waitForCount(1),
         backendItem.model.setProperty('foo', 'bar')
       ]);
 

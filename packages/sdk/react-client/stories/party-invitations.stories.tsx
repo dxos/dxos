@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
-  ClientInitializer,
+  ClientProvider,
   ProfileInitializer,
   useClient,
   useContacts,
@@ -58,8 +58,8 @@ const PartyInvitationContainer = () => {
   const handleCreateInvitation = () => {
     setImmediate(async () => {
       const invitation = (contact)
-        ? await client.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
-        : await client.createInvitation(partyKey!, secretProvider, {
+        ? await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
+        : await client.echo.createInvitation(partyKey!, { secretProvider }, {
           onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
             setInvitationCode(undefined);
             resetPin();
@@ -192,11 +192,11 @@ export const Primary = () => {
     <Container>
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {[...new Array(peers)].map((_, i) => (
-          <ClientInitializer key={i} config={{}}>
+          <ClientProvider key={i}>
             <ProfileInitializer>
               <TestApp />
             </ProfileInitializer>
-          </ClientInitializer>
+          </ClientProvider>
         ))}
       </Box>
     </Container>
