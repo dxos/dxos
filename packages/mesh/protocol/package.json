@@ -29,7 +29,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "end-of-stream": "^1.4.1",
     "humanhash": "^1.0.4",
     "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/assert": "^1.5.4",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",

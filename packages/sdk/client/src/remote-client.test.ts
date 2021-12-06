@@ -54,7 +54,7 @@ describe('Client', () => {
 
       expect(client.halo.profile).toBeDefined();
       await client.destroy();
-    }).timeout(200);
+    }).timeout(500);
 
     test('creates and joins a HALO invitation', async () => {
       const inviterRpcPort = await createServiceProviderPort();

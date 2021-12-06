@@ -70,6 +70,9 @@ dist
 lib
 build
 
+# Web Extensions
+web-ext-artifacts
+
 # Heft
 */*/.heft/build-cache/**
 */*/.heft/temp/**
@@ -85,10 +88,6 @@ storybook-static
 **/gravity/testing/out/*
 **/out/bots/*
 **/.bots/*
-
-
-# public repo
-tutorials-tasks-app/
 
 #benchmark
 .benchmark

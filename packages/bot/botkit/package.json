@@ -19,7 +19,7 @@
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "esbuild": "^0.11.23"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/expect": "~24.3.0",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
