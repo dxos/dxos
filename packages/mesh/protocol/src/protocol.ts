@@ -121,6 +121,7 @@ export class Protocol {
           await this.streamOptions?.onhandshake?.(this);
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
+          await this._onConnected();
         } catch (err: any) {
           process.nextTick(() => this._stream.destroy(err));
         }
@@ -330,11 +331,6 @@ export class Protocol {
     this.handshake.emit(this);
     this._connected = true;
 
-    for (const [name, extension] of this._extensionMap) {
-      log(`handshake extension "${name}": connected`);
-      await extension.onConnected();
-    }
-
     // TODO(unknown): Redo this.
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
@@ -347,6 +343,12 @@ export class Protocol {
       }
     });
   }
+
+  private async _onConnected() {
+    for (const [name, extension] of this._extensionMap) {
+      log(`handshake extension "${name}": connected`);
+      await extension.onConnected();
+    }}
 
   private _openConnection () {
     let initialKey = null;

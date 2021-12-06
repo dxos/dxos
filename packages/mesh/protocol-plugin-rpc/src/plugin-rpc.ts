@@ -61,6 +61,7 @@ export class PluginRpc {
     const peerId = getPeerId(peer);
     const receive = new Event<SerializedObject>();
 
+    this._peers.set(peerId, { peer, receive });
     const port = await createPort(peer, receive);
     const cleanup = await this._onConnect(port, peerId);
 
@@ -68,11 +69,6 @@ export class PluginRpc {
       this._peers.set(peerId, {
         peer,
         cleanup,
-        receive
-      });
-    } else {
-      this._peers.set(peerId, {
-        peer,
         receive
       });
     }
