@@ -23,7 +23,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/proto": "workspace:*",
     "boolean": "^3.0.1",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "js-yaml": "^3.13.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
