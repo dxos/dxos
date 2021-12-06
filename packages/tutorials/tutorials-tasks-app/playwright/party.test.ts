@@ -4,11 +4,10 @@
 
 import { firefox } from 'playwright';
 
-import { Browser, TaskApp } from './utils';
+import { baseUrl, Browser, TaskApp } from './utils';
 
 // TODO(rzadp): Add back after `PartyJoinDialog` and `PartyInvitationDialog` API is stable.
 describe.skip('Party Test Cases', () => {
-  const initialUrl = 'http://localhost:3000/';
   let chocolatesCounter = 1
   let listName = 'My Party List';
   let taskName = `Buy ${chocolatesCounter} chocolate(s) for the team`;
@@ -20,7 +19,7 @@ describe.skip('Party Test Cases', () => {
   before(() => {
     alice = new TaskApp(new Browser());
 
-    return alice.browser.launch(firefox, initialUrl)
+    return alice.browser.launch(firefox, baseUrl)
       .then(() => alice.profile.create('Alice'))
       .then(() => alice.checkAppIsLoaded())
       .then(() => alice.createTaskList(listName));
@@ -43,7 +42,7 @@ describe.skip('Party Test Cases', () => {
 
       bob = new TaskApp(new Browser());
 
-      await bob.browser.launch(firefox, initialUrl)
+      await bob.browser.launch(firefox, baseUrl)
         .then(() => bob.profile.checkCreationIsPrompted())
         .then(() => bob.profile.create(`Bob ${chocolatesCounter}`))
         .then(() => bob.checkAppIsLoaded());

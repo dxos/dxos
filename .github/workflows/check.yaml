@@ -1,7 +1,7 @@
 on:
   push:
 
-name: Build, test and lint the code
+name: Build, test, lint
 jobs:
   check:
     runs-on: [self-hosted, dind-actions-runner]
@@ -108,3 +108,4 @@ jobs:
         run: |
           sudo apt-get install -y lsof
           kill $(lsof -t -i:3000) || true
+          kill $(lsof -t -i:8080) || true

@@ -1,4 +1,5 @@
 import expect from 'expect';
+import waitForExpect from 'wait-for-expect';
 
 import { AppSimulator } from './AppSimulator';
 import { Browser } from './Browser';
@@ -58,7 +59,9 @@ export class TaskApp extends AppSimulator {
 
     await this.browser.getPage().click('[aria-label="create"]');
 
-    await this.checkTaskIsCreated(taskName);
+    await waitForExpect(async () => {
+      await this.checkTaskIsCreated(taskName);
+    });
   }
 
   async checkTaskIsCreated(taskName: string) {
@@ -74,11 +77,15 @@ export class TaskApp extends AppSimulator {
 
     await taskCheckbox?.click();
 
-    await this.checkTaskState(taskName, true);
+    await waitForExpect(async () => {
+      await this.checkTaskState(taskName, true);
+    });
 
     await taskCheckbox?.click();
 
-    await this.checkTaskState(taskName, false);
+    await waitForExpect(async () => {
+      await this.checkTaskState(taskName, false);
+    });
   }
 
   async checkTaskState(taskName: string, expectedResult: boolean) {
@@ -98,7 +105,9 @@ export class TaskApp extends AppSimulator {
 
     await taskTrash?.click();
 
-    await this.checkTaskExistence(taskName);
+    await waitForExpect(async () => {
+      await this.checkTaskExistence(taskName);
+    });
   }
 
   async checkTaskExistence(taskName: string) {

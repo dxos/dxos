@@ -4,16 +4,15 @@
 
 import { firefox } from 'playwright';
 
-import { Browser, TaskApp } from './utils';
+import { baseUrl, Browser, TaskApp } from './utils';
 
 describe('Storage Test Cases', () => {
-  const initialUrl = 'http://localhost:3000/';
   let alice: TaskApp;
 
   before(async () => {
     alice = new TaskApp(new Browser());
 
-    await alice.browser.launch(firefox, initialUrl);
+    await alice.browser.launch(firefox, baseUrl);
 
     alice.browser.getPage().on('dialog', dialog => {
       if (dialog.message() === 'Are you sure you want to reset storage?') {
