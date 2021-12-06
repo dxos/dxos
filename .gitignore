@@ -86,9 +86,5 @@ storybook-static
 **/out/bots/*
 **/.bots/*
 
-
-# public repo
-tutorials-tasks-app/
-
 #benchmark
 .benchmark
