@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "ECHO model factory.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -26,9 +26,9 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/node": "^14.0.9",
-    "debug": "^4.1.1"
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

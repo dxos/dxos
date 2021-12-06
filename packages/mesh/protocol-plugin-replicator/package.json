@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -30,7 +30,7 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/util": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1"
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
@@ -38,7 +38,7 @@
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/jest": "^26.0.7",
     "@types/pify": "^3.0.2",

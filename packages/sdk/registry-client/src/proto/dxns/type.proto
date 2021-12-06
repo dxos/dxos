@@ -26,7 +26,7 @@ message App {
   string repository_version = 4;
   string license = 5;
   repeated string keywords = 6;
-  string display_name = 7; 
+  string display_name = 7;
 
   // For frames, types of items the frame supports.
   // Content-Type is represented as ECHO item type DXN.
@@ -44,13 +44,24 @@ message Bot {
   string version = 1;
 
   /// Bot bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes hash = 2;
+  bytes hash = 2; // TODO(burdon): Rename bundle.
   string repository = 3;
   string repository_version = 4;
   string license = 5;
   repeated string keywords = 6;
 
   Record.Extension extension = 100;
+}
+
+// Registered as `type.state-machiene`.
+message StateMachiene {
+  /// Set of protobuf messages encoded in JSON.
+  string mutation_protobuf_defs = 1;
+
+  /// Set of protobuf messages encoded in JSON.
+  string snapshot_protobuf_defs = 2;
+
+  bytes code_ipfs_cid = 3;
 }
 
 // Registered as `type.file`.
@@ -78,7 +89,7 @@ message Service {
   string type = 1;
 
   // KUBE record's CID that hosts this service.
-  bytes kube = 2; 
+  bytes kube = 2;
 
   // Extension field's payload depends on service type and has extra data specific to that service.
   // Within this schema extension might be `type.service.ipfs` or `type.service.bot-factory`.

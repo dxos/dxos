@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "DXOS Wallet Extension",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -43,7 +43,7 @@
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.9",
     "@types/react-router-dom": "~5.1.7",
-    "@types/uuid": "~8.3.1",
+    "@types/uuid": "~8.3.3",
     "@types/webpack-env": "^1.16.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
@@ -53,7 +53,7 @@
     "playwright": "^1.7.0",
     "rmdir": "~1.2.0",
     "typescript": "^4.5.2",
-    "uuid": "^3.3.2",
+    "uuid": "^8.3.2",
     "webextension-polyfill-ts": "~0.25.0"
   },
   "toolchain": {

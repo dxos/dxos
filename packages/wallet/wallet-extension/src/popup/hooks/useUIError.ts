@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useSnackbar } from '../contexts';
+import { useSnackbar } from './useSnackbar';
+
+// TODO(burdon): Rewrite and replace useSnackbar.
 
 interface Messages {
   onSuccessMessage?: string, // To display when the requests passes successfully.
@@ -25,20 +27,20 @@ export const useUIError = () => {
         });
       }
       return { result };
-    } catch (e: any) {
-      console.error(e);
+    } catch (err: any) {
+      console.error(err);
       if (!setSnackbar) {
         return;
       }
 
-      if (e.toString().toLowerCase().includes('timeout')) {
+      if (err.toString().toLowerCase().includes('timeout')) {
         setSnackbar({
-          message: messages?.onTimeoutMessage ?? e.toString(),
+          message: messages?.onTimeoutMessage ?? err.toString(),
           severity: 'warning'
         });
       } else {
         setSnackbar({
-          message: messages?.onErrorMessage ?? e.toString(),
+          message: messages?.onErrorMessage ?? err.toString(),
           severity: 'error'
         });
       }

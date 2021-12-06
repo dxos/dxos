@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "private": true,
   "license": "GPL-3.0",
   "author": "DXOS.org",
@@ -9,6 +9,8 @@
     "build:test": "pnpm run build && pnpm run lint && pnpm run test",
     "lint": "toolchain lint",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
+    "pack:webext": "web-ext build --source-dir ./dist",
+    "start:firefox": "web-ext run --source-dir ./dist",
     "test": "toolchain test"
   },
   "browserslist": [
@@ -46,13 +48,19 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chrome": "^0.0.125",
+    "@types/download": "^8.0.1",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "@types/webextension-polyfill": "^0.8.0",
+    "body-parser": "~1.19.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
     "crx": "^5.0.1",
+    "download": "^8.0.0",
     "esbuild": "^0.11.23",
-    "rmdir": "~1.2.0"
+    "express": "~4.17.1",
+    "rmdir": "~1.2.0",
+    "safe-compare": "~1.1.4",
+    "web-ext": "~6.6.0"
   }
 }

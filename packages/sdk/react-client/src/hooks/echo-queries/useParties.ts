@@ -6,23 +6,22 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { PartyProxy } from '@dxos/client';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
 
 import { useClient } from '../client';
 import { useResultSet } from '../util';
 
 /**
  * Get a specific Party.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
-export const useParty = (partyKey?: PublicKeyLike) => {
+export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
   const client = useClient();
   return partyKey ? client.echo.getParty(PublicKey.from(partyKey)) : undefined;
 };
 
 /**
  * Get all Parties available to current user.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
 export const useParties = () => {
   const client = useClient();
@@ -49,6 +48,6 @@ export const useParties = () => {
 /**
  * Get all known members of a Party.
  */
-export const usePartyMembers = (party: Party) => {
+export const usePartyMembers = (party: PartyProxy) => {
   return useResultSet(useMemo(() => party.queryMembers(), [party.key.toHex()]));
 };

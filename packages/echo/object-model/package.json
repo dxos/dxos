@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -30,10 +30,10 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/lodash": "^4.14.175",
     "@types/node": "^14.0.9",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "lodash": "4.17.21",
     "minisearch": "^3.0.2"
   },

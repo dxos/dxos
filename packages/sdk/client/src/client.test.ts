@@ -50,7 +50,7 @@ describe('Client', () => {
         expect(profile?.username).toEqual('test-user');
 
         expect(client.halo.profile).toBeDefined();
-      }).timeout(200);
+      }).timeout(500);
 
       test('creating profile twice throws an error', async () => {
         const client = await createClient();

@@ -14,12 +14,12 @@ describe('Conflicts', () => {
   test.skip('object model', async () => {
     const { items: [item1, item2] } = await createModelTestBench({ model: ObjectModel });
 
-    item1.model.modelUpdate.on(() => console.log(`m1 ${item1.model.getProperty('prop')}`));
-    item2.model.modelUpdate.on(() => console.log(`m2 ${item2.model.getProperty('prop')}`));
+    item1.model.update.on(() => console.log(`m1 ${item1.model.getProperty('prop')}`));
+    item2.model.update.on(() => console.log(`m2 ${item2.model.getProperty('prop')}`));
 
     const updatesSettled = Promise.all([
-      item1.model.modelUpdate.waitForCount(2),
-      item2.model.modelUpdate.waitForCount(2)
+      item1.model.update.waitForCount(2),
+      item2.model.update.waitForCount(2)
     ]);
 
     await Promise.all([

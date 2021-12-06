@@ -12,7 +12,7 @@ import { Awaited } from '@dxos/async';
 import { Client, decodeInvitation, PendingInvitation } from '@dxos/client';
 
 import {
-  ClientInitializer,
+  ClientProvider,
   ProfileInitializer,
   useClient,
   useParties,
@@ -164,17 +164,17 @@ export const Primary = () => {
     <Container>
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {/* Instantiated Client. */}
-        <ClientInitializer config={{}}>
+        <ClientProvider>
           <ProfileInitializer>
             <TestApp />
           </ProfileInitializer>
-        </ClientInitializer>
+        </ClientProvider>
 
         {/* Joiners. */}
         {[...new Array(peers)].map((_, i) => (
-          <ClientInitializer key={i} config={{}}>
+          <ClientProvider key={i}>
             <TestApp />
-          </ClientInitializer>
+          </ClientProvider>
         ))}
       </Box>
     </Container>

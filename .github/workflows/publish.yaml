@@ -3,7 +3,7 @@ on:
     branches:
       - main
 
-name: publish
+name: Publish packages to NPM, apps to DXNS, extensions to artifacts
 jobs:
   publish:
     runs-on: [self-hosted, dind-actions-runner]
@@ -17,6 +17,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        clean: false
     - name: Check, install and build
       run: |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}

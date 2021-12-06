@@ -3,11 +3,14 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Alert, Box, Button } from '@mui/material';
 
-import { ErrorBoundary, ErrorView, FrameworkContextProvider, useError } from '../src';
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
+
+import { ErrorBoundary, ErrorView, FrameworkContextProvider, useErrors } from '../src';
 
 export default {
   title: 'react-framework/ErrorBoundary'
@@ -15,35 +18,22 @@ export default {
 
 debug.enable('*');
 
-export const View = () => {
-  const error = new Error('Test Error');
-
-  return (
-    <ErrorView
-      error={error}
-      onReset={() => {}}
-      onRestart={() => {}}
-      context={{
-        testing: true
-      }}
-    />
-  );
-};
-
 enum ErrorType {
-  Async,
-  Promise,
-  Invalid
+  Async = 1,
+  Promise = 2,
+  Invalid = 3
 }
 
 const TestApp = () => {
-  const [error, resetError] = useError();
+  const [errors, resetError] = useErrors();
   const [trigger, setTrigger] = useState<ErrorType | undefined>();
 
   useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
     switch (trigger) {
       case ErrorType.Async: {
-        setTimeout(() => {
+        t = setTimeout(() => {
+          setTrigger(undefined);
           throw new Error('Async error.');
         }, 1000);
         break;
@@ -51,16 +41,19 @@ const TestApp = () => {
 
       case ErrorType.Promise: {
         setImmediate(async () => await new Promise((resolve, reject) => {
-          setTimeout(() => {
+          t = setTimeout(() => {
+            setTrigger(undefined);
             reject(new Error('Promise rejected.'));
           }, 1000);
         }));
         break;
       }
     }
+
+    return () => clearTimeout(t);
   }, [trigger]);
 
-  // Trigger ErrorBoundary.
+  // Trigger ErrorBoundary: "Nothing was returned from render."
   if (trigger === ErrorType.Invalid) {
     return undefined;
   }
@@ -83,9 +76,11 @@ const TestApp = () => {
           </Button>
         </Box>
 
-        {error && (
+        {errors.length > 0 && (
           <Box>
-            <Alert severity='error'>{String(error)}</Alert>
+            {errors.map((error, i) => (
+              <Alert key={i} severity='error'>{String(error)}</Alert>
+            ))}
           </Box>
         )}
       </Box>
@@ -99,14 +94,38 @@ const TestApp = () => {
   );
 };
 
-export const Boundary = () => {
-  const App = TestApp as any; // Don't warn about undefined return value.
+export const Primary = () => {
+  // Forward reference to client (since can't use context here).
+  const clientRef = useRef<Client>();
+
+  // Cast to any to suppress warning about undefined return value.
+  const App = TestApp as any;
 
   return (
-    <FrameworkContextProvider>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </FrameworkContextProvider>
+    <ErrorBoundary
+      // indicator={null}
+      onReset={async () => {
+        await clientRef.current!.reset();
+      }}
+    >
+      <ClientProvider clientRef={clientRef}>
+        <FrameworkContextProvider>
+          <App />
+        </FrameworkContextProvider>
+      </ClientProvider>
+    </ErrorBoundary>
+  );
+};
+
+export const View = () => {
+  const error = new Error('Test Error');
+
+  return (
+    <ErrorView
+      error={error}
+      context={{
+        testing: true
+      }}
+    />
   );
 };

@@ -39,7 +39,10 @@ export const defaultThemeProperties = {
 
 export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defaultThemeProperties));
 
-// TODO(burdon): Rename.
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
   <ThemeProvider theme={createTheme(base)}>
     <CssBaseline />

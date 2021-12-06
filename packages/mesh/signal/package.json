@@ -1,6 +1,6 @@
 {
   "name": "@dxos/signal",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "DxOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -35,7 +35,7 @@
     "@dxos/crypto": "workspace:*",
     "@hyperswarm/dht": "^4.0.1",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "end-of-stream": "^1.4.1",
     "graphology": "^0.17.1",
     "graphql": "^15.3.0",
@@ -69,7 +69,7 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/jest": "^26.0.7",
     "@types/lodash.debounce": "~4.0.6",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
@@ -13,7 +13,7 @@
   "dependencies": {
     "assert": "^2.0.0",
     "crypto-browserify": "^3.12.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "domain-browser": "^4.22.0",
     "esbuild": "^0.11.23",
     "events": "~3.3.0",

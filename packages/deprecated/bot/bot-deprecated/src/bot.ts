@@ -8,10 +8,10 @@ import { EventEmitter } from 'events';
 import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { Client, PartyProxy } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
-import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
 import {
   COMMAND_BOT_INVITE,
@@ -195,12 +195,13 @@ export class Bot extends EventEmitter {
       log(`Joining party with invitation: ${JSON.stringify(invitation)}`);
 
       assert(invitation.hash);
-      const party = await this._client!.echo.joinParty(InvitationDescriptor.fromQueryParameters(invitation as any), secretProvider);
+      const party = await this._client!.echo.joinParty(
+        InvitationDescriptor.fromQueryParameters(invitation as any), secretProvider);
       await party.open();
     }
   }
 
-  private _onJoin (parties: Party[] = []) {
+  private _onJoin (parties: PartyProxy[] = []) {
     parties.forEach(party => {
       const topic = party.key.toString();
       if (!this._parties.has(topic)) {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -39,12 +39,12 @@
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/lodash": "^4.14.175",
     "@types/node": "^14.0.9",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "json-stable-stringify": "^1.0.1",
     "pify": "~5.0.0"
   },

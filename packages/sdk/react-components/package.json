@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -12,6 +12,7 @@
     "src"
   ],
   "scripts": {
+    "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",
@@ -21,7 +22,7 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isplainobject": "^4.0.6",
     "qrcode.react": "~1.0.1",
@@ -35,6 +36,8 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/react-client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
@@ -43,7 +46,7 @@
     "@mui/lab": "^5.0.0-alpha.48",
     "@mui/material": "^5.0.1",
     "@mui/system": "^5.0.1",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
     "@types/lodash.isplainobject": "^4.0.6",
     "@types/qrcode.react": "^1.0.2",

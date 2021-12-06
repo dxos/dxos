@@ -1,6 +1,6 @@
 {
   "name": "@dxos/debug",
-  "version": "2.18.3",
+  "version": "2.19.0",
   "description": "Debug utilities",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@types/node": "^14.0.9",
-    "debug": "^4.1.1"
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
