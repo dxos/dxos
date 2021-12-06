@@ -344,11 +344,12 @@ export class Protocol {
     });
   }
 
-  private async _onConnected() {
+  private async _onConnected () {
     for (const [name, extension] of this._extensionMap) {
       log(`handshake extension "${name}": connected`);
       await extension.onConnected();
-    }}
+    }
+  }
 
   private _openConnection () {
     let initialKey = null;
