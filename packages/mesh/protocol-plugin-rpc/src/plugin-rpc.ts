@@ -28,7 +28,6 @@ export const getPeerId = (peer: Protocol) => {
 export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
   return {
     send: async (msg) => {
-      assert(peer.connected, 'Peer is not connected');
       const extension = peer.getExtension(PluginRpc.extensionName);
       assert(extension, 'Extension is not set');
       await extension.send(msg);
@@ -52,7 +51,7 @@ export class PluginRpc {
 
   createExtension (): Extension {
     return new Extension(PluginRpc.extensionName)
-      .setConnectedHandler(this._onPeerConnect.bind(this))
+      .setHandshakeHandler(this._onPeerConnect.bind(this))
       .setMessageHandler(this._onMessage.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
@@ -66,11 +65,8 @@ export class PluginRpc {
     const cleanup = await this._onConnect(port, peerId);
 
     if (typeof cleanup === 'function') {
-      this._peers.set(peerId, {
-        peer,
-        cleanup,
-        receive
-      });
+      const connection = this._peers.get(peerId);
+      connection && (connection.cleanup = cleanup);
     }
   }
 
