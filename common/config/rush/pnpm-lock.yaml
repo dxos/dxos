@@ -211,6 +211,7 @@ importers:
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/debug': link:../debug
       debug: 4.3.1
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -221,6 +222,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
       '@types/mocha': ~8.2.2
@@ -2218,6 +2220,8 @@ importers:
       '@babel/core': 7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@craco/craco': 6.1.2_react-scripts@4.0.3
+      '@dxos/esbuild-plugins': link:../../../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.4.0
       '@jackwilsdon/craco-use-babelrc': 1.0.0_react-scripts@4.0.3
       '@storybook/addon-actions': 6.3.12_3b7f7b84f013384d046f72a4522eddf8
       '@storybook/addon-essentials': 6.3.12_a6ee5054e38654ef74c1e2227ad49036
@@ -2250,6 +2254,8 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.4.0
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
