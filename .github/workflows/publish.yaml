@@ -3,7 +3,7 @@ on:
     branches:
       - main
 
-name: publish
+name: Publish packages to NPM, apps to DXNS, extensions to artifacts
 jobs:
   publish:
     runs-on: [self-hosted, dind-actions-runner]

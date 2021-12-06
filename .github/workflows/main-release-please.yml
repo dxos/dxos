@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - main
-name: main - release-please
+name: Release automation with Release Please
 jobs:
   release-please:
     runs-on: ubuntu-latest
