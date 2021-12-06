@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
-type OnConnect = (port: RpcPort, peerId: string) => Promise<() => Promise<void> | void>
+type OnConnect = (port: RpcPort, peerId: string) => (Promise<() => Promise<void> | void>) | void
 
 interface SerializedObject {
   data: Buffer
@@ -16,7 +16,7 @@ interface SerializedObject {
 
 interface Connection {
   peer: Protocol,
-  cleanup: () => Promise<void> | void,
+  cleanup?: () => Promise<void> | void,
   receive: Event<SerializedObject>
 }
 
@@ -28,7 +28,6 @@ export const getPeerId = (peer: Protocol) => {
 export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
   return {
     send: async (msg) => {
-      assert(peer.connected, 'Peer is not connected');
       const extension = peer.getExtension(PluginRpc.extensionName);
       assert(extension, 'Extension is not set');
       await extension.send(msg);
@@ -61,23 +60,21 @@ export class PluginRpc {
     const peerId = getPeerId(peer);
     const receive = new Event<SerializedObject>();
 
+    this._peers.set(peerId, { peer, receive });
     const port = await createPort(peer, receive);
     const cleanup = await this._onConnect(port, peerId);
 
-    await peer.open();
-
-    this._peers.set(peerId, {
-      peer,
-      cleanup,
-      receive
-    });
+    if (typeof cleanup === 'function') {
+      const connection = this._peers.get(peerId);
+      connection && (connection.cleanup = cleanup);
+    }
   }
 
   private async _onPeerDisconnect (peer: Protocol) {
     const peerId = getPeerId(peer);
     const connection = this._peers.get(peerId);
     if (connection) {
-      await connection.cleanup();
+      await connection.cleanup?.();
       this._peers.delete(peerId);
     }
   }
@@ -92,7 +89,7 @@ export class PluginRpc {
 
   async close () {
     for (const connection of this._peers.values()) {
-      await connection.cleanup();
+      await connection.cleanup?.();
       await connection.peer.close();
     }
   }

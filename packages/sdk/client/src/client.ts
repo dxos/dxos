@@ -67,8 +67,9 @@ export class Client {
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
+    // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
-    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
+    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
     if (this._config.values.system?.remote) {
       if (!options.rpcPort && isNode()) {
         throw new Error('RPC port is required to run client in remote mode on Node environment.');

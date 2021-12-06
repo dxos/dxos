@@ -28,14 +28,14 @@
   },
   "dependencies": {
     "assert": "^2.0.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.3",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.20",
     "@types/assert": "^1.5.4",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "~4.6.6",
     "@types/node": "^14.0.9",
