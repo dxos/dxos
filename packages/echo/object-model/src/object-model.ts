@@ -36,11 +36,13 @@ export class ObjectModel extends Model<ObjectMutationSet> {
 
   private _object = {};
 
+  // Optimistic state.
   private _pendingObject: object | undefined;
 
   /**
    * Returns an immutable object.
    */
+  // TODO(burdon): Rename getProperties.
   toObject () {
     return this._pendingObject ? cloneDeep(this._pendingObject) : cloneDeep(this._object);
   }
@@ -56,9 +58,11 @@ export class ObjectModel extends Model<ObjectMutationSet> {
   }
 
   private async _makeMutation (mutation: ObjectMutationSet) {
+    // Create optimistic result.
     this._pendingObject ??= { ...this._object };
     MutationUtil.applyMutationSet(this._pendingObject, mutation);
 
+    // Process the mutations.
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
   }
