@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Database, Party as EchoParty, Party, RemoteDatabaseBackend } from '@dxos/echo-db';
+import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
