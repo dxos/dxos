@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
