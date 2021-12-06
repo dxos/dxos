@@ -738,6 +738,13 @@
       "versionPolicyName": "lockStepPolicy"
     },
 
+    {
+      "packageName": "@dxos/bot-factory-client",
+      "projectFolder": "packages/bot/bot-factory-client",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+
     //
     // bot-deprecated
     // NOTE: KEEP SORTED

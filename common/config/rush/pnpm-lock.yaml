@@ -1,12 +1,36 @@
 importers:
   .:
     specifiers: {}
+  ../../packages/bot/bot-factory-client:
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
+      '@dxos/rpc': link:../../common/rpc
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
+      expect: 27.0.2
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/proto': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      expect: ~27.0.2
   ../../packages/bot/botkit:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
       debug: 4.3.3
@@ -34,8 +58,10 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1621,6 +1647,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../protocol
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/network-manager': link:../network-manager
@@ -1640,6 +1667,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -20158,7 +20186,7 @@ packages:
   /pretty-format/27.0.2:
     dependencies:
       '@jest/types': 27.0.2
-      ansi-regex: 5.0.0
+      ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
     dev: true

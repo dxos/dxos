@@ -1,0 +1,51 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../common/proto"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../mesh/signal"
+    },
+    {
+      "path": "../../common/util"
+    }
+  ]
+}
