@@ -1,7 +1,7 @@
 on:
   push:
 
-name: Build, test and lint the code
+name: Build, test, lint
 jobs:
   check:
     runs-on: [self-hosted, dind-actions-runner]
