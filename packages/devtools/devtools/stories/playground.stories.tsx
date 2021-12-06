@@ -133,7 +133,6 @@ const Controls = ({ port }: { port: RpcPort }) => {
   async function handleTestSetup () {
     client.registerModel(TextModel);
     client.registerModel(MessengerModel);
-    await client.halo.createProfile();
     const party = await client.echo.createParty();
     const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
     await root.model.setProperty('name', 'root');
@@ -155,8 +154,8 @@ const Controls = ({ port }: { port: RpcPort }) => {
       borderLeft: '1px solid',
       borderLeftColor: 'primary.main'
     }}>
-      <Button onClick={handleTestSetup}>Create Test data</Button>
-      <Button onClick={handleCreateProfile}>Create Profile</Button>
+      <Button disabled={!profile} onClick={handleTestSetup}>Create Test data</Button>
+      {!profile && <Button onClick={handleCreateProfile}>Create Profile</Button>}
       {profile && <Button onClick={handleCreateParty}>Create Party</Button>}
       <Box sx={{ padding: 2 }}>
         <FormControl fullWidth>
