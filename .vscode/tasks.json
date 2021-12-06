@@ -33,7 +33,7 @@
 			"type": "shell",
 			"command": "rushx storybook",
 			"options": {
-				"cwd": "packages/sdk/demos"
+				"cwd": "packages/demos"
 			},
 			"problemMatcher": []
 		}
