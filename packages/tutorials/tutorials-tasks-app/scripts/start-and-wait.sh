@@ -10,7 +10,7 @@
 npm run start &
 set +e
 i=0
-until curl "http://localhost:3000" | grep -q "Tasks App"; do
+until curl "http://localhost:8080" | grep -q "Tasks App"; do
   i=$((i + 1))
   if [ "$i" -gt 30 ]; then
     exit -1
