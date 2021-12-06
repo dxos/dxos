@@ -162,7 +162,7 @@ const PartyJoinContainer = () => {
 
 const TestApp = () => {
   const client = useClient();
-  const parties = useParties().map(p => p.impl);
+  const parties = useParties();
   const profile = useProfile();
 
   return (
