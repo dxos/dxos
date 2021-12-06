@@ -444,10 +444,6 @@
     //
 
     {
-      "packageName": "@dxos/deps-checker",
-      "projectFolder": "toolchains/deps-checker"
-    },
-    {
       "packageName": "@dxos/esbuild-plugins",
       "projectFolder": "toolchains/esbuild-plugins",
       "shouldPublish": true,
