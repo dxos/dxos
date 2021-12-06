@@ -5,6 +5,6 @@
 import React from 'react';
 
 import { Fullscreen } from './containers';
-import render from './render';
+import { render } from './render';
 
 render(<Fullscreen />);

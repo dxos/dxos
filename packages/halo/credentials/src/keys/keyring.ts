@@ -5,6 +5,7 @@
 import assert from 'assert';
 import memdown from 'memdown';
 
+import { Event } from '@dxos/async';
 import {
   PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes,
   sign as cryptoSign, verify as cryptoVerify
@@ -285,6 +286,11 @@ export class Keyring implements Signer {
   private readonly _findTrustedCache = new Map<string, PublicKeyLike>();
 
   /**
+   * Event that is called on all key changes with updated array of keys.
+   */
+  readonly keysUpdate = new Event<KeyRecord[]>();
+
+  /**
    * If no KeyStore is supplied, in-memory key storage will be used.
    */
   constructor (keystore?: KeyStore) {
@@ -308,6 +314,7 @@ export class Keyring implements Signer {
       const [key, value] = entry;
       this._keyCache.set(key, value);
     }
+    this.keysUpdate.emit(this.keys);
 
     return this;
   }
@@ -325,6 +332,7 @@ export class Keyring implements Signer {
     }
     // TODO(burdon): Is this how we do this?
     await Promise.all(promises);
+    this.keysUpdate.emit(this.keys);
   }
 
   /**
@@ -370,6 +378,7 @@ export class Keyring implements Signer {
 
     await this._keystore.setRecord(copy.publicKey.toHex(), copy);
     this._keyCache.set(copy.publicKey.toHex(), copy);
+    this.keysUpdate.emit(this.keys);
 
     return stripSecrets(copy);
   }
@@ -392,6 +401,7 @@ export class Keyring implements Signer {
     }
 
     this._keyCache.set(copy.publicKey.toHex(), copy);
+    this.keysUpdate.emit(this.keys);
 
     return stripSecrets(copy);
   }
@@ -436,6 +446,7 @@ export class Keyring implements Signer {
       const cleaned = stripSecrets(existing);
       await this._keystore.setRecord(cleaned.publicKey.toHex(), cleaned);
       this._keyCache.set(cleaned.publicKey.toHex(), cleaned);
+      this.keysUpdate.emit(this.keys);
     }
   }
 

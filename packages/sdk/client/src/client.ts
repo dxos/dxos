@@ -7,16 +7,14 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
-import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { InvalidParameterError, raise, TimeoutError } from '@dxos/debug';
-import { InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
+import { InvalidParameterError, TimeoutError } from '@dxos/debug';
+import { InvitationDescriptor, OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { CreateInvitationOptions, HaloProxy } from './api/HaloProxy';
+import { EchoProxy, CreateInvitationOptions, HaloProxy } from './api';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { isNode } from './platform';
@@ -36,7 +34,8 @@ export const defaultTestingConfig: defs.Config = {
   }
 };
 
-export interface ClientConstructorOpts {
+// TODO(burdon): Add doc comment.
+export interface ClientOptions {
   /**
    * Only used when remote=true.
    */
@@ -44,15 +43,17 @@ export interface ClientConstructorOpts {
 }
 
 /**
- * Main DXOS client object.
- * An entrypoint to ECHO, HALO, DXNS.
+ * The main DXOS client API.
+ * An entrypoint to ECHO, HALO, MESH, and DXNS.
  */
 export class Client {
   private readonly _config: Config;
 
   private readonly _serviceProvider: ClientServiceProvider;
 
+  // TODO(burdon): Why is this different from a service provider?
   private readonly _halo: HaloProxy;
+  private readonly _echo: EchoProxy;
 
   private _initialized = false;
 
@@ -60,26 +61,28 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: defs.Config | Config = {}, opts: ClientConstructorOpts = {}) {
-    if (config instanceof Config) {
-      this._config = config;
-    } else {
-      this._config = new Config(config);
+  constructor (config: defs.Config | Config = {}, options: ClientOptions = {}) {
+    if (typeof config !== 'object' || config == null) {
+      throw new InvalidParameterError('Invalid config.');
     }
-    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
+    this._config = (config instanceof Config) ? config : new Config(config);
 
+    // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
+    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
     if (this._config.values.system?.remote) {
-      if (!opts.rpcPort && isNode()) {
+      if (!options.rpcPort && isNode()) {
         throw new Error('RPC port is required to run client in remote mode on Node environment.');
       }
-      log('Creating client in *REMOTE* mode.');
-      this._serviceProvider = new ClientServiceProxy(opts.rpcPort ?? createWindowMessagePort());
+
+      log('Creating client proxy.');
+      this._serviceProvider = new ClientServiceProxy(options.rpcPort ?? createWindowMessagePort());
     } else {
-      log('Creating client in *LOCAL* mode.');
+      log('Creating client host.');
       this._serviceProvider = new ClientServiceHost(this._config);
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider);
   }
 
   toString () {
@@ -108,8 +111,8 @@ export class Client {
   /**
    * ECHO database.
    */
-  get echo () {
-    return this._serviceProvider.echo;
+  get echo (): EchoProxy {
+    return this._echo;
   }
 
   /**
@@ -138,14 +141,16 @@ export class Client {
 
     const t = 10;
     const timeout = setTimeout(() => {
+      // TODO(burdon): Tie to global error handling (or event).
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
     await this._serviceProvider.open(onProgressCallback);
 
-    this._halo.open();
+    this._halo._open();
+    this._echo._open();
 
-    this._initialized = true;
+    this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
   }
 
@@ -154,7 +159,8 @@ export class Client {
    */
   @synchronized
   async destroy () {
-    this._halo.close();
+    await this._echo._close();
+    this._halo._close();
 
     if (!this._initialized) {
       return;
@@ -172,7 +178,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this.echo.reset();
+    await this.services.SystemService.Reset();
     this._initialized = false;
   }
 
@@ -256,46 +262,6 @@ export class Client {
     }
 
     return party;
-  }
-
-  /**
-   * Creates an invitation to a given party.
-   * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.echo.joinParty` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param secretProvider supplies the pin code
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
-   */
-  async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createInvitation({
-      secretValidator: defaultSecretValidator,
-      secretProvider
-    },
-    options);
-  }
-
-  /**
-   * Function to create an Offline Invitation for a recipient to a given party.
-   * Offline Invitation, unlike regular invitation, does NOT require
-   * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
-   * The invitee (recipient) needs to be known ahead of time.
-   * Invitation it not valid for other users.
-   *
-   * To be used with `client.echo.joinParty` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param recipientKey the invitee (recipient for the invitation).
-   */
-  // TODO(burdon): Move to party.
-  async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createOfflineInvitation(recipientKey);
   }
 
   /**

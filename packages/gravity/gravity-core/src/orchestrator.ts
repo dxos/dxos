@@ -10,10 +10,9 @@ import kill from 'tree-kill';
 
 import { promiseTimeout } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/botkit-client-deprecated';
-import { Client } from '@dxos/client';
+import { Client, PartyProxy } from '@dxos/client';
 import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { Agent } from './agent';
@@ -48,7 +47,7 @@ export class Orchestrator {
   _builds = new Map();
   _client: Client;
   _localRun: boolean;
-  _party: Party;
+  _party: PartyProxy;
   _factoryClient: BotFactoryClient;
   _factory: any;
   _config: any;
@@ -194,7 +193,7 @@ export class Orchestrator {
       return verify(message, signature, keyToBuffer(this._factory.topic));
     };
 
-    const invitation = await this._party.createInvitation({ secretValidator });
+    const invitation = await this._client.echo.createInvitation(this._party.key, { secretValidator });
 
     await this._factoryClient.sendInvitationRequest(botId, this._party.key.toHex(), {}, invitation.toQueryParameters());
 

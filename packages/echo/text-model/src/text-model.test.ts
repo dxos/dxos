@@ -16,13 +16,13 @@ describe('TextModel', () => {
 
     item1.model.insert(0, 'Hello World!');
 
-    await item2.model.modelUpdate.waitForCount(1);
+    await item2.model.update.waitForCount(1);
     expect(item2.model.textContent).toBe('Hello World!');
 
     // TODO(burdon): Test delete.
     const words = item1.model.textContent.split(' ');
     item2.model.insert(words[0].length, ' DXOS');
-    await item1.model.modelUpdate.waitForCount(1);
+    await item1.model.update.waitForCount(1);
     expect(item1.model.textContent).toBe('Hello DXOS World!');
 
     // TODO(burdon): Errors. Race condition?
@@ -50,15 +50,15 @@ describe('TextModel', () => {
     const { items: [item1, item2], peers } = await createModelTestBench({ model: TextModel });
     after(async () => Promise.all(peers.map(peer => peer.close())));
 
-    // code item1.model.modelUpdate.on(() => console.log(`m1 ${item1.model.textContent}`));
-    // code item2.model.modelUpdate.on(() => console.log(`m2 ${item2.model.textContent}`));
+    // code item1.model.update.on(() => console.log(`m1 ${item1.model.textContent}`));
+    // code item2.model.update.on(() => console.log(`m2 ${item2.model.textContent}`));
 
     item1.model.insert(0, 'Hello');
-    await item2.model.modelUpdate.waitForCount(1);
+    await item2.model.update.waitForCount(1);
 
     const updatesPromise = Promise.all([
-      item1.model.modelUpdate.waitForCount(2),
-      item2.model.modelUpdate.waitForCount(2)
+      item1.model.update.waitForCount(2),
+      item2.model.update.waitForCount(2)
     ]);
 
     item1.model.insert(5, '!');

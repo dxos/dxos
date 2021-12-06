@@ -6,8 +6,7 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
-import { Client } from '@dxos/client';
-import { Party } from '@dxos/echo-db';
+import { Client, PartyProxy } from '@dxos/client';
 
 import { useProfile } from '../../src';
 import { JsonPanel } from './JsonPanel';
@@ -19,13 +18,9 @@ export const ClientPanel = ({
 }: {
   client: Client,
   profile?: Partial<ReturnType<typeof useProfile>>,
-  parties?: Party[]
+  parties?: PartyProxy[]
 }) => {
-  const data = (parties.length !== 0)
-    ? {
-        parties: parties.map(({ key }) => key.toHex())
-      }
-    : undefined;
+  const data = (parties.length !== 0) ? { parties: parties.map(({ key }) => key.toHex()) } : undefined;
 
   return (
     <Box>

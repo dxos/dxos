@@ -34,19 +34,17 @@ export const AppBar = () => {
 
   return (
     <MuiAppBar position='static' color='default'>
-    <Toolbar>
-      <img src='../dxos.png' alt='logo' className={classes.logo} />
-      <Typography variant='h6' className={classes.title}> Welcome to DXOS! </Typography>
-      {inFullScreenMode() || (
-        <Tooltip title='Expand to fullscreen' placement='left' arrow>
-          <IconButton onClick={onExpandToFullscreen}>
-            <FullscreenIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-    </Toolbar>
-  </MuiAppBar>
+      <Toolbar>
+        <img src='../dxos.png' alt='logo' className={classes.logo} />
+        <Typography variant='h6' className={classes.title}> Welcome to DXOS! </Typography>
+        {inFullScreenMode() || (
+          <Tooltip title='Expand to fullscreen' placement='left' arrow>
+            <IconButton onClick={onExpandToFullscreen}>
+              <FullscreenIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Toolbar>
+    </MuiAppBar>
   );
 };
-
-export default AppBar;

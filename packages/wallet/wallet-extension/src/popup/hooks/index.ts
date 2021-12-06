@@ -4,3 +4,4 @@
 
 export * from './useExtensionPort';
 export * from './useUIError';
+export * from './useSnackbar';

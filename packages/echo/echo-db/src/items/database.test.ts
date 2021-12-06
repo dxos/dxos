@@ -14,7 +14,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Database } from '..';
 import { DataServiceRouter } from './data-service-router';
-import { FeedDatabaseBackend, RemoteDatabaseBacked } from './database-backend';
+import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
 describe('Database', () => {
   describe('remote', () => {
@@ -38,7 +38,7 @@ describe('Database', () => {
 
       const frontend = new Database(
         modelFactory,
-        new RemoteDatabaseBacked(dataServiceRouter, partyKey)
+        new RemoteDatabaseBackend(dataServiceRouter, partyKey)
       );
       await frontend.init();
       afterTest(() => frontend.destroy());
@@ -61,7 +61,7 @@ describe('Database', () => {
 
       // Mutate model
       await Promise.all([
-        item!.model.modelUpdate.waitForCount(1),
+        item!.model.update.waitForCount(1),
         backendItem.model.setProperty('foo', 'bar')
       ]);
 
@@ -93,7 +93,7 @@ describe('Database', () => {
       expect(item.model.getProperty('foo')).toEqual('bar');
     });
 
-    test.skip('parent & child items', async () => {
+    test('parent & child items', async () => {
       const { frontend: database } = await setup();
 
       const parent = await database.createItem({ model: ObjectModel });
@@ -105,6 +105,18 @@ describe('Database', () => {
 
       expect(parent.children).toHaveLength(1);
       expect(parent.children[0] === child).toBeTruthy();
+    });
+
+    test('link', async () => {
+      const { frontend: database } = await setup();
+
+      const source = await database.createItem({ model: ObjectModel });
+      const target = await database.createItem({ model: ObjectModel });
+
+      const link = await database.createLink({ source, target });
+
+      expect(link.source).toBe(source);
+      expect(link.target).toBe(target);
     });
   });
 });
