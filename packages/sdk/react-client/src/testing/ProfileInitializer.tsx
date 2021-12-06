@@ -10,7 +10,7 @@ import { useClient, useProfile } from '../hooks';
  * Automatically creates a random DXOS profile.
  * @deprecated
  */
-// TODO(burdon): Testing-only (set as debug option for ClientProvider?)
+// TODO(burdon): Testing-only; replace with useTestProfile();
 export const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
