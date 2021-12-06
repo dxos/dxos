@@ -39,6 +39,8 @@ export type InitHandler = (protocol: Protocol) => Promise<void> | void;
 
 export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
 
+export type ConnectedHandler = (protocol: Protocol) => Promise<void> | void;
+
 export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
 
 export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
@@ -76,6 +78,11 @@ export class Extension extends Nanomessage {
    * Close handler.
    */
   private _closeHandler: CloseHandler | null = null;
+
+  /**
+   * Connected handler. Called when the extension is connected to the peer.
+   */
+  private _connectedHandler: ConnectedHandler | null = null;
 
   /**
    * Message handler.
@@ -129,6 +136,17 @@ export class Extension extends Nanomessage {
    */
   setHandshakeHandler (handshakeHandler: HandshakeHandler) {
     this._handshakeHandler = handshakeHandler;
+
+    return this;
+  }
+
+  /**
+   * Sets the connected handler.
+   * @param {Function<{protocol}>} connectedHandler - Async connected handler.
+   * @returns {Extension}
+   */
+  setConnectedHandler (connectedHandler: ConnectedHandler) {
+    this._connectedHandler = connectedHandler;
 
     return this;
   }
@@ -222,6 +240,16 @@ export class Extension extends Nanomessage {
       }
     } catch (err: any) {
       throw ERR_EXTENSION_HANDSHAKE_FAILED.from(err);
+    }
+  }
+
+  /**
+   * Connected event.
+   */
+  async onConnected () {
+    if (this._connectedHandler) {
+      assert(this._protocol);
+      await this._connectedHandler(this._protocol);
     }
   }
 
