@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "esbuild-server build",
+    "test": "exit 0",
     "build:test": "npm run build && npm run test",
-    "eject": "craco eject",
     "pack:app": "pnpm pack",
     "start": "esbuild-server dev",
     "test:playwright": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts' --timeout 30000"
