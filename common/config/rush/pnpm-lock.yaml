@@ -554,6 +554,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools-mesh': link:../devtools-mesh
       '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/proto': link:../../common/proto
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
@@ -561,6 +562,7 @@ importers:
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
+      '@mui/lab': 5.0.0-alpha.48_71572d761b264d60c5af9e5a6a4c3026
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       color-hash: 1.1.1
@@ -601,6 +603,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.4.1
       '@dxos/messenger-model': workspace:*
+      '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
@@ -613,6 +616,7 @@ importers:
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.0.1
+      '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
       '@mui/styles': ^5.0.1
       '@mui/system': ^5.0.1
