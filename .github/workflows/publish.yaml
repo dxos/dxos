@@ -44,6 +44,9 @@ jobs:
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
         npm install -g @microsoft/rush pnpm
 
+        git config --global user.email "ci@dxos.org"
+        git config --global user.name "ci"
+
         # Create a temporary bump of versions
         rush version --bump --override-bump prerelease --override-prerelease-id dev
 
