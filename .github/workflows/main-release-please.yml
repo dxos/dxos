@@ -11,7 +11,7 @@ jobs:
       - uses: dxos/release-please-action@v2.36.0
         id: release
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CREATE_PR_TOKEN }}
           release-type: rush
           package-name: '@dxos/protocols'
           bump-minor-on-breaking: true
