@@ -1,13 +1,13 @@
 {
   "name": "@dxos/tutorials-tasks-app",
-  "version": "2.19.0",
+  "version": "2.19.1",
   "private": true,
   "scripts": {
     "build": "esbuild-server build",
-    "test": "exit 0",
     "build:test": "npm run build && npm run test",
     "pack:app": "pnpm pack",
     "start": "esbuild-server dev",
+    "test": "exit 0",
     "test:playwright": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts' --timeout 30000"
   },
   "browserslist": {
