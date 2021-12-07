@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import { generateInvitation } from '@dxos/bot-factory-client';
 import { Client, PartyProxy } from '@dxos/client';
 import type { defs } from '@dxos/config';
-import { generateInvitation } from '@dxos/bot-factory-client';
 
 export interface ClientSetup {
   client: Client,

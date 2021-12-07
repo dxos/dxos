@@ -2,11 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, PartyProxy } from "@dxos/client";
-import { SecretProvider } from "@dxos/credentials";
-import { PublicKey } from "@dxos/crypto";
+import base from 'base-x';
 
-import { encodeInvitation } from "./utils";
+import { Client, PartyProxy } from '@dxos/client';
+import { SecretProvider } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
+import { InvitationDescriptor } from '@dxos/echo-db';
+
+// Encode with only alpha-numberic characters.
+const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+export const encodeInvitation = (invitation: InvitationDescriptor) => {
+  const buffer = Buffer.from(JSON.stringify(invitation.toQueryParameters()));
+  return base62.encode(buffer);
+};
 
 export const generateInvitation = async (client: Client, party: PartyProxy) => {
   const partySecretString = PublicKey.random().toString();
@@ -17,4 +26,4 @@ export const generateInvitation = async (client: Client, party: PartyProxy) => {
     invitationCode: encodeInvitation(invitation),
     secret: partySecretString
   };
-}
+};

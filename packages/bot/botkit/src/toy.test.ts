@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
@@ -87,7 +86,7 @@ describe('In-Memory', () => {
         client,
         party
       );
-  
+
       const command = PublicKey.random().asUint8Array();
       await botHandle.sendCommand(command);
 

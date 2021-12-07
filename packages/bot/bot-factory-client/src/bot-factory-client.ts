@@ -6,16 +6,14 @@ import assert from 'assert';
 
 import { promiseTimeout } from '@dxos/async';
 import type { PartyProxy, Client } from '@dxos/client';
-import type { SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
+import { generateInvitation } from './generate-invitation';
 import { schema } from './proto/gen';
 import { BotFactoryService, BotPackageSpecifier } from './proto/gen/dxos/bot';
-import { encodeInvitation } from './utils';
-import { generateInvitation } from './generate-invitation';
 
 export class BotHandle {
   constructor (
@@ -40,7 +38,7 @@ export class BotHandle {
       id: this._id
     });
   }
- 
+
   async sendCommand (command: Uint8Array) {
     const { response } = await this._rpc.rpc.SendCommand({
       botId: this._id,
