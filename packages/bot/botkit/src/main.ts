@@ -5,19 +5,21 @@
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { InProcessBotContainer } from './bot-container';
+import { NodeContainer } from './bot-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
-import { EchoBot, TEST_ECHO_TYPE } from './bots/echo-bot';
 
 const main = async () => {
-  const topic = PublicKey.fromHex('e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc');
-
-  const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
+  const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
   const botFactory = new BotFactory(botContainer);
 
+  const signal = process.env.DX_SIGNAL_ENDPOINT ?? 'ws://localhost:4000';
+  const ice = process.env.DX_ICE_ENDPOINTS;
+  const topicString = process.env.DX_BOT_TOPIC ?? 'e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc';
+  const topic = PublicKey.from(topicString);
   const networkManager = new NetworkManager({
-    signal: ['ws://localhost:4000']
+    signal: [signal],
+    ice: [ice]
   });
   const controller = new BotController(botFactory, networkManager);
   await controller.start(topic);
