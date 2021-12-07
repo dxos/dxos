@@ -1,5 +1,15 @@
 # Change Log
 
+### [2.19.1](https://www.github.com/dxos/protocols/compare/v2.19.0...v2.19.1) (2021-12-07)
+
+
+### Bug Fixes
+
+* Plugin RPC two clients test ([#721](https://www.github.com/dxos/protocols/issues/721)) ([8eb4a7b](https://www.github.com/dxos/protocols/commit/8eb4a7b736ad87f42bb38a6705b0278499ad4fdb))
+* Protocol plugin RPC use setHandshakeHandler ([#733](https://www.github.com/dxos/protocols/issues/733)) ([186ce80](https://www.github.com/dxos/protocols/commit/186ce801b5514d2130e2975738240abe2793815c))
+* Restore Tasks app ([#729](https://www.github.com/dxos/protocols/issues/729)) ([ce459e5](https://www.github.com/dxos/protocols/commit/ce459e50610f2a5ef6d652b11157e8c8507166e8))
+* Use esbuild in tasks app ([#730](https://www.github.com/dxos/protocols/issues/730)) ([caf7e17](https://www.github.com/dxos/protocols/commit/caf7e17cfbadc3d93d5e4d4524fbae5c80d06a84))
+
 ## [2.19.0](https://www.github.com/dxos/protocols/compare/v2.18.3...v2.19.0) (2021-12-05)
 
 
