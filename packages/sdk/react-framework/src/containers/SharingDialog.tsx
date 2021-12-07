@@ -89,7 +89,7 @@ const PendingInvitationView = ({
       )}
 
       {pin && (
-        <> 
+        <>
           <IconButton size='small' title='Copy passcode.'>
             <CopyToClipboard text={pin} />
           </IconButton>
