@@ -38,10 +38,12 @@ export class BotFactoryClient {
 }
 
 export const createBotFactoryClient = async (networkManager: NetworkManager, topic: PublicKey) => {
-  const clientPromise = new Promise((resolve) => {
+  const peerId = PublicKey.random();
+
+  const clientPromise = new Promise<BotFactoryClient>((resolve) => {
     networkManager.joinProtocolSwarm({
       topic,
-      peerId: topic,
+      peerId,
       topology: new StarTopology(topic),
       protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
         const controller = new BotFactoryClient(port);
@@ -53,5 +55,5 @@ export const createBotFactoryClient = async (networkManager: NetworkManager, top
 
   const client = await promiseTimeout(clientPromise, 10000, 'Timeout on connecting to bot factory');
 
-  return client;
+  return client as BotFactoryClient;
 }

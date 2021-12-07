@@ -17,7 +17,9 @@
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocol-plugin-rpc": "workspace:*"
+    "@dxos/protocol-plugin-rpc": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
