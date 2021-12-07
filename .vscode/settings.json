@@ -10,7 +10,8 @@
   ],
   "files.associations": {
     "rush.json": "jsonc",
-    "command-line.json": "jsonc"
+    "command-line.json": "jsonc",
+    "version-policies.json": "jsonc",
   },
   "search.followSymlinks": false,
   "editor.tabSize": 2,
