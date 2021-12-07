@@ -19,13 +19,17 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/crypto": "workspace:*"
+    "@dxos/crypto": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "base-x": "~3.0.9"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "@dxos/client": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

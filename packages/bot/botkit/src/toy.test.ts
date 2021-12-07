@@ -5,7 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { createBotFactoryClient } from '@dxos/bot-factory-client';
+import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -35,7 +35,8 @@ describe('In-Memory', () => {
       const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic);
+      const botFactoryClient = new BotFactoryClient(nm2);
+      await botFactoryClient.start(topic);
 
       const { id: botId } = await botFactoryClient.botFactory.SpawnBot({});
       expect(botId).toBeDefined();
@@ -68,7 +69,7 @@ describe('In-Memory', () => {
     });
 
     it('Spawns a bot with a client', async () => {
-      const { party, invitation, secret } = clientSetup;
+      const { client, party } = clientSetup;
 
       const nm1 = new NetworkManager();
       const nm2 = new NetworkManager();
@@ -78,21 +79,17 @@ describe('In-Memory', () => {
       const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic);
+      const botFactoryClient = new BotFactoryClient(nm2);
+      await botFactoryClient.start(topic);
 
-      const { id } = await botFactoryClient.botFactory.SpawnBot({
-        invitation: {
-          invitationCode: invitation,
-          secret
-        }
-      });
-      assert(id);
-
-      const text = PublicKey.random().asUint8Array();
-      await botFactoryClient.botFactory.SendCommand({
-        botId: id,
-        command: text
-      });
+      const botHandle = await botFactoryClient.spawn(
+        {},
+        client,
+        party
+      );
+  
+      const command = PublicKey.random().asUint8Array();
+      await botHandle.sendCommand(command);
 
       await party.database.waitForItem({
         type: TEST_ECHO_TYPE
@@ -100,7 +97,7 @@ describe('In-Memory', () => {
 
       const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
-      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
+      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
@@ -130,7 +127,7 @@ describe('Node', () => {
     });
 
     it('Spawns an echo-bot', async () => {
-      const { party, invitation, secret } = clientSetup;
+      const { client, party } = clientSetup;
       const { config } = brokerSetup;
 
       const nm1 = new NetworkManager();
@@ -141,28 +138,23 @@ describe('Node', () => {
       const botFactory = new BotFactory(botContainer, config);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic);
+      const botFactoryClient = new BotFactoryClient(nm2);
+      await botFactoryClient.start(topic);
 
-      const { id } = await botFactoryClient.botFactory.SpawnBot({
-        package: {
+      const botHandle = await botFactoryClient.spawn(
+        {
           localPath: require.resolve('./bots/start-echo-bot')
         },
-        invitation: {
-          invitationCode: invitation,
-          secret
-        }
-      });
-      assert(id);
+        client,
+        party
+      );
 
-      const text = PublicKey.random().asUint8Array();
-      await botFactoryClient.botFactory.SendCommand({
-        botId: id,
-        command: text
-      });
+      const command = PublicKey.random().asUint8Array();
+      await botHandle.sendCommand(command);
 
       const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
-      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
+      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();

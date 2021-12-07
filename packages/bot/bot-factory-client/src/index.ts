@@ -3,3 +3,4 @@
 //
 
 export * from './bot-factory-client';
+export * from './generate-invitation';

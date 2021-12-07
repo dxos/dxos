@@ -5,20 +5,27 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/rpc': link:../../common/rpc
+      base-x: 3.0.9
     devDependencies:
+      '@dxos/client': link:../../sdk/client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       expect: 27.0.2
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/proto': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -26,6 +33,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      base-x: ~3.0.9
       expect: ~27.0.2
   ../../packages/bot/botkit:
     dependencies:

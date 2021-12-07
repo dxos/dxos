@@ -7,7 +7,7 @@ import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
 
-import { createBotFactoryClient } from '@dxos/bot-factory-client';
+import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { createId, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -51,7 +51,7 @@ describe('Build bot', () => {
     });
 
     const { broker, config } = await setupBroker();
-    const { client, party, invitation, secret } = await setupClient(config);
+    const { client, party } = await setupClient(config);
 
     const nm1 = new NetworkManager();
     const nm2 = new NetworkManager();
@@ -61,24 +61,17 @@ describe('Build bot', () => {
     const botFactory = new BotFactory(botContainer, config);
     const botController = new BotController(botFactory, nm1);
     await botController.start(topic);
-    const botFactoryClient = await createBotFactoryClient(nm2, topic);
+    const botFactoryClient = new BotFactoryClient(nm2);
+    await botFactoryClient.start(topic);
 
-    const { id } = await botFactoryClient.botFactory.SpawnBot({
-      package: {
-        localPath: outfile
-      },
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
-    });
-    assert(id);
+    const botHandle = await botFactoryClient.spawn(
+      { localPath: outfile },
+      client,
+      party
+    );
 
     const command = PublicKey.random().asUint8Array();
-    await botFactoryClient.botFactory.SendCommand({
-      botId: id,
-      command
-    });
+    await botHandle.sendCommand(command);
 
     const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
     const payload = item.model.getProperty('payload');

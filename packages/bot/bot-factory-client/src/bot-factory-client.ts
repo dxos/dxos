@@ -2,19 +2,78 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { promiseTimeout } from '@dxos/async';
+import type { PartyProxy, Client } from '@dxos/client';
+import type { SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { schema } from './proto/gen';
-import { BotFactoryService } from './proto/gen/dxos/bot';
+import { BotFactoryService, BotPackageSpecifier } from './proto/gen/dxos/bot';
+import { encodeInvitation } from './utils';
+import { generateInvitation } from './generate-invitation';
+
+export class BotHandle {
+  constructor (
+    private readonly _id: string,
+    private _rpc: ProtoRpcClient<BotFactoryService>
+  ) {}
+
+  async start () {
+    await this._rpc.rpc.Start({
+      id: this._id
+    });
+  }
+
+  async stop () {
+    await this._rpc.rpc.Stop({
+      id: this._id
+    });
+  }
+
+  async remove () {
+    await this._rpc.rpc.Remove({
+      id: this._id
+    });
+  }
+ 
+  async sendCommand (command: Uint8Array) {
+    const { response } = await this._rpc.rpc.SendCommand({
+      botId: this._id,
+      command
+    });
+    return response;
+  }
+}
 
 export class BotFactoryClient {
-  private readonly _rpc: ProtoRpcClient<BotFactoryService>;
+  private _rpc: ProtoRpcClient<BotFactoryService> | undefined;
 
-  constructor (port: RpcPort) {
+  constructor (private readonly _networkManager: NetworkManager) {}
+
+  get botFactory (): BotFactoryService {
+    assert(this._rpc, 'Bot factory client is not started');
+    return this._rpc.rpc;
+  }
+
+  async start (topic: PublicKey): Promise<void> {
+    const peerId = PublicKey.random();
+    const portPromise = new Promise<RpcPort>((resolve) => {
+      this._networkManager.joinProtocolSwarm({
+        topic,
+        peerId,
+        topology: new StarTopology(topic),
+        protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
+          resolve(port);
+        })])
+      });
+    });
+    // TODO(yivlad): convert promiseTimeout to typescript.
+    const port = (await promiseTimeout(portPromise, 10000, 'Timeout on connecting to bot factory')) as RpcPort;
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotFactoryService'),
       {
@@ -22,39 +81,22 @@ export class BotFactoryClient {
         timeout: 60000
       }
     );
-  }
-
-  get botFactory (): BotFactoryService {
-    return this._rpc.rpc;
-  }
-
-  async start (): Promise<void> {
     await this._rpc.open();
   }
 
   stop () {
-    this._rpc.close();
+    this._rpc?.close();
+  }
+
+  async spawn (pkg: BotPackageSpecifier, client: Client, party: PartyProxy) {
+    assert(this._rpc, 'Bot factory client is not started');
+    const invitation = await generateInvitation(client, party);
+    const { id } = await this._rpc.rpc.SpawnBot({
+      package: pkg,
+      invitation
+    });
+    assert(id);
+    const handle = new BotHandle(id, this._rpc);
+    return handle;
   }
 }
-
-export const createBotFactoryClient = async (networkManager: NetworkManager, topic: PublicKey) => {
-  const peerId = PublicKey.random();
-
-  const clientPromise = new Promise<BotFactoryClient>((resolve) => {
-    networkManager.joinProtocolSwarm({
-      topic,
-      peerId,
-      topology: new StarTopology(topic),
-      protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
-        const controller = new BotFactoryClient(port);
-        await controller.start();
-        resolve(controller);
-      })])
-    });
-  });
-
-  const client = (await promiseTimeout(clientPromise, 10000, 'Timeout on connecting to bot factory')) as BotFactoryClient;
-  await client.start();
-
-  return client;
-};
