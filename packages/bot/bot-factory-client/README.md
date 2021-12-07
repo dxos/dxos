@@ -1,3 +1,3 @@
-# @dxos/botkit
+# @dxos/bot-factory-client
 
-Bot factory implementation.
+Bot factory client implementation.
