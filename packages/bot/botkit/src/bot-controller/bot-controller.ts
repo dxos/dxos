@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
@@ -9,7 +10,6 @@ import { createRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
 import { BotFactoryService } from '../proto/gen/dxos/bot';
-import { ServiceDescriptor } from '@dxos/codec-protobuf';
 
 /**
  * Exposes BotFactoryService for external agents.

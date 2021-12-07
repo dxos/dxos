@@ -53,7 +53,8 @@ export const createBotFactoryClient = async (networkManager: NetworkManager, top
     })
   })
 
-  const client = await promiseTimeout(clientPromise, 10000, 'Timeout on connecting to bot factory');
+  const client = (await promiseTimeout(clientPromise, 10000, 'Timeout on connecting to bot factory')) as BotFactoryClient;
+  await client.start();
 
-  return client as BotFactoryClient;
+  return client;
 }

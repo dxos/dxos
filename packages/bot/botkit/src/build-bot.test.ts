@@ -60,12 +60,8 @@ describe('Build bot', () => {
     const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
     const botFactory = new BotFactory(botContainer, config);
     const botController = new BotController(botFactory, nm1);
+    await botController.start(topic);
     const botFactoryClient = await createBotFactoryClient(nm2, topic);
-
-    await Promise.all([
-      botController.start(topic),
-      botFactoryClient.start()
-    ]);
 
     const { id } = await botFactoryClient.botFactory.SpawnBot({
       package: {

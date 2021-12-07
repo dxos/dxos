@@ -34,12 +34,8 @@ describe('In-Memory', () => {
       const botContainer = new InProcessBotContainer(() => new TestBot());
       const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic); 
-
-      await Promise.all([
-        botController.start(topic),
-        botFactoryClient.start()
-      ]);
+      await botController.start(topic);
+      const botFactoryClient = await createBotFactoryClient(nm2, topic);
 
       const { id: botId } = await botFactoryClient.botFactory.SpawnBot({});
       expect(botId).toBeDefined();
@@ -81,12 +77,8 @@ describe('In-Memory', () => {
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
       const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic); 
-
-      await Promise.all([
-        botController.start(topic),
-        botFactoryClient.start()
-      ]);
+      await botController.start(topic);
+      const botFactoryClient = await createBotFactoryClient(nm2, topic);
 
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         invitation: {
@@ -148,12 +140,8 @@ describe('Node', () => {
       const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
       const botFactory = new BotFactory(botContainer, config);
       const botController = new BotController(botFactory, nm1);
-      const botFactoryClient = await createBotFactoryClient(nm2, topic); 
-
-      await Promise.all([
-        botController.start(topic),
-        botFactoryClient.start()
-      ]);
+      await botController.start(topic);
+      const botFactoryClient = await createBotFactoryClient(nm2, topic);
 
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         package: {
