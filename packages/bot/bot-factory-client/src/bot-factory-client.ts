@@ -50,11 +50,11 @@ export const createBotFactoryClient = async (networkManager: NetworkManager, top
         await controller.start();
         resolve(controller);
       })])
-    })
-  })
+    });
+  });
 
   const client = (await promiseTimeout(clientPromise, 10000, 'Timeout on connecting to bot factory')) as BotFactoryClient;
   await client.start();
 
   return client;
-}
+};
