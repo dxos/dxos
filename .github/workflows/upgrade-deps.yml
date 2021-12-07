@@ -37,5 +37,5 @@ jobs:
           COMMIT_NAME: 'GitHub Actions'
           COMMIT_EMAIL: 'ci@dxos.org'
           PR_BRANCH_NAME: 'upgrade-deps-${PR_ID}'
-          PR_TITLE: 'Automatic: Upgrade DXOS dependencies'
+          PR_TITLE: 'chore: Upgrade DXOS dependencies'
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}

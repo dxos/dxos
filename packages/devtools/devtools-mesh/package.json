@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-mesh",
-  "version": "2.19.0",
+  "version": "2.19.1",
   "private": true,
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -30,9 +30,9 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-router": "~5.1.16",

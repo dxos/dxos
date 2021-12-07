@@ -34,8 +34,9 @@ Devtools browser extension.
     1. Client API sends "ready" message.
 1. Devtools pannel is ready.
 
-
 ## Development
+
+### General
 
 1. Clone this repo then install dependencies and build:
 
@@ -53,16 +54,25 @@ rushx build
 
 TODO(burdon): `build:watch` not configured.
 
+### Chrome
+
 4. Open the __extensions__ manager in your browser: 
 
 - [brave://extensions](brave://extensions)
 - [chrome://extensions](chrome://extensions)
-- Firefox (Not Supported Yet)
 - Edge (Not Supported Yet)
 - Safari (Not Supported Yet)
 
 5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
 6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
+
+### Firefox
+
+4. Run `rushx pack:webext`.
+5. Navigate to [This Firefox](about:debugging#/runtime/this-firefox) tab of the `about:debugging` page.
+6. Click `Load Temporary Add-on...` and select the zip file in `web-ext-artifacts`.
+
+An alternative method is to run `rushx start:firefox` which will run a temporary firefox instance with the extension installed. Running this way allows for integration with watch tools and reloading the extension by pressing `r` in the terminal.
 
 ## Troubleshooting
 

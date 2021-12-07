@@ -32,13 +32,28 @@ jobs:
 
         # Build with tests
         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
-    - name: Publish
+    - name: Publish latest to NPM
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
         npm install -g @microsoft/rush pnpm
 
-        # Publish
+        # Publish under "latest" tag
         node common/scripts/install-run-rush.js publish --publish --include-all --tag latest
+    - name: Publish dev to NPM
+      run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g @microsoft/rush pnpm
+
+        # Create a temporary bump of versions
+        rush version --bump --override-bump prerelease --override-prerelease-id dev
+
+        # Include a commit hash in the version
+        SUBST="s/dev.0/dev.$(git rev-parse --short HEAD)/g"  
+        sed -i '' $SUBST './common/config/rush/version-policies.json'
+        rush version --ensure-version-policy
+
+        # Publish under "dev" tag
+        node common/scripts/install-run-rush.js publish --publish --include-all --tag dev
   publish-apps:
     runs-on: [self-hosted, dind-actions-runner]
     env:
