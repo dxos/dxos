@@ -7,8 +7,9 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
+import { MaybePromise } from '@dxos/util';
 
-type OnConnect = (port: RpcPort, peerId: string) => (Promise<() => Promise<void> | void>) | void
+type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>;
 
 interface SerializedObject {
   data: Buffer

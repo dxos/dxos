@@ -16,7 +16,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/protocol": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
