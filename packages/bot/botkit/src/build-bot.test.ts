@@ -20,11 +20,11 @@ import { setupBroker, setupClient } from './testutils';
 describe('Build bot', () => {
   let outfile: string;
   const botPath = './bots/start-echo-bot.ts';
-  const outdir = path.join(require.resolve('.'), '..', '..', 'out');
+  const outdir = path.join(require.resolve('.'), '..', '..', 'out/bots');
 
   before(() => {
     if (!fs.existsSync(outdir)) {
-      fs.mkdirSync(outdir);
+      fs.mkdirSync(outdir, { recursive: true });
     }
   });
 
