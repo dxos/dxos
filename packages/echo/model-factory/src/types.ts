@@ -14,24 +14,25 @@ import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 export type ModelType = string;
 
 export type ModelMeta = {
-  type: ModelType,
+  type: ModelType
 
+  // TODO(burdon): Rename.
   // TODO(marik-d): Specify generic type param here to match model's expected message type.
   mutation: Codec<any>
+
+  snapshotCodec?: Codec<any>
 
   /**
    * A way to initialize the model upon item creation.
    *
    * Must return a mutation that will initialize the model.
-   * This mutation will be applied in the same processing cycle as the item creation.
+   * This mutation will be applied in the same processing step as the item creation.
    *
    * @param props User-defined props required for initialization. Forwarded from `database.createItem` call.
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
-  // TODO(burdon): Remove from meta.
+  // TODO(burdon): Remove from meta? Make generic.
   getInitMutation? (props: any): Promise<any | null>
-
-  snapshotCodec?: Codec<any>
 }
 
 export type ModelConstructor<T> = (new (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<any>) => T) &

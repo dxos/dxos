@@ -14,89 +14,6 @@ export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
 }
 
-// TODO(burdon): CLean-up:
-//   ModelMeta / registration (client.register and DXNS queries).
-//   Simplify API + remove inheritance?
-//   How to query/filter for items by type (of what?) Disambiguate item/model type from message type. Frames?
-//   Minimal test (how to write models).
-
-/*
-// TODO(burdon): Reset? rollback?
-interface StateMachine<T, S, M> {
-  messageType: string // DXN for M.
-  state: () => T
-  toSnapshot: () => Promise<S>
-  fromSnaphot: (data: S) => Promise<void>
-  processMessage: (message: M) => Promise<void> // From Item stream.
-}
-
-interface Result<T> {
-  optimistic: T | undefined
-  ready: Promise<T> // Resolved once mutations have been processed.
-}
-
-// TODO(burdon): Example.
-
-interface ChessState {
-  players: {
-    white: PublicKey
-    black: PublicKey
-  }
-  fen: string
-}
-
-package arena.chess;
-message ChessMessage
-{
-  oneof kind {
-    ChessGame
-    ChessMove
-  }
-
-  ChessGame {
-    PubKey whiteKey = 1
-    PubKey blackKey = 2
-  }
-
-  ChessMove {
-    enum Piece {
-      QUEEN = 1
-    }
-
-    from: string = 1
-    to: string = 2
-    promotion: Piece
-  }
-}
-
-class ChessStateMachinelImpl implements StateMachine<ChessState> {
-  constructor (
-    private readonly writer: Writer<ChessMessage>,
-    private readonly
-  ) {}
-}
-
-// TODO(burdon): Distinguished from state machine.
-// TODO(burdon): This requires a writablestream but isn't required by the pipeline.
-interface ChessModel {
-  state: ChessState
-  setPlayers: (white: PublicKey, black: PublicKey) => Result<ChessState>
-  applyMove: (move: any) => Result<ChessState>
-}
-
-class ChessModelImpl  {
-  constructor (
-    private readonly _stateMachine: StateMachine<ChessState>
-  ) {}
-
-  get state () {
-    return _stateMachine.state;
-  }
-}
-
-const test = (Item<ChessModel>) => item.model.state.fen;
-*/
-
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
@@ -188,7 +105,7 @@ export abstract class Model<T = any> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async restoreFromSnapshot (snapshot: any): Promise<void> {
-    throw new Error('This model does not support snapshots');
+    throw new Error('Snapshots not supported.');
   }
 
   // TODO(burdon): Update public, private, protected.
@@ -219,8 +136,6 @@ export abstract class Model<T = any> {
   /**
    * Process the message.
    * @abstract
-   * @param {Object} meta
-   * @param {Object} message
    */
   protected abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
 }
