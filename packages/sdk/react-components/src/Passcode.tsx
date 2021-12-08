@@ -203,7 +203,7 @@ export const Passcode = ({
                 justifyContent: 'center',
                 color: focused ? theme.palette.text.primary : theme.palette.text.disabled,
                 border: () => focused ? `1px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
-                cursor: 'pointer',
+                cursor: disabled ? 'default' : 'pointer',
                 ...styles
               }}
             >
