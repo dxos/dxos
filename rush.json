@@ -789,6 +789,10 @@
       "projectFolder": "packages/tutorials/getting-started"
     },
     {
+      "packageName": "@dxos/react-console",
+      "projectFolder": "packages/tutorials/react-console"
+    },
+    {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/tutorials/tutorials-tasks-app"
     },

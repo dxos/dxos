@@ -2295,6 +2295,38 @@ importers:
       debug: ^4.3.3
       expect: ~27.0.2
       typescript: ^4.5.2
+  ../../packages/tutorials/react-console:
+    dependencies:
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.4.1
+      '@dxos/util': link:../../common/util
+      '@types/debug': 4.1.7
+      assert: 2.0.0
+      debug: 4.3.3
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@mui/material': 5.0.1_@types+react@17.0.24
+      '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
+      '@types/react': 17.0.24
+      '@types/react-dom': 17.0.9
+      expect: 27.0.2
+      typescript: 4.5.2
+    specifiers:
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.4.1
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@mui/material': ^5.0.1
+      '@types/debug': ^4.1.7
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      assert: ^2.0.0
+      debug: ^4.3.3
+      expect: ~27.0.2
+      typescript: ^4.5.2
   ../../packages/tutorials/tutorials-tasks-app:
     dependencies:
       '@dxos/client': link:../../sdk/client
@@ -5729,6 +5761,27 @@ packages:
         optional: true
     resolution:
       integrity: sha512-H/QQwKsr2EqPAnP35DGDpWihk5BOFYGhO52rIHb3XKOfoUjDCrCHBy2kvr3dLWJDmJXr/QzYj3AX10n5XzlaMg==
+  /@mui/core/5.0.0-alpha.48_@types+react@17.0.24:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@emotion/is-prop-valid': 1.1.0
+      '@mui/utils': 5.1.0
+      '@types/react': 17.0.24
+      clsx: 1.1.1
+      prop-types: 15.7.2
+      react-is: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-H/QQwKsr2EqPAnP35DGDpWihk5BOFYGhO52rIHb3XKOfoUjDCrCHBy2kvr3dLWJDmJXr/QzYj3AX10n5XzlaMg==
   /@mui/icons-material/5.0.1_4708d87537568924a83ffdea00ac702d:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -5910,6 +5963,40 @@ packages:
         optional: true
     resolution:
       integrity: sha512-+/JJzRcORUf5MiZnzuqsPFRgxm3/0CUi1wE97ZQ2y7r+EnDVsjJLcjAH9Q9GY3k9zkPIpYb9Hig/+HT6AGZRnQ==
+  /@mui/material/5.0.1_@types+react@17.0.24:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@mui/core': 5.0.0-alpha.48_@types+react@17.0.24
+      '@mui/system': 5.0.1_@types+react@17.0.24
+      '@mui/types': 7.0.0_@types+react@17.0.24
+      '@mui/utils': 5.1.0
+      '@popperjs/core': 2.9.2
+      '@types/react': 17.0.24
+      '@types/react-transition-group': 4.4.3
+      clsx: 1.1.1
+      csstype: 3.0.9
+      hoist-non-react-statics: 3.3.2
+      prop-types: 15.7.2
+      react-is: 17.0.2
+      react-transition-group: 4.4.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-+/JJzRcORUf5MiZnzuqsPFRgxm3/0CUi1wE97ZQ2y7r+EnDVsjJLcjAH9Q9GY3k9zkPIpYb9Hig/+HT6AGZRnQ==
   /@mui/private-theming/5.0.1_9b26932173ac5a93c18fc8634be19f05:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -5927,6 +6014,42 @@ packages:
         optional: true
     resolution:
       integrity: sha512-R8Cf2+32cG1OXFAqTighA5Mx9R5BQ57cN1ZVaNgfgdbI87Yig2fVMdFSPrw3txcjKlnwsvFJF8AdwQMqq1tJ3Q==
+  /@mui/private-theming/5.0.1_@types+react@17.0.24:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@mui/utils': 5.1.0
+      '@types/react': 17.0.24
+      prop-types: 15.7.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-R8Cf2+32cG1OXFAqTighA5Mx9R5BQ57cN1ZVaNgfgdbI87Yig2fVMdFSPrw3txcjKlnwsvFJF8AdwQMqq1tJ3Q==
+  /@mui/styled-engine/5.0.1:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@emotion/cache': 11.4.0
+      prop-types: 15.7.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      react: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+    resolution:
+      integrity: sha512-j40nCbaKr1HAZYqpX61XvZYsadYskjo3u6+pRFFaewSViAkkD1rjjbubpnh15nqVfYmijtHMZJ9/l1x1hamvfQ==
   /@mui/styled-engine/5.0.1_2305e84770652125202aaa4817ae97a9:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -6027,6 +6150,34 @@ packages:
         optional: true
     resolution:
       integrity: sha512-pGNKUpjK5hm4apZAUZu7LugemBPoZnNvNNCI2miI/BXxqyx41mL9+iT9p6Qe9uDOh8Z6GUbLIzvOjSTP+ECRZw==
+  /@mui/system/5.0.1_@types+react@17.0.24:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@mui/private-theming': 5.0.1_@types+react@17.0.24
+      '@mui/styled-engine': 5.0.1
+      '@mui/types': 7.0.0_@types+react@17.0.24
+      '@mui/utils': 5.1.0
+      '@types/react': 17.0.24
+      clsx: 1.1.1
+      csstype: 3.0.9
+      prop-types: 15.7.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-pGNKUpjK5hm4apZAUZu7LugemBPoZnNvNNCI2miI/BXxqyx41mL9+iT9p6Qe9uDOh8Z6GUbLIzvOjSTP+ECRZw==
   /@mui/system/5.0.1_b0225674030c82891a5af23896d2c054:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -6067,6 +6218,20 @@ packages:
         optional: true
     resolution:
       integrity: sha512-M/tkF2pZ4uoPhZ8pnNhlVnOFtz6F3dnYKIsnj8MuXKT6d26IE2u0UjA8B0275ggN74dR9rlHG5xJt5jgDx/Ung==
+  /@mui/utils/5.1.0:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@types/prop-types': 15.7.4
+      '@types/react-is': 17.0.2
+      prop-types: 15.7.2
+      react-is: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      react: ^17.0.2
+    resolution:
+      integrity: sha512-TbAa3DZBGE6xjrVsQ6e0Iw0jwgGZqPg/48aZJJWXJJjU8NU5OhBRutYhrk/kbdDRmsIArHNdpJayBSi7yETYvg==
   /@mui/utils/5.1.0_react@17.0.2:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -20765,6 +20930,18 @@ packages:
       react: ^16.8.0 || ^17.0.0
     resolution:
       integrity: sha512-JrMWVgQSaExQByP3ggI1eA8zF4mF0+ddVuX7acUeK2V7bmrpjVOY72vmLz2IXFJSAXoY3D80nEzrn0GWajWK3Q==
+  /react-transition-group/4.4.2:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.7.2
+    dev: true
+    peerDependencies:
+      react: '>=16.6.0'
+      react-dom: '>=16.6.0'
+    resolution:
+      integrity: sha512-/RNYfRAMlZwDSr6z4zNKV6xu53/e2BuaBbGhbyYIXTrmgu/bGHzmqOs7mJSJBHy9Ud+ApHx3QjrkKSp1pxvlFg==
   /react-transition-group/4.4.2_react-dom@16.14.0+react@16.14.0:
     dependencies:
       '@babel/runtime': 7.16.0

@@ -1,0 +1,46 @@
+{
+  "name": "@dxos/react-console",
+  "version": "2.19.1",
+  "private": true,
+  "description": "Simple API Demo",
+  "keywords": [],
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "scripts": {
+    "book": "esbuild-server book",
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint"
+  },
+  "dependencies": {
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/util": "workspace:*",
+    "@types/debug": "^4.1.7",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@mui/material": "^5.0.1",
+    "@types/debug": "^4.1.7",
+    "@types/mocha": "~8.2.2",
+    "@types/node": "^14.0.9",
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
+    "expect": "~27.0.2",
+    "typescript": "^4.5.2"
+  },
+  "peerDependencies": {
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@mui/material": ">=5.0.0",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "toolchain": {
+    "testingFramework": "mocha",
+    "jsdom": true,
+    "forceCloseTests": true
+  }
+}
