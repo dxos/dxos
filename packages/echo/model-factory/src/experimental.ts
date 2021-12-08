@@ -136,9 +136,11 @@ class TestModel extends AbstractModel<TestState, TestMutation> {
     return super.state;
   }
 
+  // TODO(burdon): Async?
   async inc () {
     return super.writeMutation({ increment: 1 });
   }
 }
 
+// TODO(burdon): Create adapter to enable new Model to be used.
 // const item: Item<TestModel> = undefined;
