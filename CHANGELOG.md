@@ -1,5 +1,18 @@
 # Change Log
 
+### [2.19.2](https://www.github.com/dxos/protocols/compare/v2.19.1...v2.19.2) (2021-12-08)
+
+
+### Features
+
+* Bot factory run with env variables ([#741](https://www.github.com/dxos/protocols/issues/741)) ([fdfdb77](https://www.github.com/dxos/protocols/commit/fdfdb775fa6d7a239d244737511d8e1753fc6599))
+* Running bot factory & inviting a bot from an app ([#734](https://www.github.com/dxos/protocols/issues/734)) ([fe19cff](https://www.github.com/dxos/protocols/commit/fe19cff4e69f77cfa7ff78c57b3d3964781f7566))
+
+
+### Bug Fixes
+
+* Improve sharing dialog flow ([#742](https://www.github.com/dxos/protocols/issues/742)) ([b320055](https://www.github.com/dxos/protocols/commit/b3200558e37f39452869e6188f1fb7ec3add2b45))
+
 ### [2.19.1](https://www.github.com/dxos/protocols/compare/v2.19.0...v2.19.1) (2021-12-07)
 
 
