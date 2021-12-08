@@ -16,8 +16,8 @@ interface ItemGenesis {
 }
 
 // TODO(burdon): Adapted from braneframe ExperimentalChessModel.stories.tsx
-// TODO(burdon): Separate aspects to isolate stateful and stateless (pure) methods.
-// TODO(burdon): Create interface for legacy Model and start to factor out aspects.
+// TODO(burdon): Standardize variables/functions on "mutation" not "message".
+// TODO(burdon): Create interfaces for legacy Model and start to factor out aspects using an adapter.
 
 /**
  * Provides an immutable state reference.
@@ -34,9 +34,10 @@ export interface StateProvider<STATE> {
  * TODO(burdon): Ref https://stackoverflow.com/questions/4929243/clarifying-terminology-what-does-hydrating-a-jpa-or-hibernate-entity-mean-wh
  */
 export interface StateMachine<STATE, MUTATION, SNAPSHOT> extends StateProvider<STATE> {
-  processMutation: (mutation: MUTATION, meta: MutationMeta) => boolean
-  fromSnapshot: (snapshot: SNAPSHOT) => void
-  toSnapshot: () => SNAPSHOT
+  reset: () => void
+  processMutation: (mutation: MUTATION, feedMeta: MutationMeta) => boolean
+  fromSnapshot?: (snapshot: SNAPSHOT) => void
+  toSnapshot?: () => SNAPSHOT
 }
 
 /**
@@ -57,6 +58,7 @@ export abstract class AbstractModel<STATE, MUTATION> implements ExperimentalMode
     private readonly _writeStream?: FeedWriter<MUTATION>
   ) {}
 
+  // TODO(burdon): Standardize (vs. isReadOnly methods in database).
   get readonly () {
     return !!this._writeStream;
   }
@@ -97,13 +99,17 @@ class ModelRegistry implements IModelRegistry {
   createModel (itemGenesis: ItemGenesis): ExperimentalModel<any, any> {
     const { modelType } = itemGenesis;
     const spec = this._specs.get(modelType)!;
+
+    // TODO(burdon): Wire-up inbound stream.
     const stateMachine = spec.stateMachineFactory();
+
+    // TODO(burdon): Wire-up outbound stream.
     return spec.modelFactory(stateMachine);
   }
 }
 
 //
-// TODO(burdon): Create more realistic tests.
+// TODO(burdon): Create tests.
 //
 
 type TestState = { value: number }
@@ -117,7 +123,12 @@ class TestStateMachine implements StateMachine<TestState, TestMutation, TestSnap
     return this.state;
   }
 
-  processMutation (mutation: TestMutation, meta: MutationMeta) {
+  reset () {
+    this.state.value = 0;
+  }
+
+  // TODO(burdon): Document why meta is required.
+  processMutation (mutation: TestMutation, feedMeta: MutationMeta) {
     this.state.value += mutation.increment;
     return true;
   }
@@ -136,7 +147,7 @@ class TestModel extends AbstractModel<TestState, TestMutation> {
     return super.state;
   }
 
-  // TODO(burdon): Async?
+  // TODO(burdon): Async optimistic result?
   async inc () {
     return super.writeMutation({ increment: 1 });
   }

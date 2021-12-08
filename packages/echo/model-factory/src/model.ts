@@ -56,13 +56,22 @@ export abstract class Model<T = any> implements IModel<T> {
     });
   }
 
+  /**
+   * @deprecated Use processMessage.
+   */
+  // TODO(burdon): Remove.
+  get processor (): NodeJS.WritableStream {
+    return this._processor;
+  }
+
+  //
+  // Model
+  //
+
   toString () {
     return `Model(${JSON.stringify(this.toJSON())})`;
   }
 
-  /**
-   * Overriden to not retun implementation details.
-   */
   toJSON () {
     return {
       id: this.itemId,
@@ -78,44 +87,16 @@ export abstract class Model<T = any> implements IModel<T> {
     return this._itemId;
   }
 
-  // TODO(burdon): Standardize (vs. isReadOnly methods in database).
   get readOnly (): boolean {
     return this._writeStream === undefined;
-  }
-
-  /**
-   * @deprecated Use processMessage.
-   */
-  // TODO(burdon): Rename.
-  get processor (): NodeJS.WritableStream {
-    return this._processor;
   }
 
   subscribe (listener: (result: this) => void) {
     return this.update.on(listener as any);
   }
 
-  async processMessage (meta: MutationMeta, message: T): Promise<void> {
-    const modified = await this._processMessage(meta, message);
-    if (modified) {
-      this.update.emit(this);
-    }
-
-    this._messageProcessed.emit(meta);
-  }
-
-  createSnapshot (): any {
-    throw new Error('This model does not support snapshots.');
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot (snapshot: any): Promise<void> {
-    throw new Error('Snapshots not supported.');
-  }
-
   /**
    * Writes the raw mutation to the output stream.
-   * @param mutation
    */
   protected async write (mutation: T): Promise<MutationWriteReceipt> {
     if (!this._writeStream) {
@@ -136,9 +117,27 @@ export abstract class Model<T = any> implements IModel<T> {
     };
   }
 
-  /**
-   * Process the message.
-   * @abstract
-   */
+  //
+  // State machine
+  //
+
   protected abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
+
+  async processMessage (meta: MutationMeta, message: T): Promise<void> {
+    const modified = await this._processMessage(meta, message);
+    if (modified) {
+      this.update.emit(this);
+    }
+
+    this._messageProcessed.emit(meta);
+  }
+
+  createSnapshot (): any {
+    throw new Error('Snapshots not supported.');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async restoreFromSnapshot (snapshot: any): Promise<void> {
+    throw new Error('Snapshots not supported.');
+  }
 }
