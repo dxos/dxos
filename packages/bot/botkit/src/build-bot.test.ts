@@ -2,29 +2,29 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
 
+import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { createId, PublicKey } from '@dxos/crypto';
-import { createLinkedPorts } from '@dxos/rpc';
+import { NetworkManager } from '@dxos/network-manager';
 
 import { NodeContainer } from './bot-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { buildBot } from './botkit';
 import { TEST_ECHO_TYPE } from './bots';
-import { BotFactoryClient, setupBroker, setupClient } from './testutils';
+import { setupBroker, setupClient } from './testutils';
 
 describe('Build bot', () => {
   let outfile: string;
   const botPath = './bots/start-echo-bot.ts';
-  const outdir = path.join(require.resolve('.'), '..', '..', 'out');
+  const outdir = path.join(require.resolve('.'), '..', '..', 'out/bots');
 
   before(() => {
     if (!fs.existsSync(outdir)) {
-      fs.mkdirSync(outdir);
+      fs.mkdirSync(outdir, { recursive: true });
     }
   });
 
@@ -50,36 +50,27 @@ describe('Build bot', () => {
     });
 
     const { broker, config } = await setupBroker();
-    const { client, party, invitation, secret } = await setupClient(config);
+    const { client, party } = await setupClient(config);
 
-    const [agentPort, botControllerPort] = createLinkedPorts();
+    const nm1 = new NetworkManager();
+    const nm2 = new NetworkManager();
+    const topic = PublicKey.random();
 
     const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
     const botFactory = new BotFactory(botContainer, config);
-    const botController = new BotController(botFactory, botControllerPort);
-    const botFactoryClient = new BotFactoryClient(agentPort);
+    const botController = new BotController(botFactory, nm1);
+    await botController.start(topic);
+    const botFactoryClient = new BotFactoryClient(nm2);
+    await botFactoryClient.start(topic);
 
-    await Promise.all([
-      botController.start(),
-      botFactoryClient.start()
-    ]);
-
-    const { id } = await botFactoryClient.botFactory.SpawnBot({
-      package: {
-        localPath: outfile
-      },
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
-    });
-    assert(id);
+    const botHandle = await botFactoryClient.spawn(
+      { localPath: outfile },
+      client,
+      party
+    );
 
     const command = PublicKey.random().asUint8Array();
-    await botFactoryClient.botFactory.SendCommand({
-      botId: id,
-      command
-    });
+    await botHandle.sendCommand(command);
 
     const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
     const payload = item.model.getProperty('payload');
@@ -90,5 +81,7 @@ describe('Build bot', () => {
     botContainer.killAll();
     await broker.stop();
     await client.destroy();
+    await nm1.destroy();
+    await nm2.destroy();
   }).timeout(60000);
 });
