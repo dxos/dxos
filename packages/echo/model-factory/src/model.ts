@@ -14,11 +14,16 @@ export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
 }
 
+// TODO(burdon): Enable transition to new adapter.
+export interface IModel<T> {
+  processMessage: (meta: MutationMeta, message: T) => Promise<void>
+}
+
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
-export abstract class Model<T = any> {
+export abstract class Model<T = any> implements IModel<T> {
   public readonly update = new Event<Model<T>>();
 
   private readonly _processor: NodeJS.WritableStream;
@@ -107,8 +112,6 @@ export abstract class Model<T = any> {
   async restoreFromSnapshot (snapshot: any): Promise<void> {
     throw new Error('Snapshots not supported.');
   }
-
-  // TODO(burdon): Update public, private, protected.
 
   /**
    * Writes the raw mutation to the output stream.

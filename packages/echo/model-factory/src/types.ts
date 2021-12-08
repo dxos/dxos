@@ -11,7 +11,7 @@ import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 // Types.
 //
 
-export type ModelType = string;
+export type ModelType = string // TODO(burdon): Replace with DXN.
 
 export type ModelMeta = {
   type: ModelType

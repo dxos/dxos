@@ -3,7 +3,7 @@
 //
 
 import { checkType } from '@dxos/debug';
-import { FeedMeta, schema, TestItemMutation } from '@dxos/echo-protocol';
+import { FeedMeta, TestItemMutation, schema } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
 import { ModelMeta } from '../types';

@@ -3,62 +3,103 @@
 //
 
 import { Codec } from '@dxos/codec-protobuf';
-import { FeedWriter, ItemID } from '@dxos/echo-protocol';
-
-import { Model } from './model';
-
-// TODO(burdon): Copied from braneframe ExperimentalChessModel.stories.tsx
+import { FeedWriter, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
 
 export type DXN = string; // TODO(burdon): Move.
 
-export type StateProcessor<STATE, MUTATION> = (state: STATE, mutation: MUTATION) => void;
+// TODO(burdon): Adapted from braneframe ExperimentalChessModel.stories.tsx
+// TODO(burdon): Separate aspects to isolate stateful and stateless (pure) methods.
+// TODO(burdon): Create interface for legacy Model and start to factor out aspects.
 
-// TODO(burdon): Create Item/Model from ItemGenesis proto (discover model, frame, etc.)
-//   { ItemID, ItemType, ModelType }
-// TODO(burdon): Create Item (Model.getInitMutation?)
-// TODO(burdon): Model registration (start-up) and dynamic loading.
-// TODO(burdon): Snapshots (incl. reset/rollback).
-// TODO(burdon): Readonly/writable models.
-
-// TODO(burdon): The Model is just an API for the state. "Meta" contains other configuration.
-export interface ExperimentalModelMeta<STATE, MUTATION, MODEL> {
-  type: DXN
-  // TODO(burdon): Why "new"?
-  model: new (getState: () => STATE, onWrite: (mutation: MUTATION) => void) => MODEL
-  initialState: () => STATE
-  mutationProcessor: StateProcessor<STATE, MUTATION>
-  mutationCodec: Codec<any>
-  snapshotCodec?: Codec<any>
-  // TODO(burdon): ???
-  modelFactory?: (writeStream?: FeedWriter<MUTATION>) => MODEL
-}
-
-export abstract class ExperimentalModel<STATE, MUTATION> {
-  protected constructor (
-    private readonly _writeStream?: FeedWriter<MUTATION>
-  ) {}
+/**
+ * Provides an immutable state reference.
+ */
+export interface StateProvider<STATE> {
+  getState: () => STATE
 }
 
 /**
- * New Model signature.
+ * Processes mutation messages that modify the model's state.
+ * TODO(burdon): Set state from snapshot? Combine with SnapshotHandler?
  */
-export class ModelAdapter<STATE, MUTATION, MODEL> extends Model<MUTATION>{
+export interface StateMachine<STATE, MUTATION> extends StateProvider<STATE> {
+  processMutation: (mutation: MUTATION, meta: MutationMeta) => boolean
+}
 
-  constructor (
-    private readonly _meta2: ExperimentalModelMeta<STATE, MUTATION, MODEL>,
-    private readonly _state: STATE,
-    itemId: ItemID,
-    writeStream?: FeedWriter<MUTATION>
-  ) {
-    super({
-      type: _meta2.type,
-      mutation: _meta2.mutationCodec,
-      snapshotCodec: _meta2.snapshotCodec
-    }, itemId, writeStream);
+/**
+ * Serializes and deserializes models to and from immutable snapshots.
+ * Enables epochs and periodic in-memory snapshots for rollback.
+ * TODO(burdon): Deleted items (dropped by model during snapshot write).
+ * TODO(burdon): Ref https://stackoverflow.com/questions/4929243/clarifying-terminology-what-does-hydrating-a-jpa-or-hibernate-entity-mean-wh
+ */
+export interface SnapshotHandler<STATE, SNAPSHOT> {
+  toSnapshot: (state: STATE) => SNAPSHOT
+  fromSnapshot: (snapshot: SNAPSHOT) => STATE
+}
+
+/**
+ * Provides an application-specific API for updating state machines.
+ * NOTE: The model is not able to modify the state directly.
+ * TODO(burdon): Create initial state (i.e., Model.getInitMutation)?
+ */
+export interface ExperimentalModel<STATE, MUTATION> {
+  writeMutation: (mutation: MUTATION) => Promise<WriteReceipt>
+}
+
+/**
+ * Runtime model specification.
+ * Enables the instantiation of models from the Item genesis message: { ItemID, ItemType, ModelType }.
+ */
+export interface ModelSpec<STATE, MUTATION, SNAPSHOT> {
+  type: DXN
+  mutationCodec: Codec<MUTATION>
+  snapshotCodec?: Codec<SNAPSHOT>
+  stateMachine: StateMachine<STATE, MUTATION>
+  snapshotHandler?: SnapshotHandler<STATE, SNAPSHOT>
+  modelFactory: (writeStream: FeedWriter<MUTATION>) => ExperimentalModel<STATE, MUTATION>
+}
+
+/**
+ * Base class for models.
+ */
+export abstract class AbstractModel<STATE, MUTATION> implements ExperimentalModel<STATE, MUTATION>{
+  protected constructor (
+    private readonly _stateProvider: StateProvider<STATE>,
+    private readonly _writeStream: FeedWriter<MUTATION> // TODO(burdon): Allow read-only?
+  ) {}
+
+  protected get state () {
+    return this._stateProvider.getState();
   }
 
-  protected _processMessage (_: any, mutation: MUTATION): Promise<boolean> {
-    this._meta2.mutationProcessor(this._state, mutation);
-    return Promise.resolve(false);
+  async writeMutation (mutation: MUTATION) {
+    return this._writeStream.write(mutation);
+  }
+}
+
+//
+// TODO(burdon): Tests.
+//
+
+class TestStateMachine implements StateMachine<number, number> {
+  private state: number = 0;
+
+  getState (): number {
+    return this.state;
+  }
+
+  processMutation (mutation: number, meta: MutationMeta) {
+    this.state += mutation;
+    return true;
+  }
+}
+
+class TestModel extends AbstractModel<number, number> {
+  get count () {
+    return super.state;
+  }
+
+  async inc () {
+    return super.writeMutation(1);
   }
 }
