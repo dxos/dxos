@@ -59,7 +59,7 @@ const PendingInvitationView = ({
 
       {invitationCode && !pin && (
         <>
-          <IconButton size='small' title='Copy passcode.'>
+          <IconButton size='small' title='Copy invitation.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
           <IconButton
@@ -89,7 +89,16 @@ const PendingInvitationView = ({
       )}
 
       {pin && (
-        <Passcode size='small' value={pin} />
+        <>
+          <IconButton size='small' title='Copy passcode.'>
+            <CopyToClipboard text={pin} />
+          </IconButton>
+          <Passcode
+            disabled
+            size='small'
+            value={pin}
+          />
+        </>
       )}
 
       {invitationCode && (

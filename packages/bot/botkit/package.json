@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.19.1",
+  "version": "2.19.2",
   "description": "Bot",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -13,10 +13,13 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/proto": "workspace:*",
+    "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.3.3",
