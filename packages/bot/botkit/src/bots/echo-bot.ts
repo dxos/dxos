@@ -3,18 +3,23 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { ObjectModel } from '@dxos/object-model';
 
 import { SendCommandRequest } from '../proto/gen/dxos/bot';
 import { ClientBot } from './client-bot';
 
+const log = debug('dxos:echo-bot');
+
 export class EchoBot extends ClientBot {
   constructor (private readonly _echoType: string) {
     super();
+    log('Constructing echo bot');
   }
 
   override async onCommand (request: SendCommandRequest) {
+    log('onCommand', request);
     assert(this.party, 'Bot is not initialized');
     assert(request.command, 'Command must be provided');
 

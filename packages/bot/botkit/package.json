@@ -23,7 +23,9 @@
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.3.3",
-    "esbuild": "^0.11.23"
+    "esbuild": "^0.11.23",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.5.2"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

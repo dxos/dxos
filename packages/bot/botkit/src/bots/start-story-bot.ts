@@ -5,13 +5,13 @@
 import debug from 'debug';
 
 import { createIpcPort } from '../bot-container';
-import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 import { startBot } from './start-bot';
+import { StoryBot } from './story-bot';
 
-const log = debug('dxos:echo-bot');
+const log = debug('dxos:story-bot');
 
 if (typeof require !== 'undefined' && require.main === module) {
   const port = createIpcPort(process);
-  log('Starting echo bot');
-  void startBot(new EchoBot(TEST_ECHO_TYPE), port);
+  log('Starting story bot');
+  void startBot(new StoryBot(), port);
 }
