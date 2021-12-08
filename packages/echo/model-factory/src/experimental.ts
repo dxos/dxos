@@ -45,14 +45,14 @@ export interface StateMachine<STATE, MUTATION, SNAPSHOT> extends StateProvider<S
  * NOTE: The model is not able to modify the state directly.
  * TODO(burdon): Create initial state (i.e., Model.getInitMutation)?
  */
-export interface ExperimentalModel<STATE, MUTATION> {
+export interface ExperimentalModel<MUTATION> {
   writeMutation: (mutation: MUTATION) => Promise<WriteReceipt>
 }
 
 /**
  * Base class for models.
  */
-export abstract class AbstractModel<STATE, MUTATION> implements ExperimentalModel<STATE, MUTATION> {
+export abstract class AbstractModel<STATE, MUTATION> implements ExperimentalModel<MUTATION> {
   protected constructor (
     private readonly _stateProvider: StateProvider<STATE>,
     private readonly _writeStream?: FeedWriter<MUTATION>
@@ -81,22 +81,22 @@ export interface ModelSpec<STATE, MUTATION, SNAPSHOT> {
   mutationCodec: Codec<MUTATION>
   snapshotCodec: Codec<SNAPSHOT>
   stateMachineFactory: () => StateMachine<STATE, MUTATION, SNAPSHOT>
-  modelFactory: (stateProvider: StateProvider<STATE>, writeStream?: FeedWriter<MUTATION>) => ExperimentalModel<STATE, MUTATION>
+  modelFactory: (stateProvider: StateProvider<STATE>, writeStream?: FeedWriter<MUTATION>) => ExperimentalModel<MUTATION>
 }
 
 export interface IModelRegistry {
   register: (spec: ModelSpec<any, any, any>) => void
-  createModel: (itemGenesis: ItemGenesis) => ExperimentalModel<any, any>
+  createModel: (itemGenesis: ItemGenesis) => ExperimentalModel<any>
 }
 
-class ModelRegistry implements IModelRegistry {
+export class ModelRegistry implements IModelRegistry {
   private _specs = new Map<DXN, ModelSpec<any, any, any>>();
 
   register (spec: ModelSpec<any, any, any>): void {
     this._specs.set(spec.type, spec);
   }
 
-  createModel (itemGenesis: ItemGenesis): ExperimentalModel<any, any> {
+  createModel (itemGenesis: ItemGenesis): ExperimentalModel<any> {
     const { modelType } = itemGenesis;
     const spec = this._specs.get(modelType)!;
 
@@ -116,7 +116,7 @@ type TestState = { value: number }
 type TestMutation = { increment: number }
 type TestSnapshot = number
 
-class TestStateMachine implements StateMachine<TestState, TestMutation, TestSnapshot> {
+export class TestStateMachine implements StateMachine<TestState, TestMutation, TestSnapshot> {
   private state: TestState = { value: 0 };
 
   getState (): TestState {
@@ -142,7 +142,7 @@ class TestStateMachine implements StateMachine<TestState, TestMutation, TestSnap
   }
 }
 
-class TestModel extends AbstractModel<TestState, TestMutation> {
+export class TestModel extends AbstractModel<TestState, TestMutation> {
   get count () {
     return super.state;
   }
