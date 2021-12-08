@@ -13,23 +13,23 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/proto": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
-    "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/crypto": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/proto": "workspace:*",
+    "@dxos/protocol-plugin-rpc": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
-    "expect": "~27.0.2",
-    "@dxos/client": "workspace:*"
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"
