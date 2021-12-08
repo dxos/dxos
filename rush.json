@@ -779,6 +779,10 @@
       "projectFolder": "packages/demos"
     },
     {
+      "packageName": "@dxos/getting-started",
+      "projectFolder": "packages/tutorials/getting-started"
+    },
+    {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/tutorials/tutorials-tasks-app"
     },

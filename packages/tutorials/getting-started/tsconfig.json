@@ -1,0 +1,59 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "node",
+      "mocha"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "ES2018",
+    "removeComments": false,
+    "strict": true
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/echo-testing"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    }
+  ]
+}

@@ -80,9 +80,14 @@ describe('Client', () => {
         let inviteeInvitationProcess: InvitationProcess;
         inviter.services.ProfileService.CreateInvitation().subscribe(async inviterInvitation => {
           if (!inviteeInvitationProcess) {
-            inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
+            inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({
+              invitationCode: inviterInvitation.invitationCode
+            });
           } else if (inviterInvitation.secret) {
-            await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
+            await invitee.services.ProfileService.AuthenticateInvitation({
+              process: inviteeInvitationProcess,
+              secret: inviterInvitation.secret
+            });
           }
         }, (error) => {
           if (!(error instanceof RpcClosedError)) {
@@ -115,7 +120,6 @@ describe('Client', () => {
 
         const item = await party.database.createItem({ model: ObjectModel });
         await item.model.setProperty('foo', 'bar');
-
         expect(item.model.getProperty('foo')).toEqual('bar');
       });
     });
@@ -140,6 +144,7 @@ describe('Client', () => {
         handlers: hostClient.services,
         port: hostPort
       });
+
       void server.open(); // This is blocks until the other client connects.
       afterTest(() => server.close());
 
@@ -181,7 +186,6 @@ describe('Client', () => {
       await selection.update.waitForCondition(() => selection.getValue().length > 0);
 
       const item = selection.expectOne();
-
       expect(item.model.getProperty('prop')).toEqual('value1');
 
       await item.model.setProperty('prop', 'value2');
