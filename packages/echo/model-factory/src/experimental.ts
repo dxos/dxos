@@ -36,8 +36,8 @@ export interface StateProvider<STATE> {
 export interface StateMachine<STATE, MUTATION, SNAPSHOT> extends StateProvider<STATE> {
   reset: () => void
   processMutation: (mutation: MUTATION, feedMeta: MutationMeta) => boolean
-  fromSnapshot?: (snapshot: SNAPSHOT) => void
-  toSnapshot?: () => SNAPSHOT
+  restoreSnapshot?: (snapshot: SNAPSHOT) => void
+  createSnapshot?: () => SNAPSHOT
 }
 
 /**
@@ -133,11 +133,11 @@ class TestStateMachine implements StateMachine<TestState, TestMutation, TestSnap
     return true;
   }
 
-  fromSnapshot (snapshot: TestSnapshot): void {
+  restoreSnapshot (snapshot: TestSnapshot): void {
     this.state.value = snapshot;
   }
 
-  toSnapshot (): TestSnapshot {
+  createSnapshot (): TestSnapshot {
     return this.state.value;
   }
 }
