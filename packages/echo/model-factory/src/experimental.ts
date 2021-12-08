@@ -140,3 +140,5 @@ class TestModel extends AbstractModel<TestState, TestMutation> {
     return super.writeMutation({ increment: 1 });
   }
 }
+
+// const item: Item<TestModel> = undefined;
