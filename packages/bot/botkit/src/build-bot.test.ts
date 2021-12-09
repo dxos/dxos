@@ -41,7 +41,7 @@ describe('Build bot', () => {
     });
   });
 
-  it.only('Builds and runs a test bot', async () => {
+  it('Builds and runs a test bot', async () => {
     await buildBot({
       entryPoint: require.resolve(botPath),
       outfile
