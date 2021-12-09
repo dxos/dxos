@@ -4,7 +4,7 @@
 
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { BotExitStatus } from '..';
+import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotService } from '../proto/gen/dxos/bot';
 
