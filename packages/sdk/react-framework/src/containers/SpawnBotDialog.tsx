@@ -5,13 +5,14 @@
 import React, { useEffect, useState } from 'react';
 
 import { Button, TextField } from '@mui/material';
+
+import { BotFactoryClient, BotHandle } from '@dxos/bot-factory-client';
+import { PartyProxy } from '@dxos/client';
+import { PublicKey } from '@dxos/crypto';
+import { useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
-import { useClient } from '@dxos/react-client';
-import { PartyProxy } from '@dxos/client';
-import { BotFactoryClient, BotHandle } from '@dxos/bot-factory-client';
-import { PublicKey } from '@dxos/crypto';
 
 export interface SpawnBotDialogProps {
   open: boolean,
@@ -20,7 +21,7 @@ export interface SpawnBotDialogProps {
   onBotCreated: (bot: BotHandle) => void
 }
 
-export const SpawnBotDialog = ({ 
+export const SpawnBotDialog = ({
   open,
   onClose,
   party,
@@ -74,7 +75,7 @@ export const SpawnBotDialog = ({
       processing,
       content: inviteBotContent,
       actions: joinPartyActions
-    }
+    };
   };
 
   const dialogProps = getDialogProps();
@@ -94,4 +95,4 @@ export const SpawnBotDialog = ({
       {...dialogProps}
     />
   );
-}
+};

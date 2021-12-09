@@ -33,7 +33,7 @@ export class ClientBot implements BotService {
       const invitation = decodeInvitation(request.invitation.invitationCode);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       log('Client bot join party');
-      this.party = await this.client.echo.joinParty(invitation, botSecretProvider);  
+      this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
     }
     log('Client bot onInit');
     await this.onInit(request);

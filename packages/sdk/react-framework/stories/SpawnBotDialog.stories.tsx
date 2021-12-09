@@ -2,33 +2,28 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import React, { useEffect, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
-import { encodeInvitation, PartyProxy } from '@dxos/client';
+import { PartyProxy } from '@dxos/client';
+import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/crypto';
 import {
   ClientProvider,
   ProfileInitializer,
   useClient,
   useParties,
-  useSecretGenerator,
   useSelection
 } from '@dxos/react-client';
-import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
+import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
   ErrorBoundary,
   FrameworkContextProvider,
-  JoinPartyDialog,
-  PartySharingDialog,
   SpawnBotDialog
 } from '../src';
 import { Column } from './helpers';
-import { Item } from '@dxos/echo-db';
 
 export default {
   title: 'react-framework/SpawnBotDialog'
@@ -67,9 +62,9 @@ const User = () => {
   };
 
   useEffect(() => {
-    handleCreateParty();
+    void handleCreateParty();
   }, []);
-  
+
   useEffect(() => {
     setImmediate(async () => {
       const textItem = await party?.database.createItem({
@@ -85,7 +80,7 @@ const User = () => {
 
   useEffect(() => {
     if (textItem) {
-      textItem.model.setProperty('text', testText)
+      void textItem.model.setProperty('text', testText);
     }
   }, [testText]);
 
@@ -111,7 +106,7 @@ const User = () => {
         <Parties />
       </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        Number of occurences of word "DXOS" in below text: {(counterItems?.length && counterItems[0].model.getProperty('counter')) ?? 0}
+        Number of occurences of word &quot;DXOS&quot; in below text: {(counterItems?.length && counterItems[0].model.getProperty('counter')) ?? 0}
       </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <TextField
@@ -128,7 +123,6 @@ const User = () => {
   );
 };
 
-
 export const Primary = () => {
   return (
     <FullScreen>
@@ -137,7 +131,7 @@ export const Primary = () => {
           display: 'flex',
           justifyContent: 'space-around'
         }}>
-          <ClientProvider config={{services: {signal: { server: 'ws://localhost:4000' } }}}>
+          <ClientProvider config={{ services: { signal: { server: 'ws://localhost:4000' } } }}>
             <ProfileInitializer>
               <FrameworkContextProvider>
                 <Column>
@@ -151,4 +145,3 @@ export const Primary = () => {
     </FullScreen>
   );
 };
-

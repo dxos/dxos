@@ -17,7 +17,7 @@ export class StoryBot extends ClientBot {
     log('constructing story bot');
   }
 
-  override async onInit() {
+  override async onInit () {
     log('onInit');
     assert(this.party);
     const COUNTER_TYPE = 'DXOS_COUNTER';
@@ -28,7 +28,7 @@ export class StoryBot extends ClientBot {
         counter: 0
       }
     });
-    this.party.database.select(s => s.filter({ type: 'TEST_TYPE' }).items).update.on(data => {
+    this.party.database.select(s => s.filter({ type: 'TEST_TYPE' }).items).update.on(async (data) => {
       log('onUpdate triggered');
       let counter = 0;
       data.forEach(item => {
@@ -40,7 +40,7 @@ export class StoryBot extends ClientBot {
       });
       if (counter !== counterItem.model.getProperty('counter')) {
         log(`Updating counter with value ${counter}`);
-        counterItem.model.setProperty('counter', counter);
+        await counterItem.model.setProperty('counter', counter);
       }
     });
   }
