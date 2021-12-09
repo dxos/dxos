@@ -15,7 +15,8 @@ import {
   ProfileInitializer,
   useClient,
   useParties,
-  useSecretGenerator
+  useSecretGenerator,
+  useSelection
 } from '@dxos/react-client';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
@@ -55,6 +56,10 @@ const User = () => {
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
   const client = useClient();
+  const counterItem = useSelection(party?.database.select(s => s
+    .filter({ type: 'DXOS_COUNTER' })
+    .items)
+  , [party?.key]);
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
@@ -102,6 +107,9 @@ const User = () => {
       )}
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
+      </Box>
+      <Box sx={{ marginTop: 2, padding: 1 }}>
+        DXOS counter: {counterItem?.[0].model.getProperty('counter')}
       </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <TextField
