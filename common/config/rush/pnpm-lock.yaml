@@ -48,8 +48,6 @@ importers:
       base-x: 3.0.9
       debug: 4.3.3
       esbuild: 0.11.23
-      ts-node: 9.1.1_typescript@4.5.2
-      typescript: 4.5.2
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -65,6 +63,8 @@ importers:
       '@types/node': 14.14.45
       assert: 2.0.0
       expect: 27.0.2
+      ts-node: 9.1.1_typescript@4.5.2
+      typescript: 4.5.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
@@ -1925,6 +1925,32 @@ importers:
       node-fetch: ^2.6.0
       protobufjs: ^6.9.0
       webpack: 4.44.2
+  ../../packages/sdk/react-bot-factory-client:
+    dependencies:
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/debug': link:../../common/debug
+    devDependencies:
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.4.1
+      '@dxos/react-client': link:../react-client
+      '@dxos/react-registry-client': link:../react-registry-client
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/react': 17.0.24
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.2
+    specifiers:
+      '@dxos/bot-factory-client': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.4.1
+      '@dxos/react-client': workspace:*
+      '@dxos/react-registry-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/react': ^17.0.24
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.5.2
   ../../packages/sdk/react-client:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2097,6 +2123,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -2129,6 +2156,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.4.1
+      '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -8508,6 +8536,7 @@ packages:
     resolution:
       integrity: sha512-5hYdAkZlcG8tOLujVDTgCT+uPX0VnpAH28gWsLfzpXYm7wP6mp5Q/gYyR7YQ0cKVJcXJnl3j2kpBan13PtQf6w==
   /arg/4.1.3:
+    dev: true
     resolution:
       integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==
   /argparse/1.0.10:
@@ -10487,6 +10516,7 @@ packages:
     resolution:
       integrity: sha512-MJG9liiZ+ogc4TzUwuvbER1JRdgvUFSB5+VR/g5h82fGaIRWMWddtKBHi7/sVhfjQZ6SehlyhvQYrcYkaUIpLg==
   /create-require/1.1.1:
+    dev: true
     resolution:
       integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
   /cross-fetch/3.1.4:
@@ -11737,6 +11767,7 @@ packages:
     resolution:
       integrity: sha512-XPLijkfJUh/PIBnfkcSHgvD6tlYixmcMAn3osTk6jt+H0v/mgURto1XUiD9DKuGX5NDoVS6dSlA23gd9FUaCFg==
   /diff/4.0.2:
+    dev: true
     engines:
       node: '>=0.3.1'
     resolution:
@@ -23421,6 +23452,7 @@ packages:
       source-map-support: 0.5.19
       typescript: 4.5.2
       yn: 3.1.1
+    dev: true
     engines:
       node: '>=10.0.0'
     hasBin: true
@@ -24967,6 +24999,7 @@ packages:
     resolution:
       integrity: sha512-sbE4G+bSP0jw71aJ9Hqi5UxOTy8JGkObIaCSpY6krRoNqssPCWq05rqV9PQcuMqcrHD3twzko92fVaF1S3id/Q==
   /yn/3.1.1:
+    dev: true
     engines:
       node: '>=6'
     resolution:
