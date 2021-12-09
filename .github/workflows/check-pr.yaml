@@ -1,5 +1,6 @@
 on:
   pull_request_target:
+    - opened
     - edited
 
 name: Validate PR title
