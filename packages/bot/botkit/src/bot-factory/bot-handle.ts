@@ -5,6 +5,7 @@
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 import assert from 'assert';
 import { join } from 'path';
+import fs from 'fs/promises'
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
@@ -24,8 +25,6 @@ export class BotHandle {
     readonly id: string,
     readonly workingDirectory: string,
   ) {
-  
-
     this._bot = {
       id,
       status: Bot.Status.STOPPED
@@ -39,6 +38,11 @@ export class BotHandle {
 
   get bot () {
     return this._bot;
+  }
+
+  async initializeDirectories () {
+    await fs.mkdir(this.workingDirectory, { recursive: true });
+    await fs.mkdir(this.logsDir);
   }
 
   async open (port: RpcPort): Promise<void> {

@@ -62,8 +62,13 @@ export class BotFactory implements BotFactoryService {
       
       const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
+      await handle.initializeDirectories();
 
-      const port = await this._botContainer.spawn(request.package ?? {}, id);
+      const port = await this._botContainer.spawn({
+        id,
+        pkg: request.package ?? {},
+        logFilePath: handle.getLogFilePath(new Date()),
+      });
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
       log(`[${id}] Initializing bot`);

@@ -15,15 +15,20 @@ import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 import { createHandle } from '../testutils/bots';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 describe('Node container', () => {
   it('Starts an empty node bot', async () => {
     const container = new NodeContainer(['ts-node/register/transpile-only']);
 
     const handle = createHandle();
+    const logFilePath = join('/tmp', `${handle.id}.log`);
     const port = await container.spawn({
-      localPath: require.resolve('../bots/empty-bot')
-    }, handle.id);
+      id: handle.id,
+      pkg: { localPath: require.resolve('../bots/empty-bot') },
+      logFilePath,
+    });
 
     await handle.open(port);
     await handle.rpc.Initialize({});
@@ -31,6 +36,8 @@ describe('Node container', () => {
     const { response } = await handle.rpc.Command({ command: command.asUint8Array() });
     assert(response);
     expect(PublicKey.from(response).toString()).toBe(command.toString());
+
+    expect(existsSync(logFilePath)).toBe(true);
 
     container.killAll();
   });
@@ -51,8 +58,9 @@ describe('Node container', () => {
       const container = new NodeContainer(['ts-node/register/transpile-only']);
       const handle = createHandle()
       const port = await container.spawn({
-        localPath: require.resolve('../bots/start-client-bot')
-      }, handle.id);
+        id: handle.id,
+        pkg: { localPath: require.resolve('../bots/start-client-bot') }
+      });
 
       await handle.open(port);
       await handle.rpc.Initialize({
@@ -76,8 +84,9 @@ describe('Node container', () => {
       const container = new NodeContainer(['ts-node/register/transpile-only']);
       const handle = createHandle();
       const port = await container.spawn({
-        localPath: require.resolve('../bots/start-echo-bot')
-      }, handle.id);
+        id: handle.id,
+        pkg: { localPath: require.resolve('../bots/start-echo-bot') }
+      });
 
       await handle.open(port);
       await handle.rpc.Initialize({
@@ -105,8 +114,9 @@ describe('Node container', () => {
 
     const handle = createHandle();
     const port = await container.spawn({
-      localPath: require.resolve('../bots/failing-bot')
-    }, handle.id);
+      id: handle.id,
+      pkg: { localPath: require.resolve('../bots/failing-bot') },
+    });
     await handle.open(port);
     await handle.rpc.Initialize({});
 

@@ -5,13 +5,14 @@
 import assert from 'assert';
 import { Serializable, fork, ChildProcess } from 'child_process';
 import debug from 'debug';
+import * as fs from 'fs';
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { RpcPort } from '@dxos/rpc';
 
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
-import { BotContainer, BotExitStatus } from './bot-container';
+import { BotContainer, BotExitStatus, SpawnOptions } from './bot-container';
 
 const log = debug('dxos:botkit:node-container');
 
@@ -28,13 +29,13 @@ export class NodeContainer implements BotContainer {
     private readonly _additionalRequireModules: string[] = []
   ) {}
 
-  async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
+  async spawn ({ pkg, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
     assert(pkg.localPath, 'Node container only supports "localPath" package specifiers.');
     log(`[${id}] Spawning ${pkg.localPath}`);
     const child = fork(pkg.localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
       serialization: 'advanced',
-      stdio: 'inherit', // TODO: Pipe to file.
+      stdio: !!logFilePath ? 'pipe' : 'inherit',
       env: {
         ...process.env,
         NODE_NO_WARNINGS: '1'
@@ -58,6 +59,12 @@ export class NodeContainer implements BotContainer {
       log(`[${id}] IPC stream disconnected`);
       this.error.emit([id, new Error('Bot child process disconnected from IPC stream.')]);
     });
+
+    if(logFilePath) {
+      const file = fs.createWriteStream(logFilePath);
+      child.stdout!.pipe(file);
+      child.stderr!.pipe(file);
+    }
 
     return port;
   }
