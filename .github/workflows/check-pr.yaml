@@ -1,7 +1,6 @@
 on:
   pull_request_target:
-    - opened
-    - edited
+    types: [edited, opened, synchronize, reopened]
 
 name: Validate PR title
 
