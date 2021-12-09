@@ -588,6 +588,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
 
+    {
+      "packageName": "@dxos/react-bot-factory-client",
+      "projectFolder": "packages/sdk/react-bot-factory-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
     //
     // echo
     // NOTE: KEEP SORTED

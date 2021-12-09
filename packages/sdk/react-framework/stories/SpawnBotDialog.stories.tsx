@@ -16,6 +16,8 @@ import {
   useSelection
 } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { BotFactoryClientProvider } from '@dxos/react-bot-factory-client';
+import type { defs } from '@dxos/config';
 
 import {
   ErrorBoundary,
@@ -30,8 +32,20 @@ export default {
 
 const TEST_TYPE = 'TEST_TYPE';
 
+const clientConfig: defs.Config = { 
+  services: { 
+    signal: { 
+      server: 'ws://localhost:4000' 
+    },
+    bot: {
+      topic: 'e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc'
+    }
+  } 
+}
+
 const User = () => {
   const [open, setOpen] = useState(false);
+  const [botRunning, setBotRunning] = useState(false);
   const [party, setParty] = useState<PartyProxy>();
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
@@ -83,9 +97,12 @@ const User = () => {
           party={party}
           open={open}
           onClose={() => setOpen(false)}
-          onBotCreated={() => window.alert('Bot created')}
+          onBotCreated={() => setBotRunning(true)}
         />
       )}
+      <Box sx={{ marginTop: 2, padding: 1 }}>
+        Bot running: {botRunning ? 'yes' : 'no'}
+      </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
         Number of occurences of word &quot;DXOS&quot; in below text: {(counterItems?.length && counterItems[0].model.getProperty('counter')) ?? 0}
       </Box>
@@ -112,12 +129,14 @@ export const Primary = () => {
           display: 'flex',
           justifyContent: 'space-around'
         }}>
-          <ClientProvider config={{ services: { signal: { server: 'ws://localhost:4000' } } }}>
+          <ClientProvider config={clientConfig}>
             <ProfileInitializer>
               <FrameworkContextProvider>
-                <Column>
-                  <User />
-                </Column>
+                <BotFactoryClientProvider>
+                  <Column>
+                    <User />
+                  </Column>
+                </BotFactoryClientProvider>
               </FrameworkContextProvider>
             </ProfileInitializer>
           </ClientProvider>
