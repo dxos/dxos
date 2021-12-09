@@ -20,7 +20,7 @@ export class BotHandle {
       schema.getService('dxos.bot.BotService'),
       {
         port,
-        timeout: 60_000, // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
       }
     );
 

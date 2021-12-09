@@ -5,10 +5,9 @@
 import { Event } from '@dxos/async';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
 
-import { BotExitStatus } from './bot-container';
 import { schema } from '../proto/gen';
 import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
-import { BotContainer } from './bot-container';
+import { BotExitStatus, BotContainer } from './bot-container';
 
 export class InProcessBotContainer implements BotContainer {
   private readonly _bots = new Map<string, BotService>();

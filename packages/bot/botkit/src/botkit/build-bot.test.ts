@@ -9,11 +9,11 @@ import path from 'path';
 import { generateInvitation } from '@dxos/bot-factory-client';
 import { createId, PublicKey } from '@dxos/crypto';
 
-import { buildBot } from './build-bot';
 import { NodeContainer } from '../bot-container';
 import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
 import { setupBroker, setupClient } from '../testutils';
+import { buildBot } from './build-bot';
 
 describe('Build bot', () => {
   let outfile: string;
