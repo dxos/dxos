@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { debug } from 'debug';
+import { join } from 'path';
 
 import type { defs } from '@dxos/config';
 import { createId } from '@dxos/crypto';
@@ -11,7 +12,6 @@ import { createId } from '@dxos/crypto';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
-import { join } from 'path';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -59,7 +59,7 @@ export class BotFactory implements BotFactoryService {
     const id = createId();
     try {
       log(`[${id}] Spawning bot ${JSON.stringify(request)}`);
-      
+
       const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
@@ -67,7 +67,7 @@ export class BotFactory implements BotFactoryService {
       const port = await this._botContainer.spawn({
         id,
         pkg: request.package ?? {},
-        logFilePath: handle.getLogFilePath(new Date()),
+        logFilePath: handle.getLogFilePath(new Date())
       });
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);

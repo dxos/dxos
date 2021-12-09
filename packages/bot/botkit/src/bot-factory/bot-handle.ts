@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 import assert from 'assert';
+import fs from 'fs/promises';
 import { join } from 'path';
-import fs from 'fs/promises'
+
+import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
@@ -23,7 +24,7 @@ export class BotHandle {
    */
   constructor (
     readonly id: string,
-    readonly workingDirectory: string,
+    readonly workingDirectory: string
   ) {
     this._bot = {
       id,
@@ -46,7 +47,7 @@ export class BotHandle {
   }
 
   async open (port: RpcPort): Promise<void> {
-    if(this._rpc) {
+    if (this._rpc) {
       await this.close();
     }
 

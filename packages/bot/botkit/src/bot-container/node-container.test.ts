@@ -5,18 +5,17 @@
 import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
 
-import { BotHandle } from '..';
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
-import { createIpcPort, NodeContainer } from './node-container';
 import { createHandle } from '../testutils/bots';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { createIpcPort, NodeContainer } from './node-container';
 
 describe('Node container', () => {
   it('Starts an empty node bot', async () => {
@@ -27,7 +26,7 @@ describe('Node container', () => {
     const port = await container.spawn({
       id: handle.id,
       pkg: { localPath: require.resolve('../bots/empty-bot') },
-      logFilePath,
+      logFilePath
     });
 
     await handle.open(port);
@@ -56,7 +55,7 @@ describe('Node container', () => {
       const { client, invitation, secret } = await setupClient(config);
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
-      const handle = createHandle()
+      const handle = createHandle();
       const port = await container.spawn({
         id: handle.id,
         pkg: { localPath: require.resolve('../bots/start-client-bot') }
@@ -115,7 +114,7 @@ describe('Node container', () => {
     const handle = createHandle();
     const port = await container.spawn({
       id: handle.id,
-      pkg: { localPath: require.resolve('../bots/failing-bot') },
+      pkg: { localPath: require.resolve('../bots/failing-bot') }
     });
     await handle.open(port);
     await handle.rpc.Initialize({});
