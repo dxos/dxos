@@ -9,16 +9,16 @@ import path from 'path';
 import { generateInvitation } from '@dxos/bot-factory-client';
 import { createId, PublicKey } from '@dxos/crypto';
 
-import { NodeContainer } from './bot-container';
-import { BotFactory } from './bot-factory';
-import { buildBot } from './botkit';
-import { TEST_ECHO_TYPE } from './bots';
-import { setupBroker, setupClient } from './testutils';
+import { NodeContainer } from '../bot-container';
+import { BotFactory } from '../bot-factory';
+import { buildBot } from '.';
+import { TEST_ECHO_TYPE } from '../bots';
+import { setupBroker, setupClient } from '../testutils';
 
 describe('Build bot', () => {
   let outfile: string;
-  const botPath = './bots/start-echo-bot.ts';
-  const outdir = path.join(require.resolve('.'), '..', '..', 'out/bots');
+  const botPath = require.resolve('../bots/start-echo-bot.ts');
+  const outdir = path.join(__dirname, '../../out/bots');
 
   before(() => {
     if (!fs.existsSync(outdir)) {
@@ -36,14 +36,14 @@ describe('Build bot', () => {
 
   it('Build benchmark', async () => {
     await buildBot({
-      entryPoint: require.resolve(botPath),
+      entryPoint: botPath,
       outfile
     });
   });
 
   it('Builds and runs a test bot', async () => {
     await buildBot({
-      entryPoint: require.resolve(botPath),
+      entryPoint: botPath,
       outfile
     });
 
