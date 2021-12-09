@@ -2,17 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, {useState } from 'react';
+import React, { useState } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { PartyProxy } from '@dxos/client';
+import { useBotFactoryClient } from '@dxos/react-bot-factory-client';
 import { useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
-import { useBotFactoryClient } from '@dxos/react-bot-factory-client';
 
 export interface SpawnBotDialogProps {
   open: boolean,
