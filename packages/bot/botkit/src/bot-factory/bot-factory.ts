@@ -3,14 +3,14 @@
 //
 
 import assert from 'assert';
+import { debug } from 'debug';
 
 import type { defs } from '@dxos/config';
+import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
-import { createId } from '@dxos/crypto';
-import { debug } from 'debug';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -23,7 +23,7 @@ export class BotFactory implements BotFactoryService {
   constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {
     _botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
-      if(!bot) {
+      if (!bot) {
         log(`Bot exited but not found in factory: ${id}`);
         return;
       }
@@ -33,7 +33,7 @@ export class BotFactory implements BotFactoryService {
 
     _botContainer.error.on(async ([id, error]) => {
       const bot = this._bots.get(id);
-      if(!bot) {
+      if (!bot) {
         log(`Bot errored but not found in factory: ${id}`);
         return;
       }
@@ -42,7 +42,7 @@ export class BotFactory implements BotFactoryService {
 
       try {
         await _botContainer.kill(id);
-      } catch(err) {
+      } catch (err) {
         log(`Failed to kill bot: ${id}`);
       }
     });

@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
-import { BotExitStatus } from '.';
 
+import { BotExitStatus } from '.';
 import { schema } from '../proto/gen';
 import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
 import { BotContainer } from './bot-container';
@@ -35,21 +35,21 @@ export class InProcessBotContainer implements BotContainer {
     return botHandlePort;
   }
 
-  async kill(id: string) {
-    if(!this._bots.has(id)) {
+  async kill (id: string) {
+    if (!this._bots.has(id)) {
       throw new Error(`Bot ${id} not found`);
     }
 
     this._bots.delete(id);
     this.exited.emit([id, {
       code: null,
-      signal: null,
-    }])
+      signal: null
+    }]);
   }
 
   killAll () {
-    for(const id of Array.from(this._bots.keys())) {
-      this.kill(id);
+    for (const id of Array.from(this._bots.keys())) {
+      void this.kill(id);
     }
   }
 }

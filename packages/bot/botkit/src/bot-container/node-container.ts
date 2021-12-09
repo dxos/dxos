@@ -6,14 +6,12 @@ import assert from 'assert';
 import { Serializable, fork, ChildProcess } from 'child_process';
 import debug from 'debug';
 
-import { RpcPort } from '@dxos/rpc';
-
-import { BotHandle } from '../bot-factory';
-import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
-import { BotContainer } from './bot-container';
-import { BotExitStatus } from '.';
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
+import { RpcPort } from '@dxos/rpc';
+
+import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
+import { BotContainer, BotExitStatus } from './bot-container';
 
 const log = debug('dxos:botkit:node-container');
 
@@ -64,9 +62,9 @@ export class NodeContainer implements BotContainer {
     return port;
   }
 
-  async kill(id: string) {
+  async kill (id: string) {
     const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
-    
+
     child.kill();
     this._processes.delete(id);
   }

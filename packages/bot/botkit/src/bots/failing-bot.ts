@@ -3,7 +3,7 @@
 //
 
 import { createIpcPort } from '../bot-container';
-import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
+import { BotService, InitializeRequest, SendCommandRequest } from '../proto/gen/dxos/bot';
 import { startBot } from './start-bot';
 
 /**

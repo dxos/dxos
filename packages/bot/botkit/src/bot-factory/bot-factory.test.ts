@@ -1,8 +1,14 @@
-import { BotFactory } from "./bot-factory";
-import { NodeContainer } from "../bot-container";
-import { sleep } from "@dxos/async";
-import expect from 'expect'
-import { Bot } from "../proto/gen/dxos/bot";
+//
+// Copyright 2021 DXOS.org
+//
+
+import expect from 'expect';
+
+import { sleep } from '@dxos/async';
+
+import { NodeContainer } from '../bot-container';
+import { Bot } from '../proto/gen/dxos/bot';
+import { BotFactory } from './bot-factory';
 
 describe('BotFactory', () => {
   describe('with NodeContainer', () => {
@@ -11,12 +17,12 @@ describe('BotFactory', () => {
       const botFactory = new BotFactory(container);
 
       const bot = await botFactory.SpawnBot({
-        package: { localPath: require.resolve('../bots/failing-bot')}
+        package: { localPath: require.resolve('../bots/failing-bot') }
       });
 
       void botFactory.SendCommand({
         botId: bot.id,
-        command: new Uint8Array(),
+        command: new Uint8Array()
       }); // Do not wait because the bot process will crash.
 
       // TODO(dmaretskyi): Replace with waiting for update from bot-factory.
@@ -25,6 +31,6 @@ describe('BotFactory', () => {
       const { bots } = await botFactory.GetBots();
       expect(bots[0].status).toEqual(Bot.Status.STOPPED);
       expect(bots[0].exitCode).toEqual(255);
-    })
-  })
-})
+    });
+  });
+});
