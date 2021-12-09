@@ -6,8 +6,7 @@ import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { NodeContainer } from './bot-container';
-import { BotController } from './bot-controller';
-import { BotFactory } from './bot-factory';
+import { BotFactory, BotController } from './bot-factory';
 
 const main = async () => {
   const signal = process.env.DX_SIGNAL_ENDPOINT ?? 'ws://localhost:4000';
