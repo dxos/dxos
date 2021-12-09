@@ -101,34 +101,58 @@ describe('Node container', () => {
       await client.destroy();
     });
   });
-});
 
-describe('IPC port', () => {
-  for (let i = 0; i < 2; i++) {
-    it(`test #${i}`, async () => {
-      const child = fork(require.resolve('../bots/empty-bot'), [], {
-        execArgv: ['-r', 'ts-node/register/transpile-only'],
-        serialization: 'advanced',
-        stdio: 'inherit'
+  it('Detects when the bot crashes', async () => {
+    const container = new NodeContainer(['ts-node/register/transpile-only']);
+
+    const id = createId()
+    const port = await container.spawn({
+      localPath: require.resolve('../bots/failing-bot')
+    }, id);
+    const handle = new BotHandle(port, id)
+    await handle.open();
+    await handle.rpc.Initialize({});
+
+    const promise = container.exited.waitForCount(1);
+
+    void handle.rpc.Command({}); // This will hang because the bot has crashed.
+
+    const [, status] = await promise;
+    expect(status.code).toBe(255);
+    expect(status.signal).toBe(null);
+
+    await handle.close();
+  });
+
+  describe('IPC port', () => {
+    for (let i = 0; i < 2; i++) {
+      it(`test #${i}`, async () => {
+        const child = fork(require.resolve('../bots/empty-bot'), [], {
+          execArgv: ['-r', 'ts-node/register/transpile-only'],
+          serialization: 'advanced',
+          stdio: 'inherit'
+        });
+  
+        const port = createIpcPort(child);
+  
+        const rpc = createRpcClient(
+          schema.getService('dxos.bot.BotService'),
+          {
+            port
+          }
+        );
+  
+        await rpc.open();
+  
+        const command = PublicKey.random().asUint8Array();
+        const { response } = await rpc.rpc.Command({ command });
+        assert(response);
+        expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
+  
+        assert(child.kill(), 'Kill failed.');
       });
-
-      const port = createIpcPort(child);
-
-      const rpc = createRpcClient(
-        schema.getService('dxos.bot.BotService'),
-        {
-          port
-        }
-      );
-
-      await rpc.open();
-
-      const command = PublicKey.random().asUint8Array();
-      const { response } = await rpc.rpc.Command({ command });
-      assert(response);
-      expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
-
-      assert(child.kill(), 'Kill failed.');
-    });
-  }
+    }
+  });
 });
+
+

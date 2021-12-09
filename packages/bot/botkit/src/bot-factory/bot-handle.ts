@@ -20,7 +20,7 @@ export class BotHandle {
       schema.getService('dxos.bot.BotService'),
       {
         port,
-        timeout: 60000
+        timeout: 10000
       }
     );
 

@@ -31,6 +31,7 @@ export class NodeContainer implements BotContainer {
 
   async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
     assert(pkg.localPath, 'Node container only supports "localPath" package specifiers.');
+    log(`[${id}] Spawning ${pkg.localPath}`);
     const child = fork(pkg.localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
       serialization: 'advanced',
@@ -44,15 +45,18 @@ export class NodeContainer implements BotContainer {
     this._processes.set(id, child);
 
     child.on('exit', (code, signal) => {
+      log(`[${id}] exited with code ${code} and signal ${signal}`);
       this._processes.delete(id);
       this.exited.emit([id, { code, signal }]);
     });
 
     child.on('error', (error) => {
+      log(`[${id}] error: ${error}`);
       this.error.emit([id, error]);
     });
 
     child.on('disconnect', () => {
+      log(`[${id}] IPC stream disconnected`);
       this.error.emit([id, new Error('Bot child process disconnected from IPC stream.')]);
     });
 
