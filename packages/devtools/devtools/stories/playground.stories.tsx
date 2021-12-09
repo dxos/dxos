@@ -192,7 +192,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
         </Box>
       </Box>
       <Box>
-        {parties.map(party => <PartyControls party={party} />)}
+        {parties.map(party => <PartyControls key={party.key.toHex()} party={party} />)}
       </Box>
     </Box>
   );
