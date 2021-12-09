@@ -133,7 +133,7 @@ export class PartyInternal {
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined
-    }
+    };
   }
 
   /**

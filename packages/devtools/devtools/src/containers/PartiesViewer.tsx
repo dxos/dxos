@@ -6,6 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
+
 import { useStream } from '../hooks';
 
 export const PartiesViewer = () => {
