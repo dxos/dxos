@@ -85,6 +85,16 @@ export class PartyCore {
     return this._pipeline;
   }
 
+  get timeframe () {
+    assert(this._timeframeClock, 'Party not open');
+    return this._timeframeClock.timeframe;
+  }
+
+  get timeframeUpdate () {
+    assert(this._timeframeClock, 'Party not open');
+    return this._timeframeClock.update;
+  }
+
   async getWriteFeed () {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
     assert(feed, `No writable feed found for party ${this._partyKey}`);

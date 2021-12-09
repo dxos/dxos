@@ -37,6 +37,8 @@ service DevtoolsHost {
   // ECHO
   //
 
+  rpc SubscribeToParties(SubscribeToPartiesRequest) returns (stream SubscribeToPartiesResponse);
+
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
 
   //
@@ -106,6 +108,13 @@ message GetNetworkPeersResponse {
   }
 
   repeated PeerInfo peers = 1;
+}
+
+message SubscribeToPartiesRequest {}
+
+message SubscribeToPartiesResponse {
+  // JSON-encoded payload.
+  string data = 1;
 }
 
 message SubscribeToItemsRequest {}

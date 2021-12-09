@@ -29,11 +29,22 @@ export class Party {
     return `Party(${JSON.stringify({ key: this.key, open: this.isOpen })})`;
   }
 
+  toJSON () {
+    return this._internal.toJSON();
+  }
+
   /**
    * Event that is emitted when party state changes or metadata is updated.
    */
   get update () {
     return this._internal.update;
+  }
+
+  /**
+   * Event that is emitted when the party timeframe changes.
+   */
+  get timeframeUpdate () {
+    return this._internal.timeframeUpdate;
   }
 
   /**
