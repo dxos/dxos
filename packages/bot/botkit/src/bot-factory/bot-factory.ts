@@ -10,18 +10,47 @@ import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import { createId } from '@dxos/crypto';
+import { debug } from 'debug';
+
+const log = debug('dxos:botkit:bot-factory');
 
 /**
  * Handles creation and managing bots.
  */
 export class BotFactory implements BotFactoryService {
-  private readonly _bots: BotHandle[] = [];
+  private readonly _bots = new Map<string, BotHandle>();
 
-  constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {}
+  constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {
+    _botContainer.exited.on(([id, status]) => {
+      const bot = this._bots.get(id);
+      if(!bot) {
+        log(`Bot exited but not found in factory: ${id}`);
+        return;
+      }
+
+      bot.onProcessExited(status);
+    });
+
+    _botContainer.error.on(async ([id, error]) => {
+      const bot = this._bots.get(id);
+      if(!bot) {
+        log(`Bot errored but not found in factory: ${id}`);
+        return;
+      }
+
+      bot.onProcessError(error);
+
+      try {
+        await _botContainer.kill(id);
+      } catch(err) {
+        log(`Failed to kill bot: ${id}`);
+      }
+    });
+  }
 
   async GetBots () {
     return {
-      bots: this._bots.map(handle => handle.bot)
+      bots: Array.from(this._bots.values()).map(handle => handle.bot)
     };
   }
 
@@ -35,7 +64,7 @@ export class BotFactory implements BotFactoryService {
       invitation: request.invitation,
       secret: request.secret
     });
-    this._bots.push(handle);
+    this._bots.set(id, handle);
     return handle.bot;
   }
 
@@ -60,11 +89,11 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Destroy () {
-    await Promise.all(this._bots.map(bot => bot.rpc.Stop()));
+    await Promise.all(Array.from(this._bots.values()).map(bot => bot.rpc.Stop()));
   }
 
   private _getBot (botId: string) {
-    const bot = this._bots.find(bot => bot.bot.id === botId);
+    const bot = this._bots.get(botId);
     assert(bot, 'Bot not found');
     return bot;
   }

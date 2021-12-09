@@ -15,6 +15,7 @@ export interface BotContainer {
   error: ReadOnlyEvent<[id: string, error: Error]>;
   exited: ReadOnlyEvent<[id: string, status: BotExitStatus]>;
 
-  spawn: (pkg: BotPackageSpecifier, id: string) => Promise<RpcPort>
-  killAll: () => void
+  spawn(pkg: BotPackageSpecifier, id: string): Promise<RpcPort>;
+  kill(id: string): Promise<void>;
+  killAll(): void;
 }

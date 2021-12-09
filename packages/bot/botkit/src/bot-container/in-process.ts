@@ -35,13 +35,21 @@ export class InProcessBotContainer implements BotContainer {
     return botHandlePort;
   }
 
+  async kill(id: string) {
+    if(!this._bots.has(id)) {
+      throw new Error(`Bot ${id} not found`);
+    }
+
+    this._bots.delete(id);
+    this.exited.emit([id, {
+      code: null,
+      signal: null,
+    }])
+  }
+
   killAll () {
     for(const id of Array.from(this._bots.keys())) {
-      this._bots.delete(id);
-      this.exited.emit([id, {
-        code: null,
-        signal: null,
-      }])
+      this.kill(id);
     }
   }
 }

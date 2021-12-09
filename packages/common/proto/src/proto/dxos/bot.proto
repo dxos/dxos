@@ -22,6 +22,10 @@ message Bot {
 
   string id = 1;
   Status status = 2;
+
+  int32 exit_code = 3;
+  string exit_signal = 4;
+  string error = 5;
 }
 
 message GetBotsResponse {

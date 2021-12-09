@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/crypto';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { BotExitStatus } from '..';
 
 import { schema } from '../proto/gen';
 import { Bot, BotService } from '../proto/gen/dxos/bot';
@@ -49,5 +50,22 @@ export class BotHandle {
 
   toString () {
     return `BotHandle: ${this._bot.id}`;
+  }
+
+  /**
+   * Called when the process backing the bot exits.
+   */
+  onProcessExited(status: BotExitStatus) {
+    this.bot.status = Bot.Status.STOPPED;
+    this.bot.exitCode = status.code ?? undefined; 
+    this.bot.exitSignal = status.signal ?? undefined; 
+  }
+  
+  /**
+   * Called when there's an critical error from the bot container backing the bot.
+   */
+  onProcessError(error: Error) {
+    this.bot.status = Bot.Status.STOPPED;
+    this.bot.error = error.stack;
   }
 }
