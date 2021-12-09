@@ -10,8 +10,7 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
-import { BotController } from './bot-controller';
-import { BotFactory } from './bot-factory';
+import { BotController, BotFactory } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
