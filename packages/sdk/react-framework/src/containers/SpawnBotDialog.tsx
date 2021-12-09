@@ -31,7 +31,7 @@ export const SpawnBotDialog = ({
   const [processing, setProcessing] = useState(false);
   const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
 
-  const handleProcessInvitation = async (path: string) => {
+  const handleSpawnProcess = async (path: string) => {
     if (!botFactoryClient) {
       return;
     }
@@ -58,14 +58,14 @@ export const SpawnBotDialog = ({
         spellCheck={false}
         value={botPath}
         onChange={(event) => setBotPath(event.target.value)}
-        onKeyDown={handleKey('Enter', () => handleProcessInvitation(botPath))}
+        onKeyDown={handleKey('Enter', () => handleSpawnProcess(botPath))}
       />
     );
 
     const joinPartyActions = (
       <>
         <Button onClick={onClose}>Close</Button>
-        <Button disabled={processing || !botFactoryClient} onClick={() => handleProcessInvitation(botPath)}>Invite</Button>
+        <Button disabled={processing || !botFactoryClient} onClick={() => handleSpawnProcess(botPath)}>Spawn</Button>
       </>
     );
 

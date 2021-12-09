@@ -56,7 +56,7 @@ const User = () => {
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
   const client = useClient();
-  const counterItem = useSelection(party?.database.select(s => s
+  const counterItems = useSelection(party?.database.select(s => s
     .filter({ type: 'DXOS_COUNTER' })
     .items)
   , [party?.key]);
@@ -67,9 +67,11 @@ const User = () => {
   };
 
   useEffect(() => {
+    handleCreateParty();
+  }, []);
+  
+  useEffect(() => {
     setImmediate(async () => {
-      await handleCreateParty();
-      assert(party);
       const textItem = await party?.database.createItem({
         type: TEST_TYPE,
         model: ObjectModel,
@@ -79,7 +81,7 @@ const User = () => {
       });
       setTextItem(textItem);
     });
-  }, []);
+  }, [party]);
 
   useEffect(() => {
     if (textItem) {
@@ -109,12 +111,14 @@ const User = () => {
         <Parties />
       </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        DXOS counter: {counterItem?.[0].model.getProperty('counter')}
+        Number of occurences of word "DXOS" in below text: {(counterItems?.length && counterItems[0].model.getProperty('counter')) ?? 0}
       </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <TextField
           fullWidth
           placeholder='Type in some text with word DXOS...'
+          multiline
+          rows={5}
           spellCheck={false}
           value={testText}
           onChange={(event) => setTestText(event.target.value)}
