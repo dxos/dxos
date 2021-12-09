@@ -3,12 +3,15 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import type { defs } from '@dxos/config';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+
+const log = debug('dxos:bot:bot-factory');
 
 /**
  * Handles creation and managing bots.
@@ -25,14 +28,19 @@ export class BotFactory implements BotFactoryService {
   }
 
   async SpawnBot (request: SpawnBotRequest) {
+    log('Spawning bot');
     const handle = await this._botContainer.spawn(request.package ?? {});
+    log('Opening bot handle');
     await handle.open();
+    log('Initializing bot');
     await handle.rpc.Initialize({
       config: this._botConfig,
       invitation: request.invitation,
       secret: request.secret
     });
+    log('Initialized bot');
     this._bots.push(handle);
+    log('Bot spawned');
     return handle.bot;
   }
 
