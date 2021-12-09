@@ -9,6 +9,7 @@ import type { defs } from '@dxos/config';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { createId } from '@dxos/crypto';
 
 /**
  * Handles creation and managing bots.
@@ -25,7 +26,9 @@ export class BotFactory implements BotFactoryService {
   }
 
   async SpawnBot (request: SpawnBotRequest) {
-    const handle = await this._botContainer.spawn(request.package ?? {});
+    const id = createId();
+    const port = await this._botContainer.spawn(request.package ?? {}, id);
+    const handle = new BotHandle(port, id);
     await handle.open();
     await handle.rpc.Initialize({
       config: this._botConfig,

@@ -15,7 +15,7 @@ import { BotContainer } from './bot-container';
 const log = debug('dxos:botkit:node-container');
 
 export class NodeContainer implements BotContainer {
-  private _processes: ChildProcess[] = [];
+  private _processes = new Map<string, ChildProcess>();
 
   constructor (
     /**
@@ -24,7 +24,7 @@ export class NodeContainer implements BotContainer {
     private readonly _additionalRequireModules: string[] = []
   ) {}
 
-  async spawn (pkg: BotPackageSpecifier): Promise<BotHandle> {
+  async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
     assert(pkg.localPath, 'Node container only supports "localPath" package specifiers.');
     const child = fork(pkg.localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
@@ -36,12 +36,12 @@ export class NodeContainer implements BotContainer {
       }
     });
     const port = createIpcPort(child);
-    this._processes.push(child);
-    return new BotHandle(port);
+    this._processes.set(id, child);
+    return port;
   }
 
   killAll () {
-    for (const botProcess of this._processes) {
+    for (const botProcess of this._processes.values()) {
       botProcess.kill();
     }
   }

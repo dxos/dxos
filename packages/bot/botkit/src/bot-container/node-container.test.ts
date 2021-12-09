@@ -6,20 +6,24 @@ import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 
-import { PublicKey } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
+import { BotHandle } from '..';
 
 describe('Node container', () => {
   it('Starts an empty node bot', async () => {
     const container = new NodeContainer(['ts-node/register/transpile-only']);
-    const handle = await container.spawn({
+    
+    const id = createId()
+    const port = await container.spawn({
       localPath: require.resolve('../bots/empty-bot')
-    });
+    }, id);
+    const handle = new BotHandle(port, id)
 
     await handle.open();
     await handle.rpc.Initialize({});
@@ -45,9 +49,11 @@ describe('Node container', () => {
       const { client, invitation, secret } = await setupClient(config);
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
-      const handle = await container.spawn({
+      const id = createId()
+      const port = await container.spawn({
         localPath: require.resolve('../bots/start-client-bot')
-      });
+      }, id);
+      const handle = new BotHandle(port, id)
 
       await handle.open();
       await handle.rpc.Initialize({
@@ -69,9 +75,11 @@ describe('Node container', () => {
       const { client, party, invitation, secret } = await setupClient(config);
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
-      const handle = await container.spawn({
+      const id = createId();
+      const port = await container.spawn({
         localPath: require.resolve('../bots/start-echo-bot')
-      });
+      }, id);
+      const handle = new BotHandle(port, id)
 
       await handle.open();
       await handle.rpc.Initialize({

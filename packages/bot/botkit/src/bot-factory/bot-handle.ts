@@ -15,7 +15,7 @@ export class BotHandle {
   private readonly _rpc: ProtoRpcClient<BotService>;
   private readonly _bot: Bot;
 
-  constructor (port: RpcPort) {
+  constructor (port: RpcPort, id: string) {
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotService'),
       {
@@ -25,7 +25,7 @@ export class BotHandle {
     );
 
     this._bot = {
-      id: PublicKey.random().toString(),
+      id,
       status: Bot.Status.STOPPED
     };
   }
