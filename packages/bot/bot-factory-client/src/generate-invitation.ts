@@ -8,6 +8,7 @@ import type { Client, PartyProxy } from '@dxos/client';
 import { SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
+
 import { Invitation } from './proto/gen/dxos/client';
 
 // Encode with only alpha-numberic characters.
