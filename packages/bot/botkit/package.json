@@ -6,6 +6,13 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "bin": {
+    "bot-factory": "bin/main.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
