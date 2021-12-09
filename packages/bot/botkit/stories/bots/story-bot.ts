@@ -7,9 +7,9 @@ import debug from 'debug';
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { ClientBot } from './client-bot';
+import { ClientBot } from '../../src';
 
-const log = debug('dxos:story-bot');
+const log = debug('dxos:bot:story-bot');
 
 export class StoryBot extends ClientBot {
   constructor () {
@@ -28,6 +28,8 @@ export class StoryBot extends ClientBot {
         counter: 0
       }
     });
+
+    // Subscribe to updates in ECHO and keep counter of occurrences of word DXOS.
     this.party.database.select(s => s.filter({ type: 'TEST_TYPE' }).items).update.on(async (data) => {
       log('onUpdate triggered');
       let counter = 0;

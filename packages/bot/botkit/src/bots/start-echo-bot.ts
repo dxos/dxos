@@ -8,7 +8,7 @@ import { createIpcPort } from '../bot-container';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 import { startBot } from './start-bot';
 
-const log = debug('dxos:echo-bot');
+const log = debug('dxos:bot:echo-bot');
 
 if (typeof require !== 'undefined' && require.main === module) {
   const port = createIpcPort(process);

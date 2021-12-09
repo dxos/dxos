@@ -20,6 +20,6 @@
     "experimentalDecorators": true,
     "stripInternal": true,
   },
-  "include": ["**/src/**/*.ts","**/src/**/*.tsx"],
+  "include": ["**/src/**/*.ts","**/src/**/*.tsx", "packages/bot/botkit/stories/bots/start-story-bot.ts"],
   "exclude": ["node_modules", "dist"]
 }

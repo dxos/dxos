@@ -13,10 +13,9 @@ import {
   ClientProvider,
   ProfileInitializer,
   useClient,
-  useParties,
   useSelection
 } from '@dxos/react-client';
-import { CopyText, FullScreen } from '@dxos/react-components';
+import { FullScreen } from '@dxos/react-components';
 
 import {
   ErrorBoundary,
@@ -31,22 +30,8 @@ export default {
 
 const TEST_TYPE = 'TEST_TYPE';
 
-const Parties = () => {
-  const parties = useParties();
-
-  return (
-    <Box>
-      {parties.map(party => (
-        <Box key={party.key.toHex()}>
-          <CopyText value={party.key.toHex()} />
-        </Box>
-      ))}
-    </Box>
-  );
-};
-
 const User = () => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [party, setParty] = useState<PartyProxy>();
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
@@ -91,8 +76,7 @@ const User = () => {
   return (
     <Box>
       <Toolbar>
-        <Button onClick={() => setOpen(true)}>Open</Button>
-        <Button onClick={handleCreateParty}>Create Party</Button>
+        <Button onClick={() => setOpen(true)}>Spawn bot</Button>
       </Toolbar>
       {open && (
         <SpawnBotDialog
@@ -102,9 +86,6 @@ const User = () => {
           onBotCreated={() => window.alert('Bot created')}
         />
       )}
-      <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
-      </Box>
       <Box sx={{ marginTop: 2, padding: 1 }}>
         Number of occurences of word &quot;DXOS&quot; in below text: {(counterItems?.length && counterItems[0].model.getProperty('counter')) ?? 0}
       </Box>

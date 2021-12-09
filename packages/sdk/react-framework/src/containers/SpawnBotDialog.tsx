@@ -28,7 +28,7 @@ export const SpawnBotDialog = ({
   onBotCreated
 } : SpawnBotDialogProps) => {
   const client = useClient();
-  const [botPath, setBotPath] = useState('./src/bots/start-story-bot');
+  const [botPath, setBotPath] = useState('./stories/bots/start-story-bot');
   const [processing, setProcessing] = useState(false);
   const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
 

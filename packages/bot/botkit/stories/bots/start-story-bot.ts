@@ -4,11 +4,11 @@
 
 import debug from 'debug';
 
-import { createIpcPort } from '../bot-container';
-import { startBot } from './start-bot';
+import { createIpcPort } from '../../src/bot-container';
+import { startBot } from '../../src/bots/start-bot';
 import { StoryBot } from './story-bot';
 
-const log = debug('dxos:story-bot');
+const log = debug('dxos:bot:story-bot');
 
 if (typeof require !== 'undefined' && require.main === module) {
   const port = createIpcPort(process);

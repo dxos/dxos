@@ -12,7 +12,7 @@ import { Party } from '@dxos/echo-db';
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
 import { decodeInvitation } from '../utils';
 
-const log = debug('dxos:client-bot');
+const log = debug('dxos:bot:client-bot');
 
 export class ClientBot implements BotService {
   protected client: Client | undefined;
@@ -33,7 +33,12 @@ export class ClientBot implements BotService {
       const invitation = decodeInvitation(request.invitation.invitationCode);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       log('Client bot join party');
-      this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
+      // TODO(yivlad): errors are nto handled well in RPC.
+      try {
+        this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
+      } catch (e: unknown) {
+        throw new Error(`Failed to join party: ${e}`);
+      }
     }
     log('Client bot onInit');
     await this.onInit(request);
