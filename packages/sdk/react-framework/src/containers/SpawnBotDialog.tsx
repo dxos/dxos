@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
-import { BotFactoryClient, BotHandle } from '@dxos/bot-factory-client';
+import type { BotHandle } from '@dxos/bot-factory-client';
 import { PartyProxy } from '@dxos/client';
-import { PublicKey } from '@dxos/crypto';
+import { useBotFactoryClient } from '@dxos/react-bot-factory-client';
 import { useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 
@@ -30,12 +30,10 @@ export const SpawnBotDialog = ({
   const client = useClient();
   const [botPath, setBotPath] = useState('./stories/bots/start-story-bot');
   const [processing, setProcessing] = useState(false);
-  const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
+
+  const botFactoryClient = useBotFactoryClient();
 
   const handleSpawnProcess = async (path: string) => {
-    if (!botFactoryClient) {
-      return;
-    }
     try {
       setProcessing(true);
       const botHandle = await botFactoryClient.spawn(
@@ -79,14 +77,6 @@ export const SpawnBotDialog = ({
   };
 
   const dialogProps = getDialogProps();
-
-  useEffect(() => {
-    const bfc = new BotFactoryClient(client.echo.networkManager);
-    setImmediate(async () => {
-      await bfc.start(PublicKey.from('e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc'));
-      setBotFactoryClient(bfc);
-    });
-  }, []);
 
   return (
     <Dialog
