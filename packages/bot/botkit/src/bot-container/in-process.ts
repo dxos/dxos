@@ -2,14 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
+import { BotExitStatus } from '.';
 
 import { schema } from '../proto/gen';
 import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
 import { BotContainer } from './bot-container';
 
 export class InProcessBotContainer implements BotContainer {
+  private readonly _bots = new Map<string, BotService>();
+
   constructor (private readonly _createBot: () => BotService) { }
+
+  readonly error = new Event<[id: string, error: Error]>();
+  readonly exited = new Event<[id: string, status: BotExitStatus]>();
 
   async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
     const [botHandlePort, botPort] = createLinkedPorts();
@@ -23,8 +30,18 @@ export class InProcessBotContainer implements BotContainer {
     });
     void rpc.open();
 
+    this._bots.set(id, botService);
+
     return botHandlePort;
   }
 
-  killAll () {}
+  killAll () {
+    for(const id of Array.from(this._bots.keys())) {
+      this._bots.delete(id);
+      this.exited.emit([id, {
+        code: null,
+        signal: null,
+      }])
+    }
+  }
 }
