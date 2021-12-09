@@ -14,18 +14,18 @@ import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
+import { createHandle } from '../testutils/bots';
 
 describe('Node container', () => {
   it('Starts an empty node bot', async () => {
     const container = new NodeContainer(['ts-node/register/transpile-only']);
 
-    const id = createId();
+    const handle = createHandle();
     const port = await container.spawn({
       localPath: require.resolve('../bots/empty-bot')
-    }, id);
-    const handle = new BotHandle(port, id);
+    }, handle.id);
 
-    await handle.open();
+    await handle.open(port);
     await handle.rpc.Initialize({});
     const command = PublicKey.random();
     const { response } = await handle.rpc.Command({ command: command.asUint8Array() });
@@ -49,13 +49,12 @@ describe('Node container', () => {
       const { client, invitation, secret } = await setupClient(config);
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
-      const id = createId();
+      const handle = createHandle()
       const port = await container.spawn({
         localPath: require.resolve('../bots/start-client-bot')
-      }, id);
-      const handle = new BotHandle(port, id);
+      }, handle.id);
 
-      await handle.open();
+      await handle.open(port);
       await handle.rpc.Initialize({
         config,
         invitation: {
@@ -75,13 +74,12 @@ describe('Node container', () => {
       const { client, party, invitation, secret } = await setupClient(config);
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
-      const id = createId();
+      const handle = createHandle();
       const port = await container.spawn({
         localPath: require.resolve('../bots/start-echo-bot')
-      }, id);
-      const handle = new BotHandle(port, id);
+      }, handle.id);
 
-      await handle.open();
+      await handle.open(port);
       await handle.rpc.Initialize({
         config,
         invitation: {
@@ -105,12 +103,11 @@ describe('Node container', () => {
   it('Detects when the bot crashes', async () => {
     const container = new NodeContainer(['ts-node/register/transpile-only']);
 
-    const id = createId();
+    const handle = createHandle();
     const port = await container.spawn({
       localPath: require.resolve('../bots/failing-bot')
-    }, id);
-    const handle = new BotHandle(port, id);
-    await handle.open();
+    }, handle.id);
+    await handle.open(port);
     await handle.rpc.Initialize({});
 
     const promise = container.exited.waitForCount(1);

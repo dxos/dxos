@@ -11,6 +11,7 @@ import { createId } from '@dxos/crypto';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { join } from 'path';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -56,20 +57,28 @@ export class BotFactory implements BotFactoryService {
 
   async SpawnBot (request: SpawnBotRequest) {
     const id = createId();
-    log(`[${id}] Spawning bot ${JSON.stringify(request)}`);
-    const port = await this._botContainer.spawn(request.package ?? {}, id);
-    const handle = new BotHandle(port, id);
-    log(`[${id}] Openning RPC channel`);
-    await handle.open();
-    log(`[${id}] Initializing bot`);
-    await handle.rpc.Initialize({
-      config: this._botConfig,
-      invitation: request.invitation,
-      secret: request.secret
-    });
-    log(`[${id}] Initialization complete`);
-    this._bots.set(id, handle);
-    return handle.bot;
+    try {
+      log(`[${id}] Spawning bot ${JSON.stringify(request)}`);
+      
+      const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
+      log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
+
+      const port = await this._botContainer.spawn(request.package ?? {}, id);
+      log(`[${id}] Openning RPC channel`);
+      await handle.open(port);
+      log(`[${id}] Initializing bot`);
+      await handle.rpc.Initialize({
+        config: this._botConfig,
+        invitation: request.invitation,
+        secret: request.secret
+      });
+      log(`[${id}] Initialization complete`);
+      this._bots.set(id, handle);
+      return handle.bot;
+    } catch (error: any) {
+      log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
+      throw error;
+    }
   }
 
   async Start (request: Bot) {
