@@ -4,7 +4,7 @@
 
 import { createLinkedPorts, createRpcServer } from '@dxos/rpc';
 
-import { BotHandle } from '../bot-handle';
+import { BotHandle } from '../bot-factory';
 import { schema } from '../proto/gen';
 import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
 import { BotContainer } from './bot-container';

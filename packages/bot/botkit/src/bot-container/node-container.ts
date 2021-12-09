@@ -8,7 +8,7 @@ import debug from 'debug';
 
 import { RpcPort } from '@dxos/rpc';
 
-import { BotHandle } from '../bot-handle';
+import { BotHandle } from '../bot-factory';
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
 import { BotContainer } from './bot-container';
 
