@@ -11,5 +11,22 @@
   "include": [
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "../../bot/bot-factory-client"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../react-registry-client"
+    }
   ]
 }

@@ -23,6 +23,7 @@
     "@dxos/bot-factory-client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/proto": "workspace:*",
@@ -30,8 +31,7 @@
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.3.3",
-    "esbuild": "^0.11.23",
-    "@dxos/debug": "workspace:*"
+    "esbuild": "^0.11.23"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
