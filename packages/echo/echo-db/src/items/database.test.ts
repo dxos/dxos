@@ -12,6 +12,7 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
+import { Item } from '.';
 import { Database } from '..';
 import { DataServiceRouter } from './data-service-router';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
@@ -141,7 +142,8 @@ describe('Database', () => {
         await backendItem.model.sendMessage('foo');
         await backendItem.model.sendMessage('bar');
 
-        const frontendItem = await frontend.waitForItem(item => item.id === backendItem.id);
+        const frontendItem: Item<TestListModel> = await frontend.waitForItem(item => item.id === backendItem.id);
+        await frontendItem.model.update.waitForCondition(() => frontendItem.model.messages.length === 2);
 
         expect(frontendItem.model.messages).toHaveLength(2);
       });
