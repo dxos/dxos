@@ -11,14 +11,19 @@ export type Unsubscribe = () => void;
  * Tracks a number of subscriptions to free them all together.
  */
 export class SubscriptionGroup {
-  private _subscriptions: Unsubscribe[] = [];
+  private _subscriptions: Record<string, Unsubscribe> = {};
 
-  push (callback: Unsubscribe) {
-    this._subscriptions.push(callback);
+  push (callback: Unsubscribe, key?: string) {
+    key = key ?? (Object.keys(this._subscriptions).length + 1).toString();
+    this._subscriptions[key] = callback;
+  }
+
+  subscriptionExists (key: string) {
+    return Boolean(this._subscriptions[key]);
   }
 
   unsubscribe () {
-    this._subscriptions.forEach(cb => cb());
-    this._subscriptions = [];
+    Object.values(this._subscriptions).forEach(cb => cb());
+    this._subscriptions = {};
   }
 }
