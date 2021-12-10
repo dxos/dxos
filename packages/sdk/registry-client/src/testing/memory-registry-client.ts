@@ -9,6 +9,7 @@ import { IQuery, Filtering } from '../querying';
 import {
   Domain,
   IRegistryClient,
+  RecordKind,
   RecordMetadata,
   RegistryDataRecord,
   RegistryRecord,
@@ -137,7 +138,9 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDataRecords<T = any> (query?: IQuery): Promise<RegistryDataRecord[]> {
-    return Promise.resolve([]);
+    const records = await this.getRecords(query);
+    const dataRecords = records.filter((record): record is RegistryDataRecord<T> => record.kind === RecordKind.Data)
+    return dataRecords;
   }
 
   async disconnect () {

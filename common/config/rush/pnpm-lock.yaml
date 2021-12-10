@@ -40,6 +40,7 @@ importers:
       '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
@@ -73,6 +74,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1932,10 +1934,9 @@ importers:
   ../../packages/sdk/react-bot-factory-client:
     dependencies:
       '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.4.1
       '@dxos/react-client': link:../react-client
       '@dxos/react-registry-client': link:../react-registry-client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -1945,9 +1946,8 @@ importers:
       typescript: 4.5.2
     specifiers:
       '@dxos/bot-factory-client': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.4.1
       '@dxos/react-client': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -2107,11 +2107,11 @@ importers:
       url-join: ^4.0.1
   ../../packages/sdk/react-framework:
     dependencies:
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.4.1
+      '@dxos/react-bot-factory-client': link:../react-bot-factory-client
       assert: 2.0.0
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2124,12 +2124,15 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/client': link:../client
+      '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
+      '@dxos/registry-client': link:../registry-client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
@@ -2145,6 +2148,7 @@ importers:
       '@types/url-join': 4.0.1
       '@types/uuid': 8.3.3
       babel-plugin-add-module-exports: 1.0.4
+      protobufjs: 6.11.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       typescript: 4.5.2
@@ -2154,6 +2158,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2161,8 +2166,10 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.4.1
       '@dxos/object-model': workspace:*
+      '@dxos/react-bot-factory-client': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -2183,6 +2190,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       mobile-detect: ~1.4.5
+      protobufjs: ^6.9.0
       react: ^17.0.2
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^17.0.2
@@ -6432,46 +6440,36 @@ packages:
     resolution:
       integrity: sha512-VZMYa7+fXHdwIq1TDhSXoVmSPEGM/aa+6Aiq3nVVJ9bXr24zScr+NlKFKC3iPljA7ho/GAZr+d2jOf5GIRC30Q==
   /@protobufjs/aspromise/1.1.2:
-    dev: false
     resolution:
       integrity: sha1-m4sMxmPWaafY9vXQiToU00jzD78=
   /@protobufjs/base64/1.1.2:
-    dev: false
     resolution:
       integrity: sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==
   /@protobufjs/codegen/2.0.4:
-    dev: false
     resolution:
       integrity: sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==
   /@protobufjs/eventemitter/1.1.0:
-    dev: false
     resolution:
       integrity: sha1-NVy8mLr61ZePntCV85diHx0Ga3A=
   /@protobufjs/fetch/1.1.0:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/inquire': 1.1.0
-    dev: false
     resolution:
       integrity: sha1-upn7WYYUr2VwDBYZ/wbUVLDYTEU=
   /@protobufjs/float/1.0.2:
-    dev: false
     resolution:
       integrity: sha1-Xp4avctz/Ap8uLKR33jIy9l7h9E=
   /@protobufjs/inquire/1.1.0:
-    dev: false
     resolution:
       integrity: sha1-/yAOPnzyQp4tyvwRQIKOjMY48Ik=
   /@protobufjs/path/1.1.2:
-    dev: false
     resolution:
       integrity: sha1-bMKyDFya1q0NzP0hynZz2Nf79o0=
   /@protobufjs/pool/1.1.0:
-    dev: false
     resolution:
       integrity: sha1-Cf0V8tbTq/qbZbw2ZQbWrXhG/1Q=
   /@protobufjs/utf8/1.1.0:
-    dev: false
     resolution:
       integrity: sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
   /@rollup/plugin-node-resolve/7.1.3_rollup@1.32.1:
@@ -7316,7 +7314,6 @@ packages:
     resolution:
       integrity: sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==
   /@types/long/4.0.1:
-    dev: false
     resolution:
       integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
   /@types/memdown/3.0.0:
@@ -17279,7 +17276,6 @@ packages:
     resolution:
       integrity: sha512-V/73qkPuJmx4BcBF19xPBr+0ZRVBhc4POxvZTZdMeXpJ4NItXSJ/MSwuFT0kQJlCbXvdlZoQQ/418bS1y9Jh6A==
   /long/4.0.0:
-    dev: false
     resolution:
       integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
   /loose-envify/1.4.0:
@@ -20330,7 +20326,6 @@ packages:
       '@types/long': 4.0.1
       '@types/node': 14.14.45
       long: 4.0.0
-    dev: false
     hasBin: true
     requiresBuild: true
     resolution:

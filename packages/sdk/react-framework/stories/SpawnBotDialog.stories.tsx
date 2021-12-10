@@ -24,7 +24,8 @@ import {
   FrameworkContextProvider,
   SpawnBotDialog
 } from '../src';
-import { Column } from './helpers';
+import { Column, createMockRegistry } from './helpers';
+import { RegistryProvider } from '@dxos/react-registry-client';
 
 export default {
   title: 'react-framework/SpawnBotDialog'
@@ -42,6 +43,8 @@ const clientConfig: defs.Config = {
     }
   }
 };
+
+const mockRegistry = createMockRegistry();
 
 const User = () => {
   const [open, setOpen] = useState(false);
@@ -130,15 +133,17 @@ export const Primary = () => {
           justifyContent: 'space-around'
         }}>
           <ClientProvider config={clientConfig}>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <BotFactoryClientProvider>
-                  <Column>
-                    <User />
-                  </Column>
-                </BotFactoryClientProvider>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
+            <RegistryProvider registry={mockRegistry}>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
+                  <BotFactoryClientProvider>
+                    <Column>
+                      <User />
+                    </Column>
+                  </BotFactoryClientProvider>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </RegistryProvider>
           </ClientProvider>
         </Box>
       </ErrorBoundary>
