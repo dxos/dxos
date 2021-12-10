@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 // https://mui.com/components/material-icons
 import {
   FilterTiltShift as SwarmIcon,
+  GroupWork as PartiesIcon,
   AccountTree as ItemsIcon,
   Dns as StorageIcon,
   Router as SignalIcon,
@@ -31,9 +32,10 @@ import { TextModel } from '@dxos/text-model';
 
 import {
   ConfigView,
-  LoggingView,
   ItemsViewer,
+  LoggingView,
   Keyring,
+  PartiesViewer,
   Signal,
   StorageTab,
   SwarmDetails
@@ -95,6 +97,11 @@ const items = [
   {
     title: 'ECHO',
     items: [
+      {
+        id: 'echo.parties',
+        title: 'Parties',
+        icon: PartiesIcon
+      },
       {
         id: 'echo.items',
         title: 'Items',
@@ -197,6 +204,9 @@ export const App = () => {
       </div>
       <div className={className('halo.keyring')}>
         <Keyring />
+      </div>
+      <div className={className('echo.parties')}>
+        <PartiesViewer />
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />

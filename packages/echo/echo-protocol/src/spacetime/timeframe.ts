@@ -57,6 +57,13 @@ export class Timeframe {
     return Array.from(this._frames.values()).reduce((acc, seq) => acc + seq + 1, 0);
   }
 
+  toJSON () {
+    return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
+      frames[key.humanize()] = seq;
+      return frames;
+    }, {});
+  }
+
   toString () {
     return `(${this.frames().map(([key, seq]) => `${key.humanize()} => ${seq}`).join(', ')})`;
   }
