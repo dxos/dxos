@@ -61,14 +61,14 @@ export const subscribeToFeed = (
       if (!party) {
         return;
       }
-  
+
       const { feed } = await party.feedProvider.createOrOpenReadOnlyFeed(feedKey);
- 
+
       // TODO(wittjosiah): Start from timeframe.
       // TODO(wittjosiah): Bidirectional lazy loading?
       feedStream = new Readable({ objectMode: true })
         .wrap(createBatchStream(feed, { live: true }));
- 
+
       feedStream.on('data', blocks => {
         next({ blocks });
       });

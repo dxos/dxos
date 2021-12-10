@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PartyProxy } from "@dxos/client";
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import React from "react";
+import React from 'react';
+
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+
+import { PartyProxy } from '@dxos/client';
 
 interface PartySelectProps {
   parties: PartyProxy[]

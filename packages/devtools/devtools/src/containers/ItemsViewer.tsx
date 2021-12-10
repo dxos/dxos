@@ -48,7 +48,7 @@ export const ItemsViewer = () => {
             defaultCollapseIcon={<CollapseIcon />}
             defaultExpandIcon={<ExpandIcon />}
             sx={{
-              flexGrow: 1, 
+              flexGrow: 1,
               height: 240,
               maxWidth: 400,
               overflowY: 'auto'

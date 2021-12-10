@@ -10,8 +10,8 @@ import { PartyProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { useClient, useParties } from '@dxos/react-client';
 
-import { useStream } from '../hooks';
 import { MessageTable, PartySelect } from '../components';
+import { useStream } from '../hooks';
 
 export const FeedsViewer = () => {
   const parties = useParties();
