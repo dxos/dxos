@@ -17,11 +17,16 @@ export const PartiesViewer = () => {
     return <div>Loading parties...</div>;
   }
 
+  const parties = result.parties.map(party => ({
+    ...party,
+    timeframe: party.timeframe?.toJSON()
+  }));
+
   return (
     <JsonTreeView
       size='small'
       depth={4}
-      data={result.parties}
+      data={parties}
     />
   );
 };

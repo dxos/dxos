@@ -8,6 +8,7 @@ package dxos.devtools;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "./echo/feed.proto";
 import "./halo/keys.proto";
 
 service DevtoolsHost {
@@ -113,17 +114,17 @@ message GetNetworkPeersResponse {
 message SubscribeToPartiesRequest {}
 
 message SubscribeToPartiesResponse {
-  message Party {
+  message PartyInfo {
     string key = 1;
     string title = 2;
     bool isOpen = 3;
     bool isActive = 4;
     int32 feedKeys = 5;
 
-    map<string, int32> timeframe = 10;
+    TimeframeVector timeframe = 10;
   }
 
-  repeated Party parties = 1;
+  repeated PartyInfo parties = 1;
 }
 
 message SubscribeToItemsRequest {}

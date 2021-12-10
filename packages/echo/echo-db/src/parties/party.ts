@@ -29,8 +29,11 @@ export class Party {
     return `Party(${JSON.stringify({ key: this.key, open: this.isOpen })})`;
   }
 
-  toJSON () {
-    return this._internal.toJSON();
+  /**
+   * Summary of a party which is useful for debugging.
+   */
+  get partyInfo () {
+    return this._internal.partyInfo;
   }
 
   /**

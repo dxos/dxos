@@ -125,14 +125,14 @@ export class PartyInternal {
     await this._preferences?.setLastKnownTitle(title);
   }
 
-  toJSON () {
+  get partyInfo () {
     return {
       key: this.key.toHex(),
       title: this.title,
       isOpen: this.isOpen,
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
-      timeframe: this.isOpen ? this._partyCore.timeframe.toJSON() : undefined
+      timeframe: this.isOpen ? this._partyCore.timeframe : undefined
     };
   }
 
