@@ -33,7 +33,7 @@ export const BotFactoryClientProvider = ({
       await botFactoryClient.start(PublicKey.from(topic));
       setBotFactoryClient(botFactoryClient);
     });
-  });
+  }, []);
 
   if (!botFactoryClient) {
     if (PlaceholderComponent) {

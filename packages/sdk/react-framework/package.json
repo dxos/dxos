@@ -69,6 +69,7 @@
     "@dxos/client": "*",
     "@dxos/react-client": "*",
     "@dxos/react-components": "*",
+    "@dxos/react-registry-client": "*",
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
     "@mui/icons-material": ">=5.0.0",
