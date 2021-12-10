@@ -160,6 +160,23 @@ const Controls = ({ port }: { port: RpcPort }) => {
     setModel('');
   };
 
+  async function handleTestSetup () {
+    client.registerModel(TextModel);
+    client.registerModel(MessengerModel);
+    const party = await client.echo.createParty();
+    const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
+    await root.model.setProperty('name', 'root');
+    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
+    const child = await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
+    const text = await party.database.createItem({ model: TextModel, type: 'example:type.text', parent: child.id });
+    await text.model.insert(0, 'Hello world');
+    const messenger = await party.database.createItem({ model: MessengerModel, type: 'example:type.messenger', parent: child.id });
+    await messenger.model.sendMessage({
+      text: 'Hello world',
+      sender: 'Test'
+    });
+  }
+
   return (
     <Box sx={{
       width: 500,
@@ -167,7 +184,8 @@ const Controls = ({ port }: { port: RpcPort }) => {
       borderLeft: '1px solid',
       borderLeftColor: 'primary.main'
     }}>
-      <Button onClick={handleCreateProfile}>Create Profile</Button>
+      <Button disabled={!profile} onClick={handleTestSetup}>Create Test data</Button>
+      {!profile && <Button onClick={handleCreateProfile}>Create Profile</Button>}
       {profile && <Button onClick={handleCreateParty}>Create Party</Button>}
       <Box sx={{ padding: 2 }}>
         <FormControl fullWidth>

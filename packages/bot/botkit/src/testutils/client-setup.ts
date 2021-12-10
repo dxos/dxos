@@ -5,6 +5,7 @@
 import { generateInvitation } from '@dxos/bot-factory-client';
 import { Client, PartyProxy } from '@dxos/client';
 import type { defs } from '@dxos/config';
+import { failUndefined } from '@dxos/debug';
 
 export interface ClientSetup {
   client: Client,
@@ -24,7 +25,7 @@ export const setupClient = async (config?: defs.Config): Promise<ClientSetup> =>
   return {
     client,
     party,
-    invitation: invitation.invitationCode,
-    secret: invitation.secret
+    invitation: invitation.invitationCode ?? failUndefined(),
+    secret: invitation.secret ?? failUndefined()
   };
 };

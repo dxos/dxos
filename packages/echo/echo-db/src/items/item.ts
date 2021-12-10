@@ -5,6 +5,7 @@
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
 
+import { SelectionResult } from '.';
 import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection } from './selection';
@@ -82,10 +83,13 @@ export class Item<M extends Model> extends Entity<M> {
     return Array.from(this._refs.values()).filter(link => !link._isDangling());
   }
 
-  // TODO(burdon): Experimental. (Event?)
-  select (): Selection<any> {
-    // TODO(unknown): Update should be triggered when item's child set or any related links change.
-    return new Selection(() => [this], this._onUpdate.discardParameter());
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   * @param [filter] {SelectFilter}
+   */
+  select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
+    const selection = new Selection(() => [this], this._onUpdate.discardParameter());
+    return new SelectionResult(selection, selector);
   }
 
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?

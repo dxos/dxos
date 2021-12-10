@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
+import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotService } from '../proto/gen/dxos/bot';
 
@@ -15,17 +15,17 @@ export class BotHandle {
   private readonly _rpc: ProtoRpcClient<BotService>;
   private readonly _bot: Bot;
 
-  constructor (port: RpcPort) {
+  constructor (port: RpcPort, id: string) {
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotService'),
       {
         port,
-        timeout: 60000
+        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
       }
     );
 
     this._bot = {
-      id: PublicKey.random().toString(),
+      id,
       status: Bot.Status.STOPPED
     };
   }
@@ -49,5 +49,22 @@ export class BotHandle {
 
   toString () {
     return `BotHandle: ${this._bot.id}`;
+  }
+
+  /**
+   * Called when the process backing the bot exits.
+   */
+  onProcessExited (status: BotExitStatus) {
+    this.bot.status = Bot.Status.STOPPED;
+    this.bot.exitCode = status.code ?? undefined;
+    this.bot.exitSignal = status.signal ?? undefined;
+  }
+
+  /**
+   * Called when there's an critical error from the bot container backing the bot.
+   */
+  onProcessError (error: Error) {
+    this.bot.status = Bot.Status.STOPPED;
+    this.bot.error = error.stack;
   }
 }

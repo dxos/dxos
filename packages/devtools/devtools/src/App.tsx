@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // https://mui.com/components/material-icons
 import {
@@ -25,6 +25,10 @@ import {
   createTheme
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+
+import { MessengerModel } from '@dxos/messenger-model';
+import { useClient } from '@dxos/react-client';
+import { TextModel } from '@dxos/text-model';
 
 import {
   ConfigView,
@@ -140,6 +144,12 @@ const items = [
 ];
 
 export const App = () => {
+  const client = useClient();
+  useEffect(() => {
+    client.registerModel(TextModel);
+    client.registerModel(MessengerModel);
+  }, [client]);
+
   const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
 
