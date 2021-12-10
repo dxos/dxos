@@ -265,7 +265,8 @@ export class PresencePlugin {
     });
     this._broadcast.sendError.on(err => {
       // Filter out "stream closed" errors.
-      if ((err as any).code !== 'ERR_PROTOCOL_STREAM_CLOSED') {
+      // TODO(dmaretskyi): Define error classes for these and use instanceof.
+      if ((err as any).code !== 'ERR_PROTOCOL_STREAM_CLOSED' && err.message !== 'Resource is closed') {
         console.warn(err);
       }
     });

@@ -27,7 +27,7 @@ export function createRamStorage (): IStorage {
 
   fn.root = root;
   fn.type = storage.type;
-  fn.destroy = storage.destroy;
+  fn.destroy = storage.destroy.bind(storage);
 
   return fn;
 }
