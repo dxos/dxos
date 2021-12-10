@@ -6,8 +6,8 @@ import { Event } from '@dxos/async';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
-import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
-import { BotExitStatus, BotContainer } from './bot-container';
+import { BotService } from '../proto/gen/dxos/bot';
+import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container';
 
 export class InProcessBotContainer implements BotContainer {
   private readonly _bots = new Map<string, BotService>();
@@ -17,7 +17,7 @@ export class InProcessBotContainer implements BotContainer {
   readonly error = new Event<[id: string, error: Error]>();
   readonly exited = new Event<[id: string, status: BotExitStatus]>();
 
-  async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
+  async spawn ({ pkg, id }: SpawnOptions): Promise<RpcPort> {
     const [botHandlePort, botPort] = createLinkedPorts();
 
     const botService = this._createBot();
