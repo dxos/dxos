@@ -43,8 +43,8 @@ export abstract class AbstractStorage implements IStorage {
       await this._close();
       await this._destroy();
       this._files.clear();
-    } catch (err: any) {
-      console.error(err.message);
+    } catch (error: any) {
+      console.error(error);
     }
   }
 
