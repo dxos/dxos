@@ -5,3 +5,4 @@ package dxos;
 import "@dxos/proto/src/proto/dxos/echo/feed.proto";
 import "@dxos/proto/src/proto/dxos/echo/snapshot.proto";
 import "@dxos/proto/src/proto/dxos/echo/service.proto";
+import "@dxos/proto/src/proto/dxos/echo/metadata.proto";
