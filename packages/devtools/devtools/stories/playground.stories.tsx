@@ -56,12 +56,70 @@ const DevTools = ({ port }: { port: RpcPort }) => {
   );
 };
 
+const PartyControls = ({ party }: { party: PartyProxy }) => {
+  const [itemModel, setItemModel] = useState('');
+
+  const handleItemModelChange = (event: SelectChangeEvent) => {
+    setItemModel(event.target.value as string);
+  };
+
+  const handleCreateItem = (party: PartyProxy) => {
+    switch (itemModel) {
+      case 'ObjectModel':
+        void party.database.createItem({
+          model: ObjectModel,
+          type: 'example:type.object'
+        });
+        break;
+      case 'MessengerModel':
+        void party.database.createItem({
+          model: MessengerModel,
+          type: 'example:type.messenger'
+        });
+        break;
+      case 'TextModel':
+        void party.database.createItem({
+          model: TextModel,
+          type: 'example:type.text'
+        });
+    }
+
+    setItemModel('');
+  };
+
+  return (
+    <Box key={party.key.toString()}>
+      <Typography>Party({truncateString(party.key.toString(), 8)})</Typography>
+      <Box sx={{ padding: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel id='model-select'>Model</InputLabel>
+          <Select
+            label='Item Model'
+            variant='standard'
+            value={itemModel}
+            onChange={handleItemModelChange}
+          >
+            <MenuItem value='ObjectModel'>ObjectModel</MenuItem>
+            <MenuItem value='MessengerModel'>MessengerModel</MenuItem>
+            <MenuItem value='TextModel'>TextModel</MenuItem>
+          </Select>
+        </FormControl>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'flex-end'
+        }}>
+          <Button onClick={() => handleCreateItem(party)}>Create Item</Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 const Controls = ({ port }: { port: RpcPort }) => {
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
   const [model, setModel] = useState('');
-  const [itemModel, setItemModel] = useState('');
 
   useEffect(() => {
     setImmediate(async () => {
@@ -100,34 +158,6 @@ const Controls = ({ port }: { port: RpcPort }) => {
     }
 
     setModel('');
-  };
-
-  const handleItemModelChange = (event: SelectChangeEvent) => {
-    setItemModel(event.target.value as string);
-  };
-
-  const handleCreateItem = (party: PartyProxy) => {
-    switch (itemModel) {
-      case 'ObjectModel':
-        void party.database.createItem({
-          model: ObjectModel,
-          type: 'example:type.object'
-        });
-        break;
-      case 'MessengerModel':
-        void party.database.createItem({
-          model: MessengerModel,
-          type: 'example:type.messenger'
-        });
-        break;
-      case 'TextModel':
-        void party.database.createItem({
-          model: TextModel,
-          type: 'example:type.text'
-        });
-    }
-
-    setItemModel('');
   };
 
   async function handleTestSetup () {
@@ -180,32 +210,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
         </Box>
       </Box>
       <Box>
-        {parties.map(party => (
-          <Box key={party.key.toString()}>
-            <Typography>Party({truncateString(party.key.toString(), 8)})</Typography>
-            <Box sx={{ padding: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel id='model-select'>Model</InputLabel>
-                <Select
-                  label='Item Model'
-                  variant='standard'
-                  value={itemModel}
-                  onChange={handleItemModelChange}
-                >
-                  <MenuItem value='ObjectModel'>ObjectModel</MenuItem>
-                  <MenuItem value='MessengerModel'>MessengerModel</MenuItem>
-                  <MenuItem value='TextModel'>TextModel</MenuItem>
-                </Select>
-              </FormControl>
-              <Box sx={{
-                display: 'flex',
-                justifyContent: 'flex-end'
-              }}>
-                <Button onClick={() => handleCreateItem(party)}>Create Item</Button>
-              </Box>
-            </Box>
-          </Box>
-        ))}
+        {parties.map(party => <PartyControls key={party.key.toHex()} party={party} />)}
       </Box>
     </Box>
   );

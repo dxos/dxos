@@ -37,31 +37,35 @@ const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsRes
   };
 };
 
-export const subscribeToItems = (hook: DevtoolsServiceDependencies) => {
+export const subscribeToItems = ({ echo }: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToItemsResponse>(({ next }) => {
-    const echo = hook.echo;
     const update = () => {
       const res = getData(echo);
       next(res);
     };
 
-    setImmediate(async () => {
-      const partySubscriptions: any[] = [];
-      echo.queryParties().subscribe((parties) => {
-        partySubscriptions.forEach(unsub => unsub());
-
-        for (const party of parties) {
+    const partySubscriptions: Record<string, () => void> = {};
+    const unsubscribe = echo.queryParties().subscribe((parties) => {
+      parties.forEach(party => {
+        if (!partySubscriptions[party.key.toHex()]) {
           const sub = party.database.select(selection => selection.items).update.on(() => {
+            // Send updates on items changes.
             update();
           });
-          partySubscriptions.push(sub);
+          partySubscriptions[party.key.toHex()] = sub;
         }
-        update();
       });
 
+      // Send items for new parties.
       update();
     });
 
-    // TODO(yivlad): Add cleanup logic.
+    // Send initial items.
+    update();
+
+    return () => {
+      unsubscribe();
+      Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
+    };
   });
 };

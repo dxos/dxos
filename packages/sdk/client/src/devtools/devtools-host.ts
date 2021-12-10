@@ -18,6 +18,7 @@ import {
   subscribeToSignalTrace,
   subscribeToSwarmInfo
 } from './network';
+import { subscribeToParties } from './parties';
 import { resetStorage } from './storage';
 
 export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents) : DevtoolsHost => {
@@ -46,6 +47,9 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     },
     SubscribeToKeyringKeys: () => {
       return subscribeToKeyringKeys(context);
+    },
+    SubscribeToParties: () => {
+      return subscribeToParties(context);
     },
     SubscribeToItems: () => {
       return subscribeToItems(context);
