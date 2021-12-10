@@ -3,7 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 import { DevtoolsServiceDependencies } from './devtools-context';
@@ -45,26 +44,28 @@ export const subscribeToItems = ({ echo }: DevtoolsServiceDependencies) => {
       next(res);
     };
 
-    const subscriptions = new SubscriptionGroup();
+    const partySubscriptions: Record<string, () => void> = {};
     const unsubscribe = echo.queryParties().subscribe((parties) => {
       parties.forEach(party => {
-        if (!subscriptions.subscriptionExists(party.key.toHex())) {
-          const unsubscribe = party.database.select(selection => selection.items).update.on(() => {
+        if (!partySubscriptions[party.key.toHex()]) {
+          const sub = party.database.select(selection => selection.items).update.on(() => {
             // Send updates on items changes.
             update();
           });
-          subscriptions.push(unsubscribe, party.key.toHex());
+          partySubscriptions[party.key.toHex()] = sub;
         }
       });
 
       // Send items for new parties.
       update();
     });
-    subscriptions.push(unsubscribe, 'partiesQuery');
 
     // Send initial items.
     update();
 
-    return () => subscriptions.unsubscribe();
+    return () => {
+      unsubscribe();
+      Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
+    };
   });
 };
