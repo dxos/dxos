@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-rpc",
-  "version": "2.19.1",
+  "version": "2.19.2",
   "description": "Protocol plugin to be used with @dxos/rpc",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -16,7 +16,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/protocol": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",

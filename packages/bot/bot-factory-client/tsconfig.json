@@ -1,0 +1,45 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../common/proto"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-rpc"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../sdk/client"
+    }
+  ]
+}

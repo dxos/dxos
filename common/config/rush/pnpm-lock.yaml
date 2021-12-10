@@ -1,12 +1,49 @@
 importers:
   .:
     specifiers: {}
+  ../../packages/bot/bot-factory-client:
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
+      '@dxos/rpc': link:../../common/rpc
+      base-x: 3.0.9
+    devDependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
+      expect: 27.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/proto': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      base-x: ~3.0.9
+      expect: ~27.0.2
   ../../packages/bot/botkit:
     dependencies:
+      '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
       debug: 4.3.3
@@ -26,16 +63,21 @@ importers:
       '@types/node': 14.14.45
       assert: 2.0.0
       expect: 27.0.2
+      ts-node: 9.1.1_typescript@4.5.2
+      typescript: 4.5.2
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -49,6 +91,8 @@ importers:
       debug: ^4.3.3
       esbuild: ^0.11.23
       expect: ~27.0.2
+      ts-node: ^9.1.1
+      typescript: ^4.5.2
   ../../packages/common/async:
     dependencies:
       '@dxos/debug': link:../debug
@@ -1625,6 +1669,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../protocol
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/network-manager': link:../network-manager
@@ -1644,6 +1689,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -1883,6 +1929,32 @@ importers:
       node-fetch: ^2.6.0
       protobufjs: ^6.9.0
       webpack: 4.44.2
+  ../../packages/sdk/react-bot-factory-client:
+    dependencies:
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/debug': link:../../common/debug
+    devDependencies:
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.4.1
+      '@dxos/react-client': link:../react-client
+      '@dxos/react-registry-client': link:../react-registry-client
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/react': 17.0.24
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.2
+    specifiers:
+      '@dxos/bot-factory-client': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.4.1
+      '@dxos/react-client': workspace:*
+      '@dxos/react-registry-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/react': ^17.0.24
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.5.2
   ../../packages/sdk/react-client:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2035,6 +2107,7 @@ importers:
       url-join: ^4.0.1
   ../../packages/sdk/react-framework:
     dependencies:
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
@@ -2054,6 +2127,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -2078,6 +2152,7 @@ importers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
@@ -2085,6 +2160,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.4.1
+      '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -8126,12 +8202,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-l6ERlkmyEa0zaR2fn0hqjsn74KM=
-  /ansi-align/3.0.0:
+  /ansi-align/3.0.1:
     dependencies:
-      string-width: 3.1.0
+      string-width: 4.2.2
     dev: true
     resolution:
-      integrity: sha512-ZpClVKqXN3RGBmKibdfWzqCY4lnjEuoNzU5T0oEFpfd/z5qJHVarukridD4juLO2FXMiwUQxr9WqQtaYa8XRYw==
+      integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==
   /ansi-colors/3.2.4:
     dev: false
     engines:
@@ -8182,6 +8258,7 @@ packages:
     resolution:
       integrity: sha1-7QMXwyIGT3lGbAKWa922Bas32Zg=
   /ansi-regex/4.1.0:
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -8192,7 +8269,6 @@ packages:
     resolution:
       integrity: sha512-bY6fj56OUQ0hU1KjFNDQuJFezqKdrAyFdIevADiqrWHwSlbmBNMHp5ak2f40Pm8JTFyM2mqxkG6ngkHO11f/lg==
   /ansi-regex/5.0.1:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -9270,7 +9346,7 @@ packages:
       integrity: sha512-5pyOr+w2LNN72F2mAq6J0ckHUfJYSgRKma7e/wlcMMhgOLV9OI0ERhERYXxUqo+dPyVxcbXKy9n+wg13+LpNnA==
   /boxen/5.1.2:
     dependencies:
-      ansi-align: 3.0.0
+      ansi-align: 3.0.1
       camelcase: 6.2.0
       chalk: 4.1.2
       cli-boxes: 2.2.1
@@ -12057,6 +12133,7 @@ packages:
     resolution:
       integrity: sha512-A8OG5SR/ij3SsJdWDJdkkSYUjQdCUx6APQXem0SaEePBSRg4eymGYwBkKo1Y6DU+af/Jn2dBQqDBvjnr9Vi8nQ==
   /emoji-regex/7.0.3:
+    dev: false
     resolution:
       integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==
   /emoji-regex/8.0.0:
@@ -20150,7 +20227,7 @@ packages:
   /pretty-format/27.0.2:
     dependencies:
       '@jest/types': 27.0.2
-      ansi-regex: 5.0.0
+      ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
     dev: true
@@ -22516,6 +22593,7 @@ packages:
       emoji-regex: 7.0.3
       is-fullwidth-code-point: 2.0.0
       strip-ansi: 5.2.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -22524,7 +22602,7 @@ packages:
     dependencies:
       emoji-regex: 8.0.0
       is-fullwidth-code-point: 3.0.0
-      strip-ansi: 6.0.0
+      strip-ansi: 6.0.1
     engines:
       node: '>=8'
     resolution:
@@ -22590,6 +22668,7 @@ packages:
   /strip-ansi/5.2.0:
     dependencies:
       ansi-regex: 4.1.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -22604,7 +22683,6 @@ packages:
   /strip-ansi/6.0.1:
     dependencies:
       ansi-regex: 5.0.1
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24629,7 +24707,7 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       string-width: 4.2.2
-      strip-ansi: 6.0.0
+      strip-ansi: 6.0.1
     engines:
       node: '>=10'
     resolution:

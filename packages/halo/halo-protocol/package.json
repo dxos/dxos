@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-protocol",
-  "version": "2.19.1",
+  "version": "2.19.2",
   "description": "DXOS HALO Protocol",
   "homepage": "https://github.com/dxos/halo/tree/master/packages/credentials#readme",
   "bugs": {

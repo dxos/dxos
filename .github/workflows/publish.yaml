@@ -44,12 +44,16 @@ jobs:
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
         npm install -g @microsoft/rush pnpm
 
+        git config --global user.email "ci@dxos.org"
+        git config --global user.name "ci"
+
         # Create a temporary bump of versions
         rush version --bump --override-bump prerelease --override-prerelease-id dev
 
         # Include a commit hash in the version
-        SUBST="s/dev.0/dev.$(git rev-parse --short HEAD)/g"  
-        sed -i '' $SUBST './common/config/rush/version-policies.json'
+        SUBST="s/dev.0/dev.$(git rev-parse --short HEAD)/g"
+        FILEPATH='./common/config/rush/version-policies.json'
+        sed -i $SUBST $FILEPATH # Caution: on macOS that would be `sed -i '' $SUBST $FILEPATH`
         rush version --ensure-version-policy
 
         # Publish under "dev" tag

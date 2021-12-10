@@ -199,10 +199,6 @@ export class RpcPeer {
     try {
       response = await Promise.race([promise, timeoutPromise]);
     } catch (err) {
-      console.log({
-        err,
-        inst: err instanceof RpcClosedError
-      });
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();

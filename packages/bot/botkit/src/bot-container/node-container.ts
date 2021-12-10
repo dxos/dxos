@@ -6,16 +6,20 @@ import assert from 'assert';
 import { Serializable, fork, ChildProcess } from 'child_process';
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
+import { raise } from '@dxos/debug';
 import { RpcPort } from '@dxos/rpc';
 
-import { BotHandle } from '../bot-handle';
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
-import { BotContainer } from './bot-container';
+import { BotContainer, BotExitStatus } from './bot-container';
 
 const log = debug('dxos:botkit:node-container');
 
 export class NodeContainer implements BotContainer {
-  private _processes: ChildProcess[] = [];
+  private _processes = new Map<string, ChildProcess>();
+
+  readonly error = new Event<[string, Error]>();
+  readonly exited = new Event<[string, BotExitStatus]>();
 
   constructor (
     /**
@@ -24,8 +28,9 @@ export class NodeContainer implements BotContainer {
     private readonly _additionalRequireModules: string[] = []
   ) {}
 
-  async spawn (pkg: BotPackageSpecifier): Promise<BotHandle> {
+  async spawn (pkg: BotPackageSpecifier, id: string): Promise<RpcPort> {
     assert(pkg.localPath, 'Node container only supports "localPath" package specifiers.');
+    log(`[${id}] Spawning ${pkg.localPath}`);
     const child = fork(pkg.localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
       serialization: 'advanced',
@@ -36,13 +41,38 @@ export class NodeContainer implements BotContainer {
       }
     });
     const port = createIpcPort(child);
-    this._processes.push(child);
-    return new BotHandle(port);
+    this._processes.set(id, child);
+
+    child.on('exit', (code, signal) => {
+      log(`[${id}] exited with code ${code} and signal ${signal}`);
+      this._processes.delete(id);
+      this.exited.emit([id, { code, signal }]);
+    });
+
+    child.on('error', (error) => {
+      log(`[${id}] error: ${error}`);
+      this.error.emit([id, error]);
+    });
+
+    child.on('disconnect', () => {
+      log(`[${id}] IPC stream disconnected`);
+      this.error.emit([id, new Error('Bot child process disconnected from IPC stream.')]);
+    });
+
+    return port;
+  }
+
+  async kill (id: string) {
+    const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
+
+    child.kill();
+    this._processes.delete(id);
   }
 
   killAll () {
-    for (const botProcess of this._processes) {
+    for (const [id, botProcess] of Array.from(this._processes.entries())) {
       botProcess.kill();
+      this._processes.delete(id);
     }
   }
 }
