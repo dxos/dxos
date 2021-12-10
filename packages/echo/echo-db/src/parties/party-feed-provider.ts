@@ -41,7 +41,7 @@ export class PartyFeedProvider {
     return this._createReadWriteFeed();
   }
 
-  private _getFeedKeys () {
+  getFeedKeys () {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
   }
 
@@ -64,7 +64,7 @@ export class PartyFeedProvider {
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
-    for (const feedKey of this._getFeedKeys()) {
+    for (const feedKey of this.getFeedKeys()) {
       iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
     }
 
