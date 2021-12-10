@@ -6,7 +6,7 @@ import { join } from 'path';
 
 import { createId } from '@dxos/crypto';
 
-import { BotHandle } from '../bot-handle';
+import { BotHandle } from '../bot-factory';
 
 export const BOTS_PATH = join(__dirname, '../../bots');
 
