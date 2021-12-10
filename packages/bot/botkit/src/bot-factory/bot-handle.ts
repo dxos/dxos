@@ -2,6 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+import fs from 'fs/promises';
+import { join } from 'path';
+
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
@@ -12,18 +16,16 @@ import { Bot, BotService } from '../proto/gen/dxos/bot';
  * Represents a running bot instance in BotFactory.
  */
 export class BotHandle {
-  private readonly _rpc: ProtoRpcClient<BotService>;
+  private _rpc: ProtoRpcClient<BotService> | null = null;
   private readonly _bot: Bot;
 
-  constructor (port: RpcPort, id: string) {
-    this._rpc = createRpcClient(
-      schema.getService('dxos.bot.BotService'),
-      {
-        port,
-        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
-      }
-    );
-
+  /**
+   * @param workingDirectory Path to the directory where bot code, data and logs are stored.
+   */
+  constructor (
+    readonly id: string,
+    readonly workingDirectory: string
+  ) {
     this._bot = {
       id,
       status: Bot.Status.STOPPED
@@ -31,6 +33,7 @@ export class BotHandle {
   }
 
   get rpc () {
+    assert(this._rpc, 'BotHandle is not open');
     return this._rpc.rpc;
   }
 
@@ -38,13 +41,31 @@ export class BotHandle {
     return this._bot;
   }
 
-  async open (): Promise<void> {
+  async initializeDirectories () {
+    await fs.mkdir(this.workingDirectory, { recursive: true });
+    await fs.mkdir(this.logsDir);
+  }
+
+  async open (port: RpcPort): Promise<void> {
+    if (this._rpc) {
+      await this.close();
+    }
+
+    this._rpc = createRpcClient(
+      schema.getService('dxos.bot.BotService'),
+      {
+        port,
+        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+      }
+    );
     await this._rpc.open();
     this._bot.status = Bot.Status.RUNNING;
   }
 
   async close () {
+    assert(this._rpc, 'BotHandle is not open');
     this._rpc.close();
+    this._rpc = null;
   }
 
   toString () {
@@ -66,5 +87,16 @@ export class BotHandle {
   onProcessError (error: Error) {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.error = error.stack;
+  }
+
+  get logsDir () {
+    return join(this.workingDirectory, 'logs');
+  }
+
+  /**
+   * Returns the name of the log file for the specified timestamp.
+   */
+  getLogFilePath (startTimestamp: Date) {
+    return join(this.logsDir, `${startTimestamp.toISOString()}.log`);
   }
 }
