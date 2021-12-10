@@ -1,7 +1,7 @@
 module.exports = {
   extends: [
-    './.eslintrc.js',
     'plugin:@dxos/react',
+    './.eslintrc.js',
   ],
   rules: {
     'no-extra-parens': 'off',
