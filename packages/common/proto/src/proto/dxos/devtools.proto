@@ -42,6 +42,10 @@ service DevtoolsHost {
 
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
 
+  rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
+
+  rpc SubscribeToFeed(SubscribeToFeedRequest) returns (stream SubscribeToFeedResponse);
+
   //
   // MESH
   //
@@ -132,6 +136,34 @@ message SubscribeToItemsRequest {}
 message SubscribeToItemsResponse {
   // JSON-encoded payload.
   string data = 1;
+}
+
+message SubscribeToFeedsRequest {}
+
+message SubscribeToFeedsResponse {
+  message Party {
+    PubKey key = 1;
+    repeated PubKey feeds = 2;
+  }
+
+  repeated Party parties = 1;
+}
+
+message SubscribeToFeedRequest {
+  PubKey partyKey = 1;
+  PubKey feedKey = 2;
+}
+
+message SubscribeToFeedResponse {
+  message EchoFeedBlock {
+    bytes key = 1;
+    int32 seq = 2;
+    bool sync = 3;
+    string path = 4;
+    FeedMessage data = 5;
+  }
+
+  repeated EchoFeedBlock blocks = 1;
 }
 
 message SubscribeToNetworkTopicsResponse {

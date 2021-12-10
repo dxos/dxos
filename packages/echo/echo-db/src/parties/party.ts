@@ -73,6 +73,10 @@ export class Party {
     return this._internal.isActive;
   }
 
+  get feedProvider () {
+    return this._internal.feedProvider;
+  }
+
   /**
    * Database instance of the current party.
    */

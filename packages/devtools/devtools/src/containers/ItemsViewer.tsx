@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
-import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
@@ -17,9 +17,13 @@ import { useParties, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
-export const ItemsViewer = () => {
-  const [selectedParty, setSelectedParty] = useState<PartyProxy | undefined>();
+import { PartySelect } from '../components';
 
+export const ItemsViewer = () => {
+  const [selectedParty, setSelectedParty] = useState<PartyProxy>();
+  const [selectedItem, setSelectedItem] = useState<Item<any>>();
+
+  const parties = useParties();
   const items = useSelection(
     selectedParty?.database.select(s => s
       .filter(item => !item.parent)
@@ -27,11 +31,13 @@ export const ItemsViewer = () => {
     [selectedParty]
   ) ?? [];
 
-  const [selectedItem, setSelectedItem] = useState<Item<any> | undefined>();
-
   return (
     <Box sx={{ padding: 2 }}>
-      <PartySelect value={selectedParty} onChange={setSelectedParty} />
+      <PartySelect
+        parties={parties}
+        value={selectedParty}
+        onChange={setSelectedParty}
+      />
       <Box
         flexDirection='row'
         display='flex'
@@ -65,34 +71,6 @@ export const ItemsViewer = () => {
   );
 };
 
-interface PartySelectProps {
-  value: PartyProxy | undefined;
-  onChange: (newValue: PartyProxy | undefined) => void;
-}
-
-const PartySelect = ({ value, onChange }: PartySelectProps) => {
-  const parties = useParties();
-
-  return (
-    <FormControl fullWidth>
-      <InputLabel id='party-select'>Party</InputLabel>
-      <Select
-        id='party-select'
-        label='Party'
-        variant='standard'
-        value={value?.key.toHex()}
-        onChange={(event) => onChange(parties.find(p => p.key.equals(event.target.value)))}
-      >
-        {parties.map((party) => (
-          <MenuItem key={party.key.toHex()} value={party.key.toHex()}>
-            {party.key.toHex()}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  );
-};
-
 interface ItemNodeProps {
   item: Item<any>
   onSelect: (item: Item<any>) => void
@@ -116,22 +94,22 @@ interface ItemDetailsProps {
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
   <>
-    <p>
+    <div>
       <Typography sx={{ fontWeight: 'bold' }}>Id</Typography>
       <Typography>{item.id}</Typography>
-    </p>
-    <p>
+    </div>
+    <div>
       <Typography sx={{ fontWeight: 'bold' }}>Type</Typography>
       <Typography>{item.type}</Typography>
-    </p>
-    <p>
+    </div>
+    <div>
       <Typography sx={{ fontWeight: 'bold' }}>Model DXN</Typography>
       <Typography>{item.model.modelMeta.type}</Typography>
-    </p>
-    <p>
+    </div>
+    <div>
       <Typography sx={{ fontWeight: 'bold' }}>Model class name</Typography>
       <Typography>{Object.getPrototypeOf(item.model).constructor.name}</Typography>
-    </p>
+    </div>
     <Typography sx={{ fontWeight: 'bold' }}>Model data</Typography>
     <JsonTreeView data={modelToObject(item.model)} />
   </>
