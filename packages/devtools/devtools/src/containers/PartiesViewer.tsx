@@ -13,7 +13,7 @@ export const PartiesViewer = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const result = useStream(() => devtoolsHost.SubscribeToParties({}));
-  if (result === undefined || result.data === undefined) {
+  if (result === undefined || result.parties === undefined) {
     return <div>Loading parties...</div>;
   }
 
@@ -21,7 +21,7 @@ export const PartiesViewer = () => {
     <JsonTreeView
       size='small'
       depth={4}
-      data={JSON.parse(result.data)}
+      data={result.parties}
     />
   );
 };

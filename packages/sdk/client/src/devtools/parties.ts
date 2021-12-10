@@ -11,7 +11,7 @@ export const subscribeToParties = ({ echo }: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToPartiesResponse>(({ next }) => {
     const update = () => {
       const { value: parties } = echo.queryParties();
-      next({ data: JSON.stringify(parties.map(party => party.toJSON())) });
+      next({ parties: parties.map(party => party.toJSON()) });
     };
 
     const partySubscriptions: Record<string, () => void> = {};

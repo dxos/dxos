@@ -132,7 +132,7 @@ export class PartyInternal {
       isOpen: this.isOpen,
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
-      timeframe: this.isOpen ? this._partyCore.timeframe : undefined
+      timeframe: this.isOpen ? this._partyCore.timeframe.toJSON() : undefined
     };
   }
 
