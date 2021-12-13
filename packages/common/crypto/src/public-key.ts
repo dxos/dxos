@@ -5,7 +5,7 @@
 import crypto from 'hypercore-crypto';
 import { inspect } from 'util';
 
-import { HumanHasher } from './humanhash';
+import { HumanHasher } from './human-hash';
 
 export class PublicKey {
   /**
