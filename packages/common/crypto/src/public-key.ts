@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import HumanHasher from 'humanhash';
 import crypto from 'hypercore-crypto';
 import { inspect } from 'util';
+
+import { HumanHasher } from './humanhash';
 
 export class PublicKey {
   /**
