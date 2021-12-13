@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import { styled } from '@mui/material';
 
-export const Column = styled('div')({
+const ColumnDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
@@ -12,3 +14,6 @@ export const Column = styled('div')({
   flexShrink: 0,
   padding: 16
 });
+
+// TODO(wittjosiah): Props and cleanup.
+export const Column: React.FunctionComponent<any> = ColumnDiv;
