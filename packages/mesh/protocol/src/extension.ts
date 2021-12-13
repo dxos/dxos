@@ -26,6 +26,8 @@ const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
 
 const log = debug('dxos:protocol:extension');
 
+const kCodec = Symbol('nanomessage.codec');
+
 export interface ExtensionOptions {
   /**
    * Protobuf schema json.
@@ -102,13 +104,13 @@ export class Extension extends Nanomessage {
 
     this._name = name;
 
-    this.codec = schema.getCodecForType('dxos.protocol.Message');
+    this[kCodec as any] = schema.getCodecForType('dxos.protocol.Message');
 
     if (userSchema) {
-      this.codec.addJson(userSchema);
+      this[kCodec as any].addJson(userSchema);
     }
 
-    this.codec = patchBufferCodec(this.codec);
+    this[kCodec as any] = patchBufferCodec(this.codec);
 
     this.on('error', (err: any) => log(err));
   }
@@ -355,8 +357,10 @@ export class Extension extends Nanomessage {
   private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
     if (typeof message === 'string') { // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
-    } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {
+    } else if (Buffer.isBuffer(message)) {
       return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else if (message instanceof Uint8Array) {
+      return { __type_url: 'dxos.protocol.Buffer', data: Buffer.from(message) };
     } else if (message == null) { // Apparently this is a use-case.
       return { __type_url: 'dxos.protocol.Buffer', data: message };
     } else {

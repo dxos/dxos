@@ -1512,7 +1512,7 @@ importers:
       end-of-stream: 1.4.4
       hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: 1.2.1
-      nanomessage: 5.4.0
+      nanomessage: 8.4.0
       signal-promise: 1.0.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -1543,7 +1543,7 @@ importers:
       expect: ~27.0.2
       hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: ^1.2.1
-      nanomessage: ^5.4.0
+      nanomessage: ^8.4.0
       pump: ^3.0.0
       signal-promise: ^1.0.3
       wait-for-expect: ^3.0.2
@@ -1722,7 +1722,7 @@ importers:
       moleculer-web: 0.9.1_moleculer@0.14.18
       moment: 2.29.1
       monotonic-timestamp: 0.0.9
-      nanomessage: 5.4.0
+      nanomessage: 8.4.0
       nanoresource-promise: 2.0.0
       node-fetch: 2.6.6
       p-event: 4.2.0
@@ -1787,7 +1787,7 @@ importers:
       moleculer-web: ^0.9.1
       moment: ^2.24.0
       monotonic-timestamp: ^0.0.9
-      nanomessage: ^5.4.0
+      nanomessage: ^8.4.0
       nanoresource-promise: ^2.0.0
       node-fetch: ^2.6.0
       p-event: ^4.2.0
@@ -9461,7 +9461,7 @@ packages:
   /abstract-leveldown/6.2.3:
     dependencies:
       buffer: 5.7.1
-      immediate: 3.2.3
+      immediate: 3.3.0
       level-concat-iterator: 2.0.1
       level-supports: 1.0.1
       xtend: 4.0.2
@@ -16460,13 +16460,6 @@ packages:
       unordered-set: 2.0.1
     resolution:
       integrity: sha512-wIlM4Iwl618NcmsY+1O/X08Cx/bY6ti3LXmQhRnPZFGQPqAeX0x53hASckW082IIAVWzXD3zcmREw5yEINzb4w==
-  /hyperid/2.3.1:
-    dependencies:
-      uuid: 8.3.2
-      uuid-parse: 1.1.0
-    dev: false
-    resolution:
-      integrity: sha512-mIbI7Ymn6MCdODaW1/6wdf5lvvXzmPsARN4zTLakMmcziBOuP4PxCBJvHF6kbAIHX6H4vAELx/pDmt0j6Th5RQ==
   /hyperswarm/2.15.3:
     dependencies:
       '@hyperswarm/network': 2.1.0
@@ -16563,7 +16556,6 @@ packages:
     resolution:
       integrity: sha1-0UD6j2FGWb1lQSMwl92qwlzdmRw=
   /immediate/3.3.0:
-    dev: false
     resolution:
       integrity: sha512-HR7EVodfFUdQCTIeySw+WDRFJlPcLOJbXfwwZ7Oom6tjsvZ3bOkCDJHehQC3nxJrv7+f9XecwazynjU8e4Vw3Q==
   /immer/8.0.1:
@@ -19992,16 +19984,6 @@ packages:
       varint: 5.0.2
     resolution:
       integrity: sha512-CRY3GzkiXa5th7gSTM45v4EZKIVg8XTbhE30PFFbzloTgiPCYBbywkpHGZ+48H/nb2H9gXhbBGDRXbn2hxjH4w==
-  /nanomessage/5.4.0:
-    dependencies:
-      hyperid: 2.3.1
-      nanocustomassert: 1.0.0
-      nanoerror: 1.2.1
-      nanoresource-promise: 2.0.0
-      p-queue: 6.6.2
-    dev: false
-    resolution:
-      integrity: sha512-3ZlRZkbo2ltJOk0R4O0zXIH7vsXmjWQ3b+YSoShFXzzYXTYWmSg0F8jA5GXcI19yj/PJXNDK+EOxaYVLN1apBA==
   /nanomessage/8.4.0:
     dependencies:
       fastq: 1.13.0
@@ -20755,6 +20737,7 @@ packages:
     dependencies:
       eventemitter3: 4.0.7
       p-timeout: 3.2.0
+    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -22873,7 +22856,7 @@ packages:
       integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==
   /regenerator-transform/0.14.5:
     dependencies:
-      '@babel/runtime': 7.12.1
+      '@babel/runtime': 7.16.3
     dev: false
     resolution:
       integrity: sha512-eOf6vka5IO151Jfsw2NO9WpGX58W6wWmefK3I1zEGr0lOD0u8rwPaNqQL1aRxUaxLeKO3ArNh3VYg1KbaD+FFw==
@@ -25833,10 +25816,6 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-sWTrWYXPhhWJh+cS2baPzhaZc89zwlWCfwSthUjGhLkZztyPhcQllo+XVVCbNGi7dhyRlxkWxN4NKU6FbA9Y8w==
-  /uuid-parse/1.1.0:
-    dev: false
-    resolution:
-      integrity: sha512-OdmXxA8rDsQ7YpNVbKSJkNzTw2I+S5WsbMDnCtIWSQaosNAcWtFuI/YK1TjzUI6nbkgiqEyh8gWngfcv8Asd9A==
   /uuid/3.4.0:
     deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
     hasBin: true

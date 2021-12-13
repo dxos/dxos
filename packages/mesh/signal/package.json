@@ -51,7 +51,7 @@
     "moleculer-web": "^0.9.1",
     "moment": "^2.24.0",
     "monotonic-timestamp": "^0.0.9",
-    "nanomessage": "^5.4.0",
+    "nanomessage": "^8.4.0",
     "nanoresource-promise": "^2.0.0",
     "node-fetch": "^2.6.0",
     "p-event": "^4.2.0",
