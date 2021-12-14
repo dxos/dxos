@@ -64,10 +64,11 @@ export const subscribeToFeed = (
 
       const { feed } = await party.feedProvider.createOrOpenReadOnlyFeed(feedKey);
 
-      // TODO(wittjosiah): Start from timeframe.
-      // TODO(wittjosiah): Bidirectional lazy loading?
+      // TODO(wittjosiah): Start from timeframe?
+      // TODO(wittjosiah): Bidirectional lazy loading to feed into virtualized table.
+      // Tail feed so as to not overload the browser.
       feedStream = new Readable({ objectMode: true })
-        .wrap(createBatchStream(feed, { live: true }));
+        .wrap(createBatchStream(feed, { live: true, start: Math.max(0, feed.length - 10) }));
 
       feedStream.on('data', blocks => {
         next({ blocks });
