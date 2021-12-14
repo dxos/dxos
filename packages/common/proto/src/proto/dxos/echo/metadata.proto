@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package dxos.echo.metadata;
 
-import "@dxos/proto/src/proto/dxos/halo/keys.proto";
+import "../halo/keys.proto";
 
 message EchoMetadata {
   repeated PartyMetadata parties = 1;
