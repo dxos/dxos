@@ -79,19 +79,19 @@ export class PartyProxy {
   //   return party!.createOfflineInvitation(...args);
   // }
 
-  queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
-    return this.impl.queryMembers(...args);
+  queryMembers () {
+    return this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key });
   }
 
-  setTitle (...args: Parameters<EchoParty['setTitle']>) {
-    return this.impl.setTitle(...args);
+  setTitle (title: string) {
+    return this._serviceProvider.services.PartyService.SetPartyTitle({ partyKey: this.key, title });
   }
 
-  setProperty (...args: Parameters<EchoParty['setProperty']>) {
-    return this.impl.setProperty(...args);
+  setProperty (key: string, value?: string) {
+    return this._serviceProvider.services.PartyService.SetPartyProperty({ partyKey: this.key, key, value });
   }
 
-  getProperty (...args: Parameters<EchoParty['getProperty']>) {
-    return this.impl.getProperty(...args);
+  getProperty (key: string) {
+    return this._serviceProvider.services.PartyService.GetPartyProperty({ partyKey: this.key, key });
   }
 }

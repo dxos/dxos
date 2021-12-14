@@ -10,12 +10,12 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, InvitationDescriptor, OpenProgress } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, OpenProgress, Party, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
+import { Contacts, SubscribeMembersResponse, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
@@ -189,6 +189,54 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         AuthenticateInvitation: () => {
           throw new Error('Not implemented');
+        },
+        SubscribeMembers: (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (party) {
+            return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
+          } else {
+            return new Stream(({ next }) => {
+              let unsubscribeMembers: () => void;
+              const unsubscribeParties = this._echo.queryParties().subscribe((parties) => {
+                const party = parties.find((party) => party.key.equals(request.partyKey));
+                if (!unsubscribeMembers && party) {
+                  const resultSet = party.queryMembers();
+                  next({ members: resultSet.value });
+                  unsubscribeMembers = resultSet.update.on(() => next({ members: resultSet.value }));
+                }
+              });
+
+              return () => {
+                unsubscribeParties();
+                unsubscribeMembers();
+              }
+            });
+          }
+        },
+        SetPartyTitle: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.setTitle(request.title);
+        },
+        SetPartyProperty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.setProperty(request.key, request.value);
+        },
+        GetPartyProperty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          const value = party.getProperty(request.key);
+          return { value: value?.toString() };
         }
       },
       DataService: this._echo.dataService,

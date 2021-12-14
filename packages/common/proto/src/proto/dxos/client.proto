@@ -99,6 +99,40 @@ message CreateInvitationRequest {
   required dxos.halo.keys.PubKey publicKey = 1;
 }
 
+message SubscribeMembersRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+message SubscribeMembersResponse {
+  // TODO(wittjosiah): Factor out.
+  message PartyMember {
+    required dxos.halo.keys.PubKey publicKey = 1;
+    string displayName = 2;
+  }
+
+  repeated PartyMember members = 1;
+}
+
+message SetPartyTitleRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+  required string title = 2;
+}
+
+message SetPartyPropertyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+  required string key = 2;
+  string value = 3;
+}
+
+message GetPartyPropertyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+  required string key = 2;
+}
+
+message GetPartyPropertyResponse {
+  string value = 1;
+}
+
 service PartyService {
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
@@ -108,5 +142,11 @@ service PartyService {
 
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
+
+  rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
+
+  rpc SetPartyTitle (SetPartyTitleRequest) returns (google.protobuf.Empty);
+  rpc SetPartyProperty (SetPartyPropertyRequest) returns (google.protobuf.Empty);
+  rpc GetPartyProperty (GetPartyPropertyRequest) returns (GetPartyPropertyResponse);
 }
 
