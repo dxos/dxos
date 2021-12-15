@@ -30,10 +30,24 @@ export class Party {
   }
 
   /**
+   * Summary of a party which is useful for debugging.
+   */
+  get partyInfo () {
+    return this._internal.partyInfo;
+  }
+
+  /**
    * Event that is emitted when party state changes or metadata is updated.
    */
   get update () {
     return this._internal.update;
+  }
+
+  /**
+   * Event that is emitted when the party timeframe changes.
+   */
+  get timeframeUpdate () {
+    return this._internal.timeframeUpdate;
   }
 
   /**

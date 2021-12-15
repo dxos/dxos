@@ -8,18 +8,23 @@ import { Readable } from 'stream';
 
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
-import { ModelFactory } from '@dxos/model-factory';
+import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
+import { Item } from '.';
 import { Database } from '..';
 import { DataServiceRouter } from './data-service-router';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
+const OBJECT_ORG = 'dxn://example/object/org';
+const OBJECT_PERSON = 'dxn://example/object/person';
+const LINK_EMPLOYEE = 'dxn://example/link/employee';
+
 describe('Database', () => {
   describe('remote', () => {
     const setup = async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
 
       const feed = new MockFeedWriter<EchoEnvelope>();
       const inboundStream = new Readable({ read () {}, objectMode: true });
@@ -117,6 +122,59 @@ describe('Database', () => {
 
       expect(link.source).toBe(source);
       expect(link.target).toBe(target);
+    });
+
+    test('directed links', async () => {
+      const { frontend: database } = await setup();
+
+      const p1 = await database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props: { name: 'Person-1' } });
+      const p2 = await database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props: { name: 'Person-2' } });
+
+      const org1 = await database.createItem({ model: ObjectModel, type: OBJECT_ORG, props: { name: 'Org-1' } });
+      const org2 = await database.createItem({ model: ObjectModel, type: OBJECT_ORG, props: { name: 'Org-2' } });
+
+      await database.createLink({ source: org1, type: LINK_EMPLOYEE, target: p1 });
+      await database.createLink({ source: org1, type: LINK_EMPLOYEE, target: p2 });
+      await database.createLink({ source: org2, type: LINK_EMPLOYEE, target: p2 });
+
+      // Find all employees for org.
+      expect(
+        org1.links.filter(link => link.type === LINK_EMPLOYEE).map(link => link.target)
+      ).toStrictEqual([p1, p2]);
+
+      // Find all orgs for person.
+      expect(
+        p2.refs.filter(link => link.type === LINK_EMPLOYEE).map(link => link.source)
+      ).toStrictEqual([org1, org2]);
+    });
+
+    describe('non-idempotent models', () => {
+      test('messages written from frontend', async () => {
+        const { frontend: database } = await setup();
+
+        const item = await database.createItem({ model: TestListModel });
+        expect(item.model.messages).toHaveLength(0);
+
+        await item.model.sendMessage('foo');
+        expect(item.model.messages).toHaveLength(1);
+
+        await item.model.sendMessage('bar');
+        expect(item.model.messages).toHaveLength(2);
+      });
+
+      test('messages written from backend', async () => {
+        const { frontend, backend } = await setup();
+
+        const backendItem = await backend.createItem({ model: TestListModel });
+
+        await backendItem.model.sendMessage('foo');
+        await backendItem.model.sendMessage('bar');
+
+        const frontendItem: Item<TestListModel> = await frontend.waitForItem(item => item.id === backendItem.id);
+        await frontendItem.model.update.waitForCondition(() => frontendItem.model.messages.length === 2);
+
+        expect(frontendItem.model.messages).toHaveLength(2);
+      });
     });
   });
 });

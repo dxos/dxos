@@ -22,8 +22,6 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
     "assert": "^2.0.0",
@@ -32,6 +30,8 @@
     "use-subscription": "^1.4.1"
   },
   "devDependencies": {
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/toolchain-node-library": "workspace:*",
     "@mui/material": "^5.0.1",
     "@testing-library/react": "^11.0.4",

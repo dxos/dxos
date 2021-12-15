@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // https://mui.com/components/material-icons
 import {
   FilterTiltShift as SwarmIcon,
+  GroupWork as PartiesIcon,
   AccountTree as ItemsIcon,
   Dns as StorageIcon,
   Router as SignalIcon,
@@ -25,11 +26,16 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
+import { MessengerModel } from '@dxos/messenger-model';
+import { useClient } from '@dxos/react-client';
+import { TextModel } from '@dxos/text-model';
+
 import {
   ConfigView,
-  LoggingView,
   ItemsViewer,
+  LoggingView,
   Keyring,
+  PartiesViewer,
   Signal,
   StorageTab,
   SwarmDetails
@@ -92,6 +98,11 @@ const items = [
     title: 'ECHO',
     items: [
       {
+        id: 'echo.parties',
+        title: 'Parties',
+        icon: PartiesIcon
+      },
+      {
         id: 'echo.items',
         title: 'Items',
         icon: ItemsIcon
@@ -133,6 +144,12 @@ const items = [
 ];
 
 export const App = () => {
+  const client = useClient();
+  useEffect(() => {
+    client.registerModel(TextModel);
+    client.registerModel(MessengerModel);
+  }, [client]);
+
   const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
 
@@ -187,6 +204,9 @@ export const App = () => {
       </div>
       <div className={className('halo.keyring')}>
         <Keyring />
+      </div>
+      <div className={className('echo.parties')}>
+        <PartiesViewer />
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />

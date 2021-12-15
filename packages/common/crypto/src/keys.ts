@@ -3,9 +3,9 @@
 //
 
 import assert from 'assert';
-import HumanHasher from 'humanhash';
 import crypto from 'hypercore-crypto';
 
+import { HumanHasher } from './humanhash';
 import { PublicKey, PublicKeyLike } from './public-key';
 
 export const hasher = new HumanHasher();

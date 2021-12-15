@@ -2,10 +2,27 @@
 // Copyright 2021 DXOS.org
 //
 
-import { BotHandle } from '../bot-handle';
+import { ReadOnlyEvent } from '@dxos/async';
+import { RpcPort } from '@dxos/rpc';
+
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
 
+export interface SpawnOptions {
+  pkg: BotPackageSpecifier;
+  id: string;
+  logFilePath?: string;
+}
+
+export interface BotExitStatus {
+  code: number | null;
+  signal: NodeJS.Signals | null;
+}
+
 export interface BotContainer {
-  spawn: (pkg: BotPackageSpecifier) => Promise<BotHandle>
-  killAll: () => void
+  error: ReadOnlyEvent<[id: string, error: Error]>;
+  exited: ReadOnlyEvent<[id: string, status: BotExitStatus]>;
+
+  spawn(opts: SpawnOptions): Promise<RpcPort>;
+  kill(id: string): Promise<void>;
+  killAll(): void;
 }

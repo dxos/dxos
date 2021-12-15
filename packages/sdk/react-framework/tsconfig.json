@@ -23,16 +23,28 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../react-bot-factory-client"
+    },
+    {
       "path": "../../common/async"
     },
     {
+      "path": "../../bot/bot-factory-client"
+    },
+    {
       "path": "../client"
+    },
+    {
+      "path": "../config"
     },
     {
       "path": "../../halo/credentials"
     },
     {
       "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
     },
     {
       "path": "../react-client"

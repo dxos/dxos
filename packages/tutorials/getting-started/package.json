@@ -21,14 +21,14 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
     "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/mocha": "~8.2.2",

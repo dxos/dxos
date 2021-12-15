@@ -6,8 +6,8 @@ syntax = "proto3";
 
 package dxos.credentials.party;
 
-import "@dxos/proto/src/proto/dxos/halo/keys.proto";
-import "@dxos/proto/src/proto/dxos/halo/signed.proto";
+import "keys.proto";
+import "signed.proto";
 import "google/protobuf/any.proto";
 
 //
