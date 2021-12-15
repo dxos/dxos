@@ -66,31 +66,33 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
   const handleCreateItem = (party: PartyProxy) => {
     switch (itemModel) {
       case 'ObjectModel':
-        void party.database.createItem({
+        void party.impl.database.createItem({
           model: ObjectModel,
           type: 'example:type.object'
         });
         break;
       case 'MessengerModel':
-        void party.database.createItem({
+        void party.impl.database.createItem({
           model: MessengerModel,
           type: 'example:type.messenger'
         });
         break;
       case 'TextModel':
-        void party.database.createItem({
+        void party.impl.database.createItem({
           model: TextModel,
           type: 'example:type.text'
         });
     }
-
-    setItemModel('');
   };
 
   return (
     <Box key={party.key.toString()}>
       <Typography>Party({truncateString(party.key.toString(), 8)})</Typography>
       <Box sx={{ padding: 2 }}>
+        <Button onClick={() => party.impl.close()}>Close Party</Button>
+        <Button onClick={() => party.impl.open()}>Open Party</Button>
+        <Button onClick={() => void party.impl.deactivate({ global: true })}>Deactivate Party</Button>
+        <Button onClick={() => void party.impl.activate({ global: true })}>Activate Party</Button>
         <FormControl fullWidth>
           <InputLabel id='model-select'>Model</InputLabel>
           <Select
