@@ -6,11 +6,12 @@ import React, { useEffect, useState } from 'react';
 
 // https://mui.com/components/material-icons
 import {
+  AccountTree as ItemsIcon,
+  Dns as StorageIcon,
+  FactCheck as CredentialMessagesIcon,
   FilterTiltShift as SwarmIcon,
   GroupWork as PartiesIcon,
-  AccountTree as ItemsIcon,
   List as FeedsIcon,
-  Dns as StorageIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
   Subject as LoggingIcon,
@@ -33,6 +34,7 @@ import { TextModel } from '@dxos/text-model';
 
 import {
   ConfigView,
+  CredentialMessagesViewer,
   FeedsViewer,
   ItemsViewer,
   LoggingView,
@@ -54,7 +56,7 @@ const useStyles = makeStyles(theme => ({
   },
   sidebar: {
     flexShrink: 0,
-    width: 120,
+    width: 125,
     backgroundColor: colors.grey[100],
     borderRight: `1px solid ${theme.palette.divider}`
   },
@@ -93,6 +95,11 @@ const items = [
         id: 'halo.keyring',
         title: 'Keyring',
         icon: KeyIcon
+      },
+      {
+        id: 'halo.credentialMessages',
+        title: 'Messages',
+        icon: CredentialMessagesIcon
       }
     ]
   },
@@ -211,6 +218,9 @@ export const App = () => {
       </div>
       <div className={className('halo.keyring')}>
         <Keyring />
+      </div>
+      <div className={className('halo.credentialMessages')}>
+        <CredentialMessagesViewer />
       </div>
       <div className={className('echo.parties')}>
         <PartiesViewer />

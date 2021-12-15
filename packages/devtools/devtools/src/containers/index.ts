@@ -3,6 +3,7 @@
 //
 
 export * from './ConfigView';
+export * from './CredentialMessagesViewer';
 export * from './FeedsViewer';
 export * from './ItemsViewer';
 export * from './Keyring';

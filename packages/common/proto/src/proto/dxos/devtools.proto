@@ -10,6 +10,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "./echo/feed.proto";
 import "./halo/keys.proto";
+import "./halo/signed.proto";
 
 service DevtoolsHost {
   //
@@ -33,6 +34,8 @@ service DevtoolsHost {
   //
 
   rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
+
+  rpc SubscribeToCredentialMessages(SubscribeToCredentialMessagesRequest) returns (stream SubscribeToCredentialMessagesResponse);
 
   //
   // ECHO
@@ -94,6 +97,14 @@ message SubscribeToKeyringKeysRequest {}
 
 message SubscribeToKeyringKeysResponse {
   repeated KeyRecord keys = 1;
+}
+
+message SubscribeToCredentialMessagesRequest {
+  PubKey partyKey = 1;
+}
+
+message SubscribeToCredentialMessagesResponse {
+  repeated SignedMessage messages = 1;
 }
 
 message ResetStorageRequest {}
