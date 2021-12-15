@@ -87,8 +87,7 @@
     "robotjs": "~0.6.0",
     "ts-loader": "~8.1.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.5.2",
-    "webpack": "4.44.2"
+    "typescript": "^4.5.2"
   },
   "publishConfig": {
     "access": "public"

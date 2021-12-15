@@ -54,6 +54,7 @@ export class ConfigPlugin {
       };
     }, { __DXOS_CONFIG__: JSON.stringify({ dynamic: this._dynamic, publicUrl: compiler.options.output.publicPath }) });
 
+    // TODO(burdon): Is this required since webpack replaced by esbuild?
     new DefinePlugin(definitions).apply(compiler);
     new NormalModuleReplacementPlugin(/[/\\]loaders[/\\]index.js/, './browser.js').apply(compiler);
   }
