@@ -10,7 +10,8 @@
     "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "lint": "toolchain lint"
+    "lint": "toolchain lint",
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/util": "workspace:*",
