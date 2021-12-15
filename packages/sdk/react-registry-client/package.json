@@ -24,7 +24,7 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.2",
+    "@dxos/esbuild-server": "~1.5.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/lodash": "^4.14.175",

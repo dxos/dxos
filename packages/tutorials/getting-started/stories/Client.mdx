@@ -1,0 +1,14 @@
+# Client
+
+- TODO(burdon): Remove `@mdx-js/react` dep from `esbuild-server`.
+
+import { Client, ClientProvider } from '@dxos/client';
+
+```tsx
+setImmediate(async () => {
+  const client = new Client();
+  await client.initialize();
+
+  const profile = await client.halo.createProfile();
+});
+```

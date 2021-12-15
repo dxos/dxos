@@ -42,7 +42,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.2",
+    "@dxos/esbuild-server": "~1.5.4",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",

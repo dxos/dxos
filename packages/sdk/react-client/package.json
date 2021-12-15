@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.2",
+    "@dxos/esbuild-server": "~1.5.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@mui/material": "^5.0.1",
     "@testing-library/react": "^11.0.4",

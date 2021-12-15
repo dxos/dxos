@@ -37,7 +37,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.2",
+    "@dxos/esbuild-server": "~1.5.4",
     "@dxos/react-client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
