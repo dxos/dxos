@@ -8,6 +8,7 @@
 
 import fetch from 'node-fetch';
 
+// TODO(burdon): Remove?
 // Fix a bug making fetch not being properly bound with webpack.
 const fetchBound = fetch;
 

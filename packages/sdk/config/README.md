@@ -47,6 +47,7 @@ DEBUG:
 
 ```
 
+- TODO(burdon): Remove.
 > For web a project with webpack is required.
 
 - Add the `ConfigPlugin` to your webpack plugins (web-only):

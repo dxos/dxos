@@ -47,7 +47,7 @@
     "@babel/core": "~7.13.15",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/esbuild-server": "~1.5.2",
     "@dxos/messenger-model": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",

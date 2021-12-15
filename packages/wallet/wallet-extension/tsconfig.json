@@ -9,7 +9,6 @@
     "outDir": "dist",
     "types": [
       "node",
-      "webpack-env",
       "mocha"
     ],
     "noEmit": true,
