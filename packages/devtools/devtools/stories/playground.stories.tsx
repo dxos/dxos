@@ -63,6 +63,15 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
   const [propertyValue, setPropertyValue] = useState('');
   const [itemModel, setItemModel] = useState('');
 
+  const handlePartyOpenToggle = (party: PartyProxy) => {
+    void (party.isOpen ? party.close() : party.open());
+  }
+
+  const handlePartyActiveToggle = (party: PartyProxy) => {
+    const options = { global: true };
+    void (party.isActive ? party.deactivate(options) : party.activate(options));
+  }
+
   const handlePartyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
@@ -90,19 +99,19 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
   const handleCreateItem = (party: PartyProxy) => {
     switch (itemModel) {
       case 'ObjectModel':
-        void party.impl.database.createItem({
+        void party.database.createItem({
           model: ObjectModel,
           type: 'example:type.object'
         });
         break;
       case 'MessengerModel':
-        void party.impl.database.createItem({
+        void party.database.createItem({
           model: MessengerModel,
           type: 'example:type.messenger'
         });
         break;
       case 'TextModel':
-        void party.impl.database.createItem({
+        void party.database.createItem({
           model: TextModel,
           type: 'example:type.text'
         });
@@ -114,12 +123,12 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
       <Typography>Party({truncateString(party.key.toString(), 8)})</Typography>
       <Box padding={2}>
         <Box marginBottom={1}>
-          <Button onClick={() => party.impl.open()}>Open Party</Button>
-          <Button onClick={() => party.impl.close()}>Close Party</Button>
-        </Box>
-        <Box marginBottom={1}>
-          <Button onClick={() => void party.impl.activate({ global: true })}>Activate Party</Button>
-          <Button onClick={() => void party.impl.deactivate({ global: true })}>Deactivate Party</Button>
+          <Button onClick={() => handlePartyOpenToggle(party)}>
+            {party.isOpen ? 'Close' : 'Open'} Party
+          </Button>
+          <Button onClick={() => handlePartyActiveToggle(party)}>
+            {party.isActive ? 'Deactivate' : 'Activate'} Party
+          </Button>
         </Box>
         <TextField
           label='Title'

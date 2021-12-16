@@ -2,67 +2,83 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
+import { ActivationOptions, Database, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { ClientServiceProvider } from '../interfaces';
+import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceProxy } from '../service-proxy';
 
 export class PartyProxy {
-  private readonly _database: Database;
+  private readonly _database?: Database;
+  
+  readonly key: PartyKey;
+  readonly isOpen: boolean;
+  readonly isActive: boolean;
 
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
-    private _partyKey: PublicKey
+    _party: Party
   ) {
+    this.key = _party.publicKey;
+    this.isOpen = _party.isOpen;
+    this.isActive = _party.isActive;
+
+    if (!_party.isOpen) {
+      return;
+    }
+
     if (_serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
-        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._partyKey)
+        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this.key)
       );
     } else {
-      const party = this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
+      const party = this._serviceProvider.echo.getParty(this.key) ?? failUndefined();
       this._database = party.database;
     }
   }
 
-  /**
-   * Returns the ECHO version of the party if we are running in local mode.
-   *
-   * @deprecated
-   */
-  get impl (): EchoParty {
-    return this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
-  }
-
-  async open () {
-    if (this._serviceProvider instanceof ClientServiceProxy) {
+  async init () {
+    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.init();
     }
   }
 
-  async close () {
-    if (this._serviceProvider instanceof ClientServiceProxy) {
+  async destroy () {
+    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
-  }
-
-  /**
-   * Party key. Each party is identified by its key.
-   */
-  get key (): PartyKey {
-    return this._partyKey;
   }
 
   /**
    * Database instance of the current party.
    */
   get database () {
+    if (!this._database) {
+      throw Error('Party not open');
+    }
+
     return this._database;
+  }
+
+  async open () {
+    await this._serviceProvider.services.PartyService.OpenParty({ partyKey: this.key });
+  }
+
+  async close () {
+    await this._serviceProvider.services.PartyService.CloseParty({ partyKey: this.key });
+  }
+
+  async activate (options: ActivationOptions) {
+    await this._serviceProvider.services.PartyService.ActivateParty({ partyKey: this.key, options });
+  }
+
+  async deactivate (options: ActivationOptions) {
+    await this._serviceProvider.services.PartyService.DeactivateParty({ partyKey: this.key, options });
   }
 
   // Use client methods instead!
