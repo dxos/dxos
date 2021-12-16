@@ -16,6 +16,7 @@ import { useResultSet } from '../util';
  */
 export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
   const client = useClient();
+  // TODO(wittjosiah): Not responsive to party updates?
   return partyKey ? client.echo.getParty(PublicKey.from(partyKey)) : undefined;
 };
 
@@ -43,11 +44,4 @@ export const useParties = () => {
   }, []);
 
   return parties;
-};
-
-/**
- * Get all known members of a Party.
- */
-export const usePartyMembers = (party: PartyProxy) => {
-  return useResultSet(useMemo(() => party.queryMembers(), [party.key.toHex()]));
 };

@@ -10,6 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ClientServiceProvider } from '../interfaces';
 import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceProxy } from '../service-proxy';
+import { streamToResultSet } from '../util';
 
 export class PartyProxy {
   private readonly _database?: Database;
@@ -96,7 +97,10 @@ export class PartyProxy {
   // }
 
   queryMembers () {
-    return this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key });
+    return streamToResultSet(
+      this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key }),
+      (response) => response?.members ?? []
+    );
   }
 
   setTitle (title: string) {
