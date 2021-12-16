@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, InvitationDescriptor, OpenProgress, Party, PartyMember, ResultSet } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -178,11 +178,13 @@ export class ClientServiceHost implements ClientServiceProvider {
         SubscribeParty: (request) => {
           const update = (next: (message: SubscribePartyResponse) => void) => {
             const party = this._echo.getParty(request.partyKey);
-            next({ party: party && {
-              publicKey: party.key,
-              isOpen: party.isOpen,
-              isActive: party.isActive
-            }});
+            next({
+              party: party && {
+                publicKey: party.key,
+                isOpen: party.isOpen,
+                isActive: party.isActive
+              }
+            });
           };
 
           const party = this._echo.getParty(request.partyKey);
@@ -199,13 +201,13 @@ export class ClientServiceHost implements ClientServiceProvider {
                   unsubscribeParty = party.update.on(() => update(next));
                 }
               });
-  
+
               update(next);
-  
+
               return () => {
                 unsubscribeParties();
                 unsubscribeParty?.();
-              }
+              };
             });
           }
         },
@@ -234,7 +236,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             throw new Error('Party not found');
           }
 
-          party.open();
+          await party.open();
         },
         CloseParty: async (request) => {
           const party = this._echo.getParty(request.partyKey);
@@ -242,7 +244,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             throw new Error('Party not found');
           }
 
-          party.close();
+          await party.close();
         },
         ActivateParty: async (request) => {
           const party = this._echo.getParty(request.partyKey);
@@ -250,7 +252,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             throw new Error('Party not found');
           }
 
-          party.activate(request.options);
+          await party.activate(request.options);
         },
         DeactivateParty: async (request) => {
           const party = this._echo.getParty(request.partyKey);
@@ -258,7 +260,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             throw new Error('Party not found');
           }
 
-          party.deactivate(request.options);
+          await party.deactivate(request.options);
         },
         CreateInvitation: () => {
           throw new Error('Not implemented');
@@ -288,7 +290,7 @@ export class ClientServiceHost implements ClientServiceProvider {
               return () => {
                 unsubscribeParties();
                 unsubscribeMembers();
-              }
+              };
             });
           }
         },

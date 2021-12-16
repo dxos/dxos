@@ -65,12 +65,12 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
 
   const handlePartyOpenToggle = (party: PartyProxy) => {
     void (party.isOpen ? party.close() : party.open());
-  }
+  };
 
   const handlePartyActiveToggle = (party: PartyProxy) => {
     const options = { global: true };
     void (party.isActive ? party.deactivate(options) : party.activate(options));
-  }
+  };
 
   const handlePartyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);

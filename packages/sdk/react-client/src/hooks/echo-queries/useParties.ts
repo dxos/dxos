@@ -2,13 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { PartyProxy } from '@dxos/client';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
 import { useClient } from '../client';
-import { useResultSet } from '../util';
 
 /**
  * Get a specific Party.

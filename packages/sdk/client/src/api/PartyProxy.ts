@@ -14,7 +14,7 @@ import { streamToResultSet } from '../util';
 
 export class PartyProxy {
   private readonly _database?: Database;
-  
+
   readonly key: PartyKey;
   readonly isOpen: boolean;
   readonly isActive: boolean;
