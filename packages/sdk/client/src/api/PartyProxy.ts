@@ -3,7 +3,7 @@
 //
 
 import { failUndefined } from '@dxos/debug';
-import { ActivationOptions, Database, RemoteDatabaseBackend } from '@dxos/echo-db';
+import { ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -104,14 +104,23 @@ export class PartyProxy {
   }
 
   setTitle (title: string) {
-    return this._serviceProvider.services.PartyService.SetPartyTitle({ partyKey: this.key, title });
+    return this.setProperty(PARTY_TITLE_PROPERTY, title);
   }
 
-  setProperty (key: string, value?: string) {
-    return this._serviceProvider.services.PartyService.SetPartyProperty({ partyKey: this.key, key, value });
+  async setProperty (key: string, value?: string) {
+    await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
+    const item = this.getPropertiesItem();
+    await item.model.setProperty(key, value);
+    return this;
   }
 
   getProperty (key: string) {
-    return this._serviceProvider.services.PartyService.GetPartyProperty({ partyKey: this.key, key });
+    const item = this.getPropertiesItem();
+    return item?.model.getProperty(key);
+  }
+
+  private getPropertiesItem () {
+    const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
+    return items[0];
   }
 }

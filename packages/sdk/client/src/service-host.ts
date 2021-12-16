@@ -293,31 +293,6 @@ export class ClientServiceHost implements ClientServiceProvider {
               };
             });
           }
-        },
-        SetPartyTitle: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
-
-          await party.setTitle(request.title);
-        },
-        SetPartyProperty: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
-
-          await party.setProperty(request.key, request.value);
-        },
-        GetPartyProperty: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
-
-          const value = party.getProperty(request.key);
-          return { value: value?.toString() };
         }
       },
       DataService: this._echo.dataService,
