@@ -2,36 +2,35 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
+import styled from '@emotion/styled'
 
-import { makeStyles } from '@material-ui/core/styles';
-import grey from '@material-ui/core/colors/grey';
+import { GridType } from '../util';
 
-const useStyles = makeStyles(() => ({
-  axis: {
-    '& line, & path': {
-      stroke: grey[700],
-      strokeWidth: 1
-    },
-
-    '& text': {
-      fill: grey[500],
-      strokeWidth: .5
-    }
-  },
-
-  grid: {
-    '& line, & path': {
-      stroke: grey[200],
-      strokeWidth: 1
-    }
+const GridGroup = styled.g`
+  path {
+    stroke-width: 0;
   }
-}));
+  line {
+    stroke: #CCC;
+    stroke-width: 1;
+  }
+`;
+
+const AxisGroup = styled.g`
+  line {
+    stroke: #333;
+    stroke-width: 1;
+  }
+  text {
+    fill: #333;
+    stroke-width: .5;
+  }
+`;
 
 interface GridOptions {
-  grid: any; // TODO(burdon): Type.
+  grid: GridType;
   showGrid?: boolean;
   showAxis?: boolean;
   tickFormat?: string;
@@ -46,10 +45,8 @@ interface GridOptions {
  *
  * NOTE: Specify either a grid object, or width and height.
  */
-const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) => {
+export const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) => {
   const { size, scaleX, scaleY, ticks } = grid;
-
-  const classes = useStyles();
 
   const xAxisRef = useRef(null);
   const yAxisRef = useRef(null);
@@ -73,35 +70,31 @@ const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) => {
         .attr('transform', `translate(0, ${-size.height / 2})`)
         .call(d3.axisBottom(scaleX)
           .ticks(ticks)
-          .tickSize(size.height)
-          .tickFormat(null) as any);
+          .tickSize(size.height));
 
       d3.select(yGridRef.current)
         .attr('transform', `translate(${-size.width / 2}, 0)`)
         .call(d3.axisRight(scaleY)
           .ticks(ticks)
-          .tickSize(size.width)
-          .tickFormat(null) as any);
+          .tickSize(size.width));
     }
   }, [grid, showGrid, showAxis]);
 
   return (
     <g>
       {showGrid && (
-        <g className={classes.grid}>
+        <GridGroup>
           <g ref={xGridRef} />
           <g ref={yGridRef} />
-        </g>
+        </GridGroup>
       )}
 
       {showAxis && (
-        <g className={classes.axis}>
+        <AxisGroup>
           <g ref={xAxisRef} />
           <g ref={yAxisRef} />
-        </g>
+        </AxisGroup>
       )}
     </g>
   );
 };
-
-export default Grid;

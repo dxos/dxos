@@ -4,6 +4,7 @@
 
 import * as d3 from 'd3';
 import React, {
+  ForwardedRef,
   MutableRefObject,
   ReactNode,
   forwardRef,
@@ -12,7 +13,6 @@ import React, {
 } from 'react';
 
 import { isNull } from '../util';
-import { ForwardedRef } from 'react';
 
 interface SVGOptions {
   children: ReactNode;
@@ -26,7 +26,7 @@ interface SVGOptions {
  * Root SVG element.
  */
 // eslint-disable-next-line react/display-name
-const SVG = ({
+const SVGInternal = ({
   children, width, height, center = true, debug = true
 }: SVGOptions, svgRef: ForwardedRef<any>) => {
   const svg = svgRef as MutableRefObject<any> || useRef<any>(null);
@@ -55,6 +55,4 @@ const SVG = ({
   );
 };
 
-const ForwardSVG = forwardRef<any, SVGOptions>(SVG);
-
-export default ForwardSVG;
+export const SVG = forwardRef<any, SVGOptions>(SVGInternal);

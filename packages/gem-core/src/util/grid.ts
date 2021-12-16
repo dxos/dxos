@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import * as d3 from 'd3';
 import { ScaleLinear } from 'd3-scale';
 import { useEffect, useState } from 'react';
@@ -59,8 +58,6 @@ export const getCenter = ({ width, height }: Size) => ({ x: (width || 0) / 2, y:
  * @returns {{ size, center, scaleX, scaleY, ticks, zoom }}
  */
 export const createGrid = ({ width = 0, height = 0 }: Size, zoom = 1): GridType => {
-  assert(zoom);
-
   // https://observablehq.com/@d3/d3-scalelinear
   // https://github.com/d3/d3-scale#scaleLinear
   // https://github.com/d3/d3-scale#quantize_invertExtent
