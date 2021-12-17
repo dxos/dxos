@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 // https://mui.com/components/material-icons
 import {
@@ -18,15 +18,16 @@ import {
   VpnKey as KeyIcon
 } from '@mui/icons-material';
 import {
+  Box,
+  BoxProps,
   Divider,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   colors,
-  createTheme
+  styled
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 
 import { MessengerModel } from '@dxos/messenger-model';
 import { useClient } from '@dxos/react-client';
@@ -45,32 +46,6 @@ import {
   SwarmDetails
   // SwarmGraph
 } from './containers';
-
-// TODO(wittjosiah): Refactor, makeStyles is deprecated.
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'row',
-    flexGrow: 1,
-    height: '100vh'
-  },
-  sidebar: {
-    flexShrink: 0,
-    width: 125,
-    backgroundColor: colors.grey[100],
-    borderRight: `1px solid ${theme.palette.divider}`
-  },
-  content: {
-    display: 'flex',
-    flex: 1,
-    flexDirection: 'column',
-    overflowX: 'hidden',
-    overflowY: 'auto'
-  },
-  contentHidden: {
-    display: 'none'
-  }
-}), { defaultTheme: createTheme({}) });
 
 const items = [
   {
@@ -157,6 +132,20 @@ const items = [
   }
 ];
 
+interface ContentBoxProps extends BoxProps {
+  selected?: boolean
+}
+
+const ContentBox = styled(Box, {
+  shouldForwardProp: prop => prop !== 'selected'
+})<ContentBoxProps>(({ selected }) => ({
+  display: selected ? 'flex' : 'none',
+  flex: 1,
+  flexDirection: 'column',
+  overflowX: 'hidden',
+  overflowY: 'auto'
+}));
+
 export const App = () => {
   const client = useClient();
   useEffect(() => {
@@ -164,18 +153,26 @@ export const App = () => {
     client.registerModel(MessengerModel);
   }, [client]);
 
-  const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
 
   const handleListItemClick = (event: any, index: string) => {
     setSelected(index);
   };
 
-  const className = (id: string) => selected === id ? classes.content : classes.contentHidden;
-
   return (
-    <div className={classes.root}>
-      <div className={classes.sidebar}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'row',
+      flexGrow: 1,
+      height: '100vh'
+    }}>
+      <Box sx={{
+        flexShrink: 0,
+        width: 125,
+        backgroundColor: colors.grey[100],
+        borderRight: '1px solid',
+        borderRightColor: 'divider'
+      }}>
         <List dense disablePadding>
           {items.map(({ title, items = [] }) => (
             <div key={title}>
@@ -206,45 +203,45 @@ export const App = () => {
             </div>
           ))}
         </List>
-      </div>
+      </Box>
 
       {/* Display hidden so that components maintain state. */}
 
-      <div className={className('config')}>
+      <ContentBox selected={selected === 'config'}>
         <ConfigView />
-      </div>
-      <div className={className('storage')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'storage'}>
         <StorageTab />
-      </div>
-      <div className={className('halo.keyring')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'halo.keyring'}>
         <Keyring />
-      </div>
-      <div className={className('halo.credentialMessages')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'halo.credentialMessages'}>
         <CredentialMessagesViewer />
-      </div>
-      <div className={className('echo.parties')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'echo.parties'}>
         <PartiesViewer />
-      </div>
-      <div className={className('echo.items')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'echo.items'}>
         <ItemsViewer />
-      </div>
-      <div className={className('echo.feeds')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'echo.feeds'}>
         <FeedsViewer />
-      </div>
-      <div className={className('mesh.signal')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'mesh.signal'}>
         <Signal />
-      </div>
+      </ContentBox>
       {/*
-      <div className={className('mesh.swarmgraph')}>
+      <ContentBox selected={selected === 'mesh.swarmgraph'}>
         <SwarmGraph />
-      </div>
+      </ContentBox>
       */}
-      <div className={className('mesh.swarminfo')}>
+      <ContentBox selected={selected === 'mesh.swarminfo'}>
         <SwarmDetails />
-      </div>
-      <div className={className('debug.logging')}>
+      </ContentBox>
+      <ContentBox selected={selected === 'debug.logging'}>
         <LoggingView />
-      </div>
-    </div>
+      </ContentBox>
+    </Box>
   );
 };
