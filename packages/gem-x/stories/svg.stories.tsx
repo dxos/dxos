@@ -3,6 +3,7 @@
 //
 
 import * as d3 from "d3";
+import { Selection } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
@@ -12,7 +13,26 @@ export default {
   title: 'SVG'
 };
 
-const createData = ({ r = 300 } = {}) => {
+// TODO(burdon): Model class (and when to update).
+// TODO(burdon): Scenes.
+// TODO(burdon): Layout (e.g., force).
+// TODO(burdon): Transitions (between scenes).
+
+const circle = g => g
+  .attr('cx', ([x,]) => x)
+  .attr('cy', ([,y]) => y)
+  .attr('r', 5);
+
+const path = g => g
+  .attr('d', path => path);
+
+interface Data {
+  type: 'circle' | 'path'
+  data: any[]
+  callback: (selection: Selection<Element, any, any, any>) => void
+}
+
+const createData = ({ r = 300 } = {}): Data[] => {
   const randomRadius = d3.randomInt(0, r);
   const circles = Array.from({ length: 500 }, () => {
     const r = randomRadius();
@@ -26,20 +46,30 @@ const createData = ({ r = 300 } = {}) => {
     d3.line()(points) + ',z' // Close path.
   ];
 
-  return {
-    circles,
-    paths
-  };
+  return [
+    {
+      type: 'circle',
+      data: circles,
+      callback: circle
+    },
+    {
+      type: 'path',
+      data: paths,
+      callback: path
+    }
+  ];
 };
 
 // TODO(burdon): Size?
-const grid = (): [number, number][][] => {
+const gridPath = () => {
   const range = d3.range(-40*32, 40*32, 32);
-  return range.reduce((result, i) => {
+  const lines = range.reduce((result, i) => {
     result.push([[-1000, i], [1000, i]]);
     result.push([[i, -1000], [i, 1000]]);
     return result;
   }, []);
+
+  return lines.map(line => d3.line()(line)).join();
 };
 
 const style = css`
@@ -49,6 +79,7 @@ const style = css`
     }
   }
 
+  // TODO(burdon): Custom style.
   g.objects {
     circle {
       stroke: seagreen;
@@ -63,40 +94,28 @@ const style = css`
 
 export const Primary = () => {
   const ref = useRef<SVGSVGElement>();
-  const { circles, paths } = useMemo(() => createData(), []);
+  const data = useMemo(() => createData(), []);
 
+  // TODO(burdon): When to draw?
   useEffect(() => {
     const root = d3.select(ref.current)
       .append('g');
 
-    // Axis.
+    // Grid.
+    // TODO(burdon): Is the grid special?
     root.append('g').classed('axis', true)
       .append('path')
-      .attr('d', grid().map(line => d3.line()(line)).join());
+      .attr('d', gridPath());
 
     // Objects.
-    // TODO(burdon): Model (datum attr to select/join).
     const objects = root.append('g').classed('objects', true);
-
-    const path = g => g
-      .attr('d', paths => paths);
-
-    objects.append('g')
-      .selectAll('path')
-        .data(paths)
-      .join('path')
-        .call(path);
-
-    const circle = g => g
-      .attr('cx', ([x,]) => x)
-      .attr('cy', ([,y]) => y)
-      .attr('r', 5);
-
-    objects.append('g')
-      .selectAll('circle')
-        .data(circles)
-      .join('circle')
-        .call(circle);
+    data.forEach(({ type, data, callback }) => {
+      objects.append('g')
+        .selectAll(type) // TODO(burdon): Selector (datum/property value?)
+          .data(data)
+        .join(type)
+          .call(callback);
+    });
   }, [ref]);
 
   const handleResize = (({ svg, width, height }) => {
@@ -109,7 +128,8 @@ export const Primary = () => {
       .scaleExtent([1, 8])
       .on('zoom', zoomed));
 
-    // TODO(burdon): Determine what to scale; scale color, etc.
+    // TODO(burdon): Determine what to scale.
+    // TODO(burdon): Custom: e.g., scale color, size of grid spacing, etc.
     function zoomed({ transform }) {
       const { k } = transform;
       const scale = 1 / k;
