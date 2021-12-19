@@ -65,8 +65,6 @@ export const createModel = (maxDepth = 4): TestModel => {
     id: 'item-0'
   }, maxDepth);
 
-  console.log(JSON.stringify(items, undefined, 2));
-
   return { items };
 };
 

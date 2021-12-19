@@ -7,6 +7,7 @@ import * as d3 from 'd3';
 import { BaseProjector, ObjectId, Renderer, Surface } from './scene';
 
 export type GraphNode = {
+  initialized: boolean
   id: ObjectId
   x?: number
   y?: number
@@ -24,9 +25,10 @@ export type Graph = {
   links: GraphLink[]
 }
 
+const line = d3.line();
+
 export class GraphRenderer implements Renderer<Graph> {
   update (surface: Surface, layout: Graph) {
-    // console.log('GraphRenderer.update', JSON.stringify(layout, undefined, 2));
     const root = d3.select(surface.root);
 
     const links = root.selectAll('g.links')
@@ -35,12 +37,10 @@ export class GraphRenderer implements Renderer<Graph> {
     links.selectAll('path')
       .data(layout.links)
       .join('path')
-      .attr('d', d => {
-        return d3.line()([
+        .attr('d', d => line([
           [d.source.x, d.source.y],
           [d.target.x, d.target.y]
-        ]);
-      });
+        ]));
 
     const circles = root.selectAll('g.nodes')
       .data([{ id: 'nodes' }])
@@ -48,9 +48,9 @@ export class GraphRenderer implements Renderer<Graph> {
     circles.selectAll('circle')
       .data(layout.nodes)
       .join('circle')
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
-      .attr('r', d => d.r);
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
+        .attr('r', d => d.r);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -63,6 +63,9 @@ export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation();
 
+  // TODO(burdon): Drag handler must be set on circles after rendering.
+  _drag = d3.drag();
+
   _layout: Graph = {
     nodes: [],
     links: []
@@ -74,15 +77,16 @@ export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
 
   onUpdate (layout: Graph) {
     this._layout = layout;
+
+    // Iniital positions.
     this._layout.nodes.forEach(node => {
-      if (node.x === undefined) {
-        node.x = (Math.random() - 0.5) * 300;
-      }
-      if (node.y === undefined) {
-        node.y = (Math.random() - 0.5) * 300;
-      }
-      if (node.r === undefined) {
-        node.r = 2 + Math.random() * 10;
+      if (!node.initialized) {
+        Object.assign(node, {
+          initialized: true,
+          x: (Math.random() - 0.5) * 300,
+          y: (Math.random() - 0.5) * 300,
+          r: 2 + Math.random() * 10
+        });
       }
     });
 
@@ -97,9 +101,7 @@ export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
   }
 
   onStart () {
-    this._simulation
-      .restart();
-
+    this._simulation.restart();
     this._simulation.on('tick', () => {
       this.doUpdate();
     });

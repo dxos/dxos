@@ -35,6 +35,11 @@ export abstract class BaseProjector<MODEL, LAYOUT> implements Projector<MODEL> {
     private readonly _renderer: Renderer<LAYOUT>
   ) {}
 
+  update (model: MODEL) {
+    this.onUpdate(this._mapper(model, this.getLayout()));
+    this.doUpdate();
+  }
+
   start (surface: Surface) {
     this._surface = surface;
     this.onStart();
@@ -44,11 +49,6 @@ export abstract class BaseProjector<MODEL, LAYOUT> implements Projector<MODEL> {
     await this.onStop();
     this._renderer.clear(this._surface);
     this._surface = undefined;
-  }
-
-  update (model: MODEL) {
-    this.onUpdate(this._mapper(model, this.getLayout()));
-    this.doUpdate();
   }
 
   protected abstract getLayout (): LAYOUT;
