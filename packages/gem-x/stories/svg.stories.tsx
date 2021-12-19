@@ -8,6 +8,10 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { FullScreen, SvgContainer } from '../src';
+import {
+  model as testModel,
+  scene as testScene, Surface
+} from './helpers';
 
 export default {
   title: 'SVG'
@@ -32,7 +36,7 @@ interface Data {
   callback: (selection: Selection<Element, any, any, any>) => void
 }
 
-const createData = ({ r = 300 } = {}): Data[] => {
+const createModel = ({ r = 300 } = {}): Data[] => {
   const randomRadius = d3.randomInt(0, r);
   const circles = Array.from({ length: 500 }, () => {
     const r = randomRadius();
@@ -94,7 +98,7 @@ const style = css`
 
 export const Primary = () => {
   const ref = useRef<SVGSVGElement>();
-  const data = useMemo(() => createData(), []);
+  const data = useMemo(() => createModel(), []);
 
   // TODO(burdon): When to draw?
   useEffect(() => {
@@ -108,6 +112,7 @@ export const Primary = () => {
       .attr('d', gridPath());
 
     // Objects.
+    // TODO(burdon): Mapping?
     const objects = root.append('g').classed('objects', true);
     data.forEach(({ type, data, callback }) => {
       objects.append('g')
@@ -148,6 +153,34 @@ export const Primary = () => {
         ref={ref}
         className={style}
         onResize={handleResize}
+      />
+    </FullScreen>
+  );
+}
+
+export const Secondary = () => {
+  const ref = useRef<SVGSVGElement>();
+  const model = useMemo(() => testModel, []);
+  const scene = useMemo(() => testScene, []);
+
+  useEffect(() => {
+    const svg = ref.current;
+    const objects = d3.select(svg).append('g').classed('objects', true);
+    const surface = new Surface(svg, objects.node());
+    scene.start(surface);
+    scene.update(model);
+    return () => {
+      scene.stop();
+    }
+  }, [ref]);
+
+  return (
+    <FullScreen style={{
+      backgroundColor: '#F5F5F5'
+    }}>
+      <SvgContainer
+        ref={ref}
+        className={style}
       />
     </FullScreen>
   );
