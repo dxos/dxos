@@ -3,14 +3,14 @@
 //
 
 import * as d3 from "d3";
-import { Selection } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { FullScreen, SvgContainer } from '../src';
 import {
-  model as testModel,
-  scene as testScene, Surface
+  Surface,
+  createModel,
+  scene as testScene
 } from './helpers';
 
 export default {
@@ -21,48 +21,6 @@ export default {
 // TODO(burdon): Scenes.
 // TODO(burdon): Layout (e.g., force).
 // TODO(burdon): Transitions (between scenes).
-
-const circle = g => g
-  .attr('cx', ([x,]) => x)
-  .attr('cy', ([,y]) => y)
-  .attr('r', 5);
-
-const path = g => g
-  .attr('d', path => path);
-
-interface Data {
-  type: 'circle' | 'path'
-  data: any[]
-  callback: (selection: Selection<Element, any, any, any>) => void
-}
-
-const createModel = ({ r = 300 } = {}): Data[] => {
-  const randomRadius = d3.randomInt(0, r);
-  const circles = Array.from({ length: 500 }, () => {
-    const r = randomRadius();
-    const theta = Math.random() * 2 * Math.PI;
-    return [Math.sin(theta) * r, Math.cos(theta) * r];
-  });
-
-  // https://css-tricks.com/svg-path-syntax-illustrated-guide
-  const points: Iterable<[number, number]> = [[-128, -128], [-128, 128], [128, 128], [128, -128]];
-  const paths = [
-    d3.line()(points) + ',z' // Close path.
-  ];
-
-  return [
-    {
-      type: 'circle',
-      data: circles,
-      callback: circle
-    },
-    {
-      type: 'path',
-      data: paths,
-      callback: path
-    }
-  ];
-};
 
 // TODO(burdon): Size?
 const gridPath = () => {
@@ -77,9 +35,9 @@ const gridPath = () => {
 };
 
 const style = css`
-  g.axis {
+  g.grid {
     path {
-      stroke: #DDD;
+      stroke: #EEE;
     }
   }
 
@@ -87,7 +45,7 @@ const style = css`
   g.objects {
     circle {
       stroke: seagreen;
-      fill: none;
+      fill: #FFF;
     }
     path {
       stroke: orange;
@@ -98,7 +56,6 @@ const style = css`
 
 export const Primary = () => {
   const ref = useRef<SVGSVGElement>();
-  const data = useMemo(() => createModel(), []);
 
   // TODO(burdon): When to draw?
   useEffect(() => {
@@ -106,21 +63,11 @@ export const Primary = () => {
       .append('g');
 
     // Grid.
+    // TODO(burdon): Factor out grid.
     // TODO(burdon): Is the grid special?
-    root.append('g').classed('axis', true)
+    root.append('g').classed('grid', true)
       .append('path')
       .attr('d', gridPath());
-
-    // Objects.
-    // TODO(burdon): Mapping?
-    const objects = root.append('g').classed('objects', true);
-    data.forEach(({ type, data, callback }) => {
-      objects.append('g')
-        .selectAll(type) // TODO(burdon): Selector (datum/property value?)
-          .data(data)
-        .join(type)
-          .call(callback);
-    });
   }, [ref]);
 
   const handleResize = (({ svg, width, height }) => {
@@ -160,15 +107,22 @@ export const Primary = () => {
 
 export const Secondary = () => {
   const ref = useRef<SVGSVGElement>();
-  const model = useMemo(() => testModel, []);
+  const model = useMemo(() => createModel(4), []);
   const scene = useMemo(() => testScene, []);
 
   useEffect(() => {
     const svg = ref.current;
+
+    const grid = d3.select(svg).append('g').classed('grid', true)
+      .append('path')
+      .attr('d', gridPath());
+
     const objects = d3.select(svg).append('g').classed('objects', true);
+
     const surface = new Surface(svg, objects.node());
     scene.start(surface);
     scene.update(model);
+
     return () => {
       scene.stop();
     }

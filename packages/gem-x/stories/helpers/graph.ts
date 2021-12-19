@@ -26,17 +26,8 @@ export type Graph = {
 
 export class GraphRenderer implements Renderer<Graph> {
   update (surface: Surface, layout: Graph) {
-    console.log('GraphRenderer.update', JSON.stringify(layout, undefined, 2));
+    // console.log('GraphRenderer.update', JSON.stringify(layout, undefined, 2));
     const root = d3.select(surface.root);
-    const circles = root.selectAll('g.nodes')
-      .data([{ id: 'nodes' }])
-      .join('g').classed('nodes', true);
-    circles.selectAll('circle')
-      .data(layout.nodes)
-      .join('circle')
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
-      .attr('r', d => d.r);
 
     const links = root.selectAll('g.links')
       .data([{ id: 'links' }])
@@ -50,6 +41,16 @@ export class GraphRenderer implements Renderer<Graph> {
           [d.target.x, d.target.y]
         ]);
       });
+
+    const circles = root.selectAll('g.nodes')
+      .data([{ id: 'nodes' }])
+      .join('g').classed('nodes', true);
+    circles.selectAll('circle')
+      .data(layout.nodes)
+      .join('circle')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', d => d.r);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -59,6 +60,9 @@ export class GraphRenderer implements Renderer<Graph> {
 }
 
 export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
+  // https://github.com/d3/d3-force
+  _simulation = d3.forceSimulation();
+
   _layout: Graph = {
     nodes: [],
     links: []
@@ -81,12 +85,27 @@ export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
         node.r = 2 + Math.random() * 10;
       }
     });
+
+    // TODO(burdon): Only reset alpha if model has changed.
+    // https://github.com/d3/d3-force#simulation_force
+    this._simulation
+      .nodes(this._layout.nodes)
+      .force('link', d3.forceLink(this._layout.links).distance(40))
+      .force('charge', d3.forceManyBody().strength(-30))
+      .alpha(1) // Reset calculations.
+      .restart();
   }
 
   onStart () {
-    // TODO(burdon): On update callback.
-    this.doUpdate();
+    this._simulation
+      .restart();
+
+    this._simulation.on('tick', () => {
+      this.doUpdate();
+    });
   }
 
-  async onStop () {}
+  async onStop () {
+    this._simulation.stop();
+  }
 }

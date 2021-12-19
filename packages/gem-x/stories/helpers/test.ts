@@ -44,36 +44,36 @@ export const scene = new Scene<TestModel>([
   }, renderer)
 ]);
 
-// TODO(burdon): Generate graph data set.
-export const model: TestModel = {
-  items: [
-    {
-      id: 'item-1'
-    },
-    {
-      id: 'item-2',
-      parent: 'item-1'
-    },
-    {
-      id: 'item-3',
-      parent: 'item-1'
-    },
-    {
-      id: 'item-4',
-      parent: 'item-3'
-    },
-    {
-      id: 'item-5',
-      parent: 'item-3'
+// TODO(burdon): Model subscription.
+export const createModel = (maxDepth = 4): TestModel => {
+  const items = [];
+
+  const sub = (root, maxDepth = 4, maxChildren = 4, depth = 0) => {
+    items.push(root);
+
+    if (depth < maxDepth) {
+      Array.from({ length: Math.round(1 + Math.random() * (maxChildren - 1)) }).forEach((_, i) => {
+        sub({
+          id: `item-${root.id}-${i}`,
+          parent: root.id
+        }, maxDepth, maxChildren, depth + 1);
+      });
     }
-  ]
+  };
+
+  sub({
+    id: 'item-0'
+  }, maxDepth);
+
+  console.log(JSON.stringify(items, undefined, 2));
+
+  return { items };
 };
 
 export const test = () => {
   const surface: Surface = undefined;
 
-  // TODO(burdon): Model subscription.
   scene.start(surface);
-  scene.update(model);
+  scene.update(createModel());
   scene.stop();
 };
