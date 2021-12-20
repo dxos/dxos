@@ -37,10 +37,10 @@ export class GraphRenderer implements Renderer<Graph> {
     links.selectAll('path')
       .data(layout.links)
       .join('path')
-        .attr('d', d => line([
-          [d.source.x, d.source.y],
-          [d.target.x, d.target.y]
-        ]));
+      .attr('d', d => line([
+        [d.source.x, d.source.y],
+        [d.target.x, d.target.y]
+      ]));
 
     const circles = root.selectAll('g.nodes')
       .data([{ id: 'nodes' }])
@@ -48,9 +48,9 @@ export class GraphRenderer implements Renderer<Graph> {
     circles.selectAll('circle')
       .data(layout.nodes)
       .join('circle')
-        .attr('cx', d => d.x)
-        .attr('cy', d => d.y)
-        .attr('r', d => d.r);
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+      .attr('r', d => d.r);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
