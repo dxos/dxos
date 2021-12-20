@@ -10,6 +10,7 @@ import { FullScreen, SvgContainer } from '../src';
 import {
   Surface,
   createModel,
+  grid,
   scene as testScene
 } from './helpers';
 
@@ -22,41 +23,6 @@ export default {
 // TODO(burdon): Layout (e.g., force).
 // TODO(burdon): Transitions (between scenes).
 
-const createGrid = ({ width, height }, transform = undefined) => {
-  const { x = 0, y = 0, k = 1 } = transform || {};
-  const s = 1 / k;
-
-  // TODO(burdon): Based on zoom.
-  const gridSize = 32;
-  const mod = n => (Math.floor(n / gridSize + 1) * gridSize);
-  const xRange = d3.range(-mod((x + width / 2) * s), mod((-x + width / 2) * s), gridSize);
-  const yRange = d3.range(-mod((y + height / 2) * s), mod((-y + height / 2) * s), gridSize);
-
-  const w = width * s;
-  const h = height * s;
-  const dx = -(x + width / 2) * s;
-  const dy = -(y + height / 2) * s;
-
-  // Create array of paths.
-  const lines = [
-    ...xRange.map(x => [[x, dy], [x, dy + h]]),
-    ...yRange.map(y => [[dx, y], [dx + w, y]])
-  ];
-
-  const createLine = d3.line();
-  return lines.map(line => createLine(line as any)).join();
-};
-
-// TODO(burdon): Customize grid.
-const grid = ({ width, height }, transform = undefined) => (el) => {
-  el.selectAll('path').data([{ id: 'grid' }]).join('path').attr('d', createGrid({ width, height }, transform));
-
-  if (transform) {
-    el.attr('transform', transform);
-    // path.attr('stroke-width', 1 / transform.k);
-  }
-}
-
 /**
  * https://github.com/d3/d3-zoom#zoom_on
  * https://www.d3indepth.com/zoom-and-pan
@@ -67,7 +33,7 @@ const grid = ({ width, height }, transform = undefined) => (el) => {
 // TODO(burdon): Add momentum.
 const zoom = ({ width, height }, listener = undefined) => d3.zoom()
   .extent([[0, 0], [width, height]])
-  .scaleExtent([-8, 8]) // TODO(burdon): Configure.
+  .scaleExtent([1/4, 8]) // TODO(burdon): Configure.
   .on('zoom', ({ transform }) => {
     listener(transform);
   });
@@ -80,6 +46,9 @@ const style = css`
   g.grid {
     path {
       stroke: #E5E5E5;
+    }
+    path.axis {
+      stroke: red;
     }
   }
 

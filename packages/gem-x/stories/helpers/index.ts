@@ -3,5 +3,6 @@
 //
 
 export * from './graph';
+export * from './grid';
 export * from './scene';
 export * from './test';
