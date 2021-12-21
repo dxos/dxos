@@ -21,13 +21,14 @@ export const SnapshotsViewer = () => {
   const devtoolsHost = client.services.DevtoolsHost;
   const [snapshot, setSnapshot] = useState<PartySnapshot>();
 
-  const handleLoadSnapshot = async () => {
-    if (!selectedParty) {
-      return;
+  const handlePartyChange = (party: PartyProxy | undefined) => {
+    setSelectedParty(party);
+    if (party) {
+      setImmediate(async () => {
+        const result = await devtoolsHost.GetPartySnapshot({ partyKey: party.key });
+        setSnapshot(result.snapshot);
+      });
     }
-
-    const result = await devtoolsHost.GetPartySnapshot({ partyKey: selectedParty.key });
-    setSnapshot(result.snapshot);
   };
 
   const handleSaveSnapshot = async () => {
@@ -46,19 +47,20 @@ export const SnapshotsViewer = () => {
   return (
     <Box padding={2}>
       <Box marginBottom={1}>
-        <Button onClick={handleLoadSnapshot}>Load</Button>
-        <Button onClick={handleSaveSnapshot}>Save</Button>
+        <Button onClick={handleSaveSnapshot}>Save Snapshot</Button>
         <Button onClick={handleClearSnapshots}>Clear All Snapshots</Button>
       </Box>
       <PartySelect
         parties={parties}
         value={selectedParty}
-        onChange={setSelectedParty}
+        onChange={handlePartyChange}
       />
-      <JsonTreeView
-        size='small'
-        data={snapshot}
-      />
+      <Box marginTop={1}>
+        <JsonTreeView
+          size='small'
+          data={snapshot}
+        />
+      </Box>
     </Box>
   );
 };
