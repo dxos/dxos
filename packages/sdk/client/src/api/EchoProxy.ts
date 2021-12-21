@@ -13,6 +13,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
+import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
 import { PartyProxy } from './PartyProxy';
 
@@ -54,9 +55,20 @@ export class EchoProxy {
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          const partyProxy = this.createPartyProxy(party.publicKey);
-          await partyProxy.open();
-          this._parties.set(party.publicKey, partyProxy);
+          const partyProxy = await this.createPartyProxy(party);
+          this._parties.set(partyProxy.key, partyProxy);
+
+          const partyStream = this._serviceProvider.services.PartyService.SubscribeParty({ partyKey: party.publicKey });
+          partyStream.subscribe(async ({ party }) => {
+            if (!party) {
+              return;
+            }
+
+            const partyProxy = await this.createPartyProxy(party);
+            this._parties.set(partyProxy.key, partyProxy);
+            this._partiesChanged.emit();
+          }, () => {});
+          this._subscriptions.push(() => partyStream.close());
         }
       }
       this._partiesChanged.emit();
@@ -69,7 +81,7 @@ export class EchoProxy {
    */
   async _close () {
     for (const party of this._parties.values()) {
-      await party.close();
+      await party.destroy();
     }
 
     this._subscriptions.unsubscribe();
@@ -107,8 +119,10 @@ export class EchoProxy {
     return this._parties.get(partyKey);
   }
 
-  private createPartyProxy (partyKey: PartyKey): PartyProxy {
-    return new PartyProxy(this._serviceProvider, this._modelFactory, partyKey);
+  private async createPartyProxy (party: Party): Promise<PartyProxy> {
+    const proxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
+    await proxy.init();
+    return proxy;
   }
 
   queryParties (): ResultSet<PartyProxy> {

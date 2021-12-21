@@ -89,24 +89,80 @@ service ProfileService {
 
 message Party {
   required dxos.halo.keys.PubKey publicKey = 1;
+  required bool isOpen = 2;
+  required bool isActive = 3;
+}
+
+message SubscribePartyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+message SubscribePartyResponse {
+  Party party = 1;
 }
 
 message SubscribePartiesResponse {
   repeated Party parties = 1;
 }
 
+message OpenPartyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+message ClosePartyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+message PartyActivationOptions {
+  bool global = 1;
+  bool device = 2;
+}
+
+message ActivatePartyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+  required PartyActivationOptions options = 2;
+}
+
+message DeactivatePartyRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+  required PartyActivationOptions options = 2;
+}
+
 message CreateInvitationRequest {
   required dxos.halo.keys.PubKey publicKey = 1;
 }
 
+message SubscribeMembersRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+message SubscribeMembersResponse {
+  // TODO(wittjosiah): Factor out.
+  message PartyMember {
+    required dxos.halo.keys.PubKey publicKey = 1;
+    string displayName = 2;
+  }
+
+  repeated PartyMember members = 1;
+}
+
 service PartyService {
+  rpc SubscribeParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
+
+  rpc OpenParty(OpenPartyRequest) returns(google.protobuf.Empty);
+  rpc CloseParty(ClosePartyRequest) returns(google.protobuf.Empty);
+
+  rpc ActivateParty(ActivatePartyRequest) returns(google.protobuf.Empty);
+  rpc DeactivateParty(DeactivatePartyRequest) returns(google.protobuf.Empty);
 
   rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
 
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
+
+  rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 }
 
