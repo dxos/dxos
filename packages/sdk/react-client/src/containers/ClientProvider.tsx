@@ -9,6 +9,7 @@ import { Client, ClientOptions } from '@dxos/client';
 import { Config, ConfigObject } from '@dxos/config';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util';
 
+import { printBanner } from '../banner';
 import { ClientContext } from '../hooks';
 
 const log = debug('dxos:react-client');
@@ -64,6 +65,8 @@ export const ClientProvider = ({
 
   // Async helpers.
   useEffect(() => {
+    printBanner();
+
     if (!client) {
       const done = async (client: Client) => {
         log(`Created client: ${client}`);
