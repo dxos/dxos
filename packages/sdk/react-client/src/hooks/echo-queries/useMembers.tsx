@@ -18,8 +18,6 @@ export const useMembers = (party: PartyProxy | undefined) => {
     setMembers(result.value);
 
     return result.subscribe(() => {
-      // TODO(wittjosiah): Result not triggering update when name loads.
-      // https://github.com/dxos/protocols/issues/372
       const update = setInterval(() => {
         const newMembers = party.queryMembers().value;
         const isNameFilled = newMembers.every(m => m.displayName);
