@@ -7,7 +7,7 @@ import debug from 'debug';
 import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
+import { Codec, patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -54,7 +54,7 @@ export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<
  */
 export class Extension extends Nanomessage {
   public _name: any;
-  public codec: any;
+  public [kCodec]: Codec<any>;
   public on: any;
   public open: any;
   public request: any;
@@ -104,13 +104,13 @@ export class Extension extends Nanomessage {
 
     this._name = name;
 
-    this[kCodec as any] = schema.getCodecForType('dxos.protocol.Message');
+    const codec = schema.getCodecForType('dxos.protocol.Message');
 
     if (userSchema) {
-      this[kCodec as any].addJson(userSchema);
+      codec.addJson(userSchema);
     }
 
-    this[kCodec as any] = patchBufferCodec(this.codec);
+    this[kCodec] = patchBufferCodec(codec);
 
     this.on('error', (err: any) => log(err));
   }
