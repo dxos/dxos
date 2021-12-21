@@ -6,7 +6,7 @@ import Server from 'simple-websocket/server';
 
 const { SocketSignalServer, errors: { ERR_PEER_NOT_FOUND } } = require('socket-signal'); // eslint-disable-line @typescript-eslint/no-var-requires
 
-class SignalServer extends SocketSignalServer {
+export class SignalServer extends SocketSignalServer {
   constructor (server, broker, opts = {}) {
     const { path, ...signalOpts } = opts;
 
@@ -104,6 +104,3 @@ class SignalServer extends SocketSignalServer {
     return this._peerMap.getPeersByTopic(data.topic).map(p => p.id);
   }
 }
-
-// TODO(burdon): ???
-exports.SignalServer = SignalServer;
