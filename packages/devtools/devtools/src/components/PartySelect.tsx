@@ -15,7 +15,10 @@ interface PartySelectProps {
 }
 
 export const PartySelect = ({ parties, value, onChange }: PartySelectProps) => (
-  <FormControl fullWidth>
+  <FormControl
+    fullWidth
+    variant='standard'
+  >
     <InputLabel id='party-select'>Party</InputLabel>
     <Select
       id='party-select'

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import Button from '@mui/material/Button';
+import { Box, Button } from '@mui/material';
 
 import { useClient } from '@dxos/react-client';
 
@@ -19,8 +19,8 @@ export const StorageTab = () => {
   }
 
   return (
-    <div style={{ padding: 8 }}>
+    <Box padding={2}>
       <Button variant='outlined' size='small' onClick={handleReset}>Reset storage</Button>
-    </div>
+    </Box>
   );
 };
