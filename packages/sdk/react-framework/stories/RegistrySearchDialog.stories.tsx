@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Box, Button } from '@mui/material';
@@ -8,7 +12,7 @@ import { RegistrySearchDialog } from '../src';
 import { createMockRegistry } from './helpers';
 
 export default {
-  title: 'react-framework/RegistrySearchDialog',
+  title: 'react-framework/RegistrySearchDialog'
 };
 
 export const Primary = () => {

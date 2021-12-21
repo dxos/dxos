@@ -54,7 +54,7 @@ export const RegistrySearchDialog = ({
   const handleSelect = async () => {
     selectedResource && await onSelect?.(selectedResource);
     handleReset();
-  }
+  };
 
   const content = (
     <Autocomplete
