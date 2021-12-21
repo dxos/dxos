@@ -9,6 +9,7 @@ import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
+import { subscribeToFeed, subscribeToFeeds } from './feeds';
 import { subscribeToItems } from './items';
 import { subscribeToKeyringKeys } from './keys';
 import {
@@ -53,6 +54,12 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     },
     SubscribeToItems: () => {
       return subscribeToItems(context);
+    },
+    SubscribeToFeeds: () => {
+      return subscribeToFeeds(context);
+    },
+    SubscribeToFeed: (request) => {
+      return subscribeToFeed(context, request);
     },
     GetNetworkPeers: async (request) => {
       return getNetworkPeers(context, request);

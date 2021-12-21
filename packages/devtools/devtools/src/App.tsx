@@ -9,6 +9,7 @@ import {
   FilterTiltShift as SwarmIcon,
   GroupWork as PartiesIcon,
   AccountTree as ItemsIcon,
+  List as FeedsIcon,
   Dns as StorageIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
@@ -32,6 +33,7 @@ import { TextModel } from '@dxos/text-model';
 
 import {
   ConfigView,
+  FeedsViewer,
   ItemsViewer,
   LoggingView,
   Keyring,
@@ -106,6 +108,11 @@ const items = [
         id: 'echo.items',
         title: 'Items',
         icon: ItemsIcon
+      },
+      {
+        id: 'echo.feeds',
+        title: 'Feeds',
+        icon: FeedsIcon
       }
     ]
   },
@@ -210,6 +217,9 @@ export const App = () => {
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />
+      </div>
+      <div className={className('echo.feeds')}>
+        <FeedsViewer />
       </div>
       <div className={className('mesh.signal')}>
         <Signal />
