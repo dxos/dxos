@@ -64,7 +64,10 @@ export const FeedsViewer = () => {
         />
       </Box>
       <Box sx={{ margin: 2 }}>
-        <FormControl fullWidth>
+        <FormControl
+          fullWidth
+          variant='standard'
+        >
           <InputLabel id='feed-select'>Feed</InputLabel>
           <Select
             id='feed-select'
