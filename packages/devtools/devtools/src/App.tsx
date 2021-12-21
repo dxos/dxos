@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 // https://mui.com/components/material-icons
 import {
   AccountTree as ItemsIcon,
-  List as FeedsIcon,
   Dns as StorageIcon,
   FactCheck as CredentialMessagesIcon,
   FilterTiltShift as SwarmIcon,
