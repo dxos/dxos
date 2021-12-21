@@ -9,16 +9,16 @@ import { SignalServer } from '../signal';
 export const WebService = {
   name: 'web',
   mixins: [
-    MoleculerWebService
+    MoleculerWebService as any
   ],
-  created () {
+  created (this: any) {
     this.settings.port = this.broker.metadata.port || 4000;
     this._signal = new SignalServer(this.server, this.broker);
   },
-  async started () {
+  async started (this: any) {
     return this._signal.open();
   },
-  async stopped () {
+  async stopped (this: any) {
     return this._signal.close();
   }
 };
