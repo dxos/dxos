@@ -130,7 +130,7 @@ describe('Client', () => {
 
         await party.setTitle('test-party');
         const title = party.getProperty('title');
-        expect(title).toEqual('test-party')
+        expect(title).toEqual('test-party');
       });
     });
   }
