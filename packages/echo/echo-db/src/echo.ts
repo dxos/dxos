@@ -223,6 +223,10 @@ export class ECHO {
     return this._dataServiceRouter;
   }
 
+  get snapshotStore (): SnapshotStore {
+    return this._snapshotStore;
+  }
+
   /**
    * Opens the ECHO instance and reads the saved state from storage.
    *
