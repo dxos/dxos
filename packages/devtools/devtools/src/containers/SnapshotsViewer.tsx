@@ -37,11 +37,11 @@ export const SnapshotsViewer = () => {
 
     const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
     setSnapshot(result.snapshot);
-  }
+  };
 
   const handleClearSnapshots = async () => {
     await devtoolsHost.ClearSnapshots({});
-  }
+  };
 
   return (
     <Box padding={2}>
