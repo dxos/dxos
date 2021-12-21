@@ -15,7 +15,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
+import { Contacts, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
@@ -60,6 +60,7 @@ export class ClientServiceHost implements ClientServiceProvider {
       snapshotInterval: this._config.get('system.snapshotInterval')
     });
 
+    // TODO(wittjosiah): Factor out service implementations.
     this.services = {
       SystemService: {
         GetConfig: async () => {
@@ -174,12 +175,92 @@ export class ClientServiceHost implements ClientServiceProvider {
         }
       },
       PartyService: {
+        SubscribeParty: (request) => {
+          const update = (next: (message: SubscribePartyResponse) => void) => {
+            const party = this._echo.getParty(request.partyKey);
+            next({
+              party: party && {
+                publicKey: party.key,
+                isOpen: party.isOpen,
+                isActive: party.isActive
+              }
+            });
+          };
+
+          const party = this._echo.getParty(request.partyKey);
+          if (party) {
+            return new Stream(({ next }) => {
+              party.update.on(() => update(next));
+            });
+          } else {
+            return new Stream(({ next }) => {
+              let unsubscribeParty: () => void;
+              const unsubscribeParties = this._echo.queryParties().subscribe((parties) => {
+                const party = parties.find((party) => party.key.equals(request.partyKey));
+                if (party && !unsubscribeParty) {
+                  unsubscribeParty = party.update.on(() => update(next));
+                }
+              });
+
+              update(next);
+
+              return () => {
+                unsubscribeParties();
+                unsubscribeParty?.();
+              };
+            });
+          }
+        },
         SubscribeParties: () => {
-          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => ({ parties: parties.map(party => ({ publicKey: party.key })) }));
+          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => {
+            return ({
+              parties: parties.map(party => ({
+                publicKey: party.key,
+                isOpen: party.isOpen,
+                isActive: party.isActive
+              }))
+            });
+          });
         },
         CreateParty: async () => {
           const party = await this._echo.createParty();
-          return { publicKey: party.key };
+          return {
+            publicKey: party.key,
+            isOpen: party.isOpen,
+            isActive: party.isActive
+          };
+        },
+        OpenParty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.open();
+        },
+        CloseParty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.close();
+        },
+        ActivateParty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.activate(request.options);
+        },
+        DeactivateParty: async (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+
+          await party.deactivate(request.options);
         },
         CreateInvitation: () => {
           throw new Error('Not implemented');
@@ -189,6 +270,29 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         AuthenticateInvitation: () => {
           throw new Error('Not implemented');
+        },
+        SubscribeMembers: (request) => {
+          const party = this._echo.getParty(request.partyKey);
+          if (party) {
+            return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
+          } else {
+            return new Stream(({ next }) => {
+              let unsubscribeMembers: () => void;
+              const unsubscribeParties = this._echo.queryParties().subscribe((parties) => {
+                const party = parties.find((party) => party.key.equals(request.partyKey));
+                if (!unsubscribeMembers && party) {
+                  const resultSet = party.queryMembers();
+                  next({ members: resultSet.value });
+                  unsubscribeMembers = resultSet.update.on(() => next({ members: resultSet.value }));
+                }
+              });
+
+              return () => {
+                unsubscribeParties();
+                unsubscribeMembers();
+              };
+            });
+          }
         }
       },
       DataService: this._echo.dataService,

@@ -128,11 +128,11 @@ export class PartyInternal {
   get partyInfo () {
     return {
       key: this.key.toHex(),
-      title: this.title,
       isOpen: this.isOpen,
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
-      timeframe: this.isOpen ? this._partyCore.timeframe : undefined
+      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
+      properties: this.isOpen ? this.getPropertiesSet().getValue()[0]?.model.toObject() : undefined
     };
   }
 
