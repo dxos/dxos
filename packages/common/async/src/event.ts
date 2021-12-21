@@ -278,7 +278,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
       listener(data);
     } catch (err) {
       // Throw an unhandled rejection.
-      Promise.reject(err);
+      void Promise.reject(err);
     }
   }
 
