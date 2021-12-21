@@ -261,8 +261,11 @@ const Controls = ({ port }: { port: RpcPort }) => {
       <Button disabled={!profile} onClick={handleTestSetup}>Create Test data</Button>
       {!profile && <Button onClick={handleCreateProfile}>Create Profile</Button>}
       {profile && <Button onClick={handleCreateParty}>Create Party</Button>}
-      <Box sx={{ padding: 2 }}>
-        <FormControl fullWidth>
+      <Box padding={2}>
+        <FormControl
+          fullWidth
+          variant='standard'
+        >
           <InputLabel id='model-select'>Model</InputLabel>
           <Select
             id='model-select'
@@ -276,10 +279,10 @@ const Controls = ({ port }: { port: RpcPort }) => {
             <MenuItem value='TextModel'>TextModel</MenuItem>
           </Select>
         </FormControl>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'flex-end'
-        }}>
+        <Box
+          display='flex'
+          justifyContent='flex-end'
+        >
           <Button onClick={handleRegisterModel}>Register Model</Button>
         </Box>
       </Box>
@@ -294,7 +297,7 @@ export const Primary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box display='flex'>
       <DevTools port={devtoolsPort} />
       <ClientProvider
         config={

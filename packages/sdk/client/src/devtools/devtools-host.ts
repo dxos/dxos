@@ -11,7 +11,7 @@ import { DevtoolsServiceDependencies } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
 import { subscribeToFeed, subscribeToFeeds } from './feeds';
 import { subscribeToItems } from './items';
-import { subscribeToKeyringKeys } from './keys';
+import { subscribeToCredentialMessages, subscribeToKeyringKeys } from './keys';
 import {
   getNetworkPeers,
   subscribeToNetworkTopics,
@@ -48,6 +48,9 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     },
     SubscribeToKeyringKeys: () => {
       return subscribeToKeyringKeys(context);
+    },
+    SubscribeToCredentialMessages: (request) => {
+      return subscribeToCredentialMessages(context, request);
     },
     SubscribeToParties: () => {
       return subscribeToParties(context);
