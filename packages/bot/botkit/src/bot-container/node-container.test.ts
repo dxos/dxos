@@ -17,7 +17,10 @@ import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createHandle } from '../testutils/bots';
 import { createIpcPort, NodeContainer } from './node-container';
 
-describe('Node container', () => {
+describe('Node container', function () {
+  // Running node command can be slow.
+  this.timeout(20000);
+
   it('Starts an empty node bot', async () => {
     const container = new NodeContainer(['ts-node/register/transpile-only']);
 
