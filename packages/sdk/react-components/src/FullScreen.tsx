@@ -2,12 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { styled } from '@mui/system'; // TODO(burdon): ???
+import React from 'react';
+
+import { styled } from '@mui/material';
 
 /**
  * Fullscreen no bounce.
  */
-export const FullScreen = styled('div')({
+const FullScreenDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   position: 'fixed',
@@ -16,3 +18,6 @@ export const FullScreen = styled('div')({
   top: 0,
   bottom: 0
 });
+
+// TODO(wittjosiah): Props and cleanup.
+export const FullScreen: React.FunctionComponent<any> = FullScreenDiv;
