@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import {
   Box,
@@ -13,6 +13,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  TextField,
   ThemeProvider,
   Typography,
   useTheme
@@ -57,7 +58,39 @@ const DevTools = ({ port }: { port: RpcPort }) => {
 };
 
 const PartyControls = ({ party }: { party: PartyProxy }) => {
+  const [title, setTitle] = useState('');
+  const [propertyKey, setPropertyKey] = useState('');
+  const [propertyValue, setPropertyValue] = useState('');
   const [itemModel, setItemModel] = useState('');
+
+  const handlePartyOpenToggle = (party: PartyProxy) => {
+    void (party.isOpen ? party.close() : party.open());
+  };
+
+  const handlePartyActiveToggle = (party: PartyProxy) => {
+    const options = { global: true };
+    void (party.isActive ? party.deactivate(options) : party.activate(options));
+  };
+
+  const handlePartyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value);
+  };
+
+  const handleSetPartyTitle = (party: PartyProxy) => {
+    void party.setTitle(title);
+  };
+
+  const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPropertyKey(event.target.value);
+  };
+
+  const handlePropertyValueChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPropertyValue(event.target.value);
+  };
+
+  const handleSetPartyProperty = (party: PartyProxy) => {
+    void party.setProperty(propertyKey, propertyValue);
+  };
 
   const handleItemModelChange = (event: SelectChangeEvent) => {
     setItemModel(event.target.value as string);
@@ -83,18 +116,56 @@ const PartyControls = ({ party }: { party: PartyProxy }) => {
           type: 'example:type.text'
         });
     }
-
-    setItemModel('');
   };
 
   return (
     <Box key={party.key.toString()}>
       <Typography>Party({truncateString(party.key.toString(), 8)})</Typography>
       <Box padding={2}>
-        <FormControl
-          fullWidth
+        <Box marginBottom={1}>
+          <Button onClick={() => handlePartyOpenToggle(party)}>
+            {party.isOpen ? 'Close' : 'Open'} Party
+          </Button>
+          <Button onClick={() => handlePartyActiveToggle(party)}>
+            {party.isActive ? 'Deactivate' : 'Activate'} Party
+          </Button>
+        </Box>
+        <TextField
+          label='Title'
           variant='standard'
+          fullWidth
+          value={title}
+          onChange={handlePartyTitleChange}
+        />
+        <Box
+          display='flex'
+          justifyContent='flex-end'
         >
+          <Button onClick={() => handleSetPartyTitle(party)}>Set Title</Button>
+        </Box>
+        <TextField
+          label='Property Key'
+          variant='standard'
+          fullWidth
+          sx={{ marginBottom: 1 }}
+          value={propertyKey}
+          onChange={handlePropertyKeyChange}
+        />
+        <TextField
+          label='Property Value'
+          variant='standard'
+          fullWidth
+          value={propertyValue}
+          onChange={handlePropertyValueChange}
+        />
+        <Box
+          display='flex'
+          justifyContent='flex-end'
+        >
+          <Button onClick={() => handleSetPartyProperty(party)}>Set Property</Button>
+        </Box>
+        {/* TODO(wittjosiah): Why is there padding inside these selects? */}
+        <FormControl fullWidth>
           <InputLabel id='model-select'>Model</InputLabel>
           <Select
             label='Item Model'

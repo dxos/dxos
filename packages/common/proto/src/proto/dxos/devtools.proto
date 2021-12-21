@@ -131,10 +131,10 @@ message SubscribeToPartiesRequest {}
 message SubscribeToPartiesResponse {
   message PartyInfo {
     string key = 1;
-    string title = 2;
-    bool isOpen = 3;
-    bool isActive = 4;
-    int32 feedKeys = 5;
+    bool isOpen = 2;
+    bool isActive = 3;
+    int32 feedKeys = 4;
+    map<string, string> properties = 5;
 
     TimeframeVector timeframe = 10;
   }

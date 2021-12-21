@@ -15,11 +15,13 @@ export const subscribeToParties = ({ echo }: DevtoolsServiceDependencies) => {
     };
 
     const partySubscriptions: Record<string, () => void> = {};
+    const timeframeSubscriptions: Record<string, () => void> = {};
     const unsubscribe = echo.queryParties().subscribe((parties) => {
       parties.forEach((party) => {
         if (!partySubscriptions[party.key.toHex()]) {
           // Send updates on party changes.
-          partySubscriptions[party.key.toHex()] = party.timeframeUpdate.on(() => update());
+          partySubscriptions[party.key.toHex()] = party.update.on(() => update());
+          timeframeSubscriptions[party.key.toHex()] = party.timeframeUpdate.on(() => update());
         }
       });
 
@@ -33,6 +35,7 @@ export const subscribeToParties = ({ echo }: DevtoolsServiceDependencies) => {
     return () => {
       unsubscribe();
       Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
+      Object.values(timeframeSubscriptions).forEach(unsubscribe => unsubscribe());
     };
   });
 };
