@@ -277,7 +277,8 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
       await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
       listener(data);
     } catch (err) {
-      console.error(err);
+      // Throw an unhandled rejection.
+      Promise.reject(err);
     }
   }
 
