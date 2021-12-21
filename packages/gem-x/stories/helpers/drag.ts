@@ -24,7 +24,14 @@ export const createSimulationDrag = (simulation) => {
       simulation.alphaTarget(0).alpha(0.1).restart();
     })
 
-    .on('end', function () {
+    .on('end', function (event) {
+      const { sourceEvent: { shiftKey } } = event;
+
+      if (!shiftKey) {
+        event.subject.fx = undefined;
+        event.subject.fy = undefined;
+      }
+
       if (!dragging) {
         console.log('select');
       }
