@@ -19,7 +19,7 @@ export interface RegistrySearchDialogProps {
 }
 
 /**
- *
+ * Simple autocomplete search dialog for querying the DXNS registry.
  */
 export const RegistrySearchDialog = ({
   open,
