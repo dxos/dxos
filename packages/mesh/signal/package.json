@@ -46,7 +46,6 @@
     "lodash.debounce": "^4.0.8",
     "lodash.pick": "^4.4.0",
     "moleculer": "^0.14.5",
-    "moleculer-apollo-server": "^0.3.3",
     "moleculer-repl": "^0.6.3",
     "moleculer-web": "^0.9.1",
     "moment": "^2.24.0",
