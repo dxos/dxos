@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.4",
+    "@dxos/esbuild-server": "~1.6.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",
