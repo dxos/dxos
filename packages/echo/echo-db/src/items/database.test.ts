@@ -14,6 +14,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Item } from '.';
 import { Database } from '..';
+import { DataServiceHost } from './data-service-host';
 import { DataServiceRouter } from './data-service-router';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
@@ -23,9 +24,7 @@ const LINK_EMPLOYEE = 'dxn://example/link/employee';
 
 describe('Database', () => {
   describe('remote', () => {
-    const setup = async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
-
+    const setupBackend = async (modelFactory: ModelFactory) => {
       const feed = new MockFeedWriter<EchoEnvelope>();
       const inboundStream = new Readable({ read () {}, objectMode: true });
       feed.written.on(([data, meta]) => inboundStream.push({ data, meta: { ...meta, memberKey: PublicKey.random() } }));
@@ -36,10 +35,13 @@ describe('Database', () => {
       );
       await backend.init();
       afterTest(() => backend.destroy());
+      return backend;
+    };
 
+    const setupFrontend = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
       const partyKey = PublicKey.random();
       const dataServiceRouter = new DataServiceRouter();
-      dataServiceRouter.trackParty(partyKey, backend.createDataServiceHost());
+      dataServiceRouter.trackParty(partyKey, dataServiceHost);
 
       const frontend = new Database(
         modelFactory,
@@ -47,6 +49,13 @@ describe('Database', () => {
       );
       await frontend.init();
       afterTest(() => frontend.destroy());
+      return frontend;
+    };
+
+    const setup = async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+      const backend = await setupBackend(modelFactory);
+      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
 
       return { backend, frontend };
     };
@@ -71,6 +80,18 @@ describe('Database', () => {
       ]);
 
       expect(item!.model.getProperty('foo')).toEqual('bar');
+    });
+
+    test('gets items synced from backend that were created before frontend was connected', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const backend = await setupBackend(modelFactory);
+
+      const backendItem = await backend.createItem({ model: ObjectModel });
+
+      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
+
+      const item = await frontend.waitForItem(item => item.id === backendItem.id);
+      expect(item.model).toBeInstanceOf(ObjectModel);
     });
 
     test('create item', async () => {
