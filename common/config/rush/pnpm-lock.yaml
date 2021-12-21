@@ -40,6 +40,7 @@ importers:
       '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
@@ -73,6 +74,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1826,6 +1828,7 @@ importers:
       level-js: 5.0.2
       lodash.defaultsdeep: 4.6.1
       memdown: 5.1.0
+      readable-stream: 3.6.0
       uuid: 8.3.2
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -1838,6 +1841,7 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.2
+      '@types/readable-stream': 2.3.9
       '@types/uuid': 8.3.3
       expect: 27.0.2
       mocha: 8.4.0
@@ -1868,6 +1872,7 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
+      '@types/readable-stream': ^2.3.9
       '@types/uuid': ~8.3.3
       '@wirelineio/registry-client': ~1.1.0-beta.3
       abstract-leveldown: ~7.0.0
@@ -1881,6 +1886,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       memdown: ^5.1.0
       mocha: ~8.4.0
+      readable-stream: ^3.6.0
       uuid: ^8.3.2
       wait-for-expect: ^3.0.2
   ../../packages/sdk/config:
@@ -1932,10 +1938,9 @@ importers:
   ../../packages/sdk/react-bot-factory-client:
     dependencies:
       '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.4.1
       '@dxos/react-client': link:../react-client
       '@dxos/react-registry-client': link:../react-registry-client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -1945,9 +1950,8 @@ importers:
       typescript: 4.5.2
     specifiers:
       '@dxos/bot-factory-client': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.4.1
       '@dxos/react-client': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -2107,11 +2111,11 @@ importers:
       url-join: ^4.0.1
   ../../packages/sdk/react-framework:
     dependencies:
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.4.1
+      '@dxos/react-bot-factory-client': link:../react-bot-factory-client
       assert: 2.0.0
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2124,7 +2128,9 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/client': link:../client
+      '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/object-model': link:../../echo/object-model
@@ -2154,6 +2160,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2161,6 +2168,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.4.1
       '@dxos/object-model': workspace:*
+      '@dxos/react-bot-factory-client': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -7464,7 +7472,6 @@ packages:
     dependencies:
       '@types/node': 14.14.45
       safe-buffer: 5.2.1
-    dev: false
     resolution:
       integrity: sha512-sqsgQqFT7HmQz/V5jH1O0fvQQnXAJO46Gg9LRO/JPfjmVmGUlcx831TZZO3Y3HtWhIkzf3kTsNT0Z0kzIhIvZw==
   /@types/resolve/0.0.8:
