@@ -77,6 +77,10 @@ export class Party {
     return this._internal.feedProvider;
   }
 
+  get processor () {
+    return this._internal.processor;
+  }
+
   /**
    * Database instance of the current party.
    */
