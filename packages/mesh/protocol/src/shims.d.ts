@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-declare module 'humanhash';
-
 declare module 'nanoerror' {
   export declare class Nanoerror extends Error {
     constructor(...args: any[]);

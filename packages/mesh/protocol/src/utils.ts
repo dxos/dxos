@@ -3,7 +3,8 @@
 //
 
 import assert from 'assert';
-import HumanHasher from 'humanhash';
+
+import { HumanHasher } from '@dxos/crypto';
 
 const hasher = new HumanHasher();
 

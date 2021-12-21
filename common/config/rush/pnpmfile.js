@@ -30,6 +30,10 @@ function readPackage(packageJson, context) {
   if (packageJson.name === 'ts-essentials') {
     // This peer dependency is not required at runtime
     delete packageJson.peerDependencies['typescript']
+  } else if (packageJson.name === 'wrtc') {
+    // The package got renamed
+    delete packageJson.dependencies['node-pre-gyp'];
+    packageJson.dependencies['@mapbox/node-pre-gyp'] = '1.0.3';
   } else if (packageJson.name === '@hot-loader/react-dom') {
     // Package has an unneccessarily strict peer dep of 17.0.1
     packageJson.peerDependencies['react'] = '^17.0.0'

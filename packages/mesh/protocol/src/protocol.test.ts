@@ -152,6 +152,66 @@ describe('Protocol', () => {
     await pipeProtocols(protocol1, protocol2);
   }).timeout(1 * 1000);
 
+  test('basic with a uint8array ping-pong extension', async () => {
+    const topic = crypto.randomBytes(32);
+    const extension = 'uint8array';
+    const timeout = 1000;
+
+    const protocol1 = new Protocol({
+      discoveryKey: topic,
+      initiator: true,
+      streamOptions: {
+        onhandshake: async () => {}
+      },
+      userSession: { peerId: 'user1' }
+    })
+      .setExtension(
+        new Extension(extension, { timeout })
+          .setInitHandler(async () => {})
+      )
+      .init();
+
+    const protocol2 = new Protocol({
+      discoveryKey: topic,
+      initiator: false,
+      streamOptions: {
+        onhandshake: async () => {}
+      },
+      userSession: { peerId: 'user2' }
+    })
+      .setExtension(new Extension(extension, { timeout })
+        .setInitHandler(async () => {})
+        .setMessageHandler(async (protocol, message) => {
+          const { data } = message;
+
+          switch (Buffer.from(data).toString()) {
+            case 'ping': {
+              return Uint8Array.from(Buffer.from('pong'));
+            }
+            default: {
+              throw new Error('Invalid data.');
+            }
+          }
+        }))
+      .init();
+
+    protocol1.error.on(err => console.log('protocol1', err));
+    protocol2.error.on(err => console.log('protocol2', err));
+
+    protocol1.setHandshakeHandler(async (protocol) => {
+      const messages = protocol.getExtension(extension)!;
+      expect(messages).toBeDefined();
+
+      {
+        const { response: { data } } = await messages.send(Uint8Array.from(Buffer.from('ping')));
+        expect(data).toEqual(Buffer.from('pong'));
+        await protocol1.close();
+      }
+    });
+
+    await pipeProtocols(protocol1, protocol2);
+  }).timeout(1 * 1000);
+
   test('basic ping and oneway', async () => {
     expect.assertions(9);
 
