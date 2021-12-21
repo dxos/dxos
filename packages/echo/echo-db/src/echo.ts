@@ -176,6 +176,7 @@ export class ECHO {
 
     this._dataServiceRouter = new DataServiceRouter();
     this._partyManager.update.on(party => {
+      log('New party to be included in data service router: %s', party.key);
       void party.update.waitForCondition(() => party.isOpen).then(() => {
         this._dataServiceRouter.trackParty(party.key, party.database.createDataServiceHost());
       });

@@ -14,9 +14,9 @@ import { afterTest } from '@dxos/testutils';
 
 import { Item } from '.';
 import { Database } from '..';
+import { DataServiceHost } from './data-service-host';
 import { DataServiceRouter } from './data-service-router';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
-import { DataServiceHost } from './data-service-host';
 
 const OBJECT_ORG = 'dxn://example/object/org';
 const OBJECT_PERSON = 'dxn://example/object/person';
@@ -24,8 +24,6 @@ const LINK_EMPLOYEE = 'dxn://example/link/employee';
 
 describe('Database', () => {
   describe('remote', () => {
-    
-
     const setupBackend = async (modelFactory: ModelFactory) => {
       const feed = new MockFeedWriter<EchoEnvelope>();
       const inboundStream = new Readable({ read () {}, objectMode: true });
@@ -37,8 +35,8 @@ describe('Database', () => {
       );
       await backend.init();
       afterTest(() => backend.destroy());
-      return backend
-    }
+      return backend;
+    };
 
     const setupFrontend = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
       const partyKey = PublicKey.random();
@@ -51,13 +49,13 @@ describe('Database', () => {
       );
       await frontend.init();
       afterTest(() => frontend.destroy());
-      return frontend
-    }
+      return frontend;
+    };
 
     const setup = async () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
-      const backend = await setupBackend(modelFactory)
-      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost())
+      const backend = await setupBackend(modelFactory);
+      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
 
       return { backend, frontend };
     };
@@ -88,13 +86,13 @@ describe('Database', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const backend = await setupBackend(modelFactory);
 
-      const backendItem = await backend.createItem({ model: ObjectModel })
-      
+      const backendItem = await backend.createItem({ model: ObjectModel });
+
       const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
 
       const item = await frontend.waitForItem(item => item.id === backendItem.id);
       expect(item.model).toBeInstanceOf(ObjectModel);
-    })
+    });
 
     test('create item', async () => {
       const { frontend: database } = await setup();
