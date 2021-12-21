@@ -3,9 +3,7 @@
 //
 
 import { Graph, GraphRenderer, GraphForceProjector } from './graph';
-import { ObjectId, Scene, Surface } from './scene';
-
-const renderer = new GraphRenderer();
+import { ObjectId, Part, Scene, Surface } from './scene';
 
 type TestModel = {
   items: {
@@ -14,9 +12,9 @@ type TestModel = {
   }[]
 }
 
-export const scene = new Scene<TestModel>([
+export const createScene = () => {
   // TODO(burdon): Generalize based on paths/filter.
-  new GraphForceProjector((model: TestModel, layout: Graph) => {
+  const mapper = (model: TestModel, layout: Graph) => {
     const updated: Graph = {
       nodes: [],
       links: []
@@ -41,8 +39,12 @@ export const scene = new Scene<TestModel>([
     });
 
     return updated;
-  }, renderer)
-]);
+  };
+
+  return new Scene<TestModel>([
+    new Part<TestModel, any>(new GraphForceProjector(mapper), new GraphRenderer())
+  ]);
+};
 
 // TODO(burdon): Model subscription.
 export const createModel = (maxDepth = 4): TestModel => {
@@ -71,7 +73,8 @@ export const createModel = (maxDepth = 4): TestModel => {
 export const test = () => {
   const surface: Surface = undefined;
 
-  scene.start(surface);
+  const scene = createScene();
   scene.update(createModel());
+  scene.start(surface);
   scene.stop();
 };

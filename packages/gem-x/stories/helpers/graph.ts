@@ -4,10 +4,11 @@
 
 import * as d3 from 'd3';
 
-import { BaseProjector, ObjectId, Renderer, Surface } from './scene';
+import { createSimulationDrag } from './drag';
+import { ObjectId, Projector, RenderOptions, Renderer, Surface } from './scene';
 
 export type GraphNode = {
-  initialized: boolean
+  initialized?: boolean
   id: ObjectId
   x?: number
   y?: number
@@ -28,50 +29,57 @@ export type Graph = {
 const line = d3.line();
 
 export class GraphRenderer implements Renderer<Graph> {
-  update (surface: Surface, layout: Graph) {
+  update (surface: Surface, layout: Graph, options: RenderOptions = {}) {
+    const { drag } = options;
+
     const root = d3.select(surface.root);
 
     const links = root.selectAll('g.links')
       .data([{ id: 'links' }])
       .join('g').classed('links', true);
     links.selectAll('path')
-      .data(layout.links)
+      .data(layout.links || [])
       .join('path')
-      .attr('d', d => line([
-        [d.source.x, d.source.y],
-        [d.target.x, d.target.y]
-      ]));
+      .attr('d', d => {
+        if (!d.source.initialized || !d.target.initialized) {
+          return;
+        }
+
+        return line([
+          [d.source.x, d.source.y],
+          [d.target.x, d.target.y]
+        ]);
+      });
 
     const circles = root.selectAll('g.nodes')
       .data([{ id: 'nodes' }])
       .join('g').classed('nodes', true);
     circles.selectAll('circle')
-      .data(layout.nodes)
+      .data(layout.nodes || [])
       .join('circle')
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
       .attr('r', d => d.r);
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  clear (surface: Surface) {
-    console.log('GraphRenderer.clear');
+    if (drag) {
+      circles.selectAll('circle')
+        .call(drag);
+    }
   }
 }
 
-export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
+export class GraphForceProjector<MODEL> extends Projector<MODEL, Graph> {
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation();
 
-  // TODO(burdon): Drag handler must be set on circles after rendering.
-  _drag = d3.drag();
+  _drag = createSimulationDrag(this._simulation);
 
   _layout: Graph = {
     nodes: [],
     links: []
   }
 
-  protected getLayout (): Graph {
+  protected getLayout () {
     return this._layout;
   }
 
@@ -101,10 +109,11 @@ export class GraphForceProjector<MODEL> extends BaseProjector<MODEL, Graph> {
   }
 
   onStart () {
-    this._simulation.restart();
     this._simulation.on('tick', () => {
-      this.doUpdate();
+      this.events.emit('update', { layout: this._layout, options: { drag: this._drag } });
     });
+
+    this._simulation.restart();
   }
 
   async onStop () {

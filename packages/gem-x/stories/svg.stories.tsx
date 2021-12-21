@@ -10,8 +10,8 @@ import { FullScreen, SvgContainer } from '../src';
 import {
   Surface,
   createModel,
-  grid,
-  scene as testScene
+  createScene,
+  grid
 } from './helpers';
 
 export default {
@@ -92,7 +92,7 @@ export const Secondary = () => {
   const gridRef = useRef<SVGSVGElement>();
   const objectsRef = useRef<SVGSVGElement>();
   const model = useMemo(() => createModel(4), []);
-  const scene = useMemo(() => testScene, []);
+  const scene = useMemo(() => createScene(), []);
 
   useEffect(() => {
     const svg = ref.current;

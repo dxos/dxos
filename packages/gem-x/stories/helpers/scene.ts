@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { EventEmitter, EventHandle } from './events';
+
 export type ObjectId = string
 
 // TODO(burdon): Add bounds, zoom, etc.
@@ -16,39 +18,31 @@ export class Surface {
 // Projector => Layout => Renderer
 //
 
+export interface RenderOptions {
+  drag?: any
+}
+
 export interface Renderer<LAYOUT> {
-  update: (surface: Surface, layout: LAYOUT) => void
-  clear: (surface: Surface) => void
+  update: (surface: Surface, layout: LAYOUT, options?: RenderOptions) => void
 }
 
-export interface Projector<MODEL> {
-  update: (model: any) => void
-  start?: (surface: Surface) => void
-  stop?: () => Promise<void>
-}
-
-export abstract class BaseProjector<MODEL, LAYOUT> implements Projector<MODEL> {
-  private _surface: Surface;
+export abstract class Projector<MODEL, LAYOUT> {
+  readonly events = new EventEmitter();
 
   constructor (
-    private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT,
-    private readonly _renderer: Renderer<LAYOUT>
+    private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT
   ) {}
 
   update (model: MODEL) {
     this.onUpdate(this._mapper(model, this.getLayout()));
-    this.doUpdate();
   }
 
-  start (surface: Surface) {
-    this._surface = surface;
+  start () {
     this.onStart();
   }
 
   async stop () {
     await this.onStop();
-    this._renderer.clear(this._surface);
-    this._surface = undefined;
   }
 
   protected abstract getLayout (): LAYOUT;
@@ -58,26 +52,50 @@ export abstract class BaseProjector<MODEL, LAYOUT> implements Projector<MODEL> {
   protected abstract onStart ();
 
   protected async onStop () {}
+}
 
-  protected doUpdate () {
-    this._renderer.update(this._surface, this.getLayout());
+export class Part<MODEL, LAYOUT> {
+  _updateListener: EventHandle | undefined;
+
+  constructor (
+    private readonly _projector: Projector<MODEL, LAYOUT>,
+    private readonly _renderer: Renderer<LAYOUT>
+  ) {}
+
+  update (model: MODEL) {
+    this._projector.update(model);
+  }
+
+  start (surface: Surface) {
+    this._updateListener = this._projector.events.on('update', ({ layout, options }) => {
+      this._renderer.update(surface, layout, options);
+    });
+
+    this._projector.start();
+  }
+
+  async stop () {
+    await this._projector.stop();
+
+    this._updateListener?.off();
+    this._updateListener = undefined;
   }
 }
 
 export class Scene<MODEL> {
   constructor (
-    private readonly _projectors: BaseProjector<MODEL, any>[]
+    private readonly _parts: Part<MODEL, any>[]
   ) {}
 
   update (model: MODEL) {
-    this._projectors.forEach(projector => projector.update(model));
+    this._parts.forEach(part => part.update(model));
   }
 
   start (surface: Surface) {
-    this._projectors.forEach(projector => projector.start(surface));
+    this._parts.forEach(part => part.start(surface));
   }
 
   stop () {
-    return Promise.all(this._projectors.map(projector => projector.stop()));
+    return Promise.all(this._parts.map(part => part.stop()));
   }
 }

@@ -47,9 +47,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
       // https://github.com/d3/d3-drag#drag_subject
       .subject(event => simulation.find(event.x, event.y))
 
-    // Event handlers.
-    // https://github.com/d3/d3-drag#drag_on
-    // https://github.com/d3/d3-drag#drag-events
+      // Event handlers.
+      // https://github.com/d3/d3-drag#drag_on
+      // https://github.com/d3/d3-drag#drag-events
 
       .on('start', function (event) {
         state.dragging = false;
