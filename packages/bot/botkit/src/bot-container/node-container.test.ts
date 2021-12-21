@@ -29,7 +29,9 @@ describe('Node container', () => {
       logFilePath
     });
 
+    console.log('Before handle open');
     await handle.open(port);
+    console.log('After handle open');
     await handle.rpc.Initialize({});
     const command = PublicKey.random();
     const { response } = await handle.rpc.Command({ command: command.asUint8Array() });
