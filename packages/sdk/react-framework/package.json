@@ -23,7 +23,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.4",
+    "@dxos/esbuild-server": "~1.6.0",
     "@dxos/react-bot-factory-client": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

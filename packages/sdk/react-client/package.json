@@ -23,7 +23,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.4",
+    "@dxos/esbuild-server": "~1.6.0",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
     "assert": "^2.0.0",

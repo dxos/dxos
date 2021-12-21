@@ -31,7 +31,7 @@
     "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.4",
+    "@dxos/esbuild-server": "~1.6.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",

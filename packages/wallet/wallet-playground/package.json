@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.5.4",
+    "@dxos/esbuild-server": "~1.6.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
