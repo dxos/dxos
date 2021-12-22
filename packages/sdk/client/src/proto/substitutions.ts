@@ -2,11 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
+import { codec, Message } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { Timeframe } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
 export default {
+  'dxos.echo.feed.CredentialsMessage': {
+    encode: (msg: Message) => ({ data: codec.encode(msg) }),
+    decode: (msg: any): Message => codec.decode(msg.data)
+  },
   'dxos.echo.feed.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -46,6 +46,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
+    "@dxos/registry-client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
@@ -69,6 +70,7 @@
     "@dxos/client": "*",
     "@dxos/react-client": "*",
     "@dxos/react-components": "*",
+    "@dxos/registry-client": "*",
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
     "@mui/icons-material": ">=5.0.0",

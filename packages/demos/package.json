@@ -1,6 +1,6 @@
 {
   "name": "@dxos/demos",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "private": true,
   "description": "SDK demos and storybooks.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
