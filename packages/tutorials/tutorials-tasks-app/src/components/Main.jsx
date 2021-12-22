@@ -38,9 +38,6 @@ const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex'
   },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1
-  },
   logo: {
     marginRight: theme.spacing(2)
   },
@@ -96,6 +93,7 @@ export const Main = () => {
       <AppBar
         position="fixed"
         className={classes.appBar}
+        style={{zIndex: 10000}}
       >
         <Toolbar>
           <WorkIcon className={classes.logo} />
