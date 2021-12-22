@@ -32,6 +32,7 @@ const Content = styled(DialogContent)(({ theme }) => ({
  * @param {Buffer} params.partyKey
  */
 export const PartySettings = ({ partyKey = undefined, onClose }) => {
+  const [inProgress, setInprogress] = useState(false);
   const client = useClient();
   const party = useParty(partyKey);
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
@@ -41,17 +42,26 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
       return;
     }
 
-    if (party) {
-      // Update the party.
-      await party.setProperty('title', title);
-    } else {
-      // Create a new party.
-      // TODO(burdon): Set properties here.
-      // ISSUE(rzadp): https://github.com/dxos/echo/issues/312
-      const party = await client.echo.createParty({ title });
-      await party.setProperty('title', title);
-      partyKey = party.key;
+    try {
+      setInprogress(true);
+      if (party) {
+        // Update the party.
+        await party.setProperty('title', title);
+      } else {
+        // Create a new party.
+        // TODO(burdon): Set properties here.
+        // ISSUE(rzadp): https://github.com/dxos/echo/issues/312
+        const party = await client.echo.createParty({ title });
+        await party.setProperty('title', title);
+        partyKey = party.key;
+      }
+    } catch (e) {
+      throw e
+    } finally {
+      setInprogress(false);
     }
+
+    
 
     onClose({ partyKey });
   };
@@ -77,7 +87,11 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
         <Button onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} color="primary">
+        <Button
+          onClick={handleSubmit}
+          color="primary"
+          disabled={inProgress}
+        >
           {partyKey ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
