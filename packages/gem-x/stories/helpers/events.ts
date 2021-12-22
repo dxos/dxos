@@ -2,24 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-interface Listeners {
-  [key: string]: Function[];
-}
+type EventListener<T> = (value: T) => void
 
 export type EventHandle = { off: () => void }
 
-export class EventEmitter {
-  private readonly _events: Listeners = {};
+export class EventEmitter<T> {
+  private readonly _listeners = new Set<EventListener<T>>();
 
-  on (name: string, cb: Function): EventHandle {
-    (this._events[name] || (this._events[name] = [])).push(cb);
+  clear () {
+    this._listeners.clear();
+  }
 
+  on (cb: EventListener<T>): EventHandle {
+    this._listeners.add(cb);
     return {
-      off: () => this._events[name] && this._events[name].splice(this._events[name].indexOf(cb) >>> 0, 1)
+      off: () => this._listeners.delete(cb)
     };
   }
 
-  public emit (name: string, ...args: any[]): void {
-    (this._events[name] || []).forEach(fn => fn(...args));
+  public emit (value: T): void {
+    this._listeners.forEach(listener => listener(value));
   }
 }

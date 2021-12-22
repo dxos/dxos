@@ -3,24 +3,33 @@
 //
 
 import * as d3 from "d3";
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { FullScreen, SvgContainer } from '../src';
+
 import {
+  GraphForceProjector,
+  GraphRenderer,
+  Part,
   Surface,
+  Scene,
+  StatsProjector,
+  StatsRenderer,
+  TestModel,
   createModel,
-  createScene,
-  grid
+  grid,
+  graphMapper,
+  statsMapper,
+  updateModel
 } from './helpers';
 
 export default {
   title: 'SVG'
 };
 
-// TODO(burdon): Model class (and when to update).
-// TODO(burdon): Scenes.
-// TODO(burdon): Layout (e.g., force).
+// TODO(burdon): Stats renderer.
+// TODO(burdon): Pass groups to zoom.
 // TODO(burdon): Transitions (between scenes).
 
 /**
@@ -51,8 +60,15 @@ const style = css`
       stroke: red;
     }
   }
+  
+  g.stats {
+    text {
+      font-family: monospace;
+      font-size: 32px;
+      fill: #999;
+    }
+  }
 
-  // TODO(burdon): Custom style.
   g.objects {
     circle {
       stroke: seagreen;
@@ -91,22 +107,44 @@ export const Secondary = () => {
   const ref = useRef<SVGSVGElement>();
   const gridRef = useRef<SVGSVGElement>();
   const objectsRef = useRef<SVGSVGElement>();
-  const model = useMemo(() => createModel(4), []);
-  const scene = useMemo(() => createScene(), []);
+  const statsRef = useRef<SVGSVGElement>();
+  const [scene, setScene] = useState<() => void>();
 
   useEffect(() => {
     const svg = ref.current;
-    const objects = d3.select(objectsRef.current);
-    const surface = new Surface(svg, objects.node());
-    scene.start(surface);
-    scene.update(model);
+
+    const scene = new Scene<TestModel>([
+      new Part<TestModel, any>(
+        new GraphForceProjector(graphMapper),
+        new GraphRenderer(new Surface(svg, d3.select(objectsRef.current).node()))),
+      new Part<TestModel, any>(
+        new StatsProjector(statsMapper),
+        new StatsRenderer(new Surface(svg, d3.select(statsRef.current).node())))
+    ]);
+
+    const model = createModel(2);
+    const interval = setInterval(() => {
+      if (model.items.length < 200) {
+        updateModel(model);
+        scene.update(model);
+      }
+    }, 50);
+
+    scene.start();
+
+    setScene(() => {
+      scene.update(model);
+    });
 
     return () => {
+      clearInterval(interval);
       scene.stop();
     }
   }, [ref]);
 
   const handleResize = (({ width, height }) => {
+    scene?.();
+
     d3.select(gridRef.current)
       .call(grid({ width, height }));
 
@@ -130,6 +168,7 @@ export const Secondary = () => {
       >
         <g className='grid' ref={gridRef} />
         <g className='objects' ref={objectsRef} />
+        <g className='stats' ref={statsRef} />
       </SvgContainer>
     </FullScreen>
   );

@@ -5,9 +5,10 @@
 import * as d3 from 'd3';
 
 import { createSimulationDrag } from './drag';
-import { ObjectId, Projector, RenderOptions, Renderer, Surface } from './scene';
+import { ObjectId, Projector, RenderOptions, Renderer } from './scene';
 
 export type GraphNode = {
+  data?: any
   initialized?: boolean
   id: ObjectId
   x?: number
@@ -28,11 +29,11 @@ export type Graph = {
 
 const line = d3.line();
 
-export class GraphRenderer implements Renderer<Graph> {
-  update (surface: Surface, layout: Graph, options: RenderOptions = {}) {
+export class GraphRenderer extends Renderer<Graph> {
+  update (layout: Graph, options: RenderOptions = {}) {
     const { drag } = options;
 
-    const root = d3.select(surface.root);
+    const root = d3.select(this._surface.root);
 
     const links = root.selectAll('g.links')
       .data([{ id: 'links' }])
@@ -89,11 +90,14 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, Graph> {
     // Iniital positions.
     this._layout.nodes.forEach(node => {
       if (!node.initialized) {
+        const parent = this._layout.nodes.find(n => n.id === node?.data.parent);
+
         Object.assign(node, {
           initialized: true,
-          x: (Math.random() - 0.5) * 300,
-          y: (Math.random() - 0.5) * 300,
-          r: 2 + Math.random() * 10
+          // Position around center or parent; must have delta to avoid spike.
+          x: (parent?.x || 0) + (Math.random() - 0.5) * 30,
+          y: (parent?.y || 0) + (Math.random() - 0.5) * 30,
+          r: 2 + Math.random() * 10 // TODO(burdon): Update based on count.
         });
       }
     });
@@ -102,15 +106,26 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, Graph> {
     // https://github.com/d3/d3-force#simulation_force
     this._simulation
       .nodes(this._layout.nodes)
-      .force('link', d3.forceLink(this._layout.links).distance(40))
-      .force('charge', d3.forceManyBody().strength(-30))
-      .alpha(1) // Reset calculations.
+
+      // https://github.com/d3/d3-force#forceLink
+      .force('link', d3.forceLink(this._layout.links)
+        // .strength(link => 1 / Math.min(count(link.source), count(link.target)))
+        .distance(30))
+
+      // https://github.com/d3/d3-force#forceManyBody
+      .force('charge', d3.forceManyBody()
+        .distanceMax(250)
+        .strength((d: GraphNode) => {
+          return -8 - (Math.log(d.data.children.length + 1) * 3);
+        }))
+
+      .alpha(0.5)
       .restart();
   }
 
   onStart () {
     this._simulation.on('tick', () => {
-      this.events.emit('update', { layout: this._layout, options: { drag: this._drag } });
+      this.updateEvent.emit({ layout: this._layout, options: { drag: this._drag } });
     });
 
     this._simulation.restart();

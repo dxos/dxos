@@ -22,12 +22,16 @@ export interface RenderOptions {
   drag?: any
 }
 
-export interface Renderer<LAYOUT> {
-  update: (surface: Surface, layout: LAYOUT, options?: RenderOptions) => void
+export abstract class Renderer<LAYOUT> {
+  constructor (
+    protected readonly _surface: Surface
+  ) {}
+
+  abstract update (layout: LAYOUT, options?: RenderOptions);
 }
 
 export abstract class Projector<MODEL, LAYOUT> {
-  readonly events = new EventEmitter();
+  readonly updateEvent = new EventEmitter<{ layout: LAYOUT, options?: RenderOptions }>();
 
   constructor (
     private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT
@@ -49,7 +53,7 @@ export abstract class Projector<MODEL, LAYOUT> {
 
   protected abstract onUpdate (layout: LAYOUT);
 
-  protected abstract onStart ();
+  protected onStart () {}
 
   protected async onStop () {}
 }
@@ -66,9 +70,9 @@ export class Part<MODEL, LAYOUT> {
     this._projector.update(model);
   }
 
-  start (surface: Surface) {
-    this._updateListener = this._projector.events.on('update', ({ layout, options }) => {
-      this._renderer.update(surface, layout, options);
+  start () {
+    this._updateListener = this._projector.updateEvent.on(({ layout, options }) => {
+      this._renderer.update(layout, options);
     });
 
     this._projector.start();
@@ -91,8 +95,8 @@ export class Scene<MODEL> {
     this._parts.forEach(part => part.update(model));
   }
 
-  start (surface: Surface) {
-    this._parts.forEach(part => part.start(surface));
+  start () {
+    this._parts.forEach(part => part.start());
   }
 
   stop () {

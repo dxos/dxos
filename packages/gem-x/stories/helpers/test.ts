@@ -2,49 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Graph, GraphRenderer, GraphForceProjector } from './graph';
-import { ObjectId, Part, Scene, Surface } from './scene';
+import faker from 'faker';
 
-type TestModel = {
+import { Graph } from './graph';
+import { ObjectId } from './scene';
+import { Stats } from './stats';
+
+export type TestModel = {
   items: {
     id: ObjectId,
-    parent?: ObjectId
+    parent?: ObjectId, // TODO(burdon): Data object.
+    children: ObjectId[]
   }[]
 }
-
-export const createScene = () => {
-  // TODO(burdon): Generalize based on paths/filter.
-  const mapper = (model: TestModel, layout: Graph) => {
-    const updated: Graph = {
-      nodes: [],
-      links: []
-    };
-
-    // Merge nodes.
-    model.items.forEach(({ id }) => {
-      const node = layout.nodes.find(node => node.id === id) ?? { id };
-      updated.nodes.push(node);
-    });
-
-    // Merge links.
-    model.items.forEach(({ id, parent }) => {
-      if (parent) {
-        const linkId = `${id}-${parent}`;
-        updated.links.push(layout.links.find(link => link.id === linkId) ?? {
-          id: linkId,
-          source: updated.nodes.find(node => node.id === id),
-          target: updated.nodes.find(node => node.id === parent)
-        });
-      }
-    });
-
-    return updated;
-  };
-
-  return new Scene<TestModel>([
-    new Part<TestModel, any>(new GraphForceProjector(mapper), new GraphRenderer())
-  ]);
-};
 
 // TODO(burdon): Model subscription.
 export const createModel = (maxDepth = 4): TestModel => {
@@ -54,27 +24,71 @@ export const createModel = (maxDepth = 4): TestModel => {
     items.push(root);
 
     if (depth < maxDepth) {
-      Array.from({ length: Math.round(1 + Math.random() * (maxChildren - 1)) }).forEach((_, i) => {
+      Array.from({ length: Math.round(1 + Math.random() * (maxChildren - 1)) }).forEach(() => {
+        const id = `item-${faker.datatype.uuid()}`;
+        root.children.push(id);
+
         sub({
-          id: `item-${root.id}-${i}`,
-          parent: root.id
+          id,
+          parent: root.id,
+          children: []
         }, maxDepth, maxChildren, depth + 1);
       });
     }
   };
 
   sub({
-    id: 'item-0'
+    id: 'item-0',
+    children: []
   }, maxDepth);
 
   return { items };
 };
 
-export const test = () => {
-  const surface: Surface = undefined;
+export const updateModel = (model: TestModel) => {
+  const parent = model.items[Math.floor(Math.random() * model.items.length)];
 
-  const scene = createScene();
-  scene.update(createModel());
-  scene.start(surface);
-  scene.stop();
+  const id = `item-${faker.datatype.uuid()}`;
+  parent.children.push(id);
+
+  model.items.push({
+    id,
+    parent: parent.id,
+    children: []
+  });
+};
+
+export const statsMapper = (model: TestModel): Stats => {
+  return {
+    nodes: model.items.length
+  };
+};
+
+// TODO(burdon): Generalize based on paths/filter.
+export const graphMapper = (model: TestModel, layout: Graph): Graph => {
+  const updated: Graph = {
+    nodes: [],
+    links: []
+  };
+
+  // Merge nodes.
+  model.items.forEach((data) => {
+    const { id } = data;
+    const node = layout.nodes.find(node => node.id === id) ?? { id, data };
+    updated.nodes.push(node);
+  });
+
+  // Merge links.
+  model.items.forEach(({ id, parent }) => {
+    if (parent) {
+      const linkId = `${id}-${parent}`;
+      updated.links.push(layout.links.find(link => link.id === linkId) ?? {
+        id: linkId,
+        source: updated.nodes.find(node => node.id === id),
+        target: updated.nodes.find(node => node.id === parent)
+      });
+    }
+  });
+
+  return updated;
 };

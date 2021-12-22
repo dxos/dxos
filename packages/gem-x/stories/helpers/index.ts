@@ -7,4 +7,5 @@ export * from './events';
 export * from './graph';
 export * from './grid';
 export * from './scene';
+export * from './stats';
 export * from './test';
