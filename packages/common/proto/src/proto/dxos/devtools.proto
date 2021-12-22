@@ -9,6 +9,7 @@ package dxos.devtools;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "./echo/feed.proto";
+import "./echo/snapshot.proto";
 import "./halo/keys.proto";
 import "./halo/signed.proto";
 
@@ -48,6 +49,10 @@ service DevtoolsHost {
   rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
 
   rpc SubscribeToFeed(SubscribeToFeedRequest) returns (stream SubscribeToFeedResponse);
+
+  rpc GetPartySnapshot(GetPartySnapshotRequest) returns (GetPartySnapshotResponse);
+  rpc SavePartySnapshot(SavePartySnapshotRequest) returns (SavePartySnapshotResponse);
+  rpc ClearSnapshots(ClearSnapshotsRequest) returns (google.protobuf.Empty);
 
   //
   // MESH
@@ -176,6 +181,24 @@ message SubscribeToFeedResponse {
 
   repeated EchoFeedBlock blocks = 1;
 }
+
+message GetPartySnapshotRequest {
+  required PubKey partyKey = 1;
+}
+
+message GetPartySnapshotResponse {
+  PartySnapshot snapshot = 1;
+}
+
+message SavePartySnapshotRequest {
+  required PubKey partyKey = 1;
+}
+
+message SavePartySnapshotResponse {
+  PartySnapshot snapshot = 1;
+}
+
+message ClearSnapshotsRequest {}
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
