@@ -93,7 +93,6 @@ export const Main = () => {
       <AppBar
         position="fixed"
         className={classes.appBar}
-        style={{zIndex: 10000}}
       >
         <Toolbar>
           <WorkIcon className={classes.logo} />
