@@ -19,7 +19,7 @@ import {
   subscribeToSignalTrace,
   subscribeToSwarmInfo
 } from './network';
-import { subscribeToParties } from './parties';
+import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties';
 import { resetStorage } from './storage';
 
 export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents) : DevtoolsHost => {
@@ -63,6 +63,15 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     },
     SubscribeToFeed: (request) => {
       return subscribeToFeed(context, request);
+    },
+    GetPartySnapshot: async (request) => {
+      return getPartySnapshot(context, request);
+    },
+    SavePartySnapshot: async (request) => {
+      return savePartySnapshot(context, request);
+    },
+    ClearSnapshots: async () => {
+      await context.echo.snapshotStore.clear();
     },
     GetNetworkPeers: async (request) => {
       return getNetworkPeers(context, request);

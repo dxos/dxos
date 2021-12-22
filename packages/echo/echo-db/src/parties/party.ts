@@ -209,4 +209,8 @@ export class Party {
   async deactivate (options: ActivationOptions) {
     return this._internal.deactivate(options);
   }
+
+  async createSnapshot () {
+    return this._internal.createSnapshot();
+  }
 }

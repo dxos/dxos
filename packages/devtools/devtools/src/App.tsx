@@ -14,6 +14,7 @@ import {
   List as FeedsIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
+  SettingsBackupRestore as SnapshotsIcon,
   Subject as LoggingIcon,
   VpnKey as KeyIcon
 } from '@mui/icons-material';
@@ -43,7 +44,8 @@ import {
   PartiesViewer,
   Signal,
   StorageTab,
-  SwarmDetails
+  SwarmDetails,
+  SnapshotsViewer
   // SwarmGraph
 } from './containers';
 
@@ -95,6 +97,11 @@ const items = [
         id: 'echo.feeds',
         title: 'Feeds',
         icon: FeedsIcon
+      },
+      {
+        id: 'echo.snapshots',
+        title: 'Snapshots',
+        icon: SnapshotsIcon
       }
     ]
   },
@@ -227,6 +234,9 @@ export const App = () => {
       </ContentBox>
       <ContentBox selected={selected === 'echo.feeds'}>
         <FeedsViewer />
+      </ContentBox>
+      <ContentBox selected={selected === 'echo.snapshots'}>
+        <SnapshotsViewer />
       </ContentBox>
       <ContentBox selected={selected === 'mesh.signal'}>
         <Signal />
