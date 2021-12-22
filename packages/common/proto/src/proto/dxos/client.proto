@@ -158,8 +158,7 @@ service PartyService {
   rpc ActivateParty(ActivatePartyRequest) returns(google.protobuf.Empty);
   rpc DeactivateParty(DeactivatePartyRequest) returns(google.protobuf.Empty);
 
-  rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
-
+  rpc CreateInvitation(CreateInvitationRequest) returns (stream Invitation);
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
 

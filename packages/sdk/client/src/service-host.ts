@@ -262,15 +262,73 @@ export class ClientServiceHost implements ClientServiceProvider {
 
           await party.deactivate(request.options);
         },
-        CreateInvitation: () => {
-          throw new Error('Not implemented');
+        CreateInvitation: (request) => new Stream(({ next, close }) => {
+          const party = this.echo.getParty(request.publicKey);
+          if (!party) {
+            throw new Error('Party not found');
+          }
+          setImmediate(async () => {
+            const secret = generatePasscode();
+            let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+            const secretProvider = async () => {
+              next({ invitationCode: encodeInvitation(invitation), secret });
+              return Buffer.from(secret);
+            };
+            invitation = await party?.createInvitation({
+              secretProvider,
+              secretValidator: defaultSecretValidator
+            }, {
+              onFinish: () => {
+                next({ finished: true });
+                close();
+              }
+            });
+            const invitationCode = encodeInvitation(invitation);
+            this._inviterInvitations.push({ invitationCode, secret });
+            next({ invitationCode });
+          });
+        }),
+        AcceptInvitation: async (request) => {
+          const id = v4();
+          assert(request.invitationCode, 'InvitationCode not provided.');
+          const [secretLatch, secretTrigger] = latch();
+          const inviteeInvitation: InviteeInvitation = { secretTrigger };
+
+          // Secret will be provided separately (in AuthenticateInvitation).
+          // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
+          const secretProvider: SecretProvider = async () => {
+            await secretLatch;
+            const secret = inviteeInvitation.secret;
+            if (!secret) {
+              throw new Error('Secret not provided.');
+            }
+            return Buffer.from(secret);
+          };
+
+          // Joining process is kicked off, and will await authentication with a secret.
+          const haloPartyPromise = this.echo.joinParty(decodeInvitation(request.invitationCode), secretProvider);
+          inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
+          this._inviteeInvitations.set(id, inviteeInvitation);
+          return { id };
         },
-        AcceptInvitation: () => {
-          throw new Error('Not implemented');
-        },
-        AuthenticateInvitation: () => {
-          throw new Error('Not implemented');
-        },
+        AuthenticateInvitation: (request) => new Stream(({ next, close }) => {
+          assert(request.process?.id, 'Process ID is missing.');
+          const invitation = this._inviteeInvitations.get(request.process?.id);
+          assert(invitation, 'Invitation not found.');
+          assert(request.secret, 'Secret not provided.');
+
+          // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
+          invitation.secret = request.secret;
+          invitation.secretTrigger?.();
+
+          next({});
+          invitation.joinPromise?.().then(() => {
+            const profile = this._echo.halo.getProfile();
+            assert(profile, 'Profile not created.');
+            next({ profile });
+            close();
+          });
+        }),
         SubscribeMembers: (request) => {
           const party = this._echo.getParty(request.partyKey);
           if (party) {
