@@ -16,6 +16,11 @@ export function NodeModulesPlugin (): Plugin {
           path: require.resolve('assert/') // Appending slash makes node resolve the installed package from node_modules.
         };
       });
+      onResolve({ filter: /^buffer$/ }, arg => {
+        return {
+          path: require.resolve('../../polyfills/Buffer.js')
+        };
+      });
       onResolve({ filter: /^domain$/ }, arg => {
         return {
           path: require.resolve('domain-browser')
