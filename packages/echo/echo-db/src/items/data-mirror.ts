@@ -36,11 +36,11 @@ export class DataMirror {
     entities.subscribe(
       async diff => {
         for (const addedEntitiy of diff.added ?? []) {
+          log(`Construct: ${JSON.stringify(addedEntitiy)}`);
+
           assert(addedEntitiy.itemId);
           assert(addedEntitiy.genesis);
           assert(addedEntitiy.genesis.modelType);
-
-          log(`Contstruct: ${JSON.stringify(addedEntitiy)}`);
 
           let entity: Entity<Model<any>>;
           if (addedEntitiy.genesis.link) {

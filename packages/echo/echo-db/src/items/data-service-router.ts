@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
@@ -21,6 +22,8 @@ import { ComplexMap } from '@dxos/util';
 import { PartyNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
+const log = debug('dxos:echo:items:data-service-router');
+
 /**
  * Routes DataService requests to different DataServiceHost instances based on party id.
  */
@@ -28,6 +31,7 @@ export class DataServiceRouter implements DataService {
   private readonly _trackedParties = new ComplexMap<PartyKey, DataServiceHost>(x => x.toHex())
 
   trackParty (key: PartyKey, host: DataServiceHost) {
+    log(`Tracking party: ${key}`);
     this._trackedParties.set(key, host);
   }
 

@@ -9,6 +9,7 @@ import { KeyHint } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, TimeframeClock } from '../items';
 import { FeedDatabaseBackend } from '../items/database-backend';
@@ -46,7 +47,7 @@ export class PartyCore {
    */
   private _databaseSnapshot: DatabaseSnapshot | undefined;
 
-  private _subscriptions: (() => void)[] = [];
+  private _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
   private _pipeline?: Pipeline;
@@ -181,7 +182,7 @@ export class PartyCore {
     this._partyProcessor = undefined;
     this._timeframeClock = undefined;
 
-    this._subscriptions.forEach(cb => cb());
+    this._subscriptions.unsubscribe();
 
     return this;
   }

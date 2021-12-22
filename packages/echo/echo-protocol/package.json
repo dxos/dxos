@@ -31,9 +31,6 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.7",
-    "@types/node": "^14.0.9",
-    "@types/readable-stream": "^2.3.9",
     "debug": "^4.3.3",
     "readable-stream": "^3.6.0"
   },
@@ -41,10 +38,13 @@
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chance": "^1.1.0",
+    "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
     "@types/pify": "^3.0.2",
     "@types/pumpify": "~1.4.1",
+    "@types/readable-stream": "^2.3.9",
     "faker": "^5.1.0",
     "pify": "~5.0.0",
     "tempy": "~1.0.1"

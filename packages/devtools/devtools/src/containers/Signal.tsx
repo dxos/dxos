@@ -5,8 +5,7 @@
 import assert from 'assert';
 import React from 'react';
 
-import { createTheme } from '@mui/material';
-import { makeStyles } from '@mui/styles';
+import { Box } from '@mui/material';
 
 // code import { PeerGraph } from '@dxos/devtools-mesh';
 import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
@@ -15,32 +14,6 @@ import { useClient } from '@dxos/react-client';
 
 import { useStream } from '../hooks';
 import { SubscribeToSignalStatusResponse } from '../proto';
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    overflow: 'hidden',
-    padding: theme.spacing(2),
-    overflowY: 'auto',
-    overflowX: 'auto'
-  },
-
-  filter: {
-    display: 'flex',
-    flexShrink: 0,
-    padding: theme.spacing(1),
-    paddingTop: theme.spacing(2)
-  },
-
-  graph: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    overflow: 'hidden'
-  }
-}), { defaultTheme: createTheme({}) });
 
 const stringToState = (state: string): SignalApi.State => {
   const dict: Record<string, SignalApi.State> = {
@@ -65,7 +38,6 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 };
 
 export const Signal = () => {
-  const classes = useStyles();
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
@@ -80,7 +52,15 @@ export const Signal = () => {
   }
 
   return (
-    <div className={classes.root}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      padding: 2,
+      overflow: 'hidden',
+      overflowY: 'auto',
+      overflowX: 'auto'
+    }}>
       {status?.servers.length < 1 ? (
         <div>Status unknown.</div>
       ) : (
@@ -91,6 +71,6 @@ export const Signal = () => {
       ) : (
         <div>No signal trace.</div>
       )}
-    </div>
+    </Box>
   );
 };
