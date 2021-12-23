@@ -274,7 +274,7 @@ export class ClientServiceHost implements ClientServiceProvider {
               next({ invitationCode: encodeInvitation(invitation), secret });
               return Buffer.from(secret);
             };
-            invitation = await party?.createInvitation({
+            invitation = await party.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
             }, {
