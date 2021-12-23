@@ -104,6 +104,47 @@ describe('Client', () => {
       }).timeout(5000);
     });
 
+    describe('party invitations', () => {
+      test('creates and joins a Party invitation', async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        await invitee.halo.createProfile({ username: 'invitee' });
+
+        const party = await inviter.echo.createParty();
+
+        let inviteeInvitationProcess: InvitationProcess;
+        inviter.services.PartyService.CreateInvitation({publicKey: party.key}).subscribe(async inviterInvitation => {
+          if (!inviteeInvitationProcess) {
+            inviteeInvitationProcess = await invitee.services.PartyService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
+          } else if (inviterInvitation.secret) {
+            await invitee.services.PartyService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
+          }
+        }, (error) => {
+          if (!(error instanceof RpcClosedError)) {
+            throw error;
+          }
+        });
+
+        const [inviteePartiesLatch, inviteePartiesTrigger] = latch();
+        invitee.services.PartyService.SubscribeParties().subscribe(inviteeParties => {
+          if (inviteeParties.parties?.length === 1) {
+            inviteePartiesTrigger();
+          }
+        }, error => {
+          if (!(error instanceof RpcClosedError)) {
+            throw error;
+          }
+        });
+        await inviteePartiesLatch;
+      }).timeout(5000);
+    });
+
     describe('data', () => {
       test('create party and item', async () => {
         const client = await createClient();

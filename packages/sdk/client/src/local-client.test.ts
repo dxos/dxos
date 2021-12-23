@@ -29,41 +29,6 @@ describe('Client', () => {
 
       await client.destroy();
     });
-
-    test.only('creates and joins a Party invitation', async () => {
-      const inviter = new Client();
-      await inviter.initialize();
-      const invitee = new Client();
-      await invitee.initialize();
-
-      await inviter.halo.createProfile({ username: 'inviter' });
-      await invitee.halo.createProfile({ username: 'invitee' });
-
-      const partyProxy = await inviter.echo.createParty();
-      // await partyProxy.open();
-      console.log('creating invitation...')
-      const invitation = await inviter.echo.createInvitation(partyProxy.key);
-
-      expect(invitee.echo.queryParties().value.length).toEqual(0);
-
-      const finishAuthentication = await invitee.echo.acceptInvitation(decodeInvitation(invitation.invitationCode));
-      console.log('finishing authentication...')
-      await finishAuthentication(invitation.pin ?? '0000')
-
-      console.log('waiting for party...')
-      await sleep(2000)
-      console.log({
-        inviter: inviter.echo.queryParties().value.length,
-        invitee: invitee.echo.queryParties().value.length,
-      })
-      await invitee.echo.queryParties().waitFor(parties => parties.length > 0);
-
-      expect(invitee.echo.queryParties().value.length).toEqual(1);
-
-      console.log('> END')
-      await inviter.destroy();
-      await invitee.destroy();
-    }).timeout(5000);
   });
 
   describe('With persistent storage', () => {
