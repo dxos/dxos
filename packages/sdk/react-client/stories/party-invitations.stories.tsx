@@ -41,15 +41,15 @@ export default {
 const PartyInvitationContainer = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const [invitation, setInvitation] = useState<PendingInvitation | undefined>();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const [secretProvider, pin, resetPin] = useSecretGenerator();
   const [contact, setContact] = useState<string>();
   const [contacts] = useContacts();
+  const [pin, setPin] = useState('');
+
 
   const resetInvitations = () => {
     setInvitationCode('');
-    setInvitation(undefined);
+    setPin('');
   }
 
   const handleCreateParty = () => {
@@ -57,7 +57,6 @@ const PartyInvitationContainer = () => {
       const party = await client.echo.createParty();
       setPartyKey(party.key);
       resetInvitations();
-      resetPin();
     });
   };
 
@@ -82,11 +81,11 @@ const PartyInvitationContainer = () => {
       } else {
         const invitation = await client.echo.createInvitation(partyKey!, {
           onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-            setInvitationCode(undefined);
-            resetPin();
-          }
+            resetInvitations();
+          },
+          onPinGenerated: setPin
         });
-        setInvitation(invitation)
+        setInvitationCode(invitation.invitationCode);
       }
     });
   };
@@ -157,7 +156,6 @@ interface Status {
 const PartyJoinContainer = () => {
   const client = useClient();
   const [status, setStatus] = useState<Status>({});
-  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   const handleSubmit = async (invitationCode: string) => {
     setStatus({});
@@ -179,8 +177,8 @@ const PartyJoinContainer = () => {
     }
   };
 
-  const handleAuthenticate = (pin: string) => {
-    secretResolver(Buffer.from(pin));
+  const handleAuthenticate = async (pin: string) => {
+    await status.finishAuthentication?.(pin);
   };
 
   return (

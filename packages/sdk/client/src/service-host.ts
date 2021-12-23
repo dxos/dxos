@@ -306,8 +306,8 @@ export class ClientServiceHost implements ClientServiceProvider {
           };
 
           // Joining process is kicked off, and will await authentication with a secret.
-          const haloPartyPromise = this.echo.joinParty(decodeInvitation(request.invitationCode), secretProvider);
-          inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
+          const partyPromise = this.echo.joinParty(decodeInvitation(request.invitationCode), secretProvider);
+          inviteeInvitation.joinPromise = () => partyPromise; // After awaiting this we have a finished joining flow.
           this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },

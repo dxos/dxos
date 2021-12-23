@@ -154,7 +154,7 @@ describe('Client', () => {
         handlers: hostClient.services,
         port: hostPort
       });
-      void server.open(); // This is blocks until the other client connects.
+      void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
       return new Client({ system: { remote: true } }, { rpcPort: proxyPort });
