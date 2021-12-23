@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { waitForCondition } from '@dxos/async';
+import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
 import { defaultSecretProvider } from '@dxos/credentials';
 
@@ -40,19 +40,27 @@ describe('Client', () => {
       await invitee.halo.createProfile({ username: 'invitee' });
 
       const partyProxy = await inviter.echo.createParty();
-      await partyProxy.open();
+      // await partyProxy.open();
       console.log('creating invitation...')
       const invitation = await inviter.echo.createInvitation(partyProxy.key);
 
       expect(invitee.echo.queryParties().value.length).toEqual(0);
 
       const finishAuthentication = await invitee.echo.acceptInvitation(decodeInvitation(invitation.invitationCode));
-      // await finishAuthentication(invitation.pin ?? '0000')
+      console.log('finishing authentication...')
+      await finishAuthentication(invitation.pin ?? '0000')
 
-      // await invitee.echo.queryParties().waitFor(parties => parties.length > 0);
+      console.log('waiting for party...')
+      await sleep(2000)
+      console.log({
+        inviter: inviter.echo.queryParties().value.length,
+        invitee: invitee.echo.queryParties().value.length,
+      })
+      await invitee.echo.queryParties().waitFor(parties => parties.length > 0);
 
-      // expect(invitee.echo.queryParties().value.length).toEqual(1);
+      expect(invitee.echo.queryParties().value.length).toEqual(1);
 
+      console.log('> END')
       await inviter.destroy();
       await invitee.destroy();
     }).timeout(5000);

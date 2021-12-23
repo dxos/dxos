@@ -5,8 +5,6 @@
 import base from 'base-x';
 
 import type { Client, PartyProxy } from '@dxos/client';
-import { SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
 import { Invitation } from './proto/gen/dxos/client';
@@ -20,12 +18,9 @@ export const encodeInvitation = (invitation: InvitationDescriptor) => {
 };
 
 export const generateInvitation = async (client: Client, party: PartyProxy): Promise<Invitation> => {
-  const partySecretString = PublicKey.random().toString();
-  const partySecret = Buffer.from(partySecretString);
-  const secretProvider: SecretProvider = async () => partySecret;
-  const invitation = await client.echo.createInvitation(party.key, { secretProvider });
+  const invitation = await client.echo.createInvitation(party.key);
   return {
-    invitationCode: encodeInvitation(invitation),
-    secret: partySecretString
+    invitationCode: invitation.invitationCode,
+    secret: invitation.pin
   };
 };

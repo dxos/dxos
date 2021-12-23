@@ -141,18 +141,19 @@ const AutoInvitationGenerator = ({
   onInvite: (invitationCode: string) => void
 }) => {
   const client = useClient();
-  const [secretProvider, pin, resetPin] = useSecretGenerator();
+  const [pin, setPin] = useState('')
 
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
-      const invitation = await client.echo.createInvitation(party.key, { secretProvider }, {
+      const invitation = await client.echo.createInvitation(party.key, {
         onFinish: () => {
-          resetPin();
-        }
+          setPin('')
+        },
+        onPinGenerated: setPin
       });
 
-      onInvite(encodeInvitation(invitation));
+      onInvite(invitation.pin!);
     });
   }, []);
 
