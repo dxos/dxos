@@ -19,7 +19,19 @@ import { TextModel } from '@dxos/text-model';
 
 import { PartySelect } from '../components';
 
-export const ItemsViewer = () => {
+const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
+  const children = useSelection(item.select(selection => selection.children().items as Item<any>[]), [item]) ?? [];
+
+  return (
+    <TreeItem nodeId={item.id} label={item.type} onClick={() => onSelect(item)}>
+      {children.map((child) => (
+        <ItemNode key={child.id} item={child} onSelect={onSelect} />
+      ))}
+    </TreeItem>
+  );
+};
+
+export const ItemsPanel = () => {
   const [selectedParty, setSelectedParty] = useState<PartyProxy>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
@@ -32,37 +44,34 @@ export const ItemsViewer = () => {
   ) ?? [];
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <PartySelect
-        parties={parties}
-        value={selectedParty}
-        onChange={setSelectedParty}
-      />
-      <Box
-        flexDirection='row'
-        display='flex'
-        padding={2}
-      >
-        <Box flex={1}>
-          <TreeView
-            defaultCollapseIcon={<CollapseIcon />}
-            defaultExpandIcon={<ExpandIcon />}
-            sx={{
-              flexGrow: 1,
-              height: 240,
-              maxWidth: 400,
-              overflowY: 'auto'
-            }}
-          >
-            {items.map(item => (
-              <ItemNode
-                key={item.id}
-                item={item}
-                onSelect={setSelectedItem}
-              />
-            ))}
-          </TreeView>
-        </Box>
+    <Box>
+      <Box padding={1}>
+        <PartySelect
+          parties={parties}
+          selected={selectedParty}
+          onChange={setSelectedParty}
+        />
+      </Box>
+
+      <Box display='flex'>
+        <TreeView
+          defaultCollapseIcon={<CollapseIcon />}
+          defaultExpandIcon={<ExpandIcon />}
+          sx={{
+            flex: 1,
+            maxWidth: 300,
+            overflowY: 'auto'
+          }}
+        >
+          {items.map(item => (
+            <ItemNode
+              key={item.id}
+              item={item}
+              onSelect={setSelectedItem}
+            />
+          ))}
+        </TreeView>
+
         <Box flex={1}>
           {selectedItem && <ItemDetails item={selectedItem} />}
         </Box>
@@ -75,18 +84,6 @@ interface ItemNodeProps {
   item: Item<any>
   onSelect: (item: Item<any>) => void
 }
-
-const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
-  const children = useSelection(item.select(s => s.children().items as Item<any>[]), [item]) ?? [];
-
-  return (
-    <TreeItem nodeId={item.id} label={item.type} onClick={() => onSelect(item)}>
-      {children.map((child) => (
-        <ItemNode key={child.id} item={child} onSelect={onSelect} />
-      ))}
-    </TreeItem>
-  );
-};
 
 interface ItemDetailsProps {
   item: Item<Model<any>>

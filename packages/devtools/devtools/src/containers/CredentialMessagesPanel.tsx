@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, FormControl } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { useClient, useParties } from '@dxos/react-client';
@@ -13,7 +13,7 @@ import { JsonTreeView } from '@dxos/react-components';
 import { PartySelect } from '../components';
 import { useStream } from '../hooks';
 
-export const CredentialMessagesViewer = () => {
+export const CredentialMessagesPanel = () => {
   const [selectedParty, setSelectedParty] = useState<PartyProxy>();
   const parties = useParties();
 
@@ -25,18 +25,19 @@ export const CredentialMessagesViewer = () => {
   );
 
   return (
-    <Box padding={2}>
-      <PartySelect
-        parties={parties}
-        value={selectedParty}
-        onChange={setSelectedParty}
-      />
-      <Box padding={2}>
-        <JsonTreeView
-          size='small'
-          data={result?.messages}
+    <Box>
+      <Box padding={1}>
+        <PartySelect
+          parties={parties}
+          selected={selectedParty}
+          onChange={setSelectedParty}
         />
       </Box>
+
+      <JsonTreeView
+        size='small'
+        data={result?.messages}
+      />
     </Box>
   );
 };

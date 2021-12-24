@@ -4,163 +4,39 @@
 
 import React, { useEffect, useState } from 'react';
 
-// https://mui.com/components/material-icons
-import {
-  Grain as ItemsIcon,
-  Dns as StorageIcon,
-  FactCheck as CredentialMessagesIcon,
-  FilterTiltShift as SwarmIcon,
-  Group as PartiesIcon,
-  List as FeedsIcon,
-  Router as SignalIcon,
-  Settings as ConfigIcon,
-  SettingsBackupRestore as SnapshotsIcon,
-  Subject as LoggingIcon,
-  VpnKey as KeyIcon
-} from '@mui/icons-material';
 import {
   Box,
   BoxProps,
   Divider,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   colors,
-  styled
+  useTheme
 } from '@mui/material';
 
 import { MessengerModel } from '@dxos/messenger-model';
 import { useClient } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
-import {
-  ConfigView,
-  CredentialMessagesViewer,
-  FeedsViewer,
-  ItemsViewer,
-  LoggingView,
-  Keyring,
-  PartiesViewer,
-  Signal,
-  StorageTab,
-  SwarmDetails,
-  SnapshotsViewer
-  // SwarmGraph
-} from './containers';
-
-const items = [
-  {
-    title: 'CLIENT',
-    items: [
-      {
-        id: 'config',
-        title: 'Config',
-        icon: ConfigIcon
-      },
-      {
-        id: 'storage',
-        title: 'Storage',
-        icon: StorageIcon
-      }
-    ]
-  },
-  {
-    title: 'HALO',
-    items: [
-      {
-        id: 'halo.keyring',
-        title: 'Keyring',
-        icon: KeyIcon
-      },
-      {
-        id: 'halo.credentialMessages',
-        title: 'Messages',
-        icon: CredentialMessagesIcon
-      }
-    ]
-  },
-  {
-    title: 'ECHO',
-    items: [
-      {
-        id: 'echo.parties',
-        title: 'Parties',
-        icon: PartiesIcon
-      },
-      {
-        id: 'echo.items',
-        title: 'Items',
-        icon: ItemsIcon
-      },
-      {
-        id: 'echo.feeds',
-        title: 'Feeds',
-        icon: FeedsIcon
-      },
-      {
-        id: 'echo.snapshots',
-        title: 'Snapshots',
-        icon: SnapshotsIcon
-      }
-    ]
-  },
-  {
-    title: 'MESH',
-    items: [
-      /*
-      {
-        id: 'mesh.swarmgraph',
-        title: 'Swarm Graph',
-        icon: SwarmIcon
-      },
-      */
-      {
-        id: 'mesh.swarminfo',
-        title: 'Swarm',
-        icon: SwarmIcon
-      },
-      {
-        id: 'mesh.signal',
-        title: 'Signal',
-        icon: SignalIcon
-      }
-    ]
-  },
-  {
-    title: 'DEBUG',
-    items: [
-      {
-        id: 'debug.logging',
-        title: 'Logging',
-        icon: LoggingIcon
-      }
-    ]
-  }
-];
+import { panels } from './panels';
 
 interface ContentBoxProps extends BoxProps {
   selected?: boolean
 }
 
-const ContentBox = styled(Box, {
-  shouldForwardProp: prop => prop !== 'selected'
-})<ContentBoxProps>(({ selected }) => ({
-  display: selected ? 'flex' : 'none',
-  flex: 1,
-  flexDirection: 'column',
-  overflowX: 'hidden',
-  overflowY: 'auto'
-}));
-
 export const App = () => {
+  const theme = useTheme();
   const client = useClient();
+  const [selected, setSelected] = useState(panels[0].items[0].id);
+
+  // TODO(burdon): Factor out.
   useEffect(() => {
     client.registerModel(TextModel);
     client.registerModel(MessengerModel);
   }, [client]);
-
-  const [selected, setSelected] = useState(items[0].items[0].id);
 
   const handleListItemClick = (event: any, index: string) => {
     setSelected(index);
@@ -171,30 +47,32 @@ export const App = () => {
       display: 'flex',
       flexDirection: 'row',
       flexGrow: 1,
-      height: '100vh'
+      height: '100vh',
+      overflow: 'hidden'
     }}>
       <Box sx={{
         flexShrink: 0,
         width: 140,
         backgroundColor: colors.grey[100],
         borderRight: '1px solid',
-        borderRightColor: 'divider'
+        borderRightColor: 'divider',
+        overflowY: 'auto'
       }}>
         <List dense disablePadding>
-          {items.map(({ title, items = [] }) => (
+          {panels.map(({ title, items = [] }) => (
             <div key={title}>
               <ListItem>
                 <ListItemText primary={title} />
               </ListItem>
               {items.map(({ id, title, icon: Icon }) => (
-                <ListItem
+                <ListItemButton
                   key={id}
-                  button
                   selected={selected === id}
                   onClick={(event) => handleListItemClick(event, id)}
                 >
                   <ListItemIcon sx={{
                     '&.MuiListItemIcon-root': {
+                      color: (selected === id) ? theme.palette.secondary.main : '',
                       minWidth: 36
                     }
                   }}>
@@ -204,7 +82,7 @@ export const App = () => {
                     style={{ whiteSpace: 'nowrap' }}
                     primary={title}
                   />
-                </ListItem>
+                </ListItemButton>
               ))}
               <Divider />
             </div>
@@ -212,46 +90,27 @@ export const App = () => {
         </List>
       </Box>
 
-      {/* Display hidden so that components maintain state. */}
-
-      <ContentBox selected={selected === 'config'}>
-        <ConfigView />
-      </ContentBox>
-      <ContentBox selected={selected === 'storage'}>
-        <StorageTab />
-      </ContentBox>
-      <ContentBox selected={selected === 'halo.keyring'}>
-        <Keyring />
-      </ContentBox>
-      <ContentBox selected={selected === 'halo.credentialMessages'}>
-        <CredentialMessagesViewer />
-      </ContentBox>
-      <ContentBox selected={selected === 'echo.parties'}>
-        <PartiesViewer />
-      </ContentBox>
-      <ContentBox selected={selected === 'echo.items'}>
-        <ItemsViewer />
-      </ContentBox>
-      <ContentBox selected={selected === 'echo.feeds'}>
-        <FeedsViewer />
-      </ContentBox>
-      <ContentBox selected={selected === 'echo.snapshots'}>
-        <SnapshotsViewer />
-      </ContentBox>
-      <ContentBox selected={selected === 'mesh.signal'}>
-        <Signal />
-      </ContentBox>
-      {/*
-      <ContentBox selected={selected === 'mesh.swarmgraph'}>
-        <SwarmGraph />
-      </ContentBox>
-      */}
-      <ContentBox selected={selected === 'mesh.swarminfo'}>
-        <SwarmDetails />
-      </ContentBox>
-      <ContentBox selected={selected === 'debug.logging'}>
-        <LoggingView />
-      </ContentBox>
+      <Box sx={{
+        display: 'flex',
+        flex: 1,
+        overflow: 'hidden'
+      }}>
+        {panels.map(({ items = [] }) =>
+          items.map(({ id, panel: Panel }) => (
+            <Box
+              key={id}
+              sx={{
+                display: (selected === id) ? 'flex' : 'none',
+                flex: 1,
+                flexDirection: 'column',
+                overflow: 'auto'
+              }}
+            >
+              <Panel />
+            </Box>
+          )
+        ))}
+      </Box>
     </Box>
   );
 };

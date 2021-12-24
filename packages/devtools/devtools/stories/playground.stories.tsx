@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { Box, CssBaseline, ThemeProvider, useTheme } from '@mui/material';
+import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { RpcPort, createLinkedPorts } from '@dxos/rpc';
 
-import { App, ErrorBoundary } from '../src';
+import { App, ErrorBoundary, theme } from '../src';
 import { Controls } from './helpers';
 
 export default {
@@ -18,8 +18,6 @@ export default {
 };
 
 const DevTools = ({ port }: { port: RpcPort }) => {
-  const theme = useTheme();
-
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>

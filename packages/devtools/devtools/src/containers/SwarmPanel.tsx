@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 
 import { useStream } from '../hooks';
 
-export const SwarmDetails = () => {
+export const SwarmPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const swarms = useStream(() => devtoolsHost.SubscribeToSwarmInfo({}));

@@ -198,10 +198,10 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
 
         <CardActions>
           <Button onClick={() => handlePartyOpenToggle(party)}>
-            {party.isOpen ? 'Close' : 'Open'} Party
+            {party.isOpen ? 'Close' : 'Open'}
           </Button>
           <Button onClick={() => handlePartyActiveToggle(party)}>
-            {party.isActive ? 'Deactivate' : 'Activate'} Party
+            {party.isActive ? 'Deactivate' : 'Activate'}
           </Button>
         </CardActions>
       </Card>

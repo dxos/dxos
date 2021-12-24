@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { KeyTable } from '../components';
 import { useStream } from '../hooks';
 
-export const Keyring = () => {
+export const KeyringPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
 

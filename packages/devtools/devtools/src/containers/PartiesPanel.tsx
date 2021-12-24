@@ -9,7 +9,7 @@ import { JsonTreeView } from '@dxos/react-components';
 
 import { useStream } from '../hooks';
 
-export const PartiesViewer = () => {
+export const PartiesPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const result = useStream(() => devtoolsHost.SubscribeToParties({}));

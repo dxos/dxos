@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Toolbar } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { PartySnapshot } from '@dxos/echo-protocol';
@@ -13,7 +13,7 @@ import { JsonTreeView } from '@dxos/react-components';
 
 import { PartySelect } from '../components';
 
-export const SnapshotsViewer = () => {
+export const SnapshotsPanel = () => {
   const parties = useParties();
   const [selectedParty, setSelectedParty] = useState<PartyProxy>();
 
@@ -32,12 +32,10 @@ export const SnapshotsViewer = () => {
   };
 
   const handleSaveSnapshot = async () => {
-    if (!selectedParty) {
-      return;
+    if (selectedParty) {
+      const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
+      setSnapshot(result.snapshot);
     }
-
-    const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
-    setSnapshot(result.snapshot);
   };
 
   const handleClearSnapshots = async () => {
@@ -45,17 +43,27 @@ export const SnapshotsViewer = () => {
   };
 
   return (
-    <Box padding={2}>
-      <Box marginBottom={1}>
-        <Button onClick={handleSaveSnapshot}>Save Snapshot</Button>
-        <Button onClick={handleClearSnapshots}>Clear All Snapshots</Button>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      overflow: 'hidden'
+    }}>
+      <Box>
+        <Toolbar variant='dense' disableGutters>
+          <Button onClick={handleSaveSnapshot} disabled={!selectedParty}>Save Snapshot</Button>
+          <Button onClick={handleClearSnapshots}>Delete Snapshots</Button>
+        </Toolbar>
+        <Box padding={1}>
+          <PartySelect
+            parties={parties}
+            selected={selectedParty}
+            onChange={handlePartyChange}
+          />
+        </Box>
       </Box>
-      <PartySelect
-        parties={parties}
-        value={selectedParty}
-        onChange={handlePartyChange}
-      />
-      <Box marginTop={1}>
+
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
         <JsonTreeView
           size='small'
           data={snapshot}
