@@ -7,11 +7,11 @@ import React from 'react';
 import { PublicKey } from '@dxos/crypto';
 import { FullScreen } from '@dxos/react-components';
 
-import { KeyTable } from '../src';
-import { KeyRecord, KeyType } from '../src/proto/gen/dxos/halo/keys';
+import { KeyRecord, KeyType } from '../../src/proto/gen/dxos/halo/keys';
+import { KeyTable } from '../../src';
 
 export default {
-  title: 'devtools/KeyTable'
+  title: 'devtools/components/KeyTable'
 };
 
 export const Primary = () => {

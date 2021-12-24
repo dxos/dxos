@@ -9,7 +9,7 @@ import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { PartyProxy } from '@dxos/client';
 
 interface PartySelectProps {
-  parties: PartyProxy[]
+  parties: PartyProxy[] // TODO(burdon): Should be keys.
   value: PartyProxy | undefined
   onChange: (newValue: PartyProxy | undefined) => void
 }

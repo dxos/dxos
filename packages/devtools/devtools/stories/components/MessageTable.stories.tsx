@@ -9,10 +9,10 @@ import { randomBytes } from '@dxos/crypto';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { FullScreen } from '@dxos/react-components';
 
-import { MessageTable } from '../src';
+import { MessageTable } from '../../src';
 
 export default {
-  title: 'devtools/MessageTable'
+  title: 'devtools/components/MessageTable'
 };
 
 // TODO(burdon): Generate protos.
