@@ -6,7 +6,7 @@
 import {
   Grain as ItemsIcon,
   Dns as StorageIcon,
-  FactCheck as CredentialMessagesIcon,
+  List as MessagesIcon,
   FilterTiltShift as SwarmIcon,
   Group as PartiesIcon,
   List as FeedsIcon,
@@ -62,7 +62,7 @@ export const panels = [
       {
         id: 'halo.messagess',
         title: 'Messages',
-        icon: CredentialMessagesIcon,
+        icon: MessagesIcon,
         panel: CredentialMessagesPanel
       }
     ]
@@ -77,16 +77,16 @@ export const panels = [
         panel: PartiesPanel
       },
       {
-        id: 'echo.items',
-        title: 'Items',
-        icon: ItemsIcon,
-        panel: ItemsPanel
-      },
-      {
         id: 'echo.feeds',
         title: 'Feeds',
         icon: FeedsIcon,
         panel: FeedsPanel
+      },
+      {
+        id: 'echo.items',
+        title: 'Items',
+        icon: ItemsIcon,
+        panel: ItemsPanel
       },
       {
         id: 'echo.snapshots',

@@ -25,7 +25,12 @@ export const CredentialMessagesPanel = () => {
   );
 
   return (
-    <Box>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      overflow: 'hidden'
+    }}>
       <Box padding={1}>
         <PartySelect
           parties={parties}
@@ -34,10 +39,12 @@ export const CredentialMessagesPanel = () => {
         />
       </Box>
 
-      <JsonTreeView
-        size='small'
-        data={result?.messages}
-      />
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <JsonTreeView
+          size='small'
+          data={result?.messages}
+        />
+      </Box>
     </Box>
   );
 };

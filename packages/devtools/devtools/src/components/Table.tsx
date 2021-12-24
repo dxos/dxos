@@ -53,6 +53,7 @@ const StyledTableCell = styled(MuiTableCell, {
   shouldForwardProp: (prop) => prop !== 'monospace'
 })<TableCellProps>(({ monospace }) => ({
   verticalAlign: 'center',
+  fontSize: 14,
   fontFamily: monospace ? 'monospace' : ''
 }));
 

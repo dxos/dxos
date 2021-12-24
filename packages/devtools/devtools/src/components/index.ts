@@ -8,4 +8,5 @@ export * from './FeedSelect';
 export * from './KeyTable';
 export * from './MessageTable';
 export * from './PartySelect';
+export * from './PartyTable';
 export * from './Table';
