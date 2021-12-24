@@ -57,7 +57,9 @@ export const Secondary = () => {
 
   return (
     <FullScreen sx={{ flexDirection: 'row' }}>
-      <DevTools port={devtoolsPort} />
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <DevTools port={devtoolsPort} />
+      </Box>
 
       <ClientProvider
         config={
@@ -65,7 +67,8 @@ export const Secondary = () => {
             services: {
               signal: {
                 // TODO(burdon): Move to config (overdependent on enterprise).
-                server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+                // server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+                server: 'ws://localhost:4000'
               }
             }
           }

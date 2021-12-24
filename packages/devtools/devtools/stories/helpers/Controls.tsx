@@ -5,7 +5,8 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-  AddCircleOutline as AddIcon
+  AddCircleOutline as AddIcon,
+  MoreVert as MenuIcon
 } from '@mui/icons-material';
 import {
   Box,
@@ -16,28 +17,22 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  Menu,
   MenuItem,
   Select,
-  SelectChangeEvent,
-  useTheme
+  SelectChangeEvent
 } from '@mui/material';
 
 import { Client, clientServiceBundle } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
+import { FrameworkContextProvider, JoinPartyDialog } from '@dxos/react-framework';
 import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
 import { PartyCard } from './PartyCard';
-
-type ModelType = 'ObjectModel' | 'MessengerModel' | 'TextModel'
-
-const modelTypes = {
-  'ObjectModel': ObjectModel,
-  'MessengerModel': MessengerModel,
-  'TextModel': TextModel
-};
+import { ModelType, modelTypes } from './models';
 
 /**
  * Devtools playground control.
@@ -46,7 +41,8 @@ const modelTypes = {
  */
 export const Controls = ({ port }: { port?: RpcPort }) => {
   const [model, setModel] = useState<ModelType>();
-  const theme = useTheme();
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
@@ -78,9 +74,9 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   };
 
   const handleRegisterModel = (client: Client, modelType: ModelType | undefined) => {
-    const modelClass = modelType && modelTypes[modelType];
-    if (modelClass) {
-      return client.registerModel(modelClass);
+    const { model } = modelType && modelTypes[modelType] || {};
+    if (model) {
+      return client.registerModel(model);
     }
 
     setModel(undefined);
@@ -111,66 +107,92 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   };
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      width: 500,
-      overflow: 'hidden',
-      // borderLeft: `1px solid ${theme.palette.divider}`,
-      backgroundColor: '#EEE'
-    }}>
-      <Box sx={{
-        paddingRight: 1
-      }}>
-        <Card sx={{ margin: 1 }}>
-          <CardActions>
-            <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile}>Profile</Button>
-            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>Party</Button>
-            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleTestData}>Test Data</Button>
-          </CardActions>
-
-          <CardContent>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'end'
-            }}>
-              <FormControl fullWidth variant='standard'>
-                <InputLabel id='model-select'>Model</InputLabel>
-                <Select
-                  id='model-select'
-                  label='Model'
-                  variant='standard'
-                  value={model}
-                  onChange={handleModelChange}
-                >
-                  <MenuItem value='ObjectModel'>ObjectModel</MenuItem>
-                  <MenuItem value='MessengerModel'>MessengerModel</MenuItem>
-                  <MenuItem value='TextModel'>TextModel</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Box>
-                <IconButton size='small' onClick={() => handleRegisterModel(client, model)}>
-                  <AddIcon />
-                </IconButton>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-
+    <FrameworkContextProvider>
       <Box sx={{
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        overflow: 'scroll',
-        paddingRight: 1
+        width: 420,
+        overflow: 'hidden',
+        backgroundColor: '#EEE'
       }}>
-        <Box>
-          {parties.map(party => <PartyCard key={party.key.toHex()} party={party} />)}
+        <>
+          <Menu
+            open={Boolean(menuAnchorEl)}
+            anchorEl={menuAnchorEl}
+            onClose={() => setMenuAnchorEl(null)}
+          >
+            <MenuItem onClick={() => {
+              setMenuAnchorEl(null);
+              setShowJoinParty(true);
+            }}>
+              Join Party
+            </MenuItem>
+          </Menu>
+
+          <JoinPartyDialog
+            open={showJoinParty}
+            onClose={() => setShowJoinParty(false)}
+            closeOnSuccess
+          />
+        </>
+
+        <Box sx={{
+          paddingRight: 1
+        }}>
+          <Card sx={{ margin: 1 }}>
+            <CardActions>
+              <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile}>Profile</Button>
+              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>Party</Button>
+              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleTestData}>Test Data</Button>
+              <Box sx={{ flex: 1 }} />
+              <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
+                <MenuIcon />
+              </IconButton>
+            </CardActions>
+
+            <CardContent>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'end'
+              }}>
+                <FormControl fullWidth variant='standard'>
+                  <InputLabel id='model-select'>Model</InputLabel>
+                  <Select
+                    id='model-select'
+                    label='Model'
+                    variant='standard'
+                    value={model}
+                    onChange={handleModelChange}
+                  >
+                    {Object.keys(modelTypes).map((model) => (
+                      <MenuItem key={model} value={model}>{model}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <Box>
+                  <IconButton size='small' onClick={() => handleRegisterModel(client, model)}>
+                    <AddIcon />
+                  </IconButton>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          overflow: 'scroll',
+          paddingRight: 1
+        }}>
+          <Box>
+            {parties.map(party => <PartyCard key={party.key.toHex()} party={party} />)}
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </FrameworkContextProvider>
   );
 };

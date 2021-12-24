@@ -22,6 +22,7 @@ export const FrameworkContext = createContext<FrameworkContextState | undefined>
 /**
  * @deprecated
  */
+// TODO(burdon): Remove.
 export const FrameworkContextProvider = ({ children }: { children: ReactNode }) => {
   const invitations = useState<PendingInvitation[]>([]);
 

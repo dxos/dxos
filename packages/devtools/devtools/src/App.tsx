@@ -6,11 +6,11 @@ import React, { useEffect, useState } from 'react';
 
 // https://mui.com/components/material-icons
 import {
-  AccountTree as ItemsIcon,
+  Grain as ItemsIcon,
   Dns as StorageIcon,
   FactCheck as CredentialMessagesIcon,
   FilterTiltShift as SwarmIcon,
-  GroupWork as PartiesIcon,
+  Group as PartiesIcon,
   List as FeedsIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
@@ -175,7 +175,7 @@ export const App = () => {
     }}>
       <Box sx={{
         flexShrink: 0,
-        width: 125,
+        width: 140,
         backgroundColor: colors.grey[100],
         borderRight: '1px solid',
         borderRightColor: 'divider'

@@ -6,7 +6,8 @@ import React, { ChangeEvent, useState } from 'react';
 
 import {
   ArrowCircleRightOutlined as AddIcon,
-  AddCircleOutline as RegisterIcon
+  AddCircleOutline as RegisterIcon,
+  MoreVert as MenuIcon
 } from '@mui/icons-material';
 import {
   Box,
@@ -18,6 +19,7 @@ import {
   CardHeader,
   FormControl,
   InputLabel,
+  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -27,9 +29,9 @@ import {
 import { PartyProxy } from '@dxos/client';
 import { HashIcon } from '@dxos/react-components';
 import { truncateString } from '@dxos/debug';
-import { MessengerModel } from '@dxos/messenger-model';
-import { ObjectModel } from '@dxos/object-model';
-import { TextModel } from '@dxos/text-model';
+import { PartySharingDialog } from '@dxos/react-framework';
+
+import { ModelType, modelTypes } from './models';
 
 /**
  * Party controls.
@@ -37,10 +39,12 @@ import { TextModel } from '@dxos/text-model';
  * @constructor
  */
 export const PartyCard = ({ party }: { party: PartyProxy }) => {
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [partySharing, setPartySharing] = useState(false);
   const [title, setTitle] = useState('');
   const [propertyKey, setPropertyKey] = useState('');
   const [propertyValue, setPropertyValue] = useState('');
-  const [itemModel, setItemModel] = useState('');
+  const [itemModel, setItemModel] = useState<ModelType | undefined>();
 
   const handlePartyOpenToggle = (party: PartyProxy) => {
     void (party.isOpen ? party.close() : party.open());
@@ -72,128 +76,135 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   };
 
   const handleItemModelChange = (event: SelectChangeEvent) => {
-    setItemModel(event.target.value as string);
+    setItemModel(event.target.value as ModelType);
   };
 
-  // TODO(burdon): Move to map.
   const handleCreateItem = (party: PartyProxy) => {
-    switch (itemModel) {
-      case 'ObjectModel':
-        void party.database.createItem({
-          model: ObjectModel,
-          type: 'example:type.object'
-        });
-        break;
-
-      case 'MessengerModel':
-        void party.database.createItem({
-          model: MessengerModel,
-          type: 'example:type.messenger'
-        });
-        break;
-
-      case 'TextModel':
-        void party.database.createItem({
-          model: TextModel,
-          type: 'example:type.text'
-        });
+    const { createItem } = itemModel && modelTypes[itemModel] || {};
+    if (createItem) {
+      createItem(party);
     }
   };
 
   return (
-    <Card sx={{
-      margin: 1
-    }}>
-      <CardHeader
-        title={truncateString(party.key.toString(), 8)}
-        titleTypographyProps={{ variant: 'h6' }}
-        avatar={<HashIcon value={party.key.toString()} />}
+    <>
+      <Menu
+        open={Boolean(menuAnchorEl)}
+        anchorEl={menuAnchorEl}
+        onClose={() => setMenuAnchorEl(null)}
+      >
+        <MenuItem onClick={() => {
+          setMenuAnchorEl(null);
+          setPartySharing(true);
+        }}>
+          Share Party
+        </MenuItem>
+      </Menu>
+
+      <PartySharingDialog
+        open={partySharing}
+        onClose={() => setPartySharing(false)}
+        partyKey={party.key}
       />
 
-      <CardContent sx={{
-        paddingTop: 1
+      <Card sx={{
+        margin: 1
       }}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'end',
-          marginBottom: 2
-        }}>
-          <TextField
-            label='Title'
-            variant='standard'
-            fullWidth
-            value={title}
-            onChange={handlePartyTitleChange}
-          />
-          <Box>
-            <IconButton size='small' onClick={() => handleSetPartyTitle(party)}>
-              <AddIcon />
+        <CardHeader
+          title={truncateString(party.key.toString(), 8)}
+          titleTypographyProps={{ variant: 'h6' }}
+          avatar={<HashIcon value={party.key.toString()} />}
+          action={
+            <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
+              <MenuIcon />
             </IconButton>
-          </Box>
-        </Box>
+          }
+        />
 
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'end',
-          marginBottom: 2
+        <CardContent sx={{
+          paddingTop: 1
         }}>
-          <TextField
-            label='Key'
-            variant='standard'
-            fullWidth
-            sx={{ width: 200, marginRight: 1 }}
-            value={propertyKey}
-            onChange={handlePropertyKeyChange}
-          />
-          <TextField
-            label='Value'
-            variant='standard'
-            fullWidth
-            value={propertyValue}
-            onChange={handlePropertyValueChange}
-          />
-          <Box>
-            <IconButton size='small' onClick={() => handleSetPartyProperty(party)}>
-              <AddIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'end',
-          marginBottom: 2
-        }}>
-          <FormControl fullWidth variant='standard'>
-            <InputLabel id='model-select'>Model</InputLabel>
-            <Select
-              label='Item Model'
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'end',
+            marginBottom: 2
+          }}>
+            <TextField
+              label='Title'
               variant='standard'
-              value={itemModel}
-              onChange={handleItemModelChange}
-            >
-              {/* TODO(burdon): From const. */}
-              <MenuItem value='ObjectModel'>ObjectModel</MenuItem>
-              <MenuItem value='MessengerModel'>MessengerModel</MenuItem>
-              <MenuItem value='TextModel'>TextModel</MenuItem>
-            </Select>
-          </FormControl>
-          <Box>
-            <IconButton size='small' onClick={() => handleCreateItem(party)}>
-              <RegisterIcon />
-            </IconButton>
+              fullWidth
+              value={title}
+              onChange={handlePartyTitleChange}
+            />
+            <Box>
+              <IconButton size='small' onClick={() => handleSetPartyTitle(party)}>
+                <AddIcon />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
-      </CardContent>
 
-      <CardActions>
-        <Button onClick={() => handlePartyOpenToggle(party)}>
-          {party.isOpen ? 'Close' : 'Open'} Party
-        </Button>
-        <Button onClick={() => handlePartyActiveToggle(party)}>
-          {party.isActive ? 'Deactivate' : 'Activate'} Party
-        </Button>
-      </CardActions>
-    </Card>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'end',
+            marginBottom: 2
+          }}>
+            <TextField
+              label='Key'
+              variant='standard'
+              fullWidth
+              sx={{ width: 200, marginRight: 1 }}
+              value={propertyKey}
+              onChange={handlePropertyKeyChange}
+            />
+            <TextField
+              label='Value'
+              variant='standard'
+              fullWidth
+              value={propertyValue}
+              onChange={handlePropertyValueChange}
+            />
+            <Box>
+              <IconButton size='small' onClick={() => handleSetPartyProperty(party)}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'end',
+            marginBottom: 2
+          }}>
+            <FormControl fullWidth variant='standard'>
+              <InputLabel id='model-select'>Model</InputLabel>
+              <Select
+                label='Item Model'
+                variant='standard'
+                value={itemModel}
+                onChange={handleItemModelChange}
+              >
+                {Object.keys(modelTypes).map((model) => (
+                  <MenuItem key={model} value={model}>{model}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box>
+              <IconButton size='small' onClick={() => handleCreateItem(party)}>
+                <RegisterIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </CardContent>
+
+        <CardActions>
+          <Button onClick={() => handlePartyOpenToggle(party)}>
+            {party.isOpen ? 'Close' : 'Open'} Party
+          </Button>
+          <Button onClick={() => handlePartyActiveToggle(party)}>
+            {party.isActive ? 'Deactivate' : 'Activate'} Party
+          </Button>
+        </CardActions>
+      </Card>
+    </>
   );
 };
