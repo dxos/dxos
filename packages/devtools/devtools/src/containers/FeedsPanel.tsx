@@ -21,7 +21,7 @@ export const FeedsPanel = () => {
   const feeds = useStream(() => devtoolsHost.SubscribeToFeeds({}));
   const partyFeeds = useMemo(
     () => feeds?.parties?.find(({ key }) => selectedParty?.key && key?.equals(selectedParty.key))?.feeds ?? [],
-  [feeds, selectedParty]);
+    [feeds, selectedParty]);
 
   const devtoolsHost = client.services.DevtoolsHost;
 

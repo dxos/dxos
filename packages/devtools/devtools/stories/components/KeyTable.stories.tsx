@@ -7,8 +7,8 @@ import React from 'react';
 import { PublicKey } from '@dxos/crypto';
 import { FullScreen } from '@dxos/react-components';
 
-import { KeyRecord, KeyType } from '../../src/proto/gen/dxos/halo/keys';
 import { KeyTable } from '../../src';
+import { KeyRecord, KeyType } from '../../src/proto/gen/dxos/halo/keys';
 
 export default {
   title: 'devtools/components/KeyTable'

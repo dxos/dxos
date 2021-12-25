@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, FormControl } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { useClient, useParties } from '@dxos/react-client';

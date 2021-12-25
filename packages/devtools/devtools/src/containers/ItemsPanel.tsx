@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
@@ -18,7 +18,7 @@ import { useParties, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
-import { PartySelect, Table } from '../components';
+import { PartySelect } from '../components';
 
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select(selection => selection.children().items as Item<any>[]), [item]) ?? [];

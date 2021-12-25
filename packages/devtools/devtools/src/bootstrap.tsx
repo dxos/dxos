@@ -20,7 +20,7 @@ export const theme = createTheme({
     },
     secondary: {
       main: colors.teal[500]
-    },
+    }
   },
   typography: {
     fontSize: 12

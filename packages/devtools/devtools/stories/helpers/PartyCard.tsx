@@ -27,8 +27,8 @@ import {
 } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
-import { HashIcon } from '@dxos/react-components';
 import { truncateString } from '@dxos/debug';
+import { HashIcon } from '@dxos/react-components';
 import { PartySharingDialog } from '@dxos/react-framework';
 
 import { ModelType, modelTypes } from './models';
@@ -71,7 +71,7 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   };
 
   const handleCreateItem = (party: PartyProxy) => {
-    const { createItem } = itemModel && modelTypes[itemModel] || {};
+    const { createItem } = (itemModel && modelTypes[itemModel]) || {};
     if (createItem) {
       createItem(party);
     }
@@ -105,11 +105,11 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
           title={truncateString(party.key.toString(), 8)}
           titleTypographyProps={{ variant: 'h6' }}
           avatar={<HashIcon value={party.key.toString()} />}
-          action={
+          action={(
             <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
               <MenuIcon />
             </IconButton>
-          }
+          )}
         />
 
         <CardContent sx={{

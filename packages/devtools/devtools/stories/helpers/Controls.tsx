@@ -74,7 +74,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   };
 
   const handleRegisterModel = (client: Client, modelType: ModelType | undefined) => {
-    const { model } = modelType && modelTypes[modelType] || {};
+    const { model } = (modelType && modelTypes[modelType]) || {};
     if (model) {
       return client.registerModel(model);
     }

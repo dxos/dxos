@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 
 import {
   Box,
-  BoxProps,
   Divider,
   List,
   ListItem,
@@ -22,10 +21,6 @@ import { useClient } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
 import { panels } from './panels';
-
-interface ContentBoxProps extends BoxProps {
-  selected?: boolean
-}
 
 export const App = () => {
   const theme = useTheme();
@@ -109,7 +104,7 @@ export const App = () => {
               <Panel />
             </Box>
           )
-        ))}
+          ))}
       </Box>
     </Box>
   );

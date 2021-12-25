@@ -34,4 +34,3 @@ export const FeedSelect = ({ keys, selected, onChange }: FeedSelectProps) => {
     </FormControl>
   );
 };
-
