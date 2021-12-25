@@ -103,10 +103,9 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
 
     // Test.
     // TODO(burdon): RangeError: index out of range: 13 + 49 > 34
-    //   Related to renaming of model DXN?
-    const text = await party.database.createItem({
-      model: TextModel, type: 'example:type.text', parent: child.id
-    });
+    // const text = await party.database.createItem({
+    //   model: TextModel, type: 'example:type.text', parent: child.id
+    // });
     // TODO(burdon): Constantly increasing mutations.
     // await text.model.insert(0, 'Hello world');
 
