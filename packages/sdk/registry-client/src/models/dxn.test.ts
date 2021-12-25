@@ -11,7 +11,7 @@ import { DXN } from './dxn';
 describe('DXN', () => {
   it('DomainKey', () => {
     expect(() => new DomainKey(randomBytes(24))).to.throw();
-  })
+  });
 
   it('validateDomain', () => {
     // Valid.
@@ -62,15 +62,15 @@ describe('DXN', () => {
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234',
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
     ].forEach(resource => expect(() => DXN.validateResource(resource), resource).to.throw());
-  })
+  });
 
   it('fromDomainKey', () => {
     const key = DomainKey.random();
-    DXN.fromDomainKey(key, 'dxos');
+    expect(DXN.fromDomainKey(key, 'dxos').key).not.to.be.undefined;
   });
 
   it('fromDomainName', () => {
-    DXN.fromDomainName('dxos', 'app.test');
+    expect(DXN.fromDomainName('dxos', 'app.test').domain).not.to.be.undefined;
   });
 
   it('parse', () => {
@@ -85,7 +85,7 @@ describe('DXN', () => {
       '',
       'dxos',
       'dxos:',
-      'dxos::foo.bar',
+      'dxos::foo.bar'
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 });

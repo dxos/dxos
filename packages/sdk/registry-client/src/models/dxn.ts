@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
 import { DomainKey } from './domain-key';
 
 /**
@@ -47,7 +45,7 @@ export class DXN {
       throw new Error(`Invalid resource: ${resource}`);
     }
 
-    resource.split(/[\.-]/).forEach(word => {
+    resource.split(/[.-]/).forEach(word => {
       if (word.length === 0 || word.endsWith('-') || word.endsWith('.')) {
         throw new Error(`Invalid resource: ${resource}`);
       }
