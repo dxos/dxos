@@ -27,8 +27,7 @@ import {
 } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
-import { truncateString } from '@dxos/debug';
-import { HashIcon } from '@dxos/react-components';
+import { CopyText, HashIcon } from '@dxos/react-components';
 import { PartySharingDialog } from '@dxos/react-framework';
 
 import { ModelType, modelTypes } from './models';
@@ -102,9 +101,20 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
         margin: 1
       }}>
         <CardHeader
-          title={truncateString(party.key.toString(), 8)}
-          titleTypographyProps={{ variant: 'h6' }}
-          avatar={<HashIcon value={party.key.toString()} />}
+          sx={{
+            '.MuiCardHeader-avatar': {
+              marginRight: 1
+            },
+            '.MuiCardHeader-action': {
+              margin: 0
+            }
+          }}
+          avatar={(
+            <IconButton>
+              <HashIcon value={party.key.toString()} />
+            </IconButton>
+          )}
+          title={<CopyText value={party.key.toString()} monospace variant='h6' length={8} />}
           action={(
             <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
               <MenuIcon />
@@ -152,7 +162,7 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
               <Select
                 label='Item Model'
                 variant='standard'
-                value={itemModel}
+                value={itemModel || ''}
                 onChange={handleItemModelChange}
               >
                 {Object.keys(modelTypes).map((model) => (

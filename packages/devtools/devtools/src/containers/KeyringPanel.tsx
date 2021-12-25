@@ -4,8 +4,6 @@
 
 import React from 'react';
 
-import { Typography } from '@mui/material';
-
 import { useClient } from '@dxos/react-client';
 
 import { KeyTable } from '../components';
@@ -17,11 +15,7 @@ export const KeyringPanel = () => {
 
   const result = useStream(() => devtoolsHost.SubscribeToKeyringKeys({}));
   if (result === undefined || result.keys === undefined) {
-    return (
-      <Typography sx={{ padding: 2 }}>
-        No keys to display.
-      </Typography>
-    );
+    return null;
   }
 
   return (

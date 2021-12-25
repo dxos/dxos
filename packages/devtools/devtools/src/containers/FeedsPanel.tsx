@@ -4,13 +4,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Box } from '@mui/material';
-
 import { PartyProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { useClient, useParties } from '@dxos/react-client';
 
-import { FeedSelect, MessageTable, PartySelect } from '../components';
+import { Panel, FeedSelect, MessageTable, PartySelect } from '../components';
 import { useStream } from '../hooks';
 
 export const FeedsPanel = () => {
@@ -50,31 +48,23 @@ export const FeedsPanel = () => {
   };
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      overflow: 'hidden'
-    }}>
-      <Box padding={1}>
+    <Panel controls={(
+      <>
         <PartySelect
           parties={parties}
           selected={selectedParty}
           onChange={handlePartyChange}
         />
-        <div style={{ marginTop: 8 }}></div>
         <FeedSelect
           keys={partyFeeds}
           selected={selectedFeed}
           onChange={handleFeedChange}
         />
-      </Box>
-
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <MessageTable
-          messages={messages}
-        />
-      </Box>
-    </Box>
+      </>
+    )}>
+      <MessageTable
+        messages={messages}
+      />
+    </Panel>
   );
 };

@@ -4,9 +4,11 @@
 
 import React from 'react';
 
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
+import { truncateString } from '@dxos/debug';
+import { HashIcon } from '@dxos/react-components';
 
 interface PartySelectProps {
   parties: PartyProxy[] // TODO(burdon): Keys?
@@ -27,7 +29,10 @@ export const PartySelect = ({ parties, selected, onChange }: PartySelectProps) =
       >
         {parties.map(party => (
           <MenuItem key={party.key.toHex()} value={party.key.toHex()}>
-            {party.key.toHex()}
+            <Box sx={{ display: 'flex' }}>
+              <HashIcon value={party.key.toHex()} />
+              <Typography variant='h6' sx={{ marginLeft: 2 }}>{truncateString(party.key.toHex(), 8)}</Typography>
+            </Box>
           </MenuItem>
         ))}
       </Select>

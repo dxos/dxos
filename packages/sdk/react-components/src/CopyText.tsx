@@ -13,11 +13,11 @@ import { CopyToClipboard } from './CopyToClipboard';
 export interface CopyTextProps extends TypographyProps {
   value?: string
   length?: number
+  monospace?: boolean
   onCopyToClipboard?: (text: string) => void
 }
 
-export const CopyText = ({ value, length, sx, onCopyToClipboard, ...rest }: CopyTextProps) => {
-  // TODO(burdon): Only expand to limit of div.
+export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, variant, ...rest }: CopyTextProps) => {
   return (
     <Box sx={{
       display: 'flex',
@@ -29,13 +29,16 @@ export const CopyText = ({ value, length, sx, onCopyToClipboard, ...rest }: Copy
         sx={{
           overflow: 'hidden',
           textOverflow: 'ellipsis',
+          fontFamily: monospace ? 'monospace' : '',
           ...sx
         }}
+        variant={variant}
         title={value}
         {...rest}
       >
         {length ? truncateString(value, length) : value}
       </Typography>
+
       {value && (
         <>
           <Box sx={{ flex: 1 }} />

@@ -3,7 +3,7 @@
 //
 
 import defaultsDeep from 'lodash.defaultsdeep';
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { colors, createTheme as createMuiTheme, CssBaseline, ThemeProvider } from '@mui/material';
 
@@ -43,7 +43,7 @@ export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defa
  * @deprecated
  */
 // TODO(burdon): Remove.
-export const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
+export const ReactUXTheme = ({ children, base }: { base: any; children: ReactNode }) => (
   <ThemeProvider theme={createTheme(base)}>
     <CssBaseline />
     {children}

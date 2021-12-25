@@ -8,7 +8,7 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateString } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
-import { CopyText } from '@dxos/react-components';
+import { CopyText, HashIcon } from '@dxos/react-components';
 
 import { SubscribeToPartiesResponse } from '../proto';
 import { BooleanIcon } from './BooleanIcon';
@@ -39,7 +39,8 @@ export const PartyTable = ({ parties }: PartyTableProps) => {
     >
       <TableHead>
         <TableRow>
-          <TableCell>Key</TableCell>
+          <TableCell sx={{ width: 40 }} />
+          <TableCell>Party Key</TableCell>
           <TableCell sx={{ width: 40 }}>Open</TableCell>
           <TableCell sx={{ width: 40 }}>Active</TableCell>
           <TableCell sx={{ width: 40 }}>Feeds</TableCell>
@@ -50,8 +51,11 @@ export const PartyTable = ({ parties }: PartyTableProps) => {
         {parties.map(({ key, isOpen, isActive, feedKeys, timeframe }) => {
           return (
             <TableRow key={key}>
+              <TableCell>
+                <HashIcon value={key!} />
+              </TableCell>
               <TableCell title={key}>
-                <CopyText sx={{ fontFamily: 'monospace' }} value={key} length={8} />
+                <CopyText monospace variant='h6' value={key} length={8} />
               </TableCell>
               <TableCell align='center'>
                 <BooleanIcon value={isOpen} />

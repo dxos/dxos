@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material';
 
@@ -33,7 +33,7 @@ const theme = createTheme({
 });
 
 // TODO(burdon): Add theme as decorator.
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => (
+export const ThemeProvider = ({ children }: { children: ReactNode }) => (
   <MuiThemeProvider theme={theme}>
     {children}
   </MuiThemeProvider>

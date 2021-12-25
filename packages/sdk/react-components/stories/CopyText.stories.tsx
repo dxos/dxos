@@ -23,8 +23,8 @@ export const Primary = () => {
       <Box sx={{ padding: 1 }}>
         <Box sx={{ width: 240 }}>
           <CopyText value='Text' />
-          <CopyText value={key} sx={{ fontFamily: 'monospace' }} color={theme.palette.primary.main} />
-          <CopyText value={key} sx={{ fontFamily: 'monospace' }} length={8} />
+          <CopyText value={key} monospace color={theme.palette.primary.main} />
+          <CopyText value={key} monospace variant='h6' length={8} />
         </Box>
         <Divider />
         <TextField
@@ -40,10 +40,10 @@ export const Primary = () => {
         padding: 1
       }}>
         <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
-          <CopyText value='hello' sx={{ fontFamily: 'monospace' }} />
+          <CopyText value='hello' monospace />
         </Box>
         <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
-          <CopyText value={key} sx={{ fontFamily: 'monospace' }} />
+          <CopyText value={key} monospace />
         </Box>
       </Box>
     </Container>

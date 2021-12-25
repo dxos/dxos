@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -10,7 +10,7 @@ import { FullScreen } from '@dxos/react-components';
 
 import { ErrorBoundary } from '../../src';
 
-export const Container = ({ children }: { children: React.ReactNode }) => (
+export const Container = ({ children }: { children: ReactNode }) => (
   <FullScreen style={{ backgroundColor: '#EEE' }}>
     <ErrorBoundary>
       <Box

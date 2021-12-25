@@ -86,23 +86,37 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     client.registerModel(TextModel);
     client.registerModel(MessengerModel);
 
+    // Create party.
     const party = await client.echo.createParty();
-    const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
-    await root.model.setProperty('name', 'root');
+    const root = await party.database.createItem({
+      model: ObjectModel, type: 'example:type.root'
+    });
+    await root.model.setProperty('title', 'root');
 
     // Objects.
-    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
-    const child = await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
+    await party.database.createItem({
+      model: ObjectModel, type: 'example:type.object', parent: root.id
+    });
+    const child = await party.database.createItem({
+      model: ObjectModel, type: 'example:type.object', parent: root.id
+    });
 
     // Test.
-    const text = await party.database.createItem({ model: TextModel, type: 'example:type.text', parent: child.id });
-    await text.model.insert(0, 'Hello world');
+    // TODO(burdon): RangeError: index out of range: 13 + 49 > 34
+    //   Related to renaming of model DXN?
+    const text = await party.database.createItem({
+      model: TextModel, type: 'example:type.text', parent: child.id
+    });
+    // TODO(burdon): Constantly increasing mutations.
+    // await text.model.insert(0, 'Hello world');
 
     // Messenger.
-    const messenger = await party.database.createItem({ model: MessengerModel, type: 'example:type.messenger', parent: child.id });
+    const messenger = await party.database.createItem({
+      model: MessengerModel, type: 'example:type.messenger', parent: child.id
+    });
     await messenger.model.sendMessage({
       text: 'Hello world',
-      sender: 'Test'
+      sender: 'Test' // TODO(burdon): Key?
     });
   };
 
@@ -122,10 +136,18 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
             anchorEl={menuAnchorEl}
             onClose={() => setMenuAnchorEl(null)}
           >
-            <MenuItem onClick={() => {
-              setMenuAnchorEl(null);
-              setShowJoinParty(true);
-            }}>
+            <MenuItem
+disabled={!profile} onClick={() => {
+  setMenuAnchorEl(null);
+  void handleTestData();
+}}>
+              Generate Test Data
+            </MenuItem>
+            <MenuItem
+disabled={!profile} onClick={() => {
+  setMenuAnchorEl(null);
+  setShowJoinParty(true);
+}}>
               Join Party
             </MenuItem>
           </Menu>
@@ -142,9 +164,12 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
         }}>
           <Card sx={{ margin: 1 }}>
             <CardActions>
-              <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile}>Profile</Button>
-              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>Party</Button>
-              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleTestData}>Test Data</Button>
+              <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile} variant='outlined'>
+                Profile
+              </Button>
+              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>
+                Party
+              </Button>
               <Box sx={{ flex: 1 }} />
               <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
                 <MenuIcon />
@@ -162,7 +187,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
                     id='model-select'
                     label='Model'
                     variant='standard'
-                    value={model}
+                    value={model || ''}
                     onChange={handleModelChange}
                   >
                     {Object.keys(modelTypes).map((model) => (

@@ -18,7 +18,7 @@ import { useParties, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
-import { PartySelect } from '../components';
+import { Panel, PartySelect } from '../components';
 
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select(selection => selection.children().items as Item<any>[]), [item]) ?? [];
@@ -45,15 +45,13 @@ export const ItemsPanel = () => {
   ) ?? [];
 
   return (
-    <Box>
-      <Box padding={1}>
-        <PartySelect
-          parties={parties}
-          selected={selectedParty}
-          onChange={setSelectedParty}
-        />
-      </Box>
-
+    <Panel controls={(
+      <PartySelect
+        parties={parties}
+        selected={selectedParty}
+        onChange={setSelectedParty}
+      />
+    )}>
       <Box display='flex'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
@@ -77,7 +75,7 @@ export const ItemsPanel = () => {
           {selectedItem && <ItemDetails item={selectedItem} />}
         </Box>
       </Box>
-    </Box>
+    </Panel>
   );
 };
 
@@ -112,6 +110,7 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
         </tr>
       </tbody>
     </table>
+
     <JsonTreeView data={modelToObject(item.model)} />
   </Box>
 );

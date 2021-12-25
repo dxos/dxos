@@ -30,6 +30,19 @@ export const theme = createTheme({
       defaultProps: {
         disableRipple: true
       }
+    },
+    MuiToolbar: {
+      defaultProps: {
+        disableGutters: true,
+        variant: 'dense'
+      },
+      styleOverrides: {
+        root: {
+          '.MuiButton-root': {
+            margin: '0 4px'
+          }
+        }
+      }
     }
   }
 });

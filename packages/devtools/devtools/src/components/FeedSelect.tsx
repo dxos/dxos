@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
+import { truncateString } from '@dxos/debug';
 
 interface FeedSelectProps {
   keys: PublicKey[]
@@ -27,7 +28,7 @@ export const FeedSelect = ({ keys, selected, onChange }: FeedSelectProps) => {
       >
         {keys?.map(key => (
           <MenuItem key={key.toHex()} value={key.toHex()}>
-            {key.toHex()}
+            <Typography variant='h6'>{truncateString(key.toHex(), 8)}</Typography>
           </MenuItem>
         ))}
       </Select>

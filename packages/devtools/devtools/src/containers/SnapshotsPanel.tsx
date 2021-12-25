@@ -4,14 +4,14 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, Toolbar } from '@mui/material';
+import { Button, Toolbar } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { PartySnapshot } from '@dxos/echo-protocol';
 import { useClient, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { PartySelect } from '../components';
+import { Panel, PartySelect } from '../components';
 
 export const SnapshotsPanel = () => {
   const parties = useParties();
@@ -43,32 +43,23 @@ export const SnapshotsPanel = () => {
   };
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      overflow: 'hidden'
-    }}>
-      <Box>
-        <Toolbar variant='dense' disableGutters>
-          <Button onClick={handleSaveSnapshot} disabled={!selectedParty}>Save Snapshot</Button>
+    <Panel controls={(
+      <>
+        <Toolbar>
+          <Button variant='outlined' onClick={handleSaveSnapshot} disabled={!selectedParty}>Save Snapshot</Button>
           <Button onClick={handleClearSnapshots}>Delete Snapshots</Button>
         </Toolbar>
-        <Box padding={1}>
-          <PartySelect
-            parties={parties}
-            selected={selectedParty}
-            onChange={handlePartyChange}
-          />
-        </Box>
-      </Box>
-
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <JsonTreeView
-          size='small'
-          data={snapshot}
+        <PartySelect
+          parties={parties}
+          selected={selectedParty}
+          onChange={handlePartyChange}
         />
-      </Box>
-    </Box>
+      </>
+    )}>
+      <JsonTreeView
+        size='small'
+        data={snapshot}
+      />
+    </Panel>
   );
 };

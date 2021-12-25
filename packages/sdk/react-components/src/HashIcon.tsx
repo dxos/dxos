@@ -30,7 +30,7 @@ import {
   LocalFlorist as FlowerIcon,
   BeachAccess as Umbrella
 } from '@mui/icons-material';
-import { Box, colors } from '@mui/material';
+import { colors } from '@mui/material';
 
 // https://mui.com/components/material-icons
 const hashIcons = [
@@ -104,8 +104,8 @@ export const HashIcon = ({
   const title = `${color[1]} ${icon[1]}`;
 
   return (
-    <Box title={title}>
+    <div style={{ display: 'flex' }} title={title}>
       <Icon sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }} {...props} />
-    </Box>
+    </div>
   );
 };

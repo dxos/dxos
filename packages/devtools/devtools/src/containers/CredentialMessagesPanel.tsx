@@ -4,13 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
-
 import { PartyProxy } from '@dxos/client';
 import { useClient, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { PartySelect } from '../components';
+import { Panel, PartySelect } from '../components';
 import { useStream } from '../hooks';
 
 export const CredentialMessagesPanel = () => {
@@ -25,26 +23,17 @@ export const CredentialMessagesPanel = () => {
   );
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      overflow: 'hidden'
-    }}>
-      <Box padding={1}>
-        <PartySelect
-          parties={parties}
-          selected={selectedParty}
-          onChange={setSelectedParty}
-        />
-      </Box>
-
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <JsonTreeView
-          size='small'
-          data={result?.messages}
-        />
-      </Box>
-    </Box>
+    <Panel controls={(
+      <PartySelect
+        parties={parties}
+        selected={selectedParty}
+        onChange={setSelectedParty}
+      />
+    )}>
+      <JsonTreeView
+        size='small'
+        data={result?.messages}
+      />
+    </Panel>
   );
 };
