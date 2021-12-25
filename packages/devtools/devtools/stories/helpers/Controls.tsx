@@ -13,17 +13,12 @@ import {
   Button,
   Card,
   CardActions,
-  CardContent,
-  FormControl,
   IconButton,
-  InputLabel,
   Menu,
-  MenuItem,
-  Select,
-  SelectChangeEvent
+  MenuItem
 } from '@mui/material';
 
-import { Client, clientServiceBundle } from '@dxos/client';
+import { clientServiceBundle } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
@@ -32,7 +27,6 @@ import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
 import { PartyCard } from './PartyCard';
-import { ModelType, modelTypes } from './models';
 
 /**
  * Devtools playground control.
@@ -40,7 +34,6 @@ import { ModelType, modelTypes } from './models';
  * @constructor
  */
 export const Controls = ({ port }: { port?: RpcPort }) => {
-  const [model, setModel] = useState<ModelType>();
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
@@ -67,19 +60,6 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
 
   const handleCreateParty = () => {
     void client.echo.createParty();
-  };
-
-  const handleModelChange = (event: SelectChangeEvent) => {
-    setModel(event.target.value as ModelType);
-  };
-
-  const handleRegisterModel = (client: Client, modelType: ModelType | undefined) => {
-    const { model } = (modelType && modelTypes[modelType]) || {};
-    if (model) {
-      return client.registerModel(model);
-    }
-
-    setModel(undefined);
   };
 
   const handleTestData = async () => {
@@ -136,17 +116,21 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
             onClose={() => setMenuAnchorEl(null)}
           >
             <MenuItem
-disabled={!profile} onClick={() => {
-  setMenuAnchorEl(null);
-  void handleTestData();
-}}>
+              disabled={!profile}
+              onClick={() => {
+                setMenuAnchorEl(null);
+                void handleTestData();
+              }}
+            >
               Generate Test Data
             </MenuItem>
             <MenuItem
-disabled={!profile} onClick={() => {
-  setMenuAnchorEl(null);
-  setShowJoinParty(true);
-}}>
+              disabled={!profile}
+              onClick={() => {
+                setMenuAnchorEl(null);
+                setShowJoinParty(true);
+              }}
+            >
               Join Party
             </MenuItem>
           </Menu>
@@ -174,34 +158,6 @@ disabled={!profile} onClick={() => {
                 <MenuIcon />
               </IconButton>
             </CardActions>
-
-            <CardContent>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'end'
-              }}>
-                <FormControl fullWidth variant='standard'>
-                  <InputLabel id='model-select'>Model</InputLabel>
-                  <Select
-                    id='model-select'
-                    label='Model'
-                    variant='standard'
-                    value={model || ''}
-                    onChange={handleModelChange}
-                  >
-                    {Object.keys(modelTypes).map((model) => (
-                      <MenuItem key={model} value={model}>{model}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <Box>
-                  <IconButton size='small' onClick={() => handleRegisterModel(client, model)}>
-                    <AddIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </CardContent>
           </Card>
         </Box>
 

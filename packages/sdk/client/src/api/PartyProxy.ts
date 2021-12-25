@@ -107,7 +107,7 @@ export class PartyProxy {
     return this.setProperty(PARTY_TITLE_PROPERTY, title);
   }
 
-  async setProperty (key: string, value?: string) {
+  async setProperty (key: string, value?: any) {
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
     const item = this.getPropertiesItem();
     await item.model.setProperty(key, value);

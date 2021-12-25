@@ -31,6 +31,7 @@ export class ModelFactory {
     return Array.from(this._models.values());
   }
 
+  // TODO(burdon): Test if already registered.
   registerModel (constructor: ModelConstructor<any>): this {
     validateModelClass(constructor);
     const { meta } = constructor;

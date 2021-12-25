@@ -89,29 +89,33 @@ interface ItemDetailsProps {
 }
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <Box>
+  <Box sx={{
+    '& td': {
+      verticalAlign: 'top'
+    }
+  }}>
     <table>
       <tbody>
         <tr>
-          <td style={{ width: 120 }}>ID</td>
+          <td style={{ width: 100 }}>ID</td>
           <td>{truncateString(item.id, 8)}</td>
+        </tr>
+        <tr>
+          <td>Model</td>
+          <td>{item.model.modelMeta.type}</td>
         </tr>
         <tr>
           <td>Type</td>
           <td>{item.type}</td>
         </tr>
         <tr>
-          <td>Model type</td>
-          <td>{item.model.modelMeta.type}</td>
-        </tr>
-        <tr>
-          <td>Model class</td>
-          <td>{Object.getPrototypeOf(item.model).constructor.name}</td>
+          <td>Properties</td>
+          <td>
+            <JsonTreeView data={modelToObject(item.model)} />
+          </td>
         </tr>
       </tbody>
     </table>
-
-    <JsonTreeView data={modelToObject(item.model)} />
   </Box>
 );
 

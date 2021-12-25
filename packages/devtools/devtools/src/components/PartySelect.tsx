@@ -31,7 +31,9 @@ export const PartySelect = ({ parties, selected, onChange }: PartySelectProps) =
           <MenuItem key={party.key.toHex()} value={party.key.toHex()}>
             <Box sx={{ display: 'flex' }}>
               <HashIcon value={party.key.toHex()} />
-              <Typography variant='h6' sx={{ marginLeft: 2 }}>{truncateString(party.key.toHex(), 8)}</Typography>
+              <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
+                {truncateString(party.key.toHex(), 8)}
+              </Typography>
             </Box>
           </MenuItem>
         ))}

@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
+import { useClient } from '@dxos/react-client';
 import { CopyText, HashIcon } from '@dxos/react-components';
 import { PartySharingDialog } from '@dxos/react-framework';
 
@@ -38,6 +39,7 @@ import { ModelType, modelTypes } from './models';
  * @constructor
  */
 export const PartyCard = ({ party }: { party: PartyProxy }) => {
+  const client = useClient();
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [partySharing, setPartySharing] = useState(false);
   const [itemModel, setItemModel] = useState<ModelType | undefined>();
@@ -62,7 +64,12 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   };
 
   const handleSetPartyProperty = (party: PartyProxy) => {
-    void party.setProperty(propertyKey, propertyValue);
+    const intValue: number = parseInt(propertyValue);
+    if (!isNaN(intValue)) {
+      void party.setProperty(propertyKey, intValue);
+    } else {
+      void party.setProperty(propertyKey, propertyValue);
+    }
   };
 
   const handleItemModelChange = (event: SelectChangeEvent) => {
@@ -70,7 +77,8 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   };
 
   const handleCreateItem = (party: PartyProxy) => {
-    const { createItem } = (itemModel && modelTypes[itemModel]) || {};
+    const { model, createItem } = (itemModel && modelTypes[itemModel]) || {};
+    client.registerModel(model); // TODO(burdon): Test if already registered.
     if (createItem) {
       createItem(party);
     }
@@ -171,7 +179,7 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
               </Select>
             </FormControl>
             <Box>
-              <IconButton size='small' onClick={() => handleCreateItem(party)}>
+              <IconButton size='small' title='Create item' onClick={() => handleCreateItem(party)}>
                 <RegisterIcon />
               </IconButton>
             </Box>

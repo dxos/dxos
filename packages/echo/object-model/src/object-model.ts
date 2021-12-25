@@ -67,7 +67,6 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     await receipt.waitToBeProcessed();
   }
 
-  // TODO(burdon): Create builder pattern (replace static methods).
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [

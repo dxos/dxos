@@ -28,7 +28,9 @@ export const FeedSelect = ({ keys, selected, onChange }: FeedSelectProps) => {
       >
         {keys?.map(key => (
           <MenuItem key={key.toHex()} value={key.toHex()}>
-            <Typography variant='h6'>{truncateString(key.toHex(), 8)}</Typography>
+            <Typography variant='h6' sx={{ fontFamily: 'monospace' }}>
+              {truncateString(key.toHex(), 8)}
+            </Typography>
           </MenuItem>
         ))}
       </Select>
