@@ -63,7 +63,9 @@ export const PartyTable = ({ parties }: PartyTableProps) => {
                 {feedKeys}
               </TableCell>
               <TableCell monospace>
-                <TimeFrame value={timeframe as any} />
+                {timeframe && (
+                  <TimeFrame value={timeframe as any} />
+                )}
               </TableCell>
             </TableRow>
           );

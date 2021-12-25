@@ -12,7 +12,7 @@ import { Message, schema } from './proto';
  */
 export class MessengerModel extends Model<Message> {
   static meta: ModelMeta = {
-    type: 'dxos:model.messenger',
+    type: 'dxos:model/messenger',
     mutation: schema.getCodecForType('dxos.model.messenger.Message')
   };
 

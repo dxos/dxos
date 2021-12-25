@@ -41,10 +41,9 @@ import { ModelType, modelTypes } from './models';
 export const PartyCard = ({ party }: { party: PartyProxy }) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [partySharing, setPartySharing] = useState(false);
-  const [title, setTitle] = useState('');
+  const [itemModel, setItemModel] = useState<ModelType | undefined>();
   const [propertyKey, setPropertyKey] = useState('');
   const [propertyValue, setPropertyValue] = useState('');
-  const [itemModel, setItemModel] = useState<ModelType | undefined>();
 
   const handlePartyOpenToggle = (party: PartyProxy) => {
     void (party.isOpen ? party.close() : party.open());
@@ -53,14 +52,6 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   const handlePartyActiveToggle = (party: PartyProxy) => {
     const options = { global: true };
     void (party.isActive ? party.deactivate(options) : party.activate(options));
-  };
-
-  const handlePartyTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
-  };
-
-  const handleSetPartyTitle = (party: PartyProxy) => {
-    void party.setTitle(title);
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -124,25 +115,6 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
         <CardContent sx={{
           paddingTop: 1
         }}>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'end',
-            marginBottom: 2
-          }}>
-            <TextField
-              label='Title'
-              variant='standard'
-              fullWidth
-              value={title}
-              onChange={handlePartyTitleChange}
-            />
-            <Box>
-              <IconButton size='small' onClick={() => handleSetPartyTitle(party)}>
-                <AddIcon />
-              </IconButton>
-            </Box>
-          </Box>
-
           <Box sx={{
             display: 'flex',
             alignItems: 'end',

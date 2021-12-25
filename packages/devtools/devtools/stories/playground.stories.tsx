@@ -52,6 +52,15 @@ export const Primary = () => {
 
 export const Secondary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
+  const config = {
+    services: {
+      signal: {
+        // TODO(burdon): Fallback.
+        server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+        // server: 'ws://localhost:4000'
+      }
+    }
+  };
 
   return (
     <FullScreen sx={{ flexDirection: 'row' }}>
@@ -59,19 +68,7 @@ export const Secondary = () => {
         <DevTools port={devtoolsPort} />
       </Box>
 
-      <ClientProvider
-        config={
-          {
-            services: {
-              signal: {
-                // TODO(burdon): Move to config (overdependent on enterprise).
-                // server: 'wss://enterprise.kube.dxos.network/dxos/signal'
-                server: 'ws://localhost:4000'
-              }
-            }
-          }
-        }
-      >
+      <ClientProvider config={config}>
         <Box sx={{ display: 'flex', flexShrink: 0 }}>
           <Controls port={controlsPort} />
         </Box>

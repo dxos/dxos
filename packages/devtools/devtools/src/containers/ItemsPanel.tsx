@@ -9,6 +9,7 @@ import { TreeItem, TreeView } from '@mui/lab';
 import { Box, Typography } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
+import { truncateString } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
@@ -17,7 +18,7 @@ import { useParties, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
-import { PartySelect } from '../components';
+import { PartySelect, Table } from '../components';
 
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select(selection => selection.children().items as Item<any>[]), [item]) ?? [];
@@ -90,26 +91,29 @@ interface ItemDetailsProps {
 }
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <>
-    <div>
-      <Typography sx={{ fontWeight: 'bold' }}>Id</Typography>
-      <Typography>{item.id}</Typography>
-    </div>
-    <div>
-      <Typography sx={{ fontWeight: 'bold' }}>Type</Typography>
-      <Typography>{item.type}</Typography>
-    </div>
-    <div>
-      <Typography sx={{ fontWeight: 'bold' }}>Model DXN</Typography>
-      <Typography>{item.model.modelMeta.type}</Typography>
-    </div>
-    <div>
-      <Typography sx={{ fontWeight: 'bold' }}>Model class name</Typography>
-      <Typography>{Object.getPrototypeOf(item.model).constructor.name}</Typography>
-    </div>
-    <Typography sx={{ fontWeight: 'bold' }}>Model data</Typography>
+  <Box>
+    <table>
+      <tbody>
+        <tr>
+          <td style={{ width: 120 }}>ID</td>
+          <td>{truncateString(item.id, 8)}</td>
+        </tr>
+        <tr>
+          <td>Type</td>
+          <td>{item.type}</td>
+        </tr>
+        <tr>
+          <td>Model type</td>
+          <td>{item.model.modelMeta.type}</td>
+        </tr>
+        <tr>
+          <td>Model class</td>
+          <td>{Object.getPrototypeOf(item.model).constructor.name}</td>
+        </tr>
+      </tbody>
+    </table>
     <JsonTreeView data={modelToObject(item.model)} />
-  </>
+  </Box>
 );
 
 const modelToObject = (model: Model<any>) => {

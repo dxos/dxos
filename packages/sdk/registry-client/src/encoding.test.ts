@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { decodeExtensionPayload, encodeExtensionPayload } from './encoding';
 import { createCID, createMockTypes } from './testing';
 
-describe('record encoding', () => {
+describe('Record encoding', () => {
   const mockTypes = createMockTypes();
 
   const serviceType = mockTypes.find(type => type.messageName === 'dxos.type.Service') ?? raise(new Error());

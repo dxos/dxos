@@ -8,7 +8,7 @@ import * as protobuf from 'protobufjs';
 import { convertSchemaToDescriptor, loadSchemaFromDescriptor } from './encoding';
 import { schemaJson } from './proto/gen';
 
-describe('proto utils', () => {
+describe('Proto utils', () => {
   it('can convert schema to descriptor and back', () => {
     const root = protobuf.Root.fromJSON(schemaJson);
 
