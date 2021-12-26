@@ -60,8 +60,7 @@ const hashColors = [
   [colors.blue, 'blue'],
   [colors.green, 'green'],
   [colors.orange, 'orange'],
-  [colors.brown, 'brown'],
-  [colors.cyan, 'cyan']
+  [colors.brown, 'brown']
 ];
 
 const colorDepth = 500;
@@ -96,12 +95,11 @@ export const HashIcon = ({
   sx?: any,
   size?: Size
 }) => {
-  const num = hash(value);
-  const icon = hashIcons[num % hashIcons.length];
-  const color = hashColors[num % hashColors.length];
+  const icon = hashIcons[hash(value) % hashIcons.length];
+  const color = hashColors[hash(value) % hashColors.length];
 
   const Icon = icon[0];
-  const title = `${color[1]} ${icon[1]}`;
+  const title = `${color[1]}-${icon[1]}`;
 
   return (
     <div style={{ display: 'flex' }} title={title}>

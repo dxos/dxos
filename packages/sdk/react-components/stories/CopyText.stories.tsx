@@ -21,7 +21,7 @@ export const Primary = () => {
   return (
     <Container>
       <Box sx={{ padding: 1 }}>
-        <Box sx={{ width: 240 }}>
+        <Box sx={{ width: 300 }}>
           <CopyText value='Text' />
           <CopyText value={key} monospace color={theme.palette.primary.main} />
           <CopyText value={key} monospace variant='h6' length={8} />
