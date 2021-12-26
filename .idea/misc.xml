@@ -69,4 +69,7 @@
     </LinkMapSettings>
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.11 virtualenv at ~/projects/src/alienlaboratories/nx-frontend/tools/python" project-jdk-type="Python SDK" />
+  <component name="TaskProjectConfiguration">
+    <server type="GitHub" url="https://github.com" />
+  </component>
 </project>

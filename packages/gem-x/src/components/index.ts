@@ -3,5 +3,4 @@
 //
 
 export * from './FullScreen';
-export * from './Grid';
-export * from './SVG';
+export * from './SvgContainer';

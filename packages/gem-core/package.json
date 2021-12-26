@@ -19,10 +19,10 @@
     "src"
   ],
   "scripts": {
+    "book": "esbuild-server book",
     "build": "npm run clean && tsc --build",
     "clean": "rm -rf ./dist",
     "lint": "eslint --format codeframe './src/**/*.ts'",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
   },
   "browserslist": [
@@ -36,6 +36,9 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@dxos/esbuild-plugins": "^2.19.2",
+    "@dxos/esbuild-server": "^1.5.4",
+    "@emotion/styled": "^11.6.0",
     "@types/d3": "^6.3.0",
     "clsx": "^1.1.0",
     "d3": "^6.1.1",
@@ -46,7 +49,7 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
-    "@material-ui/core": "4.12.3",
+    "@mdx-js/react": "^1.6.22",
     "@storybook/addon-knobs": "6.3.1",
     "@storybook/react": "6.3.8",
     "@types/d3": "^6.3.0",
@@ -54,9 +57,6 @@
     "@types/faker": "^5.1.6",
     "@types/lodash": "^4.14.168",
     "@types/react": "^17.0.0",
-    "babel-loader": "^8.1.0",
-    "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-inline-import": "^3.0.0",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
     "faker": "^4.1.0",
@@ -67,7 +67,6 @@
     "typescript": "~4.0.2"
   },
   "peerDependencies": {
-    "@material-ui/core": "*",
     "react": "*",
     "react-dom": "*"
   },

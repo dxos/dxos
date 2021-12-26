@@ -5,17 +5,13 @@
 import React from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { withKnobs } from '@storybook/addon-knobs';
-
-import { FullScreen, SVG, Grid, useGrid } from '../src';
+import { FullScreen, Grid, SVG, useGrid } from '../src';
 
 export default {
-  title: 'Grid',
-  decorators: [withKnobs]
+  title: 'Grid'
 };
 
-// TODO(burdon): Name?
-export const withGrid = () => {
+export const Primary = () => {
   const [resizeListener, size] = useResizeAware();
   const grid = useGrid(size);
 

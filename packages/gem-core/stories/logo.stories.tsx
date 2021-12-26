@@ -5,37 +5,29 @@
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 import useResizeAware from 'react-resize-aware';
+import styled from '@emotion/styled'
 
-import { withKnobs } from '@storybook/addon-knobs';
-
-import { createPath, FullScreen, SVG } from '../src';
+import { createPath, FullScreen, Point, SVG } from '../src';
 
 export default {
-  title: 'Logos',
-  decorators: [withKnobs]
+  title: 'Logos'
 };
 
-import { makeStyles } from '@material-ui/core';
+import { DxosIconPath } from './icons';
 
-import { Point, FoldData } from '../src';
+const MeshGroup = styled.g`
+  stroke: #FCC;
+  stroke-width: .5;
+  fill: none;
+`;
 
-// https://www.w3.org/TR/SVG/propidx.html
-const useStyles = makeStyles(() => ({
-  mesh: {
-    stroke: '#FCC',
-    strokeWidth: .5,
-    fill: 'none',
-  },
+const LogoGroup = styled.g`
+  stroke: #333;
+  stroke-width: 2;
+  fill: #AAA;
+  fill-opacity: .1;
+`;
 
-  group: {
-    stroke: '#333',
-    strokeWidth: 2,
-    fill: '#AAA',
-    fillOpacity: .1
-  }
-}));
-
-// TODO(burdon): Create mesh.
 const mesh: any[] = [];
 for (let x = -10; x < 10; x++) {
   for (let y = -10; y < 10; y++) {
@@ -116,8 +108,7 @@ const points = [
   points2,
 ];
 
-export const withFold = () => {
-  const classes = useStyles();
+export const Icon = () => {
   const [resizeListener, size] = useResizeAware();
   const meshGroup = useRef(null);
   const logoGroup = useRef(null);
@@ -163,14 +154,14 @@ export const withFold = () => {
     <FullScreen>
       {resizeListener}
       <SVG width={size.width || 0} height={size.height || 0}>
-        <g ref={meshGroup} className={classes.mesh} />
-        <g ref={logoGroup} className={classes.group} />
+        <MeshGroup ref={meshGroup} />
+        <LogoGroup ref={logoGroup} />
       </SVG>
     </FullScreen>
   );
 };
 
-export const withLogo = () => {
+export const Spinner = () => {
   const [resizeListener, size] = useResizeAware();
   const group1 = useRef(null);
   const group2 = useRef(null);
@@ -180,19 +171,17 @@ export const withLogo = () => {
       return;
     }
 
-    // TODO(burdon): Import size.
-
     d3.select(group1.current)
       .attr('transform', 'translate(-128, -128)')
       .append('path')
-      .attr('d', FoldData)
+      .attr('d', DxosIconPath)
       .attr('fill', '#EEEEEE');
 
     d3.select(group2.current)
       .attr('transform-origin', '128 128')
       .attr('transform', 'translate(-128, -128)')
       .append('path')
-      .attr('d', FoldData)
+      .attr('d', DxosIconPath)
       .attr('fill', '#333333');
 
     const i = d3.interval(() => {
