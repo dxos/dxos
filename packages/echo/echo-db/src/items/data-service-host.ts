@@ -36,7 +36,7 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>
-  ) { }
+  ) {}
 
   /**
    * Returns a stream with a list of active entities in the party.

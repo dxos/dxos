@@ -12,7 +12,7 @@ import { ModelMeta } from '../types';
  */
 export class TestListModel extends Model<TestListMutation> {
   static meta: ModelMeta = {
-    type: 'dxn://dxos/model/test-list',
+    type: 'dxos:model/test-list',
     mutation: schema.getCodecForType('dxos.echo.testing.TestListMutation')
   };
 

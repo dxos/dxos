@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   ArrowUpward as UpIcon,
@@ -107,7 +107,7 @@ export interface DataCellProps {
   value: any
 }
 
-export const DefaultTableCell = ({ children }: { children: React.ReactNode }): JSX.Element => (
+export const DefaultTableCell = ({ children }: { children: ReactNode }): JSX.Element => (
   <Box
     sx={{
       display: 'flex',
