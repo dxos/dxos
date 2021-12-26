@@ -2296,6 +2296,7 @@ importers:
   ../../packages/sdk/registry-client:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.1
@@ -2318,7 +2319,6 @@ importers:
       bn.js: 4.12.0
       chai: ^4.3.4
       chai-as-promised: ^7.1.1
-      crypto: ^1.0.1
       faker: ^5.1.0
       fs-extra: ^8.1.0
       mocha: ~8.4.0
@@ -2328,6 +2328,7 @@ importers:
       typescript: ^4.5.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/util': link:../../common/util
       '@polkadot/api': 4.17.1
@@ -2338,7 +2339,6 @@ importers:
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
       bn.js: 4.12.0
-      crypto: 1.0.1
       faker: 5.5.3
       fs-extra: 8.1.0
       multihashes: 4.0.3
@@ -11549,11 +11549,6 @@ packages:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
     engines: {node: '>=8'}
     dev: true
-
-  /crypto/1.0.1:
-    resolution: {integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==}
-    deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
-    dev: false
 
   /css-blank-pseudo/0.1.4:
     resolution: {integrity: sha512-LHz35Hr83dnFeipc7oqFDmsjHdljj3TQtxGGiNWSOsTLIAubSm4TEz8qCaKFpk7idaQ1GfWscF4E6mgpBysA1w==}
