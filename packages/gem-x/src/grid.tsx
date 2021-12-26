@@ -2,8 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from "d3";
+import * as d3 from 'd3';
 
+/**
+ * Create grid based on size and current zoom transform.
+ * @param width
+ * @param height
+ * @param gridSize
+ * @param transform d3.zoom transform.
+ */
 const createGrid = ({ width, height, gridSize = 32 }, transform = undefined) => {
   const { x = 0, y = 0, k = 1 } = transform || {};
   const s = 1 / k;

@@ -2,13 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from "d3";
-import React, { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
-import { FullScreen, SvgContainer } from '../src';
-
 import {
+  FullScreen,
   GraphForceProjector,
   GraphRenderer,
   Part,
@@ -16,9 +15,13 @@ import {
   Scene,
   StatsProjector,
   StatsRenderer,
+  SvgContainer,
+  grid,
+} from '../src';
+
+import {
   TestModel,
   createModel,
-  grid,
   graphMapper,
   statsMapper,
   updateModel
@@ -28,8 +31,6 @@ export default {
   title: 'SVG'
 };
 
-// TODO(burdon): Stats renderer.
-// TODO(burdon): Pass groups to zoom.
 // TODO(burdon): Transitions (between scenes).
 
 /**
@@ -64,7 +65,7 @@ const style = css`
   g.stats {
     text {
       font-family: monospace;
-      font-size: 32px;
+      font-size: 24px;
       fill: #999;
     }
   }
@@ -108,7 +109,8 @@ export const Secondary = () => {
   const gridRef = useRef<SVGSVGElement>();
   const objectsRef = useRef<SVGSVGElement>();
   const statsRef = useRef<SVGSVGElement>();
-  const [scene, setScene] = useState<() => void>();
+  const model = useMemo(() => createModel(2), []);
+  const [scene, setScene] = useState<Scene<TestModel>>();
 
   useEffect(() => {
     const svg = ref.current;
@@ -122,7 +124,6 @@ export const Secondary = () => {
         new StatsRenderer(new Surface(svg, d3.select(statsRef.current).node())))
     ]);
 
-    const model = createModel(2);
     const interval = setInterval(() => {
       if (model.items.length < 200) {
         updateModel(model);
@@ -132,9 +133,7 @@ export const Secondary = () => {
 
     scene.start();
 
-    setScene(() => {
-      scene.update(model);
-    });
+    setScene(scene);
 
     return () => {
       clearInterval(interval);
@@ -143,18 +142,19 @@ export const Secondary = () => {
   }, [ref]);
 
   const handleResize = (({ width, height }) => {
-    scene?.();
+    scene.update(model);
 
     d3.select(gridRef.current)
       .call(grid({ width, height }));
 
     d3.select(ref.current)
       .call(zoom({ width, height }, (transform) => {
-        // Update grid.
+        // Transform grid.
         d3.select(gridRef.current).call(grid({ width, height }, transform));
-        // Update objects.
+        // Transform objects.
         d3.select(objectsRef.current).attr('transform', transform);
-      }));
+      }))
+      .on('dblclick.zoom', null); // TODO(burdon): Default handler throws error.
   });
 
   return (
@@ -173,3 +173,14 @@ export const Secondary = () => {
     </FullScreen>
   );
 }
+
+/*
+const simpleAPI = () => (
+  <SvgContainer>
+    <Grid zoom>
+      <Graph data={} /> // useSize(); useTransform();
+    </Grid>
+    <Stats />
+  </SvgContainer>
+)
+*/

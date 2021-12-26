@@ -48,6 +48,18 @@ export const createModel = (maxDepth = 4): TestModel => {
 export const updateModel = (model: TestModel) => {
   const parent = model.items[Math.floor(Math.random() * model.items.length)];
 
+  // TODO(burdon): Delete item.
+  if (Math.random() < 0.05) {
+    model.items = model.items.filter(n => n.id !== parent.id);
+    model.items.forEach(n => {
+      if (n.parent === parent.id) {
+        n.parent = undefined;
+      }
+    });
+
+    return;
+  }
+
   const id = `item-${faker.datatype.uuid()}`;
   parent.children.push(id);
 

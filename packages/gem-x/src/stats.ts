@@ -16,9 +16,7 @@ export class StatsRenderer extends Renderer<Stats> {
     const root = d3.select(this._surface.root);
 
     const { clientWidth: width, clientHeight: height } = d3.select(this._surface.svg).node();
-
-    const group = root.selectAll('text.stats').data([{ id: 'stats' }]).join('text').classed('stats', true);
-    group
+    root.selectAll('text.stats').data([{ id: 'stats' }]).join('text').classed('stats', true)
       .attr('x', 8 - width / 2)
       .attr('y', height / 2 - 16)
       .text(JSON.stringify(layout));

@@ -116,7 +116,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, Graph> {
       .force('charge', d3.forceManyBody()
         .distanceMax(250)
         .strength((d: GraphNode) => {
-          return -8 - (Math.log(d.data.children.length + 1) * 3);
+          return -15 - (Math.log(d.data.children.length + 1) * 3);
         }))
 
       .alpha(0.5)
