@@ -1371,10 +1371,6 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/end-of-stream': 1.4.1
-      '@types/pify': 3.0.2
-      '@types/pump': 1.1.1
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
       encoding-down: 6.3.0
@@ -1392,7 +1388,9 @@ importers:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/debug': 4.1.7
       '@types/encoding-down': 5.0.0
+      '@types/end-of-stream': 1.4.1
       '@types/expect': 24.3.0
       '@types/jest': 26.0.24
       '@types/json-stable-stringify': 1.0.33
@@ -1401,6 +1399,8 @@ importers:
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
+      '@types/pify': 3.0.2
+      '@types/pump': 1.1.1
       '@types/stream-to-array': 2.3.0
       expect: 27.0.6
       wait-for-expect: 3.0.2
@@ -8333,6 +8333,7 @@ packages:
     resolution: {integrity: sha512-dYCSlUtCGXuP2axeKD5l1vj/04iNXW8TLXryDa0uA8u8EsNE68jn27ZLg7jAPV+qJAlk1wC4WtRdIoZXvuUl0A==}
     dependencies:
       '@types/node': 14.18.0
+    dev: true
 
   /@types/eslint/7.29.0:
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -8602,6 +8603,7 @@ packages:
 
   /@types/pify/3.0.2:
     resolution: {integrity: sha512-a5AKF1/9pCU3HGMkesgY6LsBdXHUY3WU+I2qgpU0J+I8XuJA1aFr59eS84/HP0+dxsyBSNbt+4yGI2adUpHwSg==}
+    dev: true
 
   /@types/prettier/2.4.2:
     resolution: {integrity: sha512-ekoj4qOQYp7CvjX8ZDBgN86w3MqQhLE1hczEJbEIjgFEumDy+na/4AJAbLXfgEWFNB2pKadM5rPFtuSGMWK7xA==}
@@ -8613,6 +8615,7 @@ packages:
     resolution: {integrity: sha512-wpRerjHDxFBQ4r8XNv3xHJZeuqrBBoeQ/fhgkooV2F7KsPIYRROb/+f9ODgZfOEyO5/w2ej4YQdpPPXipT8DAA==}
     dependencies:
       '@types/node': 14.18.0
+    dev: true
 
   /@types/pumpify/1.4.1:
     resolution: {integrity: sha512-l7u/Dnh1OG9T7VH6TvulR0g8oE8hgIW5409mSUKi8Vxw2+JV18aTa06Sv5bvNjrD0zbsB/cuZ/iTFQgFNfzIuw==}
