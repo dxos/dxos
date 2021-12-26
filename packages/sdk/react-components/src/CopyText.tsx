@@ -42,11 +42,9 @@ export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, vari
       {value && (
         <>
           <Box sx={{ flex: 1 }} />
-          <Box sx={{ flexShrink: 0, width: 40, marginLeft: '2px' }}>
-            <IconButton>
-              <CopyToClipboard text={value} />
-            </IconButton>
-          </Box>
+          <IconButton sx={{ marginLeft: 1 }}>
+            <CopyToClipboard text={value} />
+          </IconButton>
         </>
       )}
     </Box>

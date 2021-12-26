@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 
@@ -26,8 +26,10 @@ export const Primary = () => {
         const value = PublicKey.random().toHex();
         return (
           <Box key={i} sx={{ display: 'flex' }}>
-            <HashIcon value={value} size='large' sx={{ marginRight: 1 }} />
-            <CopyText value={value} monospace length={16} sx={{ marginLeft: 1 }} />
+            <IconButton sx={{ marginRight: 1 }} disabled>
+              <HashIcon value={value} />
+            </IconButton>
+            <CopyText value={value} monospace length={16} />
           </Box>
         );
       })}
