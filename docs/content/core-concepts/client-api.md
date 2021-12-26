@@ -2,7 +2,8 @@
 title: DXOS Client
 ---
 
-This API reference documents the `Client` class. It's the main DXOS client object. Is the entrypoint to ECHO, HALO, DXNS.
+This API reference documents the `Client` class. 
+It's the main DXOS client object. Is the entrypoint to ECHO, HALO, DXNS.
 
 ## constructor
 
