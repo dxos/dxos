@@ -13,7 +13,7 @@ import {
 } from '../src';
 
 export default {
-  title: 'Grid'
+  title: 'gem-x/Grid'
 };
 
 /**

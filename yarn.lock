@@ -1710,10 +1710,10 @@
     tty-browserify "~0.0.1"
     util "~0.12.4"
 
-"@dxos/esbuild-server@^1.5.4":
-  version "1.5.4"
-  resolved "https://registry.yarnpkg.com/@dxos/esbuild-server/-/esbuild-server-1.5.4.tgz#f691670b7ee749bbbad2ff8005ad1a890868b1a0"
-  integrity sha512-W33JSqlBqXJX4AAwWV8voKwifBZ+yuUB3kd4Qn//wkBYxPBvKHgbGsuCQoz00d9cttwFfZpbV00OWcF9K/YvPQ==
+"@dxos/esbuild-server@^1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@dxos/esbuild-server/-/esbuild-server-1.6.1.tgz#9a591da5ae7dce16b7c457cf837a9a20444532b9"
+  integrity sha512-Sfvxdgfk5Fg8xpZj/EUQi/B6OUfMSm/1+wQljL1gL/yEmeurWTSjPHcLhE2Pn1LsBAkTNayQycvMklnHRFU4hw==
   dependencies:
     "@babel/core" "^7.16.5"
     "@mdx-js/esbuild" "^2.0.0-rc.1"
@@ -4696,11 +4696,6 @@
   version "5.1.6"
   resolved "https://registry.yarnpkg.com/@types/faker/-/faker-5.1.6.tgz#f029aaebfc2d7931a3d729c0888c15f0187d2453"
   integrity sha512-D+gfFWR/YCvlrYL8lgNZO1jKgIUW+cfhxsgMOqUMYwCI+tl0htD7vCCXp/oJsIxJpxuI7zqmo3gpVQBkFCM4iA==
-
-"@types/faker@^5.5.9":
-  version "5.5.9"
-  resolved "https://registry.yarnpkg.com/@types/faker/-/faker-5.5.9.tgz#588ede92186dc557bff8341d294335d50d255f0c"
-  integrity sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==
 
 "@types/geojson@*":
   version "7946.0.7"

@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@dxos/esbuild-plugins": "^2.19.2",
-    "@dxos/esbuild-server": "^1.5.4",
+    "@dxos/esbuild-server": "^1.6.1",
     "@emotion/styled": "^11.6.0",
     "@types/d3": "^6.3.0",
     "clsx": "^1.1.0",

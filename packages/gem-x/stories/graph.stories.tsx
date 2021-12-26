@@ -28,7 +28,7 @@ import {
 } from './helpers';
 
 export default {
-  title: 'SVG'
+  title: 'gem-x/Graph'
 };
 
 // TODO(burdon): Transitions (between scenes).
@@ -83,28 +83,6 @@ const style = css`
 `;
 
 export const Primary = () => {
-  const gridRef = useRef<SVGSVGElement>();
-
-  const handleResize = (({ width, height }) => {
-    d3.select(gridRef.current)
-      .call(grid({ width, height }));
-  });
-
-  return (
-    <FullScreen style={{
-      backgroundColor: '#F9F9F9'
-    }}>
-      <SvgContainer
-        className={style}
-        onResize={handleResize}
-      >
-        <g className='grid' ref={gridRef} />
-      </SvgContainer>
-    </FullScreen>
-  );
-}
-
-export const Secondary = () => {
   const ref = useRef<SVGSVGElement>();
   const gridRef = useRef<SVGSVGElement>();
   const objectsRef = useRef<SVGSVGElement>();

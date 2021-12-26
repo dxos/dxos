@@ -36,21 +36,18 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/esbuild-plugins": "^2.19.2",
-    "@dxos/esbuild-server": "^1.5.4",
+    "@emotion/css": "^11.7.1",
     "@emotion/styled": "^11.6.0",
-    "@types/faker": "^5.5.9",
     "csstype": "^3.0.10",
     "d3": "^7.2.1",
     "debug": "^4.1.1",
-    "faker": "^5.5.3",
     "immutability-helper": "^3.0.2",
-    "react-resize-aware": "3.1.1",
     "use-resize-observer": "^8.0.0"
   },
   "devDependencies": {
+    "@dxos/esbuild-plugins": "^2.19.2",
+    "@dxos/esbuild-server": "^1.6.1",
     "@dxos/eslint-plugin": "~1.0.10",
-    "@emotion/css": "^11.7.1",
     "@types/d3": "^6.3.0",
     "@types/debug": "^4.1.5",
     "@types/faker": "^5.1.6",
@@ -58,7 +55,7 @@
     "@types/react": "^17.0.0",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
-    "faker": "^4.1.0",
+    "faker": "^5.5.3",
     "jest": "^25.5.2",
     "react": "16.14.0",
     "react-dom": "16.14.0",
