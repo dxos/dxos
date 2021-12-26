@@ -4,16 +4,16 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Button, Toolbar } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
 import { PartySnapshot } from '@dxos/echo-protocol';
 import { useClient, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { PartySelect } from '../components';
+import { Panel, PartySelect } from '../components';
 
-export const SnapshotsViewer = () => {
+export const SnapshotsPanel = () => {
   const parties = useParties();
   const [selectedParty, setSelectedParty] = useState<PartyProxy>();
 
@@ -32,12 +32,10 @@ export const SnapshotsViewer = () => {
   };
 
   const handleSaveSnapshot = async () => {
-    if (!selectedParty) {
-      return;
+    if (selectedParty) {
+      const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
+      setSnapshot(result.snapshot);
     }
-
-    const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
-    setSnapshot(result.snapshot);
   };
 
   const handleClearSnapshots = async () => {
@@ -45,22 +43,23 @@ export const SnapshotsViewer = () => {
   };
 
   return (
-    <Box padding={2}>
-      <Box marginBottom={1}>
-        <Button onClick={handleSaveSnapshot}>Save Snapshot</Button>
-        <Button onClick={handleClearSnapshots}>Clear All Snapshots</Button>
-      </Box>
-      <PartySelect
-        parties={parties}
-        value={selectedParty}
-        onChange={handlePartyChange}
-      />
-      <Box marginTop={1}>
-        <JsonTreeView
-          size='small'
-          data={snapshot}
+    <Panel controls={(
+      <>
+        <Toolbar>
+          <Button variant='outlined' onClick={handleSaveSnapshot} disabled={!selectedParty}>Save Snapshot</Button>
+          <Button onClick={handleClearSnapshots}>Delete Snapshots</Button>
+        </Toolbar>
+        <PartySelect
+          parties={parties}
+          selected={selectedParty}
+          onChange={handlePartyChange}
         />
-      </Box>
-    </Box>
+      </>
+    )}>
+      <JsonTreeView
+        size='small'
+        data={snapshot}
+      />
+    </Panel>
   );
 };

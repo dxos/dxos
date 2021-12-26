@@ -12,7 +12,7 @@ import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container';
 export class InProcessBotContainer implements BotContainer {
   private readonly _bots = new Map<string, BotService>();
 
-  constructor (private readonly _createBot: () => BotService) { }
+  constructor (private readonly _createBot: () => BotService) {}
 
   readonly error = new Event<[id: string, error: Error]>();
   readonly exited = new Event<[id: string, status: BotExitStatus]>();

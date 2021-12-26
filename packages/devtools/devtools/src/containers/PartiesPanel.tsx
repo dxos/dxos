@@ -5,28 +5,22 @@
 import React from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
 
+import { PartyTable } from '../components';
 import { useStream } from '../hooks';
 
-export const PartiesViewer = () => {
+export const PartiesPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const result = useStream(() => devtoolsHost.SubscribeToParties({}));
   if (result === undefined || result.parties === undefined) {
-    return <div>Loading parties...</div>;
+    return null;
   }
 
-  const parties = result.parties.map(party => ({
-    ...party,
-    timeframe: party.timeframe?.toJSON()
-  }));
-
   return (
-    <JsonTreeView
-      size='small'
-      depth={4}
-      data={parties}
+    <PartyTable
+      // TODO(burdon): Type.
+      parties={result.parties as any}
     />
   );
 };

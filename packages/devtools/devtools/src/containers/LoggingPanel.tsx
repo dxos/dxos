@@ -8,7 +8,7 @@ import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
 
 import { useClient } from '@dxos/react-client';
 
-export const LoggingView = () => {
+export const LoggingPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const [enabled, setEnabled] = useState(false);
@@ -59,7 +59,7 @@ export const LoggingView = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', padding: 2 }}>
+    <Box sx={{ display: 'flex', padding: 1 }}>
       <TextField
         variant='outlined'
         value={namespaces}

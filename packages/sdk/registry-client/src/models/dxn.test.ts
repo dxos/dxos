@@ -3,38 +3,90 @@
 //
 
 import { expect } from 'chai';
-import { randomBytes } from 'crypto';
+
+import { randomBytes } from '@dxos/crypto';
 
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
 
-describe('Dxn', () => {
-  it('fromAddress', () => {
-    const key = DomainKey.random();
-
-    DXN.fromDomainKey(key, 'app');
-    DXN.fromDomainKey(key, 'app.test');
-    DXN.fromDomainKey(key, 'app-test');
-
-    expect(() => new DomainKey(randomBytes(24))).to.throw;
-    expect(() => DXN.fromDomainKey(key, 'app/test')).to.throw;
+describe('DXN', () => {
+  it('DomainKey', () => {
+    expect(() => new DomainKey(randomBytes(24))).to.throw();
   });
 
-  it('fromDomain', () => {
-    DXN.fromDomainName('dxos', 'app');
-    DXN.fromDomainName('dxos-test', 'app');
+  it('validateDomain', () => {
+    // Valid.
+    [
+      'dxos',
+      'dxos-prime',
+      'a-b-c-d'
+    ].forEach(domain => expect(DXN.validateDomain(domain), domain).length.greaterThanOrEqual(1));
 
-    expect(() => DXN.fromDomainName('dxos.test', 'app')).to.throw;
-    expect(() => DXN.fromDomainName('dxos/test', 'app')).to.throw;
-    expect(() => DXN.fromDomainName('~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5', 'app')).to.throw;
+    // Invalid.
+    [
+      '',
+      ' ',
+      'x y',
+      '4chan',
+      '-dxos',
+      'dxos-',
+      'foo--bar',
+      'c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
+    ].forEach(domain => expect(() => DXN.validateDomain(domain), domain).to.throw());
+  });
+
+  it('validateResource', () => {
+    // Valid.
+    [
+      'x',
+      'dxos',
+      'dxos.prime',
+      'a.b.c.d',
+      'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A123'
+    ].forEach(resource => expect(DXN.validateResource(resource), resource).length.greaterThanOrEqual(1));
+
+    // Invalid.
+    [
+      '',
+      ' ',
+      'x y',
+      '1000',
+      '4chan',
+      '-dxos',
+      'dxos-',
+      'foo--bar',
+      'foo.-bar',
+      'foo-.bar',
+      '.dxos',
+      'dxos.',
+      'foo..bar',
+      'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234',
+      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
+    ].forEach(resource => expect(() => DXN.validateResource(resource), resource).to.throw());
+  });
+
+  it('fromDomainKey', () => {
+    const key = DomainKey.random();
+    expect(DXN.fromDomainKey(key, 'dxos').key).not.to.be.undefined;
+  });
+
+  it('fromDomainName', () => {
+    expect(DXN.fromDomainName('dxos', 'app.test').domain).not.to.be.undefined;
   });
 
   it('parse', () => {
-    DXN.parse('dxos:app');
-    DXN.parse('dxos:app.test');
-    DXN.parse('~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:app.test');
+    // Valid.
+    [
+      'dxos:foo.bar',
+      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo.bar'
+    ].forEach(dxn => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
 
-    expect(() => DXN.parse('dxos.com:app.test')).to.throw;
-    expect(() => DXN.parse('foo')).to.throw;
+    // Invalid.
+    [
+      '',
+      'dxos',
+      'dxos:',
+      'dxos::foo.bar'
+    ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 });

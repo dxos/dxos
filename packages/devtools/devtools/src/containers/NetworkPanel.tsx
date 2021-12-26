@@ -27,7 +27,7 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
   };
 };
 
-export const SwarmGraph = () => {
+export const NetworkPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const [selectedTopic, setSelectedTopic] = useState<string>();
