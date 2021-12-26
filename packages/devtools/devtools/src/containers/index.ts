@@ -2,11 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './ConfigView';
-export * from './ItemsViewer';
-export * from './Keyring';
-export * from './LoggingView';
-export * from './Signal';
-export * from './StorageTab';
-export * from './SwarmDetails';
-export * from './SwarmGraph';
+export * from './ConfigPanel';
+export * from './CredentialMessagesPanel';
+export * from './FeedsPanel';
+export * from './ItemsPanel';
+export * from './KeyringPanel';
+export * from './LoggingPanel';
+export * from './NetworkPanel';
+export * from './PartiesPanel';
+export * from './SignalPanel';
+export * from './SnapshotsPanel';
+export * from './StoragePanel';
+export * from './SwarmPanel';

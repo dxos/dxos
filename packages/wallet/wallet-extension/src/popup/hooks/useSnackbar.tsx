@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { ReactNode, createContext, useContext, useState } from 'react';
 
 import { Snackbar, Alert as MuiAlert, AlertProps } from '@mui/material';
 
@@ -22,7 +22,7 @@ const UseSnackbar = createContext<((message: SnackbarMessage) => void) | undefin
 export const useSnackbar = () => useContext(UseSnackbar);
 
 // TODO(burdon): Rename MessageContextProvider.
-export const WithSnackbarContext = ({ children } : { children: React.ReactNode }) => {
+export const WithSnackbarContext = ({ children } : { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<SnackbarMessage | undefined>(undefined);
 

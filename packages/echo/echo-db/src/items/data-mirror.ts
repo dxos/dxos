@@ -29,18 +29,18 @@ export class DataMirror {
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
     private readonly _partkyKey: PublicKey
-  ) { }
+  ) {}
 
   open () {
     const entities = this._dataService.SubscribeEntitySet({ partyKey: this._partkyKey });
     entities.subscribe(
       async diff => {
         for (const addedEntitiy of diff.added ?? []) {
+          log(`Construct: ${JSON.stringify(addedEntitiy)}`);
+
           assert(addedEntitiy.itemId);
           assert(addedEntitiy.genesis);
           assert(addedEntitiy.genesis.modelType);
-
-          log(`Contstruct: ${JSON.stringify(addedEntitiy)}`);
 
           let entity: Entity<Model<any>>;
           if (addedEntitiy.genesis.link) {

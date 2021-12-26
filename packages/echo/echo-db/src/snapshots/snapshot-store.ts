@@ -50,7 +50,7 @@ export class SnapshotStore {
 
     try {
       const data = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
-      await pify(file.write.bind(file))(0, data);
+      await pify(file.write.bind(file))(0, Buffer.from(data));
     } finally {
       await pify(file.close.bind(file))();
     }

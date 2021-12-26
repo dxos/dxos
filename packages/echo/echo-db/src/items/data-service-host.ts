@@ -18,7 +18,7 @@ import {
   SubscribeEntityStreamResponse
 } from '@dxos/echo-protocol';
 
-import { EntitiyNotFoundError } from '../errors';
+import { EntityNotFoundError } from '../errors';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
@@ -36,7 +36,7 @@ export class DataServiceHost {
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>
-  ) { }
+  ) {}
 
   /**
    * Returns a stream with a list of active entities in the party.
@@ -67,17 +67,17 @@ export class DataServiceHost {
         const added = new Set<ItemID>();
         const deleted = new Set<ItemID>();
 
-        for (const entitiy of this._itemManager.entities.keys()) {
-          if (!trackedSet.has(entitiy)) {
-            added.add(entitiy);
-            trackedSet.add(entitiy);
+        for (const entity of this._itemManager.entities.keys()) {
+          if (!trackedSet.has(entity)) {
+            added.add(entity);
+            trackedSet.add(entity);
           }
         }
 
-        for (const entitiy of trackedSet) {
-          if (!this._itemManager.entities.has(entitiy)) {
-            deleted.add(entitiy);
-            trackedSet.delete(entitiy);
+        for (const entity of trackedSet) {
+          if (!this._itemManager.entities.has(entity)) {
+            deleted.add(entity);
+            trackedSet.delete(entity);
           }
         }
 
@@ -87,6 +87,7 @@ export class DataServiceHost {
         });
       };
 
+      update();
       return this._itemManager.debouncedItemUpdate.on(update);
     });
   }
@@ -100,14 +101,14 @@ export class DataServiceHost {
   subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
-      const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntitiyNotFoundError(request.itemId));
+      const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntityNotFoundError(request.itemId));
       const snapshot = this._itemDemuxer.createEntitySnapshot(entity);
 
-      log(`Entitiy stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
+      log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
       next({ snapshot });
 
       return this._itemDemuxer.mutation.on(mutation => {
-        log(`Entitiy stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
+        log(`Entity stream ${request.itemId}: ${JSON.stringify({ mutation })}`);
         next({
           mutation: {
             data: mutation.data,

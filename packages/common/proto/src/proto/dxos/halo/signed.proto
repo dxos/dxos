@@ -4,12 +4,13 @@
 
 syntax = "proto3";
 
+// TODO(burdon): Rename dxos.halo?
 package dxos.credentials;
 
 import "keys.proto";
 import "google/protobuf/any.proto";
 
-// TODO(burdon): Use default from codec-protobuf
+// TODO(burdon): Use default from codec-protobuf.
 message Message {
   required google.protobuf.Any payload = 1;
 }

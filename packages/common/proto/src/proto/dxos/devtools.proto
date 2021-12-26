@@ -8,7 +8,10 @@ package dxos.devtools;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "./echo/feed.proto";
+import "./echo/snapshot.proto";
 import "./halo/keys.proto";
+import "./halo/signed.proto";
 
 service DevtoolsHost {
   //
@@ -33,11 +36,23 @@ service DevtoolsHost {
 
   rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
 
+  rpc SubscribeToCredentialMessages(SubscribeToCredentialMessagesRequest) returns (stream SubscribeToCredentialMessagesResponse);
+
   //
   // ECHO
   //
 
+  rpc SubscribeToParties(SubscribeToPartiesRequest) returns (stream SubscribeToPartiesResponse);
+
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
+
+  rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
+
+  rpc SubscribeToFeed(SubscribeToFeedRequest) returns (stream SubscribeToFeedResponse);
+
+  rpc GetPartySnapshot(GetPartySnapshotRequest) returns (GetPartySnapshotResponse);
+  rpc SavePartySnapshot(SavePartySnapshotRequest) returns (SavePartySnapshotResponse);
+  rpc ClearSnapshots(ClearSnapshotsRequest) returns (google.protobuf.Empty);
 
   //
   // MESH
@@ -89,6 +104,14 @@ message SubscribeToKeyringKeysResponse {
   repeated KeyRecord keys = 1;
 }
 
+message SubscribeToCredentialMessagesRequest {
+  PubKey partyKey = 1;
+}
+
+message SubscribeToCredentialMessagesResponse {
+  repeated SignedMessage messages = 1;
+}
+
 message ResetStorageRequest {}
 
 message GetNetworkPeersRequest {
@@ -108,12 +131,74 @@ message GetNetworkPeersResponse {
   repeated PeerInfo peers = 1;
 }
 
+message SubscribeToPartiesRequest {}
+
+message SubscribeToPartiesResponse {
+  message PartyInfo {
+    string key = 1;
+    bool isOpen = 2;
+    bool isActive = 3;
+    int32 feedKeys = 4;
+    map<string, string> properties = 5;
+
+    TimeframeVector timeframe = 10;
+  }
+
+  repeated PartyInfo parties = 1;
+}
+
 message SubscribeToItemsRequest {}
 
 message SubscribeToItemsResponse {
   // JSON-encoded payload.
   string data = 1;
 }
+
+message SubscribeToFeedsRequest {}
+
+message SubscribeToFeedsResponse {
+  message Party {
+    PubKey key = 1;
+    repeated PubKey feeds = 2;
+  }
+
+  repeated Party parties = 1;
+}
+
+message SubscribeToFeedRequest {
+  PubKey partyKey = 1;
+  PubKey feedKey = 2;
+}
+
+message SubscribeToFeedResponse {
+  message EchoFeedBlock {
+    bytes key = 1;
+    int32 seq = 2;
+    bool sync = 3;
+    string path = 4;
+    FeedMessage data = 5;
+  }
+
+  repeated EchoFeedBlock blocks = 1;
+}
+
+message GetPartySnapshotRequest {
+  required PubKey partyKey = 1;
+}
+
+message GetPartySnapshotResponse {
+  PartySnapshot snapshot = 1;
+}
+
+message SavePartySnapshotRequest {
+  required PubKey partyKey = 1;
+}
+
+message SavePartySnapshotResponse {
+  PartySnapshot snapshot = 1;
+}
+
+message ClearSnapshotsRequest {}
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {

@@ -115,10 +115,25 @@ export class PartyInternal {
     return this._feedProvider;
   }
 
+  get timeframeUpdate (): Event<Timeframe> {
+    return this._partyCore.timeframeUpdate;
+  }
+
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
+  }
+
+  get partyInfo () {
+    return {
+      key: this.key.toHex(),
+      isOpen: this.isOpen,
+      isActive: this.isActive,
+      feedKeys: this._feedProvider.getFeedKeys().length,
+      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
+      properties: this.isOpen ? this.getPropertiesSet().getValue()[0]?.model.toObject() : undefined
+    };
   }
 
   /**

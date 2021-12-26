@@ -655,8 +655,6 @@ describe('ECHO', () => {
     expect(b.queryParties().value[0].isOpen).toBe(true);
   });
 
-  // TODO(burdon): Sporadically fails.
-  // https://github.com/dxos/echo/issues/391
   test('Setting title propagates to other devices AND other party members', async () => {
     // User creating the party.
     const a = new ECHO();

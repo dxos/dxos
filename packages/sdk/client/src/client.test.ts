@@ -118,6 +118,20 @@ describe('Client', () => {
 
         expect(item.model.getProperty('foo')).toEqual('bar');
       });
+
+      test('set party properties', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+        const party = await client.echo.createParty();
+        await party.open();
+
+        await party.setTitle('test-party');
+        const title = party.getProperty('title');
+        expect(title).toEqual('test-party');
+      });
     });
   }
 

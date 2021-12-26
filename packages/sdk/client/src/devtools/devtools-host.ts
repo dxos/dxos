@@ -9,8 +9,9 @@ import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
+import { subscribeToFeed, subscribeToFeeds } from './feeds';
 import { subscribeToItems } from './items';
-import { subscribeToKeyringKeys } from './keys';
+import { subscribeToCredentialMessages, subscribeToKeyringKeys } from './keys';
 import {
   getNetworkPeers,
   subscribeToNetworkTopics,
@@ -18,6 +19,7 @@ import {
   subscribeToSignalTrace,
   subscribeToSwarmInfo
 } from './network';
+import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties';
 import { resetStorage } from './storage';
 
 export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents) : DevtoolsHost => {
@@ -47,8 +49,29 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     SubscribeToKeyringKeys: () => {
       return subscribeToKeyringKeys(context);
     },
+    SubscribeToCredentialMessages: (request) => {
+      return subscribeToCredentialMessages(context, request);
+    },
+    SubscribeToParties: () => {
+      return subscribeToParties(context);
+    },
     SubscribeToItems: () => {
       return subscribeToItems(context);
+    },
+    SubscribeToFeeds: () => {
+      return subscribeToFeeds(context);
+    },
+    SubscribeToFeed: (request) => {
+      return subscribeToFeed(context, request);
+    },
+    GetPartySnapshot: async (request) => {
+      return getPartySnapshot(context, request);
+    },
+    SavePartySnapshot: async (request) => {
+      return savePartySnapshot(context, request);
+    },
+    ClearSnapshots: async () => {
+      await context.echo.snapshotStore.clear();
     },
     GetNetworkPeers: async (request) => {
       return getNetworkPeers(context, request);

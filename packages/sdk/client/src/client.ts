@@ -34,7 +34,6 @@ export const defaultTestingConfig: defs.Config = {
   }
 };
 
-// TODO(burdon): Add doc comment.
 export interface ClientOptions {
   /**
    * Only used when remote=true.
@@ -47,8 +46,10 @@ export interface ClientOptions {
  * An entrypoint to ECHO, HALO, MESH, and DXNS.
  */
 export class Client {
-  private readonly _config: Config;
+  // TODO(burdon): Update version from package.
+  public readonly version = '1.0.0';
 
+  private readonly _config: Config;
   private readonly _serviceProvider: ClientServiceProvider;
 
   // TODO(burdon): Why is this different from a service provider?

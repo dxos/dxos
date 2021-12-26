@@ -21,10 +21,6 @@ export class Timeframe {
     }
   }
 
-  frames (): [FeedKey, number][] {
-    return Array.from(this._frames.entries());
-  }
-
   get (key: FeedKey) {
     return this._frames.get(key);
   }
@@ -33,10 +29,17 @@ export class Timeframe {
     this._frames.set(key, value);
   }
 
+  // TODO(burdon): Change to getter.
+  frames (): [FeedKey, number][] {
+    return Array.from(this._frames.entries());
+  }
+
+  // TODO(burdon): Change to getter.
   size () {
     return this._frames.size;
   }
 
+  // TODO(burdon): Change to getter (empty).
   isEmpty () {
     return this.size() === 0;
   }
@@ -55,6 +58,13 @@ export class Timeframe {
    */
   totalMessages (): number {
     return Array.from(this._frames.values()).reduce((acc, seq) => acc + seq + 1, 0);
+  }
+
+  toJSON () {
+    return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
+      frames[key.humanize()] = seq;
+      return frames;
+    }, {});
   }
 
   toString () {

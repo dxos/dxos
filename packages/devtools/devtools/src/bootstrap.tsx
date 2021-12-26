@@ -5,7 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { CssBaseline, ThemeProvider, createTheme as createMuiTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider, colors, createTheme } from '@mui/material';
 
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -13,14 +13,35 @@ import { ClientProvider } from '@dxos/react-client';
 import { App } from './App';
 import { ErrorBoundary } from './components';
 
-const theme = createMuiTheme({
+export const theme = createTheme({
+  palette: {
+    primary: {
+      main: colors.blueGrey[500]
+    },
+    secondary: {
+      main: colors.teal[500]
+    }
+  },
   typography: {
-    fontSize: 11
+    fontSize: 12
   },
   components: {
     MuiButtonBase: {
       defaultProps: {
         disableRipple: true
+      }
+    },
+    MuiToolbar: {
+      defaultProps: {
+        disableGutters: true,
+        variant: 'dense'
+      },
+      styleOverrides: {
+        root: {
+          '.MuiButton-root': {
+            margin: '0 4px'
+          }
+        }
       }
     }
   }
@@ -33,6 +54,7 @@ export interface Shell {
 }
 
 export const initialize = (shell: Shell) => {
+  console.log(theme);
   shell.connect(client => {
     ReactDOM.render(
       <ErrorBoundary>

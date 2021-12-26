@@ -2,17 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createLinkedPorts, createRpcServer } from '@dxos/rpc';
+import { Event } from '@dxos/async';
+import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
 
-import { BotHandle } from '../bot-handle';
 import { schema } from '../proto/gen';
-import { BotPackageSpecifier, BotService } from '../proto/gen/dxos/bot';
-import { BotContainer } from './bot-container';
+import { BotService } from '../proto/gen/dxos/bot';
+import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container';
 
 export class InProcessBotContainer implements BotContainer {
-  constructor (private readonly _createBot: () => BotService) { }
+  private readonly _bots = new Map<string, BotService>();
 
-  async spawn (pkg: BotPackageSpecifier): Promise<BotHandle> {
+  constructor (private readonly _createBot: () => BotService) {}
+
+  readonly error = new Event<[id: string, error: Error]>();
+  readonly exited = new Event<[id: string, status: BotExitStatus]>();
+
+  async spawn ({ pkg, id }: SpawnOptions): Promise<RpcPort> {
     const [botHandlePort, botPort] = createLinkedPorts();
 
     const botService = this._createBot();
@@ -24,8 +29,26 @@ export class InProcessBotContainer implements BotContainer {
     });
     void rpc.open();
 
-    return new BotHandle(botHandlePort);
+    this._bots.set(id, botService);
+
+    return botHandlePort;
   }
 
-  killAll () {}
+  async kill (id: string) {
+    if (!this._bots.has(id)) {
+      throw new Error(`Bot ${id} not found`);
+    }
+
+    this._bots.delete(id);
+    this.exited.emit([id, {
+      code: null,
+      signal: null
+    }]);
+  }
+
+  killAll () {
+    for (const id of Array.from(this._bots.keys())) {
+      void this.kill(id);
+    }
+  }
 }

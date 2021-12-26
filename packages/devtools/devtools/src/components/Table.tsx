@@ -52,7 +52,8 @@ interface TableCellProps extends MuiTableCellProps {
 const StyledTableCell = styled(MuiTableCell, {
   shouldForwardProp: (prop) => prop !== 'monospace'
 })<TableCellProps>(({ monospace }) => ({
-  verticalAlign: 'top',
+  verticalAlign: 'center',
+  fontSize: 14,
   fontFamily: monospace ? 'monospace' : ''
 }));
 

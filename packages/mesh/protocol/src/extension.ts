@@ -7,7 +7,7 @@ import debug from 'debug';
 import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
+import { Codec, patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -25,6 +25,8 @@ import { keyToHuman } from './utils';
 const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
 
 const log = debug('dxos:protocol:extension');
+
+const kCodec = Symbol('nanomessage.codec');
 
 export interface ExtensionOptions {
   /**
@@ -52,7 +54,7 @@ export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<
  */
 export class Extension extends Nanomessage {
   public _name: any;
-  public codec: any;
+  public [kCodec]: Codec<any>;
   public on: any;
   public open: any;
   public request: any;
@@ -102,13 +104,13 @@ export class Extension extends Nanomessage {
 
     this._name = name;
 
-    this.codec = schema.getCodecForType('dxos.protocol.Message');
+    const codec = schema.getCodecForType('dxos.protocol.Message');
 
     if (userSchema) {
-      this.codec.addJson(userSchema);
+      codec.addJson(userSchema);
     }
 
-    this.codec = patchBufferCodec(this.codec);
+    this[kCodec] = patchBufferCodec(codec);
 
     this.on('error', (err: any) => log(err));
   }
@@ -355,8 +357,10 @@ export class Extension extends Nanomessage {
   private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
     if (typeof message === 'string') { // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
-    } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {
+    } else if (Buffer.isBuffer(message)) {
       return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else if (message instanceof Uint8Array) {
+      return { __type_url: 'dxos.protocol.Buffer', data: Buffer.from(message) };
     } else if (message == null) { // Apparently this is a use-case.
       return { __type_url: 'dxos.protocol.Buffer', data: message };
     } else {

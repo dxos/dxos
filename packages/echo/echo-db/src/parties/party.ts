@@ -30,10 +30,24 @@ export class Party {
   }
 
   /**
+   * Summary of a party which is useful for debugging.
+   */
+  get partyInfo () {
+    return this._internal.partyInfo;
+  }
+
+  /**
    * Event that is emitted when party state changes or metadata is updated.
    */
   get update () {
     return this._internal.update;
+  }
+
+  /**
+   * Event that is emitted when the party timeframe changes.
+   */
+  get timeframeUpdate () {
+    return this._internal.timeframeUpdate;
   }
 
   /**
@@ -57,6 +71,14 @@ export class Party {
    */
   get isActive () {
     return this._internal.isActive;
+  }
+
+  get feedProvider () {
+    return this._internal.feedProvider;
+  }
+
+  get processor () {
+    return this._internal.processor;
   }
 
   /**
@@ -186,5 +208,9 @@ export class Party {
    */
   async deactivate (options: ActivationOptions) {
     return this._internal.deactivate(options);
+  }
+
+  async createSnapshot () {
+    return this._internal.createSnapshot();
   }
 }

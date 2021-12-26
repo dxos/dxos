@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -41,6 +41,7 @@
     "level-js": "^5.0.2",
     "lodash.defaultsdeep": "^4.6.1",
     "memdown": "^5.1.0",
+    "readable-stream": "^3.6.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -54,6 +55,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
+    "@types/readable-stream": "^2.3.9",
     "@types/uuid": "~8.3.3",
     "expect": "~27.0.2",
     "mocha": "~8.4.0",

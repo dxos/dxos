@@ -23,7 +23,7 @@ import {
   Share as ShareIcon,
 } from '@mui/icons-material';
 
-import { PartySharingDialog } from '@dxos/react-framework'
+import { PartySharingDialog, SpawnBotDialog } from '@dxos/react-framework'
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';

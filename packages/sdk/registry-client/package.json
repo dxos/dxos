@@ -1,6 +1,6 @@
 {
   "name": "@dxos/registry-client",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "description": "DXNS API",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/util": "workspace:*",
     "@polkadot/api": "4.17.1",
@@ -36,7 +37,6 @@
     "@polkadot/util": "6.11.1",
     "@polkadot/util-crypto": "6.11.1",
     "bn.js": "4.12.0",
-    "crypto": "^1.0.1",
     "faker": "^5.1.0",
     "fs-extra": "^8.1.0",
     "multihashes": "^4.0.2",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/esbuild-server": "~1.7.1",
     "@dxos/toolchain-node-library": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",
