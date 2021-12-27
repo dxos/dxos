@@ -31,8 +31,8 @@ export const KeyTable = ({ keys }: KeyTableProps) => {
           <TableCell sx={{ width: 80 }}>Type</TableCell>
           <TableCell>Public Key</TableCell>
           <TableCell sx={{ width: 180 }}>Added</TableCell>
-          <TableCell>Ours</TableCell>
-          <TableCell>Trusted</TableCell>
+          <TableCell sx={{ width: 40 }}>Ours</TableCell>
+          <TableCell sx={{ width: 40 }}>Trusted</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -44,7 +44,7 @@ export const KeyTable = ({ keys }: KeyTableProps) => {
                 {keyTypeName(type)}
               </TableCell>
               <TableCell title={key}>
-                <CopyText sx={{ fontFamily: 'monospace' }} value={key} />
+                <CopyText monospace variant='h6' value={key} length={8} />
               </TableCell>
               <TableCell title={added}>
                 {moment(added).fromNow()}

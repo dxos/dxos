@@ -10,6 +10,7 @@ import { schema } from '../proto/gen';
 import { PartyService, ProfileService, SystemService } from '../proto/gen/dxos/client';
 import { DevtoolsHost } from '../proto/gen/dxos/devtools';
 
+// TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
 export interface ClientServices {
   SystemService: SystemService;
   ProfileService: ProfileService;

@@ -65,8 +65,6 @@ export const ClientProvider = ({
 
   // Async helpers.
   useEffect(() => {
-    printBanner();
-
     if (!client) {
       const done = async (client: Client) => {
         log(`Created client: ${client}`);
@@ -75,6 +73,7 @@ export const ClientProvider = ({
         }
         await onInitialize?.(client);
         setClient(client);
+        printBanner(client);
       };
 
       // TODO(burdon): Error handling.

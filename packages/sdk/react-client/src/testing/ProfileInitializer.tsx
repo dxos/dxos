@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 
 import { useClient, useProfile } from '../hooks';
 
@@ -11,7 +11,7 @@ import { useClient, useProfile } from '../hooks';
  * @deprecated
  */
 // TODO(burdon): Testing-only; replace with useTestProfile();
-export const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
+export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
 

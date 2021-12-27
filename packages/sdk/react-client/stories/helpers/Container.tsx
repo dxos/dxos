@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { styled } from '@mui/material';
 
@@ -19,7 +19,7 @@ const FullScreen = styled('div')({
   backgroundColor: '#EEE'
 });
 
-export const Container = ({ children }: { children: React.ReactNode }) => (
+export const Container = ({ children }: { children: ReactNode }) => (
   <FullScreen>
     <ThemeProvider>
       {children}
