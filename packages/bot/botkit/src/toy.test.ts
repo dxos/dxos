@@ -51,7 +51,7 @@ describe('In-Memory', () => {
       expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
     });
   });
 
@@ -98,7 +98,7 @@ describe('In-Memory', () => {
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
     });
   });
 });
@@ -155,7 +155,7 @@ describe('Node', () => {
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
       botContainer.killAll();
     });
   });

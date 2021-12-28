@@ -8,3 +8,4 @@ export * from './echo-selections';
 export * from './invitations';
 export * from './wns';
 export * from './util';
+export * from './bot-factory';
