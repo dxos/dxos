@@ -7,6 +7,10 @@ import { Timeframe } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
 export default {
+  'google.protobuf.Timestamp': {
+    encode: (value: number) => ({ seconds: value / 1000 }),
+    decode: (value: any) => +(value.seconds + '000')
+  },
   'dxos.echo.feed.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
@@ -24,10 +28,6 @@ export default {
   'dxos.halo.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
     decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
-  },
-  'google.protobuf.Timestamp': {
-    encode: (value: number) => ({ seconds: value / 1000 }),
-    decode: (value: any) => +(value.seconds + '000')
   },
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
     encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),

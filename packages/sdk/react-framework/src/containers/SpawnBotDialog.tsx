@@ -30,18 +30,18 @@ export const SpawnBotDialog = ({
   const client = useClient();
   const [botPath, setBotPath] = useState('./stories/bots/start-story-bot');
   const [processing, setProcessing] = useState(false);
-
   const botFactoryClient = useBotFactoryClient();
 
   const handleSpawnProcess = async (path: string) => {
     try {
-      assert(botFactoryClient, 'Bot factory client is not available');
+      assert(botFactoryClient, 'Bot factory client is not available.');
       setProcessing(true);
-      const botHandle = await botFactoryClient.spawn(
+      const botHandle = await botFactoryClient!.spawn(
         { localPath: path },
         client,
         party
       );
+
       onBotCreated(botHandle);
       onClose();
     } finally {

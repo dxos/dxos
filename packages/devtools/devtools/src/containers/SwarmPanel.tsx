@@ -14,10 +14,11 @@ export const SwarmPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const { data } = useStream(() => devtoolsHost.SubscribeToSwarmInfo({})) ?? {};
-  if (data?.length) {
+  if (!data?.length) {
     return null;
   }
 
+  // TODO(burdon): Requires cast despite subsitutions.
   return (
     <SwarmDetails swarms={data as SwarmInfo[]} />
   );
