@@ -9,8 +9,7 @@ import { Button, TextField } from '@mui/material';
 
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { PartyProxy } from '@dxos/client';
-import { useBotFactoryClient } from '@dxos/react-client';
-import { useClient } from '@dxos/react-client';
+import { useBotFactoryClient, useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';

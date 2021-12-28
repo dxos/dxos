@@ -84,10 +84,10 @@ export class BotFactoryClient {
     await this._rpc.open();
   }
 
-  stop () {
+  async stop () {
     this._rpc?.close();
     if (this._connectedTopic) {
-      this._networkManager.leaveProtocolSwarm(this._connectedTopic);
+      await this._networkManager.leaveProtocolSwarm(this._connectedTopic);
     }
   }
 
