@@ -16,25 +16,26 @@ export const FeedsPanel = () => {
   const parties = useParties();
   const [selectedParty, setSelectedParty] = useState<PartyProxy>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
-  const feeds = useStream(() => devtoolsHost.SubscribeToFeeds({}));
+  const { parties: remoteParties } = useStream(() => devtoolsHost.SubscribeToFeeds({})) ?? {};
   const partyFeeds = useMemo(
-    () => feeds?.parties?.find(({ key }) => selectedParty?.key && key?.equals(selectedParty.key))?.feeds ?? [],
-    [feeds, selectedParty]);
+    () => remoteParties?.find(({ key }) => selectedParty?.key && key?.equals(selectedParty.key))?.feeds ?? [],
+    [remoteParties, selectedParty]
+  );
 
   const devtoolsHost = client.services.DevtoolsHost;
 
   // TODO(wittjosiah): EchoFeedBlock.
   const [messages, setMessages] = useState<any[]>([]);
-  const feed = useStream(
+  const { blocks } = useStream(
     () => devtoolsHost.SubscribeToFeed({ partyKey: selectedParty?.key, feedKey: selectedFeed }),
     [selectedParty?.key, selectedFeed]
-  );
+  ) ?? {};
 
   useEffect(() => {
-    if (feed?.blocks) {
-      setMessages([...messages, ...feed.blocks]);
+    if (blocks) {
+      setMessages([...messages, ...blocks]);
     }
-  }, [feed?.blocks]);
+  }, [blocks]);
 
   const handlePartyChange = (party: PartyProxy | undefined) => {
     setSelectedParty(party);
