@@ -6,7 +6,7 @@
     <working-directory />
     <pass-parent-env>true</pass-parent-env>
     <ui />
-    <extra-mocha-options>-r ts-node/register/transpile-only</extra-mocha-options>
+    <extra-mocha-options>-r @swc-node/register</extra-mocha-options>
     <test-kind>DIRECTORY</test-kind>
     <test-directory />
     <recursive>false</recursive>
