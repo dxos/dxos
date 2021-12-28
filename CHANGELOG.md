@@ -1,5 +1,22 @@
 # Change Log
 
+### [2.19.4](https://www.github.com/dxos/protocols/compare/v2.19.3...v2.19.4) (2021-12-28)
+
+
+### Features
+
+* Devtools refresh ([#784](https://www.github.com/dxos/protocols/issues/784)) ([bda345d](https://www.github.com/dxos/protocols/commit/bda345d3b97084ae571774ad0f3634f4b2b957b0))
+* **esbuild-plugins:** Add buffer to node modules plugin ([#780](https://www.github.com/dxos/protocols/issues/780)) ([e19ce28](https://www.github.com/dxos/protocols/commit/e19ce289d16086be916e68be26f9ab6d6478821d))
+* Use swc instead of ts-node ([#772](https://www.github.com/dxos/protocols/issues/772)) ([aac2d72](https://www.github.com/dxos/protocols/commit/aac2d72394769b678943b16b6c211bceb05721ca))
+
+
+### Bug Fixes
+
+* add npm url to config. ([#790](https://www.github.com/dxos/protocols/issues/790)) ([3bfecc0](https://www.github.com/dxos/protocols/commit/3bfecc0918f3b3c4e3c4fd414235fc1064991f77))
+* add signal status endpoint to config. ([2e43dbe](https://www.github.com/dxos/protocols/commit/2e43dbee0c28d9b4247ba6123fc4b6b43f12b374))
+* Model mutations routed incorrectly in the remote mode ([#779](https://www.github.com/dxos/protocols/issues/779)) ([54bbea9](https://www.github.com/dxos/protocols/commit/54bbea97412ea2bae97e316b5c10537b148b61a1))
+* Verify that https://github.com/dxos/protocols/issues/785 is fixed ([#788](https://www.github.com/dxos/protocols/issues/788)) ([ef99dda](https://www.github.com/dxos/protocols/commit/ef99dda8b4acf74a47731ab8c153d1e1c65397ff))
+
 ### [2.19.3](https://www.github.com/dxos/protocols/compare/v2.19.2...v2.19.3) (2021-12-22)
 
 
