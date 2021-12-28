@@ -22,7 +22,7 @@ describe('Node container', function () {
   this.timeout(20000);
 
   it('Starts an empty node bot', async () => {
-    const container = new NodeContainer(['ts-node/register/transpile-only']);
+    const container = new NodeContainer(['@swc-node/register']);
 
     const handle = createHandle();
     const logFilePath = join('/tmp', `${handle.id}.log`);
@@ -57,7 +57,7 @@ describe('Node container', function () {
       const { config } = brokerSetup;
       const { client, invitation, secret } = await setupClient(config);
 
-      const container = new NodeContainer(['ts-node/register/transpile-only']);
+      const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
       const port = await container.spawn({
         id: handle.id,
@@ -83,7 +83,7 @@ describe('Node container', function () {
       const { config } = brokerSetup;
       const { client, party, invitation, secret } = await setupClient(config);
 
-      const container = new NodeContainer(['ts-node/register/transpile-only']);
+      const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
       const port = await container.spawn({
         id: handle.id,
@@ -112,7 +112,7 @@ describe('Node container', function () {
   });
 
   it('Detects when the bot crashes', async () => {
-    const container = new NodeContainer(['ts-node/register/transpile-only']);
+    const container = new NodeContainer(['@swc-node/register']);
 
     const handle = createHandle();
     const port = await container.spawn({
@@ -137,7 +137,7 @@ describe('Node container', function () {
     for (let i = 0; i < 2; i++) {
       it(`test #${i}`, async () => {
         const child = fork(require.resolve('../bots/empty-bot'), [], {
-          execArgv: ['-r', 'ts-node/register/transpile-only'],
+          execArgv: ['-r', '@swc-node/register'],
           serialization: 'advanced',
           stdio: 'inherit'
         });
