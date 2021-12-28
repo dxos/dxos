@@ -132,7 +132,7 @@ describe('Node', () => {
       const nm2 = new NetworkManager();
       const topic = PublicKey.random();
 
-      const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
+      const botContainer = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory(botContainer, config);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);

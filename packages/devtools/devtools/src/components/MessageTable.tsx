@@ -29,7 +29,7 @@ const color = (type: string) => {
   return type === 'halo' ? colors.red[500] : colors.blue[500];
 };
 
-// TODO(burdon): What is this for?
+// TODO(burdon): Remove.
 const defaultGetType = (message: any) => {
   if (!message) {
     return;
@@ -37,19 +37,20 @@ const defaultGetType = (message: any) => {
 
   if (message.echo) {
     if (message.echo.genesis) {
-      return 'item genesis';
+      return 'echo.genesis';
     } else if (message.echo.itemMutation) {
-      return 'item mutation';
+      return 'echo.itemMutation';
     } else if (message.echo.mutation) {
-      return 'model mutation';
+      return 'echo.mutation';
     }
   }
 
   if (message.halo) {
+    // TODO(burdon): Change namespace to dxos.halo.credentials?
     if (message.halo.payload?.__type_url === 'dxos.credentials.SignedMessage') {
       return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
     } else {
-      return message.halo.payload?.__type_url ?? 'halo message';
+      return message.halo.payload?.__type_url ?? 'halo.payload';
     }
   }
 };

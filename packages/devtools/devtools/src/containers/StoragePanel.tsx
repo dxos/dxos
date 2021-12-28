@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Toolbar } from '@mui/material';
 
 import { useClient } from '@dxos/react-client';
 
-export const StorageTab = () => {
+export const StoragePanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
 
@@ -19,8 +19,10 @@ export const StorageTab = () => {
   }
 
   return (
-    <Box padding={2}>
-      <Button variant='outlined' size='small' onClick={handleReset}>Reset storage</Button>
+    <Box sx={{ padding: 1 }}>
+      <Toolbar>
+        <Button variant='outlined' onClick={handleReset}>Reset storage</Button>
+      </Toolbar>
     </Box>
   );
 };

@@ -3,7 +3,8 @@
 //
 
 import assert from 'assert';
-import { randomBytes } from 'crypto';
+
+import { randomBytes } from '@dxos/crypto';
 
 /**
  * Represents a domain key.

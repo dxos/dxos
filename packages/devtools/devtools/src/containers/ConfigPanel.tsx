@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-export const ConfigView = () => {
+export const ConfigPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const [config, setConfig] = useState<any>(undefined);

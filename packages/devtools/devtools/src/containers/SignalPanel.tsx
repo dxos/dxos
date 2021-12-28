@@ -37,14 +37,14 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
   };
 };
 
-export const Signal = () => {
+export const SignalPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
   const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace());
 
   if (!status?.servers) {
-    return <div>Loading servers status...</div>;
+    return <div>Loading status...</div>;
   }
 
   if (!trace?.events) {
@@ -56,20 +56,16 @@ export const Signal = () => {
       display: 'flex',
       flexDirection: 'column',
       flex: 1,
-      padding: 2,
+      padding: 1,
       overflow: 'hidden',
       overflowY: 'auto',
       overflowX: 'auto'
     }}>
-      {status?.servers.length < 1 ? (
-        <div>Status unknown.</div>
-      ) : (
+      {status?.servers.length >= 1 && (
         <SignalStatus status={status.servers.map(signalStatus)} />
       )}
-      {trace.events.length < 1 ? (
+      {trace.events.length < 1 && (
         <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} />
-      ) : (
-        <div>No signal trace.</div>
       )}
     </Box>
   );

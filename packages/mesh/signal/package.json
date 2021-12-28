@@ -27,6 +27,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
+    "start": "./bin/signal.js",
     "test": "toolchain test"
   },
   "dependencies": {

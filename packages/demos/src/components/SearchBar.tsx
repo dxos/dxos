@@ -4,10 +4,12 @@
 
 import React, { useState } from 'react';
 
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
+import {
+  Clear as ClearIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
 import { createTheme, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from '@mui/styles'; // TODO(burdon): Remove.
 
 const useStyles = makeStyles(theme => ({
   root: {

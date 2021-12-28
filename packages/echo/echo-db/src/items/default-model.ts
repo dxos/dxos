@@ -14,7 +14,7 @@ import { Model, ModelMeta, ModelType } from '@dxos/model-factory';
 // TODO(burdon): Optional. Set as null and ignore messages for items that have unregistered models?
 export class DefaultModel extends Model<Uint8Array> {
   static meta: ModelMeta = {
-    type: 'dxn://dxos/model/default',
+    type: 'dxos:model/default',
     mutation: NOOP_CODEC
   };
 
