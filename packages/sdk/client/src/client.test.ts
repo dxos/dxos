@@ -137,18 +137,18 @@ describe('Client', () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
-    
+
         await client.halo.createProfile();
         const party = await client.echo.createParty();
         await party.open();
-    
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' })
+
+        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
         await item1.model.setProperty('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' })
+        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
         await item2.model.setProperty('prop1', 'y');
-    
+
         expect(item1.model.getProperty('prop1')).toEqual('x');
-      })
+      });
     });
   }
 
