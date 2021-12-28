@@ -13,12 +13,12 @@ export const KeyringPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
 
-  const result = useStream(() => devtoolsHost.SubscribeToKeyringKeys({}));
-  if (result === undefined || result.keys === undefined) {
+  const { keys } = useStream(() => devtoolsHost.SubscribeToKeyringKeys({})) ?? {};
+  if (keys === undefined) {
     return null;
   }
 
   return (
-    <KeyTable keys={result.keys} />
+    <KeyTable keys={keys} />
   );
 };

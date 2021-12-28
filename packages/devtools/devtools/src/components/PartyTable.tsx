@@ -14,10 +14,6 @@ import { SubscribeToPartiesResponse } from '../proto';
 import { BooleanIcon } from './BooleanIcon';
 import { Table, TableCell } from './Table';
 
-export interface PartyTableProps {
-  parties: SubscribeToPartiesResponse.PartyInfo[]
-}
-
 const TimeFrame = ({ value }: { value: Timeframe }) => {
   return (
     <div>
@@ -30,6 +26,10 @@ const TimeFrame = ({ value }: { value: Timeframe }) => {
     </div>
   );
 };
+
+export interface PartyTableProps {
+  parties: SubscribeToPartiesResponse.PartyInfo[]
+}
 
 export const PartyTable = ({ parties }: PartyTableProps) => {
   return (
