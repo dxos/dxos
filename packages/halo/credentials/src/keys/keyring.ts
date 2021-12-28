@@ -599,8 +599,9 @@ export class Keyring implements Signer {
   /**
    * Export the Keyring contents.
    */
+  // Has to be in quotes: https://github.com/Brooooooklyn/swc-node/issues/636.
   @meter
-  export () {
+  ['export'] () {
     return { keys: this._findFullKeys() };
   }
 
