@@ -84,8 +84,8 @@ export class DataMirror {
             await entity.model.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
           } else {
             assert(update.snapshot.model.array);
-            for (const msg of update.snapshot.model.array.mutations ?? []) {
-              await entity.model.processMessage(msg.meta, entity.modelMeta.mutation.decode(msg.mutation));
+            for (const message of update.snapshot.model.array.mutations ?? []) {
+              await entity.model.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
             }
           }
         } else if (update.mutation) {

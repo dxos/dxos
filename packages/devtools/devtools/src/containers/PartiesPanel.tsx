@@ -12,15 +12,14 @@ import { useStream } from '../hooks';
 export const PartiesPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
-  const result = useStream(() => devtoolsHost.SubscribeToParties({}));
-  if (result === undefined || result.parties === undefined) {
+  const { parties } = useStream(() => devtoolsHost.SubscribeToParties({})) ?? {};
+  if (parties === undefined) {
     return null;
   }
 
   return (
     <PartyTable
-      // TODO(burdon): Type.
-      parties={result.parties as any}
+      parties={parties}
     />
   );
 };
