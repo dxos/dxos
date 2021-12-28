@@ -189,6 +189,7 @@ message Runtime {
     message Signal {
       string server = 1;
       string api = 2;
+      string status = 3;
     }
 
     message Ice {
