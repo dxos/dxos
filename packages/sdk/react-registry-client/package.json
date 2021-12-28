@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-registry-client",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "description": "React registry client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -24,7 +24,7 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/esbuild-server": "~1.7.1",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/lodash": "^4.14.175",

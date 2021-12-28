@@ -1,6 +1,6 @@
 {
   "name": "@dxos/browser-tests",
-  "version": "2.19.2",
+  "version": "2.19.3",
   "private": true,
   "description": "Browser tests for SDK.",
   "bugs": {

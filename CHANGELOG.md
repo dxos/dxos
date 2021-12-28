@@ -1,5 +1,34 @@
 # Change Log
 
+### [2.19.3](https://www.github.com/dxos/protocols/compare/v2.19.2...v2.19.3) (2021-12-22)
+
+
+### Features
+
+* Add feeds viewer to devtools ([#759](https://www.github.com/dxos/protocols/issues/759)) ([0acc668](https://www.github.com/dxos/protocols/commit/0acc668de186058b903a55346607a86d703e9b9f))
+* Add items view to devtools ([#724](https://www.github.com/dxos/protocols/issues/724)) ([eb14f45](https://www.github.com/dxos/protocols/commit/eb14f4586269353a5270856f5f81d68da2de20dc))
+* Add RegistrySearchDialog ([#770](https://www.github.com/dxos/protocols/issues/770)) ([a7017f9](https://www.github.com/dxos/protocols/commit/a7017f95a78316667a4b0990333bb665fa27475a))
+* **crypto:** Move HumanHasher into @dxos/crypto ([#761](https://www.github.com/dxos/protocols/issues/761)) ([f4e7124](https://www.github.com/dxos/protocols/commit/f4e712468e0f307f6cd3afdf4c5f7c3597f19172))
+* Devtools parties viewer ([#750](https://www.github.com/dxos/protocols/issues/750)) ([0ecd5f7](https://www.github.com/dxos/protocols/commit/0ecd5f78e96046b9a4a550106b342496d3cfacc3))
+* **devtools:** Add viewer for credential messages ([#764](https://www.github.com/dxos/protocols/issues/764)) ([3b433cd](https://www.github.com/dxos/protocols/commit/3b433cd79310ea79d9e235860fef3926c2c12897))
+* **devtools:** Party snapshots panel ([#774](https://www.github.com/dxos/protocols/issues/774)) ([8ce8708](https://www.github.com/dxos/protocols/commit/8ce87082e58fb65a9cc2502721d45fd2c4788f48))
+* Introduce react-bot-factory-client package ([#752](https://www.github.com/dxos/protocols/issues/752)) ([b8ee815](https://www.github.com/dxos/protocols/commit/b8ee81520ea5adee644e0f81f2ea18518c822ac3))
+* Print banner in console ([#767](https://www.github.com/dxos/protocols/issues/767)) ([f9e53a7](https://www.github.com/dxos/protocols/commit/f9e53a7c2f07dbf2ef72b406de64f09e89c600ac))
+* Refactor bots and add error handling ([#749](https://www.github.com/dxos/protocols/issues/749)) ([9a16cc9](https://www.github.com/dxos/protocols/commit/9a16cc944d4a9162bc99cafedafae16c419c1a54))
+* Storybook bot demo ([#747](https://www.github.com/dxos/protocols/issues/747)) ([bd1ee56](https://www.github.com/dxos/protocols/commit/bd1ee56a0d7ae60b1a5a17339f2c02555be58c87))
+* Write bot logs to files ([#751](https://www.github.com/dxos/protocols/issues/751)) ([bde8430](https://www.github.com/dxos/protocols/commit/bde8430c868fdc492989798dc8b6758548166038))
+
+
+### Bug Fixes
+
+* Clean up echo tests ([#755](https://www.github.com/dxos/protocols/issues/755)) ([1b96ce2](https://www.github.com/dxos/protocols/commit/1b96ce295f6ac6c039c8c2fc1ff3ff20cf42a94b))
+* expose new botkit. ([#744](https://www.github.com/dxos/protocols/issues/744)) ([968edc9](https://www.github.com/dxos/protocols/commit/968edc9d23437fe611f4ff1cb8910cbbb19144a5))
+* Fix synchronizing items created before frontend database connects ([#771](https://www.github.com/dxos/protocols/issues/771)) ([576bee5](https://www.github.com/dxos/protocols/commit/576bee56b5d9fff35374e08229227f5059deca3b))
+* Flaky echo test ([#754](https://www.github.com/dxos/protocols/issues/754)) ([f6f64ed](https://www.github.com/dxos/protocols/commit/f6f64ed441b54dfb097d2e5eb93bc58731727179))
+* Increase bot tests timeout ([#769](https://www.github.com/dxos/protocols/issues/769)) ([1f602c0](https://www.github.com/dxos/protocols/commit/1f602c0c26d65aa9ced2d4e7a922906298691512))
+* Signal server type issues ([#773](https://www.github.com/dxos/protocols/issues/773)) ([794f337](https://www.github.com/dxos/protocols/commit/794f33729773a250c8c593b73fd26a8bc0226b4b))
+* uuidv4 bug ([#762](https://www.github.com/dxos/protocols/issues/762)) ([6c51769](https://www.github.com/dxos/protocols/commit/6c517690e0da9f3a1a8d49bf5ecc7d7d5563f8b4))
+
 ### [2.19.2](https://www.github.com/dxos/protocols/compare/v2.19.1...v2.19.2) (2021-12-08)
 
 
