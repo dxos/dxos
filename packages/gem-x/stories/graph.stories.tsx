@@ -110,7 +110,6 @@ export const Primary = () => {
     }, 50);
 
     scene.start();
-
     setScene(scene);
 
     return () => {
@@ -136,9 +135,7 @@ export const Primary = () => {
   });
 
   return (
-    <FullScreen style={{
-      backgroundColor: '#F9F9F9'
-    }}>
+    <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
         ref={ref}
         className={style}

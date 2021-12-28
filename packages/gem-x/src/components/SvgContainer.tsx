@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Property } from 'csstype';
 import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useRef, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
-import { Property } from 'csstype';
 
 export interface ResizeCallbackProps {
   svg: SVGElement
@@ -42,8 +42,6 @@ export const SvgContainer = forwardRef<SVGElement, SvgOptions>(({
   const { ref: div, width: currentWidth, height: currentHeight } = useResizeObserver<HTMLDivElement>();
   const [visibility, setVisibility] = useState<Property.Visibility>('hidden');
   const ref = svgRef || useRef<SVGSVGElement>();
-
-  const x: React.CSSProperties = null;
 
   useEffect(() => {
     if (width && height) {

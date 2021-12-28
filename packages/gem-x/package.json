@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "^2.19.2",
-    "@dxos/esbuild-server": "^1.6.1",
+    "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/d3": "^6.3.0",
     "@types/debug": "^4.1.5",

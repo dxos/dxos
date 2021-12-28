@@ -3,13 +3,13 @@
 //
 
 import * as d3 from 'd3';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
 import {
   FullScreen,
   SvgContainer,
-  grid,
+  grid, ResizeCallbackProps,
 } from '../src';
 
 export default {
@@ -66,15 +66,14 @@ const style = css`
 `;
 
 const Grid = ({ width, height }) => {
-  const gridRef = useRef<SVGSVGElement>();
-
-  const handleResize = (({ width, height }) => {
-    d3.select(gridRef.current)
+  const ref = useRef<SVGSVGElement>();
+  useEffect(() => {
+    d3.select(ref.current)
       .call(grid({ width, height }));
-  });
+  }, [width, height]);
 
   return (
-    <g className='grid' ref={gridRef} />
+    <g ref={ref} className='grid' />
   );
 }
 
@@ -87,14 +86,24 @@ export const Primary = () => {
   });
 
   return (
-    <FullScreen style={{
-      backgroundColor: '#F9F9F9'
-    }}>
+    <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
         className={style}
         onResize={handleResize}
       >
         <g className='grid' ref={gridRef} />
+      </SvgContainer>
+    </FullScreen>
+  );
+}
+
+export const Secondary = () => {
+  const [{ width, height }, setSize] = useState<{ width?, height? }>({});
+
+  return (
+    <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
+      <SvgContainer className={style} onResize={size => setSize(size)}>
+        <Grid width={width} height={height} />
       </SvgContainer>
     </FullScreen>
   );
