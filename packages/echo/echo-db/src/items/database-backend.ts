@@ -11,6 +11,9 @@ import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import debug from 'debug';
+
+const log = debug('dxos:echo-db:database-backend');
 
 /**
  * Generic interface to represent a backend for the database.
@@ -118,6 +121,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
     return {
       write: async (mutation) => {
+        log('write', mutation)
         const { feedKey, seq } = await this._service.Write({ mutation, partyKey: this._partyKey });
         assert(feedKey);
         assert(seq !== undefined);

@@ -119,6 +119,17 @@ describe('Database', () => {
       expect(item.model.getProperty('foo')).toEqual('bar');
     });
 
+    test('creates two items with ObjectModel', async () => {
+      const { frontend: database } = await setup();
+  
+      const item1 = await database.createItem({ model: ObjectModel, type: 'test' })
+      await item1.model.setProperty('prop1', 'x');
+      const item2 = await database.createItem({ model: ObjectModel, type: 'test' })
+      await item2.model.setProperty('prop1', 'y');
+  
+      expect(item1.model.getProperty('prop1')).toEqual('x');
+    })
+
     test('parent & child items', async () => {
       const { frontend: database } = await setup();
 
