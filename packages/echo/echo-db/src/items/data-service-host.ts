@@ -108,7 +108,7 @@ export class DataServiceHost {
       next({ snapshot });
 
       return this._itemDemuxer.mutation.on(mutation => {
-        if(mutation.data.itemId !== request.itemId) {
+        if (mutation.data.itemId !== request.itemId) {
           return;
         }
 
