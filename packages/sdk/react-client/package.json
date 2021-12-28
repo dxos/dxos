@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -26,8 +27,7 @@
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1",
-    "@dxos/bot-factory-client": "workspace:*"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
