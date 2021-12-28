@@ -24,7 +24,7 @@ export const useBotFactoryClient = (): BotFactoryClient | undefined => {
       await botFactoryClient.start(PublicKey.from(topic));
       setBotFactoryClient(botFactoryClient);
     });
-    return () => botFactoryClient.stop();
+    return () => void botFactoryClient.stop();
   }, []);
 
   return botFactoryClient;
