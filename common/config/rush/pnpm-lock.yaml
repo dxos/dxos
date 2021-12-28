@@ -1986,34 +1986,10 @@ importers:
       expect: 27.0.6
       webpack: 4.44.2
 
-  ../../packages/sdk/react-bot-factory-client:
-    specifiers:
-      '@dxos/bot-factory-client': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-registry-client': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/react': ^17.0.24
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      typescript: ^4.5.2
-    dependencies:
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-    devDependencies:
-      '@dxos/react-client': link:../react-client
-      '@dxos/react-registry-client': link:../react-registry-client
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/react': 17.0.37
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      typescript: 4.5.3
-
   ../../packages/sdk/react-client:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2049,6 +2025,7 @@ importers:
       webpack: 4.44.2
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/client': link:../client
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
@@ -2178,7 +2155,6 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.1
       '@dxos/object-model': workspace:*
-      '@dxos/react-bot-factory-client': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/registry-client': workspace:*
@@ -2211,7 +2187,6 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/react-bot-factory-client': link:../react-bot-factory-client
       assert: 2.0.0
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1

@@ -10,7 +10,6 @@ import { PartyProxy } from '@dxos/client';
 import type { defs } from '@dxos/config';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { BotFactoryClientProvider } from '@dxos/react-bot-factory-client';
 import {
   ClientProvider,
   ProfileInitializer,
@@ -132,11 +131,9 @@ export const Primary = () => {
           <ClientProvider config={clientConfig}>
             <ProfileInitializer>
               <FrameworkContextProvider>
-                <BotFactoryClientProvider>
-                  <Column>
-                    <User />
-                  </Column>
-                </BotFactoryClientProvider>
+                <Column>
+                  <User />
+                </Column>
               </FrameworkContextProvider>
             </ProfileInitializer>
           </ClientProvider>
