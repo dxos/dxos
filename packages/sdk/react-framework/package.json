@@ -22,7 +22,6 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/react-bot-factory-client": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1",
