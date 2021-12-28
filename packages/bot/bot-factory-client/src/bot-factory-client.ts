@@ -50,6 +50,7 @@ export class BotHandle {
 
 export class BotFactoryClient {
   private _rpc: ProtoRpcClient<BotFactoryService> | undefined;
+  private _connectedTopic: PublicKey | undefined;
 
   constructor (private readonly _networkManager: NetworkManager) {}
 
@@ -66,6 +67,7 @@ export class BotFactoryClient {
         peerId,
         topology: new StarTopology(topic),
         protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
+          this._connectedTopic = topic;
           resolve(port);
         })])
       });
@@ -84,6 +86,9 @@ export class BotFactoryClient {
 
   stop () {
     this._rpc?.close();
+    if (this._connectedTopic) {
+      this._networkManager.leaveProtocolSwarm(this._connectedTopic);
+    }
   }
 
   async spawn (pkg: BotPackageSpecifier, client: Client, party: PartyProxy) {

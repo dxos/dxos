@@ -23,9 +23,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../react-bot-factory-client"
-    },
-    {
       "path": "../../common/async"
     },
     {

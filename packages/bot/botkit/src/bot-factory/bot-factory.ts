@@ -67,7 +67,7 @@ export class BotFactory implements BotFactoryService {
       const port = await this._botContainer.spawn({
         id,
         pkg: request.package ?? {},
-        logFilePath: handle.getLogFilePath(new Date())
+        // logFilePath: handle.getLogFilePath(new Date())
       });
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);

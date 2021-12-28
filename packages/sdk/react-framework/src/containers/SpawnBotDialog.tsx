@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import React, { useState } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { PartyProxy } from '@dxos/client';
-import { useBotFactoryClient } from '@dxos/react-bot-factory-client';
+import { useBotFactoryClient } from '@dxos/react-client';
 import { useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 
@@ -35,6 +36,7 @@ export const SpawnBotDialog = ({
 
   const handleSpawnProcess = async (path: string) => {
     try {
+      assert(botFactoryClient, 'Bot factory client is not available');
       setProcessing(true);
       const botHandle = await botFactoryClient.spawn(
         { localPath: path },
@@ -64,7 +66,9 @@ export const SpawnBotDialog = ({
     const joinPartyActions = (
       <>
         <Button onClick={onClose}>Close</Button>
-        <Button disabled={processing || !botFactoryClient} onClick={() => handleSpawnProcess(botPath)}>Spawn</Button>
+        <Button disabled={processing || !botFactoryClient} onClick={() => handleSpawnProcess(botPath)}>
+          {botFactoryClient ? (processing ? 'Spawning' : 'Spawn') : 'Loading...'}
+        </Button>
       </>
     );
 
