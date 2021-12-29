@@ -40,15 +40,10 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 export const SignalPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
-  const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
-  const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace());
-
-  if (!status?.servers) {
-    return <div>Loading status...</div>;
-  }
-
-  if (!trace?.events) {
-    return <div>Loading trace...</div>;
+  const { servers } = useStream(() => devtoolsHost.SubscribeToSignalStatus()) ?? {};
+  const { events } = useStream(() => devtoolsHost.SubscribeToSignalTrace()) ?? {};
+  if (!servers || !events) {
+    return null;
   }
 
   return (
@@ -61,11 +56,11 @@ export const SignalPanel = () => {
       overflowY: 'auto',
       overflowX: 'auto'
     }}>
-      {status?.servers.length >= 1 && (
-        <SignalStatus status={status.servers.map(signalStatus)} />
+      {servers.length >= 1 && (
+        <SignalStatus status={servers.map(signalStatus)} />
       )}
-      {trace.events.length < 1 && (
-        <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} />
+      {events.length < 1 && (
+        <SignalTrace trace={events?.map(event => JSON.parse(event))} />
       )}
     </Box>
   );

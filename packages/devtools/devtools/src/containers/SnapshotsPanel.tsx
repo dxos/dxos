@@ -25,16 +25,16 @@ export const SnapshotsPanel = () => {
     setSelectedParty(party);
     if (party) {
       setImmediate(async () => {
-        const result = await devtoolsHost.GetPartySnapshot({ partyKey: party.key });
-        setSnapshot(result.snapshot);
+        const { snapshot } = await devtoolsHost.GetPartySnapshot({ partyKey: party.key });
+        setSnapshot(snapshot);
       });
     }
   };
 
   const handleSaveSnapshot = async () => {
     if (selectedParty) {
-      const result = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
-      setSnapshot(result.snapshot);
+      const { snapshot } = await devtoolsHost.SavePartySnapshot({ partyKey: selectedParty.key });
+      setSnapshot(snapshot);
     }
   };
 

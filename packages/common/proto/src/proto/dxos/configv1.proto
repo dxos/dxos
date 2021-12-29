@@ -59,6 +59,7 @@ message Module {
   string repository_version = 8;
   repeated string keywords = 9;
   string display_name = 10;
+  string npm_url = 11;
 
   Build build = 101;
   Record record = 102;
@@ -188,6 +189,7 @@ message Runtime {
     message Signal {
       string server = 1;
       string api = 2;
+      string status = 3;
     }
 
     message Ice {
