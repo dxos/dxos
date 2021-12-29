@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.19.6](https://www.github.com/dxos/protocols/compare/v2.19.5...v2.19.6) (2021-12-29)
+
+
+### Bug Fixes
+
+* update confv1. ([b9605a7](https://www.github.com/dxos/protocols/commit/b9605a776db53a3649078457ae5696dc4d8a70fc))
+
 ### [2.19.5](https://www.github.com/dxos/protocols/compare/v2.19.4...v2.19.5) (2021-12-29)
 
 
