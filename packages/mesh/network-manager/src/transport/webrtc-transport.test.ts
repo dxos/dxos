@@ -40,7 +40,7 @@ describe('WebrtcTransport', () => {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  }).timeout(1_000);
+  }).timeout(1_000).retries(3);
 
   test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
@@ -98,5 +98,5 @@ describe('WebrtcTransport', () => {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('Foo');
     });
-  }).timeout(2_000);
+  }).timeout(2_000).retries(3);
 });
