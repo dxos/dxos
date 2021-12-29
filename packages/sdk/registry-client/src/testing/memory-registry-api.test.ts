@@ -18,7 +18,7 @@ describe('Registry API mock', () => {
 
   it('Returns a specific resource', async () => {
     const dxn = 'example:resource';
-    const resource = createMockResourceRecord(DXN.parse(dxn));
+    const resource = createMockResourceRecord({ _dxn: DXN.parse(dxn) });
     mock = new MemoryRegistryClient(createMockTypes(), [resource]);
     /* Parse the query DXN separately to ensure it is not the same instance
      * as the resource DXN.
