@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
@@ -17,12 +17,14 @@ import {
   useSelection
 } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
 
 import {
   ErrorBoundary,
   FrameworkContextProvider,
   SpawnBotDialog
 } from '../src';
+import { createMockRegistryWithBots } from '../src/testing';
 import { Column } from './helpers';
 
 export default {
@@ -121,6 +123,8 @@ const User = () => {
 };
 
 export const Primary = () => {
+  const mockRegistry = useMemo(createMockRegistryWithBots, []);
+
   return (
     <FullScreen>
       <ErrorBoundary>
@@ -129,13 +133,15 @@ export const Primary = () => {
           justifyContent: 'space-around'
         }}>
           <ClientProvider config={clientConfig}>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <Column>
-                  <User />
-                </Column>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
+            <RegistryProvider registry={mockRegistry}>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
+                  <Column>
+                    <User />
+                  </Column>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </RegistryProvider>
           </ClientProvider>
         </Box>
       </ErrorBoundary>

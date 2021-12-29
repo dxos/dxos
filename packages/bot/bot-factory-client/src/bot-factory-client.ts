@@ -61,13 +61,13 @@ export class BotFactoryClient {
 
   async start (topic: PublicKey): Promise<void> {
     const peerId = PublicKey.random();
+    this._connectedTopic = topic;
     const portPromise = new Promise<RpcPort>((resolve) => {
       this._networkManager.joinProtocolSwarm({
         topic,
         peerId,
         topology: new StarTopology(topic),
         protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
-          this._connectedTopic = topic;
           resolve(port);
         })])
       });

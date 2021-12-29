@@ -10,6 +10,12 @@ import { CID, DXN } from '../models';
 import { schemaJson } from '../proto/gen';
 import { RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord } from '../registry-client';
 
+export interface CreateMockResourceRecordOptions {
+  _dxn?: DXN,
+  _typeCID?: CID,
+  _data?: any
+}
+
 export const mockTypeNames = [
   {
     type: 'dxos.type.KUBE',
@@ -45,18 +51,22 @@ export const createDxn = (): DXN => {
   return DXN.fromDomainName('dxos', faker.internet.domainWord());
 };
 
-export const createMockResourceRecord = (_dxn?: DXN): ResourceRecord => {
+export const createMockResourceRecord = ({
+  _dxn,
+  _typeCID,
+  _data
+} : CreateMockResourceRecordOptions = {}): ResourceRecord => {
   const dxn = _dxn || createDxn();
   const type = faker.random.arrayElement(mockTypes);
 
   const record: RegistryDataRecord = {
     kind: RecordKind.Data,
     cid: createCID(),
-    type: type.cid,
+    type: _typeCID ?? type.cid,
     meta: {},
     dataSize: 0,
     dataRaw: new Uint8Array(),
-    data: sanitizeExtensionData({}, type.cid)
+    data: sanitizeExtensionData(_data ?? {}, type.cid)
   };
 
   return {
