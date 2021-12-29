@@ -6,17 +6,17 @@ import * as d3 from 'd3';
 
 /**
  * Create grid based on size and current zoom transform.
+ * @param scale
  * @param width
  * @param height
- * @param gridSize
  * @param transform d3.zoom transform.
  */
-const createGrid = ({ width, height, gridSize = 32 }, transform = undefined) => {
+const createGrid = ({ scale, width, height }, transform = undefined) => {
   const { x = 0, y = 0, k = 1 } = transform || {};
   const s = 1 / k;
 
   // Scale grid size.
-  const gs = Math.pow(2, Math.round(Math.log2(s * gridSize)));
+  const gs = Math.pow(2, Math.round(Math.log2(s * scale.gridSize)));
 
   // Extents.
   const mod = (n, m, delta = 0) => (Math.floor(n / m + delta) * m);
@@ -40,8 +40,13 @@ const createGrid = ({ width, height, gridSize = 32 }, transform = undefined) => 
   return lines.map(line => createLine(line as any)).join();
 };
 
-export const grid = ({ width, height }, transform = undefined) => (el) => {
-  el.selectAll('path').data([{ id: 'grid' }]).join('path').attr('d', createGrid({ width, height }, transform));
+// TODO(burdon): Zoom parent group?
+export const grid = ({ scale, width, height }, transform = undefined) => (el) => {
+  // Construct grid.
+  el.selectAll('path')
+    .data([{ id: 'grid' }])
+    .join('path')
+    .attr('d', createGrid({ scale, width, height }, transform));
 
   if (transform) {
     el.attr('transform', transform);
