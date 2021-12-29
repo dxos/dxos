@@ -16,7 +16,8 @@ const DOWNLOAD_TIMEOUT = 10000;
 
 export interface ContentLoader {
   /**
-   * Downloads a file from the CDN and saves it to the specified filesystem path.
+   * Downloads a file from the CDN and saves it to the specified filesystem directory.
+   * @returns The path to the downloaded file.
    */
   download: (pkg: BotPackageSpecifier, dir: string) => Promise<string>;
 }

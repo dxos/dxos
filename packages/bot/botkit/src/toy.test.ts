@@ -13,7 +13,7 @@ import { NodeContainer } from './bot-container/node-container';
 import { BotController, BotFactory } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
+import { BrokerSetup, ClientSetup, MockContentLoader, setupBroker, setupClient } from './testutils';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -30,7 +30,8 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory(botContainer);
+      const contentLoader = new MockContentLoader();
+      const botFactory = new BotFactory(contentLoader, botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -74,7 +75,8 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const botFactory = new BotFactory(botContainer);
+      const contentLoader = new MockContentLoader();
+      const botFactory = new BotFactory(contentLoader, botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -133,7 +135,8 @@ describe('Node', () => {
       const topic = PublicKey.random();
 
       const botContainer = new NodeContainer(['@swc-node/register']);
-      const botFactory = new BotFactory(botContainer, config);
+      const contentLoader = new MockContentLoader();
+      const botFactory = new BotFactory(contentLoader, botContainer, config);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);

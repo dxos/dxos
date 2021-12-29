@@ -12,7 +12,7 @@ import { createId, PublicKey } from '@dxos/crypto';
 import { NodeContainer } from '../bot-container';
 import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
-import { setupBroker, setupClient } from '../testutils';
+import { MockContentLoader, setupBroker, setupClient } from '../testutils';
 import { buildBot } from './build-bot';
 
 describe('Build bot', () => {
@@ -51,7 +51,8 @@ describe('Build bot', () => {
     const { client, party } = await setupClient(config);
 
     const botContainer = new NodeContainer();
-    const botFactory = new BotFactory(botContainer, config);
+    const contentLoader = new MockContentLoader();
+    const botFactory = new BotFactory(contentLoader, botContainer, config);
     const botHandle = await botFactory.SpawnBot({
       package: { localPath: outfile },
       invitation: await generateInvitation(client, party)

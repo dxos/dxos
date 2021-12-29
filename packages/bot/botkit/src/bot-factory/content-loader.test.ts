@@ -26,7 +26,9 @@ describe('Content loader', () => {
     const ipfsFilePath = path.join(outDir, PublicKey.random().toString());
     const localDir = path.join(outDir, PublicKey.random().toString());
     await fs.promises.appendFile(ipfsFilePath, PublicKey.random().toString());
-    const ipfsServer = new IPFS(port, { [MOCK_BOT_HASH]: ipfsFilePath });
+    const ipfsServer = new IPFS(port, new Map([
+      [MOCK_BOT_HASH, ipfsFilePath]
+    ]));
     await ipfsServer.start();
     const loader = new DXNSContentLoader(mockRegistry, `http://localhost:${port}`);
 

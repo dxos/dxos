@@ -8,7 +8,7 @@ import { RpcPort } from '@dxos/rpc';
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
 
 export interface SpawnOptions {
-  pkg: BotPackageSpecifier;
+  localPath: string;
   id: string;
   logFilePath?: string;
 }

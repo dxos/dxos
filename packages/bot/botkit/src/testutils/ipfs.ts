@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import express, { Application, Request, Response } from 'express';
 import { Server } from 'http';
 
@@ -12,11 +13,12 @@ export class IPFS {
 
   constructor (
     private _port: number,
-    private _filePaths: Record<string, string>
+    private _filePaths: Map<string, string>
   ) {
     this._app.get('/:hash', (req: Request, res: Response) => {
       const ipfsCid = req.params.hash;
-      const filePath = this._filePaths[ipfsCid];
+      const filePath = this._filePaths.get(ipfsCid);
+      assert(filePath, 'File not found');
       res.download(filePath);
     });
   }

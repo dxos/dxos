@@ -11,6 +11,7 @@ import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
+import { ContentLoader } from './content-loader';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 
 const log = debug('dxos:botkit:bot-factory');
@@ -22,6 +23,7 @@ export class BotFactory implements BotFactoryService {
   private readonly _bots = new Map<string, BotHandle>();
 
   constructor (
+    private readonly _contentLoader: ContentLoader,
     private readonly _botContainer: BotContainer,
     private readonly _botConfig: defs.Config = {}
   ) {
@@ -61,7 +63,10 @@ export class BotFactory implements BotFactoryService {
   async SpawnBot (request: SpawnBotRequest) {
     const id = createId();
     try {
-      log(`[${id}] Spawning bot ${JSON.stringify(request)}`);
+      log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
+      const localPath = await this._contentLoader.download(request.package ?? {}, join(process.cwd(), 'out'));
+
+      log(`[${id}] Spawning bot ${localPath}`);
 
       const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
@@ -69,7 +74,7 @@ export class BotFactory implements BotFactoryService {
 
       const port = await this._botContainer.spawn({
         id,
-        pkg: request.package ?? {},
+        localPath,
         logFilePath: handle.getLogFilePath(new Date())
       });
       log(`[${id}] Openning RPC channel`);
