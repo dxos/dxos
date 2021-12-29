@@ -12,7 +12,8 @@ import {
   MemoryRegistryClient
 } from '@dxos/registry-client';
 
-const BOT_DXN = 'dxos:type.bot';
+export const MOCK_BOT_DXN = 'dxos:bot:mock';
+export const MOCK_BOT_HASH = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
 
 export const createMockRegistryWithBots = () => {
   const types = createMockTypes();
@@ -21,23 +22,15 @@ export const createMockRegistryWithBots = () => {
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
     _typeCID: botTypeRecord.cid,
+    _dxn: DXN.parse(MOCK_BOT_DXN),
     _data: {
-      localPath: './stories/bots/start-story-bot'
+      hash: MOCK_BOT_HASH,
     }
   });
-  const botTypeResourceRecord = {
-    resource: {
-      id: DXN.parse(BOT_DXN),
-      tags: {
-        latest: botTypeRecord.cid
-      },
-      versions: {}
-    },
-    record: botTypeRecord
-  };
   const memoryRegistryClient = new MemoryRegistryClient(
     types,
-    [...records, botRecord, botTypeResourceRecord]
+    [...records, botRecord]
   );
   return memoryRegistryClient;
 };
+

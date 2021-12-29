@@ -12,6 +12,7 @@ import { createId } from '@dxos/crypto';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { ContentLoader } from './content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -21,7 +22,10 @@ const log = debug('dxos:botkit:bot-factory');
 export class BotFactory implements BotFactoryService {
   private readonly _bots = new Map<string, BotHandle>();
 
-  constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {
+  constructor (
+    private readonly _botContainer: BotContainer,
+    private readonly _botConfig: defs.Config = {},
+  ) {
     _botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
       if (!bot) {
