@@ -148,6 +148,10 @@ message Runtime {
     string title = 1;
   }
 
+  message System {
+    string debug = 1;
+  }
+
   //
   // DXOS Services.
   //
@@ -221,4 +225,5 @@ message Runtime {
   CLI cli = 4;
   Props props = 5;
   Services services = 6;
+  System system = 7;
 }
