@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
@@ -24,6 +24,8 @@ import {
   SpawnBotDialog
 } from '../src';
 import { Column } from './helpers';
+import { createMockRegistryWithBot } from '../src/testing';
+import { RegistryProvider } from '@dxos/react-registry-client';
 
 export default {
   title: 'react-framework/SpawnBotDialog'
@@ -121,6 +123,8 @@ const User = () => {
 };
 
 export const Primary = () => {
+  const mockRegistry = useMemo(createMockRegistryWithBot, []);
+
   return (
     <FullScreen>
       <ErrorBoundary>
@@ -129,13 +133,15 @@ export const Primary = () => {
           justifyContent: 'space-around'
         }}>
           <ClientProvider config={clientConfig}>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <Column>
-                  <User />
-                </Column>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
+            <RegistryProvider registry={mockRegistry}>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
+                  <Column>
+                    <User />
+                  </Column>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </RegistryProvider>
           </ClientProvider>
         </Box>
       </ErrorBoundary>

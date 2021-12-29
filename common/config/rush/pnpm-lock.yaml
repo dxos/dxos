@@ -2157,6 +2157,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/react-registry-client': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
@@ -2187,6 +2188,7 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/react-registry-client': link:../react-registry-client
       assert: 2.0.0
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2232,6 +2234,7 @@ importers:
   ../../packages/sdk/react-registry-client:
     specifiers:
       '@babel/core': ~7.13.15
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.1
@@ -2257,6 +2260,7 @@ importers:
       debug: 4.3.3
     devDependencies:
       '@babel/core': 7.13.16
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library

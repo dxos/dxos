@@ -49,6 +49,7 @@ message Bot {
   string repository_version = 4;
   string license = 5;
   repeated string keywords = 6;
+  string local_path = 7;
 
   Record.Extension extension = 100;
 }
