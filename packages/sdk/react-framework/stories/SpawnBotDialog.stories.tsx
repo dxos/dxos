@@ -17,15 +17,15 @@ import {
   useSelection
 } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
 
 import {
   ErrorBoundary,
   FrameworkContextProvider,
   SpawnBotDialog
 } from '../src';
-import { Column } from './helpers';
 import { createMockRegistryWithBot } from '../src/testing';
-import { RegistryProvider } from '@dxos/react-registry-client';
+import { Column } from './helpers';
 
 export default {
   title: 'react-framework/SpawnBotDialog'

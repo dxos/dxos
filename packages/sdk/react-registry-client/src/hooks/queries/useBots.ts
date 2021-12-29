@@ -3,11 +3,12 @@
 //
 
 import assert from 'assert';
+
 import { DXN } from '@dxos/registry-client';
 
+import { Bot } from '../../proto/gen/dxos/type';
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
-import { Bot } from '../../proto/gen/dxos/type';
 
 const BOT_DXN = 'dxos:type.bot';
 

@@ -3,20 +3,21 @@
 //
 
 import assert from 'assert';
+
 import {
   createMockResourceRecord,
   createMockResourceRecords,
   createMockTypes,
   DXN,
   MemoryRegistryClient
-} from "@dxos/registry-client";
+} from '@dxos/registry-client';
 
 const BOT_DXN = 'dxos:type.bot';
 
 export const createMockRegistryWithBot = () => {
   const types = createMockTypes();
-  const botTypeRecord = types.find(type => type.messageName === "bot");
-  assert(botTypeRecord, "Bot type not found: bot");
+  const botTypeRecord = types.find(type => type.messageName === 'bot');
+  assert(botTypeRecord, 'Bot type not found: bot');
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
     _typeCID: botTypeRecord!.cid,
@@ -33,7 +34,7 @@ export const createMockRegistryWithBot = () => {
       versions: {}
     },
     record: botTypeRecord!
-  }
+  };
   const memoryRegistryClient = new MemoryRegistryClient(
     types,
     [...records, botRecord, botTypeResourceRecord]
