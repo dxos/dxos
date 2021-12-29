@@ -24,7 +24,7 @@ import {
   FrameworkContextProvider,
   SpawnBotDialog
 } from '../src';
-import { createMockRegistryWithBot } from '../src/testing';
+import { createMockRegistryWithBots } from '../src/testing';
 import { Column } from './helpers';
 
 export default {
@@ -123,7 +123,7 @@ const User = () => {
 };
 
 export const Primary = () => {
-  const mockRegistry = useMemo(createMockRegistryWithBot, []);
+  const mockRegistry = useMemo(createMockRegistryWithBots, []);
 
   return (
     <FullScreen>

@@ -14,7 +14,7 @@ import {
 
 const BOT_DXN = 'dxos:type.bot';
 
-export const createMockRegistryWithBot = () => {
+export const createMockRegistryWithBots = () => {
   const types = createMockTypes();
   const botTypeRecord = types.find(type => type.messageName === 'bot');
   assert(botTypeRecord, 'Bot type not found: bot');
