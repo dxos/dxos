@@ -57,7 +57,7 @@ export const SpawnBotDialog = ({
         <InputLabel id="select-bot-label">Select bot</InputLabel>
         <Select
           labelId="select-bot-label"
-          value={botPath}
+          value={botPath || ''}
           label="Select bot"
           onChange={(event) => setBotPath(event.target.value)}
         >
