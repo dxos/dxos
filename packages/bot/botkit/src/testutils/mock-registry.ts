@@ -24,7 +24,7 @@ export const createMockRegistryWithBots = () => {
     _typeCID: botTypeRecord.cid,
     _dxn: DXN.parse(MOCK_BOT_DXN),
     _data: {
-      hash: MOCK_BOT_HASH,
+      hash: MOCK_BOT_HASH
     }
   });
   const memoryRegistryClient = new MemoryRegistryClient(
@@ -33,4 +33,3 @@ export const createMockRegistryWithBots = () => {
   );
   return memoryRegistryClient;
 };
-

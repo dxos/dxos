@@ -2,19 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import fs from 'fs';
 import expect from 'expect';
+import fs from 'fs';
 import path from 'path';
 
-import { randomInt } from "@dxos/util";
-
-import { createMockRegistryWithBots, IPFS, MOCK_BOT_DXN, MOCK_BOT_HASH } from "../testutils";
-import { DXNSContentLoader } from "./content-loader";
 import { PublicKey } from '@dxos/crypto';
+import { randomInt } from '@dxos/util';
+
+import { createMockRegistryWithBots, IPFS, MOCK_BOT_DXN, MOCK_BOT_HASH } from '../testutils';
+import { DXNSContentLoader } from './content-loader';
 
 const outDir = './out';
 
-describe.only('Content loader', () => {
+describe('Content loader', () => {
   it('Loads file using dxns', async () => {
     const mockRegistry = createMockRegistryWithBots();
     const port = randomInt(40000, 10000);

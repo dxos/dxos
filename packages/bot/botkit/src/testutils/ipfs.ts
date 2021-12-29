@@ -15,7 +15,7 @@ export class IPFS {
     private _filePaths: Record<string, string>
   ) {
     this._app.get('/:hash', (req: Request, res: Response) => {
-      const ipfsCid = req.params['hash'];
+      const ipfsCid = req.params.hash;
       const filePath = this._filePaths[ipfsCid];
       res.download(filePath);
     });

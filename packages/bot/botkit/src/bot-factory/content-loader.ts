@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from "assert";
+import assert from 'assert';
 import download from 'download';
 import fs from 'fs';
 import path from 'path';
 
-import { CID, DXN, IRegistryClient, RegistryDataRecord } from "@dxos/registry-client";
+import { CID, DXN, IRegistryClient, RegistryDataRecord } from '@dxos/registry-client';
 
-import type { BotPackageSpecifier } from "../proto/gen/dxos/bot";
-import type { Bot } from "../proto/gen/dxos/type";
+import type { BotPackageSpecifier } from '../proto/gen/dxos/bot';
+import type { Bot } from '../proto/gen/dxos/type';
 
 const DOWNLOAD_TIMEOUT = 10000;
 
@@ -31,7 +31,7 @@ export class DXNSContentLoader implements ContentLoader {
     // Clone object to not modify the original.
     pkg = { ...pkg };
 
-    if(pkg.dxn) {
+    if (pkg.dxn) {
       pkg.ipfsCid = (await this._resolveDXN(DXN.parse(pkg.dxn))).toString();
       pkg.dxn = undefined;
     }
@@ -46,9 +46,9 @@ export class DXNSContentLoader implements ContentLoader {
     assert(pkg.localPath, 'Couldn\'t resolve bot package specifier.');
     await fs.promises.access(pkg.localPath, fs.constants.F_OK);
     return pkg.localPath;
-  };
+  }
 
-  async _resolveDXN(dxn: DXN): Promise<CID> {
+  async _resolveDXN (dxn: DXN): Promise<CID> {
     const botResourceRecord = await this._registry.getResourceRecord<RegistryDataRecord<Bot>>(dxn, 'latest');
     assert(botResourceRecord, `Bot resource not found: ${dxn.toString()}`);
     const botIpfsCID = botResourceRecord.record.data.hash;
