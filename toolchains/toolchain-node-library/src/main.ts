@@ -35,16 +35,16 @@ function execBuild (opts: BuildOptions = {}) {
     process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored\n`);
   }
 
+  try {
+    fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
+  } catch (err: any) {
+    console.log(err.message);
+  }
+
   // Compile protocol buffer definitions.
   const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     console.log(chalk.bold`\nprotobuf`);
-
-    try {
-      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
-    } catch (err: any) {
-      console.log(err.message);
-    }
 
     // TODO(burdon): Document this.
     const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts'))
