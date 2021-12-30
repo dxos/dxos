@@ -278,6 +278,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
@@ -288,6 +289,7 @@ importers:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
+      '@dxos/proto': link:../proto
       debug: 4.3.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
