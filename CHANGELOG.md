@@ -1,5 +1,25 @@
 # Change Log
 
+### [2.19.6](https://www.github.com/dxos/protocols/compare/v2.19.5...v2.19.6) (2021-12-29)
+
+
+### Bug Fixes
+
+* update confv1. ([b9605a7](https://www.github.com/dxos/protocols/commit/b9605a776db53a3649078457ae5696dc4d8a70fc))
+
+### [2.19.5](https://www.github.com/dxos/protocols/compare/v2.19.4...v2.19.5) (2021-12-29)
+
+
+### Features
+
+* Add and use useBots hook ([#792](https://www.github.com/dxos/protocols/issues/792)) ([e473c92](https://www.github.com/dxos/protocols/commit/e473c928cb9ff73c3a570e2865a43afe1df509a1))
+
+
+### Bug Fixes
+
+* Add flaky test retries ([#793](https://www.github.com/dxos/protocols/issues/793)) ([4fb0c4a](https://www.github.com/dxos/protocols/commit/4fb0c4a8e42b0ac2755d71d032e58540e7d57f52))
+* update conf loader for config v1. ([#795](https://www.github.com/dxos/protocols/issues/795)) ([9d8264c](https://www.github.com/dxos/protocols/commit/9d8264c6ce8625c7c72c16cef2fe50800548a417))
+
 ### [2.19.4](https://www.github.com/dxos/protocols/compare/v2.19.3...v2.19.4) (2021-12-28)
 
 

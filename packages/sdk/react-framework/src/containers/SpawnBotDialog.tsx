@@ -5,14 +5,13 @@
 import assert from 'assert';
 import React, { useState } from 'react';
 
-import { Button, TextField } from '@mui/material';
+import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { PartyProxy } from '@dxos/client';
 import { useBotFactoryClient, useClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
-
-import { handleKey } from '../helpers';
+import { useBots } from '@dxos/react-registry-client';
 
 export interface SpawnBotDialogProps {
   open: boolean,
@@ -28,7 +27,8 @@ export const SpawnBotDialog = ({
   onBotCreated
 } : SpawnBotDialogProps) => {
   const client = useClient();
-  const [botPath, setBotPath] = useState('./stories/bots/start-story-bot');
+  const { bots, error } = useBots();
+  const [botPath, setBotPath] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const botFactoryClient = useBotFactoryClient();
 
@@ -50,23 +50,34 @@ export const SpawnBotDialog = ({
   };
 
   const getDialogProps = () => {
-    const inviteBotContent = (
-      <TextField
-        autoFocus
-        fullWidth
-        placeholder='Type in path to a local bot.'
-        spellCheck={false}
-        value={botPath}
-        onChange={(event) => setBotPath(event.target.value)}
-        onKeyDown={handleKey('Enter', () => handleSpawnProcess(botPath))}
-      />
+    const noBotsContent = <div> No bots available. </div>;
+
+    const spawnBotContent = (
+      <FormControl fullWidth style={{ marginTop: '10px' }}>
+        <InputLabel id='select-bot-label'>Select bot</InputLabel>
+        <Select
+          labelId='select-bot-label'
+          value={botPath || ''}
+          label='Select bot'
+          onChange={(event) => setBotPath(event.target.value)}
+        >
+          {bots.filter(({ localPath }) => !!localPath).map(({ localPath }) => (
+            <MenuItem key={localPath} value={localPath}>
+              {localPath}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
     );
 
     const joinPartyActions = (
       <>
         <Button onClick={onClose}>Close</Button>
-        <Button disabled={processing || !botFactoryClient} onClick={() => handleSpawnProcess(botPath)}>
-          {botFactoryClient ? (processing ? 'Spawning' : 'Spawn') : 'Loading...'}
+        <Button
+          disabled={!!error || processing || !botFactoryClient || !botPath}
+          onClick={() => botPath && handleSpawnProcess(botPath)}
+        >
+          {botFactoryClient ? (processing ? 'Spawning' : ('Spawn')) : 'Loading...'}
         </Button>
       </>
     );
@@ -74,7 +85,7 @@ export const SpawnBotDialog = ({
     return {
       title: 'Spawn bot',
       processing,
-      content: inviteBotContent,
+      content: error ? <div> Error: {error} </div> : (bots.length > 0 ? spawnBotContent : noBotsContent),
       actions: joinPartyActions
     };
   };

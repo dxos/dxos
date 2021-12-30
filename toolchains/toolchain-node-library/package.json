@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolchain-node-library",
-  "version": "2.19.4",
+  "version": "2.19.6",
   "private": true,
   "bin": {
     "toolchain": "./main.js"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.19.4",
+  "version": "2.19.6",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -29,7 +29,8 @@
     "mobile-detect": "~1.4.5",
     "react-copy-to-clipboard": "~5.0.3",
     "url-join": "^4.0.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "@dxos/react-registry-client": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
