@@ -133,6 +133,9 @@ export class EchoProxy {
     return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
+  /**
+   * @deprecated Use acceptInvitation instead.
+   */
   async joinParty (...args: Parameters<ECHO['joinParty']>) {
     return this._serviceProvider.echo.joinParty(...args);
   }
