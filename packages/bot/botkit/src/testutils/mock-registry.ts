@@ -11,13 +11,11 @@ import {
   DXN,
   MemoryRegistryClient
 } from '@dxos/registry-client';
-import { IPFS } from './ipfs';
 import { randomInt } from '@dxos/util';
 
 export const MOCK_BOT_DXN = 'dxos:bot:mock';
-export const MOCK_BOT_HASH = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
 
-export const createMockRegistryWithBots = () => {
+export const createMockRegistryWithBot = (botPath: string) => {
   const types = createMockTypes();
   const botTypeRecord = types.find(type => type.messageName === 'bot');
   assert(botTypeRecord, 'Bot type not found: bot');
@@ -26,7 +24,7 @@ export const createMockRegistryWithBots = () => {
     _typeCID: botTypeRecord.cid,
     _dxn: DXN.parse(MOCK_BOT_DXN),
     _data: {
-      hash: MOCK_BOT_HASH
+      localPath: botPath
     }
   });
   const memoryRegistryClient = new MemoryRegistryClient(
@@ -36,19 +34,10 @@ export const createMockRegistryWithBots = () => {
   return memoryRegistryClient;
 };
 
-export const setupIPFSWithBot = async (botPath: string) => {
-  const ipfsPort = randomInt(40000, 1000);
+export const setupMockRegistryWithBot = async (botPath: string) => {
+  const registry = createMockRegistryWithBot(botPath);
 
-  const ipfsServer = new IPFS(ipfsPort, new Map([
-    [MOCK_BOT_HASH, botPath]
-  ]));
-
-  const registry = createMockRegistryWithBots();
-
-  ipfsServer.start();
-
-  return { 
-    ipfsServer,
+  return {
     registry,
     botDXN: MOCK_BOT_DXN
   };

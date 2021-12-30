@@ -11,11 +11,10 @@ import { IRegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
-import { BotController, BotFactory, DXNSContentLoader } from './bot-factory';
+import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BrokerSetup, ClientSetup, createMockRegistryWithBots, IPFS, MockContentLoader, MOCK_BOT_HASH, setupBroker, setupClient, setupIPFSWithBot } from './testutils';
-import { randomInt } from '@dxos/util';
+import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -32,8 +31,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const contentLoader = new MockContentLoader();
-      const botFactory = new BotFactory(contentLoader, botContainer);
+      const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -77,8 +75,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const contentLoader = new MockContentLoader();
-      const botFactory = new BotFactory(contentLoader, botContainer);
+      const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -107,25 +104,22 @@ describe('In-Memory', () => {
   });
 });
 
-describe.only('Node', () => {
+describe('Node', () => {
   describe('With a DXOS client', () => {
     let clientSetup: ClientSetup;
     let brokerSetup: BrokerSetup;
     let registry: IRegistryClient;
-    let ipfsServer: IPFS;
     let botDXN: string;
 
     before(async () => {
       brokerSetup = await setupBroker();
-      const ipfsSetup = await setupIPFSWithBot('./bots/start-echo-bot.ts');
+      const ipfsSetup = await setupMockRegistryWithBot(require.resolve('./bots/start-echo-bot'));
       registry = ipfsSetup.registry;
-      ipfsServer = ipfsSetup.ipfsServer;
       botDXN = ipfsSetup.botDXN;
     });
 
     after(async () => {
       await brokerSetup.broker.stop();
-      await ipfsServer.stop();
     });
 
     beforeEach(async () => {
@@ -146,9 +140,10 @@ describe.only('Node', () => {
 
       const botContainer = new NodeContainer(['@swc-node/register']);
 
-      const contentLoader = new DXNSContentLoader(registry, ipfsServer.endpoint);
+      const contentResolver = new DXNSContentResolver(registry);
   
-      const botFactory = new BotFactory(contentLoader, botContainer, config);
+      const botFactory = new BotFactory(botContainer, config);
+      botFactory.serContentResolver(contentResolver);
     
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);

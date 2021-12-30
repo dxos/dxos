@@ -7,7 +7,6 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController } from './bot-factory';
-import { MockContentLoader } from './testutils';
 
 const main = async () => {
   const signal = process.env.DX_SIGNAL_ENDPOINT ?? 'ws://localhost:4000';
@@ -15,9 +14,7 @@ const main = async () => {
   const topic = PublicKey.from(topicString);
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
-  const contentLoader = new MockContentLoader();
   const botFactory = new BotFactory(
-    contentLoader,
     botContainer,
     {
       services: {

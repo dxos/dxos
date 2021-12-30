@@ -5,11 +5,9 @@
 import { ReadOnlyEvent } from '@dxos/async';
 import { RpcPort } from '@dxos/rpc';
 
-import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
-
 export interface SpawnOptions {
-  localPath: string;
   id: string;
+  localPath?: string;
   logFilePath?: string;
 }
 

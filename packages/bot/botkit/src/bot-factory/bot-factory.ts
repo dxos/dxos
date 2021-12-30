@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { debug } from 'debug';
+import fs from 'fs';
 import { join } from 'path';
 
 import type { defs } from '@dxos/config';
@@ -11,8 +12,9 @@ import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
-import { ContentLoader } from './content-loader';
+import { ContentLoader } from './ipfs-content-loader';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import type { ContentResolver } from './dxns-content-resolver';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -21,9 +23,11 @@ const log = debug('dxos:botkit:bot-factory');
  */
 export class BotFactory implements BotFactoryService {
   private readonly _bots = new Map<string, BotHandle>();
+  private readonly _workingDir = './out';
+  private _contentLoader: ContentLoader | undefined;
+  private _contentResolver: ContentResolver | undefined;
 
   constructor (
-    private readonly _contentLoader: ContentLoader,
     private readonly _botContainer: BotContainer,
     private readonly _botConfig: defs.Config = {}
   ) {
@@ -54,6 +58,19 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
+  setContentLoader (loader: ContentLoader) {
+    this._contentLoader = loader;
+  }
+
+  serContentResolver (resolver: ContentResolver) {
+    this._contentResolver = resolver;
+  }
+
+  private async _ensurePackageExists (localPath: string) {
+    assert(localPath, `Couldn't resolve bot package ${localPath}.`);
+    await fs.promises.access(localPath, fs.constants.F_OK);
+  }
+
   async GetBots () {
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
@@ -64,9 +81,21 @@ export class BotFactory implements BotFactoryService {
     const id = createId();
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
-      const localPath = await this._contentLoader.download(request.package ?? {}, join(process.cwd(), 'out'));
+      
+      if (this._contentResolver && request.package?.dxn) {
+        request.package = await this._contentResolver.resolve(request.package.dxn);
+      }
 
-      log(`[${id}] Spawning bot ${localPath}`);
+      if (this._contentLoader && request.package?.ipfsCid) {
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, this._workingDir);
+      }
+
+      let localPath = request.package?.localPath;
+
+      if (localPath) {
+        await this._ensurePackageExists(localPath);
+        log(`[${id}] Spawning bot ${localPath}`);
+      }
 
       const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
