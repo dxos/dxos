@@ -32,4 +32,8 @@ export class IPFS {
   async stop (): Promise<void> {
     this._server.close();
   }
+
+  get endpoint (): string {
+    return `http://localhost:${this._port}`;
+  }
 }

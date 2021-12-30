@@ -7,17 +7,14 @@ import fs from 'fs';
 import path from 'path';
 
 import { PublicKey } from '@dxos/crypto';
-import { randomInt } from '@dxos/util';
 
-import { createMockRegistryWithBots, IPFS, MOCK_BOT_DXN, MOCK_BOT_HASH } from '../testutils';
+import { setupIPFSWithBot } from '../testutils';
 import { DXNSContentLoader } from './content-loader';
 
 const outDir = './out';
 
 describe('Content loader', () => {
   it('Loads file using dxns', async () => {
-    const mockRegistry = createMockRegistryWithBots();
-    const port = randomInt(40000, 10000);
 
     if (!fs.existsSync(outDir)) {
       fs.mkdirSync(outDir);
@@ -26,13 +23,11 @@ describe('Content loader', () => {
     const ipfsFilePath = path.join(outDir, PublicKey.random().toString());
     const localDir = path.join(outDir, PublicKey.random().toString());
     await fs.promises.appendFile(ipfsFilePath, PublicKey.random().toString());
-    const ipfsServer = new IPFS(port, new Map([
-      [MOCK_BOT_HASH, ipfsFilePath]
-    ]));
-    await ipfsServer.start();
-    const loader = new DXNSContentLoader(mockRegistry, `http://localhost:${port}`);
+    const { ipfsServer, registry, botDXN } = await setupIPFSWithBot(ipfsFilePath);
 
-    const downloadedFile = await loader.download({ dxn: MOCK_BOT_DXN }, localDir);
+    const loader = new DXNSContentLoader(registry, ipfsServer.endpoint);
+
+    const downloadedFile = await loader.download({ dxn: botDXN }, localDir);
 
     const downloadedContent = fs.readFileSync(downloadedFile);
     const originalContent = fs.readFileSync(ipfsFilePath);

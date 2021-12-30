@@ -7,13 +7,15 @@ import expect from 'expect';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { IRegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
-import { BotController, BotFactory } from './bot-factory';
+import { BotController, BotFactory, DXNSContentLoader } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BrokerSetup, ClientSetup, MockContentLoader, setupBroker, setupClient } from './testutils';
+import { BrokerSetup, ClientSetup, createMockRegistryWithBots, IPFS, MockContentLoader, MOCK_BOT_HASH, setupBroker, setupClient, setupIPFSWithBot } from './testutils';
+import { randomInt } from '@dxos/util';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -105,17 +107,25 @@ describe('In-Memory', () => {
   });
 });
 
-describe('Node', () => {
+describe.only('Node', () => {
   describe('With a DXOS client', () => {
     let clientSetup: ClientSetup;
     let brokerSetup: BrokerSetup;
+    let registry: IRegistryClient;
+    let ipfsServer: IPFS;
+    let botDXN: string;
 
     before(async () => {
       brokerSetup = await setupBroker();
+      const ipfsSetup = await setupIPFSWithBot('./bots/start-echo-bot.ts');
+      registry = ipfsSetup.registry;
+      ipfsServer = ipfsSetup.ipfsServer;
+      botDXN = ipfsSetup.botDXN;
     });
 
     after(async () => {
       await brokerSetup.broker.stop();
+      await ipfsServer.stop();
     });
 
     beforeEach(async () => {
@@ -135,16 +145,20 @@ describe('Node', () => {
       const topic = PublicKey.random();
 
       const botContainer = new NodeContainer(['@swc-node/register']);
-      const contentLoader = new MockContentLoader();
+
+      const contentLoader = new DXNSContentLoader(registry, ipfsServer.endpoint);
+  
       const botFactory = new BotFactory(contentLoader, botContainer, config);
+    
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
+
       const botFactoryClient = new BotFactoryClient(nm2);
       await botFactoryClient.start(topic);
 
       const botHandle = await botFactoryClient.spawn(
         {
-          localPath: require.resolve('./bots/start-echo-bot')
+          dxn: botDXN
         },
         client,
         party
