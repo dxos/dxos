@@ -16,7 +16,7 @@
   "author": "DXOS.org",
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/v7/*"
     ]
   },
   "scripts": {
