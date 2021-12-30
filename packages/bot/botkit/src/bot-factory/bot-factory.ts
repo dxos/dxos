@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { debug } from 'debug';
+import fs from 'fs';
 import { join } from 'path';
 
 import type { defs } from '@dxos/config';
@@ -12,17 +13,36 @@ import { createId } from '@dxos/crypto';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import type { ContentResolver } from './dxns-content-resolver';
+import { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
+
+export interface BotFactoryOptions {
+  botContainer: BotContainer,
+  botConfig?: defs.Config,
+  contentResolver?: ContentResolver,
+  contentLoader?: ContentLoader,
+}
 
 /**
  * Handles creation and managing bots.
  */
 export class BotFactory implements BotFactoryService {
+  private readonly _contentLoader: ContentLoader | undefined;
+  private readonly _contentResolver: ContentResolver | undefined;
+  private readonly _botContainer: BotContainer;
+  private readonly _botConfig: defs.Config;
+
   private readonly _bots = new Map<string, BotHandle>();
 
-  constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {
-    _botContainer.exited.on(([id, status]) => {
+  constructor (options: BotFactoryOptions) {
+    this._botContainer = options.botContainer;
+    this._botConfig = options.botConfig ?? {};
+    this._contentLoader = options.contentLoader;
+    this._contentResolver = options.contentResolver;
+
+    this._botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
       if (!bot) {
         log(`Bot exited but not found in factory: ${id}`);
@@ -32,7 +52,7 @@ export class BotFactory implements BotFactoryService {
       bot.onProcessExited(status);
     });
 
-    _botContainer.error.on(async ([id, error]) => {
+    this._botContainer.error.on(async ([id, error]) => {
       const bot = this._bots.get(id);
       if (!bot) {
         log(`Bot errored but not found in factory: ${id}`);
@@ -42,11 +62,16 @@ export class BotFactory implements BotFactoryService {
       bot.onProcessError(error);
 
       try {
-        await _botContainer.kill(id);
+        await this._botContainer.kill(id);
       } catch (err) {
         log(`Failed to kill bot: ${id}`);
       }
     });
+  }
+
+  private async _ensurePackageExists (localPath: string) {
+    assert(localPath, `Couldn't resolve bot package ${localPath}.`);
+    await fs.promises.access(localPath, fs.constants.F_OK);
   }
 
   async GetBots () {
@@ -58,15 +83,31 @@ export class BotFactory implements BotFactoryService {
   async SpawnBot (request: SpawnBotRequest) {
     const id = createId();
     try {
-      log(`[${id}] Spawning bot ${JSON.stringify(request)}`);
+      log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
+
+      if (this._contentResolver && request.package?.dxn) {
+        request.package = await this._contentResolver.resolve(request.package.dxn);
+      }
 
       const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
+      const workingDirectory = handle.getContentPath();
+
+      if (this._contentLoader && request.package?.ipfsCid) {
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, workingDirectory);
+      }
+
+      const localPath = request.package?.localPath;
+
+      if (localPath) {
+        await this._ensurePackageExists(localPath);
+        log(`[${id}] Spawning bot ${localPath}`);
+      }
 
       const port = await this._botContainer.spawn({
         id,
-        pkg: request.package ?? {},
+        localPath,
         logFilePath: handle.getLogFilePath(new Date())
       });
       log(`[${id}] Openning RPC channel`);

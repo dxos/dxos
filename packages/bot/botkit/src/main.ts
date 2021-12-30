@@ -14,16 +14,16 @@ const main = async () => {
   const topic = PublicKey.from(topicString);
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
-  const botFactory = new BotFactory(
+  const botFactory = new BotFactory({
     botContainer,
-    {
+    botConfig: {
       services: {
         signal: {
           server: signal
         }
       }
     }
-  );
+  });
 
   const networkManager = new NetworkManager({
     signal: [signal]

@@ -55,18 +55,21 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
+      '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
+      '@types/download': ^8.0.1
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
       base-x: ~3.0.9
       debug: ^4.3.3
+      download: ^8.0.0
       esbuild: ^0.11.23
       expect: ~27.0.2
       ts-node: ^9.1.1
@@ -80,9 +83,11 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/proto': link:../../common/proto
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
+      '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
       debug: 4.3.3
+      download: 8.0.0
       esbuild: 0.11.23
     devDependencies:
       '@dxos/async': link:../../common/async
@@ -95,6 +100,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
+      '@types/download': 8.0.1
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
@@ -2169,6 +2175,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
+      '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
@@ -2222,6 +2229,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.isplainobject': 4.0.6
+      '@types/node': 14.18.0
       '@types/react': 17.0.37
       '@types/react-copy-to-clipboard': 5.0.2
       '@types/url-join': 4.0.1

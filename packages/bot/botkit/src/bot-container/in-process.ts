@@ -17,7 +17,7 @@ export class InProcessBotContainer implements BotContainer {
   readonly error = new Event<[id: string, error: Error]>();
   readonly exited = new Event<[id: string, status: BotExitStatus]>();
 
-  async spawn ({ pkg, id }: SpawnOptions): Promise<RpcPort> {
+  async spawn ({ id }: SpawnOptions): Promise<RpcPort> {
     const [botHandlePort, botPort] = createLinkedPorts();
 
     const botService = this._createBot();

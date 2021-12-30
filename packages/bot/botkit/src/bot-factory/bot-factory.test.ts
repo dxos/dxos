@@ -14,7 +14,9 @@ describe('BotFactory', () => {
   describe('with NodeContainer', () => {
     it('crashed bots get their status updated', async () => {
       const container = new NodeContainer(['@swc-node/register']);
-      const botFactory = new BotFactory(container);
+      const botFactory = new BotFactory({
+        botContainer: container
+      });
 
       const bot = await botFactory.SpawnBot({
         package: { localPath: require.resolve('../bots/failing-bot') }
