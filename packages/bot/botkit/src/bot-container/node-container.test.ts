@@ -28,7 +28,7 @@ describe('Node container', function () {
     const logFilePath = join('/tmp', `${handle.id}.log`);
     const port = await container.spawn({
       id: handle.id,
-      pkg: { localPath: require.resolve('../bots/empty-bot') },
+      localPath: require.resolve('../bots/empty-bot'),
       logFilePath
     });
 
@@ -61,7 +61,7 @@ describe('Node container', function () {
       const handle = createHandle();
       const port = await container.spawn({
         id: handle.id,
-        pkg: { localPath: require.resolve('../bots/start-client-bot') }
+        localPath: require.resolve('../bots/start-client-bot')
       });
 
       await handle.open(port);
@@ -87,7 +87,7 @@ describe('Node container', function () {
       const handle = createHandle();
       const port = await container.spawn({
         id: handle.id,
-        pkg: { localPath: require.resolve('../bots/start-echo-bot') }
+        localPath: require.resolve('../bots/start-echo-bot')
       });
 
       await handle.open(port);
@@ -117,7 +117,7 @@ describe('Node container', function () {
     const handle = createHandle();
     const port = await container.spawn({
       id: handle.id,
-      pkg: { localPath: require.resolve('../bots/failing-bot') }
+      localPath: require.resolve('../bots/failing-bot')
     });
     await handle.open(port);
     await handle.rpc.Initialize({});
