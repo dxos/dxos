@@ -2,9 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import download from 'download';
-import fs from 'fs';
 import path from 'path';
 
 const DOWNLOAD_TIMEOUT = 10000;

@@ -11,7 +11,6 @@ import {
   DXN,
   MemoryRegistryClient
 } from '@dxos/registry-client';
-import { randomInt } from '@dxos/util';
 
 export const MOCK_BOT_DXN = 'dxos:bot:mock';
 

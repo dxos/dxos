@@ -12,9 +12,9 @@ import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
-import { ContentLoader } from './ipfs-content-loader';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
+import { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -81,7 +81,7 @@ export class BotFactory implements BotFactoryService {
     const id = createId();
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
-      
+
       if (this._contentResolver && request.package?.dxn) {
         request.package = await this._contentResolver.resolve(request.package.dxn);
       }
@@ -90,7 +90,7 @@ export class BotFactory implements BotFactoryService {
         request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, this._workingDir);
       }
 
-      let localPath = request.package?.localPath;
+      const localPath = request.package?.localPath;
 
       if (localPath) {
         await this._ensurePackageExists(localPath);

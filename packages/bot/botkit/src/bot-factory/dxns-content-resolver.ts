@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from "assert";
+import assert from 'assert';
 
-import { CID, DXN, IRegistryClient, RegistryDataRecord } from "@dxos/registry-client";
+import { CID, DXN, IRegistryClient, RegistryDataRecord } from '@dxos/registry-client';
 
-import { BotPackageSpecifier } from "../proto/gen/dxos/bot";
-import { Bot } from "../proto/gen/dxos/type";
+import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
+import { Bot } from '../proto/gen/dxos/type';
 
-export type ContentResolverResult = Exclude<BotPackageSpecifier, "dxn">;
+export type ContentResolverResult = Exclude<BotPackageSpecifier, 'dxn'>;
 
 export interface ContentResolver {
   /**
@@ -33,7 +33,7 @@ export class DXNSContentResolver implements ContentResolver {
     if (!botIpfsCID && !botLocalPath) {
       throw new Error(`Unable to resolve bot content byt the provided dxn: ${dxn.toString()}`);
     }
-    let result: ContentResolverResult = {};
+    const result: ContentResolverResult = {};
     if (botIpfsCID) {
       result.ipfsCid = CID.from(botIpfsCID).toString();
     }

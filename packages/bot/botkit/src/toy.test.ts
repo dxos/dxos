@@ -141,10 +141,10 @@ describe('Node', () => {
       const botContainer = new NodeContainer(['@swc-node/register']);
 
       const contentResolver = new DXNSContentResolver(registry);
-  
+
       const botFactory = new BotFactory(botContainer, config);
       botFactory.serContentResolver(contentResolver);
-    
+
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
 
