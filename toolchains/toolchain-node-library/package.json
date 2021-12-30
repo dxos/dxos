@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolchain-node-library",
-  "version": "2.19.3",
+  "version": "2.19.6",
   "private": true,
   "bin": {
     "toolchain": "./main.js"
@@ -13,6 +13,7 @@
   "dependencies": {
     "@dxos/eslint-plugin": "~1.0.20",
     "@dxos/protobuf-compiler": "workspace:*",
+    "@swc-node/register": "~1.4.2",
     "@types/yargs": "~16.0.1",
     "chalk": "^4.1.0",
     "eslint": "^7.7.0",

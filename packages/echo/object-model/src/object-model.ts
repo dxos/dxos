@@ -21,7 +21,7 @@ const log = debug('dxos:echo:object-model');
  */
 export class ObjectModel extends Model<ObjectMutationSet> {
   static meta: ModelMeta = {
-    type: 'dxn://dxos/model/object',
+    type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
@@ -67,7 +67,6 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     await receipt.waitToBeProcessed();
   }
 
-  // TODO(burdon): Create builder pattern (replace static methods).
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [

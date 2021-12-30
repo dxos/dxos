@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.19.3",
+  "version": "2.19.6",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -22,9 +22,6 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
-    "@dxos/react-bot-factory-client": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1",
@@ -32,7 +29,8 @@
     "mobile-detect": "~1.4.5",
     "react-copy-to-clipboard": "~5.0.3",
     "url-join": "^4.0.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "@dxos/react-registry-client": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
@@ -43,6 +41,8 @@
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.7.2",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",

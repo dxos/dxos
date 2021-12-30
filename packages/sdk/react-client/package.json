@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.19.3",
+  "version": "2.19.6",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -16,22 +16,22 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.7",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "react-display-name": "^0.2.5",
     "use-subscription": "^1.4.1"
   },
   "devDependencies": {
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.7.2",
     "@dxos/toolchain-node-library": "workspace:*",
     "@mui/material": "^5.0.1",
     "@testing-library/react": "^11.0.4",

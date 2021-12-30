@@ -13,7 +13,7 @@ export interface ExecMochaOpts {
 export function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
   const jsdomArray = jsdom ? ['-r', 'jsdom-global/register'] : [];
   execTool('mocha', [
-    '-r', 'ts-node/register/transpile-only',
+    '-r', '@swc-node/register',
     '-r', require.resolve('./wtfnode.js'),
     ...jsdomArray,
 

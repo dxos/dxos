@@ -14,94 +14,16 @@ export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
 }
 
-// TODO(burdon): CLean-up:
-//   ModelMeta / registration (client.register and DXNS queries).
-//   Simplify API + remove inheritance?
-//   How to query/filter for items by type (of what?) Disambiguate item/model type from message type. Frames?
-//   Minimal test (how to write models).
-
-/*
-// TODO(burdon): Reset? rollback?
-interface StateMachine<T, S, M> {
-  messageType: string // DXN for M.
-  state: () => T
-  toSnapshot: () => Promise<S>
-  fromSnaphot: (data: S) => Promise<void>
-  processMessage: (message: M) => Promise<void> // From Item stream.
+// TODO(burdon): Enable transition to new adapter.
+export interface IModel<T> {
+  processMessage: (meta: MutationMeta, message: T) => Promise<void>
 }
-
-interface Result<T> {
-  optimistic: T | undefined
-  ready: Promise<T> // Resolved once mutations have been processed.
-}
-
-// TODO(burdon): Example.
-
-interface ChessState {
-  players: {
-    white: PublicKey
-    black: PublicKey
-  }
-  fen: string
-}
-
-package arena.chess;
-message ChessMessage
-{
-  oneof kind {
-    ChessGame
-    ChessMove
-  }
-
-  ChessGame {
-    PubKey whiteKey = 1
-    PubKey blackKey = 2
-  }
-
-  ChessMove {
-    enum Piece {
-      QUEEN = 1
-    }
-
-    from: string = 1
-    to: string = 2
-    promotion: Piece
-  }
-}
-
-class ChessStateMachinelImpl implements StateMachine<ChessState> {
-  constructor (
-    private readonly writer: Writer<ChessMessage>,
-    private readonly
-  ) {}
-}
-
-// TODO(burdon): Distinguished from state machine.
-// TODO(burdon): This requires a writablestream but isn't required by the pipeline.
-interface ChessModel {
-  state: ChessState
-  setPlayers: (white: PublicKey, black: PublicKey) => Result<ChessState>
-  applyMove: (move: any) => Result<ChessState>
-}
-
-class ChessModelImpl  {
-  constructor (
-    private readonly _stateMachine: StateMachine<ChessState>
-  ) {}
-
-  get state () {
-    return _stateMachine.state;
-  }
-}
-
-const test = (Item<ChessModel>) => item.model.state.fen;
-*/
 
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
-export abstract class Model<T = any> {
+export abstract class Model<T = any> implements IModel<T> {
   public readonly update = new Event<Model<T>>();
 
   private readonly _processor: NodeJS.WritableStream;
@@ -134,13 +56,22 @@ export abstract class Model<T = any> {
     });
   }
 
+  /**
+   * @deprecated Use processMessage.
+   */
+  // TODO(burdon): Remove.
+  get processor (): NodeJS.WritableStream {
+    return this._processor;
+  }
+
+  //
+  // Model
+  //
+
   toString () {
     return `Model(${JSON.stringify(this.toJSON())})`;
   }
 
-  /**
-   * Overriden to not retun implementation details.
-   */
   toJSON () {
     return {
       id: this.itemId,
@@ -156,46 +87,16 @@ export abstract class Model<T = any> {
     return this._itemId;
   }
 
-  // TODO(burdon): Standardize (vs. isReadOnly methods in database).
   get readOnly (): boolean {
     return this._writeStream === undefined;
-  }
-
-  /**
-   * @deprecated Use processMessage.
-   */
-  // TODO(burdon): Rename.
-  get processor (): NodeJS.WritableStream {
-    return this._processor;
   }
 
   subscribe (listener: (result: this) => void) {
     return this.update.on(listener as any);
   }
 
-  async processMessage (meta: MutationMeta, message: T): Promise<void> {
-    const modified = await this._processMessage(meta, message);
-    if (modified) {
-      this.update.emit(this);
-    }
-
-    this._messageProcessed.emit(meta);
-  }
-
-  createSnapshot (): any {
-    throw new Error('This model does not support snapshots.');
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot (snapshot: any): Promise<void> {
-    throw new Error('This model does not support snapshots');
-  }
-
-  // TODO(burdon): Update public, private, protected.
-
   /**
    * Writes the raw mutation to the output stream.
-   * @param mutation
    */
   protected async write (mutation: T): Promise<MutationWriteReceipt> {
     if (!this._writeStream) {
@@ -216,11 +117,27 @@ export abstract class Model<T = any> {
     };
   }
 
-  /**
-   * Process the message.
-   * @abstract
-   * @param {Object} meta
-   * @param {Object} message
-   */
+  //
+  // State machine
+  //
+
   protected abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
+
+  async processMessage (meta: MutationMeta, message: T): Promise<void> {
+    const modified = await this._processMessage(meta, message);
+    if (modified) {
+      this.update.emit(this);
+    }
+
+    this._messageProcessed.emit(meta);
+  }
+
+  createSnapshot (): any {
+    throw new Error('Snapshots not supported.');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async restoreFromSnapshot (snapshot: any): Promise<void> {
+    throw new Error('Snapshots not supported.');
+  }
 }

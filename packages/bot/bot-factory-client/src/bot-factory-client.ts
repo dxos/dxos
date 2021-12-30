@@ -50,6 +50,7 @@ export class BotHandle {
 
 export class BotFactoryClient {
   private _rpc: ProtoRpcClient<BotFactoryService> | undefined;
+  private _connectedTopic: PublicKey | undefined;
 
   constructor (private readonly _networkManager: NetworkManager) {}
 
@@ -60,6 +61,7 @@ export class BotFactoryClient {
 
   async start (topic: PublicKey): Promise<void> {
     const peerId = PublicKey.random();
+    this._connectedTopic = topic;
     const portPromise = new Promise<RpcPort>((resolve) => {
       this._networkManager.joinProtocolSwarm({
         topic,
@@ -82,8 +84,11 @@ export class BotFactoryClient {
     await this._rpc.open();
   }
 
-  stop () {
+  async stop () {
     this._rpc?.close();
+    if (this._connectedTopic) {
+      await this._networkManager.leaveProtocolSwarm(this._connectedTopic);
+    }
   }
 
   async spawn (pkg: BotPackageSpecifier, client: Client, party: PartyProxy) {

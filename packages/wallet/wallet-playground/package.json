@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-playground",
-  "version": "2.19.3",
+  "version": "2.19.6",
   "description": "DXOS Wallet Playground.",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.4.1",
+    "@dxos/esbuild-server": "~1.7.2",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",

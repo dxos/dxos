@@ -6,7 +6,7 @@ import React, { SyntheticEvent } from 'react';
 
 import { Autocomplete as MuiAutocomplete, TextField } from '@mui/material';
 
-export interface AutocompleteFilterProps {
+export interface AutocompleteProps {
   label: string
   value?: string
   options: string[]
@@ -21,7 +21,7 @@ export const Autocomplete = ({
   value,
   options = [],
   onUpdate
-}: AutocompleteFilterProps) => {
+}: AutocompleteProps) => {
   return (
     <MuiAutocomplete
       size='small'
@@ -35,7 +35,12 @@ export const Autocomplete = ({
         onUpdate(value || undefined);
       }}
       renderInput={params => (
-        <TextField {...params} label={label} variant='outlined' fullWidth />
+        <TextField
+          {...params}
+          label={label}
+          variant='outlined'
+          fullWidth
+        />
       )}
     />
   );

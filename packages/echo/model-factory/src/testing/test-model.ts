@@ -3,7 +3,7 @@
 //
 
 import { checkType } from '@dxos/debug';
-import { FeedMeta, schema, TestItemMutation } from '@dxos/echo-protocol';
+import { FeedMeta, TestItemMutation, schema } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
 import { ModelMeta } from '../types';
@@ -13,7 +13,7 @@ import { ModelMeta } from '../types';
  */
 export class TestModel extends Model<TestItemMutation> {
   static meta: ModelMeta = {
-    type: 'dxn://dxos/model/test',
+    type: 'dxos:model/test',
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
   };
 

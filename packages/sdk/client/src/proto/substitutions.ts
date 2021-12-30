@@ -7,6 +7,8 @@ import { PublicKey } from '@dxos/crypto';
 import { Timeframe } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
+// TODO(burdon): How to standardize?
+
 export default {
   'dxos.echo.feed.CredentialsMessage': {
     encode: (msg: Message) => ({ data: codec.encode(msg) }),

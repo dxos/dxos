@@ -51,7 +51,7 @@ describe('In-Memory', () => {
       expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
     });
   });
 
@@ -98,7 +98,7 @@ describe('In-Memory', () => {
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
     });
   });
 });
@@ -132,7 +132,7 @@ describe('Node', () => {
       const nm2 = new NetworkManager();
       const topic = PublicKey.random();
 
-      const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
+      const botContainer = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory(botContainer, config);
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
@@ -155,7 +155,7 @@ describe('Node', () => {
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.Destroy();
-      botFactoryClient.stop();
+      await botFactoryClient.stop();
       botContainer.killAll();
     });
   });

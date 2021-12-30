@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
@@ -10,7 +10,6 @@ import { PartyProxy } from '@dxos/client';
 import type { defs } from '@dxos/config';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { BotFactoryClientProvider } from '@dxos/react-bot-factory-client';
 import {
   ClientProvider,
   ProfileInitializer,
@@ -18,12 +17,14 @@ import {
   useSelection
 } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
 
 import {
   ErrorBoundary,
   FrameworkContextProvider,
   SpawnBotDialog
 } from '../src';
+import { createMockRegistryWithBots } from '../src/testing';
 import { Column } from './helpers';
 
 export default {
@@ -122,6 +123,8 @@ const User = () => {
 };
 
 export const Primary = () => {
+  const mockRegistry = useMemo(createMockRegistryWithBots, []);
+
   return (
     <FullScreen>
       <ErrorBoundary>
@@ -130,15 +133,15 @@ export const Primary = () => {
           justifyContent: 'space-around'
         }}>
           <ClientProvider config={clientConfig}>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <BotFactoryClientProvider>
+            <RegistryProvider registry={mockRegistry}>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
                   <Column>
                     <User />
                   </Column>
-                </BotFactoryClientProvider>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </RegistryProvider>
           </ClientProvider>
         </Box>
       </ErrorBoundary>

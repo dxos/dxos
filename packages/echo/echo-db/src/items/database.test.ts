@@ -4,19 +4,14 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { Readable } from 'stream';
 
-import { PublicKey } from '@dxos/crypto';
-import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { Item } from '.';
-import { Database } from '..';
 import { DataServiceHost } from './data-service-host';
-import { DataServiceRouter } from './data-service-router';
-import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'dxn://example/object/org';
 const OBJECT_PERSON = 'dxn://example/object/person';
@@ -25,29 +20,13 @@ const LINK_EMPLOYEE = 'dxn://example/link/employee';
 describe('Database', () => {
   describe('remote', () => {
     const setupBackend = async (modelFactory: ModelFactory) => {
-      const feed = new MockFeedWriter<EchoEnvelope>();
-      const inboundStream = new Readable({ read () {}, objectMode: true });
-      feed.written.on(([data, meta]) => inboundStream.push({ data, meta: { ...meta, memberKey: PublicKey.random() } }));
-
-      const backend = new Database(
-        modelFactory,
-        new FeedDatabaseBackend(inboundStream, feed, undefined, { snapshots: true })
-      );
-      await backend.init();
+      const backend = await createInMemoryDatabase(modelFactory);
       afterTest(() => backend.destroy());
       return backend;
     };
 
     const setupFrontend = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
-      const partyKey = PublicKey.random();
-      const dataServiceRouter = new DataServiceRouter();
-      dataServiceRouter.trackParty(partyKey, dataServiceHost);
-
-      const frontend = new Database(
-        modelFactory,
-        new RemoteDatabaseBackend(dataServiceRouter, partyKey)
-      );
-      await frontend.init();
+      const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, dataServiceHost);
       afterTest(() => frontend.destroy());
       return frontend;
     };
@@ -117,6 +96,17 @@ describe('Database', () => {
       await item.model.setProperty('foo', 'bar');
 
       expect(item.model.getProperty('foo')).toEqual('bar');
+    });
+
+    test('creates two items with ObjectModel', async () => {
+      const { frontend: database } = await setup();
+
+      const item1 = await database.createItem({ model: ObjectModel, type: 'test' });
+      await item1.model.setProperty('prop1', 'x');
+      const item2 = await database.createItem({ model: ObjectModel, type: 'test' });
+      await item2.model.setProperty('prop1', 'y');
+
+      expect(item1.model.getProperty('prop1')).toEqual('x');
     });
 
     test('parent & child items', async () => {

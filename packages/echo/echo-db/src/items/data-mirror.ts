@@ -29,7 +29,7 @@ export class DataMirror {
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
     private readonly _partkyKey: PublicKey
-  ) { }
+  ) {}
 
   open () {
     const entities = this._dataService.SubscribeEntitySet({ partyKey: this._partkyKey });
@@ -75,27 +75,27 @@ export class DataMirror {
   private _subscribeToUpdates (entity: Entity<Model<any>>) {
     const stream = this._dataService.SubscribeEntityStream({ partyKey: this._partkyKey, itemId: entity.id });
     stream.subscribe(
-      async upd => {
-        log(`Update[${entity.id}]: ${JSON.stringify(upd)}`);
-        if (upd.snapshot) {
-          assert(upd.snapshot.model);
-          if (upd.snapshot.model.custom) {
+      async update => {
+        log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
+        if (update.snapshot) {
+          assert(update.snapshot.model);
+          if (update.snapshot.model.custom) {
             assert(entity.modelMeta.snapshotCodec);
-            await entity.model.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(upd.snapshot.model?.custom));
+            await entity.model.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
           } else {
-            assert(upd.snapshot.model.array);
-            for (const msg of upd.snapshot.model.array.mutations ?? []) {
-              await entity.model.processMessage(msg.meta, entity.modelMeta.mutation.decode(msg.mutation));
+            assert(update.snapshot.model.array);
+            for (const message of update.snapshot.model.array.mutations ?? []) {
+              await entity.model.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
             }
           }
-        } else if (upd.mutation) {
-          if (upd.mutation.data?.mutation) {
-            assert(upd.mutation.meta);
+        } else if (update.mutation) {
+          if (update.mutation.data?.mutation) {
+            assert(update.mutation.meta);
             await entity.model.processMessage({
-              feedKey: (upd.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
-              memberKey: (upd.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
-              seq: upd.mutation.meta.seq ?? failUndefined()
-            }, entity.modelMeta.mutation.decode(upd.mutation.data.mutation ?? failUndefined()));
+              feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
+              memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
+              seq: update.mutation.meta.seq ?? failUndefined()
+            }, entity.modelMeta.mutation.decode(update.mutation.data.mutation ?? failUndefined()));
           }
         }
       },
