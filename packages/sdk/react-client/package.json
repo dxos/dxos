@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.19.3",
+  "version": "2.19.6",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",

@@ -1,0 +1,3 @@
+syntax = "proto3";
+
+import "@dxos/registry-client/src/proto/dxns/type.proto";

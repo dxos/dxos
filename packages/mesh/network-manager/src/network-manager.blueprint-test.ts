@@ -83,7 +83,7 @@ function sharedTests (inMemory: boolean) {
 
     await nm1.destroy();
     await nm2.destroy();
-  }).timeout(10_000);
+  }).timeout(10_000).retries(3);
 
   it('join and leave swarm', async () => {
     const topic = PublicKey.random();
@@ -117,7 +117,7 @@ function sharedTests (inMemory: boolean) {
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }).timeout(10_000);
+  }).timeout(10_000).retries(3);
 }
 
 // eslint-disable-next-line jest/no-export
@@ -158,7 +158,7 @@ export function webRTCTests () {
 
     await networkManager1.destroy();
     await networkManager2.destroy();
-  }).timeout(10_000);
+  }).timeout(10_000).retries(3);
 
   describe('StarTopology', () => {
     it('two peers connect to each other', async () => {
@@ -181,7 +181,7 @@ export function webRTCTests () {
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('Foo');
       });
-    }).timeout(10_000);
+    }).timeout(10_000).retries(3);
   });
 }
 
@@ -457,5 +457,5 @@ export function inMemoryTests () {
         ]
       }
     );
-  }).timeout(30_000);
+  }).timeout(30_000).retries(3);
 }

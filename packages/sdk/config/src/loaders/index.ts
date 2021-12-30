@@ -1,8 +1,4 @@
 //
-// Copyright 2020 DXOS.
-//
-
-//
 // Copyright 2021 DXOS.org
 //
 
@@ -20,15 +16,15 @@ const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
  * See `ConfigPlugin.js:33`.
  */
 
-export const LocalStorage = (): ConfigObject => ({});
+export const LocalStorage = <T = ConfigObject>(): T => ({} as T);
 
-export const Dynamics = (): ConfigObject => ({});
+export const Dynamics = <T = ConfigObject>(): T => ({} as T);
 
-export const Envs = (basePath = DEFAULT_BASE_PATH): ConfigObject => {
+export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
   const content = yaml.load(fs.readFileSync(path.resolve(basePath, 'envs-map.yml'), { encoding: 'utf8' }));
-  return mapFromKeyValues(content, process.env);
+  return mapFromKeyValues(content, process.env) as T;
 };
 
-export const Defaults = (basePath = DEFAULT_BASE_PATH): ConfigObject => {
+export const Defaults = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
   return yaml.load(fs.readFileSync(path.resolve(basePath, 'defaults.yml'), { encoding: 'utf8' }));
 };

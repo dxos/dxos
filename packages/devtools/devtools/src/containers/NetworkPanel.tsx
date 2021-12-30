@@ -33,13 +33,14 @@ export const NetworkPanel = () => {
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  const networkTopics = useStream(() => devtoolsHost.SubscribeToNetworkTopics());
+  const { topics } = useStream(() => devtoolsHost.SubscribeToNetworkTopics()) ?? {};
 
   useAsyncEffect(async () => {
     if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {
       setPeers([]);
       return;
     }
+
     const updatePeers = async () => {
       const { peers } = await devtoolsHost.GetNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
       peers && setPeers(peers.map((peer: any) => ({
@@ -48,12 +49,13 @@ export const NetworkPanel = () => {
         connections: peer.connections.map((connection: any) => PublicKey.from(connection))
       })));
     };
+
     await updatePeers();
     const interval = setInterval(updatePeers, 2000);
     return () => clearInterval(interval);
   }, [selectedTopic]);
 
-  const options = (networkTopics?.topics ?? []).map(networkTopic);
+  const options = (topics ?? []).map(networkTopic);
 
   return (
     <Box sx={{

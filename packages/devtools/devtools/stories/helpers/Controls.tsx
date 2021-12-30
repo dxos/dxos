@@ -82,12 +82,10 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     });
 
     // Test.
-    // TODO(burdon): RangeError: index out of range: 13 + 49 > 34
-    // const text = await party.database.createItem({
-    //   model: TextModel, type: 'example:type.text', parent: child.id
-    // });
-    // TODO(burdon): Constantly increasing mutations.
-    // await text.model.insert(0, 'Hello world');
+    const text = await party.database.createItem({
+      model: TextModel, type: 'example:type.text', parent: child.id
+    });
+    await text.model.insert(0, 'Hello world');
 
     // Messenger.
     const messenger = await party.database.createItem({
@@ -95,7 +93,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     });
     await messenger.model.sendMessage({
       text: 'Hello world',
-      sender: 'Test' // TODO(burdon): Key?
+      sender: 'Tester' // TODO(burdon): Key not name?
     });
   };
 

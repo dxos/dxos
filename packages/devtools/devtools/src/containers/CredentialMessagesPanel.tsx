@@ -17,10 +17,9 @@ export const CredentialMessagesPanel = () => {
 
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
-  const result = useStream(
-    () => devtoolsHost.SubscribeToCredentialMessages({ partyKey: selectedParty?.key }),
-    [selectedParty?.key]
-  );
+  const { messages } = useStream(
+    () => devtoolsHost.SubscribeToCredentialMessages({ partyKey: selectedParty?.key }), [selectedParty?.key]
+  ) ?? {};
 
   return (
     <Panel controls={(
@@ -32,7 +31,7 @@ export const CredentialMessagesPanel = () => {
     )}>
       <JsonTreeView
         size='small'
-        data={result?.messages}
+        data={messages}
       />
     </Panel>
   );

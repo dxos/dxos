@@ -9,10 +9,11 @@ title: Publishing to DXNS
 Before starting with the deployment process, we need to explain you some stuff on our compiler:
 
 1. **Build Folder**: We set our build folder to `dist` as it's used by default on the CLI (more on this later)
+2. **Flat Build Folder**: We make our build folder flat (without nested files) so the app can find 
+3. all the assets when running in the Kube
 
-2. **Flat Build Folder**: We make our build folder flat (without nested files) so the app can find all the assets when running in the Kube
-
-So, we've added some comment in the following snippet, that we already have in our `craco.config.js` file, to explain you better the steps above. 
+So, we've added some comment in the following snippet, that we already have in our `craco.config.js` file, 
+to explain you better the steps above. 
 
 ```jsx:title=<root>/craco.config.js
  // ...
@@ -42,7 +43,8 @@ module.exports = {
 };
 ```
 
-Once you run `yarn build` you will see all the compiled assets under the `dist` folder and no nested directories should be created.
+Once you run `yarn build` you will see all the compiled assets under the `dist` folder 
+and no nested directories should be created.
 
 ## Deployment Process
 
