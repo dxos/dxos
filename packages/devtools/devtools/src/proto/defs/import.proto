@@ -8,3 +8,5 @@ package dxos.devtools;
 
 import "@dxos/proto/src/proto/dxos/devtools.proto";
 import "@dxos/proto/src/proto/dxos/rpc.proto";
+import "@dxos/proto/src/proto/dxos/client.proto";
+import "@dxos/proto/src/proto/dxos/echo/service.proto";

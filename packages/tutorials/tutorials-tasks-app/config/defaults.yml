@@ -1,10 +1,13 @@
-app:
-  title: "Tasks App"
 system:
-  storage:
-    persistent: true
-services:
-  signal:
-    server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
-  dxns:
-    server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
+  remote: true
+
+# app:
+#   title: "Tasks App"
+# system:
+#   storage:
+#     persistent: true
+# services:
+#   signal:
+#     server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
+#   dxns:
+#     server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"

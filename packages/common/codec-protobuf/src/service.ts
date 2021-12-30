@@ -19,6 +19,10 @@ export class ServiceDescriptor<S> {
     private readonly _schema: Schema<any>
   ) {}
 
+  get serviceProto (): pb.Service {
+    return this._service;
+  }
+
   createClient (backend: ServiceBackend): Service & S {
     return new Service(backend, this._service, this._schema) as Service & S;
   }
