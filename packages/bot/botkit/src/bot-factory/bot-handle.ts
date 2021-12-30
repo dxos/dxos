@@ -103,7 +103,7 @@ export class BotHandle {
   /**
    * Returns the path to a directory where bot content is stored.
    */
-   getContentPath (): string {
+  getContentPath (): string {
     return join(this.workingDirectory, 'content');
   }
 }
