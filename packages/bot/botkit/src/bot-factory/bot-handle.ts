@@ -42,7 +42,7 @@ export class BotHandle {
   }
 
   async initializeDirectories () {
-    await fs.mkdir(this.workingDirectory, { recursive: true });
+    await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.mkdir(this.logsDir);
   }
 
@@ -98,5 +98,12 @@ export class BotHandle {
    */
   getLogFilePath (startTimestamp: Date) {
     return join(this.logsDir, `${startTimestamp.toISOString()}.log`);
+  }
+
+  /**
+   * Returns the path to a directory where bot content is stored.
+   */
+  getContentPath (): string {
+    return join(this.workingDirectory, 'content');
   }
 }

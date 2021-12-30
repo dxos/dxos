@@ -51,7 +51,10 @@ describe('Build bot', () => {
     const { client, party } = await setupClient(config);
 
     const botContainer = new NodeContainer();
-    const botFactory = new BotFactory(botContainer, config);
+    const botFactory = new BotFactory({
+      botContainer,
+      botConfig: config
+    });
     const botHandle = await botFactory.SpawnBot({
       package: { localPath: outfile },
       invitation: await generateInvitation(client, party)

@@ -28,10 +28,10 @@ export class NodeContainer implements BotContainer {
     private readonly _additionalRequireModules: string[] = []
   ) {}
 
-  async spawn ({ pkg, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
-    assert(pkg.localPath, 'Node container only supports "localPath" package specifiers.');
-    log(`[${id}] Spawning ${pkg.localPath}`);
-    const child = fork(pkg.localPath, [], {
+  async spawn ({ localPath, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
+    assert(localPath, 'Node container only supports "localPath" package specifiers.');
+    log(`[${id}] Spawning ${localPath}`);
+    const child = fork(localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
       serialization: 'advanced',
       stdio: logFilePath ? 'pipe' : 'inherit',
