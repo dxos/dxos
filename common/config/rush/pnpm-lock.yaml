@@ -329,7 +329,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -413,7 +413,7 @@ importers:
       '@dxos/async': link:../common/async
       '@dxos/debug': link:../common/debug
       '@dxos/esbuild-plugins': link:../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../toolchains/toolchain-node-library
       '@types/d3': 7.0.0
       '@types/faker': 5.5.9
@@ -628,7 +628,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -690,7 +690,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -803,7 +803,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/network-manager': workspace:*
@@ -853,7 +853,7 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.37
       '@types/react-copy-to-clipboard': 5.0.2
@@ -1997,7 +1997,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.0.1
@@ -2039,7 +2039,7 @@ importers:
       use-subscription: 1.5.1_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@mui/material': 5.2.3_5539cae010396b202b015f3568914e95
       '@testing-library/react': 11.2.7_react-dom@17.0.2+react@17.0.2
@@ -2070,7 +2070,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
@@ -2117,7 +2117,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/react-client': link:../react-client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
@@ -2153,7 +2153,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2207,7 +2207,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
@@ -2237,7 +2237,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -2262,7 +2262,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.7
       '@types/lodash': 4.14.178
@@ -2280,7 +2280,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@polkadot/api': 4.17.1
@@ -2326,7 +2326,7 @@ importers:
       protobufjs: 6.11.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1
+      '@dxos/esbuild-server': 1.7.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@polkadot/typegen': 4.17.1
       '@types/chai': 4.3.0
@@ -2349,7 +2349,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2398,7 +2398,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
@@ -2501,7 +2501,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.1
+      '@dxos/esbuild-server': ~1.7.2
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -2526,7 +2526,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.1_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -5126,8 +5126,8 @@ packages:
       - webpack-command
     dev: true
 
-  /@dxos/esbuild-server/1.7.1:
-    resolution: {integrity: sha512-+Uvne5mz6ZcYyZzjTKgFH4eN1V4v27DsvQ4YQdwU0oTC9iYXQ4/dV1NNP74P0ZPpxMk7sonWZ53OeZFbPeoUgA==}
+  /@dxos/esbuild-server/1.7.2:
+    resolution: {integrity: sha512-wuo9Fn/4ykGt+45HUVoP4y7W9hytJySzvqIIlnZ47LUe0xxEFvr1mNlCVDvEebuqxB83u2n7XV13t2vAB+y4qQ==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
@@ -5155,8 +5155,8 @@ packages:
       - supports-color
     dev: true
 
-  /@dxos/esbuild-server/1.7.1_@types+react@17.0.37:
-    resolution: {integrity: sha512-+Uvne5mz6ZcYyZzjTKgFH4eN1V4v27DsvQ4YQdwU0oTC9iYXQ4/dV1NNP74P0ZPpxMk7sonWZ53OeZFbPeoUgA==}
+  /@dxos/esbuild-server/1.7.2_@types+react@17.0.37:
+    resolution: {integrity: sha512-wuo9Fn/4ykGt+45HUVoP4y7W9hytJySzvqIIlnZ47LUe0xxEFvr1mNlCVDvEebuqxB83u2n7XV13t2vAB+y4qQ==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
