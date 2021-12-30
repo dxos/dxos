@@ -266,5 +266,5 @@ message SetTracingOptionsRequest {
 
 service TracingService {
   rpc SetTracingOptions(SetTracingOptionsRequest) returns (google.protobuf.Empty);
-  rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream MessageTrace);
+  rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream RpcMessage);
 }

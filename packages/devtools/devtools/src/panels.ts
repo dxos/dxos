@@ -48,12 +48,6 @@ export const panels = [
         title: 'Storage',
         icon: StorageIcon,
         panel: StoragePanel
-      },
-      {
-        id: 'rpc',
-        title: 'RPC Trace',
-        icon: MessagesIcon,
-        panel: RpcTracePanel,
       }
     ]
   },
@@ -136,6 +130,12 @@ export const panels = [
         title: 'Logging',
         icon: LoggingIcon,
         panel: LoggingPanel
+      },
+      {
+        id: 'rpc',
+        title: 'RPC Trace',
+        icon: MessagesIcon,
+        panel: RpcTracePanel,
       }
     ]
   }

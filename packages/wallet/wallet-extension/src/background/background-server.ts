@@ -4,7 +4,7 @@
 
 import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
 import { schema } from '@dxos/client/src/proto/gen';
-import { MessageTrace } from '@dxos/client/src/proto/gen/dxos/rpc';
+import { MessageTrace, RpcMessage } from '@dxos/client/src/proto/gen/dxos/rpc';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 import { SubscriptionGroup } from "@dxos/util";
 import { Stream } from '@dxos/codec-protobuf';
@@ -69,10 +69,10 @@ export class BackgroundServer {
 export class TraceCollector {
   private readonly _subscriptions = new SubscriptionGroup();
 
-  private _messages: MessageTrace[] = [];
+  private _messages: RpcMessage[] = [];
   private readonly _ids = new Set<number>();
 
-  private readonly _message = new Event<MessageTrace>();
+  private readonly _message = new Event<RpcMessage>();
   
   constructor(
     private readonly _tracer: PortTracer,
@@ -97,8 +97,8 @@ export class TraceCollector {
           }
         }
 
-        this._messages.push(msg);
-        this._message.emit(msg);
+        this._messages.push(inner);
+        this._message.emit(inner);
       }));
     } else {
       this._subscriptions.unsubscribe();
@@ -107,7 +107,7 @@ export class TraceCollector {
     }
   }
 
-  getMessageStream(): Stream<MessageTrace> {
+  getMessageStream(): Stream<RpcMessage> {
     return new Stream(({ next }) => {
       for(const msg of this._messages) {
         next(msg);
