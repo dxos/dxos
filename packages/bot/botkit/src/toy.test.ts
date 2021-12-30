@@ -31,7 +31,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory(botContainer);
+      const botFactory = new BotFactory({ botContainer });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -75,7 +75,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const botFactory = new BotFactory(botContainer);
+      const botFactory = new BotFactory({ botContainer });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -142,8 +142,11 @@ describe('Node', () => {
 
       const contentResolver = new DXNSContentResolver(registry);
 
-      const botFactory = new BotFactory(botContainer, config);
-      botFactory.serContentResolver(contentResolver);
+      const botFactory = new BotFactory({
+        botContainer,
+        botConfig: config,
+        contentResolver
+      });
 
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);

@@ -18,20 +18,31 @@ import { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
 
+export interface BotFactoryOptions {
+  botContainer: BotContainer,
+  botConfig?: defs.Config,
+  contentResolver?: ContentResolver,
+  contentLoader?: ContentLoader,
+}
+
 /**
  * Handles creation and managing bots.
  */
 export class BotFactory implements BotFactoryService {
-  private readonly _bots = new Map<string, BotHandle>();
-  private readonly _workingDir = './out';
-  private _contentLoader: ContentLoader | undefined;
-  private _contentResolver: ContentResolver | undefined;
+  private readonly _contentLoader: ContentLoader | undefined;
+  private readonly _contentResolver: ContentResolver | undefined;
+  private readonly _botContainer: BotContainer;
+  private readonly _botConfig: defs.Config;
 
-  constructor (
-    private readonly _botContainer: BotContainer,
-    private readonly _botConfig: defs.Config = {}
-  ) {
-    _botContainer.exited.on(([id, status]) => {
+  private readonly _bots = new Map<string, BotHandle>();
+
+  constructor (options: BotFactoryOptions) {
+    this._botContainer = options.botContainer;
+    this._botConfig = options.botConfig ?? {};
+    this._contentLoader = options.contentLoader;
+    this._contentResolver = options.contentResolver;
+
+    this._botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
       if (!bot) {
         log(`Bot exited but not found in factory: ${id}`);
@@ -41,7 +52,7 @@ export class BotFactory implements BotFactoryService {
       bot.onProcessExited(status);
     });
 
-    _botContainer.error.on(async ([id, error]) => {
+    this._botContainer.error.on(async ([id, error]) => {
       const bot = this._bots.get(id);
       if (!bot) {
         log(`Bot errored but not found in factory: ${id}`);
@@ -51,19 +62,11 @@ export class BotFactory implements BotFactoryService {
       bot.onProcessError(error);
 
       try {
-        await _botContainer.kill(id);
+        await this._botContainer.kill(id);
       } catch (err) {
         log(`Failed to kill bot: ${id}`);
       }
     });
-  }
-
-  setContentLoader (loader: ContentLoader) {
-    this._contentLoader = loader;
-  }
-
-  serContentResolver (resolver: ContentResolver) {
-    this._contentResolver = resolver;
   }
 
   private async _ensurePackageExists (localPath: string) {
@@ -86,8 +89,13 @@ export class BotFactory implements BotFactoryService {
         request.package = await this._contentResolver.resolve(request.package.dxn);
       }
 
+      const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
+      log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
+      await handle.initializeDirectories();
+      const workingDirectory = handle.getContentPath();
+
       if (this._contentLoader && request.package?.ipfsCid) {
-        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, this._workingDir);
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, workingDirectory);
       }
 
       const localPath = request.package?.localPath;
@@ -96,10 +104,6 @@ export class BotFactory implements BotFactoryService {
         await this._ensurePackageExists(localPath);
         log(`[${id}] Spawning bot ${localPath}`);
       }
-
-      const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
-      log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
-      await handle.initializeDirectories();
 
       const port = await this._botContainer.spawn({
         id,
