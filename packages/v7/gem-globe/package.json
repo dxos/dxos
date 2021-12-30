@@ -30,13 +30,14 @@
     "immutability-helper": "^3.0.2",
     "lodash.defaultsdeep": "4.6.1",
     "lodash.get": "4.4.2",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-hotkeys": "2.0.0",
     "react-resize-aware": "3.1.1",
     "topojson": "^3.0.2"
   },
   "devDependencies": {
+    "@dxos/esbuild-book-knobs": "^1.0.0-beta.36",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",

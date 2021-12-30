@@ -70,7 +70,7 @@ export class Versor {
       a2 = -a2;
       b2 = -b2;
       c2 = -c2;
-      d2 = -d2
+      d2 = -d2;
       dot = -dot;
     }
     if (dot > 0.9995) {

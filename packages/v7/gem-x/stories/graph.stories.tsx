@@ -6,6 +6,8 @@ import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
+import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
+
 import {
   FullScreen,
   GraphForceProjector,
@@ -32,6 +34,11 @@ export default {
 };
 
 const styles = {
+  knobs: css`
+    position: absolute;
+    right: 0;
+  `,
+
   stats: css`
     text {
       font-family: monospace;
@@ -59,6 +66,9 @@ export const Primary = () => {
   const model = useMemo(() => createModel(2), []);
   const [scene, setScene] = useState<Scene<TestModel>>();
   const scale = useScale({ gridSize: 32 });
+  const Knobs = useKnobs();
+
+  useButton('Test', () => {});
 
   useEffect(() => {
     const svg = ref.current;
@@ -100,6 +110,8 @@ export const Primary = () => {
         <g className={styles.graph} ref={graphRef} />
         <g className={styles.stats} ref={statsRef} />
       </SvgContainer>
+
+      <Knobs className={styles.knobs} />
     </FullScreen>
   );
 }

@@ -4,11 +4,11 @@
 
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
-import styled from '@emotion/styled'
+import { css } from '@emotion/css'
 
 import { GridType } from '../util';
 
-const GridGroup = styled.g`
+const gridStyles = css`
   path {
     stroke-width: 0;
   }
@@ -18,7 +18,7 @@ const GridGroup = styled.g`
   }
 `;
 
-const AxisGroup = styled.g`
+const axisStyles = css`
   line {
     stroke: #333;
     stroke-width: 1;
@@ -83,17 +83,17 @@ export const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) =
   return (
     <g>
       {showGrid && (
-        <GridGroup>
+        <g className={gridStyles}>
           <g ref={xGridRef} />
           <g ref={yGridRef} />
-        </GridGroup>
+        </g>
       )}
 
       {showAxis && (
-        <AxisGroup>
+        <g className={axisStyles}>
           <g ref={xAxisRef} />
           <g ref={yAxisRef} />
-        </AxisGroup>
+        </g>
       )}
     </g>
   );

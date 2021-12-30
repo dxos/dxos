@@ -9,11 +9,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 
+import { useButton, useKnobs, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
 import { FullScreen, useObjectMutator } from '@dxos/gem-core';
 
 import CitiesData from '../data/cities.json';
 import TopologyData from '../data/110m.json';
-import { useButton, useKnobs, useNumber, useSelect } from './helpers';
 
 import { Globe, Versor } from '../src';
 

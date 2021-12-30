@@ -3,6 +3,12 @@
 //
 
 import React, { MutableRefObject, createContext, forwardRef, useContext, useEffect, useState } from 'react';
+import { css } from '@emotion/css';
+
+const styles = css`
+  position: absolute;
+  right: 0;
+`;
 
 // TODO(burdon): Create esbuild-server lib. (@dxos/esbuild-book-knobs); create lerna project.
 
@@ -64,7 +70,7 @@ interface KnobsProps {
 }
 
 export const Knobs = forwardRef<HTMLDivElement, KnobsProps>(({
-  className
+  className = styles
 }: KnobsProps,
   ref: MutableRefObject<HTMLDivElement>
 ) => {
@@ -74,12 +80,6 @@ export const Knobs = forwardRef<HTMLDivElement, KnobsProps>(({
     <div
       ref={ref}
       className={className}
-      style={{
-        position: 'absolute',
-        left: 0,
-        bottom: 0,
-        padding: 8
-      }}
     >
       {knobs.map(([type, knob], i) => {
         switch (type) {

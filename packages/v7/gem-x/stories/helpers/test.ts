@@ -4,9 +4,7 @@
 
 import faker from 'faker';
 
-import { Graph } from './graph';
-import { ObjectId } from './scene';
-import { Stats } from './stats';
+import { Graph, ObjectId, Stats } from '../../src';
 
 export type TestModel = {
   items: {
@@ -25,7 +23,7 @@ export const createModel = (maxDepth = 4): TestModel => {
 
     if (depth < maxDepth) {
       Array.from({ length: Math.round(1 + Math.random() * (maxChildren - 1)) }).forEach(() => {
-        const id = `item-${faker.datatype.uuid()}`;
+        const id = `item-${faker.random.uuid()}`;
         root.children.push(id);
 
         sub({
@@ -60,7 +58,7 @@ export const updateModel = (model: TestModel) => {
     return;
   }
 
-  const id = `item-${faker.datatype.uuid()}`;
+  const id = `item-${faker.random.uuid()}`;
   parent.children.push(id);
 
   model.items.push({
