@@ -28,7 +28,8 @@ import {
   SignalPanel,
   StoragePanel,
   SwarmPanel,
-  SnapshotsPanel
+  SnapshotsPanel,
+  RpcTracePanel
   // NetworkPanel
 } from './containers';
 
@@ -47,6 +48,12 @@ export const panels = [
         title: 'Storage',
         icon: StorageIcon,
         panel: StoragePanel
+      },
+      {
+        id: 'rpc',
+        title: 'RPC Trace',
+        icon: MessagesIcon,
+        panel: RpcTracePanel,
       }
     ]
   },

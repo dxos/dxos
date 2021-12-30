@@ -14,3 +14,4 @@ export * from './SignalPanel';
 export * from './SnapshotsPanel';
 export * from './StoragePanel';
 export * from './SwarmPanel';
+export * from './RpcTracePanel';

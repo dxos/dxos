@@ -7,3 +7,4 @@ syntax = "proto3";
 package dxos.devtools;
 
 import "@dxos/proto/src/proto/dxos/devtools.proto";
+import "@dxos/proto/src/proto/dxos/rpc.proto";

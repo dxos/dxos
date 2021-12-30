@@ -2422,6 +2422,7 @@ importers:
 
   ../../packages/wallet/wallet-extension:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -2434,6 +2435,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@hot-loader/react-dom': 17.0.1
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
@@ -2463,6 +2465,7 @@ importers:
       uuid: ^8.3.2
       webextension-polyfill-ts: ~0.25.0
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
@@ -2472,6 +2475,7 @@ importers:
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
       '@hot-loader/react-dom': 17.0.1_react@17.0.2
       '@mui/icons-material': 5.2.1_5ba8d2bfb1b4f0e067f3951fb85359cb
       '@mui/material': 5.2.3_5539cae010396b202b015f3568914e95

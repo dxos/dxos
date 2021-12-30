@@ -40,9 +40,18 @@ message StreamClose {
   int32 id = 1;
 }
 
-
 message Error {
   string name = 1;
   string message = 2;
   string stack = 3;
+}
+
+message MessageTrace {
+  enum Direction {
+    INCOMING = 1;
+    OUTGOING = 2;
+  }
+
+  Direction direction = 1;
+  bytes data = 2;
 }

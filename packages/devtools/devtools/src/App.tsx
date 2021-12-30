@@ -33,6 +33,13 @@ export const App = () => {
     client.registerModel(MessengerModel);
   }, [client]);
 
+  useEffect(() => {
+    void client.services.TracingService.SetTracingOptions({ enable: true });
+    return () => {
+      void client.services.TracingService.SetTracingOptions({ enable: false });
+    }
+  }, [client]);
+
   const handleListItemClick = (event: any, index: string) => {
     setSelected(index);
   };
