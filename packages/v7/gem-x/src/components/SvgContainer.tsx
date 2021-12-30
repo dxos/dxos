@@ -3,8 +3,8 @@
 //
 
 import * as d3 from 'd3';
-import { ZoomTransform } from 'd3';
-import { Property } from 'csstype';
+import type { ZoomTransform } from 'd3';
+import type { Property } from 'csstype';
 import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useRef, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 import { css } from '@emotion/css';
@@ -75,15 +75,16 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const childrenRef = useRef<SVGSVGElement>();
   const gridRef = useRef<SVGSVGElement>();
 
-  // Default value of 1 prevents default (300 width).
   const width = controlledWidth || currentWidth;
   const height = controlledHeight || currentHeight;
 
   const handleResize = ({ width, height }, transform) => {
+    const bounds = scale.bounds.update(-Math.floor(width / 2), -Math.floor(height / 2), width, height);
+
     if (center) {
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
       svgRef.current
-        .setAttribute('viewBox', `${-width / 2},${-height / 2},${width},${height}`);
+        .setAttribute('viewBox', `${bounds.x},${bounds.y},${bounds.width},${bounds.height}`);
     }
 
     if (showGrid) {
@@ -98,9 +99,13 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
 
       if (zoom) {
         const zoomCallback = d3.zoom()
+          .filter(event => {
+            return true;
+          })
           .extent([[0, 0], [width, height]])
           .scaleExtent(zoom)
-          .on('zoom', function ({ transform }: { transform: ZoomTransform }) {
+          .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
+            scale.setTransform(transform);
             setTransform(transform);
             handleResize({ width, height }, transform);
             d3.select((zoomRoot ?? childrenRef).current)

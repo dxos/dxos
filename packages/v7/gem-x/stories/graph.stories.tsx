@@ -3,10 +3,12 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
+
+import { useStateRef } from './helpers';
 
 import {
   FullScreen,
@@ -37,6 +39,8 @@ const styles = {
   knobs: css`
     position: absolute;
     right: 0;
+    bottom: 0;
+    padding: 8px;
   `,
 
   stats: css`
@@ -60,18 +64,21 @@ const styles = {
 };
 
 export const Primary = () => {
-  const ref = useRef<SVGSVGElement>();
+  const svgRef = useRef<SVGSVGElement>();
   const graphRef = useRef<SVGSVGElement>();
   const statsRef = useRef<SVGSVGElement>();
   const model = useMemo(() => createModel(2), []);
-  const [scene, setScene] = useState<Scene<TestModel>>();
+  const [scene, setScene, sceneRef] = useStateRef<Scene<TestModel>>();
   const scale = useScale({ gridSize: 32 });
   const Knobs = useKnobs();
 
-  useButton('Test', () => {});
+  useButton('Test', () => {
+    updateModel(model);
+    sceneRef.current.update(model);
+  });
 
   useEffect(() => {
-    const svg = ref.current;
+    const svg = svgRef.current;
 
     const scene = new Scene<TestModel>([
       new Part<TestModel, any>(
@@ -96,19 +103,19 @@ export const Primary = () => {
       clearInterval(interval);
       scene.stop();
     }
-  }, [ref]);
+  }, [svgRef]);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
-        ref={ref}
-        grid
+        ref={svgRef}
         zoom={[1/4, 8]}
         zoomRoot={graphRef}
         scale={scale}
+        grid
       >
-        <g className={styles.graph} ref={graphRef} />
-        <g className={styles.stats} ref={statsRef} />
+        <g ref={graphRef} className={styles.graph} />
+        <g ref={statsRef} className={styles.stats} />
       </SvgContainer>
 
       <Knobs className={styles.knobs} />

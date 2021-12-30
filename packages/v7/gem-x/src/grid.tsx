@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import { ZoomTransform } from 'd3';
+import type { ZoomTransform } from 'd3';
 
 import { Scale } from './scale';
 

@@ -56,7 +56,7 @@ export const Shapes = ({
             const { x, y, r } = (data as Circle);
             root.append('circle')
               .attr('cx', scale.x(x))
-              .attr('cy', scale.x(y))
+              .attr('cy', -scale.x(y))
               .attr('r', scale.x(r));
             break;
           }
@@ -65,7 +65,7 @@ export const Shapes = ({
             const { x, y, width, height } = (data as Rect);
             root.append('rect')
               .attr('x', scale.x(x))
-              .attr('y', scale.x(y))
+              .attr('y', -(scale.x(y) + scale.x(height)))
               .attr('width', scale.x(width))
               .attr('height', scale.x(height));
             break;
@@ -75,9 +75,9 @@ export const Shapes = ({
             const { x1, y1, x2, y2 } = (data as Line);
             root.append('line')
               .attr('x1', scale.x(x1))
-              .attr('y1', scale.x(y1))
+              .attr('y1', -scale.x(y1))
               .attr('x2', scale.x(x2))
-              .attr('y2', scale.x(y2));
+              .attr('y2', -scale.x(y2));
             break;
           }
         }

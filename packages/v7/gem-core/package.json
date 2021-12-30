@@ -39,7 +39,7 @@
     "clsx": "^1.1.0",
     "d3": "^7.2.1",
     "debug": "^4.1.1",
-    "faker": "^4.1.0",
+    "faker": "^5.5.3",
     "immutability-helper": "^3.0.2",
     "react-resize-aware": "3.1.1"
   },
@@ -49,19 +49,18 @@
     "@dxos/eslint-plugin": "~1.0.10",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.7.1",
-    "@mdx-js/react": "^1.6.22",
     "@types/d3": "^7.1.0",
     "@types/debug": "^4.1.5",
     "@types/faker": "^5.1.6",
     "@types/lodash": "^4.14.168",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
-    "faker": "^4.1.0",
+    "faker": "^5.5.3",
     "jest": "^25.5.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "~4.0.2"
+    "ts-jest": "^27.1.2",
+    "typescript": "~4.5.4"
   },
   "peerDependencies": {
     "@emotion/css": ">=11.0.0",

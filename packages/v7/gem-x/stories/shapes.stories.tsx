@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import * as d3 from 'd3';
+import type { D3DragEvent } from 'd3';
+import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
 import {
@@ -41,9 +43,10 @@ const styles = css`
 `;
 
 export const Primary = () => {
+  const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
 
-  const shapes = useMemo<Shape[]>(() => [
+  const [shapes, setShapes] = useState<Shape[]>([
     {
       type: 'circle', data: { x: 0, y: 0, r: [3, 1] }
     },
@@ -62,17 +65,52 @@ export const Primary = () => {
     {
       type: 'circle', data: { x: 6, y: 0, r: [1, 4] }
     }
-  ], []);
+  ]);
+
+  useEffect(() => {
+    let start = undefined;
+    let end = undefined;
+
+    const drag = d3.drag()
+      .filter(event => {
+        return false; // TODO(burdon): Filter unless tool selected (since clashes with zoom).
+      })
+      .on('start', (event: D3DragEvent<any, any, any>) => {
+        start = scale.map({ x: event.x, y: event.y }, true);
+      })
+      .on('drag', (event: D3DragEvent<any, any, any>) => {
+        // const { x, y } = scale.map({ x: event.x, y: event.y }, true);
+      })
+      .on('end', (event: D3DragEvent<any, any, any>) => {
+        end = scale.map({ x: event.x, y: event.y }, true);
+        setShapes(shapes => [...shapes, {
+          type: 'line',
+          data: {
+            x1: start.x,
+            y1: start.y,
+            x2: end.x,
+            y2: end.y
+          }
+        }])
+      });
+
+    if (false)
+      d3.select(svgRef.current).call(drag);
+  }, [svgRef]);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
-        grid
+        ref={svgRef}
         scale={scale}
         zoom={[1/8, 8]}
+        grid
       >
         <g className={styles}>
-          <Shapes scale={scale} shapes={shapes} />
+          <Shapes
+            scale={scale}
+            shapes={shapes}
+          />
         </g>
       </SvgContainer>
     </FullScreen>

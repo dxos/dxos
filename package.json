@@ -16,7 +16,7 @@
   "author": "DXOS.org",
   "workspaces": {
     "packages": [
-      "experimental/*",
+      "packages/experimental/*",
       "packages/v7/*"
     ]
   },

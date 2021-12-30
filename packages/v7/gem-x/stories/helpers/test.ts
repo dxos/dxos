@@ -23,7 +23,7 @@ export const createModel = (maxDepth = 4): TestModel => {
 
     if (depth < maxDepth) {
       Array.from({ length: Math.round(1 + Math.random() * (maxChildren - 1)) }).forEach(() => {
-        const id = `item-${faker.random.uuid()}`;
+        const id = `item-${faker.datatype.uuid()}`;
         root.children.push(id);
 
         sub({
@@ -58,7 +58,7 @@ export const updateModel = (model: TestModel) => {
     return;
   }
 
-  const id = `item-${faker.random.uuid()}`;
+  const id = `item-${faker.datatype.uuid()}`;
   parent.children.push(id);
 
   model.items.push({
