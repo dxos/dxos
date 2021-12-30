@@ -9,7 +9,7 @@ import { CID, DXN, IRegistryClient, RegistryDataRecord } from '@dxos/registry-cl
 import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
 import { Bot } from '../proto/gen/dxos/type';
 
-export type ContentResolverResult = Exclude<BotPackageSpecifier, 'dxn'>;
+export type ContentResolverResult = Omit<BotPackageSpecifier, 'dxn'>;
 
 export interface ContentResolver {
   /**
