@@ -16,7 +16,7 @@ export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'onJoin' | 'title'>
 
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
     const finishAuthentication = await client.echo.acceptInvitation(invitation);
-    await finishAuthentication((await secretProvider()).toString())
+    await finishAuthentication((await secretProvider()).toString());
   };
 
   return (

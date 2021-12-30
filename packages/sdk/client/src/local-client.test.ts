@@ -5,12 +5,10 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
-import { defaultSecretProvider } from '@dxos/credentials';
 
 import { Client } from './client';
-import { decodeInvitation } from './util';
 
 describe('Client', () => {
   describe('Local-only tests', () => {

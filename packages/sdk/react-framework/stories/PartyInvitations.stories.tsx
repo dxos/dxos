@@ -6,14 +6,12 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import {
   ClientProvider,
   ProfileInitializer,
   useClient,
-  useParties,
-  useSecretGenerator
+  useParties
 } from '@dxos/react-client';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
@@ -141,14 +139,14 @@ const AutoInvitationGenerator = ({
   onInvite: (invitationCode: string) => void
 }) => {
   const client = useClient();
-  const [pin, setPin] = useState('')
+  const [pin, setPin] = useState('');
 
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
       const invitation = await client.echo.createInvitation(party.key, {
         onFinish: () => {
-          setPin('')
+          setPin('');
         },
         onPinGenerated: setPin
       });

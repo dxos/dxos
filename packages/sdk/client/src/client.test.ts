@@ -119,7 +119,7 @@ describe('Client', () => {
         const party = await inviter.echo.createParty();
 
         let inviteeInvitationProcess: InvitationProcess;
-        inviter.services.PartyService.CreateInvitation({publicKey: party.key}).subscribe(async inviterInvitation => {
+        inviter.services.PartyService.CreateInvitation({ publicKey: party.key }).subscribe(async inviterInvitation => {
           if (!inviteeInvitationProcess) {
             inviteeInvitationProcess = await invitee.services.PartyService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
           } else if (inviterInvitation.secret) {

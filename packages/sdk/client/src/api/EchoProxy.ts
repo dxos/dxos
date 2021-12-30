@@ -3,10 +3,9 @@
 //
 
 import { Event, latch } from '@dxos/async';
-import { defaultSecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
-import { ECHO, InvitationAuthenticator, InvitationOptions, PartyNotFoundError, ResultSet, InvitationDescriptor } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -15,8 +14,8 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { PartyProxy } from './PartyProxy';
 import { encodeInvitation } from '../util';
+import { PartyProxy } from './PartyProxy';
 
 interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
@@ -142,7 +141,7 @@ export class EchoProxy {
    * Joins an existing Party by invitation.
    * @returns An async function to provide secret and finishing the invitation process.
    */
-   async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
+  async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
     const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
       invitationCode: encodeInvitation(invitationDescriptor)
     });
@@ -166,7 +165,7 @@ export class EchoProxy {
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
   async createInvitation (partyKey: PublicKey, options?: CreateInvitationOptions): Promise<PendingInvitation> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({publicKey: partyKey});
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
         if (invitationMsg.finished) {

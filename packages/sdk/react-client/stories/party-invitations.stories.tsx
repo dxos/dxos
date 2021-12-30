@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { encodeInvitation, decodeInvitation, PendingInvitation, Client } from '@dxos/client';
+import { Client, decodeInvitation, encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
@@ -18,9 +18,7 @@ import {
   useClient,
   useContacts,
   useParties,
-  useProfile,
-  useSecretGenerator,
-  useSecretProvider
+  useProfile
 } from '../src';
 import {
   ClientPanel,
@@ -46,11 +44,10 @@ const PartyInvitationContainer = () => {
   const [contacts] = useContacts();
   const [pin, setPin] = useState('');
 
-
   const resetInvitations = () => {
     setInvitationCode('');
     setPin('');
-  }
+  };
 
   const handleCreateParty = () => {
     setImmediate(async () => {
@@ -76,7 +73,7 @@ const PartyInvitationContainer = () => {
     setImmediate(async () => {
       resetInvitations();
       if (contact) {
-        const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
+        const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!));
         setInvitationCode(encodeInvitation(invitation));
       } else {
         const invitation = await client.echo.createInvitation(partyKey!, {
@@ -170,8 +167,6 @@ const PartyJoinContainer = () => {
         const finishAuthentication = await client.echo.acceptInvitation(invitation);
         setStatus({ finishAuthentication });
       }
-      
-
     } catch (error: any) {
       setStatus({ error });
     }
