@@ -7,6 +7,8 @@ import type { D3DragEvent } from 'd3';
 import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
+import { useStateRef } from './helpers';
+
 import {
   FullScreen,
   Shape,
@@ -15,8 +17,67 @@ import {
   useScale,
 } from '../src';
 
+// TODO(burdon): Mapping bug (based on scale).
+// TODO(burdon): Path.
+// TODO(burdon): Resize (handles).
+// TODO(burdon): Delete.
+
 export default {
   title: 'gem-x/Shapes'
+};
+
+interface ToolbarProps {
+  active?: string
+  onSelect?: (tool?: string) => void
+}
+
+const Toolbar = ({
+  active,
+  onSelect
+}: ToolbarProps) => {
+  const styles = css`
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 8px;
+    
+    button {
+      color: #999;
+      margin-right: 4px;
+    }
+    button.active {
+      color: #000;
+    }
+  `;
+
+  const tools = [
+    {
+      id: 'rect'
+    },
+    {
+      id: 'circle'
+    },
+    {
+      id: 'line'
+    },
+    {
+      id: 'path'
+    }
+  ]
+
+  return (
+    <div className={styles}>
+      {tools.map(({ id }) => (
+        <button
+          key={id}
+          className={active === id ? 'active' : ''}
+          onClick={() => onSelect(active === id ? undefined : id)}
+        >
+          {id}
+        </button>
+      ))}
+    </div>
+  );
 };
 
 const styles = css`
@@ -45,6 +106,7 @@ const styles = css`
 export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
+  const [tool, setTool, toolRef] = useStateRef<string>(undefined);
 
   const [shapes, setShapes] = useState<Shape[]>([
     {
@@ -72,8 +134,9 @@ export const Primary = () => {
     let end = undefined;
 
     const drag = d3.drag()
-      .filter(event => {
-        return false; // TODO(burdon): Filter unless tool selected (since clashes with zoom).
+      .filter(() => {
+        // TODO(burdon): Filter unless tool selected (since clashes with zoom).
+        return Boolean(toolRef.current);
       })
       .on('start', (event: D3DragEvent<any, any, any>) => {
         start = scale.map({ x: event.x, y: event.y }, true);
@@ -83,19 +146,51 @@ export const Primary = () => {
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
         end = scale.map({ x: event.x, y: event.y }, true);
-        setShapes(shapes => [...shapes, {
-          type: 'line',
-          data: {
-            x1: start.x,
-            y1: start.y,
-            x2: end.x,
-            y2: end.y
+
+        switch (toolRef.current) {
+          case 'rect': {
+            const width = end.x - start.x;
+            const height = end.y - start.y
+            setShapes(shapes => [...shapes, {
+              type: 'rect',
+              data: {
+                x: start.x + (width < 0 ? width : 0),
+                y: start.y + (height < 0 ? height : 0),
+                width: Math.abs(width),
+                height: Math.abs(height)
+              }
+            }]);
+            break;
           }
-        }])
+
+          case 'circle': {
+            setShapes(shapes => [...shapes, {
+              type: 'circle',
+              data: {
+                x: start.x,
+                y: start.y,
+                r: Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2))
+              }
+            }]);
+            break;
+          }
+
+          case 'line': {
+            setShapes(shapes => [...shapes, {
+              type: 'line',
+              data: {
+                x1: start.x,
+                y1: start.y,
+                x2: end.x,
+                y2: end.y
+              }
+            }]);
+            break;
+          }
+        }
       });
 
-    if (false)
-      d3.select(svgRef.current).call(drag);
+    d3.select(svgRef.current).call(drag);
   }, [svgRef]);
 
   return (
@@ -113,6 +208,11 @@ export const Primary = () => {
           />
         </g>
       </SvgContainer>
+
+      <Toolbar
+        active={tool}
+        onSelect={(tool) => setTool(tool)}
+      />
     </FullScreen>
   );
 }

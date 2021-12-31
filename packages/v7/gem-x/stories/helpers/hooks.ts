@@ -19,4 +19,4 @@ export const useStateRef = <V extends any>(initialValue?: V):
   }, [initialValue, value]);
 
   return [value, setValue, ref];
-}
+};
