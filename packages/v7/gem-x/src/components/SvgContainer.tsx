@@ -70,7 +70,6 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
 }: SvgContainerProps, initialRef: MutableRefObject<SVGSVGElement>) => {
   const { ref: div, width: currentWidth, height: currentHeight } = useResizeObserver<HTMLDivElement>();
   const [visibility, setVisibility] = useState<Property.Visibility>('hidden');
-  const [transform, setTransform] = useState<ZoomTransform>();
   const svgRef = initialRef || useRef<SVGSVGElement>();
   const childrenRef = useRef<SVGSVGElement>();
   const gridRef = useRef<SVGSVGElement>();
@@ -78,7 +77,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const width = controlledWidth || currentWidth;
   const height = controlledHeight || currentHeight;
 
-  const handleResize = ({ width, height }, transform) => {
+  const handleResize = ({ width, height }) => {
     const bounds = scale.bounds.update(-Math.floor(width / 2), -Math.floor(height / 2), width, height);
 
     if (center) {
@@ -89,13 +88,13 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
 
     if (showGrid) {
       d3.select(gridRef.current)
-        .call(grid({ scale, transform, width, height }));
+        .call(grid({ scale, width, height }));
     }
   }
 
   useEffect(() => {
     if (width && height) {
-      handleResize({ width, height }, transform);
+      handleResize({ width, height });
 
       if (zoom) {
         const zoomCallback = d3.zoom()
@@ -106,8 +105,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
           .scaleExtent(zoom)
           .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
             scale.setTransform(transform);
-            setTransform(transform);
-            handleResize({ width, height }, transform);
+            handleResize({ width, height });
             d3.select((zoomRoot ?? childrenRef).current)
               .attr('transform', transform as any);
           })
@@ -144,6 +142,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
       <svg
         ref={svgRef}
         className={className}
+        transform='scale(1, -1)' // Flip y-axis.
         style={{
           width,
           height,

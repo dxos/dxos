@@ -11,6 +11,7 @@ import { css } from '@emotion/css';
 import { useStateRef } from './helpers';
 
 import {
+  Path,
   FullScreen,
   Shape,
   Shapes,
@@ -18,9 +19,11 @@ import {
   useScale,
 } from '../src';
 
+// TODO(burdon): Normalized [x, y] over {x, y} -- const [px, py] = d3.pointer(event);
+// TODO(burdon): Use d3.pointer rather than raw event.x, event.y.
+
 // TODO(burdon): Delete shapes if removed from model.
 // TODO(burdon): Mapping bug (based on scale).
-// TODO(burdon): Path.
 // TODO(burdon): Resize (handles).
 // TODO(burdon): Delete.
 
@@ -86,26 +89,28 @@ const styles = css`
   circle {
     stroke: seagreen;
     stroke-width: 2;
-    fill: none;
+    fill: #EEE;
+    opacity: 0.4;
   }
   rect {
     stroke: orange;
-    stroke-width: 1;
-    fill: none;
+    stroke-width: 2;
+    fill: #EEE;
+    opacity: 0.4;
   }
   line {
-    stroke: orange;
-    stroke-width: 4;
+    stroke: darkred;
+    stroke-width: 2;
     fill: none;
   }
   path {
-    stroke: orange;
-    stroke-width: 4;
+    stroke: darkblue;
+    stroke-width: 2;
     fill: none;
   }
 `;
 
-const createShape = (id, start, end, tool): Shape => {
+const createShape = (id: string, tool: string, start?, end?): Shape => {
   switch (tool) {
     case 'rect': {
       const width = end.x - start.x;
@@ -146,6 +151,16 @@ const createShape = (id, start, end, tool): Shape => {
         }
       };
     }
+
+    case 'path': {
+      return {
+        id,
+        type: 'path',
+        data: {
+          points: []
+        }
+      }
+    }
   }
 }
 
@@ -167,6 +182,18 @@ const initialShapes: Shape[] = [
   },
   {
     id: faker.datatype.uuid(), type: 'circle', data: { x: 6, y: 0, r: [1, 4] }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'path', data: {
+      type: 'basis',
+      closed: true,
+      points: [
+        [3, 5],
+        [4, 9],
+        [-2, 7],
+        [-1, 4]
+      ]
+    }
   }
 ];
 
@@ -179,7 +206,7 @@ export const Primary = () => {
 
   // TODO(burdon): Factor out.
   const [shapes, setShapes] = useState<Shape[]>(initialShapes);
-  const [cursor, setCursor] = useState<Shape>(undefined);
+  const [cursor, setCursor, cursorRef] = useStateRef<Shape>(undefined);
   useEffect(() => {
     let start = undefined;
     let end = undefined;
@@ -190,14 +217,26 @@ export const Primary = () => {
         return Boolean(toolRef.current);
       })
       .on('start', (event: D3DragEvent<any, any, any>) => {
+        if (toolRef.current === 'path') {
+          return;
+        }
+
         start = scale.map({ x: event.x, y: event.y }, true);
       })
       .on('drag', (event: D3DragEvent<any, any, any>) => {
+        if (toolRef.current === 'path') {
+          return;
+        }
+
         end = scale.map({ x: event.x, y: event.y });
-        const shape = createShape('_', start, end, toolRef.current);
+        const shape = createShape('_', toolRef.current, start, end); // TODO(burdon): Update existing?
         setCursor(shape);
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
+        if (toolRef.current === 'path') {
+          return;
+        }
+
         end = scale.map({ x: event.x, y: event.y }, true);
         setCursor(undefined);
 
@@ -207,13 +246,72 @@ export const Primary = () => {
           return;
         }
 
-        const shape = createShape(faker.datatype.uuid(), start, end, toolRef.current);
+        const shape = createShape(faker.datatype.uuid(), toolRef.current, start, end);
         if (shape) {
           setShapes(shapes => [...shapes, shape]);
         }
       });
 
-    d3.select(svgRef.current).call(drag);
+    d3.select(document.body)
+      .on('keydown', (event: KeyboardEvent) => {
+        switch (event.key) {
+          case 'Enter': {
+            if (toolRef.current === 'path') {
+              const data = cursorRef.current.data as Path;
+              data.type = 'cardinal';
+              data.closed = true;
+              data.points.splice(data.points.length - 1, 1);
+              setShapes(shapes => [...shapes, {...cursorRef.current}]);
+              setCursor(undefined);
+            }
+            break;
+          }
+
+          case 'Escape': {
+            setCursor(undefined);
+            break;
+          }
+        }
+      });
+
+    d3.select(svgRef.current)
+      // https://github.com/d3/d3-selection#handling-events
+      .on('click', (event: MouseEvent) => {
+        if (toolRef.current === 'path') {
+          const { x, y } = scale.map({ x: event.x, y: event.y });
+          if (!cursorRef.current) {
+            const cursor = createShape(faker.datatype.uuid(), toolRef.current);
+            const data = cursor.data as Path;
+            data.points.push([x, y]);
+            setCursor(cursor);
+          } else {
+            const data = cursorRef.current.data as Path;
+            setCursor(cursor => {
+              data.points.push([x, y]);
+              return {...cursor};
+            });
+          }
+        }
+      })
+      // TODO(burdon): Disable zoom/drag.
+      .on('mousemove', (event: MouseEvent) => {
+        if (toolRef.current === 'path') {
+          const { x, y } = scale.map({ x: event.x, y: event.y });
+          if (cursorRef.current) {
+            setCursor(cursor => {
+              const data = cursorRef.current.data as Path;
+              const points = data.points;
+              if (points.length === 1) {
+                points.push([x, y]);
+              } else {
+                points.splice(points.length - 1, 1, [x, y]);
+              }
+              return {...cursor};
+            });
+          }
+        }
+      })
+      .call(drag);
   }, [svgRef]);
 
   return (
@@ -224,13 +322,12 @@ export const Primary = () => {
         zoom={[1/8, 8]}
         grid
       >
-        <g className={styles}>
-          <Shapes
-            scale={scale}
-            cursor={cursor}
-            shapes={shapes}
-          />
-        </g>
+        <Shapes
+          scale={scale}
+          cursor={cursor}
+          shapes={shapes}
+          className={styles}
+        />
       </SvgContainer>
 
       <Toolbar

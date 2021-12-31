@@ -72,13 +72,13 @@ export class Scale {
     return Frac.floor(Frac.x(n, this._gridSize));
   }
 
-  map ({ x, y }, snap?: boolean) {
+  map ({ x, y }, snap?: boolean) { // TODO(burdon): 2D array.
     const { center } = this._bounds;
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
 
     const pos = {
       x: ((x - center.x) - tx) / k,
-      y: ((center.y - y) + ty) / k
+      y: ((center.y - y) - ty) / k
     }
 
     if (snap) {

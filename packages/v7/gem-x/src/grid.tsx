@@ -19,10 +19,9 @@ interface GridProps {
  * @param scale
  * @param width
  * @param height
- * @param transform d3.zoom transform.
  */
-const createGrid = ({ scale, transform, width, height }: GridProps) => {
-  const { x = 0, y = 0, k = 1 } = transform || {};
+const createGrid = ({ scale, width, height }: GridProps) => {
+  const { x = 0, y = 0, k = 1 } = scale.transform || {};
   const s = 1 / k;
 
   // TODO(burdon): Use the transform to create the range?
@@ -53,15 +52,15 @@ const createGrid = ({ scale, transform, width, height }: GridProps) => {
   return lines.map(line => createLine(line as any)).join();
 };
 
-export const grid = ({ scale, transform, width, height }: GridProps) => (el) => {
+export const grid = ({ scale, width, height }: GridProps) => (el) => {
   // Construct grid.
   el.selectAll('path')
     .data([{ id: 'grid' }])
     .join('path')
-    .attr('d', createGrid({ scale, transform, width, height } ));
+    .attr('d', createGrid({ scale, width, height } ));
 
-  if (transform) {
-    el.attr('transform', transform);
-    el.attr('stroke-width', 1 / transform.k);
+  if (scale.transform) {
+    el.attr('transform', scale.transform);
+    el.attr('stroke-width', 1 / scale.transform.k);
   }
 }

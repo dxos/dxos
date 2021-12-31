@@ -28,11 +28,37 @@ export type Line = {
   y2: number | Num
 }
 
-// TODO(burdon): Path.
+export type PathType = 'linear' | 'basis' | 'cardinal' | 'step';
+
+const getCurve = (type: PathType, closed: boolean) => {
+  const curves = {
+    open: {
+      linear: d3.curveLinear,
+      basis: d3.curveBasis,
+      cardinal: d3.curveCardinal,
+      step: d3.curveStep
+    },
+    closed: {
+      linear: d3.curveLinearClosed,
+      basis: d3.curveBasisClosed,
+      cardinal: d3.curveCardinalClosed,
+      step: d3.curveStep
+    }
+  }
+
+  return curves[closed ? 'closed' : 'open'][type];
+}
+
+export type Path = {
+  type?: PathType
+  closed?: boolean
+  points: [ x: number, y: number ][]
+}
+
 export type Shape = {
   id: string
   type: string
-  data: Circle | Rect | Line
+  data: Circle | Rect | Line | Path
 }
 
 const createShape = (root, shape, scale) => {
@@ -55,6 +81,12 @@ const createShape = (root, shape, scale) => {
       updateShape(root, shape, scale);
       break;
     }
+
+    case 'path': {
+      root.append('path');
+      updateShape(root, shape, scale);
+      break;
+    }
   }
 };
 
@@ -65,7 +97,7 @@ const updateShape = (root, shape, scale) => {
       const { x, y, r } = (data as Circle);
       root.select('circle')
         .attr('cx', scale.x(x))
-        .attr('cy', -scale.x(y))
+        .attr('cy', scale.x(y))
         .attr('r', scale.x(r));
       break;
     }
@@ -74,7 +106,7 @@ const updateShape = (root, shape, scale) => {
       const { x, y, width, height } = (data as Rect);
       root.select('rect')
         .attr('x', scale.x(x))
-        .attr('y', -(scale.x(y) + scale.x(height)))
+        .attr('y', scale.x(y))
         .attr('width', scale.x(width))
         .attr('height', scale.x(height));
       break;
@@ -84,9 +116,19 @@ const updateShape = (root, shape, scale) => {
       const { x1, y1, x2, y2 } = (data as Line);
       root.select('line')
         .attr('x1', scale.x(x1))
-        .attr('y1', -scale.x(y1))
+        .attr('y1', scale.x(y1))
         .attr('x2', scale.x(x2))
-        .attr('y2', -scale.x(y2));
+        .attr('y2', scale.x(y2));
+      break;
+    }
+
+    case 'path': {
+      // https://github.com/d3/d3-shape/#lines
+      const { type, closed, points } = (data as Path);
+      const curve = getCurve(type, closed);
+      const line = curve ? d3.line().curve(curve) : d3.line();
+      root.select('path')
+        .attr('d', line(points.map(([ x, y ]) => [scale.x(x), scale.x(y)])));
       break;
     }
   }
@@ -96,12 +138,14 @@ export interface ShapesProps {
   scale: Scale,
   cursor?: Shape
   shapes?: Shape[]
+  className?: string
 }
 
 export const Shapes = ({
   scale,
   cursor,
-  shapes
+  shapes,
+  className,
 }: ShapesProps) => {
   const gridRef = useRef<SVGSVGElement>();
 
@@ -128,6 +172,9 @@ export const Shapes = ({
   }, [gridRef, cursor, shapes])
 
   return (
-    <g ref={gridRef} />
+    <g
+      ref={gridRef}
+      className={className}
+    />
   );
 };
