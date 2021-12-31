@@ -4,6 +4,7 @@
 
 import * as d3 from 'd3';
 import type { D3DragEvent } from 'd3';
+import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
@@ -17,6 +18,7 @@ import {
   useScale,
 } from '../src';
 
+// TODO(burdon): Delete shapes if removed from model.
 // TODO(burdon): Mapping bug (based on scale).
 // TODO(burdon): Path.
 // TODO(burdon): Resize (handles).
@@ -103,90 +105,111 @@ const styles = css`
   }
 `;
 
+const createShape = (id, start, end, tool): Shape => {
+  switch (tool) {
+    case 'rect': {
+      const width = end.x - start.x;
+      const height = end.y - start.y
+      return {
+        id,
+        type: 'rect',
+        data: {
+          x: start.x + (width < 0 ? width : 0),
+          y: start.y + (height < 0 ? height : 0),
+          width: Math.abs(width),
+          height: Math.abs(height)
+        }
+      };
+    }
+
+    case 'circle': {
+      return {
+        id,
+        type: 'circle',
+        data: {
+          x: start.x,
+          y: start.y,
+          r: Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2))
+        }
+      };
+    }
+
+    case 'line': {
+      return {
+        id,
+        type: 'line',
+        data: {
+          x1: start.x,
+          y1: start.y,
+          x2: end.x,
+          y2: end.y
+        }
+      };
+    }
+  }
+}
+
+const initialShapes: Shape[] = [
+  {
+    id: faker.datatype.uuid(), type: 'circle', data: { x: 0, y: 0, r: [3, 1] }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'rect', data: { x: -1, y: -1, width: 2, height: 2 }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'rect', data: { x: [4, 1], y: [-2, 1], width: [8, 2], height: [12, 3] }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'line', data: { x1: 0, y1: 0, x2: 6, y2: 0 }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'circle', data: { x: 0, y: 0, r: [1, 4] }
+  },
+  {
+    id: faker.datatype.uuid(), type: 'circle', data: { x: 6, y: 0, r: [1, 4] }
+  }
+];
+
 export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
+
+  // TODO(burdon): Factor out.
   const [tool, setTool, toolRef] = useStateRef<string>(undefined);
 
-  const [shapes, setShapes] = useState<Shape[]>([
-    {
-      type: 'circle', data: { x: 0, y: 0, r: [3, 1] }
-    },
-    {
-      type: 'rect', data: { x: -1, y: -1, width: 2, height: 2 }
-    },
-    {
-      type: 'rect', data: { x: [4, 1], y: [-2, 1], width: [8, 2], height: [12, 3] }
-    },
-    {
-      type: 'line', data: { x1: 0, y1: 0, x2: 6, y2: 0 }
-    },
-    {
-      type: 'circle', data: { x: 0, y: 0, r: [1, 4] }
-    },
-    {
-      type: 'circle', data: { x: 6, y: 0, r: [1, 4] }
-    }
-  ]);
-
+  // TODO(burdon): Factor out.
+  const [shapes, setShapes] = useState<Shape[]>(initialShapes);
+  const [cursor, setCursor] = useState<Shape>(undefined);
   useEffect(() => {
     let start = undefined;
     let end = undefined;
 
     const drag = d3.drag()
       .filter(() => {
-        // TODO(burdon): Filter unless tool selected (since clashes with zoom).
+        // Filter unless tool selected (since clashes with zoom).
         return Boolean(toolRef.current);
       })
       .on('start', (event: D3DragEvent<any, any, any>) => {
         start = scale.map({ x: event.x, y: event.y }, true);
       })
       .on('drag', (event: D3DragEvent<any, any, any>) => {
-        // const { x, y } = scale.map({ x: event.x, y: event.y }, true);
+        end = scale.map({ x: event.x, y: event.y });
+        const shape = createShape('_', start, end, toolRef.current);
+        setCursor(shape);
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
         end = scale.map({ x: event.x, y: event.y }, true);
+        setCursor(undefined);
 
-        switch (toolRef.current) {
-          case 'rect': {
-            const width = end.x - start.x;
-            const height = end.y - start.y
-            setShapes(shapes => [...shapes, {
-              type: 'rect',
-              data: {
-                x: start.x + (width < 0 ? width : 0),
-                y: start.y + (height < 0 ? height : 0),
-                width: Math.abs(width),
-                height: Math.abs(height)
-              }
-            }]);
-            break;
-          }
+        // Check non-zero size.
+        const d = Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2));
+        if (d === 0) {
+          return;
+        }
 
-          case 'circle': {
-            setShapes(shapes => [...shapes, {
-              type: 'circle',
-              data: {
-                x: start.x,
-                y: start.y,
-                r: Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2))
-              }
-            }]);
-            break;
-          }
-
-          case 'line': {
-            setShapes(shapes => [...shapes, {
-              type: 'line',
-              data: {
-                x1: start.x,
-                y1: start.y,
-                x2: end.x,
-                y2: end.y
-              }
-            }]);
-            break;
-          }
+        const shape = createShape(faker.datatype.uuid(), start, end, toolRef.current);
+        if (shape) {
+          setShapes(shapes => [...shapes, shape]);
         }
       });
 
@@ -204,6 +227,7 @@ export const Primary = () => {
         <g className={styles}>
           <Shapes
             scale={scale}
+            cursor={cursor}
             shapes={shapes}
           />
         </g>

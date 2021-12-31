@@ -73,7 +73,6 @@ export class Scale {
   }
 
   map ({ x, y }, snap?: boolean) {
-    // TODO(burdon): Transform.
     const { center } = this._bounds;
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
 
@@ -87,9 +86,12 @@ export class Scale {
         x: round(pos.x, this._gridSize),
         y: round(pos.y, this._gridSize)
       }
+    } else {
+      return {
+        x: pos.x / this._gridSize,
+        y: pos.y / this._gridSize
+      }
     }
-
-    return pos;
   }
 }
 
