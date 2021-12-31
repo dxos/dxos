@@ -34,7 +34,7 @@ export const Primary = () => {
         scale={scale}
       >
         <g className={styles}>
-          <circle r={scale.x(1)} />
+          <circle r={scale.mapToScreen(1)} />
         </g>
       </SvgContainer>
     </FullScreen>

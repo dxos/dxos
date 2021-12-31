@@ -96,29 +96,29 @@ const updateShape = (root, shape, scale) => {
     case 'circle': {
       const { x, y, r } = (data as Circle);
       root.select('circle')
-        .attr('cx', scale.x(x))
-        .attr('cy', scale.x(y))
-        .attr('r', scale.x(r));
+        .attr('cx', scale.mapToScreen(x))
+        .attr('cy', scale.mapToScreen(y))
+        .attr('r', scale.mapToScreen(r));
       break;
     }
 
     case 'rect': {
       const { x, y, width, height } = (data as Rect);
       root.select('rect')
-        .attr('x', scale.x(x))
-        .attr('y', scale.x(y))
-        .attr('width', scale.x(width))
-        .attr('height', scale.x(height));
+        .attr('x', scale.mapToScreen(x))
+        .attr('y', scale.mapToScreen(y))
+        .attr('width', scale.mapToScreen(width))
+        .attr('height', scale.mapToScreen(height));
       break;
     }
 
     case 'line': {
       const { x1, y1, x2, y2 } = (data as Line);
       root.select('line')
-        .attr('x1', scale.x(x1))
-        .attr('y1', scale.x(y1))
-        .attr('x2', scale.x(x2))
-        .attr('y2', scale.x(y2));
+        .attr('x1', scale.mapToScreen(x1))
+        .attr('y1', scale.mapToScreen(y1))
+        .attr('x2', scale.mapToScreen(x2))
+        .attr('y2', scale.mapToScreen(y2));
       break;
     }
 
@@ -128,7 +128,7 @@ const updateShape = (root, shape, scale) => {
       const curve = getCurve(type, closed);
       const line = curve ? d3.line().curve(curve) : d3.line();
       root.select('path')
-        .attr('d', line(points.map(([ x, y ]) => [scale.x(x), scale.x(y)])));
+        .attr('d', line(points.map(([ x, y ]) => [scale.mapToScreen(x), scale.mapToScreen(y)])));
       break;
     }
   }

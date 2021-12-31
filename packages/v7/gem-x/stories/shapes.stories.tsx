@@ -11,17 +11,17 @@ import { css } from '@emotion/css';
 import { useStateRef } from './helpers';
 
 import {
-  Path,
   FullScreen,
+  Path,
+  Point,
   Shape,
   Shapes,
   SvgContainer,
   useScale,
 } from '../src';
 
-// TODO(burdon): Normalized [x, y] over {x, y} -- const [px, py] = d3.pointer(event);
-// TODO(burdon): Use d3.pointer rather than raw event.x, event.y.
-
+// TODO(burdon): If zoomed then can be too small.
+// TODO(burdon): Normalized [x, y] over {x, y}
 // TODO(burdon): Delete shapes if removed from model.
 // TODO(burdon): Mapping bug (based on scale).
 // TODO(burdon): Resize (handles).
@@ -57,10 +57,10 @@ const Toolbar = ({
 
   const tools = [
     {
-      id: 'rect'
+      id: 'circle'
     },
     {
-      id: 'circle'
+      id: 'rect'
     },
     {
       id: 'line'
@@ -110,31 +110,32 @@ const styles = css`
   }
 `;
 
-const createShape = (id: string, tool: string, start?, end?): Shape => {
+const createShape = (id: string, tool: string, start?: Point, end?: Point): Shape => {
   switch (tool) {
-    case 'rect': {
-      const width = end.x - start.x;
-      const height = end.y - start.y
-      return {
-        id,
-        type: 'rect',
-        data: {
-          x: start.x + (width < 0 ? width : 0),
-          y: start.y + (height < 0 ? height : 0),
-          width: Math.abs(width),
-          height: Math.abs(height)
-        }
-      };
-    }
-
     case 'circle': {
       return {
         id,
         type: 'circle',
         data: {
-          x: start.x,
-          y: start.y,
-          r: Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2))
+          x: start[0],
+          y: start[1],
+          r: Math.sqrt(Math.pow(Math.abs(start[0] - end[0]), 2) + Math.pow(Math.abs(start[1] - end[1]), 2))
+        }
+      };
+    }
+
+    case 'rect': {
+      const width = end[0] - start[0];
+      const height = end[1] - start[1]
+
+      return {
+        id,
+        type: 'rect',
+        data: {
+          x: start[0] + (width < 0 ? width : 0),
+          y: start[1] + (height < 0 ? height : 0),
+          width: Math.abs(width),
+          height: Math.abs(height)
         }
       };
     }
@@ -144,10 +145,10 @@ const createShape = (id: string, tool: string, start?, end?): Shape => {
         id,
         type: 'line',
         data: {
-          x1: start.x,
-          y1: start.y,
-          x2: end.x,
-          y2: end.y
+          x1: start[0],
+          y1: start[1],
+          x2: end[0],
+          y2: end[1]
         }
       };
     }
@@ -166,8 +167,9 @@ const createShape = (id: string, tool: string, start?, end?): Shape => {
 
 const initialShapes: Shape[] = [
   {
-    id: faker.datatype.uuid(), type: 'circle', data: { x: 0, y: 0, r: [3, 1] }
+    id: faker.datatype.uuid(), type: 'circle', data: { x: 0, y: 0, r: [1, 1] }
   },
+  /*
   {
     id: faker.datatype.uuid(), type: 'rect', data: { x: -1, y: -1, width: 2, height: 2 }
   },
@@ -195,6 +197,7 @@ const initialShapes: Shape[] = [
       ]
     }
   }
+  */
 ];
 
 export const Primary = () => {
@@ -208,40 +211,46 @@ export const Primary = () => {
   const [shapes, setShapes] = useState<Shape[]>(initialShapes);
   const [cursor, setCursor, cursorRef] = useStateRef<Shape>(undefined);
   useEffect(() => {
-    let start = undefined;
-    let end = undefined;
+    let start: Point = undefined;
+    let end: Point = undefined;
 
     const drag = d3.drag()
       .filter(() => {
         // Filter unless tool selected (since clashes with zoom).
         return Boolean(toolRef.current);
       })
+
       .on('start', (event: D3DragEvent<any, any, any>) => {
         if (toolRef.current === 'path') {
           return;
         }
 
-        start = scale.map({ x: event.x, y: event.y }, true);
+        start = scale.mapToModel([event.x, event.y], true);
       })
+
       .on('drag', (event: D3DragEvent<any, any, any>) => {
         if (toolRef.current === 'path') {
           return;
         }
 
-        end = scale.map({ x: event.x, y: event.y });
-        const shape = createShape('_', toolRef.current, start, end); // TODO(burdon): Update existing?
+        end = scale.mapToModel([event.x, event.y]);
+
+        // TODO(burdon): Update existing?
+        const shape = createShape('_', toolRef.current, start, end);
         setCursor(shape);
       })
+
       .on('end', (event: D3DragEvent<any, any, any>) => {
         if (toolRef.current === 'path') {
           return;
         }
 
-        end = scale.map({ x: event.x, y: event.y }, true);
+        end = scale.mapToModel([event.x, event.y], true);
         setCursor(undefined);
 
         // Check non-zero size.
-        const d = Math.sqrt(Math.pow(Math.abs(start.x - end.x), 2) + Math.pow(Math.abs(start.y - end.y), 2));
+        // TODO(burdon): Depends on zoom.
+        const d = Math.sqrt(Math.pow(Math.abs(start[0] - end[0]), 2) + Math.pow(Math.abs(start[1] - end[1]), 2));
         if (d === 0) {
           return;
         }
@@ -278,7 +287,7 @@ export const Primary = () => {
       // https://github.com/d3/d3-selection#handling-events
       .on('click', (event: MouseEvent) => {
         if (toolRef.current === 'path') {
-          const { x, y } = scale.map({ x: event.x, y: event.y });
+          const [x, y] = scale.mapToModel([event.x, event.y]);
           if (!cursorRef.current) {
             const cursor = createShape(faker.datatype.uuid(), toolRef.current);
             const data = cursor.data as Path;
@@ -296,7 +305,7 @@ export const Primary = () => {
       // TODO(burdon): Disable zoom/drag.
       .on('mousemove', (event: MouseEvent) => {
         if (toolRef.current === 'path') {
-          const { x, y } = scale.map({ x: event.x, y: event.y });
+          const [x, y] = scale.mapToModel([event.x, event.y]);
           if (cursorRef.current) {
             setCursor(cursor => {
               const data = cursorRef.current.data as Path;

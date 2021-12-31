@@ -163,11 +163,11 @@ THREEx.Terrain.planeToHeightMapCoords = function (heightMap, planeMesh, x, z) {
   position.sub(planeMesh.position);
 
   // heightMap origin is at its top-left, while planeMesh origin is at its center
-  position.x += planeMesh.geometry.width / 2 * planeMesh.scale.x;
+  position.mapToScreen += planeMesh.geometry.width / 2 * planeMesh.scale.mapToScreen;
   position.z += planeMesh.geometry.height / 2 * planeMesh.scale.y;
 
   // normalize it from [0,1] for the heightmap
-  position.x /= planeMesh.geometry.width * planeMesh.scale.x;
+  position.mapToScreen /= planeMesh.geometry.width * planeMesh.scale.mapToScreen;
   position.z /= planeMesh.geometry.height * planeMesh.scale.y;
 
   // get heightMap dimensions
@@ -175,7 +175,7 @@ THREEx.Terrain.planeToHeightMapCoords = function (heightMap, planeMesh, x, z) {
   let depth = heightMap[0].length;
 
   // convert it in heightMap coordinate
-  position.x *= (width - 1);
+  position.mapToScreen *= (width - 1);
   position.z *= (depth - 1);
 
   position.y = THREEx.Terrain.heightMapToHeight(heightMap, position.x, position.z);

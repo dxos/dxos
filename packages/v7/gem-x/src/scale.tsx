@@ -7,6 +7,8 @@ import { useMemo } from 'react';
 
 import { Frac, Num } from './frac';
 
+export type Point = [x: number, y: number];
+
 export class Bounds {
   private _x: number
   private _y: number
@@ -67,30 +69,28 @@ export class Scale {
     this._transform = transform;
   }
 
-  // TODO(burdon): Invese of map (with inverted y).
-  x (n: number | Num) {
+  mapToScreen (n: number | Num) {
     return Frac.floor(Frac.x(n, this._gridSize));
   }
 
-  map ({ x, y }, snap?: boolean) { // TODO(burdon): 2D array.
+  mapToModel ([ x, y ], snap?: boolean): Point {
     const { center } = this._bounds;
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
-
-    const pos = {
-      x: ((x - center.x) - tx) / k,
-      y: ((center.y - y) - ty) / k
-    }
+    const pos = [
+      (x - center.x - tx) / k,
+      (center.y - y - ty) / k
+    ];
 
     if (snap) {
-      return {
-        x: round(pos.x, this._gridSize),
-        y: round(pos.y, this._gridSize)
-      }
+      return [
+        round(pos[0], this._gridSize),
+        round(pos[1], this._gridSize)
+      ];
     } else {
-      return {
-        x: pos.x / this._gridSize,
-        y: pos.y / this._gridSize
-      }
+      return [
+        pos[0] / this._gridSize,
+        pos[1] / this._gridSize
+      ];
     }
   }
 }
