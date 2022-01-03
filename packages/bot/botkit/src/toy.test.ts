@@ -15,6 +15,7 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
+import { Config } from '@dxos/config';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -31,7 +32,10 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory({ botContainer });
+      const botFactory = new BotFactory({ 
+        botContainer,
+        config: new Config({})
+      });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -75,7 +79,10 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const botFactory = new BotFactory({ botContainer });
+      const botFactory = new BotFactory({ 
+        botContainer,
+        config: new Config({})
+      });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -144,7 +151,7 @@ describe('Node', () => {
 
       const botFactory = new BotFactory({
         botContainer,
-        botConfig: config,
+        config,
         contentResolver
       });
 

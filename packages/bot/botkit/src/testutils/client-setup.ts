@@ -4,7 +4,7 @@
 
 import { generateInvitation } from '@dxos/bot-factory-client';
 import { Client, PartyProxy } from '@dxos/client';
-import type { defs } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { failUndefined } from '@dxos/debug';
 
 export interface ClientSetup {
@@ -14,7 +14,7 @@ export interface ClientSetup {
   secret: string
 }
 
-export const setupClient = async (config?: defs.Config): Promise<ClientSetup> => {
+export const setupClient = async (config?: Config): Promise<ClientSetup> => {
   const client = new Client(config);
   await client.initialize();
   await client.halo.createProfile({ username: 'Client' });

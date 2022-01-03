@@ -66,7 +66,7 @@ describe('Node container', function () {
 
       await handle.open(port);
       await handle.rpc.Initialize({
-        config,
+        config: config.values,
         invitation: {
           invitationCode: invitation,
           secret
@@ -92,7 +92,7 @@ describe('Node container', function () {
 
       await handle.open(port);
       await handle.rpc.Initialize({
-        config,
+        config: config.values,
         invitation: {
           invitationCode: invitation,
           secret

@@ -9,13 +9,15 @@ import { sleep } from '@dxos/async';
 import { NodeContainer } from '../bot-container';
 import { Bot } from '../proto/gen/dxos/bot';
 import { BotFactory } from './bot-factory';
+import { Config } from '@dxos/config';
 
 describe('BotFactory', () => {
   describe('with NodeContainer', () => {
     it('crashed bots get their status updated', async () => {
       const container = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory({
-        botContainer: container
+        botContainer: container,
+        config: new Config({})
       });
 
       const bot = await botFactory.SpawnBot({

@@ -64,6 +64,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
       '@types/expect': ~24.3.0
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
@@ -72,11 +73,13 @@ importers:
       download: ^8.0.0
       esbuild: ^0.11.23
       expect: ~27.0.2
+      lodash.defaultsdeep: ^4.6.1
       ts-node: ^9.1.1
       typescript: ^4.5.2
     dependencies:
       '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
@@ -89,10 +92,10 @@ importers:
       debug: 4.3.3
       download: 8.0.0
       esbuild: 0.11.23
+      lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/signal': link:../../mesh/signal
@@ -102,6 +105,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
       '@types/expect': 24.3.0
+      '@types/lodash.defaultsdeep': 4.6.6
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       assert: 2.0.0
