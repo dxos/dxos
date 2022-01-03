@@ -3,27 +3,28 @@
 //
 
 import { Awaited } from '@dxos/async';
-import type { defs } from '@dxos/config';
+import { Config, ConfigObject } from '@dxos/config';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
 export interface BrokerSetup {
   broker: Awaited<ReturnType<typeof createTestBroker>>,
-  config: defs.Config
+  config: Config
 }
 
 export const setupBroker: () => Promise<BrokerSetup> = async () => {
   const port = randomInt(40000, 10000);
   const broker = await createTestBroker(port);
+  const config = new Config<ConfigObject>({
+    services: {
+      signal: {
+        server: `ws://localhost:${port}`
+      }
+    }
+  });
 
   return {
     broker,
-    config: {
-      services: {
-        signal: {
-          server: `ws://localhost:${port}`
-        }
-      }
-    }
+    config
   };
 };

@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { sleep } from '@dxos/async';
+import { Config } from '@dxos/config';
 
 import { NodeContainer } from '../bot-container';
 import { Bot } from '../proto/gen/dxos/bot';
@@ -15,7 +16,8 @@ describe('BotFactory', () => {
     it('crashed bots get their status updated', async () => {
       const container = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory({
-        botContainer: container
+        botContainer: container,
+        config: new Config({})
       });
 
       const bot = await botFactory.SpawnBot({
