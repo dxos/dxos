@@ -8,9 +8,14 @@ import pb from 'protobufjs';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 
+export interface Any {
+  'type_url'?: string;
+  value?: Uint8Array;
+}
+
 export interface ServiceBackend {
-  call (method: string, request: Uint8Array): Promise<Uint8Array>;
-  callStream (method: string, request: Uint8Array): Stream<Uint8Array>;
+  call (method: string, request: Any): Promise<Any>;
+  callStream (method: string, request: Any): Stream<Any>;
 }
 
 export class ServiceDescriptor<S> {
@@ -18,6 +23,10 @@ export class ServiceDescriptor<S> {
     private readonly _service: pb.Service,
     private readonly _schema: Schema<any>
   ) {}
+
+  get serviceProto (): pb.Service {
+    return this._service;
+  }
 
   createClient (backend: ServiceBackend): Service & S {
     return new Service(backend, this._service, this._schema) as Service & S;
@@ -47,15 +56,21 @@ export class Service {
       if (!method.responseStream) {
         (this as any)[method.name] = async (request: unknown) => {
           const encoded = requestCodec.encode(request);
-          const response = await backend.call(method.name, encoded);
-          return responseCodec.decode(response);
+          const response = await backend.call(method.name, {
+            value: encoded,
+            type_url: method.resolvedRequestType!.fullName
+          });
+          return responseCodec.decode(response.value!);
         };
       } else {
         (this as any)[method.name] = (request: unknown) => {
           const encoded = requestCodec.encode(request);
           return new Stream(({ next, close }) => {
-            const stream = backend.callStream(method.name, encoded);
-            stream.subscribe(data => next(responseCodec.decode(data)), close);
+            const stream = backend.callStream(method.name, {
+              value: encoded,
+              type_url: method.resolvedRequestType!.fullName
+            });
+            stream.subscribe(data => next(responseCodec.decode(data.value!)), close);
 
             return () => stream.close();
           });
@@ -72,12 +87,12 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     private readonly _handlers: S
   ) {}
 
-  async call (methodName: string, request: Uint8Array): Promise<Uint8Array> {
+  async call (methodName: string, request: Any): Promise<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(!method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
 
-    const requestDecoded = requestCodec.decode(request);
+    const requestDecoded = requestCodec.decode(request.value!);
 
     const handler = this._handlers[methodName as keyof S];
     assert(handler, `Handler is missing: ${methodName}`);
@@ -86,22 +101,28 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const responseEncoded = responseCodec.encode(response);
 
-    return responseEncoded;
+    return {
+      value: responseEncoded,
+      type_url: method.resolvedResponseType!.fullName
+    };
   }
 
-  callStream (methodName: string, request: Uint8Array): Stream<Uint8Array> {
+  callStream (methodName: string, request: Any): Stream<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
 
-    const requestDecoded = requestCodec.decode(request);
+    const requestDecoded = requestCodec.decode(request.value!);
 
     const handler = this._handlers[methodName as keyof S];
     assert(handler, `Handler is missing: ${methodName}`);
 
     const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
-    return new Stream<Uint8Array>(({ next, close }) => {
-      responseStream.subscribe(data => next(responseCodec.encode(data)), close);
+    return new Stream<Any>(({ next, close }) => {
+      responseStream.subscribe(data => next({
+        value: responseCodec.encode(data),
+        type_url: method.resolvedResponseType!.fullName
+      }), close);
       return () => responseStream.close();
     });
   }
