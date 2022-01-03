@@ -118,30 +118,10 @@ describe('Client', () => {
 
         const party = await inviter.echo.createParty();
 
-        let inviteeInvitationProcess: InvitationProcess;
-        inviter.services.PartyService.CreateInvitation({ publicKey: party.key }).subscribe(async inviterInvitation => {
-          if (!inviteeInvitationProcess) {
-            inviteeInvitationProcess = await invitee.services.PartyService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
-          } else if (inviterInvitation.secret) {
-            await invitee.services.PartyService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
-          }
-        }, (error) => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
+        const invitation = await inviter.echo.createInvitation(party.key);
+        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait()
 
-        const [inviteePartiesLatch, inviteePartiesTrigger] = latch();
-        invitee.services.PartyService.SubscribeParties().subscribe(inviteeParties => {
-          if (inviteeParties.parties?.length === 1) {
-            inviteePartiesTrigger();
-          }
-        }, error => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
-        await inviteePartiesLatch;
+        expect(inviteeParty.key).toEqual(party.key);
       }).timeout(5000);
     });
 

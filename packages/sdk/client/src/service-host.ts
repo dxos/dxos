@@ -286,7 +286,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
-            next({ invitationCode });
+            next({ invitationCode, secret });
           });
         }),
         AcceptInvitation: async (request) => {
