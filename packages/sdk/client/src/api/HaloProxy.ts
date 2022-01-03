@@ -8,7 +8,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { Profile } from '../proto/gen/dxos/client';
-import { encodeInvitation } from '../util';
+import { encodeInvitation, decodeInvitation } from '../util';
 
 export interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
@@ -114,7 +114,11 @@ export class HaloProxy {
           options?.onFinish?.({});
           stream.close();
         } else {
-          const pendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+          const pendingInvitation: PendingInvitation = {
+            invitationCode: invitationMsg.invitationCode!,
+            pin: invitationMsg.secret,
+            invitation: decodeInvitation(invitationMsg.invitationCode!),
+          };
           if (invitationMsg.secret && options?.onPinGenerated) {
             options.onPinGenerated(invitationMsg.secret);
           }

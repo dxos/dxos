@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, InvitationDescriptor, OpenProgress } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, OpenProgress, Party } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -19,6 +19,7 @@ import { Contacts, SubscribeMembersResponse, SubscribePartiesResponse, Subscribe
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
+import { failUndefined } from '@dxos/debug';
 
 interface InviterInvitation {
   invitationCode: string
@@ -28,7 +29,7 @@ interface InviterInvitation {
 interface InviteeInvitation {
   secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void // Is triggered after supplying the secret.
-  joinPromise?: () => Promise<any> // Resolves when the joining process finishes.
+  joinPromise?: () => Promise<Party> // Resolves when the joining process finishes.
 }
 
 export class ClientServiceHost implements ClientServiceProvider {
@@ -311,7 +312,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },
-        AuthenticateInvitation: (request) => new Stream(({ next, close }) => {
+        AuthenticateInvitation: async (request) => {
           assert(request.process?.id, 'Process ID is missing.');
           const invitation = this._inviteeInvitations.get(request.process?.id);
           assert(invitation, 'Invitation not found.');
@@ -321,14 +322,12 @@ export class ClientServiceHost implements ClientServiceProvider {
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
 
-          next({});
-          invitation.joinPromise?.().then(() => {
-            const profile = this._echo.halo.getProfile();
-            assert(profile, 'Profile not created.');
-            next({ profile });
-            close();
-          });
-        }),
+          const party = await invitation.joinPromise?.() ?? failUndefined();
+
+          return {
+            partyKey: party.key,
+          }
+        },
         SubscribeMembers: (request) => {
           const party = this._echo.getParty(request.partyKey);
           if (party) {

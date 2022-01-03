@@ -2,19 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, latch } from '@dxos/async';
+import { Event, latch, trigger } from '@dxos/async';
+import { SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 import { ECHO, InvitationDescriptor, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import assert from 'assert';
+import { RedeemingInvitation } from '.';
 
-import { ClientServiceProvider, PendingInvitation } from '../interfaces';
-import { Party } from '../proto/gen/dxos/client';
+import { ClientServiceProvider } from '../interfaces';
+import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { encodeInvitation } from '../util';
+import { encodeInvitation, decodeInvitation } from '../util';
+import { InvitationRequest } from './InvitationRequest';
 import { PartyProxy } from './PartyProxy';
 
 interface CreateInvitationOptions extends InvitationOptions {
@@ -144,15 +148,39 @@ export class EchoProxy {
    * Joins an existing Party by invitation.
    * @returns An async function to provide secret and finishing the invitation process.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
-    const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
-      invitationCode: encodeInvitation(invitationDescriptor)
-    });
-    return async (secret: string) => {
-      await this._serviceProvider.services.PartyService.AuthenticateInvitation({
-        process: invitationProcess, secret
+  acceptInvitation (invitationRequest: InvitationRequest): RedeemingInvitation {
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>()
+    const [waitForParty, resolveParty] = trigger<PartyProxy>()
+
+    setImmediate(async () => {
+      const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
+        invitationCode: encodeInvitation(invitationRequest.descriptor)
       });
-    };
+
+      resolveInvitationProcess(invitationProcess);
+    });
+
+    const authenticate = async (secret: Buffer) => {
+      const invitationProcess = await getInvitationProcess();
+
+      const { partyKey } = await this._serviceProvider.services.PartyService.AuthenticateInvitation({
+        process: invitationProcess,
+        secret: secret.toString(),
+      });
+      assert(partyKey)
+      await this._partiesChanged.waitForCondition(() => this._parties.has(partyKey));
+  
+      resolveParty(this.getParty(partyKey) ?? failUndefined())
+    }
+
+    if(invitationRequest.secret) {
+      authenticate(invitationRequest.secret)
+    }
+    
+    return new RedeemingInvitation(
+      waitForParty(),
+      authenticate,
+    )
   }
 
   /**
@@ -167,7 +195,7 @@ export class EchoProxy {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createInvitation (partyKey: PublicKey, options?: CreateInvitationOptions): Promise<PendingInvitation> {
+  async createInvitation (partyKey: PublicKey, options?: CreateInvitationOptions): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
@@ -175,10 +203,17 @@ export class EchoProxy {
           options?.onFinish?.({});
           stream.close();
         } else {
-          const pendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+          const pendingInvitation: PendingInvitation = {
+            invitationCode: invitationMsg.invitationCode!,
+            invitation: decodeInvitation(invitationMsg.invitationCode!),
+            pin: invitationMsg.secret
+          };
           if (invitationMsg.secret && options?.onPinGenerated) {
             options.onPinGenerated(invitationMsg.secret);
           }
+
+          
+
           resolve(pendingInvitation);
         }
       }, error => {

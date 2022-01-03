@@ -147,6 +147,10 @@ message SubscribeMembersResponse {
   repeated PartyMember members = 1;
 }
 
+message AuthenticatePartyInvitationResponse {
+  dxos.halo.keys.PubKey partyKey = 1;
+}
+
 service PartyService {
   rpc SubscribeParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
@@ -161,7 +165,7 @@ service PartyService {
 
   rpc CreateInvitation(CreateInvitationRequest) returns (stream Invitation);
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (AuthenticatePartyInvitationResponse);
 
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 }
