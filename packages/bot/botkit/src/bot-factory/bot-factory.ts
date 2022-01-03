@@ -4,10 +4,9 @@
 
 import assert from 'assert';
 import { debug } from 'debug';
-import fs from 'fs';
 import { join } from 'path';
 
-import type { defs } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
@@ -20,7 +19,7 @@ const log = debug('dxos:botkit:bot-factory');
 
 export interface BotFactoryOptions {
   botContainer: BotContainer,
-  botConfig?: defs.Config,
+  config: Config,
   contentResolver?: ContentResolver,
   contentLoader?: ContentLoader,
 }
@@ -32,13 +31,13 @@ export class BotFactory implements BotFactoryService {
   private readonly _contentLoader: ContentLoader | undefined;
   private readonly _contentResolver: ContentResolver | undefined;
   private readonly _botContainer: BotContainer;
-  private readonly _botConfig: defs.Config;
+  private readonly _config: Config;
 
   private readonly _bots = new Map<string, BotHandle>();
 
   constructor (options: BotFactoryOptions) {
     this._botContainer = options.botContainer;
-    this._botConfig = options.botConfig ?? {};
+    this._config = options.config;
     this._contentLoader = options.contentLoader;
     this._contentResolver = options.contentResolver;
 
@@ -69,11 +68,6 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
-  private async _ensurePackageExists (localPath: string) {
-    assert(localPath, `Couldn't resolve bot package ${localPath}.`);
-    await fs.promises.access(localPath, fs.constants.F_OK);
-  }
-
   async GetBots () {
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
@@ -101,7 +95,6 @@ export class BotFactory implements BotFactoryService {
       const localPath = request.package?.localPath;
 
       if (localPath) {
-        await this._ensurePackageExists(localPath);
         log(`[${id}] Spawning bot ${localPath}`);
       }
 
@@ -114,7 +107,7 @@ export class BotFactory implements BotFactoryService {
       await handle.open(port);
       log(`[${id}] Initializing bot`);
       await handle.rpc.Initialize({
-        config: this._botConfig,
+        config: this._config.values,
         invitation: request.invitation,
         secret: request.secret
       });

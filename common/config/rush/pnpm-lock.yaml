@@ -77,6 +77,7 @@ importers:
     dependencies:
       '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
@@ -92,7 +93,6 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/signal': link:../../mesh/signal
