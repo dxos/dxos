@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tutorials-tasks-app",
-  "version": "2.19.6",
+  "version": "2.19.7",
   "private": true,
   "scripts": {
     "build": "esbuild-server build",

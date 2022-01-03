@@ -1,5 +1,14 @@
 # Change Log
 
+### [2.19.7](https://www.github.com/dxos/protocols/compare/v2.19.6...v2.19.7) (2022-01-03)
+
+
+### Features
+
+* Add client RPC trace to devtools ([#800](https://www.github.com/dxos/protocols/issues/800)) ([3aa68bc](https://www.github.com/dxos/protocols/commit/3aa68bc88235277617e4539bdfded450376362fb))
+* Introduce content loader in bot factory ([#796](https://www.github.com/dxos/protocols/issues/796)) ([6cf543b](https://www.github.com/dxos/protocols/commit/6cf543b246ac15a5eed025472ef8d11a4d6d3d60))
+* Load config from env variables in bot factory ([#802](https://www.github.com/dxos/protocols/issues/802)) ([3672cc3](https://www.github.com/dxos/protocols/commit/3672cc3734a2532feb60260c7fa65610b12fd1f4))
+
 ### [2.19.6](https://www.github.com/dxos/protocols/compare/v2.19.5...v2.19.6) (2021-12-29)
 
 
