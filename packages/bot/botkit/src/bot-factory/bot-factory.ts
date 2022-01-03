@@ -69,11 +69,6 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
-  private async _ensurePackageExists (localPath: string) {
-    assert(localPath, `Couldn't resolve bot package ${localPath}.`);
-    await fs.promises.access(localPath, fs.constants.F_OK);
-  }
-
   async GetBots () {
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
@@ -101,7 +96,6 @@ export class BotFactory implements BotFactoryService {
       const localPath = request.package?.localPath;
 
       if (localPath) {
-        await this._ensurePackageExists(localPath);
         log(`[${id}] Spawning bot ${localPath}`);
       }
 
