@@ -117,7 +117,6 @@ export class HaloProxy {
           const pendingInvitation: PendingInvitation = {
             invitationCode: invitationMsg.invitationCode!,
             pin: invitationMsg.secret,
-            invitation: decodeInvitation(invitationMsg.invitationCode!),
           };
           if (invitationMsg.secret && options?.onPinGenerated) {
             options.onPinGenerated(invitationMsg.secret);

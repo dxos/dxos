@@ -18,7 +18,7 @@ import { ClientServiceProvider } from '../interfaces';
 import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
 import { encodeInvitation, decodeInvitation } from '../util';
-import { InvitationRequest } from './InvitationRequest';
+import { InvitationRequest } from './invitations';
 import { PartyProxy } from './PartyProxy';
 
 interface CreateInvitationOptions extends InvitationOptions {
@@ -148,13 +148,13 @@ export class EchoProxy {
    * Joins an existing Party by invitation.
    * @returns An async function to provide secret and finishing the invitation process.
    */
-  acceptInvitation (invitationRequest: InvitationRequest): RedeemingInvitation {
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): RedeemingInvitation {
     const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>()
     const [waitForParty, resolveParty] = trigger<PartyProxy>()
 
     setImmediate(async () => {
       const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
-        invitationCode: encodeInvitation(invitationRequest.descriptor)
+        invitationCode: encodeInvitation(invitationDescriptor)
       });
 
       resolveInvitationProcess(invitationProcess);
@@ -173,8 +173,8 @@ export class EchoProxy {
       resolveParty(this.getParty(partyKey) ?? failUndefined())
     }
 
-    if(invitationRequest.secret) {
-      authenticate(invitationRequest.secret)
+    if(invitationDescriptor.secret) {
+      authenticate(invitationDescriptor.secret)
     }
     
     return new RedeemingInvitation(
@@ -195,26 +195,16 @@ export class EchoProxy {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createInvitation (partyKey: PublicKey, options?: CreateInvitationOptions): Promise<InvitationRequest> {
+  async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
         if (invitationMsg.finished) {
-          options?.onFinish?.({});
           stream.close();
         } else {
-          const pendingInvitation: PendingInvitation = {
-            invitationCode: invitationMsg.invitationCode!,
-            invitation: decodeInvitation(invitationMsg.invitationCode!),
-            pin: invitationMsg.secret
-          };
-          if (invitationMsg.secret && options?.onPinGenerated) {
-            options.onPinGenerated(invitationMsg.secret);
-          }
-
-          
-
-          resolve(pendingInvitation);
+          const descriptor = decodeInvitation(invitationMsg.invitationCode!);
+          descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
+          resolve(new InvitationRequest(descriptor));
         }
       }, error => {
         if (error) {

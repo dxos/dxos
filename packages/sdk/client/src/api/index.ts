@@ -5,5 +5,4 @@
 export * from './EchoProxy';
 export * from './HaloProxy';
 export * from './PartyProxy';
-export * from './InvitationRequest'
-export * from './RedeemingInvitation'
+export * from './invitations'
