@@ -2,16 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
-import { schema } from '@dxos/client/src/proto/gen';
-import { MessageTrace, RpcMessage } from '@dxos/client/src/proto/gen/dxos/rpc';
-import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
-import { SubscriptionGroup } from "@dxos/util";
-import { Stream } from '@dxos/codec-protobuf';
 import assert from 'assert';
 
-import { config } from './config';
 import { Event } from '@dxos/async';
+import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
+import { schema } from '@dxos/client/src/proto/gen';
+import { RpcMessage } from '@dxos/client/src/proto/gen/dxos/rpc';
+import { Stream } from '@dxos/codec-protobuf';
+import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
+import { SubscriptionGroup } from '@dxos/util';
+
+import { config } from './config';
 
 export class BackgroundServer {
   private readonly _client: Client = new Client(config);
@@ -52,14 +53,14 @@ export class BackgroundServer {
         SetTracingOptions: async ({ enable }) => {
           collector.setEnabled(enable ?? false);
         },
-        SubscribeToRpcTrace: () => collector.getMessageStream(),
+        SubscribeToRpcTrace: () => collector.getMessageStream()
       }
     };
 
     const server = createBundledRpcServer({
       services: clientServiceBundle,
       handlers,
-      port: tracer.port,
+      port: tracer.port
     });
     this._connections.add(server);
     await server.open(); // This is blocks until the other client connects.
@@ -73,18 +74,18 @@ export class TraceCollector {
   private readonly _ids = new Set<number>();
 
   private readonly _message = new Event<RpcMessage>();
-  
-  constructor(
-    private readonly _tracer: PortTracer,
+
+  constructor (
+    private readonly _tracer: PortTracer
   ) {}
 
-  setEnabled(enabled: boolean) {
-    if(enabled) {
+  setEnabled (enabled: boolean) {
+    if (enabled) {
       this._subscriptions.push(this._tracer.message.on(msg => {
-        assert(msg.data)
+        assert(msg.data);
         const inner = schema.getCodecForType('dxos.rpc.RpcMessage').decode(msg.data);
-        if(inner.request) {
-          if(inner.request.method?.startsWith('TracingService.')) {
+        if (inner.request) {
+          if (inner.request.method?.startsWith('TracingService.')) {
             return;
           }
 
@@ -92,7 +93,7 @@ export class TraceCollector {
           this._ids.add(inner.request.id);
         } else if (inner.response) {
           assert(inner.response.id);
-          if(!this._ids.has(inner.response.id)) {
+          if (!this._ids.has(inner.response.id)) {
             return;
           }
         }
@@ -107,9 +108,9 @@ export class TraceCollector {
     }
   }
 
-  getMessageStream(): Stream<RpcMessage> {
+  getMessageStream (): Stream<RpcMessage> {
     return new Stream(({ next }) => {
-      for(const msg of this._messages) {
+      for (const msg of this._messages) {
         next(msg);
       }
 

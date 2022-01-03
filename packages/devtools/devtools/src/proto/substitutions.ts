@@ -54,7 +54,7 @@ export default {
       const data = codec.decode(value.value!);
       return {
         '@type': value.type_url,
-        ...data,
+        ...data
       };
     }
   }

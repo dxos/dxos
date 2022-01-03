@@ -1,12 +1,14 @@
-import { useClient } from "@dxos/react-client";
-import { JsonTreeView } from "@dxos/react-components";
+//
+// Copyright 2022 DXOS.org
+//
+
 import React, { useEffect, useState } from 'react';
-import { Panel } from "../components";
-import { MessageTrace, RpcMessage } from "../proto/gen/dxos/rpc";
-import { schema } from "../proto/gen";
-import assert from "assert";
-import { clientServiceBundle, ClientServices } from "@dxos/client";
-import pb from 'protobufjs';
+
+import { useClient } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components';
+
+import { Panel } from '../components';
+import { RpcMessage } from '../proto/gen/dxos/rpc';
 
 export const RpcTracePanel = () => {
   const client = useClient();
@@ -25,5 +27,5 @@ export const RpcTracePanel = () => {
         <JsonTreeView data={msg} key={idx} />
       ))}
     </Panel>
-  )
-}
+  );
+};

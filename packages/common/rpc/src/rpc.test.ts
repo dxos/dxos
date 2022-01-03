@@ -9,9 +9,9 @@ import { sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
+import { Any } from './proto/gen/google/protobuf';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
-import { Any } from './proto/gen/google/protobuf';
 
 describe('RpcPeer', () => {
   test('can open', async () => {
@@ -300,7 +300,7 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const stream = await bob.callStream('method', {value: Buffer.from('request') });
+      const stream = await bob.callStream('method', { value: Buffer.from('request') });
       expect(stream).toBeA(Stream);
 
       const msgs = await Stream.consume(stream);
@@ -337,7 +337,7 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const stream = bob.callStream('method', {value: Buffer.from('request') });
+      const stream = bob.callStream('method', { value: Buffer.from('request') });
       stream.close();
 
       await sleep(1);

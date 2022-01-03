@@ -135,7 +135,7 @@ export const panels = [
         id: 'rpc',
         title: 'RPC Trace',
         icon: MessagesIcon,
-        panel: RpcTracePanel,
+        panel: RpcTracePanel
       }
     ]
   }

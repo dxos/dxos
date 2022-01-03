@@ -27,7 +27,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   // DataService is provided and implemented internally in ECHO so we import it from there.
   DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
-  TracingService: schema.getService('dxos.devtools.TracingService'),
+  TracingService: schema.getService('dxos.devtools.TracingService')
 });
 
 export interface ClientServiceProvider {

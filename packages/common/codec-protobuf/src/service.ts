@@ -9,7 +9,7 @@ import type { Schema } from './schema';
 import { Stream } from './stream';
 
 export interface Any {
-  type_url?: string;
+  'type_url'?: string;
   value?: Uint8Array;
 }
 
@@ -58,7 +58,7 @@ export class Service {
           const encoded = requestCodec.encode(request);
           const response = await backend.call(method.name, {
             value: encoded,
-            type_url:method.resolvedRequestType!.fullName
+            type_url: method.resolvedRequestType!.fullName
           });
           return responseCodec.decode(response.value!);
         };
@@ -68,7 +68,7 @@ export class Service {
           return new Stream(({ next, close }) => {
             const stream = backend.callStream(method.name, {
               value: encoded,
-              type_url: method.resolvedRequestType!.fullName,
+              type_url: method.resolvedRequestType!.fullName
             });
             stream.subscribe(data => next(responseCodec.decode(data.value!)), close);
 
@@ -121,7 +121,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     return new Stream<Any>(({ next, close }) => {
       responseStream.subscribe(data => next({
         value: responseCodec.encode(data),
-        type_url: method.resolvedResponseType!.fullName,
+        type_url: method.resolvedResponseType!.fullName
       }), close);
       return () => responseStream.close();
     });
