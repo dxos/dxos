@@ -79,8 +79,8 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test 2'
     });
 
-    const invite = await client.echo.createInvitation(party.key, defaultInvitationAuthenticator);
-    const otherParty = await otherClient.echo.joinParty(invite, defaultInvitationAuthenticator.secretProvider);
+    const invite = await client.echo.createInvitation(party.key);
+    const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).wait();
 
     const otherItem = otherParty.database.select(s => s.filter({ type: 'dxn://test' }).items).getValue()[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
@@ -111,8 +111,8 @@ describe('Client - nonpersistent', () => {
     // Online (adds contact).
     {
       const party1A = await clientA.echo.createParty();
-      const invite1 = await clientA.echo.createInvitation(party1A.key, defaultInvitationAuthenticator);
-      await clientB.echo.joinParty(invite1, defaultInvitationAuthenticator.secretProvider);
+      const invite1 = await clientA.echo.createInvitation(party1A.key);
+      await clientB.echo.acceptInvitation(invite1.descriptor).wait();
     }
 
     const contact = (await contactPromise)[0];

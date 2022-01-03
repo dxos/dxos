@@ -20,7 +20,7 @@ export const encodeInvitation = (invitation: InvitationDescriptor) => {
 export const generateInvitation = async (client: Client, party: PartyProxy): Promise<Invitation> => {
   const invitation = await client.echo.createInvitation(party.key);
   return {
-    invitationCode: invitation.invitationCode,
-    secret: invitation.pin
+    invitationCode: encodeInvitation(invitation.descriptor),
+    secret: invitation.descriptor.secret?.toString(),
   };
 };
