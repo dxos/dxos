@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "halo/keys.proto";
+import "config.proto";
 
 package dxos.client;
 

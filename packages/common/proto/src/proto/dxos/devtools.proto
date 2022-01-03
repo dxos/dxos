@@ -12,6 +12,7 @@ import "./echo/feed.proto";
 import "./echo/snapshot.proto";
 import "./halo/keys.proto";
 import "./halo/signed.proto";
+import "./rpc.proto";
 
 service DevtoolsHost {
   //
@@ -257,4 +258,13 @@ message SubscribeToSwarmInfoResponse {
     repeated ConnectionInfo connections = 5;
   }
   repeated SwarmInfo data = 1;
+}
+
+message SetTracingOptionsRequest {
+  bool enable = 1;
+}
+
+service TracingService {
+  rpc SetTracingOptions(SetTracingOptionsRequest) returns (google.protobuf.Empty);
+  rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream RpcMessage);
 }

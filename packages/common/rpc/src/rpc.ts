@@ -12,6 +12,7 @@ import { StackTrace } from '@dxos/debug';
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
 import { Request, Response, Error as ErrorResponse, RpcMessage } from './proto/gen/dxos/rpc';
+import { Any } from './proto/gen/google/protobuf';
 
 const DEFAULT_TIMEOUT = 3000;
 
@@ -20,8 +21,8 @@ const log = debug('dxos:rpc');
 type MaybePromise<T> = Promise<T> | T
 
 export interface RpcPeerOptions {
-  messageHandler: (method: string, request: Uint8Array) => MaybePromise<Uint8Array>
-  streamHandler?: (method: string, request: Uint8Array) => Stream<Uint8Array>
+  messageHandler: (method: string, request: Any) => MaybePromise<Any>
+  streamHandler?: (method: string, request: Any) => Stream<Any>
   port: RpcPort,
   timeout?: number,
 }
@@ -169,7 +170,7 @@ export class RpcPeer {
    *
    * Peer should be open before making this call.
    */
-  async call (method: string, request: Uint8Array): Promise<Uint8Array> {
+  async call (method: string, request: Any): Promise<Any> {
     if (!this._open) {
       throw new RpcNotOpenError();
     }
@@ -223,7 +224,7 @@ export class RpcPeer {
    *
    * Peer should be open before making this call.
    */
-  callStream (method: string, request: Uint8Array): Stream<Uint8Array> {
+  callStream (method: string, request: Any): Stream<Any> {
     if (!this._open) {
       throw new RpcNotOpenError();
     }
