@@ -7,8 +7,8 @@ import React, { ReactNode } from 'react';
 import { Box } from '@mui/material';
 
 export interface PanelProps {
-  controls: ReactNode | undefined
-  children: ReactNode | ReactNode[] | undefined
+  controls?: ReactNode
+  children?: ReactNode | ReactNode[]
 }
 
 export const Panel = ({ children, controls }: PanelProps) => {

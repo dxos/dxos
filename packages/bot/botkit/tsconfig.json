@@ -37,6 +37,9 @@
       "path": "../../mesh/protocol-plugin-rpc"
     },
     {
+      "path": "../../sdk/registry-client"
+    },
+    {
       "path": "../../common/rpc"
     },
     {
