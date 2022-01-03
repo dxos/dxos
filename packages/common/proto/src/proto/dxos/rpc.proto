@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package dxos.rpc;
 
 message RpcMessage {
@@ -21,14 +23,14 @@ message RpcMessage {
 message Request {
   int32 id = 1;
   string method = 2;
-  bytes payload = 3;
+  google.protobuf.Any payload = 3;
   bool stream = 4;
 }
 
 message Response {
   int32 id = 1;
   oneof content {
-    bytes payload = 2;
+    google.protobuf.Any payload = 2;
     Error error = 3;
     // Sent when stream is closed without an error.
     bool close = 4;
@@ -40,9 +42,18 @@ message StreamClose {
   int32 id = 1;
 }
 
-
 message Error {
   string name = 1;
   string message = 2;
   string stack = 3;
+}
+
+message MessageTrace {
+  enum Direction {
+    INCOMING = 1;
+    OUTGOING = 2;
+  }
+
+  Direction direction = 1;
+  bytes data = 2;
 }

@@ -296,7 +296,15 @@ export class ClientServiceHost implements ClientServiceProvider {
         }
       },
       DataService: this._echo.dataService,
-      DevtoolsHost: this._createDevtoolsService()
+      DevtoolsHost: this._createDevtoolsService(),
+      TracingService: {
+        SetTracingOptions: () => {
+          throw new Error('Tracing not available');
+        },
+        SubscribeToRpcTrace: () => {
+          throw new Error('Tracing not available');
+        }
+      }
     };
   }
 

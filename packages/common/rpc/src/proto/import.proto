@@ -1,0 +1,9 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.rpc;
+
+import "@dxos/proto/src/proto/dxos/rpc.proto";
