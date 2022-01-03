@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { IRegistryClient } from '@dxos/registry-client';
@@ -15,7 +16,6 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
-import { Config } from '@dxos/config';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -32,7 +32,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory({ 
+      const botFactory = new BotFactory({
         botContainer,
         config: new Config({})
       });
@@ -79,7 +79,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const botFactory = new BotFactory({ 
+      const botFactory = new BotFactory({
         botContainer,
         config: new Config({})
       });

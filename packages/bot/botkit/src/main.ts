@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
-import assert from 'assert';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController } from './bot-factory';

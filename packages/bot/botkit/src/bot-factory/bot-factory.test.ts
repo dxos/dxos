@@ -5,11 +5,11 @@
 import expect from 'expect';
 
 import { sleep } from '@dxos/async';
+import { Config } from '@dxos/config';
 
 import { NodeContainer } from '../bot-container';
 import { Bot } from '../proto/gen/dxos/bot';
 import { BotFactory } from './bot-factory';
-import { Config } from '@dxos/config';
 
 describe('BotFactory', () => {
   describe('with NodeContainer', () => {

@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import { debug } from 'debug';
-import fs from 'fs';
 import { join } from 'path';
 
 import { Config } from '@dxos/config';
