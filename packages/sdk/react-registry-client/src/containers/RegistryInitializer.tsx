@@ -24,7 +24,7 @@ const log = debug('dxos:react-registry-client:error');
 
 // TODO(burdon): Move to util?
 type AsyncProvider<T> = T | (() => MaybePromise<T>);
-const resolveAsyncProvider = async <T extends any>(provider: AsyncProvider<T>): Promise<T> => {
+const resolveAsyncProvider = async <T>(provider: AsyncProvider<T>): Promise<T> => {
   return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
 };
 
