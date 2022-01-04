@@ -22,6 +22,7 @@ import {
   PartySharingDialog
 } from '../src';
 import { Column } from './helpers';
+import { encodeInvitation } from '@dxos/client';
 
 export default {
   title: 'react-framework/PartyInvitations'
@@ -144,14 +145,11 @@ const AutoInvitationGenerator = ({
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
-      const invitation = await client.echo.createInvitation(party.key, {
-        onFinish: () => {
-          setPin('');
-        },
-        onPinGenerated: setPin
-      });
+      const invitation = await client.echo.createInvitation(party.key);
+      invitation.finshed.on(() => setPin(''));
+      invitation.connected.on(() => setPin(invitation.secret.toString()));
 
-      onInvite(invitation.pin!);
+      onInvite(encodeInvitation(invitation.descriptor));
     });
   }, []);
 
