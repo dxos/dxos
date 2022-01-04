@@ -5,15 +5,15 @@ app:
   title: "Tasks App"
 
 # Uncomment for remote mode
-system:
-  remote: true
+# system:
+#   remote: true
 
 # Uncomment for local mode
-# system:
-#   storage:
-#     persistent: true
-# services:
-#   signal:
-#     server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
-#   dxns:
-#     server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
+system:
+  storage:
+    persistent: true
+services:
+  signal:
+    server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
+  dxns:
+    server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
