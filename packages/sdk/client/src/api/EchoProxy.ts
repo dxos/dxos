@@ -2,22 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
-import assert from 'assert';
+
 import { RedeemingInvitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
 import { decodeInvitation, encodeInvitation } from '../util';
-import { InvitationRequest } from './invitations';
 import { PartyProxy } from './PartyProxy';
+import { InvitationRequest } from './invitations';
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
@@ -168,7 +170,7 @@ export class EchoProxy {
     };
 
     if (invitationDescriptor.secret) {
-      authenticate(invitationDescriptor.secret);
+      void authenticate(invitationDescriptor.secret);
     }
 
     return new RedeemingInvitation(

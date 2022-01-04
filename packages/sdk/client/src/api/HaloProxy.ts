@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
+
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { Profile } from '../proto/gen/dxos/client';
 import { encodeInvitation } from '../util';

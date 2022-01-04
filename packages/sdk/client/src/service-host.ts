@@ -148,7 +148,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           invitation.secretTrigger?.();
 
           next({});
-          invitation.joinPromise?.().then(() => {
+          void invitation.joinPromise?.().then(() => {
             const profile = this._echo.halo.getProfile();
             assert(profile, 'Profile not created.');
             next({ profile });
@@ -271,12 +271,11 @@ export class ClientServiceHost implements ClientServiceProvider {
           setImmediate(async () => {
             try {
               const secret = generatePasscode();
-              let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
               const secretProvider = async () => {
                 next({ connected: true });
                 return Buffer.from(secret);
               };
-              invitation = await party.createInvitation({
+              const invitation = await party.createInvitation({
                 secretProvider,
                 secretValidator: defaultSecretValidator
               }, {
