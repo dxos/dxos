@@ -7,7 +7,6 @@ import 'source-map-support/register';
 
 import { defaultTestingConfig, Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-import { defaultInvitationAuthenticator } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 describe('Client - nonpersistent', () => {

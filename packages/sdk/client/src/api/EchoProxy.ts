@@ -3,7 +3,6 @@
 //
 
 import { Event, latch, trigger } from '@dxos/async';
-import { SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise } from '@dxos/debug';
 import { ECHO, InvitationDescriptor, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
@@ -13,17 +12,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import assert from 'assert';
 import { RedeemingInvitation } from '.';
-
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { encodeInvitation, decodeInvitation } from '../util';
+import { decodeInvitation, encodeInvitation } from '../util';
 import { InvitationRequest } from './invitations';
 import { PartyProxy } from './PartyProxy';
-
-interface CreateInvitationOptions extends InvitationOptions {
-  onPinGenerated?: (pin: string) => void
-}
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
@@ -149,8 +143,8 @@ export class EchoProxy {
    * @returns An async function to provide secret and finishing the invitation process.
    */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): RedeemingInvitation {
-    const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>()
-    const [waitForParty, resolveParty] = trigger<PartyProxy>()
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>();
+    const [waitForParty, resolveParty] = trigger<PartyProxy>();
 
     setImmediate(async () => {
       const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
@@ -165,22 +159,22 @@ export class EchoProxy {
 
       const { partyKey } = await this._serviceProvider.services.PartyService.AuthenticateInvitation({
         process: invitationProcess,
-        secret: secret.toString(),
+        secret: secret.toString()
       });
-      assert(partyKey)
+      assert(partyKey);
       await this._partiesChanged.waitForCondition(() => this._parties.has(partyKey));
-  
-      resolveParty(this.getParty(partyKey) ?? failUndefined())
+
+      resolveParty(this.getParty(partyKey) ?? failUndefined());
+    };
+
+    if (invitationDescriptor.secret) {
+      authenticate(invitationDescriptor.secret);
     }
 
-    if(invitationDescriptor.secret) {
-      authenticate(invitationDescriptor.secret)
-    }
-    
     return new RedeemingInvitation(
       waitForParty(),
-      authenticate,
-    )
+      authenticate
+    );
   }
 
   /**
@@ -200,27 +194,27 @@ export class EchoProxy {
       const finished = new Event();
       const error = new Event<Error>();
 
-      let hasInitiated = false, hasConnected = false;
+      let hasInitiated = false; let hasConnected = false;
 
       stream.subscribe(invitationMsg => {
-        if(!hasInitiated) {
+        if (!hasInitiated) {
           hasInitiated = true;
           const descriptor = decodeInvitation(invitationMsg.invitationCode!);
           descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
           resolve(new InvitationRequest(descriptor, connected, finished, error));
         }
 
-        if(invitationMsg.connected && !hasConnected) {
+        if (invitationMsg.connected && !hasConnected) {
           hasConnected = true;
           connected.emit();
         }
-        
+
         if (invitationMsg.finished) {
           finished.emit();
           stream.close();
         }
 
-        if(invitationMsg.error) {
+        if (invitationMsg.error) {
           error.emit(new Error(invitationMsg.error));
         }
       }, error => {

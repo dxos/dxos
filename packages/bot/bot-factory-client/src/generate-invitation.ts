@@ -21,6 +21,6 @@ export const generateInvitation = async (client: Client, party: PartyProxy): Pro
   const invitation = await client.echo.createInvitation(party.key);
   return {
     invitationCode: encodeInvitation(invitation.descriptor),
-    secret: invitation.descriptor.secret?.toString(),
+    secret: invitation.descriptor.secret?.toString()
   };
 };

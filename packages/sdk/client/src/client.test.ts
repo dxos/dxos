@@ -7,6 +7,7 @@ import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
@@ -15,7 +16,6 @@ import { afterTest } from '@dxos/testutils';
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
 import { InvitationProcess } from './proto/gen/dxos/client';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -120,7 +120,7 @@ describe('Client', () => {
         const party = await inviter.echo.createParty();
 
         const invitation = await inviter.echo.createInvitation(party.key);
-        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait()
+        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
 
         expect(inviteeParty.key).toEqual(party.key);
       }).timeout(5000);
@@ -141,17 +141,17 @@ describe('Client', () => {
         const invitation = await inviter.echo.createInvitation(party.key);
 
         const connectedFired = invitation.connected.waitForCount(1);
-        
+
         const reincodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
         const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
-        
+
         await connectedFired;
         const finishedFired = invitation.finshed.waitForCount(1);
 
         acceptedInvitation.authenticate(invitation.secret);
 
         await finishedFired;
-        
+
         const inviteeParty = await acceptedInvitation.wait();
 
         expect(inviteeParty.key).toEqual(party.key);

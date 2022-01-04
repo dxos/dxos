@@ -5,4 +5,4 @@
 export * from './EchoProxy';
 export * from './HaloProxy';
 export * from './PartyProxy';
-export * from './invitations'
+export * from './invitations';

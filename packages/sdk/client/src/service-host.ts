@@ -10,6 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
+import { failUndefined } from '@dxos/debug';
 import { ECHO, InvitationDescriptor, OpenProgress, Party } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -19,7 +20,6 @@ import { Contacts, SubscribeMembersResponse, SubscribePartiesResponse, Subscribe
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
-import { failUndefined } from '@dxos/debug';
 
 interface InviterInvitation {
   invitationCode: string
@@ -330,8 +330,8 @@ export class ClientServiceHost implements ClientServiceProvider {
           const party = await invitation.joinPromise?.() ?? failUndefined();
 
           return {
-            partyKey: party.key,
-          }
+            partyKey: party.key
+          };
         },
         SubscribeMembers: (request) => {
           const party = this._echo.getParty(request.partyKey);
