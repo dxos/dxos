@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { Client, decodeInvitation, encodeInvitation } from '@dxos/client';
+import { Client, decodeInvitation, encodeInvitation, RedeemingInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
@@ -76,13 +76,10 @@ const PartyInvitationContainer = () => {
         const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!));
         setInvitationCode(encodeInvitation(invitation));
       } else {
-        const invitation = await client.echo.createInvitation(partyKey!, {
-          onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-            resetInvitations();
-          },
-          onPinGenerated: setPin
-        });
-        setInvitationCode(invitation.invitationCode);
+        const invitation = await client.echo.createInvitation(partyKey!);
+        invitation.connected.on(() => setPin(invitation.secret.toString()));
+        invitation.finshed.on(() => resetInvitations());
+        setInvitationCode(encodeInvitation(invitation.descriptor));
       }
     });
   };
@@ -144,7 +141,7 @@ const PartyInvitationContainer = () => {
 interface Status {
   error?: any,
   party?: string,
-  finishAuthentication?: Awaited<ReturnType<Client['echo']['acceptInvitation']>>
+  invitation?: RedeemingInvitation
 }
 
 /**
@@ -164,8 +161,8 @@ const PartyJoinContainer = () => {
         await party.open();
         setStatus({ party: party.key.toHex() });
       } else {
-        const finishAuthentication = await client.echo.acceptInvitation(invitation);
-        setStatus({ finishAuthentication });
+        const redeemingInvitation = client.echo.acceptInvitation(invitation);
+        setStatus({ invitation: redeemingInvitation });
       }
     } catch (error: any) {
       setStatus({ error });
@@ -173,7 +170,7 @@ const PartyJoinContainer = () => {
   };
 
   const handleAuthenticate = async (pin: string) => {
-    await status.finishAuthentication?.(pin);
+    await status.invitation?.authenticate(Buffer.from(pin));
   };
 
   return (
