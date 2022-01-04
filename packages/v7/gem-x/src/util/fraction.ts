@@ -90,8 +90,7 @@ export class Frac {
    * @param n1
    * @param n2
    */
-  // TODO(burdon): Rename multiply.
-  static x = (n1: number | Fraction, n2: number | Fraction): Fraction => {
+  static multiply = (n1: number | Fraction, n2: number | Fraction): Fraction => {
     const num1 = typeof n1 === 'number' ? Frac.num(n1) : n1;
     const num2 = typeof n2 === 'number' ? Frac.num(n2) : n2;
 

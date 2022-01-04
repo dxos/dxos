@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter, EventHandle } from './util';
+import { EventEmitter, EventHandle } from '../util';
 
 export type ObjectId = string
 

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { distance, Fraction, Point } from '../scale';
+import { distance, Fraction, Point } from '@dxos/gem-x';
 
 export type Circle = {
   x: number | Fraction
@@ -38,15 +38,11 @@ export type Element = {
   data: Circle | Rect | Line | Path
 }
 
-export type Cursor = {
-  element: Element
-}
+export type Cursor = Element;
 
-// TODO(burdon): Wrapper.
-export const createCursor = (element: Element, start?: Point, end?: Point): Cursor => {
-  return {
-    element
-  };
+// TODO(burdon): Contains element.
+export const createCursor = (id: string, tool: string, start?: Point, end?: Point): Cursor => {
+  return createElement(id, tool, start, end);
 };
 
 /**

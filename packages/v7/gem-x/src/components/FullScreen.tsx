@@ -7,7 +7,7 @@ import React, { ReactNode } from 'react';
 /**
  * Fullscreen container.
  */
-export const FullScreen = ({ children, style }: { children: ReactNode | ReactNode[], style: any }) => {
+export const FullScreen = ({ children, style }: { children: ReactNode | ReactNode[], style?: any }) => {
   return (
     <div style={{
       display: 'flex',

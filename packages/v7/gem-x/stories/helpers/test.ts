@@ -4,7 +4,8 @@
 
 import faker from 'faker';
 
-import { Graph, ObjectId, Stats } from '../../src';
+import { Graph, ObjectId } from '../../src';
+import { Stats } from './stats';
 
 export type TestModel = {
   items: {

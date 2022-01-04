@@ -57,10 +57,10 @@ export const grid = ({ scale, width, height }: GridProps) => (el) => {
   el.selectAll('path')
     .data([{ id: 'grid' }])
     .join('path')
-    .attr('d', createGrid({ scale, width, height } ));
+    .attr('d', createGrid({ scale, width, height }));
 
   if (scale.transform) {
     el.attr('transform', scale.transform);
     el.attr('stroke-width', 1 / scale.transform.k);
   }
-}
+};

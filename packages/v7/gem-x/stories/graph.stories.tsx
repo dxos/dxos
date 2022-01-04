@@ -8,7 +8,7 @@ import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
 
-import { useStateRef } from './helpers';
+import { useStateRef } from '../src';
 
 import {
   FullScreen,
@@ -17,13 +17,13 @@ import {
   Part,
   Surface,
   Scene,
-  StatsProjector,
-  StatsRenderer,
   SvgContainer,
   useScale
 } from '../src';
 
 import {
+  StatsProjector,
+  StatsRenderer,
   TestModel,
   createModel,
   graphMapper,

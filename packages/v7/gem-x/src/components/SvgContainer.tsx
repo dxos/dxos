@@ -9,8 +9,7 @@ import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useRef, useS
 import useResizeObserver from 'use-resize-observer';
 import { css } from '@emotion/css';
 
-import { grid } from '../grid';
-import { defaultScale, Scale } from '../scale';
+import { defaultScale, grid, Scale } from '../grid';
 
 const defaultStyles = css`
   g.grid {
@@ -78,12 +77,12 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const height = controlledHeight || currentHeight;
 
   const handleResize = ({ width, height }) => {
-    const bounds = scale.bounds.update(-Math.floor(width / 2), -Math.floor(height / 2), width, height);
+    const [x, y] = scale.setBounds([-Math.floor(width / 2), -Math.floor(height / 2), width, height]);
 
     if (center) {
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
       svgRef.current
-        .setAttribute('viewBox', `${bounds.x},${bounds.y},${bounds.width},${bounds.height}`);
+        .setAttribute('viewBox', `${x},${y},${width},${height}`);
     }
 
     if (showGrid) {
@@ -142,7 +141,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
       <svg
         ref={svgRef}
         className={className}
-        transform='scale(1, -1)' // Flip y-axis.
+        transform='scale(1, -1)' // TODO(burdon): Can't do this -- flips text.
         style={{
           width,
           height,

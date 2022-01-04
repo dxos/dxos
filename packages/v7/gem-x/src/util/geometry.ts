@@ -4,6 +4,10 @@
 
 export type Point = [x: number, y: number];
 
+export type Size = [width: number, height: number];
+
+export type Bounds = [x: number, y: number, width: number, height: number];
+
 /**
  * Distance between two points.
  * @param p1
@@ -35,40 +39,3 @@ export const normal = (v1: Point, v2: Point, p: Point) => {
 
   return Math.sqrt(d);
 };
-
-/**
- * Rectangular region.
- */
-export class Bounds {
-  constructor (
-    private _x: number = 0,
-    private _y: number = 0,
-    private _width: number = 0,
-    private _height: number = 0
-  ) {}
-
-  get bounds () {
-    return {
-      x: this._x,
-      y: this._y,
-      width: this._width,
-      height: this._height
-    };
-  }
-
-  // TODO(burdon): Bug: used by viewbox.
-  get center () {
-    return {
-      x: /* this._x + */ this._width / 2,
-      y: /* this._y + */ this._height / 2
-    };
-  }
-
-  update (x: number, y: number, width: number, height: number) {
-    this._x = x;
-    this._y = y;
-    this._width = width;
-    this._height = height;
-    return this.bounds;
-  }
-}

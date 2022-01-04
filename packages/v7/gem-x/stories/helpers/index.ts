@@ -2,5 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './hooks';
+export * from './stats';
 export * from './test';

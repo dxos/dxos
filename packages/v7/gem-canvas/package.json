@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/gem-x",
+  "name": "@dxos/gem-canvas",
   "version": "1.0.0-beta.36",
-  "description": "Gem core components.",
+  "description": "Gem vector editor.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
     "url": "https://github.com/dxos/gem/issues"
@@ -36,10 +36,10 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@dxos/gem-x": "^1.0.0-beta.36",
     "csstype": "^3.0.10",
     "d3": "^7.2.1",
-    "debug": "^4.1.1",
-    "use-resize-observer": "^8.0.0"
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/esbuild-book-knobs": "^1.0.0-beta.36",

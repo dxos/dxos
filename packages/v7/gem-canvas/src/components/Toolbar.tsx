@@ -5,9 +5,11 @@
 import React from 'react';
 import { css } from '@emotion/css';
 
+export type Tool = 'circle' | 'rect' | 'line' | 'path';
+
 export interface ToolbarProps {
-  active?: string
-  onSelect?: (tool?: string) => void
+  active?: Tool
+  onSelect?: (tool?: Tool) => void
 }
 
 export const Toolbar = ({
@@ -29,30 +31,30 @@ export const Toolbar = ({
     }
   `;
 
-  const tools = [
+  const tools: { type: Tool }[] = [
     {
-      id: 'circle'
+      type: 'circle'
     },
     {
-      id: 'rect'
+      type: 'rect'
     },
     {
-      id: 'line'
+      type: 'line'
     },
     {
-      id: 'path'
+      type: 'path'
     }
-  ]
+  ];
 
   return (
     <div className={styles}>
-      {tools.map(({ id }) => (
+      {tools.map(({ type }) => (
         <button
-          key={id}
-          className={active === id ? 'active' : ''}
-          onClick={() => onSelect(active === id ? undefined : id)}
+          key={type}
+          className={active === type ? 'active' : ''}
+          onClick={() => onSelect(active === type ? undefined : type)}
         >
-          {id}
+          {type}
         </button>
       ))}
     </div>

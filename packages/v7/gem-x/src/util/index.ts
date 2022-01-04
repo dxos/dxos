@@ -3,3 +3,5 @@
 //
 
 export * from './events';
+export * from './fraction';
+export * from './geometry';

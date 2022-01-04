@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { Projector, Renderer } from './scene';
+import { Projector, Renderer } from '../../src';
 
 export type Stats = {
   nodes?: number

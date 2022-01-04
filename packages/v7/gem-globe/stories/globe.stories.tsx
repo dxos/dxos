@@ -50,7 +50,7 @@ const useStateWithRef = (initial) => {
     ref.current = value;
   };
 
-  return [ value, update, ref ];
+  return [value, update, ref];
 };
 
 /**
@@ -370,7 +370,7 @@ export const Primary = () => {
         {
           // TODO(burdon): Remove points (not part of current paths).
           points: {
-            $push: [ point ]
+            $push: [point]
           }
         },
         points.length && {

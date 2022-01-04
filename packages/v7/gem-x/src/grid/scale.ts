@@ -5,8 +5,7 @@
 import type { ZoomTransform } from 'd3';
 import { useMemo } from 'react';
 
-import { Frac, Fraction } from './fraction';
-import { Bounds, Point } from './geometry';
+import { Bounds, Frac, Fraction, Point, Size } from '../util';
 
 const round = (n: number, s: number) => {
   return Math.round((n + 0.5) / s);
@@ -16,7 +15,7 @@ const round = (n: number, s: number) => {
  *
  */
 export class Scale {
-  private _bounds: Bounds = new Bounds();
+  private _bounds: Bounds;
   private _transform: ZoomTransform;
 
   constructor (
@@ -35,20 +34,43 @@ export class Scale {
     return this._gridSize;
   }
 
+  setBounds (bounds: Bounds): Bounds {
+    this._bounds = bounds;
+    return this._bounds;
+  }
+
   setTransform (transform: ZoomTransform) {
     this._transform = transform;
   }
 
   mapToScreen (n: number | Fraction) {
-    return Frac.floor(Frac.x(n, this._gridSize));
+    return Frac.floor(Frac.multiply(n, this._gridSize));
   }
 
-  mapToModel ([ x, y ], snap?: boolean): Point {
-    const { center } = this._bounds;
+  // TODO(burdon): Hack. Separate out scaling/snapping from centering.
+  mapSizeToModel ([width, height]: Size, snap?: boolean): Size {
+    if (snap) {
+      return [
+        round(width, this._gridSize),
+        round(height, this._gridSize)
+      ];
+    } else {
+      return [
+        width / this._gridSize,
+        height / this._gridSize
+      ];
+    }
+  }
+
+  mapToModel ([x, y]: Point, snap?: boolean): Point {
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
+
+    // TODO(burdon): Update since scale -1 doesn't work.
+    const [,, width, height] = this._bounds;
+    const [cx, cy] = [width / 2, height / 2];
     const pos = [
-      (x - center.x - tx) / k,
-      (center.y - y - ty) / k
+      (x - cx - tx) / k,
+      (cy - y - ty) / k
     ];
 
     if (snap) {
@@ -70,4 +92,4 @@ export const defaultScale = new Scale(32);
 // TODO(burdon): Factor out (hooks).
 export const useScale = ({ gridSize }): Scale => {
   return useMemo<Scale>(() => new Scale(gridSize), []);
-}
+};

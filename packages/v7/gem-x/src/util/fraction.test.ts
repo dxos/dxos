@@ -48,6 +48,6 @@ test('Add', () => {
 test('Multiply', () => {
   const x = Frac.num(4, 2);
   const y = Frac.num(8, 2);
-  const r = Frac.x(x, y);
+  const r = Frac.multiply(x, y);
   expect(Frac.floor(r)).toEqual(8);
 });
