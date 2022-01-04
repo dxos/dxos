@@ -38,7 +38,11 @@ export type Element = {
   data: Circle | Rect | Line | Path
 }
 
-export type Cursor = Element;
+export type Cursor = {
+  id: string // ID of element.
+  type: string
+  data: Circle | Rect | Line | Path
+}
 
 // TODO(burdon): Contains element.
 export const createCursor = (id: string, tool: string, start?: Point, end?: Point): Cursor => {

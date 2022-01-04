@@ -60,7 +60,7 @@ const styles = css`
   }
 `;
 
-const model: Element[] = [
+const testElements: Element[] = [
   {
     id: faker.datatype.uuid(), type: 'rect', data: { x: -2, y: -1, width: 4, height: 2 }
   },
@@ -104,9 +104,14 @@ export const Primary = () => {
   const [tool, setTool] = useState<Tool>(undefined);
 
   // TODO(burdon): Move to canvas wrapper.
-  const [elements, setElements] = useState<Element[]>(model);
+  const [elements, setElements] = useState<Element[]>();
   const [cursor, setCursor] = useState<Cursor>(undefined);
 
+  useEffect(() => {
+    setElements(testElements);
+  }, []);
+
+  // TODO(burdon): Determine relationship between editor and state in this class.
   useEffect(() => {
     editor.setTool(tool);
     editor.setCursor(cursor);
@@ -191,6 +196,8 @@ export const Primary = () => {
         zoom={[1/8, 8]}
         grid
       >
+        <text>Upside Down</text>
+
         <Canvas
           className={styles}
           scale={scale}

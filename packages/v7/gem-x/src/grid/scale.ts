@@ -65,12 +65,11 @@ export class Scale {
   mapToModel ([x, y]: Point, snap?: boolean): Point {
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
 
-    // TODO(burdon): Update since scale -1 doesn't work.
     const [,, width, height] = this._bounds;
     const [cx, cy] = [width / 2, height / 2];
     const pos = [
       (x - cx - tx) / k,
-      (cy - y - ty) / k
+      (y - cy - ty) / k
     ];
 
     if (snap) {

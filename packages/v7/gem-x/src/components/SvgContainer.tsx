@@ -141,7 +141,6 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
       <svg
         ref={svgRef}
         className={className}
-        transform='scale(1, -1)' // TODO(burdon): Can't do this -- flips text.
         style={{
           width,
           height,

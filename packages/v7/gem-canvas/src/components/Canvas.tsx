@@ -29,7 +29,7 @@ export const Canvas = ({
   className,
   scale,
   cursor,
-  elements,
+  elements = [],
   onUpdateCursor
 }: CanvasProps) => {
   const elementsRef = useRef<SVGSVGElement>();

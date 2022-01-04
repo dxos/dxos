@@ -62,9 +62,10 @@ export class Editor {
   }
 
   // TODO(burdon): Map point to model.
-  // findElement (point: Point) {
-  //   return this._elements.length ? this._elements[0] : undefined;
-  // }
+  findElement (point: Point) {
+    console.log('find', point);
+    return this._elements.length ? this._elements[0] : undefined;
+  }
 }
 
 export const createMouseHandlers = (
@@ -132,8 +133,8 @@ export const createMouseHandlers = (
   //
   const mouseHandler = selection => selection
     .on('click', (event: MouseEvent) => {
+      // Select.
       if (!editor.tool) {
-        // TODO(burdon): Find existing.
         const selected = editor.findElement([event.x, event.y]);
         if (selected && selected.type === 'rect') {
           editor.setSelected(selected);
@@ -145,6 +146,7 @@ export const createMouseHandlers = (
         return;
       }
 
+      // Path tool.
       if (editor.tool === 'path') {
         const [x, y] = editor.scale.mapToModel([event.x, event.y]);
         if (!editor.cursor) {
@@ -153,6 +155,7 @@ export const createMouseHandlers = (
           const data = cursor.data as Path;
           data.points.push([x, y]);
           setCursor(cursor);
+          return;
         } else {
           const data = editor.cursor.data as Path;
           data.points.push([x, y]);
@@ -162,6 +165,7 @@ export const createMouseHandlers = (
     })
 
     // TODO(burdon): Disable zoom/drag.
+    // TODO(burdon): Show cross-hair while moving tool.
     .on('mousemove', (event: MouseEvent) => {
       if (editor.tool === 'path') {
         const [x, y] = editor.scale.mapToModel([event.x, event.y]);
