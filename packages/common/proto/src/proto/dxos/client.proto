@@ -46,7 +46,8 @@ message Invitation {
   // TODO(dmaretskyi): Split into fields.
   string invitationCode = 1;
   string secret = 2;
-  bool finished = 3;
+  bool connected = 3;
+  bool finished = 4;
   string error = 5;
 }
 

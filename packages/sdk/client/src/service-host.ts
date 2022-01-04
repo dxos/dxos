@@ -269,24 +269,29 @@ export class ClientServiceHost implements ClientServiceProvider {
             throw new Error('Party not found');
           }
           setImmediate(async () => {
-            const secret = generatePasscode();
-            let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
-            const secretProvider = async () => {
-              next({ invitationCode: encodeInvitation(invitation), secret });
-              return Buffer.from(secret);
-            };
-            invitation = await party.createInvitation({
-              secretProvider,
-              secretValidator: defaultSecretValidator
-            }, {
-              onFinish: () => {
-                next({ finished: true });
-                close();
-              }
-            });
-            const invitationCode = encodeInvitation(invitation);
-            this._inviterInvitations.push({ invitationCode, secret });
-            next({ invitationCode, secret });
+            try {
+              const secret = generatePasscode();
+              let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+              const secretProvider = async () => {
+                next({ connected: true });
+                return Buffer.from(secret);
+              };
+              invitation = await party.createInvitation({
+                secretProvider,
+                secretValidator: defaultSecretValidator
+              }, {
+                onFinish: () => {
+                  next({ finished: true });
+                  close();
+                }
+              });
+              const invitationCode = encodeInvitation(invitation);
+              this._inviterInvitations.push({ invitationCode, secret });
+              next({ invitationCode, secret });
+            } catch (error: any) {
+              next({ error: error.message });
+              close();
+            }
           });
         }),
         AcceptInvitation: async (request) => {

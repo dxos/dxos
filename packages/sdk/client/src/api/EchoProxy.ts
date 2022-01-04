@@ -189,22 +189,39 @@ export class EchoProxy {
    * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
    * The invitation flow is protected by a generated pin code.
    *
-   * To be used with `client.echo.joinParty` on the invitee side.
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
     return new Promise((resolve, reject) => {
+      const connected = new Event();
+      const finished = new Event();
+      const error = new Event<Error>();
+
+      let hasInitiated = false, hasConnected = false;
+
       stream.subscribe(invitationMsg => {
-        if (invitationMsg.finished) {
-          stream.close();
-        } else {
+        if(!hasInitiated) {
+          hasInitiated = true;
           const descriptor = decodeInvitation(invitationMsg.invitationCode!);
           descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
-          resolve(new InvitationRequest(descriptor));
+          resolve(new InvitationRequest(descriptor, connected, finished, error));
+        }
+
+        if(invitationMsg.connected && !hasConnected) {
+          hasConnected = true;
+          connected.emit();
+        }
+        
+        if (invitationMsg.finished) {
+          finished.emit();
+          stream.close();
+        }
+
+        if(invitationMsg.error) {
+          error.emit(new Error(invitationMsg.error));
         }
       }, error => {
         if (error) {
@@ -223,7 +240,7 @@ export class EchoProxy {
    * The invitee (recipient) needs to be known ahead of time.
    * Invitation it not valid for other users.
    *
-   * To be used with `client.echo.joinParty` on the invitee side.
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
    * @param recipientKey the invitee (recipient for the invitation).

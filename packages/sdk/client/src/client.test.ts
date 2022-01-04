@@ -15,6 +15,7 @@ import { afterTest } from '@dxos/testutils';
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
 import { InvitationProcess } from './proto/gen/dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -120,6 +121,38 @@ describe('Client', () => {
 
         const invitation = await inviter.echo.createInvitation(party.key);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait()
+
+        expect(inviteeParty.key).toEqual(party.key);
+      }).timeout(5000);
+
+      test('invitation callbacks are fired', async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        await invitee.halo.createProfile({ username: 'invitee' });
+
+        const party = await inviter.echo.createParty();
+
+        const invitation = await inviter.echo.createInvitation(party.key);
+
+        const connectedFired = invitation.connected.waitForCount(1);
+        
+        const reincodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
+        
+        await connectedFired;
+        const finishedFired = invitation.finshed.waitForCount(1);
+
+        acceptedInvitation.authenticate(invitation.secret);
+
+        await finishedFired;
+        
+        const inviteeParty = await acceptedInvitation.wait();
 
         expect(inviteeParty.key).toEqual(party.key);
       }).timeout(5000);
