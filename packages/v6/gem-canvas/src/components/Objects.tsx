@@ -12,7 +12,7 @@ import grey from '@material-ui/core/colors/grey';
 import { Datum, GridType, noop } from '@dxos/gem-core';
 
 import { createObjectDrag } from '../drag';
-import { appendObject, updateObject } from '../shapes';
+import { appendObject, updateObject } from '../elements';
 
 // TODO(burdon): Factor out styles.
 const useStyles = makeStyles({

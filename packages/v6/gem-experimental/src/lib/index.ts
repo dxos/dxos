@@ -3,6 +3,6 @@
 //
 
 export * from './isometric';
-export * from './shapes';
+export * from './elements';
 export * from './SimplexNoise';
 export * from './THREEx';

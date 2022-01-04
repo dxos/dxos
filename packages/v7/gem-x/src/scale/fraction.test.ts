@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Frac } from './frac';
+import { Frac } from './fraction';
 
 test('Normalize', () => {
   expect(Frac.norm([3, 2])).toEqual([3, 2]);

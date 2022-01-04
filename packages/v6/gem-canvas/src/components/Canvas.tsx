@@ -181,7 +181,7 @@ const Canvas = ({ objects = [], model = undefined, showToolbar = true, showPalet
   if (model) {
     const handleCreate = properties => {
       if (properties) {
-        modelRef.current.createObject(properties);
+        modelRef.current.createElement(properties);
         setSelected({ ids: [ properties.id ] });
         setTool(undefined);
       } else {
@@ -268,7 +268,7 @@ const Canvas = ({ objects = [], model = undefined, showToolbar = true, showPalet
         // TODO(burdon): Multi-select.
         if (clipboard.current) {
           const { properties } = clipboard.current;
-          const id = modelRef.current.createObject(properties);
+          const id = modelRef.current.createElement(properties);
           setSelected({ ids: [id] });
         }
         break;

@@ -93,7 +93,7 @@ export const updateController = (group, grid, drag, { width, height }, classes) 
     }
 
     //
-    // Bounding box for shapes.
+    // Bounding box for elements.
     //
     case 'ellipse':
     case 'rect':

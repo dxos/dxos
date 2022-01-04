@@ -13,7 +13,7 @@ import { ObjectType } from './model';
 const log = debug('gem:canvas:drag');
 
 /**
- * Creates a drag handler that manages selecting and creating shapes.
+ * Creates a drag handler that manages selecting and creating elements.
  *
  * @param container
  * @param grid

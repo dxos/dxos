@@ -37,7 +37,7 @@ export interface ObjectType {
  * @param {Object} properties
  * @return {{ id:string , properties: Object }}
  */
-const createObject = (properties: ObjectProperties): ObjectType => ({
+const createElement = (properties: ObjectProperties): ObjectType => ({
   id: faker.random.uuid(),
   type: 'object',
   properties
@@ -48,7 +48,7 @@ const createObject = (properties: ObjectProperties): ObjectType => ({
  * @param {Object[]} data - Initial data set.
  */
 export const useCanvasModel = (data = []): [any[], any] => {
-  const [objects,, getObjects, updateObjects] = useObjectMutator<any[]>(data.map(properties => createObject(properties)));
+  const [objects,, getObjects, updateObjects] = useObjectMutator<any[]>(data.map(properties => createElement(properties)));
 
   let mutations = null;
 
@@ -70,12 +70,12 @@ export const useCanvasModel = (data = []): [any[], any] => {
     /**
      * @param {Object} properties
      */
-    createObject: (properties) => {
+    createElement: (properties) => {
       if (mutations) {
         mutations.push({ action: 'create', properties });
       }
 
-      const object = createObject(properties);
+      const object = createElement(properties);
 
       log('created', object);
       updateObjects({ $push: [object] });

@@ -2,22 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-export type Num = [num: number, denum: number]
+export type Fraction = [num: number, denum: number]
 
+// TODO(burdon): Rename.
 export class Frac {
   /**
    * Create fraction.
    * @param n
    * @param d
    */
-  static num = (n: number, d: number = 1): Num => [n, d];
+  static num = (n: number, d = 1): Fraction => [n, d];
 
   /**
    * Convert to float number.
    * @param num
    * @param denum
    */
-  static float = ([num, denum]: Num): number => num / denum;
+  static float = ([num, denum]: Fraction): number => num / denum;
 
   /**
    * Round down to integer.
@@ -25,14 +26,15 @@ export class Frac {
    * @param denum
    * @param n
    */
-  static floor = ([num, denum]: Num, n = 1): number => Math.floor(num * n / denum);
+  static floor = ([num, denum]: Fraction, n = 1): number => Math.floor(num * n / denum);
 
   /**
    * Normalize fraction.
    * @param n
    * @param d
    */
-  static norm = ([n, d]: Num): Num => {
+  // TODO(burdon): Rename normalize.
+  static norm = ([n, d]: Fraction): Fraction => {
     if (d < 1) {
       const t = n / d;
       if (Math.floor(t) === t) {
@@ -73,7 +75,7 @@ export class Frac {
    * @param n1
    * @param n2
    */
-  static add = (n1: number | Num, n2: number | Num): Num => {
+  static add = (n1: number | Fraction, n2: number | Fraction): Fraction => {
     const num1 = typeof n1 === 'number' ? Frac.num(n1) : n1;
     const num2 = typeof n2 === 'number' ? Frac.num(n2) : n2;
 
@@ -88,12 +90,13 @@ export class Frac {
    * @param n1
    * @param n2
    */
-  static x = (n1: number | Num, n2: number | Num): Num => {
+  // TODO(burdon): Rename multiply.
+  static x = (n1: number | Fraction, n2: number | Fraction): Fraction => {
     const num1 = typeof n1 === 'number' ? Frac.num(n1) : n1;
     const num2 = typeof n2 === 'number' ? Frac.num(n2) : n2;
 
-    let n = num1[0] * num2[0];
-    let d = num1[1] * num2[1];
+    const n = num1[0] * num2[0];
+    const d = num1[1] * num2[1];
 
     return Frac.norm([n, d]);
   }

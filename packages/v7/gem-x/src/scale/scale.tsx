@@ -5,46 +5,16 @@
 import type { ZoomTransform } from 'd3';
 import { useMemo } from 'react';
 
-import { Frac, Num } from './frac';
-
-export type Point = [x: number, y: number];
-
-export class Bounds {
-  private _x: number
-  private _y: number
-  private _width: number
-  private _height: number
-
-  get bounds () {
-    return {
-      x: this._x,
-      y: this._y,
-      width: this._width,
-      height: this._height
-    }
-  }
-
-  get center () {
-    return {
-      x: this._width / 2,
-      y: this._height / 2,
-    }
-  }
-
-  update (x: number, y: number, width: number, height: number) {
-    this._x = x;
-    this._y = y;
-    this._width = width;
-    this._height = height;
-
-    return this.bounds;
-  }
-}
+import { Frac, Fraction } from './fraction';
+import { Bounds, Point } from './geometry';
 
 const round = (n: number, s: number) => {
   return Math.round((n + 0.5) / s);
 };
 
+/**
+ *
+ */
 export class Scale {
   private _bounds: Bounds = new Bounds();
   private _transform: ZoomTransform;
@@ -69,7 +39,7 @@ export class Scale {
     this._transform = transform;
   }
 
-  mapToScreen (n: number | Num) {
+  mapToScreen (n: number | Fraction) {
     return Frac.floor(Frac.x(n, this._gridSize));
   }
 
@@ -97,6 +67,7 @@ export class Scale {
 
 export const defaultScale = new Scale(32);
 
+// TODO(burdon): Factor out (hooks).
 export const useScale = ({ gridSize }): Scale => {
   return useMemo<Scale>(() => new Scale(gridSize), []);
 }

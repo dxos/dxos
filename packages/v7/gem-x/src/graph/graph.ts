@@ -4,8 +4,8 @@
 
 import * as d3 from 'd3';
 
-import { createSimulationDrag } from './drag';
-import { ObjectId, Projector, RenderOptions, Renderer } from './scene';
+import { ObjectId, Projector, RenderOptions, Renderer } from '../scene';
+import { createSimulationDrag } from './force';
 
 export type GraphNode = {
   data?: any
