@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
+import { encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import {
   ClientProvider,
@@ -22,7 +23,6 @@ import {
   PartySharingDialog
 } from '../src';
 import { Column } from './helpers';
-import { encodeInvitation } from '@dxos/client';
 
 export default {
   title: 'react-framework/PartyInvitations'

@@ -39,13 +39,13 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
           { ...invitationWithPin, pin }
         ];
       });
-    })
+    });
     invitation.finshed.on(() => setInvitations(invitations => invitations.filter(invitation => invitation.id !== id)));
 
     const pendingInvitation: PendingInvitation = {
       id,
       invitationCode: encodeInvitation(invitation.descriptor),
-      pin: undefined,
+      pin: undefined
     };
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
