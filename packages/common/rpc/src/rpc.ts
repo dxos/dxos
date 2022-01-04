@@ -56,8 +56,8 @@ const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
  * Both sides must be opened before making any RPC calls.
  *
  * Errors inside the handler get serialized and sent to the other side.
- * 
- * Inspierd by JSON-RPC 2.0 https://www.jsonrpc.org/specification.
+ *
+ * Inspired by JSON-RPC 2.0 https://www.jsonrpc.org/specification.
  */
 export class RpcPeer {
   private readonly _outgoingRequests = new Map<number, RequestItem>();

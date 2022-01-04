@@ -1,0 +1,18 @@
+{
+  "DX_SIGNAL_ENDPOINT": {
+    "path": "services.signal.server"
+  },
+  "DX_BOT_TOPIC": {
+    "path": "services.bot.topic"
+  },
+  "DX_ICE_ENDPOINTS": {
+    "path": "services.ice",
+    "type": "json"
+  },
+  "DX_IPFS_GATEWAY": {
+    "path": "services.ipfs.gateway"
+  },
+  "DX_DXNS_SERVER": {
+    "path": "services.dxns.server"
+  }
+}

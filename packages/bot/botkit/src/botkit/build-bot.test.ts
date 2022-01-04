@@ -53,7 +53,7 @@ describe('Build bot', () => {
     const botContainer = new NodeContainer();
     const botFactory = new BotFactory({
       botContainer,
-      botConfig: config
+      config
     });
     const botHandle = await botFactory.SpawnBot({
       package: { localPath: outfile },

@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { IRegistryClient } from '@dxos/registry-client';
@@ -31,7 +32,10 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory({ botContainer });
+      const botFactory = new BotFactory({
+        botContainer,
+        config: new Config({})
+      });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -75,7 +79,10 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
-      const botFactory = new BotFactory({ botContainer });
+      const botFactory = new BotFactory({
+        botContainer,
+        config: new Config({})
+      });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
@@ -144,7 +151,7 @@ describe('Node', () => {
 
       const botFactory = new BotFactory({
         botContainer,
-        botConfig: config,
+        config,
         contentResolver
       });
 
