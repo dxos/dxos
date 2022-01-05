@@ -6,7 +6,6 @@ import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
 
-import { generateInvitation } from '@dxos/bot-factory-client';
 import { createId, PublicKey } from '@dxos/crypto';
 
 import { NodeContainer } from '../bot-container';

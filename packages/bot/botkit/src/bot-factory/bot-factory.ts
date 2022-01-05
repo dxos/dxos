@@ -100,7 +100,7 @@ export class BotFactory implements BotFactoryService {
 
       const port = await this._botContainer.spawn({
         id,
-        localPath,
+        localPath
         // logFilePath: handle.getLogFilePath(new Date())
       });
       log(`[${id}] Openning RPC channel`);

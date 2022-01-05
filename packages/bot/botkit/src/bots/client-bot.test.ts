@@ -7,7 +7,7 @@ import { ClientBot } from './client-bot';
 
 describe('Client Bot', () => {
   it('Starts a bot', async () => {
-    const { client, invitation, secret } = await setupClient();
+    const { client, invitation } = await setupClient();
     const bot = new ClientBot();
 
     await bot.Initialize({
@@ -20,7 +20,7 @@ describe('Client Bot', () => {
 
   it('Starts a bot with a remote signal server', async () => {
     const { broker, config } = await setupBroker();
-    const { client, invitation, secret } = await setupClient(config);
+    const { client, invitation } = await setupClient(config);
     const bot = new ClientBot();
 
     await bot.Initialize({

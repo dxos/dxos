@@ -7,11 +7,11 @@ import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { createApiPromise, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader } from './bot-factory';
 import { getConfig } from './config';
-import { createApiPromise, RegistryClient } from '@dxos/registry-client';
 
 const log = debug('dxos:botkit:bot-factory:main');
 
