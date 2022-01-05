@@ -39,14 +39,17 @@ export const Canvas = ({
   // Elements
   //
   useEffect(() => {
+    // Hide currently selected element.
+    const visible = elements.filter(element => element.id !== cursor?.element.id);
+
     d3.select(elementsRef.current)
       .selectAll('g')
-      .data(elements, (element: Element) => element.id)
+      .data(visible, (element: Element) => element.id)
       .join('g')
       .each((element, i, nodes) => {
         createSvgElement(d3.select(nodes[i]), element, scale);
       });
-  }, [elementsRef, elements])
+  }, [elementsRef, elements, cursor])
 
   //
   // Cursor
@@ -56,8 +59,8 @@ export const Canvas = ({
       .selectAll('g')
       .data([cursor].filter(Boolean))
       .join('g')
-      .each((element, i, nodes) => {
-        createSvgCursor(d3.select(nodes[i]), element, scale, (bounds: Bounds, end: boolean) => {
+      .each((cursor, i, nodes) => {
+        createSvgCursor(d3.select(nodes[i]), cursor, scale, (bounds: Bounds, end: boolean) => {
           onUpdateCursor?.(bounds, end);
         });
       });

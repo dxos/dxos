@@ -14,7 +14,6 @@ import {
   Cursor,
   Editor,
   Element,
-  Rect,
   Tool,
   Toolbar,
   createMouseHandlers,
@@ -147,7 +146,7 @@ export const Primary = () => {
     const size = scale.mapSizeToModel([width, height]);
 
     setCursor(cursor => {
-      let { x, y, width, height } = cursor.data as Rect;
+      let { x, y, width, height } = cursor.bounds;
 
       // Clamp width.
       if (size[0] >= 1) {
@@ -180,7 +179,7 @@ export const Primary = () => {
 
       return {
         ...cursor,
-        data: { x, y, width, height }
+        bounds: { x, y, width, height }
       }
     });
   };
@@ -196,8 +195,6 @@ export const Primary = () => {
         zoom={[1/8, 8]}
         grid
       >
-        <text>Upside Down</text>
-
         <Canvas
           className={styles}
           scale={scale}

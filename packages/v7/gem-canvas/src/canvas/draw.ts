@@ -3,11 +3,11 @@
 //
 
 import * as d3 from 'd3';
-import type { D3DragEvent } from 'd3';
 
-import { Bounds, Point } from '@dxos/gem-x';
+import { Bounds, Point, Scale } from '@dxos/gem-x';
 
-import { Circle, Line, Path, PathType, Rect } from '../model';
+import { Circle, Cursor, Element, Line, Path, PathType, Rect } from '../model';
+import { D3Call, D3DragEvent, D3Selection } from '../types';
 
 const getCurve = (type: PathType, closed: boolean) => {
   const curves = {
@@ -43,7 +43,7 @@ const getCurve = (type: PathType, closed: boolean) => {
  * @param element
  * @param scale
  */
-export const createSvgElement = (root, element, scale) => {
+export const createSvgElement = (root: D3Selection, element: Element, scale: Scale) => {
   const { type, data } = element;
   switch (type) {
     case 'circle': {
@@ -86,26 +86,28 @@ export const createSvgElement = (root, element, scale) => {
   }
 };
 
-const handleDrag = (updateBounds) => {
+const handleDrag = (updateBounds: (handle: Handle, delta: Point, end?: boolean) => void): D3Call => {
   let subject;
   let start: Point;
 
   return d3.drag()
-    .on('start', (event: D3DragEvent<any, any, any>) => {
+    .on('start', (event: D3DragEvent) => {
       subject = event.subject;
       start = [event.x, event.y];
     })
-    .on('drag', (event: D3DragEvent<any, any, any>) => {
+    .on('drag', (event: D3DragEvent) => {
       const end = [event.x, event.y];
       updateBounds(subject, [end[0] - start[0], end[1] - start[1]]);
     })
-    .on('end', (event: D3DragEvent<any, any, any>) => {
+    .on('end', (event: D3DragEvent) => {
       const end = [event.x, event.y];
       updateBounds(subject, [end[0] - start[0], end[1] - start[1]], true);
     });
 };
 
-const handles = [
+type Handle = { id: string, p: Point }
+
+const handles: Handle[] = [
   { id: 'n', p: [0, 1] },
   { id: 'ne', p: [1, 1] },
   { id: 'e', p: [1, 0] },
@@ -116,7 +118,7 @@ const handles = [
   { id: 'nw', p: [-1, 1] }
 ];
 
-const computeBounds = (bounds, handle, delta): Bounds => {
+const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
   let [x, y, width, height] = bounds;
 
   // Clip direction.
@@ -143,16 +145,17 @@ const computeBounds = (bounds, handle, delta): Bounds => {
 /**
  *
  * @param root
- * @param element
+ * @param cursor
  * @param scale
  * @param updateBounds
  */
-export const createSvgCursor = (root, element, scale, updateBounds) => {
-  if (element.type !== 'rect') { // TODO(burdon): Hack.
-    return createSvgElement(root, element, scale);
+export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale, updateBounds) => {
+  if (cursor.element.type !== 'rect') { // TODO(burdon): Hack.
+    // return createSvgElement(root, cursor, scale);
+    return;
   }
 
-  const data = element.data as Rect;
+  const data = cursor.bounds as Rect;
   const x = scale.mapToScreen(data.x);
   const y = scale.mapToScreen(data.y);
   const width = scale.mapToScreen(data.width);
@@ -165,20 +168,20 @@ export const createSvgCursor = (root, element, scale, updateBounds) => {
     .selectAll('rect')
     .data([0])
     .join('rect')
-    .attr('x', x)
-    .attr('y', y)
-    .attr('width', width)
-    .attr('height', height);
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height);
 
   root
     .selectAll('circle')
-    .data(handles, d => d.id)
+    .data(handles, (d: Handle) => d.id)
     .join('circle')
-    .call(handleDrag((handle, delta, end) => {
-      const bounds = computeBounds([x, y, width, height], handle, delta);
-      updateBounds(bounds, end);
-    }))
-    .attr('cx', ({ p }) => cx + p[0] * width / 2)
-    .attr('cy', ({ p }) => cy + p[1] * height / 2)
-    .attr('r', 5); // TODO(burdon): Grow as zoomed.
+      .call(handleDrag((handle, delta, end) => {
+        const bounds = computeBounds([x, y, width, height], handle, delta);
+        updateBounds(bounds, end);
+      }))
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy + p[1] * height / 2)
+      .attr('r', 5); // TODO(burdon): Grow as zoomed.
 };

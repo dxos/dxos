@@ -39,14 +39,19 @@ export type Element = {
 }
 
 export type Cursor = {
-  id: string // ID of element.
-  type: string
-  data: Circle | Rect | Line | Path
+  element: Element
+  bounds?: Rect
 }
 
-// TODO(burdon): Contains element.
-export const createCursor = (id: string, tool: string, start?: Point, end?: Point): Cursor => {
-  return createElement(id, tool, start, end);
+export const createCursor = (element?: Element, tool?: string, start?: Point, end?: Point): Cursor => {
+  if (!element) {
+    element = createElement('_', tool, start, end);
+  }
+
+  return {
+    element,
+    bounds: (element.type === 'rect') ? { ...element.data as Rect } : undefined
+  }
 };
 
 /**
@@ -55,6 +60,7 @@ export const createCursor = (id: string, tool: string, start?: Point, end?: Poin
  * @param start
  * @param end
  */
+// TODO(burdon): Separate from Item (which is updated/created later).
 export const createElement = (id: string, tool: string, start?: Point, end?: Point): Element => {
   switch (tool) {
     case 'circle': {
