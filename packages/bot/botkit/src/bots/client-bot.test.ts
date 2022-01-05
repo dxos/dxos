@@ -11,10 +11,7 @@ describe('Client Bot', () => {
     const bot = new ClientBot();
 
     await bot.Initialize({
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
+      invitation
     });
 
     await bot.Stop();
@@ -28,10 +25,7 @@ describe('Client Bot', () => {
 
     await bot.Initialize({
       config: config.values,
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
+      invitation
     });
 
     await broker.stop();

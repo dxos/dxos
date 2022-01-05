@@ -48,16 +48,16 @@ describe('Build bot', () => {
     });
 
     const { broker, config } = await setupBroker();
-    const { client, party } = await setupClient(config);
+    const { client, party, invitation } = await setupClient(config);
 
-    const botContainer = new NodeContainer();
+    const botContainer = new NodeContainer(['@swc-node/register']);
     const botFactory = new BotFactory({
       botContainer,
       config
     });
     const botHandle = await botFactory.SpawnBot({
       package: { localPath: outfile },
-      invitation: await generateInvitation(client, party)
+      invitation
     });
 
     const command = PublicKey.random().asUint8Array();
