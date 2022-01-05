@@ -168,20 +168,20 @@ export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale,
     .selectAll('rect')
     .data([0])
     .join('rect')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
+    .attr('x', x)
+    .attr('y', y)
+    .attr('width', width)
+    .attr('height', height);
 
   root
     .selectAll('circle')
     .data(handles, (d: Handle) => d.id)
     .join('circle')
-      .call(handleDrag((handle, delta, end) => {
-        const bounds = computeBounds([x, y, width, height], handle, delta);
-        updateBounds(bounds, end);
-      }))
-      .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy + p[1] * height / 2)
-      .attr('r', 5); // TODO(burdon): Grow as zoomed.
+    .call(handleDrag((handle, delta, end) => {
+      const bounds = computeBounds([x, y, width, height], handle, delta);
+      updateBounds(bounds, end);
+    }))
+    .attr('cx', ({ p }) => cx + p[0] * width / 2)
+    .attr('cy', ({ p }) => cy + p[1] * height / 2)
+    .attr('r', 5); // TODO(burdon): Grow as zoomed.
 };
