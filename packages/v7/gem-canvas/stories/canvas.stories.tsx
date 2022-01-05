@@ -20,12 +20,10 @@ import {
   createKeyHandlers
 } from '../src';
 
-// TODO(burdon): If zoomed then can be too small.
-// TODO(burdon): Normalized [x, y] over {x, y}
-// TODO(burdon): Delete elements if removed from model.
-// TODO(burdon): Mapping bug (based on scale).
-// TODO(burdon): Resize (handles).
+// TODO(burdon): Show cursor for circle, line, path.
+// TODO(burdon): Find element on click.
 // TODO(burdon): Delete.
+// TODO(burdon): Clean-up scale mapping functions.
 
 export default {
   title: 'gem-canvas/Canvas'
