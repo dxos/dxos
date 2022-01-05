@@ -3,4 +3,5 @@
 //
 
 export * from './draw';
+export * from './editor';
 export * from './handlers';

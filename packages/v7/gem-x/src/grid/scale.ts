@@ -5,14 +5,10 @@
 import type { ZoomTransform } from 'd3';
 import { useMemo } from 'react';
 
-import { Bounds, Frac, Fraction, Point, Size } from '../util';
-
-const round = (n: number, s: number) => {
-  return Math.round((n + 0.5) / s);
-};
+import { Bounds, Frac, Fraction, Point, round } from '../util';
 
 /**
- *
+ * Zoomable scale for grid.
  */
 export class Scale {
   private _bounds: Bounds;
@@ -43,28 +39,38 @@ export class Scale {
     this._transform = transform;
   }
 
+  /**
+   * Map model value to screen value.
+   * @param n
+   */
   mapToScreen (n: number | Fraction) {
     return Frac.floor(Frac.multiply(n, this._gridSize));
   }
 
-  // TODO(burdon): Hack. Separate out scaling/snapping from centering.
-  mapSizeToModel ([width, height]: Size, snap?: boolean): Size {
+  /**
+   * Map screen values to model values.
+   * @param n
+   * @param snap
+   */
+  // TODO(burdon): Snap to fraction!
+  mapToModel (n: number[], snap?: boolean): number[] {
     if (snap) {
-      return [
-        round(width, this._gridSize),
-        round(height, this._gridSize)
-      ];
+      return n.map(n => round(n, this._gridSize));
     } else {
-      return [
-        width / this._gridSize,
-        height / this._gridSize
-      ];
+      return n.map(n => n / this._gridSize);
     }
   }
 
-  mapToModel ([x, y]: Point, snap?: boolean): Point {
+  /**
+   * Map screen point to model point.
+   * @param x
+   * @param y
+   * @param snap
+   */
+  mapPointToModel ([x, y]: Point, snap?: boolean): Point {
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
 
+    // Center.
     const [,, width, height] = this._bounds;
     const [cx, cy] = [width / 2, height / 2];
     const pos = [
@@ -72,23 +78,12 @@ export class Scale {
       (y - cy - ty) / k
     ];
 
-    if (snap) {
-      return [
-        round(pos[0], this._gridSize),
-        round(pos[1], this._gridSize)
-      ];
-    } else {
-      return [
-        pos[0] / this._gridSize,
-        pos[1] / this._gridSize
-      ];
-    }
+    // Snap.
+    return this.mapToModel(pos, snap) as Point;
   }
 }
 
-export const defaultScale = new Scale(32);
-
 // TODO(burdon): Factor out (hooks).
-export const useScale = ({ gridSize }): Scale => {
+export const useScale = ({ gridSize = 32 }): Scale => {
   return useMemo<Scale>(() => new Scale(gridSize), []);
 };

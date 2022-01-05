@@ -8,6 +8,10 @@ export type Size = [width: number, height: number];
 
 export type Bounds = [x: number, y: number, width: number, height: number];
 
+export const round = (n: number, s: number) => {
+  return Math.round((n + 0.5) / s);
+};
+
 /**
  * Distance between two points.
  * @param p1

@@ -9,7 +9,7 @@ import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useRef, useS
 import useResizeObserver from 'use-resize-observer';
 import { css } from '@emotion/css';
 
-import { defaultScale, grid, Scale } from '../grid';
+import { grid, Scale } from '../grid';
 
 const defaultStyles = css`
   g.grid {
@@ -30,6 +30,8 @@ export interface ResizeCallbackProps {
 }
 
 export type Zoom = [min: number, max: number];
+
+export const defaultScale = new Scale(32);
 
 export interface SvgContainerProps {
   children?: ReactNode | ReactNode[]

@@ -20,8 +20,12 @@ import {
   createKeyHandlers
 } from '../src';
 
+// Priority
+// TODO(burdon): Start to factor out this class (move handlers into Canvas).
+// TODO(burdon): Find element on click (iterate DOM).
+
+// Next
 // TODO(burdon): Show cursor for circle, line, path.
-// TODO(burdon): Find element on click.
 // TODO(burdon): Delete.
 // TODO(burdon): Clean-up scale mapping functions.
 
@@ -57,6 +61,7 @@ const styles = css`
   }
 `;
 
+// TODO(burdon): Hook.
 const testElements: Element[] = [
   {
     id: faker.datatype.uuid(), type: 'rect', data: { x: -2, y: -1, width: 4, height: 2 }
@@ -97,13 +102,13 @@ export const Primary = () => {
   const scale = useScale({ gridSize: 32 });
   const editor = useMemo(() => new Editor(scale), [scale]);
 
-  // TODO(burdon): Move to app wrapper (not visible in read-only mode).
   const [tool, setTool] = useState<Tool>(undefined);
 
   // TODO(burdon): Move to canvas wrapper.
   const [elements, setElements] = useState<Element[]>();
   const [cursor, setCursor] = useState<Cursor>(undefined);
 
+  // TODO(burdon): Items vs elements.
   useEffect(() => {
     setElements(testElements);
   }, []);
@@ -115,6 +120,7 @@ export const Primary = () => {
     editor.setElements(elements);
   }, [tool, cursor, elements]);
 
+  // TODO(burdon): Move handlers into canvas.
   useEffect(() => {
     const addElement = (element: Element) => setElements(elements => [...elements, element]);
 
@@ -123,25 +129,14 @@ export const Primary = () => {
 
     d3.select(document.body)
       .call(createKeyHandlers(editor, setCursor, addElement));
-
-    /*
-    d3.select(document.body).on('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Backspace') {
-        if (elements.length) {
-          elements.splice(0, 1);
-          setElements([...elements]);
-        }
-      }
-    });
-    */
   }, [svgRef]);
 
   const handleUpdateCursor = (bounds: Bounds, end: boolean) => {
     const [x, y, width, height] = bounds;
 
-    // TODO(burdon): Make mapToModel symmetrical to mapToScreen.
-    const pos = scale.mapSizeToModel([x, y]);
-    const size = scale.mapSizeToModel([width, height]);
+    // Snap to fractions.
+    const pos = scale.mapToModel([x, y]);
+    const size = scale.mapToModel([width, height]);
 
     setCursor(cursor => {
       let { x, y, width, height } = cursor.bounds;
@@ -168,6 +163,7 @@ export const Primary = () => {
               ...element,
               data: { x, y, width, height }
             });
+
             return [...elements];
           }
         });
@@ -181,9 +177,6 @@ export const Primary = () => {
       }
     });
   };
-
-  // TODO(burdon): Don't display element being edited.
-  //   Cursor should have pointer to selected element.
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>

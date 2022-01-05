@@ -5,69 +5,21 @@
 import * as d3 from 'd3';
 import faker from 'faker';
 
-import { distance, Point, Scale } from '@dxos/gem-x';
+import { distance, Point } from '@dxos/gem-x';
 
-import { Tool } from '../components';
 import { createCursor, createElement, Cursor, Element, Path } from '../model';
 import { D3DragEvent } from '../types';
+import { Editor } from './editor';
 
 // TODO(burdon): Remove faker.
 const uuid = () => faker.datatype.uuid();
 
-// TODO(burdon): Editor state referenced by handlers.
-export class Editor {
-  _tool: Tool;
-  _cursor: Cursor;
-  _selected: Element;
-  _elements: Element[];
-
-  constructor (
-    private readonly _scale: Scale
-  ) {}
-
-  get scale () {
-    return this._scale;
-  }
-
-  get tool () {
-    return this._tool;
-  }
-
-  get cursor () {
-    return this._cursor;
-  }
-
-  get selected () {
-    return this._selected;
-  }
-
-  get elements () {
-    return this._elements;
-  }
-
-  setTool (tool: Tool) {
-    this._tool = tool;
-  }
-
-  setCursor (cursor: Cursor) {
-    this._cursor = cursor;
-  }
-
-  setSelected (selected: Element) {
-    this._selected = selected;
-  }
-
-  setElements (elements: Element[]) {
-    this._elements = elements;
-  }
-
-  // TODO(burdon): Map point to model.
-  findElement (point: Point) {
-    console.log('find', point);
-    return this._elements.length ? this._elements[0] : undefined;
-  }
-}
-
+/**
+ *
+ * @param editor
+ * @param setCursor
+ * @param addElement
+ */
 export const createMouseHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,
@@ -90,7 +42,7 @@ export const createMouseHandlers = (
         return;
       }
 
-      start = editor.scale.mapToModel([event.x, event.y], true); // Snap.
+      start = editor.scale.mapPointToModel([event.x, event.y], true); // Snap.
     })
 
     .on('drag', (event: D3DragEvent) => {
@@ -99,7 +51,7 @@ export const createMouseHandlers = (
       }
 
       // TODO(burdon): Smart snap (i.e., if close to grid line).
-      end = editor.scale.mapToModel([event.x, event.y]);
+      end = editor.scale.mapPointToModel([event.x, event.y]);
 
       // TODO(burdon): Update existing.
       const cursor = createCursor(undefined, editor.tool, start, end);
@@ -111,7 +63,7 @@ export const createMouseHandlers = (
         return;
       }
 
-      end = editor.scale.mapToModel([event.x, event.y], true);
+      end = editor.scale.mapPointToModel([event.x, event.y], true);
       setCursor(undefined);
 
       // Check non-zero size.
@@ -135,7 +87,7 @@ export const createMouseHandlers = (
     .on('click', (event: MouseEvent) => {
       // Path tool.
       if (editor.tool === 'path') {
-        const [x, y] = editor.scale.mapToModel([event.x, event.y]);
+        const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
         if (!editor.cursor) {
           const cursor = createCursor(undefined, editor.tool);
           const data = cursor.element.data as Path;
@@ -160,7 +112,7 @@ export const createMouseHandlers = (
     // TODO(burdon): Show cross-hair while moving tool.
     .on('mousemove', (event: MouseEvent) => {
       if (editor.tool === 'path') {
-        const [x, y] = editor.scale.mapToModel([event.x, event.y]);
+        const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
         if (editor.cursor) {
           const data = editor.cursor.element.data as Path;
           const points = data.points;
@@ -180,6 +132,12 @@ export const createMouseHandlers = (
     .call(mouseHandler);
 };
 
+/**
+ *
+ * @param editor
+ * @param setCursor
+ * @param addElement
+ */
 export const createKeyHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,

@@ -21,5 +21,8 @@
   "include": [
     "src",
     "stories",
+  ],
+  "references": [
+    { "path": "../gem-x" }
   ]
 }
