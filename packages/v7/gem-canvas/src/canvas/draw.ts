@@ -150,9 +150,8 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
  * @param updateBounds
  */
 export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale, updateBounds) => {
-  if (cursor.element.type !== 'rect') { // TODO(burdon): Hack.
-    // return createSvgElement(root, cursor, scale);
-    return;
+  if (cursor.element.type !== 'rect') {
+    return createSvgElement(root, cursor.element, scale);
   }
 
   const data = cursor.bounds as Rect;

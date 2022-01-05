@@ -64,9 +64,11 @@ export const Canvas = ({
       }
     }
 
+    // Key events.
     d3.select(document.body)
       .call(createKeyHandlers(editor, setCursor, handleCreate, handleDelete));
 
+    // Mouse events.
     d3.select(svgRef.current)
       .call(createMouseHandlers(editor, setCursor, handleCreate, (point: Point) => {
         let selected: Element;

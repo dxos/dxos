@@ -36,11 +36,11 @@ export const createMouseHandlers = (
   const dragHandler = d3.drag()
     // Filter unless tool selected (since clashes with zoom).
     .filter(() => {
-      return Boolean(editor.tool);
+      return Boolean(editor.tool || editor.cursor);
     })
 
     .on('start', (event: D3DragEvent) => {
-      if (editor.tool === 'path') { // TODO(burdon): Create filter.
+      if (editor.tool === 'path') {
         return;
       }
 
@@ -105,8 +105,9 @@ export const createMouseHandlers = (
       }
 
       // Select.
+      // TODO(burdon): Select non-rectangle elements.
       const selected = findElement([event.x, event.y]);
-      if (selected && selected.type === 'rect') { // TODO(burdon): Hack.
+      if (selected && selected.type === 'rect') {
         editor.setSelected(selected);
         setCursor(createCursor(selected));
       } else {
@@ -115,7 +116,7 @@ export const createMouseHandlers = (
       }
     })
 
-    // TODO(burdon): Disable zoom/drag.
+    // TODO(burdon): Disable zoom/drag while tool selected.
     // TODO(burdon): Show cross-hair while moving tool.
     .on('mousemove', (event: MouseEvent) => {
       if (editor.tool === 'path') {

@@ -51,6 +51,7 @@ export class Scale {
    * Snap model points.
    * @param n
    */
+  // TODO(burdon): Return as fraction.
   snap (n: (number | Fraction)[]) {
     return this.mapToModel(n.map(n => this.mapToScreen(n)), true);
   }
@@ -60,7 +61,6 @@ export class Scale {
    * @param n
    * @param snap
    */
-  // TODO(burdon): Snap to fraction!
   mapToModel (n: number[], snap?: boolean): number[] {
     if (snap) {
       return n.map(n => round(n, this._gridSize));

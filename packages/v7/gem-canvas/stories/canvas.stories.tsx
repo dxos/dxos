@@ -15,10 +15,11 @@ import {
   Toolbar
 } from '../src';
 
-// TODO(burdon): Path is broken.
+// TODO(burdon): Move items.
 // TODO(burdon): Items vs elements (save?)
 // TODO(burdon): Think about undo.
-// TODO(burdon): Show cursor for circle, line, path.
+// TODO(burdon): Factor out special cases for path (in handlers).
+// TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 
 export default {
   title: 'gem-canvas/Canvas'
