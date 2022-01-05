@@ -79,7 +79,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const height = controlledHeight || currentHeight;
 
   const handleResize = ({ width, height }) => {
-    const [x, y] = scale.setBounds([-Math.floor(width / 2), -Math.floor(height / 2), width, height]);
+    const { x, y } = scale.setBounds({ x: -Math.floor(width / 2), y: -Math.floor(height / 2), width, height });
 
     if (center) {
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
@@ -99,9 +99,10 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
 
       if (zoom) {
         const zoomCallback = d3.zoom()
-          .filter(event => {
-            return true;
-          })
+          // TODO(burdon): Make pluggable (competes with other drag/mouse handlers).
+          // .filter((event) => {
+          //   return event.shiftKey;
+          // })
           .extent([[0, 0], [width, height]])
           .scaleExtent(zoom)
           .on('zoom', ({ transform }: { transform: ZoomTransform }) => {

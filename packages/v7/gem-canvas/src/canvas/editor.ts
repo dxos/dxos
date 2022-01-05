@@ -11,10 +11,10 @@ import { Cursor, Element } from '../model';
  * Editor state referenced by handlers.
  */
 export class Editor {
-  _tool: Tool;
-  _cursor: Cursor;
+  _tool?: Tool;
+  _cursor?: Cursor;
   _elements: Element[];
-  _selected: Element;
+  _selected?: Element;
 
   constructor (
     private readonly _scale: Scale
@@ -33,7 +33,7 @@ export class Editor {
   }
 
   get elements () {
-    return this._elements;
+    return this._elements ?? [];
   }
 
   get selected () {

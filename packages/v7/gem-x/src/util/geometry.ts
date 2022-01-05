@@ -2,18 +2,35 @@
 // Copyright 2020 DXOS.org
 //
 
-export type Point = [x: number, y: number];
+//
+// Screen geometry.
+//
 
-export type Size = [width: number, height: number];
+// Screen point.
+export type Point = [x: number, y: number]
 
-// TODO(burdon): Convert to SVGRect object used by D3.
-export type Bounds = [x: number, y: number, width: number, height: number];
+// Mappable from SVGRect (used in D3).
+export type Bounds = {
+  x: number,
+  y: number,
+  width: number,
+  height: number
+}
+
+export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): Bounds => {
+  return {
+    x: Math.min(x1, x2),
+    y: Math.min(y1, y2),
+    width: Math.abs(x2 - x1),
+    height: Math.abs(y2 - y1)
+  };
+};
 
 export const round = (n: number, s: number) => {
   return Math.round((n + 0.5) / s);
 };
 
-export const contains = (bounds: SVGRect, point: Point): boolean => {
+export const contains = (bounds: Bounds, point: Point): boolean => {
   const [x, y] = point;
 
   if (x < bounds.x || y < bounds.y) {

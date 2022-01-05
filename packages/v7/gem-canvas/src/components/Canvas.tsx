@@ -38,8 +38,6 @@ export const Canvas = ({
 
   // TODO(burdon): State object is redundent with state below? Acts as ref?
   const editor = useMemo(() => new Editor(scale), [scale]);
-
-  // TODO(burdon): Items vs elements?
   const [elements, setElements] = useState<Element[]>([]);
   const [cursor, setCursor] = useState<Cursor>();
 
@@ -54,39 +52,57 @@ export const Canvas = ({
   }, [tool, cursor, elements]);
 
   useEffect(() => {
-    const handleCreate = (element: Element) => setElements(elements => [...elements, element]);
-    const handleDelete = (selected: Element) => {
-      const idx = editor.elements.findIndex(element => element.id === selected.id);
-      if (idx !== -1) {
-        editor.elements.splice(idx, 1);
-        setElements(editor.elements);
-        setCursor(undefined);
-      }
-    }
+    // Mouse events.
+    d3.select(svgRef.current)
+      .call(createMouseHandlers(editor, setCursor, handleCreate, handleUpdate, findElement));
 
     // Key events.
     d3.select(document.body)
       .call(createKeyHandlers(editor, setCursor, handleCreate, handleDelete));
-
-    // Mouse events.
-    d3.select(svgRef.current)
-      .call(createMouseHandlers(editor, setCursor, handleCreate, (point: Point) => {
-        let selected: Element;
-
-        const p = scale.translatePoint(point);
-        d3.select(elementGroup.current).selectAll<any, Element>('g').each((element, i, nodes) => {
-          const bounds = d3.select<any, Element>(nodes[i]).node().getBBox();
-          if (contains(bounds, p)) {
-            selected = element;
-          }
-        });
-
-        return selected;
-      }));
   }, [svgRef]);
 
-  const handleUpdate = (bounds: Bounds, end: boolean) => {
-    const [x, y, width, height] = bounds; // Current.
+  // TODO(burdon): Consolidate callbacks (and utils) below into Editor class (pass in).
+  //   Create subscription to rerender cursor/elements.
+  //   Pass editor object to d3 callbacks.
+  //   Editor handles items/elements (save, updates, etc.)
+  //   const cursor = useCursor(editor);
+  //   const elements = useElements(editor);
+
+  const findElement = (point: Point) => {
+    let selected: Element;
+    const p = scale.translatePoint(point);
+    d3.select(elementGroup.current).selectAll<any, Element>('g').each((element, i, nodes) => {
+      const bounds = d3.select<any, Element>(nodes[i]).node().getBBox();
+      if (contains(bounds, p)) {
+        selected = element;
+      }
+    });
+
+    return selected;
+  };
+
+  const handleCreate = (element: Element) => setElements(elements => [...elements, element]);
+
+  const handleUpdate = (element: Element) => setElements(elements => {
+    const idx = elements.findIndex(({ id }) => id === element.id);
+    if (idx !== -1) {
+      elements.splice(idx, 1, element);
+    }
+
+    return [...elements];
+  });
+
+  const handleDelete = (element: Element) => setElements(elements => {
+    const idx = elements.findIndex(({ id }) => id === element.id);
+    if (idx !== -1) {
+      elements.splice(idx, 1);
+    }
+
+    return [...elements];
+  });
+
+  const handleUpdateBounds = (bounds: Bounds, end: boolean) => {
+    const { x, y, width, height } = bounds; // Current.
 
     // TODO(burdon): Snap to fractions.
     const pos = scale.mapToModel([x, y]);
@@ -143,7 +159,7 @@ export const Canvas = ({
   //
   useEffect(() => {
     // Hide currently selected element.
-    const visible = elements.filter(element => element.id !== cursor?.element.id);
+    const visible = elements.filter(element => element.id !== cursor?.element?.id);
 
     d3.select(elementGroup.current)
       .selectAll('g')
@@ -164,7 +180,7 @@ export const Canvas = ({
       .join('g')
       .each((cursor, i, nodes) => {
         createSvgCursor(d3.select(nodes[i]), cursor, scale, (bounds: Bounds, end: boolean) => {
-          handleUpdate?.(bounds, end);
+          handleUpdateBounds(bounds, end);
         });
       });
   }, [cursorGroup, cursor]);

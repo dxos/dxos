@@ -76,7 +76,7 @@ export class Scale {
    */
   translatePoint ([x, y]: Point): Point {
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
-    const [,, width, height] = this._bounds;
+    const { width, height } = this._bounds;
     const [cx, cy] = [width / 2, height / 2];
     return [
       (x - cx - tx) / k,

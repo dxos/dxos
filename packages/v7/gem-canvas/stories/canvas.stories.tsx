@@ -15,11 +15,13 @@ import {
   Toolbar
 } from '../src';
 
-// TODO(burdon): Move items.
-// TODO(burdon): Items vs elements (save?)
+// TODO(burdon): Factor out Canvas handlers into Editor class with events.
+
+// TODO(burdon): Screen vs. model space (fractions); see cursors "wobble" when editing while zoomed (width/height).
 // TODO(burdon): Think about undo.
 // TODO(burdon): Factor out special cases for path (in handlers).
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
+// TODO(burdon): Style objects.
 
 export default {
   title: 'gem-canvas/Canvas'

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { distance, Fraction, Point } from '@dxos/gem-x';
+import { createBounds, distance, Frac, Fraction, Point } from '@dxos/gem-x';
 
 export type Circle = {
   x: number | Fraction
@@ -32,56 +32,105 @@ export type Path = {
   points: [ x: number, y: number ][]
 }
 
+export type ElementDataType = Circle | Rect | Line | Path;
+
+// NOTE: Different from tool type.
+export type ElementType = 'circle' | 'rect' | 'line' | 'path';
+
 export type Element = {
   id: string
-  type: string
-  data: Circle | Rect | Line | Path
+  type: ElementType
+  data: ElementDataType
 }
 
 export type Cursor = {
-  element: Element
-  bounds?: Rect
+  element?: Element
+  bounds: Rect
 }
 
-export const createCursor = (element?: Element, tool?: string, start?: Point, end?: Point): Cursor => {
-  if (!element) {
-    element = createElement(undefined, tool, start, end);
-  }
+export const createCursor = (element?: Element, start?: Point, end?: Point): Cursor => {
+  if (element) {
+    const { x, y, width, height } = getBounds(element);
+    const [dx, dy] = (start && end) ? [end[0] - start[0], end[1] - start[1]] : [0, 0];
 
-  return {
-    element,
-    bounds: (element.type === 'rect') ? { ...element.data as Rect } : undefined
+    return {
+      element,
+      bounds: {
+        x: Frac.add(x, dx),
+        y: Frac.add(y, dy),
+        width,
+        height
+      }
+    };
+  } else {
+    return {
+      bounds: createBounds(start, end)
+    };
   }
 };
 
+// TODO(burdon): Use Rect (as fractions).
+export const moveElement = (element: Element, [dx, dy]: Point): Element => {
+  switch (element.type) {
+    case 'rect': {
+      const { x, y, width, height } = element.data as Rect;
+      return {
+        ...element,
+        data: {
+          x: Frac.add(x, dx),
+          y: Frac.add(y, dy),
+          width,
+          height
+        }
+      };
+    }
+
+    default: {
+      throw new Error(`Invalid type: ${element.type}`);
+    }
+  }
+}
+
+export const getBounds = (element: Element): Rect => {
+  switch (element.type) {
+    case 'rect': {
+      return element.data as Rect;
+    }
+
+    default: {
+      throw new Error(`Invalid type: ${element.type}`);
+    }
+  }
+}
+
 /**
  * @param id
- * @param tool
+ * @param type
  * @param start
- * @param end
+ * @param current
  */
-// TODO(burdon): Separate from Item (which is updated/created later).
-export const createElement = (id: string, tool: string, start?: Point, end?: Point): Element => {
-  switch (tool) {
+// TODO(burdon): Use Rect (as fractions).
+export const createElement = (id: string, type: ElementType, start?: Point, current?: Point): Element => {
+  switch (type) {
     case 'circle': {
       return {
         id,
-        type: 'circle',
+        type,
         data: {
           x: start[0],
           y: start[1],
-          r: distance(start, end)
+          r: distance(start, current)
         }
       };
     }
 
     case 'rect': {
-      const width = end[0] - start[0];
-      const height = end[1] - start[1]
+      const width = current[0] - start[0];
+      const height = current[1] - start[1]
 
       return {
         id,
-        type: 'rect',
+        type,
         data: {
           x: start[0] + (width < 0 ? width : 0),
           y: start[1] + (height < 0 ? height : 0),
@@ -94,12 +143,12 @@ export const createElement = (id: string, tool: string, start?: Point, end?: Poi
     case 'line': {
       return {
         id,
-        type: 'line',
+        type,
         data: {
           x1: start[0],
           y1: start[1],
-          x2: end[0],
-          y2: end[1]
+          x2: current[0],
+          y2: current[1]
         }
       };
     }
@@ -107,11 +156,15 @@ export const createElement = (id: string, tool: string, start?: Point, end?: Poi
     case 'path': {
       return {
         id,
-        type: 'path',
+        type,
         data: {
           points: []
         }
       }
+    }
+
+    default: {
+      throw new Error(`Invalid type: ${type}`);
     }
   }
 };

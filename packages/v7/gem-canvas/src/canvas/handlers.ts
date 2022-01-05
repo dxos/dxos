@@ -7,7 +7,7 @@ import faker from 'faker';
 
 import { distance, Point } from '@dxos/gem-x';
 
-import { createCursor, createElement, Cursor, Element, Path } from '../model';
+import { createCursor, createElement, moveElement, Cursor, Element } from '../model';
 import { D3DragEvent } from '../types';
 import { Editor } from './editor';
 
@@ -15,30 +15,41 @@ import { Editor } from './editor';
 const uuid = () => faker.datatype.uuid();
 
 /**
- *
+ * Drag and mouse event handler.
  * @param editor
  * @param setCursor
- * @param addElement
+ * @param onCreate
+ * @param onUpdate
  * @param findElement
  */
 export const createMouseHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,
-  addElement: (element: Element) => void,
+  onCreate: (element: Element) => void,
+  onUpdate: (element: Element) => void,
   findElement: (point: Point) => Element
 ) => {
   let start: Point;
-  let end: Point;
+  let hover: Element;
+
+  // TODO(burdon): Is tool the same as element.type? (Or should tool type have an element type property).
+  // TODO(burdon): Remove special case for Path tool.
 
   //
-  // Drag
+  // Tool drag.
+  // Coordinate with zoom drag in SvgContainer.
+  // https://github.com/d3/d3-drag#drag
+  // https://observablehq.com/@d3/click-vs-drag
   //
   const dragHandler = d3.drag()
-    // Filter unless tool selected (since clashes with zoom).
+    // Enable drag if tool selected, actively editing (cursor), or hovering (about to drag).
     .filter(() => {
-      return Boolean(editor.tool || editor.cursor);
+      return Boolean(editor.tool) || Boolean(editor.cursor) || Boolean(hover);
     })
 
+    //
+    // Drag start
+    //
     .on('start', (event: D3DragEvent) => {
       if (editor.tool === 'path') {
         return;
@@ -47,48 +58,76 @@ export const createMouseHandlers = (
       start = editor.scale.mapPointToModel([event.x, event.y], true); // Snap.
     })
 
+    //
+    // Drag move
+    //
     .on('drag', (event: D3DragEvent) => {
       if (editor.tool === 'path') {
         return;
       }
 
       // TODO(burdon): Smart snap (i.e., if close to grid line).
-      end = editor.scale.mapPointToModel([event.x, event.y]);
+      const current = editor.scale.mapPointToModel([event.x, event.y]);
 
-      // TODO(burdon): Update existing.
-      const cursor = createCursor(undefined, editor.tool, start, end);
-      setCursor(cursor);
+      // TODO(burdon): Normalize: define cursor modes.
+      // 1. Create new element (inital drag using tool with no cursor).
+      // 2. Drag of existing cursor to move.
+      // 2. Resize of existing cursor (using draw.ts drag).
+
+      // Create.
+      if (editor.tool) {
+        const cursor = createCursor(undefined, start, current);
+        setCursor(cursor);
+      } else {
+        // Drag.
+        if (hover) {
+          const cursor = createCursor(hover, start, current);
+          setCursor(cursor);
+        }
+      }
     })
 
+    //
+    // Drag end
+    //
     .on('end', (event: D3DragEvent) => {
+      if (!editor.cursor) {
+        return;
+      }
       if (editor.tool === 'path') {
         return;
       }
 
-      end = editor.scale.mapPointToModel([event.x, event.y], true);
+      const current = editor.scale.mapPointToModel([event.x, event.y], true);
+
+      if (editor.cursor.element) {
+        // Update.
+        // TODO(burdon): Element is stale after resize.
+        const delta: Point = [current[0] - start[0], current[1] - start[1]];
+        const element = moveElement(editor.cursor.element, delta);
+        onUpdate(element);
+      } else {
+        // Create.
+        // TODO(burdon): Min size depends on zoom.
+        const d = distance(start, current);
+        if (d >= 1) {
+          const element = createElement(uuid(), editor.tool, start, current);
+          onCreate(element);
+        }
+      }
+
       setCursor(undefined);
-
-      // Check non-zero size.
-      // TODO(burdon): Depends on zoom.
-      const d = distance(start, end);
-      if (d === 0) {
-        return;
-      }
-
-      const element = createElement(uuid(), editor.tool, start, end);
-      if (element) {
-        addElement(element);
-      }
     });
 
   //
-  // Mouse
+  // Mouse events
   // https://github.com/d3/d3-selection#handling-events
   //
   const mouseHandler = selection => selection
     .on('click', (event: MouseEvent) => {
       // Path tool.
       if (editor.tool === 'path') {
+        /*
         const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
         if (!editor.cursor) {
           const cursor = createCursor(undefined, editor.tool);
@@ -100,26 +139,30 @@ export const createMouseHandlers = (
           data.points.push([x, y]);
           setCursor({ ...editor.cursor });
         }
-
+        */
         return;
       }
 
       // Select.
-      // TODO(burdon): Select non-rectangle elements.
       const selected = findElement([event.x, event.y]);
-      if (selected && selected.type === 'rect') {
-        editor.setSelected(selected);
-        setCursor(createCursor(selected));
-      } else {
-        editor.setSelected(undefined);
-        setCursor(undefined);
+      if (selected) {
+        // TODO(burdon): Select non-rectangle elements.
+        if (selected.type === 'rect') {
+          setCursor(createCursor(selected));
+          editor.setSelected(selected);
+          return;
+        }
       }
+
+      setCursor(undefined);
+      editor.setSelected(undefined);
     })
 
     // TODO(burdon): Disable zoom/drag while tool selected.
     // TODO(burdon): Show cross-hair while moving tool.
     .on('mousemove', (event: MouseEvent) => {
       if (editor.tool === 'path') {
+        /*
         const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
         if (editor.cursor) {
           const data = editor.cursor.element.data as Path;
@@ -132,7 +175,12 @@ export const createMouseHandlers = (
 
           setCursor({ ...editor.cursor });
         }
+        */
+
+        return;
       }
+
+      hover = findElement([event.x, event.y]);
     });
 
   return el => el
@@ -141,37 +189,39 @@ export const createMouseHandlers = (
 };
 
 /**
- *
+ * Keyboard event handler.
  * @param editor
  * @param setCursor
- * @param createElement
- * @param deleteElement
+ * @param onCreate
+ * @param onDelete
  */
 export const createKeyHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,
-  createElement: (element: Element) => void,
-  deleteElement: (element: Element) => void
+  onCreate: (element: Element) => void,
+  onDelete: (element: Element) => void
 ) => {
   return selection => selection
     .on('keydown', (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Enter': {
-          if (editor.tool === 'path') { // TODO(burdon): Encapsulate and remove case.
+          if (editor.tool === 'path') {
+            /*
             const data = editor.cursor.element.data as Path;
             data.type = 'cardinal';
             data.closed = true;
             data.points.splice(data.points.length - 1, 1);
 
-            createElement({ ...editor.cursor.element, id: uuid() });
+            onCreate({ ...editor.cursor.element, id: uuid() });
             setCursor(undefined);
+            */
           }
           break;
         }
 
         case 'Backspace': {
           if (editor.selected) {
-            deleteElement(editor.selected);
+            onDelete(editor.selected);
           }
           break;
         }

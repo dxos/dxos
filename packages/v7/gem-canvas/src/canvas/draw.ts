@@ -9,6 +9,10 @@ import { Bounds, Point, Scale } from '@dxos/gem-x';
 import { Circle, Cursor, Element, Line, Path, PathType, Rect } from '../model';
 import { D3Call, D3DragEvent, D3Selection } from '../types';
 
+//
+// Element.
+//
+
 const getCurve = (type: PathType, closed: boolean) => {
   const curves = {
     open: {
@@ -27,15 +31,6 @@ const getCurve = (type: PathType, closed: boolean) => {
 
   return curves[closed ? 'closed' : 'open'][type];
 };
-
-/**
- *
- * @param elements
- * @param point
- */
-// export const findElement = (elements: Element[], point: Point): (Element | undefined) => {
-//   return undefined;
-// };
 
 /**
  *
@@ -86,6 +81,23 @@ export const createSvgElement = (root: D3Selection, element: Element, scale: Sca
   }
 };
 
+//
+// Cursor.
+//
+
+type Handle = { id: string, p: Point }
+
+const handles: Handle[] = [
+  { id: 'n', p: [0, 1] },
+  { id: 'ne', p: [1, 1] },
+  { id: 'e', p: [1, 0] },
+  { id: 'se', p: [1, -1] },
+  { id: 's', p: [0, -1] },
+  { id: 'sw', p: [-1, -1] },
+  { id: 'w', p: [-1, 0] },
+  { id: 'nw', p: [-1, 1] }
+];
+
 const handleDrag = (updateBounds: (handle: Handle, delta: Point, end?: boolean) => void): D3Call => {
   let subject;
   let start: Point;
@@ -105,21 +117,8 @@ const handleDrag = (updateBounds: (handle: Handle, delta: Point, end?: boolean) 
     });
 };
 
-type Handle = { id: string, p: Point }
-
-const handles: Handle[] = [
-  { id: 'n', p: [0, 1] },
-  { id: 'ne', p: [1, 1] },
-  { id: 'e', p: [1, 0] },
-  { id: 'se', p: [1, -1] },
-  { id: 's', p: [0, -1] },
-  { id: 'sw', p: [-1, -1] },
-  { id: 'w', p: [-1, 0] },
-  { id: 'nw', p: [-1, 1] }
-];
-
 const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
-  let [x, y, width, height] = bounds;
+  let { x, y, width, height } = bounds;
 
   // Clip direction.
   const { p } = handle;
@@ -139,7 +138,7 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
     height += dy;
   }
 
-  return [x, y, width, height];
+  return { x, y, width, height };
 };
 
 /**
@@ -149,16 +148,14 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
  * @param scale
  * @param updateBounds
  */
-export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale, updateBounds) => {
-  if (cursor.element.type !== 'rect') {
-    return createSvgElement(root, cursor.element, scale);
-  }
+// TODO(burdon): Show ghost element inside.
+export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale, onUpdate) => {
+  const bounds = cursor.bounds;
 
-  const data = cursor.bounds as Rect;
-  const x = scale.mapToScreen(data.x);
-  const y = scale.mapToScreen(data.y);
-  const width = scale.mapToScreen(data.width);
-  const height = scale.mapToScreen(data.height);
+  const x = scale.mapToScreen(bounds.x);
+  const y = scale.mapToScreen(bounds.y);
+  const width = scale.mapToScreen(bounds.width);
+  const height = scale.mapToScreen(bounds.height);
 
   const cx = x + width / 2;
   const cy = y + height / 2;
@@ -177,8 +174,8 @@ export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale,
     .data(handles, (d: Handle) => d.id)
     .join('circle')
     .call(handleDrag((handle, delta, end) => {
-      const bounds = computeBounds([x, y, width, height], handle, delta);
-      updateBounds(bounds, end);
+      const bounds = computeBounds({ x, y, width, height }, handle, delta);
+      onUpdate(bounds, end);
     }))
     .attr('cx', ({ p }) => cx + p[0] * width / 2)
     .attr('cy', ({ p }) => cy + p[1] * height / 2)
