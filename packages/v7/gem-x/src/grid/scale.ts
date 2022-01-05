@@ -43,8 +43,16 @@ export class Scale {
    * Map model value to screen value.
    * @param n
    */
-  mapToScreen (n: number | Fraction) {
+  mapToScreen (n: number | Fraction): number {
     return Frac.floor(Frac.multiply(n, this._gridSize));
+  }
+
+  /**
+   * Snap model points.
+   * @param n
+   */
+  snap (n: (number | Fraction)[]) {
+    return this.mapToModel(n.map(n => this.mapToScreen(n)), true);
   }
 
   /**
@@ -62,24 +70,28 @@ export class Scale {
   }
 
   /**
-   * Map screen point to model point.
+   * Translate point relative to origin.
    * @param x
    * @param y
-   * @param snap
    */
-  mapPointToModel ([x, y]: Point, snap?: boolean): Point {
+  translatePoint ([x, y]: Point): Point {
     const { x: tx, y: ty, k } = this._transform || { x: 0, y: 0, k: 1 };
-
-    // Center.
     const [,, width, height] = this._bounds;
     const [cx, cy] = [width / 2, height / 2];
-    const pos = [
+    return [
       (x - cx - tx) / k,
       (y - cy - ty) / k
     ];
+  }
 
-    // Snap.
-    return this.mapToModel(pos, snap) as Point;
+  /**
+   * Map screen point to model point.
+   * @param point
+   * @param snap
+   */
+  // TODO(burdon): Remove.
+  mapPointToModel (point: Point, snap?: boolean): Point {
+    return this.mapToModel(this.translatePoint(point), snap) as Point;
   }
 }
 

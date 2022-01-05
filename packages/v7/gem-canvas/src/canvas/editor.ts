@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Point, Scale } from '@dxos/gem-x';
+import { Scale } from '@dxos/gem-x';
 
 import { Tool } from '../components';
 import { Cursor, Element } from '../model';
@@ -13,8 +13,8 @@ import { Cursor, Element } from '../model';
 export class Editor {
   _tool: Tool;
   _cursor: Cursor;
-  _selected: Element;
   _elements: Element[];
+  _selected: Element;
 
   constructor (
     private readonly _scale: Scale
@@ -32,12 +32,12 @@ export class Editor {
     return this._cursor;
   }
 
-  get selected () {
-    return this._selected;
-  }
-
   get elements () {
     return this._elements;
+  }
+
+  get selected () {
+    return this._selected;
   }
 
   setTool (tool: Tool) {
@@ -48,17 +48,11 @@ export class Editor {
     this._cursor = cursor;
   }
 
-  setSelected (selected: Element) {
-    this._selected = selected;
-  }
-
   setElements (elements: Element[]) {
     this._elements = elements;
   }
 
-  // TODO(burdon): Map point to model.
-  findElement (point: Point) {
-    console.log('findElement', point);
-    return this._elements.length ? this._elements[0] : undefined;
+  setSelected (selected: Element) {
+    this._selected = selected;
   }
 }

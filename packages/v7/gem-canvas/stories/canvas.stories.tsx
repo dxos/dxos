@@ -2,32 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
 import faker from 'faker';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
-import { Bounds, FullScreen, SvgContainer, useScale } from '@dxos/gem-x';
+import { FullScreen, SvgContainer, useScale } from '@dxos/gem-x';
 
 import {
   Canvas,
-  Cursor,
-  Editor,
   Element,
   Tool,
-  Toolbar,
-  createMouseHandlers,
-  createKeyHandlers
+  Toolbar
 } from '../src';
 
-// Priority
-// TODO(burdon): Start to factor out this class (move handlers into Canvas).
-// TODO(burdon): Find element on click (iterate DOM).
-
-// Next
+// TODO(burdon): Path is broken.
+// TODO(burdon): Items vs elements (save?)
+// TODO(burdon): Think about undo.
 // TODO(burdon): Show cursor for circle, line, path.
-// TODO(burdon): Delete.
-// TODO(burdon): Clean-up scale mapping functions.
 
 export default {
   title: 'gem-canvas/Canvas'
@@ -98,100 +89,24 @@ const testElements: Element[] = [
 ];
 
 export const Primary = () => {
-  const svgRef = useRef<SVGSVGElement>();
+  const svg = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
-  const editor = useMemo(() => new Editor(scale), [scale]);
-
   const [tool, setTool] = useState<Tool>(undefined);
-
-  // TODO(burdon): Move to canvas wrapper.
-  const [elements, setElements] = useState<Element[]>();
-  const [cursor, setCursor] = useState<Cursor>(undefined);
-
-  // TODO(burdon): Items vs elements.
-  useEffect(() => {
-    setElements(testElements);
-  }, []);
-
-  // TODO(burdon): Determine relationship between editor and state in this class.
-  useEffect(() => {
-    editor.setTool(tool);
-    editor.setCursor(cursor);
-    editor.setElements(elements);
-  }, [tool, cursor, elements]);
-
-  // TODO(burdon): Move handlers into canvas.
-  useEffect(() => {
-    const addElement = (element: Element) => setElements(elements => [...elements, element]);
-
-    d3.select(svgRef.current)
-      .call(createMouseHandlers(editor, setCursor, addElement));
-
-    d3.select(document.body)
-      .call(createKeyHandlers(editor, setCursor, addElement));
-  }, [svgRef]);
-
-  const handleUpdateCursor = (bounds: Bounds, end: boolean) => {
-    const [x, y, width, height] = bounds;
-
-    // Snap to fractions.
-    const pos = scale.mapToModel([x, y]);
-    const size = scale.mapToModel([width, height]);
-
-    setCursor(cursor => {
-      let { x, y, width, height } = cursor.bounds;
-
-      // Clamp width.
-      if (size[0] >= 1) {
-        x = pos[0];
-        width = size[0];
-      }
-
-      // Clamp height.
-      if (size[1] >= 1) {
-        y = pos[1];
-        height = size[1];
-      }
-
-      if (end) {
-        // Update element.
-        setElements(elements => {
-          const idx = elements.findIndex(element => element.id === editor.selected.id);
-          if (idx !== -1) {
-            const element = elements[idx];
-            elements.splice(idx, 1, {
-              ...element,
-              data: { x, y, width, height }
-            });
-
-            return [...elements];
-          }
-        });
-
-        return undefined;
-      }
-
-      return {
-        ...cursor,
-        bounds: { x, y, width, height }
-      }
-    });
-  };
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
-        ref={svgRef}
+        ref={svg}
         scale={scale}
         zoom={[1/8, 8]}
         grid
       >
         <Canvas
           className={styles}
+          svgRef={svg}
           scale={scale}
-          cursor={cursor}
-          elements={elements}
-          onUpdateCursor={handleUpdateCursor}
+          tool={tool}
+          elements={testElements}
         />
       </SvgContainer>
 

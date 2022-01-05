@@ -19,11 +19,13 @@ const uuid = () => faker.datatype.uuid();
  * @param editor
  * @param setCursor
  * @param addElement
+ * @param findElement
  */
 export const createMouseHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,
-  addElement: (element: Element) => void
+  addElement: (element: Element) => void,
+  findElement: (point: Point) => Element
 ) => {
   let start: Point;
   let end: Point;
@@ -96,15 +98,20 @@ export const createMouseHandlers = (
         } else {
           const data = editor.cursor.element.data as Path;
           data.points.push([x, y]);
-          return setCursor({ ...editor.cursor });
+          setCursor({ ...editor.cursor });
         }
+
+        return;
       }
 
       // Select.
-      const selected = editor.findElement([event.x, event.y]);
-      if (selected && selected.type === 'rect') {
+      const selected = findElement([event.x, event.y]);
+      if (selected && selected.type === 'rect') { // TODO(burdon): Hack.
         editor.setSelected(selected);
         setCursor(createCursor(selected));
+      } else {
+        editor.setSelected(undefined);
+        setCursor(undefined);
       }
     })
 
@@ -136,25 +143,34 @@ export const createMouseHandlers = (
  *
  * @param editor
  * @param setCursor
- * @param addElement
+ * @param createElement
+ * @param deleteElement
  */
 export const createKeyHandlers = (
   editor: Editor,
   setCursor: (cursor: Cursor) => void,
-  addElement: (element: Element) => void
+  createElement: (element: Element) => void,
+  deleteElement: (element: Element) => void
 ) => {
   return selection => selection
     .on('keydown', (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Enter': {
-          if (editor.tool === 'path') {
+          if (editor.tool === 'path') { // TODO(burdon): Encapsulate and remove case.
             const data = editor.cursor.element.data as Path;
             data.type = 'cardinal';
             data.closed = true;
             data.points.splice(data.points.length - 1, 1);
 
+            createElement({ ...editor.cursor.element, id: uuid() });
             setCursor(undefined);
-            addElement({ ...editor.cursor.element });
+          }
+          break;
+        }
+
+        case 'Backspace': {
+          if (editor.selected) {
+            deleteElement(editor.selected);
           }
           break;
         }

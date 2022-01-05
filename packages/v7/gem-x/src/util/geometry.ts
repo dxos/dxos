@@ -6,10 +6,25 @@ export type Point = [x: number, y: number];
 
 export type Size = [width: number, height: number];
 
+// TODO(burdon): Convert to SVGRect object used by D3.
 export type Bounds = [x: number, y: number, width: number, height: number];
 
 export const round = (n: number, s: number) => {
   return Math.round((n + 0.5) / s);
+};
+
+export const contains = (bounds: SVGRect, point: Point): boolean => {
+  const [x, y] = point;
+
+  if (x < bounds.x || y < bounds.y) {
+    return false;
+  }
+
+  if (x > bounds.x + bounds.width || y > bounds.y + bounds.height) {
+    return false;
+  }
+
+  return true;
 };
 
 /**

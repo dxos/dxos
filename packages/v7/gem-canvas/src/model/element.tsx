@@ -45,7 +45,7 @@ export type Cursor = {
 
 export const createCursor = (element?: Element, tool?: string, start?: Point, end?: Point): Cursor => {
   if (!element) {
-    element = createElement('_', tool, start, end);
+    element = createElement(undefined, tool, start, end);
   }
 
   return {
