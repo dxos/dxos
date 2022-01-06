@@ -11,7 +11,7 @@
     "lint": "ts-node src/main.ts lint"
   },
   "dependencies": {
-    "@dxos/eslint-plugin": "~1.0.20",
+    "@dxos/eslint-plugin": "~1.0.21",
     "@dxos/protobuf-compiler": "workspace:*",
     "@swc-node/register": "~1.4.2",
     "@types/yargs": "~16.0.1",
