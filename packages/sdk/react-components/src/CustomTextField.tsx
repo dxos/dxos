@@ -204,7 +204,10 @@ export const CustomTextField = ({
       onMouseLeave={() => setMouseOver(false)}
     >
       <Typography
-        sx={{ color: text ? undefined : theme.palette.text.disabled }}
+        sx={{
+          color: text ? undefined : theme.palette.text.disabled,
+          boxSizing: 'content-box',
+        }}
         onClick={() => !readonly && clickToEdit && setEditing(true)}
       >
         {text || placeholder}
