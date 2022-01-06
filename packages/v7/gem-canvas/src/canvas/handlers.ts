@@ -5,35 +5,27 @@
 import * as d3 from 'd3';
 import faker from 'faker';
 
-import { distance, Point } from '@dxos/gem-x';
+import { distance, Point, Scale } from '@dxos/gem-x';
 
-import { createCursor, createElement, moveElement, Cursor, Element } from '../model';
+import { createCursor, createElement, moveElement, Element } from '../model';
 import { D3DragEvent } from '../types';
 import { Editor } from './editor';
 
-// TODO(burdon): Remove faker.
+// TODO(burdon): Remove faker (move to Editor).
 const uuid = () => faker.datatype.uuid();
 
 /**
  * Drag and mouse event handler.
  * @param editor
- * @param setCursor
- * @param onCreate
- * @param onUpdate
+ * @param scale
  * @param findElement
  */
 export const createMouseHandlers = (
   editor: Editor,
-  setCursor: (cursor: Cursor) => void,
-  onCreate: (element: Element) => void,
-  onUpdate: (element: Element) => void,
+  scale: Scale,
   findElement: (point: Point) => Element
 ) => {
   let start: Point;
-  let hover: Element;
-
-  // TODO(burdon): Is tool the same as element.type? (Or should tool type have an element type property).
-  // TODO(burdon): Remove special case for Path tool.
 
   //
   // Tool drag.
@@ -44,7 +36,7 @@ export const createMouseHandlers = (
   const dragHandler = d3.drag()
     // Enable drag if tool selected, actively editing (cursor), or hovering (about to drag).
     .filter(() => {
-      return Boolean(editor.tool) || Boolean(editor.cursor) || Boolean(hover);
+      return !editor.cursor && Boolean(editor.tool);
     })
 
     //
@@ -55,7 +47,7 @@ export const createMouseHandlers = (
         return;
       }
 
-      start = editor.scale.mapPointToModel([event.x, event.y], true); // Snap.
+      start = scale.mapPointToModel([event.x, event.y], true); // Snap.
     })
 
     //
@@ -67,23 +59,12 @@ export const createMouseHandlers = (
       }
 
       // TODO(burdon): Smart snap (i.e., if close to grid line).
-      const current = editor.scale.mapPointToModel([event.x, event.y]);
-
-      // TODO(burdon): Normalize: define cursor modes.
-      // 1. Create new element (inital drag using tool with no cursor).
-      // 2. Drag of existing cursor to move.
-      // 2. Resize of existing cursor (using draw.ts drag).
+      const current = scale.mapPointToModel([event.x, event.y]);
 
       // Create.
       if (editor.tool) {
         const cursor = createCursor(undefined, start, current);
-        setCursor(cursor);
-      } else {
-        // Drag.
-        if (hover) {
-          const cursor = createCursor(hover, start, current);
-          setCursor(cursor);
-        }
+        editor.setCursor(cursor);
       }
     })
 
@@ -98,25 +79,25 @@ export const createMouseHandlers = (
         return;
       }
 
-      const current = editor.scale.mapPointToModel([event.x, event.y], true);
+      const current = scale.mapPointToModel([event.x, event.y], true);
 
       if (editor.cursor.element) {
-        // Update.
+        // Drag.
         // TODO(burdon): Element is stale after resize.
         const delta: Point = [current[0] - start[0], current[1] - start[1]];
         const element = moveElement(editor.cursor.element, delta);
-        onUpdate(element);
+        editor.updateElement(element);
       } else {
         // Create.
         // TODO(burdon): Min size depends on zoom.
         const d = distance(start, current);
         if (d >= 1) {
           const element = createElement(uuid(), editor.tool, start, current);
-          onCreate(element);
+          editor.addElement(element);
         }
       }
 
-      setCursor(undefined);
+      editor.setCursor(undefined);
     });
 
   //
@@ -128,7 +109,7 @@ export const createMouseHandlers = (
       // Path tool.
       if (editor.tool === 'path') {
         /*
-        const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
+        const [x, y] = scale.mapPointToModel([event.x, event.y]);
         if (!editor.cursor) {
           const cursor = createCursor(undefined, editor.tool);
           const data = cursor.element.data as Path;
@@ -148,13 +129,13 @@ export const createMouseHandlers = (
       if (selected) {
         // TODO(burdon): Select non-rectangle elements.
         if (selected.type === 'rect') {
-          setCursor(createCursor(selected));
+          editor.setCursor(createCursor(selected));
           editor.setSelected(selected);
           return;
         }
       }
 
-      setCursor(undefined);
+      editor.setCursor(undefined);
       editor.setSelected(undefined);
     })
 
@@ -163,7 +144,7 @@ export const createMouseHandlers = (
     .on('mousemove', (event: MouseEvent) => {
       if (editor.tool === 'path') {
         /*
-        const [x, y] = editor.scale.mapPointToModel([event.x, event.y]);
+        const [x, y] = scale.mapPointToModel([event.x, event.y]);
         if (editor.cursor) {
           const data = editor.cursor.element.data as Path;
           const points = data.points;
@@ -177,10 +158,7 @@ export const createMouseHandlers = (
         }
         */
 
-        return;
       }
-
-      hover = findElement([event.x, event.y]);
     });
 
   return el => el
@@ -191,15 +169,9 @@ export const createMouseHandlers = (
 /**
  * Keyboard event handler.
  * @param editor
- * @param setCursor
- * @param onCreate
- * @param onDelete
  */
 export const createKeyHandlers = (
-  editor: Editor,
-  setCursor: (cursor: Cursor) => void,
-  onCreate: (element: Element) => void,
-  onDelete: (element: Element) => void
+  editor: Editor
 ) => {
   return selection => selection
     .on('keydown', (event: KeyboardEvent) => {
@@ -221,13 +193,13 @@ export const createKeyHandlers = (
 
         case 'Backspace': {
           if (editor.selected) {
-            onDelete(editor.selected);
+            editor.deleteElement(editor.selected.id);
           }
           break;
         }
 
         case 'Escape': {
-          setCursor(undefined);
+          editor.setCursor(undefined);
           break;
         }
       }

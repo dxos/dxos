@@ -5,7 +5,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
 
-export type Tool = 'circle' | 'rect' | 'line' | 'path';
+export type Tool = 'circle' | 'ellipse' | 'rect' | 'line' | 'path';
 
 export interface ToolbarProps {
   active?: Tool
@@ -34,6 +34,9 @@ export const Toolbar = ({
   const tools: { type: Tool }[] = [
     {
       type: 'circle'
+    },
+    {
+      type: 'ellipse'
     },
     {
       type: 'rect'

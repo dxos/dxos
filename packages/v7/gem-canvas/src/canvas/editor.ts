@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Scale } from '@dxos/gem-x';
+import { useEffect, useState } from 'react';
+
+import { EventEmitter } from '@dxos/gem-x';
 
 import { Tool } from '../components';
 import { Cursor, Element } from '../model';
@@ -11,18 +13,13 @@ import { Cursor, Element } from '../model';
  * Editor state referenced by handlers.
  */
 export class Editor {
+  readonly updateCursor = new EventEmitter<Cursor>();
+  readonly updateElements = new EventEmitter<Element[]>();
+
   _tool?: Tool;
-  _cursor?: Cursor;
-  _elements: Element[];
+  _cursor?: Cursor; // TODO(burdon): Manage cursor object.
   _selected?: Element;
-
-  constructor (
-    private readonly _scale: Scale
-  ) {}
-
-  get scale () {
-    return this._scale;
-  }
+  _elements: Element[] = [];
 
   get tool () {
     return this._tool;
@@ -32,12 +29,12 @@ export class Editor {
     return this._cursor;
   }
 
-  get elements () {
-    return this._elements ?? [];
-  }
-
   get selected () {
     return this._selected;
+  }
+
+  get elements () {
+    return this._elements;
   }
 
   setTool (tool: Tool) {
@@ -46,13 +43,59 @@ export class Editor {
 
   setCursor (cursor: Cursor) {
     this._cursor = cursor;
-  }
-
-  setElements (elements: Element[]) {
-    this._elements = elements;
+    this.updateCursor.emit(this._cursor);
   }
 
   setSelected (selected: Element) {
     this._selected = selected;
   }
+
+  setElements (elements: Element[]) {
+    this._elements = elements ?? [];
+    this.updateElements.emit(this._elements);
+  }
+
+  addElement (element: Element) {
+    this._elements.push(element);
+    this.updateElements.emit(this._elements);
+  }
+
+  updateElement (element: Element) {
+    this._elements = [...this._elements.filter(({ id }) => id !== element.id), element];
+    this.updateElements.emit(this._elements);
+  }
+
+  deleteElement (id: string) {
+    this._elements = this._elements.filter(element => element.id !== id);
+    this.updateElements.emit(this._elements);
+    this.setCursor(undefined);
+  }
 }
+
+// TODO(burdon): Factor out hooks.
+
+export const useCursor = (editor: Editor) => {
+  const [cursor, setCursor] = useState<Cursor>(editor.cursor);
+  useEffect(() => {
+    const { off } = editor.updateCursor.on(cursor => {
+      setCursor(cursor);
+    });
+
+    return off;
+  }, []);
+
+  return cursor;
+};
+
+export const useElements = (editor: Editor) => {
+  const [elements, setElements] = useState<Element[]>(editor.elements);
+  useEffect(() => {
+    const { off } = editor.updateElements.on(elements => {
+      setElements(elements);
+    });
+
+    return off;
+  }, []);
+
+  return elements;
+};

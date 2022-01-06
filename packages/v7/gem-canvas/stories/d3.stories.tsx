@@ -9,7 +9,7 @@ import { css } from '@emotion/css';
 import { FullScreen, SvgContainer } from '@dxos/gem-x';
 
 export default {
-  title: 'gem-canvas/Test'
+  title: 'gem-canvas/D3'
 };
 
 const styles = css`

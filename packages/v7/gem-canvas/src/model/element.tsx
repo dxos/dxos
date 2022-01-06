@@ -5,9 +5,16 @@
 import { createBounds, distance, Frac, Fraction, Point } from '@dxos/gem-x';
 
 export type Circle = {
-  x: number | Fraction
-  y: number | Fraction
+  cx: number | Fraction
+  cy: number | Fraction
   r: number | Fraction
+}
+
+export type Ellipse = {
+  cx: number | Fraction
+  cy: number | Fraction
+  rx: number | Fraction
+  ry: number | Fraction
 }
 
 export type Rect = {
@@ -32,10 +39,10 @@ export type Path = {
   points: [ x: number, y: number ][]
 }
 
-export type ElementDataType = Circle | Rect | Line | Path;
+export type ElementDataType = Circle | Ellipse | Rect | Line | Path;
 
 // NOTE: Different from tool type.
-export type ElementType = 'circle' | 'rect' | 'line' | 'path';
+export type ElementType = 'circle' | 'ellipse' | 'rect' | 'line' | 'path';
 
 export type Element = {
   id: string
@@ -117,8 +124,8 @@ export const createElement = (id: string, type: ElementType, start?: Point, curr
         id,
         type,
         data: {
-          x: start[0],
-          y: start[1],
+          cx: start[0],
+          cy: start[1],
           r: distance(start, current)
         }
       };

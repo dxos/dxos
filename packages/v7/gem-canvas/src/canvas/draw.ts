@@ -7,7 +7,7 @@ import * as d3 from 'd3';
 import { Bounds, Point, Scale } from '@dxos/gem-x';
 
 import { Circle, Cursor, Element, Line, Path, PathType, Rect } from '../model';
-import { D3Call, D3DragEvent, D3Selection } from '../types';
+import { D3Callable, D3DragEvent, D3Selection } from '../types';
 
 //
 // Element.
@@ -42,10 +42,12 @@ export const createSvgElement = (root: D3Selection, element: Element, scale: Sca
   const { type, data } = element;
   switch (type) {
     case 'circle': {
-      const { x, y, r } = (data as Circle);
+      const { cx, cy, r } = (data as Circle);
+
       root.selectAll('circle').data([0]).join('circle')
-        .attr('cx', scale.mapToScreen(x))
-        .attr('cy', scale.mapToScreen(y))
+        .call(d3.drag())
+        .attr('cx', scale.mapToScreen(cx))
+        .attr('cy', scale.mapToScreen(cy))
         .attr('r', scale.mapToScreen(r));
       break;
     }
@@ -53,6 +55,7 @@ export const createSvgElement = (root: D3Selection, element: Element, scale: Sca
     case 'rect': {
       const { x, y, width, height } = (data as Rect);
       root.selectAll('rect').data([0]).join('rect')
+        .call(d3.drag())
         .attr('x', scale.mapToScreen(x))
         .attr('y', scale.mapToScreen(y))
         .attr('width', scale.mapToScreen(width))
@@ -98,25 +101,6 @@ const handles: Handle[] = [
   { id: 'nw', p: [-1, 1] }
 ];
 
-const handleDrag = (updateBounds: (handle: Handle, delta: Point, end?: boolean) => void): D3Call => {
-  let subject;
-  let start: Point;
-
-  return d3.drag()
-    .on('start', (event: D3DragEvent) => {
-      subject = event.subject;
-      start = [event.x, event.y];
-    })
-    .on('drag', (event: D3DragEvent) => {
-      const end = [event.x, event.y];
-      updateBounds(subject, [end[0] - start[0], end[1] - start[1]]);
-    })
-    .on('end', (event: D3DragEvent) => {
-      const end = [event.x, event.y];
-      updateBounds(subject, [end[0] - start[0], end[1] - start[1]], true);
-    });
-};
-
 const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
   let { x, y, width, height } = bounds;
 
@@ -141,15 +125,56 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
   return { x, y, width, height };
 };
 
+const handleDrag = (onUpdate: (handle: Handle, delta: Point, end?: boolean) => void): D3Callable => {
+  let start: Point;
+  let subject: Handle;
+
+  return d3.drag()
+    .on('start', (event: D3DragEvent) => {
+      subject = event.subject;
+      start = [event.x, event.y];
+    })
+    .on('drag', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]]);
+    })
+    .on('end', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], true);
+    });
+};
+
+const outlineDrag = (onUpdate: (delta: Point, end?: boolean) => void): D3Callable => {
+  let start: Point;
+
+  return d3.drag()
+    .on('start', (event: D3DragEvent) => {
+      start = [event.x, event.y];
+    })
+    .on('drag', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate([current[0] - start[0], current[1] - start[1]]);
+    })
+    .on('end', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate([current[0] - start[0], current[1] - start[1]], true);
+    });
+};
+
 /**
  *
  * @param root
  * @param cursor
  * @param scale
- * @param updateBounds
+ * @param onUpdate
  */
 // TODO(burdon): Show ghost element inside.
-export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale, onUpdate) => {
+export const createSvgCursor = (
+  root: D3Selection,
+  cursor: Cursor,
+  scale: Scale,
+  onUpdate: (cursor: Cursor, bounds: Bounds, commit: boolean) => void
+) => {
   const bounds = cursor.bounds;
 
   const x = scale.mapToScreen(bounds.x);
@@ -160,10 +185,21 @@ export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale,
   const cx = x + width / 2;
   const cy = y + height / 2;
 
+  // eslint-disable indent
   root
     .selectAll('rect')
     .data([0])
     .join('rect')
+    .call(outlineDrag(([dx, dy], end) => {
+      const bounds = {
+        x: x + dx,
+        y: y + dy,
+        width,
+        height
+      };
+
+      onUpdate(cursor, bounds, end);
+    }))
     .attr('x', x)
     .attr('y', y)
     .attr('width', width)
@@ -175,9 +211,10 @@ export const createSvgCursor = (root: D3Selection, cursor: Cursor, scale: Scale,
     .join('circle')
     .call(handleDrag((handle, delta, end) => {
       const bounds = computeBounds({ x, y, width, height }, handle, delta);
-      onUpdate(bounds, end);
+      onUpdate(cursor, bounds, end);
     }))
     .attr('cx', ({ p }) => cx + p[0] * width / 2)
     .attr('cy', ({ p }) => cy + p[1] * height / 2)
     .attr('r', 5); // TODO(burdon): Grow as zoomed.
+  // eslint-enable indent
 };

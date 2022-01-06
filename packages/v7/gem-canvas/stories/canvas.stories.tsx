@@ -3,20 +3,27 @@
 //
 
 import faker from 'faker';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { FullScreen, SvgContainer, useScale } from '@dxos/gem-x';
 
 import {
   Canvas,
+  Editor,
   Element,
   Tool,
-  Toolbar
+  Toolbar,
 } from '../src';
 
-// TODO(burdon): Factor out Canvas handlers into Editor class with events.
+// TODO(burdon): Remove concept of cursor.
+//   - Editor tracks state of selected/editing element.
+//   - Each element type has Create/Resize/Normal render modes.
+//   - Each mode has element-specific drag handlers and events.
+//   - Events handled within each element (separate file).
 
+// TODO(burdon): Grid major/minor colors.
+// TODO(burdon): Grid snap while dragging.
 // TODO(burdon): Screen vs. model space (fractions); see cursors "wobble" when editing while zoomed (width/height).
 // TODO(burdon): Think about undo.
 // TODO(burdon): Factor out special cases for path (in handlers).
@@ -61,7 +68,7 @@ const testElements: Element[] = [
     id: faker.datatype.uuid(), type: 'rect', data: { x: -2, y: -1, width: 4, height: 2 }
   },
   {
-    id: faker.datatype.uuid(), type: 'circle', data: { x: 5, y: 0, r: [1, 1] }
+    id: faker.datatype.uuid(), type: 'circle', data: { cx: 5, cy: 0, r: [1, 1] }
   },
   /*
   {
@@ -71,10 +78,10 @@ const testElements: Element[] = [
     id: faker.datatype.uuid(), type: 'line', data: { x1: 0, y1: 0, x2: 6, y2: 0 }
   },
   {
-    id: faker.datatype.uuid(), type: 'circle', data: { x: 0, y: 0, r: [1, 4] }
+    id: faker.datatype.uuid(), type: 'circle', data: { cx: 0, cy: 0, r: [1, 4] }
   },
   {
-    id: faker.datatype.uuid(), type: 'circle', data: { x: 6, y: 0, r: [1, 4] }
+    id: faker.datatype.uuid(), type: 'circle', data: { cx: 6, cy: 0, r: [1, 4] }
   },
   {
     id: faker.datatype.uuid(), type: 'path', data: {
@@ -95,6 +102,14 @@ export const Primary = () => {
   const svg = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
   const [tool, setTool] = useState<Tool>(undefined);
+  const editor = useMemo(() => {
+    const editor = new Editor();
+    editor.setElements(testElements);
+    return editor;
+  }, [scale]);
+  useEffect(() => {
+    editor.setTool(tool);
+  }, [tool]);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
@@ -108,8 +123,7 @@ export const Primary = () => {
           className={styles}
           svgRef={svg}
           scale={scale}
-          tool={tool}
-          elements={testElements}
+          editor={editor}
         />
       </SvgContainer>
 
