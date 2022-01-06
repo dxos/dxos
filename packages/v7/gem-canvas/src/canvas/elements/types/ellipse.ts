@@ -5,28 +5,21 @@
 import { Bounds, Frac, Point, Scale } from '@dxos/gem-x';
 
 import { Ellipse } from '../../../model';
-import { D3Callable, D3DragEvent } from '../../../types';
-import {
-  DragElementProps,
-  DrawElementProps,
-  Mode,
-  dragBounds,
-  dragMove
-} from '../drag';
-import {
-  drawFrame,
-  drawResizableFrame
-} from '../frame';
+import { D3Callable, D3DragEvent, D3Selection } from '../../../types';
+import { DragElementProps, DrawElementProps, Mode, dragBounds, dragMove } from '../drag';
+import { drawFrame } from '../frame';
+
+// TODO(burdon): Be strict about relative to center or not.
+// TODO(burdon): Normalize whether centered on screen (either translate in drag handler).
 
 const createData = (scale: Scale, bounds: Bounds, center: boolean, snap: boolean): Ellipse => {
+  console.log('createData', bounds);
   const { x, y, width, height } = bounds;
   const pos: Point = center ? [x, y] : [x + width / 2, y + height / 2];
   const size = center ? [width, height] : [width / 2, height / 2];
-  const [cx, cy] = scale.mapPointToModel(pos);
+  const [cx, cy] = scale.mapPointToModel(pos, snap);
   const [rx, ry] = scale.mapToModel(size, snap);
-  // if (rx >= 1 && ry >= 1) {
   return { cx, cy, rx, ry };
-  // }
 };
 
 const createBoundsFromData = (scale: Scale, data: Ellipse): Bounds => {
@@ -39,11 +32,36 @@ const createBoundsFromData = (scale: Scale, data: Ellipse): Bounds => {
   };
 };
 
-export const dragEllipse = ({ scale, onCreate }: DragElementProps<Ellipse>): D3Callable => {
+const drawBasicEllipse = (scale: Scale, onEdit, onMove): D3Callable => {
+  return (group: D3Selection, { id, data, editable }) => {
+    const { cx, cy, rx, ry } = data;
+
+    // eslint-disable indent
+    // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
+    group.selectAll('ellipse').data([id]).join('ellipse')
+      .call(selection => {
+        if (editable) {
+          selection
+            .on('click', onEdit)
+            .call(dragMove(onMove));
+        }
+      })
+      .attr('cx', scale.mapToScreen(cx))
+      .attr('cy', scale.mapToScreen(cy))
+      .attr('rx', scale.mapToScreen(rx))
+      .attr('ry', scale.mapToScreen(ry));
+    // eslint-enable indent
+  };
+}
+
+export const dragEllipse = ({ scale, onCancel, onCreate }: DragElementProps<Ellipse>): D3Callable => {
   return dragBounds((event: D3DragEvent, bounds: Bounds, commit?: boolean) => {
     // TODO(burdon): If shift then constain circle.
     const data = createData(scale, bounds, event.sourceEvent.metaKey, commit);
-    if (data) {
+    const { rx, ry } = data;
+    if (commit && (rx < 0.5 || ry < 0.5)) { // TODO(burdon): Zoom specific?
+      onCancel();
+    } else {
       onCreate('ellipse', data, commit);
     }
   });
@@ -53,6 +71,9 @@ export const drawEllipse = ({
   scale, group, element, data, mode, editable, onUpdate, onEdit
 }: DrawElementProps<Ellipse>) => {
   // console.log('drawEllipse', JSON.stringify(data));
+  const id = element?.id ?? '_'; // TODO(burdon): Pass in ID.
+
+  // TODO(burdon): Avoid creating unnecessary closures.
 
   const handleMove = (delta: Point, commit: boolean) => {
     const [dx, dy] = scale.mapToModel(delta, commit);
@@ -67,56 +88,17 @@ export const drawEllipse = ({
     }, commit);
   };
 
-  const handleResize = (event: MouseEvent, bounds: Bounds, commit: boolean) => {
-    const data = createData(scale, bounds, event.metaKey, commit);
+  const handleResize = (bounds: Bounds, commit: boolean) => {
+    const data = createData(scale, bounds, false, commit);
     onUpdate(element, data, commit);
   };
 
-  const drawBasicEllipse = () => {
-    // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
-    const { cx, cy, rx, ry } = data;
-    group.selectAll('ellipse').data([0]).join('ellipse')
-      .call(selection => {
-        if (editable) {
-          selection
-            .on('click', onEdit)
-            .call(dragMove(handleMove));
-        }
-      })
-      .attr('cx', scale.mapToScreen(cx))
-      .attr('cy', scale.mapToScreen(cy))
-      .attr('rx', scale.mapToScreen(rx))
-      .attr('ry', scale.mapToScreen(ry));
-  };
-
-  switch (mode) {
-    case Mode.CREATE:
-    {
-      const bounds = createBoundsFromData(scale, data);
-      drawFrame(group, bounds);
-      drawBasicEllipse();
-      break;
-    }
-
-    case Mode.UPDATE:
-    {
-      const bounds = createBoundsFromData(scale, data);
-      drawResizableFrame(group, bounds, handleMove, handleResize);
-      drawBasicEllipse();
-      break;
-    }
-
-    case Mode.HIGHLIGHT:
-    {
-      drawBasicEllipse();
-      break;
-    }
-
-    case Mode.DEFAULT:
-    default:
-    {
-      drawBasicEllipse();
-      break;
-    }
-  }
+  group.call(group => {
+    group.call(drawBasicEllipse(scale, onEdit, handleMove), { id, data, editable });
+    group.call(drawFrame(handleMove, handleResize), {
+      id: (mode === Mode.CREATE || mode === Mode.UPDATE) ? id : undefined,
+      resize: mode === Mode.UPDATE,
+      bounds: createBoundsFromData(scale, data)
+    })
+  });
 };

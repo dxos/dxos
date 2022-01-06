@@ -2,25 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { csvFormatBody } from 'd3';
+import * as d3 from 'd3';
+
 import { Bounds, Point } from '@dxos/gem-x';
 
-import { D3Selection } from '../../types';
+import { D3Callable, D3DragEvent } from '../../types';
 import { dragMove } from './drag';
-
-/**
- * Render basic bounding box.
- * @param group
- * @param bounds
- */
-export const drawFrame = (group: D3Selection, bounds: Bounds) => {
-  const { x, y, width, height } = bounds;
-  group.selectAll('rect').data([0]).join('rect')
-    .classed('frame', true)
-    .attr('x', x)
-    .attr('y', y)
-    .attr('width', width)
-    .attr('height', height);
-};
 
 type Handle = { id: string, p: Point }
 
@@ -35,38 +23,84 @@ const handles: Handle[] = [
   { id: 'nw', p: [-1, 1] }
 ];
 
+const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
+  let { x, y, width, height } = bounds;
+
+  // Clip direction.
+  const { p } = handle;
+  const [dx, dy] = [Math.abs(p[0]) * delta[0], Math.abs(p[1]) * delta[1]];
+
+  if (p[0] < 0) {
+    width -= dx;
+    x += dx;
+  } else {
+    width += dx;
+  }
+
+  if (p[1] < 0) {
+    height -= dy;
+    y += dy;
+  } else {
+    height += dy;
+  }
+
+  return { x, y, width, height };
+};
+
+const handleDrag = (onUpdate: (handle: Handle, delta: Point, commit?: boolean) => void): D3Callable => {
+  let start: Point;
+  let subject: Handle;
+
+  return d3.drag()
+    .on('start', (event: D3DragEvent) => {
+      subject = event.subject;
+      start = [event.x, event.y];
+    })
+    .on('drag', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]]);
+    })
+    .on('end', (event: D3DragEvent) => {
+      const current = [event.x, event.y];
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], true);
+    });
+};
+
 /**
  * Render frame with resize handles.
- * @param group
- * @param bounds
  * @param onMove
  * @param onResize
  */
-// TODO(burdon): Use createSvgCursor.
-export const drawResizableFrame = (group: D3Selection, bounds: Bounds, onMove, onResize) => {
-  const { x, y, width, height } = bounds;
+export const drawFrame = (onMove, onResize): D3Callable => {
+  return (group, { id, bounds, resize }) => {
+    const { x, y, width, height } = bounds;
 
-  const cx = x + width / 2;
-  const cy = y + height / 2;
+    const cx = x + width / 2;
+    const cy = y + height / 2;
 
-  group.selectAll('rect').data([0]).join('rect')
-    .call(dragMove(onMove))
-    .classed('frame', true)
-    .attr('x', x)
-    .attr('y', y)
-    .attr('width', width)
-    .attr('height', height);
+    // eslint-disable indent
+    group.selectAll('rect')
+      .data(id ? [id] : [])
+      .join('rect')
+        .call(dragMove(onMove))
+        .classed('frame', true)
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height);
 
-  group
-    .selectAll('circle')
-    .data(handles, (d: Handle) => d.id)
-    .join('circle')
-  // .call(handleDrag((handle, delta, end) => {
-  //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-  //   onUpdate(cursor, bounds, end);
-  // }))
-    .classed('frame-handle', true)
-    .attr('cx', ({ p }) => cx + p[0] * width / 2)
-    .attr('cy', ({ p }) => cy + p[1] * height / 2)
-    .attr('r', 5); // TODO(burdon): Grow as zoomed.
+    group
+      .selectAll('circle')
+      .data(resize ? handles : [], (handle: Handle) => handle.id)
+      .join('circle')
+        .call(handleDrag((handle, delta, commit) => {
+          const bounds = computeBounds({ x, y, width, height }, handle, delta);
+          onResize(bounds, commit);
+        }))
+        .classed('frame-handle', true)
+        .attr('cx', ({ p }) => cx + p[0] * width / 2)
+        .attr('cy', ({ p }) => cy + p[1] * height / 2)
+        .attr('r', 5); // TODO(burdon): Grow as zoomed.
+    // eslint-enable indent
+  };
 };

@@ -34,16 +34,20 @@ const styles = css`
   }
 `;
 
-// TODO(burdon): Use debug for logging.
+// TODO(burdon): Perf test (figure out join enter/update rules).
+
+// TODO(burdon): Start to replace old implementation.
+//  - Move Test.tsx to storybook.
+//  - Rewrite Editor to manage state and events.
+//  - Separate group for active element.
+//  - Save items (model).
 
 // TODO(burdon): Info panel with element info.
-
-// TODO(burdon): Manage active element:
-//   - Draw in separate group.
-//   - Render current position, but save original position pre-drag (e.g., in element).
+// TODO(burdon): Use debug for logging.
 
 // TODO(burdon): Click to select outside (e.g., to handle path click).
 // TODO(burdon): Implement path next (e.g., no bounding box resize).
+
 // TODO(burdon): Performance?
 //   Re-usable closure that is just passed the data (and ID)?
 //   E.g., Prevent re-render if only one element is updated. Optimize join (enter, update, delete) call.
@@ -93,6 +97,11 @@ export const Test = ({ scale = defaultScale }: TestProps) => {
   // TODO(burdon): Move into editor.
   const [data, setData] = useState<ElementDataType>();
 
+  const onCancel = () => {
+    setSelected(undefined);
+    setData(undefined);
+  }
+
   const onCreate = (type: ElementType, data: ElementDataType, commit: boolean) => {
     if (commit) {
       // console.log('onCreate:commit');
@@ -103,9 +112,10 @@ export const Test = ({ scale = defaultScale }: TestProps) => {
         data
       };
 
+      setData(undefined);
+      setSelected(undefined);
       setElements(elements => [...elements, element]);
     } else {
-      // TODO(burdon): Create ghost to render with data.
       setData(data);
     }
   };
@@ -117,7 +127,6 @@ export const Test = ({ scale = defaultScale }: TestProps) => {
       element.data = data;
       setElements(elements => [...elements]);
     } else {
-      // TODO(burdon): Create ghost to render with data.
       setSelected(element.id);
       setData(data);
     }
@@ -129,12 +138,26 @@ export const Test = ({ scale = defaultScale }: TestProps) => {
   }
 
   //
+  // Global
+  //
+  useEffect(() => {
+    d3.select(svgRef.current)
+      .on('click', (event) => {
+        const elementId = d3.select(event.target).datum();
+        if (!elementId) {
+          setData(undefined);
+          setSelected(undefined);
+        }
+      });
+  }, []);
+
+  //
   // Create element.
   //
   useEffect(() => {
     const { drag } = elementMap[tool] ?? {};
     if (drag) {
-      d3.select(svgRef.current).call(drag({ scale, onCreate }));
+      d3.select(svgRef.current).call(drag({ scale, onCancel, onCreate }));
     } else {
       d3.select(svgRef.current).call(d3.drag());
     }

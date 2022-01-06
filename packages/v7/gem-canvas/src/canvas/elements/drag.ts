@@ -69,6 +69,7 @@ export const dragBounds = (onUpdate: (event: D3DragEvent, bounds: Bounds, commit
  */
 export interface DragElementProps<T extends ElementDataType> {
   scale: Scale
+  onCancel: () => void
   onCreate: (type: ElementType, data: T, commit: boolean) => void
 }
 
