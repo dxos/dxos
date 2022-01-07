@@ -206,7 +206,7 @@ export const CustomTextField = ({
       <Typography
         sx={{
           color: text ? undefined : theme.palette.text.disabled,
-          boxSizing: 'content-box',
+          boxSizing: 'content-box'
         }}
         onClick={() => !readonly && clickToEdit && setEditing(true)}
       >
