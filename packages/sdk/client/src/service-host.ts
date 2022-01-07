@@ -191,7 +191,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           const party = this._echo.getParty(request.partyKey);
           if (party) {
             return new Stream(({ next }) => {
-              party.update.on(() => update(next));
+              return party.update.on(() => update(next));
             });
           } else {
             return new Stream(({ next }) => {
