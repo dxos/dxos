@@ -3,9 +3,9 @@
 //
 
 import React from 'react';
+import { v4 } from 'uuid';
 
 import { encodeInvitation, PendingInvitation } from '@dxos/client';
-import { generatePasscode } from '@dxos/credentials';
 import type { PublicKey } from '@dxos/crypto';
 import { useClient, useMembers, useParty } from '@dxos/react-client';
 
@@ -23,30 +23,30 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const party = useParty(partyKey);
   const members = useMembers(party);
 
-  // The old way - before the migration to new Client API with Client Services.
-  const createInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
-    let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
+  const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
+    const id = v4();
+    const invitation = await client.echo.createInvitation(partyKey!);
 
-    // Called when other side joins the invitation party.
-    const secretProvider = () => {
-      pendingInvitation.pin = generatePasscode();
-      setInvitations(invitations => [...invitations]);
-      return Promise.resolve(Buffer.from(pendingInvitation.pin));
-    };
-
-    const invitation = await client.echo.createInvitation(partyKey!, { secretProvider }, {
-      onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-      // Remove the pending invitation.
-        setInvitations(invitations => invitations
-          .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
-      }
+    invitation.connected.on(() => {
+      const pin = invitation.secret.toString();
+      setInvitations(invitations => {
+        const invitationWithPin = invitations.find(invitation => invitation.id === id);
+        if (!invitationWithPin) {
+          return invitations;
+        }
+        return [
+          ...invitations.filter(invitation => invitation.id !== id),
+          { ...invitationWithPin, pin }
+        ];
+      });
     });
+    invitation.finshed.on(() => setInvitations(invitations => invitations.filter(invitation => invitation.id !== id)));
 
-    pendingInvitation = {
-      invitationCode: encodeInvitation(invitation),
-      pin: undefined // Generated above.
+    const pendingInvitation: PendingInvitation = {
+      id,
+      invitationCode: encodeInvitation(invitation.descriptor),
+      pin: undefined
     };
-
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
@@ -54,7 +54,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
     <SharingDialog
       {...props}
       title='Party Sharing'
-      onCreateInvitation={createInvitation}
+      onCreateInvitation={handleCreateInvitation}
       members={members}
     />
   );

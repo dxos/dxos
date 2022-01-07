@@ -10,14 +10,14 @@ export function trigger <T>(timeout?: number): [() => Promise<T>, (arg: T) => vo
 export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => void] {
   let callback: (arg: T) => void;
 
-  const provider = () => {
-    return new Promise<T>((resolve, reject) => {
-      if (timeout) {
-        setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
-      }
-      callback = resolve;
-    });
-  };
+  const promise = new Promise<T>((resolve, reject) => {
+    if (timeout) {
+      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
+    }
+    callback = resolve;
+  });
+
+  const provider = () => promise;
 
   const resolver = (value: T) => callback(value);
 
