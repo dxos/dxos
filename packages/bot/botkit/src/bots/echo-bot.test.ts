@@ -11,14 +11,11 @@ import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', () => {
   it('Starts a bot', async () => {
-    const { client, party, invitation, secret } = await setupClient();
+    const { client, party, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
     await bot.Initialize({
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
+      invitation
     });
 
     const command = PublicKey.random().asUint8Array();

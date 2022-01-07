@@ -33,7 +33,7 @@ export class ClientBot implements BotService {
       const invitation = decodeInvitation(request.invitation.invitationCode);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       log('Client bot join party');
-      // TODO(yivlad): errors are nto handled well in RPC.
+      // TODO(yivlad): errors are not handled well in RPC.
       try {
         this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
       } catch (e: unknown) {
