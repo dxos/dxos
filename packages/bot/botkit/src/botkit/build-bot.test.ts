@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { fork } from 'child_process';
 import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
