@@ -13,6 +13,7 @@ import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
 import { setupBroker, setupClient } from '../testutils';
 import { buildBot } from './build-bot';
+import { fork } from 'child_process';
 
 describe('Build bot', () => {
   let outfile: string;
@@ -73,4 +74,31 @@ describe('Build bot', () => {
     await broker.stop();
     await client.destroy();
   }).timeout(60000);
+
+  it.only('Reduced test', async () => {
+    const filePath = require.resolve('../bots/connect-to-signal.ts');
+    await buildBot({
+      entryPoint: filePath,
+      outfile
+    });
+    const localPath = outfile;
+    const child = fork(localPath, [], {
+      execArgv: ['-r', 'ts-node/register/transpile-only'],
+      serialization: 'advanced',
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NODE_NO_WARNINGS: '1'
+      }
+    });
+    await new Promise<void>((resolve, reject) => {
+      child.on('exit', (code, signal) => {
+        if (code !== 0) {
+          reject(new Error(`Child process exited with code ${code} and signal ${signal}`));
+        } else {
+          resolve();
+        }
+      });
+    });
+  });
 });
