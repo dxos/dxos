@@ -5,8 +5,8 @@
 import { Scale } from '@dxos/gem-x';
 
 import { Element, ElementId } from '../model';
-import { EllipseElement } from './types';
 import { BaseElement } from './base';
+import { EllipseElement } from './types';
 
 /**
  * Cache of graphical element objects.

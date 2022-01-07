@@ -50,7 +50,7 @@ const drawBasicEllipse = (scale: Scale, onEdit, onMove): D3Callable => {
       .attr('ry', scale.mapToScreen(ry));
     // eslint-enable indent
   };
-}
+};
 
 export const dragEllipse = ({ scale, onCancel, onCreate }: DragElementProps<Ellipse>): D3Callable => {
   return dragBounds(scale, (event: D3DragEvent, bounds: Bounds, commit?: boolean) => {
@@ -97,7 +97,7 @@ export const drawEllipse = ({
       id: (mode === Mode.CREATE || mode === Mode.UPDATE) ? id : undefined,
       resize: mode === Mode.UPDATE,
       bounds: createBoundsFromData(scale, data)
-    })
+    });
   });
 };
 
@@ -130,13 +130,12 @@ const createEllipse = (scale: Scale): D3Callable => {
       .attr('ry', scale.mapToScreen(ry));
     // eslint-enable indent
   };
-}
+};
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
  */
 export class EllipseElement extends BaseElement<Ellipse> {
-
   _ellipse = createEllipse(this.scale);
   _frame = createFrame(this.scale);
 
@@ -158,6 +157,6 @@ export class EllipseElement extends BaseElement<Ellipse> {
     return group => {
       group.call(this._ellipse, group.datum());
       group.call(this._frame, group.datum(), true, true);
-    }
+    };
   }
 }

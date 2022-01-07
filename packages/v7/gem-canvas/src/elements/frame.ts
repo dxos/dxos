@@ -82,25 +82,25 @@ export const drawFrame = (onMove, onResize): D3Callable => {
     group.selectAll('rect')
       .data(id ? [id] : [])
       .join('rect')
-        .call(dragMove(onMove))
-        .classed('frame', true)
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
+      .call(dragMove(onMove))
+      .classed('frame', true)
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height);
 
     group
       .selectAll('circle')
       .data(resize ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-        .call(handleDrag((handle, delta, commit) => {
-          const bounds = computeBounds({ x, y, width, height }, handle, delta);
-          onResize(bounds, commit);
-        }))
-        .classed('frame-handle', true)
-        .attr('cx', ({ p }) => cx + p[0] * width / 2)
-        .attr('cy', ({ p }) => cy + p[1] * height / 2)
-        .attr('r', 5); // TODO(burdon): Grow as zoomed.
+      .call(handleDrag((handle, delta, commit) => {
+        const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        onResize(bounds, commit);
+      }))
+      .classed('frame-handle', true)
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy + p[1] * height / 2)
+      .attr('r', 5); // TODO(burdon): Grow as zoomed.
     // eslint-enable indent
   };
 };
@@ -120,25 +120,25 @@ export const createFrame = (scale: Scale): D3Callable => {
     group.selectAll('rect')
       .data(visible ? ['_frame_'] : [])
       .join('rect')
-        // .call(dragMove(onMove))
-        .classed('frame', true)
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
+    // .call(dragMove(onMove))
+      .classed('frame', true)
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height);
 
     group
       .selectAll('circle')
       .data(resize ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-        // .call(handleDrag((handle, delta, commit) => {
-        //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        //   onResize(bounds, commit);
-        // }))
-        .classed('frame-handle', true)
-        .attr('cx', ({ p }) => cx + p[0] * width / 2)
-        .attr('cy', ({ p }) => cy + p[1] * height / 2)
-        .attr('r', 5); // TODO(burdon): Grow as zoomed.
+    // .call(handleDrag((handle, delta, commit) => {
+    //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+    //   onResize(bounds, commit);
+    // }))
+      .classed('frame-handle', true)
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy + p[1] * height / 2)
+      .attr('r', 5); // TODO(burdon): Grow as zoomed.
     // eslint-enable indent
   };
 };
