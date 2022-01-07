@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { fork } from 'child_process';
 import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
@@ -13,7 +14,6 @@ import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
 import { setupBroker, setupClient } from '../testutils';
 import { buildBot } from './build-bot';
-import { fork } from 'child_process';
 
 describe('Build bot', () => {
   let outfile: string;
@@ -75,7 +75,7 @@ describe('Build bot', () => {
     await client.destroy();
   }).timeout(60000);
 
-  it.only('Reduced test', async () => {
+  it('Reduced test', async () => {
     const filePath = require.resolve('../bots/connect-to-signal.ts');
     await buildBot({
       entryPoint: filePath,
