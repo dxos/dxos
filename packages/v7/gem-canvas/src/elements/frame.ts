@@ -2,25 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { csvFormatBody } from 'd3';
 import * as d3 from 'd3';
 
-import { Bounds, Point } from '@dxos/gem-x';
+import { Bounds, Point, Scale } from '@dxos/gem-x';
 
-import { D3Callable, D3DragEvent } from '../../types';
+import { D3Callable, D3DragEvent, D3Selection } from '../types';
+import { BaseElement } from './base';
 import { dragMove } from './drag';
 
 type Handle = { id: string, p: Point }
 
 const handles: Handle[] = [
-  { id: 'n', p: [0, 1] },
-  { id: 'ne', p: [1, 1] },
-  { id: 'e', p: [1, 0] },
-  { id: 'se', p: [1, -1] },
-  { id: 's', p: [0, -1] },
-  { id: 'sw', p: [-1, -1] },
-  { id: 'w', p: [-1, 0] },
-  { id: 'nw', p: [-1, 1] }
+  { id: 'handle_n', p: [0, 1] },
+  { id: 'handle_ne', p: [1, 1] },
+  { id: 'handle_e', p: [1, 0] },
+  { id: 'handle_se', p: [1, -1] },
+  { id: 'handle_s', p: [0, -1] },
+  { id: 'handle_sw', p: [-1, -1] },
+  { id: 'handle_w', p: [-1, 0] },
+  { id: 'handle_nw', p: [-1, 1] }
 ];
 
 const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
@@ -97,6 +97,44 @@ export const drawFrame = (onMove, onResize): D3Callable => {
           const bounds = computeBounds({ x, y, width, height }, handle, delta);
           onResize(bounds, commit);
         }))
+        .classed('frame-handle', true)
+        .attr('cx', ({ p }) => cx + p[0] * width / 2)
+        .attr('cy', ({ p }) => cy + p[1] * height / 2)
+        .attr('r', 5); // TODO(burdon): Grow as zoomed.
+    // eslint-enable indent
+  };
+};
+
+//
+//
+//
+
+export const createFrame = (scale: Scale): D3Callable => {
+  return (group: D3Selection, element: BaseElement<any>, visible?: boolean, resize?: boolean) => {
+    const { x, y, width, height } = element.createBounds(scale);
+
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
+    // eslint-disable indent
+    group.selectAll('rect')
+      .data(visible ? ['_frame_'] : [])
+      .join('rect')
+        // .call(dragMove(onMove))
+        .classed('frame', true)
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height);
+
+    group
+      .selectAll('circle')
+      .data(resize ? handles : [], (handle: Handle) => handle.id)
+      .join('circle')
+        // .call(handleDrag((handle, delta, commit) => {
+        //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        //   onResize(bounds, commit);
+        // }))
         .classed('frame-handle', true)
         .attr('cx', ({ p }) => cx + p[0] * width / 2)
         .attr('cy', ({ p }) => cy + p[1] * height / 2)

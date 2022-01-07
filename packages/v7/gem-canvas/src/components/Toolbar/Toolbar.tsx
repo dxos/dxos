@@ -5,7 +5,7 @@
 import React from 'react';
 import { css } from '@emotion/css';
 
-export type Tool = 'circle' | 'ellipse' | 'rect' | 'line' | 'path';
+import { Tool } from '../../tools';
 
 export interface ToolbarProps {
   active?: Tool

@@ -43,21 +43,17 @@ export const Primary = () => {
     d3.select(groupRef.current)
       .selectAll('g')
       .data([{ id: '_group' }], (d: Datum) => d?.id)
-      .join('g')
+      .join('g') // TODO(burdon): Split enter/update/exit.
         .call(createCircle);
   }, [groupRef, radius]);
 
   useEffect(() => {
-    const i = setInterval(() => {
+    const t = setTimeout(() => {
       setRadius(r => {
-        if (r > 100) {
-          clearInterval(i);
-        }
-
-        return r + 5;
+        return r + 100;
       });
-    }, 100);
-    return () => clearInterval(i);
+    }, 500);
+    return () => clearTimeout(t);
   }, []);
 
   return (

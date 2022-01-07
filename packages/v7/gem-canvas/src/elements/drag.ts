@@ -6,8 +6,8 @@ import * as d3 from 'd3';
 
 import { Bounds, Point, Scale, createBounds } from '@dxos/gem-x';
 
-import { Element, ElementDataType, ElementType } from '../../model';
-import { D3Callable, D3DragEvent, D3Selection } from '../../types';
+import { Element, ElementDataType, ElementType } from '../model';
+import { D3Callable, D3DragEvent, D3Selection } from '../types';
 
 /**
  * Render mode.
@@ -82,11 +82,11 @@ export type DragElementFunction<T extends ElementDataType> = (props: DragElement
 export interface DrawElementProps<T extends ElementDataType> {
   scale: Scale
   group: D3Selection
-  element?: Element
+  element?: Element<T>
   data: T
   mode?: Mode
   editable?: boolean
-  onUpdate?: (element: Element, data: T, commit: boolean) => void
+  onUpdate?: (element: Element<T>, data: T, commit: boolean) => void
   onEdit?: () => void
 }
 

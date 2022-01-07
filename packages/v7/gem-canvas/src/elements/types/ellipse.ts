@@ -2,18 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as d3 from 'd3';
+
 import { Bounds, Frac, Point, Scale } from '@dxos/gem-x';
 
-import { Ellipse } from '../../../model';
-import { D3Callable, D3DragEvent, D3Selection } from '../../../types';
+import { Ellipse } from '../../model';
+import { D3Callable, D3DragEvent, D3Selection } from '../../types';
+import { BaseElement } from '../base';
 import { DragElementProps, DrawElementProps, Mode, dragBounds, dragMove } from '../drag';
-import { drawFrame } from '../frame';
-
-// TODO(burdon): Be strict about relative to center or not.
-// TODO(burdon): Normalize whether centered on screen (either translate in drag handler).
+import { createFrame, drawFrame } from '../frame';
 
 const createData = (scale: Scale, bounds: Bounds, center: boolean, snap: boolean): Ellipse => {
-  // console.log('createData', bounds);
   const { x, y, width, height } = bounds;
   const pos: Point = center ? [x, y] : [x + width / 2, y + height / 2];
   const size = center ? [width, height] : [width / 2, height / 2];
@@ -37,7 +36,6 @@ const drawBasicEllipse = (scale: Scale, onEdit, onMove): D3Callable => {
     const { cx, cy, rx, ry } = data;
 
     // eslint-disable indent
-    // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
     group.selectAll('ellipse').data([id]).join('ellipse')
       .call(selection => {
         if (editable) {
@@ -102,3 +100,64 @@ export const drawEllipse = ({
     })
   });
 };
+
+//
+//
+//
+
+// TODO(burdon): Each element has pointer to parent context for events.
+
+// TODO(burdon): Move.
+// TODO(burdon): Resize.
+// TODO(burdon): Create.
+
+const createEllipse = (scale: Scale): D3Callable => {
+  return (group: D3Selection, element: BaseElement<Ellipse>) => {
+    const { element: { data: { cx, cy, rx, ry } } } = element;
+
+    // eslint-disable indent
+    group.selectAll('ellipse').data(['_main_']).join('ellipse')
+      // .call(selection => {
+      //   if (editable) {
+      //     selection
+      //       .on('click', onEdit)
+      //       .call(dragMove(onMove));
+      //   }
+      // })
+      .attr('cx', scale.mapToScreen(cx))
+      .attr('cy', scale.mapToScreen(cy))
+      .attr('rx', scale.mapToScreen(rx))
+      .attr('ry', scale.mapToScreen(ry));
+    // eslint-enable indent
+  };
+}
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
+ */
+export class EllipseElement extends BaseElement<Ellipse> {
+
+  _ellipse = createEllipse(this.scale);
+  _frame = createFrame(this.scale);
+
+  createBounds = (scale: Scale): Bounds => {
+    const { data: { cx, cy, rx, ry } } = this.element;
+    return {
+      x: scale.mapToScreen(Frac.add(cx, -rx)),
+      y: scale.mapToScreen(Frac.add(cy, -ry)),
+      width: scale.mapToScreen(Frac.multiply(rx, 2)),
+      height: scale.mapToScreen(Frac.multiply(ry, 2))
+    };
+  };
+
+  drag (): D3Callable {
+    return group => group.call(d3.drag());
+  }
+
+  draw (): D3Callable {
+    return group => {
+      group.call(this._ellipse, group.datum());
+      group.call(this._frame, group.datum(), true, true);
+    }
+  }
+}
