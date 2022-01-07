@@ -43,22 +43,23 @@ export const dragMove = (onMove: (delta: Point, commit?: boolean) => void): D3Ca
 
 /**
  * Drag handler to compute bounds for creating and resizing elements.
+ * @param scale
  * @param onUpdate
  */
-export const dragBounds = (onUpdate: (event: D3DragEvent, bounds: Bounds, commit?: boolean) => void): D3Callable => {
+export const dragBounds = (scale: Scale, onUpdate: (event: D3DragEvent, bounds: Bounds, commit?: boolean) => void): D3Callable => {
   let start: Point;
 
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
-      start = [event.x, event.y];
+      start = scale.translatePoint([event.x, event.y]);
     })
     .on('drag', (event: D3DragEvent) => {
-      const current: Point = [event.x, event.y];
+      const current: Point = scale.translatePoint([event.x, event.y]);
       const bounds = createBounds(start, current);
       onUpdate(event, bounds);
     })
     .on('end', (event: D3DragEvent) => {
-      const current: Point = [event.x, event.y];
+      const current: Point = scale.translatePoint([event.x, event.y]);
       const bounds = createBounds(start, current);
       onUpdate(event, bounds, true);
     });

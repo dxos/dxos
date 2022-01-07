@@ -13,11 +13,11 @@ import { drawFrame } from '../frame';
 // TODO(burdon): Normalize whether centered on screen (either translate in drag handler).
 
 const createData = (scale: Scale, bounds: Bounds, center: boolean, snap: boolean): Ellipse => {
-  console.log('createData', bounds);
+  // console.log('createData', bounds);
   const { x, y, width, height } = bounds;
   const pos: Point = center ? [x, y] : [x + width / 2, y + height / 2];
   const size = center ? [width, height] : [width / 2, height / 2];
-  const [cx, cy] = scale.mapPointToModel(pos, snap);
+  const [cx, cy] = scale.mapToModel(pos, snap);
   const [rx, ry] = scale.mapToModel(size, snap);
   return { cx, cy, rx, ry };
 };
@@ -55,7 +55,7 @@ const drawBasicEllipse = (scale: Scale, onEdit, onMove): D3Callable => {
 }
 
 export const dragEllipse = ({ scale, onCancel, onCreate }: DragElementProps<Ellipse>): D3Callable => {
-  return dragBounds((event: D3DragEvent, bounds: Bounds, commit?: boolean) => {
+  return dragBounds(scale, (event: D3DragEvent, bounds: Bounds, commit?: boolean) => {
     // TODO(burdon): If shift then constain circle.
     const data = createData(scale, bounds, event.sourceEvent.metaKey, commit);
     const { rx, ry } = data;
