@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { decodeInvitation, encodeInvitation, RedeemingInvitation } from '@dxos/client';
+import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
@@ -141,7 +141,7 @@ const PartyInvitationContainer = () => {
 interface Status {
   error?: any,
   party?: string,
-  invitation?: RedeemingInvitation
+  invitation?: Invitation
 }
 
 /**

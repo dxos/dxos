@@ -9,7 +9,7 @@ import { InvitationDescriptor } from '@dxos/echo-db';
 import { PartyProxy } from './PartyProxy';
 
 /**
- * Represents an invitation that was created.
+ * Invitation created by sender.
  */
 export class InvitationRequest {
   /**
@@ -46,12 +46,16 @@ export class InvitationRequest {
   get secret (): Buffer {
     return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
   }
+
+  toString () {
+    return `InvitationRequest(${JSON.stringify(this._descriptor.toQueryParameters())})`;
+  }
 }
 
 /**
- * Represents an invitation that is beeing redeemed.
+ * Invitation that is beeing redeemed.
  */
-export class RedeemingInvitation {
+export class Invitation {
   constructor (
     private readonly _partyPromise: Promise<PartyProxy>,
     private readonly _onAuthenticate: (secret: Buffer) => void

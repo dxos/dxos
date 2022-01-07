@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { RedeemingInvitation } from '.';
+import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
@@ -144,7 +144,7 @@ export class EchoProxy {
    * Joins an existing Party by invitation.
    * @returns An async function to provide secret and finishing the invitation process.
    */
-  acceptInvitation (invitationDescriptor: InvitationDescriptor): RedeemingInvitation {
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
     const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>();
     const [waitForParty, resolveParty] = trigger<PartyProxy>();
 
@@ -173,7 +173,7 @@ export class EchoProxy {
       void authenticate(invitationDescriptor.secret);
     }
 
-    return new RedeemingInvitation(
+    return new Invitation(
       waitForParty(),
       authenticate
     );

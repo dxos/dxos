@@ -10,8 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { failUndefined } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, OpenProgress, Party } from '@dxos/echo-db';
+import { failUndefined, raise } from '@dxos/debug';
+import { ECHO, InvitationDescriptor, OpenProgress, Party, PartyNotFoundError } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -264,10 +264,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           await party.deactivate(request.options);
         },
         CreateInvitation: (request) => new Stream(({ next, close }) => {
-          const party = this.echo.getParty(request.publicKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
+          const party = this.echo.getParty(request.publicKey) ?? raise(new PartyNotFoundError(request.publicKey));
           setImmediate(async () => {
             try {
               const secret = generatePasscode();

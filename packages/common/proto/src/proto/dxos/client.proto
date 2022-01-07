@@ -153,7 +153,7 @@ message AuthenticatePartyInvitationResponse {
 }
 
 service PartyService {
-  rpc SubscribeParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
+  rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
