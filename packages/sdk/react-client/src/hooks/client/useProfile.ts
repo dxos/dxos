@@ -8,7 +8,7 @@ import { useClient } from './useClient';
 
 /**
  * Hook returning DXOS user profile object.
- * Requires ClientConext to be set via ClientProvider.
+ * Requires ClientContext to be set via ClientProvider.
  */
 export const useProfile = () => {
   const client = useClient();

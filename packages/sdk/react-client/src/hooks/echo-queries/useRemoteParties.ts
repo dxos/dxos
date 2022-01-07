@@ -10,7 +10,7 @@ import { useClient } from '../client';
 
 /**
  * Get all Parties available to current user.
- * Requires ClientConext to be set via ClientProvider.
+ * Requires ClientContext to be set via ClientProvider.
  */
 export const useRemoteParties = () => {
   const client = useClient();
