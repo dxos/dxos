@@ -12,7 +12,7 @@ import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
 import './setup';
 
-test('local source', async () => {
+test.skip('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
   orchestrator.client.registerModel(MessengerModel);
   await orchestrator.start();

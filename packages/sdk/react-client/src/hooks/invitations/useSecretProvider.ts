@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { trigger } from '@dxos/async';
 
-export const useSecretProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
+export const useSecretProvider = <T> (): [() => Promise<T>, (value: T) => void] => {
   const [[provider, resolver]] = useState(() => trigger<T>());
 
   return [provider, resolver];

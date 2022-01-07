@@ -8,7 +8,7 @@ import MobileDetect from 'mobile-detect';
 export const isMobile = new MobileDetect(window.navigator.userAgent).mobile();
 
 // TODO(burdon): Factor out.
-export const pickUnique = <T extends unknown>(array: T[], n: number) => {
+export const pickUnique = <T>(array: T[], n: number) => {
   const unique: T[] = [];
   while (unique.length < n) {
     const i = Math.floor(Math.random() * array.length);

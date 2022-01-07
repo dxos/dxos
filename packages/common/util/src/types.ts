@@ -17,7 +17,7 @@ export type MaybeFunction<T> = T | (() => T)
 /**
  * Get value from a provider.
  */
-export const getAsyncValue = async <T extends any>(value: MaybeFunction<MaybePromise<T>>) => {
+export const getAsyncValue = async <T>(value: MaybeFunction<MaybePromise<T>>) => {
   if (typeof value === 'function') {
     return (value as Function)();
   } else {
