@@ -82,20 +82,6 @@ export class PartyProxy {
     await this._serviceProvider.services.PartyService.DeactivateParty({ partyKey: this.key, options });
   }
 
-  // Use client methods instead!
-
-  // async createInvitation (...args: Parameters<EchoParty['createInvitation']>) {
-  //   const party = this._serviceProvider.echo.getParty(this._partyKey);
-  //   assert(party, 'Party not found');
-  //   return party!.createInvitation(...args);
-  // }
-
-  // async createOfflineInvitation (...args: Parameters<EchoParty['createOfflineInvitation']>) {
-  //   const party = this._serviceProvider.echo.getParty(this._partyKey);
-  //   assert(party, 'Party not found');
-  //   return party!.createOfflineInvitation(...args);
-  // }
-
   queryMembers () {
     return streamToResultSet(
       this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key }),

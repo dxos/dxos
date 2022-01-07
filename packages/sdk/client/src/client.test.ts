@@ -7,6 +7,7 @@ import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
@@ -104,6 +105,55 @@ describe('Client', () => {
       }).timeout(5000);
     });
 
+    describe('party invitations', () => {
+      test('creates and joins a Party invitation', async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        await invitee.halo.createProfile({ username: 'invitee' });
+
+        const party = await inviter.echo.createParty();
+        const invitation = await inviter.echo.createInvitation(party.key);
+        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
+
+        expect(inviteeParty.key).toEqual(party.key);
+      }).timeout(5000);
+
+      test('invitation callbacks are fired', async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        await invitee.halo.createProfile({ username: 'invitee' });
+
+        const party = await inviter.echo.createParty();
+        const invitation = await inviter.echo.createInvitation(party.key);
+
+        const connectedFired = invitation.connected.waitForCount(1);
+        // Simulate invitation being serialized. This effectively removes the pin from the invitation.
+        const reincodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
+        await connectedFired;
+
+        const finishedFired = invitation.finshed.waitForCount(1);
+        acceptedInvitation.authenticate(invitation.secret);
+        await finishedFired;
+
+        const inviteeParty = await acceptedInvitation.wait();
+        expect(inviteeParty.key).toEqual(party.key);
+      }).timeout(5000);
+    });
+
     describe('data', () => {
       test('create party and item', async () => {
         const client = await createClient();
@@ -171,7 +221,7 @@ describe('Client', () => {
         handlers: hostClient.services,
         port: hostPort
       });
-      void server.open(); // This is blocks until the other client connects.
+      void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
       return new Client({ system: { remote: true } }, { rpcPort: proxyPort });

@@ -90,7 +90,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   async call (methodName: string, request: Any): Promise<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
-    assert(!method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
+    assert(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
     const requestDecoded = requestCodec.decode(request.value!);
 
@@ -110,7 +110,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   callStream (methodName: string, request: Any): Stream<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
-    assert(method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
+    assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
     const requestDecoded = requestCodec.decode(request.value!);
 

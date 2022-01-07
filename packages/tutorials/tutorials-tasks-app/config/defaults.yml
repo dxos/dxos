@@ -1,8 +1,11 @@
+app:
+  title: "Tasks App"
+
+# Uncomment for remote mode
 # system:
 #   remote: true
 
-app:
-  title: "Tasks App"
+# Uncomment for local mode
 system:
   storage:
     persistent: true

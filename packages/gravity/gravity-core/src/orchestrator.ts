@@ -11,8 +11,7 @@ import kill from 'tree-kill';
 import { promiseTimeout } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/botkit-client-deprecated';
 import { Client, PartyProxy } from '@dxos/client';
-import { Invitation } from '@dxos/credentials';
-import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
+import { createKeyPair, keyToString, sha256 } from '@dxos/crypto';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { Agent } from './agent';
@@ -187,15 +186,9 @@ export class Orchestrator {
 
   // TODO(egorgripasov): Takes non-defined time; wait for node to appear in control party?
   async _inviteBot (botId: string) {
-    const secretValidator = async (invitation: Invitation, secret: Buffer) => {
-      const signature = secret.slice(0, SIGNATURE_LENGTH);
-      const message = secret.slice(SIGNATURE_LENGTH);
-      return verify(message, signature, keyToBuffer(this._factory.topic));
-    };
+    const invitation = await this._client.echo.createInvitation(this._party.key);
 
-    const invitation = await this._client.echo.createInvitation(this._party.key, { secretValidator });
-
-    await this._factoryClient.sendInvitationRequest(botId, this._party.key.toHex(), {}, invitation.toQueryParameters());
+    await this._factoryClient.sendInvitationRequest(botId, this._party.key.toHex(), {}, invitation.descriptor.toQueryParameters());
 
     log(`Bot ${botId} invited.`);
   }
