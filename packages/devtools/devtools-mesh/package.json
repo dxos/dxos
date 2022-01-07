@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-mesh",
-  "version": "2.19.7",
+  "version": "2.19.8",
   "private": true,
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
