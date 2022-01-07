@@ -30,7 +30,7 @@ describe('Build bot', () => {
   });
 
   afterEach(() => {
-    // fs.unlinkSync(outfile);
+    fs.unlinkSync(outfile);
   });
 
   it('Build benchmark', async () => {
