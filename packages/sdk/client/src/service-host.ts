@@ -176,7 +176,7 @@ export class ClientServiceHost implements ClientServiceProvider {
         }
       },
       PartyService: {
-        SubscribeParty: (request) => {
+        SubscribeToParty: (request) => {
           const update = (next: (message: SubscribePartyResponse) => void) => {
             const party = this._echo.getParty(request.partyKey);
             next({

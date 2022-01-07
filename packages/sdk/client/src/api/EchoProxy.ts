@@ -62,7 +62,7 @@ export class EchoProxy {
           const partyProxy = await this.createPartyProxy(party);
           this._parties.set(partyProxy.key, partyProxy);
 
-          const partyStream = this._serviceProvider.services.PartyService.SubscribeParty({ partyKey: party.publicKey });
+          const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
           partyStream.subscribe(async ({ party }) => {
             if (!party) {
               return;
