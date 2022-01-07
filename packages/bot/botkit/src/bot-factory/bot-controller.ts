@@ -40,7 +40,7 @@ export class BotController {
   }
 
   private async _onPeerConnect (port: RpcPort, peerId: string) {
-    log(`[${peerId}]: Peer connetced`);
+    log(`[${peerId}]: Peer connected`);
     const peer = createRpcServer({
       service: this._service,
       handlers: this._botFactory,
