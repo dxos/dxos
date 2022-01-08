@@ -59,6 +59,22 @@ const createEllipse = (scale: Scale): D3Callable => {
 };
 
 /**
+ * Check not too small.
+ * @param data
+ * @param commit
+ */
+const valid = (data: Ellipse, commit: boolean) => {
+  if (commit) {
+    const { rx, ry } = data;
+    if (Frac.isZero(rx) || Frac.isZero(ry)) {
+      return;
+    }
+  }
+
+  return data;
+};
+
+/**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
  */
 export class EllipseElement extends BaseElement<Ellipse> {
@@ -68,24 +84,15 @@ export class EllipseElement extends BaseElement<Ellipse> {
   type = 'ellipse' as ElementType;
 
   createData (bounds: Bounds, mod?: EventMod, commit?: boolean): Ellipse {
-    const { x, y, width, height } = bounds;
+    let { x, y, width, height } = bounds;
+    if (mod?.constrain) {
+      // TODO(burdon): Maintain aspect (not square).
+      width = height = Math.max(width, height);
+    }
 
-    const valid = (data: Ellipse, commit: boolean) => {
-      if (commit) {
-        const { rx, ry } = data;
-        if (Frac.isZero(rx) || Frac.isZero(ry)) {
-          return;
-        }
-      }
-
-      return data;
-    };
-
-    // TODO(burdon): Constrain (maintain aspect).
     // TODO(burdon): Center relative to original center.
-
     if (mod?.center) {
-      const { cx, cy } = this.data;
+      const { cx, cy } = this.data ?? { cx: x, cy: y };
       const size = [width / 2, height / 2];
       const [rx, ry] = this.scale.mapToModel(size, commit, 2);
       return valid({ cx, cy, rx, ry }, commit);

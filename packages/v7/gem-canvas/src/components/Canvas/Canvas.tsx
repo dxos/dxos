@@ -120,6 +120,10 @@ export const Canvas = ({
       const data = cursor.createData(bounds, mod, commit);
 
       if (commit) {
+        // TODO(burdon): Reset.
+        // cursorRef.current._data = undefined;
+        console.log('commit', JSON.stringify(data));
+
         d3.select(cursorGroup.current)
           .selectAll('g')
           .remove();
