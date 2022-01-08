@@ -23,7 +23,7 @@ export const createElement = (scale: Scale, type: ElementType, element?: Element
     }
 
     default: {
-      throw new Error(`Invalid type: ${type}`);
+      console.warn(`Invalid type: ${type}`);
     }
   }
 };

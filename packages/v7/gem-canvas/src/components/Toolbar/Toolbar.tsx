@@ -8,12 +8,12 @@ import { css } from '@emotion/css';
 import { Tool } from '../../tools';
 
 export interface ToolbarProps {
-  active?: Tool
+  tool?: Tool
   onSelect?: (tool?: Tool) => void
 }
 
 export const Toolbar = ({
-  active,
+  tool,
   onSelect
 }: ToolbarProps) => {
   const styles = css`
@@ -54,8 +54,8 @@ export const Toolbar = ({
       {tools.map(({ type }) => (
         <button
           key={type}
-          className={active === type ? 'active' : ''}
-          onClick={() => onSelect(active === type ? undefined : type)}
+          className={tool === type ? 'active' : ''}
+          onClick={() => onSelect(tool === type ? undefined : type)}
         >
           {type}
         </button>

@@ -10,17 +10,19 @@ import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
 import { EventMod, getEventMod } from './drag';
 
-type Handle = { id: string, p: Point }
+type Handle = { id: string, p: Point, cursor: string }
+
+// https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
 
 const handles: Handle[] = [
-  { id: 'handle_n', p: [0, 1] },
-  { id: 'handle_ne', p: [1, 1] },
-  { id: 'handle_e', p: [1, 0] },
-  { id: 'handle_se', p: [1, -1] },
-  { id: 'handle_s', p: [0, -1] },
-  { id: 'handle_sw', p: [-1, -1] },
-  { id: 'handle_w', p: [-1, 0] },
-  { id: 'handle_nw', p: [-1, 1] }
+  { id: 'n-resize', p: [0, 1], cursor: 'ns-resize' },
+  { id: 'ne-resize', p: [1, 1], cursor: 'nesw-resize' },
+  { id: 'e-resize', p: [1, 0], cursor: 'ew-resize' },
+  { id: 'se-resize', p: [1, -1], cursor: 'nwse-resize' },
+  { id: 's-resize', p: [0, -1], cursor: 'ns-resize' },
+  { id: 'sw-resize', p: [-1, -1], cursor: 'nesw-resize' },
+  { id: 'w-resize', p: [-1, 0], cursor: 'ew-resize' },
+  { id: 'nw-resize', p: [-1, 1], cursor: 'nwse-resize' }
 ];
 
 /**
@@ -44,10 +46,10 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
   }
 
   if (p[1] < 0) {
+    height += dy;
+  } else {
     height -= dy;
     y += dy;
-  } else {
-    height += dy;
   }
 
   return { x, y, width, height };
@@ -69,12 +71,12 @@ const handleDrag = (
       start = [event.x, event.y];
     })
     .on('drag', (event: D3DragEvent) => {
-      const mod = getEventMod(event);
+      const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
     .on('end', (event: D3DragEvent) => {
-      const mod = getEventMod(event);
+      const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod, true);
     });
@@ -110,8 +112,9 @@ export const createFrame = (): D3Callable => {
         base.onUpdate(data);
       }))
       .classed('frame-handle', true)
+      .attr('cursor', h => h.cursor)
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy + p[1] * height / 2)
+      .attr('cy', ({ p }) => cy - p[1] * height / 2)
       .attr('r', 5); // TODO(burdon): Grow as zoomed.
     // eslint-enable indent
   };

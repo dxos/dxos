@@ -4,14 +4,34 @@
 
 export type Fraction = [num: number, denum: number]
 
+export type Num = number | Fraction
+
 // TODO(burdon): Rename.
 export class Frac {
   /**
    * Create fraction.
    * @param n
+   */
+  static fraction = (n: Num) => {
+    return typeof n === 'number' ? [n, 1] : n;
+  }
+
+  static isZero = (n: Num) => {
+    return typeof n === 'number' ? n === 0 : n[0] === 0;
+  }
+
+  /**
+   * Check valid fraction.
+   * @param n
    * @param d
    */
-  static num = (n: number, d = 1): Fraction => [n, d];
+  static validate = ([n, d]: Fraction) => {
+    if (!(d !== 0 && Number.isInteger(n) && Number.isInteger(d))) {
+      throw new Error(`Invalid fraction: ${n}/${d}`);
+    }
+
+    return [n, d];
+  }
 
   /**
    * Convert to float number.
@@ -29,7 +49,17 @@ export class Frac {
   static floor = ([num, denum]: Fraction, n = 1): number => Math.floor(num * n / denum);
 
   /**
-   * Normalize fraction.
+   * Round the number to the nearest fraction.
+   * @param n Value
+   * @param d Precision (e.g., 1/2, 1/4, etc.)
+   */
+  static round = (n: number, d = 1): Fraction => {
+    const f: Fraction = [Math.round(n * d), d];
+    return (d > 1) ? Frac.norm(f) : f;
+  };
+
+  /**
+   * Normalize fraction finding LCDs.
    * @param n
    * @param d
    */
@@ -58,6 +88,10 @@ export class Frac {
     return [n, d];
   }
 
+  /**
+   * Return common factors.
+   * @param n
+   */
   static factors = (n: number): number[] => {
     const factors = [1];
     let f = 1;
@@ -75,12 +109,27 @@ export class Frac {
    * @param n1
    * @param n2
    */
-  static add = (n1: number | Fraction, n2: number | Fraction): Fraction => {
-    const num1 = typeof n1 === 'number' ? Frac.num(n1) : n1;
-    const num2 = typeof n2 === 'number' ? Frac.num(n2) : n2;
+  static add = (n1: Num, n2: Num): Fraction => {
+    const num1 = Frac.fraction(n1);
+    const num2 = Frac.fraction(n2);
 
     const d = num1[1] * num2[1]; // Same denom.
     const n = (num1[0] * num2[1]) + (num2[0] * num1[1]);
+
+    return Frac.norm([n, d]);
+  }
+
+  /**
+   * Subtract fraction.
+   * @param n1
+   * @param n2
+   */
+  static sub = (n1: Num, n2: Num): Fraction => {
+    const num1 = Frac.fraction(n1);
+    const num2 = Frac.fraction(n2);
+
+    const d = num1[1] * num2[1]; // Same denom.
+    const n = (num1[0] * num2[1]) - (num2[0] * num1[1]);
 
     return Frac.norm([n, d]);
   }
@@ -90,9 +139,9 @@ export class Frac {
    * @param n1
    * @param n2
    */
-  static multiply = (n1: number | Fraction, n2: number | Fraction): Fraction => {
-    const num1 = typeof n1 === 'number' ? Frac.num(n1) : n1;
-    const num2 = typeof n2 === 'number' ? Frac.num(n2) : n2;
+  static multiply = (n1: Num, n2: Num): Fraction => {
+    const num1 = Frac.fraction(n1);
+    const num2 = Frac.fraction(n2);
 
     const n = num1[0] * num2[0];
     const d = num1[1] * num2[1];

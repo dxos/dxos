@@ -5,7 +5,7 @@
 import type { ZoomTransform } from 'd3';
 import { useMemo } from 'react';
 
-import { Bounds, Frac, Fraction, Point, round } from '../util';
+import { Bounds, Frac, Num, Point } from '../util';
 
 /**
  * Zoomable scale for grid.
@@ -40,28 +40,6 @@ export class Scale {
   }
 
   /**
-   * Map model value to screen value.
-   * @param array
-   */
-  // TODO(burdon): Constrain to fraction only.
-  mapToScreen (array: (number | Fraction)[]): number[] {
-    return array.map(n => Frac.floor(Frac.multiply(n, this._gridSize)));
-  }
-
-  /**
-   * Map screen values to model values.
-   * @param array
-   * @param snap
-   */
-  mapToModel (array: number[], snap?: boolean): number[] {
-    if (snap) {
-      return array.map(n => round(n, this._gridSize));
-    } else {
-      return array.map(n => n / this._gridSize);
-    }
-  }
-
-  /**
    * Translate point relative to origin.
    * @param x
    * @param y
@@ -74,6 +52,39 @@ export class Scale {
       (x - cx - tx) / k,
       (y - cy - ty) / k
     ];
+  }
+
+  /**
+   * Snap point to grid.
+   * @param p
+   */
+  // TODO(burdon): More efficient?
+  snap (p: Point): Point {
+    const m = this.mapToModel(p, true);
+    return this.mapToScreen(m) as Point;
+  }
+
+  /**
+   * Map model value to screen value.
+   * @param array
+   */
+  // TODO(burdon): Constrain to fraction only.
+  mapToScreen (array: (Num)[]): number[] {
+    return array.map(n => Frac.floor(Frac.multiply(n, this._gridSize)));
+  }
+
+  /**
+   * Map screen values to model values.
+   * @param array
+   * @param snap
+   * @param d
+   */
+  mapToModel (array: number[], snap = false, d = 1): Num[] {
+    if (snap) {
+      return array.map(n => Frac.round(n / this._gridSize, d));
+    } else {
+      return array.map(n => n / this._gridSize);
+    }
   }
 }
 

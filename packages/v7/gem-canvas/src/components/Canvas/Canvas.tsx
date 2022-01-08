@@ -3,10 +3,10 @@
 //
 
 import * as d3 from 'd3';
-import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import React, { RefObject, useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { Bounds, defaultScale, Scale } from '@dxos/gem-x';
+import { Bounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
 
 import { BaseElement, ElementCache, EventMod, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
@@ -14,23 +14,25 @@ import { Tool } from '../../tools';
 
 // TODO(burdon): Create theme.
 const styles = css`
-  ellipse {
-    stroke: seagreen;
-    stroke-width: 2;
-    fill: #F5F5F5;
-  }
-
   rect.frame {
-    stroke: #999;
+    stroke: cornflowerblue;
     stroke-width: 1;
-    stroke-dasharray: 4;
+    // stroke-dasharray: 8,2;
     fill: none;    
   }
   
   circle.frame-handle {
-    stroke: #999;
+    stroke: cornflowerblue;
     stroke-width: 1;
-    fill: #FFF;
+    fill: #EEE;
+  }
+
+  // TODO(burdon): Scope.
+  ellipse {
+    stroke: #666;
+    stroke-width: 2;
+    fill: #F5F5F5;
+    opacity: 0.7;
   }
 `;
 
@@ -76,7 +78,7 @@ export const Canvas = ({
 
   // New element cursor.
   const cursorGroup = useRef<SVGSVGElement>();
-  const [cursor, setCursor] = useState<BaseElement<any>>();
+  const [cursor, setCursor, cursorRef] = useStateRef<BaseElement<any>>();
 
   //
   // Update cache.
@@ -114,13 +116,21 @@ export const Canvas = ({
   // eslint-disable indent
   useEffect(() => {
     const handleUpdate = (bounds: Bounds, mod: EventMod, commit: boolean) => {
+      const cursor = cursorRef.current;
       const data = cursor.createData(bounds, mod, commit);
 
       if (commit) {
-        onCreate(cursor.type, data);
         d3.select(cursorGroup.current)
           .selectAll('g')
           .remove();
+
+        // Too small.
+        if (!data) {
+          onSelect(undefined);
+          return;
+        }
+
+        onCreate(cursor.type, data);
       } else {
         cursor.onUpdate(data);
         d3.select(cursorGroup.current)
@@ -134,10 +144,11 @@ export const Canvas = ({
     };
 
     // Drag handler.
+    // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
       .call(dragBounds(scale, handleUpdate, () => onSelect(undefined))
-        .filter(() => Boolean(cursor)));
-  }, [svgRef, cursorGroup, cursor]);
+        .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
+  }, [svgRef, cursorGroup]);
   // eslint-enable indent
 
   //

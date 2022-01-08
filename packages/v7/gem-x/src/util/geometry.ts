@@ -2,10 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-//
-// Screen geometry.
-//
-
 // Screen point.
 export type Point = [x: number, y: number]
 
@@ -24,10 +20,6 @@ export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): Bounds => {
     width: Math.abs(x2 - x1),
     height: Math.abs(y2 - y1)
   };
-};
-
-export const round = (n: number, s: number) => {
-  return Math.round((n + 0.5) / s);
 };
 
 export const contains = (bounds: Bounds, point: Point): boolean => {

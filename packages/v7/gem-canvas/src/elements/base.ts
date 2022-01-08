@@ -56,8 +56,12 @@ export abstract class BaseElement<T extends ElementDataType> {
     this._selected = selected;
   }
 
-  onSelect () {
-    this._onSelect?.(this.element);
+  onSelect (select: boolean) {
+    if (select && !this.selected) {
+      this._onSelect?.(this.element);
+    } else if (!select && this.selected) {
+      this._onSelect?.(undefined);
+    }
   }
 
   onCreate (data: T) {
@@ -82,9 +86,9 @@ export abstract class BaseElement<T extends ElementDataType> {
    * Create element data from bounds.
    * @param bounds
    * @param mod
-   * @param snap
+   * @param commit
    */
-  abstract createData (bounds: Bounds, mod?: EventMod, snap?: boolean): T;
+  abstract createData (bounds: Bounds, mod?: EventMod, commit?: boolean): T;
 
   /**
    * Create bounding box from data.

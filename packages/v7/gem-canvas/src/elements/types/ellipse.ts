@@ -28,15 +28,19 @@ const createEllipse = (scale: Scale): D3Callable => {
         // TODO(burdon): Generic.
         if (base.onSelect) {
           selection
-            .on('click', base.onSelect.bind(base));
+            .on('click', () => {
+              base.onSelect(true);
+            });
         }
 
         // Move.
         if (base.onUpdate) {
           selection
+            .attr('cursor', 'move')
             .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
               const [dx, dy] = scale.mapToModel(delta, commit);
               const { cx, cy, rx, ry } = data;
+              base.onSelect(true);
               base.onUpdate({
                 cx: Frac.add(cx, dx),
                 cy: Frac.add(cy, dy),
@@ -63,8 +67,19 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
-  createData (bounds: Bounds, mod?: EventMod, snap?: boolean): Ellipse {
+  createData (bounds: Bounds, mod?: EventMod, commit?: boolean): Ellipse {
     const { x, y, width, height } = bounds;
+
+    const valid = (data: Ellipse, commit: boolean) => {
+      if (commit) {
+        const { rx, ry } = data;
+        if (Frac.isZero(rx) || Frac.isZero(ry)) {
+          return;
+        }
+      }
+
+      return data;
+    };
 
     // TODO(burdon): Constrain (maintain aspect).
     // TODO(burdon): Center relative to original center.
@@ -72,22 +87,22 @@ export class EllipseElement extends BaseElement<Ellipse> {
     if (mod?.center) {
       const { cx, cy } = this.data;
       const size = [width / 2, height / 2];
-      const [rx, ry] = this.scale.mapToModel(size, snap);
-      return { cx, cy, rx, ry };
+      const [rx, ry] = this.scale.mapToModel(size, commit, 2);
+      return valid({ cx, cy, rx, ry }, commit);
     } else {
       const pos: Point = [x + width / 2, y + height / 2];
       const size = [width / 2, height / 2];
-      const [cx, cy] = this.scale.mapToModel(pos, snap);
-      const [rx, ry] = this.scale.mapToModel(size, snap);
-      return { cx, cy, rx, ry };
+      const [cx, cy] = this.scale.mapToModel(pos, commit, 2);
+      const [rx, ry] = this.scale.mapToModel(size, commit, 2);
+      return valid({ cx, cy, rx, ry }, commit);
     }
   }
 
   createBounds (): Bounds {
     const { cx, cy, rx, ry } = this.data;
     const [x, y, width, height] = this.scale.mapToScreen([
-      Frac.add(cx, -rx),
-      Frac.add(cy, -ry),
+      Frac.sub(cx, rx),
+      Frac.sub(cy, ry),
       Frac.multiply(rx, 2),
       Frac.multiply(ry, 2)
     ]);
