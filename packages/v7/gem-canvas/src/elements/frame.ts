@@ -8,6 +8,7 @@ import { Bounds, Point } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
+import { EventMod, getEventMod } from './drag';
 
 type Handle = { id: string, p: Point }
 
@@ -56,7 +57,9 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
  * Handle drag handles.
  * @param onUpdate
  */
-const handleDrag = (onUpdate: (handle, delta, constrain?, commit?) => void): D3Callable => {
+const handleDrag = (
+  onUpdate: (handle: Handle, delta: Point, mod: EventMod, commit?: boolean) => void
+): D3Callable => {
   let start: Point;
   let subject: Handle;
 
@@ -66,12 +69,14 @@ const handleDrag = (onUpdate: (handle, delta, constrain?, commit?) => void): D3C
       start = [event.x, event.y];
     })
     .on('drag', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], event.sourceEvent);
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
     .on('end', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], event.sourceEvent, true);
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod, true);
     });
 };
 
@@ -79,7 +84,7 @@ const handleDrag = (onUpdate: (handle, delta, constrain?, commit?) => void): D3C
  * Draw the resizable frame.
  */
 export const createFrame = (): D3Callable => {
-  return (group: D3Selection, base: BaseElement<any>, selected?: boolean, resize?: boolean) => {
+  return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
     const { x, y, width, height } = base.createBounds();
 
     const cx = x + width / 2;
@@ -87,7 +92,7 @@ export const createFrame = (): D3Callable => {
 
     // eslint-disable indent
     group.selectAll('rect')
-      .data(selected ? ['_frame_'] : [])
+      .data(active ? ['_frame_'] : [])
       .join('rect')
       .classed('frame', true)
       .attr('x', x)
@@ -97,12 +102,12 @@ export const createFrame = (): D3Callable => {
 
     group
       .selectAll('circle')
-      .data(resize ? handles : [], (handle: Handle) => handle.id)
+      .data(resizable ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-      .call(handleDrag((handle, delta, event, commit) => {
-        const { shiftKey, metaKey } = event;
+      .call(handleDrag((handle, delta, mod, commit) => {
         const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        base.updateBounds(bounds, shiftKey, metaKey, commit);
+        const data = base.createData(bounds, mod, commit);
+        base.onUpdate(data);
       }))
       .classed('frame-handle', true)
       .attr('cx', ({ p }) => cx + p[0] * width / 2)

@@ -4,8 +4,9 @@
 
 import { Bounds, Scale } from '@dxos/gem-x';
 
-import { Element, ElementDataType } from '../model';
+import { Element, ElementDataType, ElementType } from '../model';
 import { D3Callable } from '../types';
+import { EventMod } from './drag';
 
 /**
  * Graphical element.
@@ -14,12 +15,18 @@ import { D3Callable } from '../types';
 export abstract class BaseElement<T extends ElementDataType> {
   private _selected = false;
 
+  // TODO(burdon): Manipulate clone until commit.
+  private _data;
+
   constructor (
-    private _scale: Scale,
-    private _element: Element<T>,
-    private _onSelect?: (element: Element<T>) => void,
-    private _onUpdate?: (element: Element<T>) => void
-  ) {}
+    private readonly _scale: Scale,
+    private readonly _element?: Element<T>,
+    private readonly _onSelect?: (element: Element<T>) => void,
+    private readonly _onUpdate?: (element: Element<T>) => void,
+    private readonly _onCreate?: (type: ElementType, data: T) => void
+  ) {
+    this._data = this._element?.data;
+  }
 
   get scale () {
     return this._scale;
@@ -29,8 +36,16 @@ export abstract class BaseElement<T extends ElementDataType> {
     return this._element;
   }
 
+  get data () {
+    return this._data;
+  }
+
   get selected () {
     return this._selected;
+  }
+
+  get resizable () {
+    return Boolean(this._element);
   }
 
   toString () {
@@ -45,15 +60,39 @@ export abstract class BaseElement<T extends ElementDataType> {
     this._onSelect?.(this.element);
   }
 
-  onUpdate () {
+  onCreate (data: T) {
+    this._data = data;
+    this._onCreate?.(this.type, this._data);
+  }
+
+  onUpdate (data: T) {
+    this._data = data;
+
+    // TODO(burdon): Don't update until commit.
+    if (this._element) {
+      this._element.data = data;
+    }
+
     this._onUpdate?.(this.element);
   }
 
+  abstract readonly type: ElementType;
+
+  /**
+   * Create element data from bounds.
+   * @param bounds
+   * @param mod
+   * @param snap
+   */
+  abstract createData (bounds: Bounds, mod?: EventMod, snap?: boolean): T;
+
+  /**
+   * Create bounding box from data.
+   */
   abstract createBounds (): Bounds;
 
-  abstract updateBounds (bounds: Bounds, constrain?: boolean, center?: boolean, commit?: boolean);
-
-  abstract drag (): D3Callable;
-
+  /**
+   * Callable renderer.
+   */
   abstract draw (): D3Callable;
 }

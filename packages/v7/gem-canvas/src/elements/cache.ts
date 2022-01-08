@@ -6,10 +6,10 @@ import { Scale } from '@dxos/gem-x';
 
 import { Element, ElementId } from '../model';
 import { BaseElement } from './base';
-import { EllipseElement } from './types';
+import { createElement } from './factory';
 
 /**
- * Cache of graphical element objects.
+ * Cache of graphical element wrappers.
  */
 export class ElementCache {
   private _elements: BaseElement<any>[] = [];
@@ -24,7 +24,7 @@ export class ElementCache {
     return `ElementCache(${this._elements.length})`;
   }
 
-  get elements () {
+  get elements (): BaseElement<any>[] {
     return this._elements;
   }
 
@@ -36,23 +36,13 @@ export class ElementCache {
     return this._elements.find(({ element }) => element.id === id);
   }
 
-  update (elements: Element<any>[], selected?: Element<any>) {
+  updateElements (elements: Element<any>[], selected?: Element<any>) {
     this._elements = elements.map(element => {
-      const base = this.getElement(element.id) ?? this._createElement(element);
+      const base = this.getElement(element.id) ??
+        createElement(this._scale, element.type, element, this._onSelect, this._onUpdate);
+
       base.setSelected(element.id === selected?.id);
       return base;
     });
-  }
-
-  _createElement (element: Element<any>) {
-    switch (element.type) {
-      case 'ellipse': {
-        return new EllipseElement(this._scale, element, this._onSelect, this._onUpdate);
-      }
-
-      default: {
-        throw new Error(`Invalid type: ${element.type}`);
-      }
-    }
   }
 }

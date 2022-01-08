@@ -3,28 +3,59 @@
 //
 
 import * as d3 from 'd3';
+import type { DragBehavior } from 'd3';
 
 import { Bounds, Point, Scale, createBounds } from '@dxos/gem-x';
 
-import { Element, ElementDataType, ElementType } from '../model';
-import { D3Callable, D3DragEvent, D3Selection } from '../types';
+import { D3DragEvent } from '../types';
+
+export type EventMod = { center?: boolean, constrain?: boolean }
+
+export const getEventMod = (event: D3DragEvent) => ({
+  center: event.sourceEvent.metaKey,
+  constrain: event.sourceEvent.shiftKey
+});
 
 /**
- * Render mode.
+ * Drag handler to compute bounds for creating and resizing elements.
+ * @param scale
+ * @param onUpdate
+ * @param onStart
  */
-// TODO(burdon): Move defs.
-export enum Mode {
-  DEFAULT,
-  HIGHLIGHT, // Show connection points.
-  CREATE, // Being created.
-  UPDATE // Update handles.
-}
+// TODO(burdon): Create type for modifiers.
+export const dragBounds = (
+  scale: Scale,
+  onUpdate: (bounds: Bounds, mod: EventMod, commit?: boolean) => void,
+  onStart?: () => void
+): DragBehavior<any, any, any> => {
+  let start: Point;
+
+  return d3.drag()
+    .on('start', (event: D3DragEvent) => {
+      start = scale.translatePoint([event.x, event.y]);
+      onStart?.();
+    })
+    .on('drag', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
+      const current: Point = scale.translatePoint([event.x, event.y]);
+      const bounds = createBounds(start, current);
+      onUpdate(bounds, mod);
+    })
+    .on('end', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
+      const current: Point = scale.translatePoint([event.x, event.y]);
+      const bounds = createBounds(start, current);
+      onUpdate(bounds, mod, true);
+    });
+};
 
 /**
  * Drag handler to compute delta for moving elements.
  * @param onMove
  */
-export const dragMove = (onMove: (delta: Point, commit?: boolean) => void): D3Callable => {
+export const dragMove = (
+  onMove: (delta: Point, mod: EventMod, commit?: boolean) => void
+): DragBehavior<any, any, any> => {
   let start: Point;
 
   return d3.drag()
@@ -32,68 +63,19 @@ export const dragMove = (onMove: (delta: Point, commit?: boolean) => void): D3Ca
       start = [event.x, event.y];
     })
     .on('drag', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
       const current: Point = [event.x, event.y];
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
       if (delta[0] || delta[1]) {
-        onMove(delta);
+        onMove(delta, mod);
       }
     })
     .on('end', (event: D3DragEvent) => {
+      const mod = getEventMod(event);
       const current: Point = [event.x, event.y];
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
       if (delta[0] || delta[1]) {
-        onMove(delta, true);
+        onMove(delta, mod, true);
       }
     });
 };
-
-/**
- * Drag handler to compute bounds for creating and resizing elements.
- * @param scale
- * @param onUpdate
- */
-export const dragBounds = (scale: Scale, onUpdate: (event: D3DragEvent, bounds: Bounds, commit?: boolean) => void): D3Callable => {
-  let start: Point;
-
-  return d3.drag()
-    .on('start', (event: D3DragEvent) => {
-      start = scale.translatePoint([event.x, event.y]);
-    })
-    .on('drag', (event: D3DragEvent) => {
-      const current: Point = scale.translatePoint([event.x, event.y]);
-      const bounds = createBounds(start, current);
-      onUpdate(event, bounds);
-    })
-    .on('end', (event: D3DragEvent) => {
-      const current: Point = scale.translatePoint([event.x, event.y]);
-      const bounds = createBounds(start, current);
-      onUpdate(event, bounds, true);
-    });
-};
-
-/**
- * Properties for drag handler to create element.
- */
-export interface DragElementProps<T extends ElementDataType> {
-  scale: Scale
-  onCancel: () => void
-  onCreate: (type: ElementType, data: T, commit: boolean) => void
-}
-
-export type DragElementFunction<T extends ElementDataType> = (props: DragElementProps<T>) => D3Callable
-
-/**
- * Properties for element renderer.
- */
-export interface DrawElementProps<T extends ElementDataType> {
-  scale: Scale
-  group: D3Selection
-  element?: Element<T>
-  data: T
-  mode?: Mode
-  editable?: boolean
-  onUpdate?: (element: Element<T>, data: T, commit: boolean) => void
-  onEdit?: () => void
-}
-
-export type DrawElementFunction<T extends ElementDataType> = (props: DrawElementProps<T>) => void

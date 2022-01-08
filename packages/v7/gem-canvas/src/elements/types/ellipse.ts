@@ -2,53 +2,49 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
-
 import { Bounds, Frac, Point, Scale } from '@dxos/gem-x';
 
-import { Ellipse } from '../../model';
+import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { BaseElement } from '../base';
-import { dragMove } from '../drag';
+import { EventMod, dragMove } from '../drag';
 import { createFrame } from '../frame';
 
-/*
-export const dragEllipse = ({ scale, onCancel, onCreate }: DragElementProps<Ellipse>): D3Callable => {
-  return dragBounds(scale, (event: D3DragEvent, bounds: Bounds, commit?: boolean) => {
-    // TODO(burdon): If shift then constain circle.
-    const data = createData(scale, bounds, event.sourceEvent.metaKey, commit);
-    const { rx, ry } = data;
-    if (commit && (rx < 0.5 || ry < 0.5)) { // TODO(burdon): Zoom specific?
-      onCancel();
-    } else {
-      onCreate('ellipse', data, commit);
-    }
-  });
-};
-*/
-
+/**
+ * Renderer.
+ * @param scale
+ */
 const createEllipse = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Ellipse>) => {
-    const { data } = base.element;
+    const data = base.data;
     const [cx, cy, rx, ry] = scale.mapToScreen([data.cx, data.cy, data.rx, data.ry]);
 
     // eslint-disable indent
-    group.selectAll('ellipse').data(['_main_']).join('ellipse')
+    return group.selectAll('ellipse')
+      .data(['_main_'])
+      .join('ellipse')
       .call(selection => {
-        selection
-          .on('click', base.onSelect.bind(base))
-          .call(dragMove((delta: Point, commit?: boolean) => {
-            const [dx, dy] = scale.mapToModel(delta, commit);
-            const { cx, cy, rx, ry } = data;
-            base.element.data = {
-              cx: Frac.add(cx, dx),
-              cy: Frac.add(cy, dy),
-              rx,
-              ry
-            };
+        // Select.
+        // TODO(burdon): Generic.
+        if (base.onSelect) {
+          selection
+            .on('click', base.onSelect.bind(base));
+        }
 
-            base.onUpdate();
-          }));
+        // Move.
+        if (base.onUpdate) {
+          selection
+            .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
+              const [dx, dy] = scale.mapToModel(delta, commit);
+              const { cx, cy, rx, ry } = data;
+              base.onUpdate({
+                cx: Frac.add(cx, dx),
+                cy: Frac.add(cy, dy),
+                rx,
+                ry
+              });
+            }));
+        }
       })
       .attr('cx', cx)
       .attr('cy', cy)
@@ -62,18 +58,19 @@ const createEllipse = (scale: Scale): D3Callable => {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
  */
 export class EllipseElement extends BaseElement<Ellipse> {
-  _ellipse = createEllipse(this.scale);
   _frame = createFrame();
+  _main = createEllipse(this.scale);
 
-  createData (bounds: Bounds, constrain: boolean, center: boolean, snap: boolean): Ellipse {
+  type = 'ellipse' as ElementType;
+
+  createData (bounds: Bounds, mod?: EventMod, snap?: boolean): Ellipse {
     const { x, y, width, height } = bounds;
 
-    // TODO(burdon): Need to keep original size (Don't change element.data until commit).
+    // TODO(burdon): Constrain (maintain aspect).
+    // TODO(burdon): Center relative to original center.
 
-    // TODO(burdon): Constrain (keep aspect).
-    if (center) {
-      // TODO(burdon): Relative to original center.
-      const { cx, cy } = this.element.data;
+    if (mod?.center) {
+      const { cx, cy } = this.data;
       const size = [width / 2, height / 2];
       const [rx, ry] = this.scale.mapToModel(size, snap);
       return { cx, cy, rx, ry };
@@ -87,7 +84,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
   }
 
   createBounds (): Bounds {
-    const { data: { cx, cy, rx, ry } } = this.element;
+    const { cx, cy, rx, ry } = this.data;
     const [x, y, width, height] = this.scale.mapToScreen([
       Frac.add(cx, -rx),
       Frac.add(cy, -ry),
@@ -98,19 +95,11 @@ export class EllipseElement extends BaseElement<Ellipse> {
     return { x, y, width, height };
   }
 
-  updateBounds (bounds: Bounds, constrain?: boolean, center?: boolean, commit?: boolean) {
-    this.element.data = this.createData(bounds, constrain, center, commit);
-    this.onUpdate();
-  }
-
-  drag (): D3Callable {
-    return group => group.call(d3.drag());
-  }
-
+  // TODO(burdon): Generic.
   draw (): D3Callable {
     return group => {
-      group.call(this._ellipse, group.datum());
-      group.call(this._frame, group.datum(), this.selected, this.selected);
+      group.call(this._main, group.datum());
+      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
     };
   }
 }

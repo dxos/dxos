@@ -2,28 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as d3 from 'd3';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { useScale, FullScreen, SvgContainer } from '@dxos/gem-x';
 
-import { Canvas, Element } from '../src';
+import { Canvas, Element, Tool, createKeyHandlers } from '../src';
 
 export default {
   title: 'gem-canvas/Canvas'
 };
 
 // TODO(burdon): Need to keep original size (Don't change element.data until commit).
+//  - Constraints.
 //  - Save items (model).
 
-//  - Implement path to test model.
+// TODO(burdon): Snap.
 
-// TODO(burdon): Performance?
-//   Re-usable closure that is just passed the data (and ID)?
-//   E.g., Prevent re-render if only one element is updated. Optimize join (enter, update, delete) call.
-//   When is update called? (check if data has changed?)
-//   Split function calls (e.g., for basic vs. editable) to minimize unnecessary closures.
-//   Make callable?
+// TODO(burdon): Implement path to test model.
 
 // TODO(burdon): Info panel with element info.
 // TODO(burdon): Use debug for logging.
@@ -56,6 +53,7 @@ export const Primary = () => {
   const scale = useScale({ gridSize: 32 });
   const [elements, setElements] = useState<Element<any>[]>(initial);
   const [selected, setSelected] = useState<Element<any>>();
+  const [tool, setTool] = useState<Tool>('ellipse');
 
   // TODO(burdon): Randomizer.
   // useEffect(() => {
@@ -68,22 +66,39 @@ export const Primary = () => {
   //   }, 1000);
   // }, []);
 
+  // Keys.
+  useEffect(() => {
+    d3.select(svgRef.current).call(createKeyHandlers);
+  }, []);
+
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
         ref={svgRef}
         scale={scale}
+        zoom={[1/4, 8]}
         grid
       >
         <Canvas
           svgRef={svgRef}
           scale={scale}
-          tool='ellipse'
+          tool={tool}
           elements={elements}
           selected={selected}
           onSelect={element => setSelected(element)}
-          onCreate={element => setElements(elements => [...elements, element])}
           onUpdate={element => setElements(elements => [...elements.filter(({ id }) => element.id !== id), element])}
+          onCreate={(type, data) => {
+            // TODO(burdon):
+            setElements(elements => {
+              const element = {
+                id: faker.datatype.uuid(),
+                type,
+                data
+              };
+
+              return [...elements, element];
+            })
+          }}
           onDelete={id => setElements(elements.filter(element => element.id !== id))}
         />
       </SvgContainer>
