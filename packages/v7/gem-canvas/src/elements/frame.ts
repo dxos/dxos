@@ -84,7 +84,7 @@ const handleDrag = (
  * Draw the resizable frame.
  */
 export const createFrame = (): D3Callable => {
-  return (group: D3Selection, base: BaseElement<any>, selected?: boolean, resize?: boolean) => {
+  return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
     const { x, y, width, height } = base.createBounds();
 
     const cx = x + width / 2;
@@ -92,27 +92,27 @@ export const createFrame = (): D3Callable => {
 
     // eslint-disable indent
     group.selectAll('rect')
-      .data(selected ? ['_frame_'] : [])
+      .data(active ? ['_frame_'] : [])
       .join('rect')
       .classed('frame', true)
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height);
 
     group
       .selectAll('circle')
-      .data(resize ? handles : [], (handle: Handle) => handle.id)
+      .data(resizable ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-      .call(handleDrag((handle, delta, mod, commit) => {
-        const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        const data = base.createData(bounds, mod, commit);
-        base.onUpdate(data);
-      }))
-      .classed('frame-handle', true)
-      .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy + p[1] * height / 2)
-      .attr('r', 5); // TODO(burdon): Grow as zoomed.
+        .call(handleDrag((handle, delta, mod, commit) => {
+          const bounds = computeBounds({ x, y, width, height }, handle, delta);
+          const data = base.createData(bounds, mod, commit);
+          base.onUpdate(data);
+        }))
+        .classed('frame-handle', true)
+        .attr('cx', ({ p }) => cx + p[0] * width / 2)
+        .attr('cy', ({ p }) => cy + p[1] * height / 2)
+        .attr('r', 5); // TODO(burdon): Grow as zoomed.
     // eslint-enable indent
   };
 };

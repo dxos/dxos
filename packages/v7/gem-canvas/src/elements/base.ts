@@ -44,6 +44,10 @@ export abstract class BaseElement<T extends ElementDataType> {
     return this._selected;
   }
 
+  get resizable () {
+    return Boolean(this._element);
+  }
+
   toString () {
     return `Element(${this._element.id})`;
   }

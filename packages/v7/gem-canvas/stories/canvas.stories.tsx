@@ -15,7 +15,10 @@ export default {
 };
 
 // TODO(burdon): Need to keep original size (Don't change element.data until commit).
+//  - Constraints.
 //  - Save items (model).
+
+// TODO(burdon): Snap.
 
 // TODO(burdon): Implement path to test model.
 

@@ -20,10 +20,12 @@ const createEllipse = (scale: Scale): D3Callable => {
     const [cx, cy, rx, ry] = scale.mapToScreen([data.cx, data.cy, data.rx, data.ry]);
 
     // eslint-disable indent
-    group.selectAll('ellipse').data(['_main_']).join('ellipse')
-      // TODO(burdon): Generic/reusable handler.
+    return group.selectAll('ellipse')
+      .data(['_main_'])
+      .join('ellipse')
       .call(selection => {
         // Select.
+        // TODO(burdon): Generic.
         if (base.onSelect) {
           selection
             .on('click', base.onSelect.bind(base));
@@ -57,8 +59,7 @@ const createEllipse = (scale: Scale): D3Callable => {
  */
 export class EllipseElement extends BaseElement<Ellipse> {
   _frame = createFrame();
-
-  _ellipse = createEllipse(this.scale);
+  _main = createEllipse(this.scale);
 
   type = 'ellipse' as ElementType;
 
@@ -94,10 +95,11 @@ export class EllipseElement extends BaseElement<Ellipse> {
     return { x, y, width, height };
   }
 
+  // TODO(burdon): Generic.
   draw (): D3Callable {
     return group => {
-      group.call(this._ellipse, group.datum());
-      group.call(this._frame, group.datum(), this.selected, this.selected);
+      group.call(this._main, group.datum());
+      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
     };
   }
 }
