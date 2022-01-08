@@ -41,31 +41,23 @@ export class Scale {
 
   /**
    * Map model value to screen value.
-   * @param n
+   * @param array
    */
-  mapToScreen (n: number | Fraction): number {
-    return Frac.floor(Frac.multiply(n, this._gridSize));
-  }
-
-  /**
-   * Snap model points.
-   * @param n
-   */
-  // TODO(burdon): Return as fraction.
-  snap (n: (number | Fraction)[]) {
-    return this.mapToModel(n.map(n => this.mapToScreen(n)), true);
+  // TODO(burdon): Constrain to fraction only.
+  mapToScreen (array: (number | Fraction)[]): number[] {
+    return array.map(n => Frac.floor(Frac.multiply(n, this._gridSize)));
   }
 
   /**
    * Map screen values to model values.
-   * @param n
+   * @param array
    * @param snap
    */
-  mapToModel (n: number[], snap?: boolean): number[] {
+  mapToModel (array: number[], snap?: boolean): number[] {
     if (snap) {
-      return n.map(n => round(n, this._gridSize));
+      return array.map(n => round(n, this._gridSize));
     } else {
-      return n.map(n => n / this._gridSize);
+      return array.map(n => n / this._gridSize);
     }
   }
 
@@ -82,16 +74,6 @@ export class Scale {
       (x - cx - tx) / k,
       (y - cy - ty) / k
     ];
-  }
-
-  /**
-   * Map screen point to model point.
-   * @param point
-   * @param snap
-   */
-  // TODO(burdon): Remove.
-  mapPointToModel (point: Point, snap?: boolean): Point {
-    return this.mapToModel(this.translatePoint(point), snap) as Point;
   }
 }
 

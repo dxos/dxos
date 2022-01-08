@@ -4,11 +4,10 @@
 
 import * as d3 from 'd3';
 
-import { Bounds, Point, Scale } from '@dxos/gem-x';
+import { Bounds, Point } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
-import { dragMove } from './drag';
 
 type Handle = { id: string, p: Point }
 
@@ -23,6 +22,12 @@ const handles: Handle[] = [
   { id: 'handle_nw', p: [-1, 1] }
 ];
 
+/**
+ * Compute updated bounds by dragging handles.
+ * @param bounds
+ * @param handle
+ * @param delta
+ */
 const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => {
   let { x, y, width, height } = bounds;
 
@@ -47,7 +52,11 @@ const computeBounds = (bounds: Bounds, handle: Handle, delta: Point): Bounds => 
   return { x, y, width, height };
 };
 
-const handleDrag = (onUpdate: (handle: Handle, delta: Point, commit?: boolean) => void): D3Callable => {
+/**
+ * Handle drag handles.
+ * @param onUpdate
+ */
+const handleDrag = (onUpdate: (handle, delta, constrain?, commit?) => void): D3Callable => {
   let start: Point;
   let subject: Handle;
 
@@ -58,31 +67,28 @@ const handleDrag = (onUpdate: (handle: Handle, delta: Point, commit?: boolean) =
     })
     .on('drag', (event: D3DragEvent) => {
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]]);
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], event.sourceEvent);
     })
     .on('end', (event: D3DragEvent) => {
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], true);
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], event.sourceEvent, true);
     });
 };
 
 /**
- * Render frame with resize handles.
- * @param onMove
- * @param onResize
+ * Draw the resizable frame.
  */
-export const drawFrame = (onMove, onResize): D3Callable => {
-  return (group, { id, bounds, resize }) => {
-    const { x, y, width, height } = bounds;
+export const createFrame = (): D3Callable => {
+  return (group: D3Selection, base: BaseElement<any>, selected?: boolean, resize?: boolean) => {
+    const { x, y, width, height } = base.createBounds();
 
     const cx = x + width / 2;
     const cy = y + height / 2;
 
     // eslint-disable indent
     group.selectAll('rect')
-      .data(id ? [id] : [])
+      .data(selected ? ['_frame_'] : [])
       .join('rect')
-      .call(dragMove(onMove))
       .classed('frame', true)
       .attr('x', x)
       .attr('y', y)
@@ -93,48 +99,11 @@ export const drawFrame = (onMove, onResize): D3Callable => {
       .selectAll('circle')
       .data(resize ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-      .call(handleDrag((handle, delta, commit) => {
+      .call(handleDrag((handle, delta, event, commit) => {
+        const { shiftKey, metaKey } = event;
         const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        onResize(bounds, commit);
+        base.updateBounds(bounds, shiftKey, metaKey, commit);
       }))
-      .classed('frame-handle', true)
-      .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy + p[1] * height / 2)
-      .attr('r', 5); // TODO(burdon): Grow as zoomed.
-    // eslint-enable indent
-  };
-};
-
-//
-//
-//
-
-export const createFrame = (scale: Scale): D3Callable => {
-  return (group: D3Selection, element: BaseElement<any>, visible?: boolean, resize?: boolean) => {
-    const { x, y, width, height } = element.createBounds(scale);
-
-    const cx = x + width / 2;
-    const cy = y + height / 2;
-
-    // eslint-disable indent
-    group.selectAll('rect')
-      .data(visible ? ['_frame_'] : [])
-      .join('rect')
-    // .call(dragMove(onMove))
-      .classed('frame', true)
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
-
-    group
-      .selectAll('circle')
-      .data(resize ? handles : [], (handle: Handle) => handle.id)
-      .join('circle')
-    // .call(handleDrag((handle, delta, commit) => {
-    //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-    //   onResize(bounds, commit);
-    // }))
       .classed('frame-handle', true)
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
       .attr('cy', ({ p }) => cy + p[1] * height / 2)

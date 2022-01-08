@@ -25,6 +25,7 @@ const styles = css`
 
 export const Primary = () => {
   const scale = useScale({ gridSize: 32 });
+  const [r] = scale.mapToScreen([1]);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
@@ -34,7 +35,7 @@ export const Primary = () => {
         scale={scale}
       >
         <g className={styles}>
-          <circle r={scale.mapToScreen(1)} />
+          <circle cx={0} cy={0} r={r} />
         </g>
       </SvgContainer>
     </FullScreen>

@@ -13,13 +13,9 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Perf test (figure out join enter/update rules).
-
-// TODO(burdon): Start to replace old implementation.
-//  - Move Test.tsx to storybook.
-//  - Rewrite Editor to manage state and events.
-//  - Separate group for active element.
+// TODO(burdon): Need to keep original size (Don't change element.data until commit).
 //  - Save items (model).
+
 //  - Implement path to test model.
 
 // TODO(burdon): Performance?
@@ -59,17 +55,18 @@ export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
   const [elements, setElements] = useState<Element<any>[]>(initial);
+  const [selected, setSelected] = useState<Element<any>>();
 
   // TODO(burdon): Randomizer.
-  useEffect(() => {
-    setTimeout(() => {
-      setElements(elements => {
-        elements.splice(0, 1);
-        elements[0].data = { cx: 6, cy: 4, rx: 1, ry: 1 };
-        return [...elements];
-      });
-    }, 1000);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setElements(elements => {
+  //       elements.splice(0, 1);
+  //       elements[0].data = { cx: 6, cy: 4, rx: 1, ry: 1 };
+  //       return [...elements];
+  //     });
+  //   }, 1000);
+  // }, []);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
@@ -83,6 +80,8 @@ export const Primary = () => {
           scale={scale}
           tool='ellipse'
           elements={elements}
+          selected={selected}
+          onSelect={element => setSelected(element)}
           onCreate={element => setElements(elements => [...elements, element])}
           onUpdate={element => setElements(elements => [...elements.filter(({ id }) => element.id !== id), element])}
           onDelete={id => setElements(elements.filter(element => element.id !== id))}

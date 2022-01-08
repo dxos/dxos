@@ -15,7 +15,9 @@ export class ElementCache {
   private _elements: BaseElement<any>[] = [];
 
   constructor (
-    private readonly _scale: Scale
+    private readonly _scale: Scale,
+    private readonly _onSelect?: (element: Element<any>) => void,
+    private readonly _onUpdate?: (element: Element<any>) => void
   ) {}
 
   toString () {
@@ -34,16 +36,18 @@ export class ElementCache {
     return this._elements.find(({ element }) => element.id === id);
   }
 
-  update (elements: Element<any>[]) {
+  update (elements: Element<any>[], selected?: Element<any>) {
     this._elements = elements.map(element => {
-      return this.getElement(element.id) ?? this._createElement(element);
+      const base = this.getElement(element.id) ?? this._createElement(element);
+      base.setSelected(element.id === selected?.id);
+      return base;
     });
   }
 
   _createElement (element: Element<any>) {
     switch (element.type) {
       case 'ellipse': {
-        return new EllipseElement(this._scale, element);
+        return new EllipseElement(this._scale, element, this._onSelect, this._onUpdate);
       }
 
       default: {

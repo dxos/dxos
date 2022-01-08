@@ -33,11 +33,17 @@ export const dragMove = (onMove: (delta: Point, commit?: boolean) => void): D3Ca
     })
     .on('drag', (event: D3DragEvent) => {
       const current: Point = [event.x, event.y];
-      onMove([current[0] - start[0], current[1] - start[1]]);
+      const delta: Point = [current[0] - start[0], current[1] - start[1]];
+      if (delta[0] || delta[1]) {
+        onMove(delta);
+      }
     })
     .on('end', (event: D3DragEvent) => {
       const current: Point = [event.x, event.y];
-      onMove([current[0] - start[0], current[1] - start[1]], true);
+      const delta: Point = [current[0] - start[0], current[1] - start[1]];
+      if (delta[0] || delta[1]) {
+        onMove(delta, true);
+      }
     });
 };
 
