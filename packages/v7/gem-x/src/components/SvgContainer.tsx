@@ -13,11 +13,14 @@ import { grid, Scale } from '../grid';
 
 const defaultStyles = css`
   g.grid {
-    path {
-      stroke: #E5E5E5;
-    }
     path.axis {
-      stroke: red;
+      stroke: #C0C0C0;
+    }
+    path.major {
+      stroke: #E0E0E0;
+    }
+    path.minor {
+      stroke: #F0F0F0;
     }
   }
 }`;

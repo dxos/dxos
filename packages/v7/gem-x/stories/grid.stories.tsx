@@ -31,8 +31,8 @@ export const Primary = () => {
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
       <SvgContainer
         grid
-        zoom={[1/4, 8]}
         scale={scale}
+        zoom={[1/4, 8]}
       >
         <g className={styles}>
           <circle cx={0} cy={0} r={r} />
