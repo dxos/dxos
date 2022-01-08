@@ -29,7 +29,7 @@ export interface ResizeCallbackProps {
   transform?: any
 }
 
-export type Zoom = [min: number, max: number];
+export type Zoom = [min: number, max: number]; // TODO(burdon): Use Frac.
 
 export const defaultScale = new Scale(32);
 
