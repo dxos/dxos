@@ -3,10 +3,10 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { Bounds2, Frac, FullScreen, SvgContainer, useScale } from '../src';
+import { Bounds, FractionUtil, FullScreen, Scale, SvgContainer, Vector, Vertex } from '../src';
 
 export default {
   title: 'gem-x/D3'
@@ -32,23 +32,42 @@ const styles = css`
   }
 `;
 
+type DataItem = {
+  type: string
+  data: {
+    bounds?: Bounds
+    pos?: Vertex
+    points?: []
+    r?: Vector
+    text?: string
+    class?: string
+    style?: any // TODO(burdon): Shared style mixin (rect, text, etc).
+    curve?: string // TODO(burdon): Type-specific or sub object?
+    closed?: boolean
+  }
+}
+
 export const Primary = () => {
   const groupRef = useRef<SVGSVGElement>();
-  const scale = useScale({ gridSize: 32 });
+  const scale = useMemo(() => new Scale(32), []);
+
+  // TODO(burdon): Rename gen-x => gem-d3/vector (docs).
+  // TODO(burdon): Move test to canvas and declare mixin types.
 
   // Test join updates single item.
   // https://github.com/d3/d3-selection#selection_data
   // https://github.com/d3/d3-selection#selection_join
 
-  // TODO(burdon): Design
-  //  - Types (consider mutations, protobuf).
-  //  - Frac vs number type names and utils (symmetric).
+  const convertPoints = array => array.map(([x, y]) => ({
+    x: FractionUtil.toFraction(x),
+    y: FractionUtil.toFraction(y)
+  }));
 
-  const data = [
+  const data: DataItem[] = [
     {
       type: 'circle',
       data: {
-        pos: [0, [3, 1]], // TODO(burdon): x, y for model (protobuf).
+        pos: { x: [0, 1], y: [3, 1] },
         r: [3, 2],
         text: 'Circle'
       }
@@ -56,30 +75,40 @@ export const Primary = () => {
     {
       type: 'rect',
       data: {
-        bounds: { x: [-2, 1], y: [1, 1], width: 4, height: [8, 2] }
+        bounds: { x: [-2, 1], y: [1, 1], width: [4, 1], height: [8, 2] }
       }
+    },
+    {
+      type: 'text',
+      data: {
+        bounds: { x: [-2, 1], y: [5, 1], width: [4, 1], height: [1, 1] },
+        text: 'Text',
+        style: {
+          'text-anchor': 'end'
+        }
+      },
     },
     {
       type: 'rect',
       data: {
-        bounds: { x: 4, y: 1, width: 4, height: 4 },
+        bounds: { x: [4, 1], y: [1, 1], width: [4, 1], height: [4, 1] },
         class: 'style-1',
-        style: { rx: 1, 'font-size': 24 }, // TODO(burdon): Shared style mixin (rect, text, etc). Clash?
+        style: { rx: 1, 'font-size': 24 },
         text: 'Rect'
       }
     },
     {
       type: 'path',
       data: {
-        points: [[0, -1], [8, -2], [8, -6], [0, -9], [-6, -6], [-8, -2]],
-        curve: 'basis',
+        points: convertPoints([[8, -2], [8, -6], [4, -9], [-2, -2]]),
+        curve: 'cardinal',
         closed: true
       }
     },
     {
       type: 'path',
       data: {
-        points: [[-8, 1], [-4, 1], [-6, 5]],
+        points: convertPoints([[-8, 1], [-4, 1], [-6, 5]]),
         closed: true
       }
     }
@@ -87,19 +116,40 @@ export const Primary = () => {
 
   useEffect(() => {
     const updateCircle = (el, { pos, r }) => {
-      const [x, y] = scale.model.toPoint(pos);
+      const [cx, cy] = scale.model.toPoint(pos);
       return el
-        .attr('cx', x)
-        .attr('cy', y)
+        .attr('cx', cx)
+        .attr('cy', cy)
         .attr('r', scale.model.toValues([r])[0]);
     };
 
-    const updateText = (el, { style = {}, pos, text }) => {
-      const [x, y] = scale.model.toPoint(pos);
+    const updateText = (el, { style = {}, bounds, pos, text }) => {
+      const anchor = style['text-anchor'] ?? 'middle';
+      let [x = 0, y = 0] = [];
+      if (pos) {
+        [x, y] = scale.model.toPoint(pos);
+      } else {
+        switch (anchor) {
+          case 'start': {
+            [x, y] = scale.model.toPoint(Vector.left(bounds));
+            break;
+          }
+          case 'end': {
+            [x, y] = scale.model.toPoint(Vector.right(bounds));
+            break;
+          }
+          case 'middle':
+          default: {
+            [x, y] = scale.model.toPoint(Vector.center(bounds));
+            break;
+          }
+        }
+      }
+
       return el
         .style('dominant-baseline', 'middle')
-        .style('text-anchor', 'middle')
-        .style('font-size', style['font-size']) // TODO(burdon): One-off, but also by class.
+        .style('text-anchor', anchor)
+        .style('font-size', style['font-size'])
         .style('font-family', style['font-family'])
         .attr('x', x)
         .attr('y', y)
@@ -121,6 +171,10 @@ export const Primary = () => {
       const p = points.map(p => scale.model.toPoint(p));
       let line;
       switch (curve) {
+        case 'cardinal': {
+          line = closed ? d3.curveCardinalClosed : d3.curveCardinal;
+          break;
+        }
         case 'basis': {
           line = closed ? d3.curveBasisClosed : d3.curveBasis;
           break;
@@ -153,7 +207,7 @@ export const Primary = () => {
 
           case 'rect': {
             const { style, bounds, text } = data;
-            const pos = Frac.center(bounds as Bounds2);
+            const pos = Vector.center(bounds as Bounds);
             el.selectAll('rect').data([0]).join('rect')
               .call(updateRect, data);
             el.selectAll('text').data(text ? [1] : []).join('text')
@@ -161,9 +215,25 @@ export const Primary = () => {
             break;
           }
 
+          case 'text': {
+            const { style, bounds, text } = data;
+            el.selectAll('text').data(text ? [1] : []).join('text')
+              .call(updateText, { style, bounds, text });
+            break;
+          }
+
           case 'path': {
+            const { points } = data;
             el.selectAll('path').data([0]).join('path')
               .call(updatePath, data);
+            el.selectAll('circle').data(points).join('circle')
+              .each((pos, i, nodes) => {
+                const [cx, cy] = scale.model.toPoint(pos);
+                return d3.select(nodes[i])
+                  .attr('cx', cx)
+                  .attr('cy', cy)
+                  .attr('r', scale.model.toValues([[1, 8]])[0]);
+              })
             break;
           }
         }
@@ -175,6 +245,7 @@ export const Primary = () => {
       <SvgContainer
         grid
         scale={scale}
+        zoom={[1/4, 8]}
       >
         <g
           ref={groupRef}

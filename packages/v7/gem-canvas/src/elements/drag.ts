@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { Bounds, Point, Scale, createBounds } from '@dxos/gem-x';
+import { ViewBounds, Point, Scale, createBounds } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
 
@@ -25,7 +25,7 @@ export const getEventMod = (event: KeyboardEvent) => ({
 // TODO(burdon): Create type for modifiers.
 export const dragBounds = (
   scale: Scale,
-  onUpdate: (bounds: Bounds, mod: EventMod, commit?: boolean) => void,
+  onUpdate: (bounds: ViewBounds, mod: EventMod, commit?: boolean) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   let start: Point;

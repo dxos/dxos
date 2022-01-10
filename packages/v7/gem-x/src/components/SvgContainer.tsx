@@ -9,7 +9,8 @@ import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useRef, useS
 import useResizeObserver from 'use-resize-observer';
 import { css } from '@emotion/css';
 
-import { grid, Scale } from '../grid';
+import { grid } from '../grid';
+import { Scale } from '../util';
 
 const defaultStyles = css`
   g.grid {
@@ -32,7 +33,7 @@ export interface ResizeCallbackProps {
   transform?: any
 }
 
-export type Zoom = [min: number, max: number]; // TODO(burdon): Use Frac.
+export type Zoom = [min: number, max: number]; // TODO(burdon): Use FractionUtil.
 
 export const defaultScale = new Scale(32);
 

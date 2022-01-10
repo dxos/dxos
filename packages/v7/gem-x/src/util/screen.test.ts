@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Bounds, Point, createBounds, contains } from './geometry';
+import { ViewBounds, Point, createBounds, contains } from './screen';
 
 test('Bounds', () => {
-  const tests: { p1: Point, p2: Point, bounds: Bounds }[] = [
+  const tests: { p1: Point, p2: Point, bounds: ViewBounds }[] = [
     {
       p1: [0, 0],
       p2: [0, 0],

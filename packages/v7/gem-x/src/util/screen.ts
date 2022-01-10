@@ -2,11 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Rename Point, ViewBounds (doc user space).
+//  - View util.
+
 export type Point = [x: number, y: number]
 
-export type Bounds = { x: number, y: number, width: number, height: number }
+export type ViewBounds = { x: number, y: number, width: number, height: number }
 
-export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): Bounds => {
+export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): ViewBounds => {
   return {
     x: Math.min(x1, x2),
     y: Math.min(y1, y2),
@@ -15,7 +18,7 @@ export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): Bounds => {
   };
 };
 
-export const contains = (bounds: Bounds, point: Point): boolean => {
+export const contains = (bounds: ViewBounds, point: Point): boolean => {
   const [x, y] = point;
 
   if (x < bounds.x || y < bounds.y) {

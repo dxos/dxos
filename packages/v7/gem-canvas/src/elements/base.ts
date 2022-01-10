@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bounds, Scale } from '@dxos/gem-x';
+import { ViewBounds, Scale } from '@dxos/gem-x';
 
 import { Element, ElementDataType, ElementType } from '../model';
 import { D3Callable } from '../types';
@@ -88,12 +88,12 @@ export abstract class BaseElement<T extends ElementDataType> {
    * @param mod
    * @param commit
    */
-  abstract createData (bounds: Bounds, mod?: EventMod, commit?: boolean): T;
+  abstract createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): T;
 
   /**
    * Create bounding box from data.
    */
-  abstract createBounds (): Bounds;
+  abstract createBounds (): ViewBounds;
 
   /**
    * Callable renderer.

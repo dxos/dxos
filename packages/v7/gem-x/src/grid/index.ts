@@ -3,4 +3,3 @@
 //
 
 export * from './grid';
-export * from './scale';

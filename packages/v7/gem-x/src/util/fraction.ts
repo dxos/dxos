@@ -4,20 +4,24 @@
 
 export type Fraction = [num: number, denum: number]
 
+// TODO(burdon): Remove (assume fraction everywhere).
 export type Num = number | Fraction
 
-export type Point2 = [x: Num, y: Num]
-
-export type Bounds2 = { x: Num, y: Num, width: Num, height: Num } // TODO(burdon): Array.
-
-// TODO(burdon): Rename.
-export class Frac {
+export class FractionUtil {
   /**
-   * Create fraction.
+   * Convert number to fraction.
    * @param n
    */
-  static fraction = (n: Num): Fraction => {
+  static toFraction = (n: Num): Fraction => {
     return typeof n === 'number' ? [n, 1] : n;
+  }
+
+  /**
+   * Convert to float number.
+   * @param n
+   */
+  static toNumber = (n: Num): number => {
+    return (typeof n === 'number') ? n : n[0] / n[1];
   }
 
   /**
@@ -28,61 +32,31 @@ export class Frac {
   }
 
   /**
-   * Check valid fraction.
-   * @param n
-   * @param d
+   * Round the number to the nearest fraction.
+   * Example: 3/5 => 1/1; 3/5 (precision 2) => 1/2.
+   * @param n Value
+   * @param p Precision (e.g., 1/2, 1/4, etc.)
    */
-  static validate = ([n, d]: Fraction): Fraction => {
-    if (!(d !== 0 && Number.isInteger(n) && Number.isInteger(d))) {
-      throw new Error(`Invalid fraction: ${n}/${d}`);
+  // TODO(burdon): p as power of 2?
+  static round = ([n, d]: Fraction, p = 1): Fraction => {
+    if (p >= d) {
+      return [n, d];
     }
 
-    return [n, d];
-  }
-
-  /**
-   * Calculate center point.
-   * @param bounds
-   */
-  // TODO(burdon): Mirror center, bounds, for Num, number, etc.
-  static center = ({ x, y, width, height }: Bounds2): Point2 => {
-    const cx = Frac.add(x, Frac.multiply(width, [1, 2]));
-    const cy = Frac.add(y, Frac.multiply(height, [1, 2]));
-    return [cx, cy];
-  }
-
-  /**
-   * Convert to float number.
-   * @param num
-   * @param denum
-   */
-  static float = ([num, denum]: Fraction): number => num / denum;
-
-  /**
-   * Round down to integer.
-   * @param num
-   * @param denum
-   * @param n
-   */
-  static floor = ([num, denum]: Fraction, n = 1): number => Math.floor(num * n / denum);
-
-  /**
-   * Round the number to the nearest fraction.
-   * @param n Value
-   * @param d Precision (e.g., 1/2, 1/4, etc.)
-   */
-  static round = (n: number, d = 1): Fraction => {
-    const f: Fraction = [Math.round(n * d), d];
-    return (d > 1) ? Frac.norm(f) : f;
+    const v = Math.round(FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p])));
+    return FractionUtil.simplify([v, p]);
   };
 
+  //
+  // Normalization.
+  //
+
   /**
-   * Normalize fraction finding LCDs.
+   * Simplify fraction finding LCDs.
    * @param n
    * @param d
    */
-  // TODO(burdon): Rename normalize.
-  static norm = ([n, d]: Fraction): Fraction => {
+  static simplify = ([n, d]: Fraction): Fraction => {
     if (d < 1) {
       const t = n / d;
       if (Math.floor(t) === t) {
@@ -92,8 +66,8 @@ export class Frac {
     }
 
     // Find highest common denominator.
-    const fn = Frac.factors(n).reverse();
-    const fd = Frac.factors(d).reverse();
+    const fn = FractionUtil.factors(n).reverse();
+    const fd = FractionUtil.factors(d).reverse();
 
     let c;
     for (let i = 0; i < fn.length; i++) {
@@ -103,6 +77,7 @@ export class Frac {
       }
     }
 
+    // TODO(burdon): Convert to number if d == 1.
     return [n, d];
   }
 
@@ -122,48 +97,63 @@ export class Frac {
     return factors;
   }
 
+  //
+  // Basic arithmetic.
+  //
+
   /**
-   * Add fraction.
    * @param n1
    * @param n2
    */
   static add = (n1: Num, n2: Num): Fraction => {
-    const num1 = Frac.fraction(n1);
-    const num2 = Frac.fraction(n2);
+    const num1 = FractionUtil.toFraction(n1);
+    const num2 = FractionUtil.toFraction(n2);
 
     const d = num1[1] * num2[1]; // Same denom.
     const n = (num1[0] * num2[1]) + (num2[0] * num1[1]);
 
-    return Frac.norm([n, d]);
+    return FractionUtil.simplify([n, d]);
   }
 
   /**
-   * Subtract fraction.
    * @param n1
    * @param n2
    */
-  static sub = (n1: Num, n2: Num): Fraction => {
-    const num1 = Frac.fraction(n1);
-    const num2 = Frac.fraction(n2);
+  static subtract = (n1: Num, n2: Num): Fraction => {
+    const num1 = FractionUtil.toFraction(n1);
+    const num2 = FractionUtil.toFraction(n2);
 
     const d = num1[1] * num2[1]; // Same denom.
     const n = (num1[0] * num2[1]) - (num2[0] * num1[1]);
 
-    return Frac.norm([n, d]);
+    return FractionUtil.simplify([n, d]);
   }
 
   /**
-   * Multiply fraction.
    * @param n1
    * @param n2
    */
   static multiply = (n1: Num, n2: Num): Fraction => {
-    const num1 = Frac.fraction(n1);
-    const num2 = Frac.fraction(n2);
+    const num1 = FractionUtil.toFraction(n1);
+    const num2 = FractionUtil.toFraction(n2);
 
     const n = num1[0] * num2[0];
     const d = num1[1] * num2[1];
 
-    return Frac.norm([n, d]);
+    return FractionUtil.simplify([n, d]);
+  }
+
+  /**
+   * @param n1
+   * @param n2
+   */
+  static divide = (n1: Num, n2: Num): Fraction => {
+    const num1 = FractionUtil.toFraction(n1);
+    const num2 = FractionUtil.toFraction(n2);
+
+    const n = num1[0] * num2[1];
+    const d = num1[1] * num2[0];
+
+    return FractionUtil.simplify([n, d]);
   }
 }

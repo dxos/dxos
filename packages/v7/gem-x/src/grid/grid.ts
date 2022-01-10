@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 
-import { Scale } from './scale';
+import { Scale } from '../util';
 
 interface GridProps {
   scale: Scale

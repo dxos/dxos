@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Bounds, Frac, Point, Scale } from '@dxos/gem-x';
+import { ViewBounds, Point, Scale } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -43,8 +43,8 @@ const createEllipse = (scale: Scale): D3Callable => {
               const { cx, cy, rx, ry } = data;
               base.onSelect(true);
               base.onUpdate({
-                cx: Frac.add(cx, dx),
-                cy: Frac.add(cy, dy),
+                cx: FractionUtil.add(cx, dx),
+                cy: FractionUtil.add(cy, dy),
                 rx,
                 ry
               });
@@ -67,7 +67,7 @@ const createEllipse = (scale: Scale): D3Callable => {
 const valid = (data: Ellipse, commit: boolean) => {
   if (commit) {
     const { rx, ry } = data;
-    if (Frac.isZero(rx) || Frac.isZero(ry)) {
+    if (FractionUtil.isZero(rx) || FractionUtil.isZero(ry)) {
       return;
     }
   }
@@ -84,7 +84,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
-  createData (bounds: Bounds, mod?: EventMod, commit?: boolean): Ellipse {
+  createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): Ellipse {
     let { x, y, width, height } = bounds;
     if (mod?.constrain) {
       // TODO(burdon): Maintain aspect (not square).
@@ -106,13 +106,13 @@ export class EllipseElement extends BaseElement<Ellipse> {
     }
   }
 
-  createBounds (): Bounds {
+  createBounds (): ViewBounds {
     const { cx, cy, rx, ry } = this.data;
     const { x, y, width, height } = this.scale.mapBoundsToScreen({
-      x: Frac.sub(cx, rx),
-      y: Frac.sub(cy, ry),
-      width: Frac.multiply(rx, 2),
-      height: Frac.multiply(ry, 2)
+      x: FractionUtil.subtract(cx, rx),
+      y: FractionUtil.subtract(cy, ry),
+      width: FractionUtil.multiply(rx, 2),
+      height: FractionUtil.multiply(ry, 2)
     });
 
     return { x, y, width, height };

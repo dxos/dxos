@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { Bounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
+import { ViewBounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
 
 import { BaseElement, ElementCache, EventMod, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
@@ -115,7 +115,7 @@ export const Canvas = ({
   //
   // eslint-disable indent
   useEffect(() => {
-    const handleUpdate = (bounds: Bounds, mod: EventMod, commit: boolean) => {
+    const handleUpdate = (bounds: ViewBounds, mod: EventMod, commit: boolean) => {
       const cursor = cursorRef.current;
       const data = cursor.createData(bounds, mod, commit);
 

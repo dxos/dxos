@@ -4,4 +4,6 @@
 
 export * from './events';
 export * from './fraction';
-export * from './geometry';
+export * from './scale';
+export * from './screen';
+export * from './vector';

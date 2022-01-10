@@ -8,7 +8,7 @@ import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
 
-import { useStateRef } from '../src';
+import { Scale, useStateRef } from '../src';
 
 import {
   FullScreen,
@@ -17,8 +17,7 @@ import {
   Part,
   Surface,
   Scene,
-  SvgContainer,
-  useScale
+  SvgContainer
 } from '../src';
 
 import {
@@ -69,7 +68,7 @@ export const Primary = () => {
   const statsRef = useRef<SVGSVGElement>();
   const model = useMemo(() => createModel(2), []);
   const [scene, setScene, sceneRef] = useStateRef<Scene<TestModel>>();
-  const scale = useScale({ gridSize: 32 });
+  const scale = useMemo(() => new Scale(32), []);
   const Knobs = useKnobs();
 
   useButton('Test', () => {
