@@ -9,18 +9,9 @@ import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 
 import { InvalidInvitationError } from '../errors';
+import * as proto from '@dxos/echo-protocol'
 
-/**
- * Defines an invitation type.
- *
- * Interactive invitation is when both peers are online at the same time.
- *
- * Offline is when only a single peer needs to be online at the time.
- */
-export enum InvitationDescriptorType {
-  INTERACTIVE = '1',
-  OFFLINE_KEY = '2',
-}
+export type InvitationDescriptorType = proto.InvitationDescriptor.Type;
 
 /**
  * A serialized version of InvitationDescriptor that's sutable to be encoded as an URL query string.
@@ -33,19 +24,19 @@ export interface InvitationQueryParameters {
   type: string
 }
 
-// TODO(telackey): Add class description.
-/* TODO(telackey): Add comment explaining in brief what is going on.
- * (eg, What is hash for?)
- * (eg, Do we expect users of this class to serialize it themselves?)
- */
 /**
- * Description of what this class is for goes here.
+ * Describes an issued invitation.
+ * 
+ * Can be serialized to protobuf or JSON.
+ * Invitations can be interactive or offline.
+ * 
+ * This descriptor might also have a bundled secret for authentication in interactive mode.
  */
 export class InvitationDescriptor {
   static fromQueryParameters (queryParameters: InvitationQueryParameters): InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
-    const descriptor = new InvitationDescriptor(type as InvitationDescriptorType, keyToBuffer(swarmKey),
+    const descriptor = new InvitationDescriptor(parseInvitationType(type), keyToBuffer(swarmKey),
       keyToBuffer(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
@@ -53,6 +44,21 @@ export class InvitationDescriptor {
     }
 
     return descriptor;
+  }
+
+  static fromProto (protoInvitation: proto.InvitationDescriptor): InvitationDescriptor {
+    assert(protoInvitation.type, 'Invitation type not provided.');
+    assert(protoInvitation.swarmKey, 'Invitation swarm key not provided.');
+    assert(protoInvitation.invitation, 'Invitation not provided.');
+    assert(protoInvitation.identityKey, 'Invitation identity key not provided.');
+  
+    return new InvitationDescriptor(
+      protoInvitation.type,
+      protoInvitation.swarmKey,
+      Buffer.from(protoInvitation.invitation),
+      PublicKey.from(protoInvitation.identityKey),
+      protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined,
+    );
   }
 
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
@@ -88,7 +94,7 @@ export class InvitationDescriptor {
     const query: Partial<InvitationQueryParameters> = {
       swarmKey: keyToString(this.swarmKey),
       invitation: keyToString(this.invitation),
-      type: this.type
+      type: stringifyInvitationType(this.type),
     };
 
     if (this.identityKey) {
@@ -99,4 +105,22 @@ export class InvitationDescriptor {
 
     return query as InvitationQueryParameters;
   }
+
+  toProto (): proto.InvitationDescriptor {
+    return {
+      type: this.type,
+      swarmKey: this.swarmKey,
+      invitation: this.invitation,
+      identityKey: this.identityKey?.asUint8Array(),
+      secret: this.secret,
+    }
+  }
 }
+
+const parseInvitationType = (str: string): InvitationDescriptorType => {
+  const type = parseInt(str);
+  assert(type === 1 || type === 2, 'Invalid invitation type');
+  return type;
+}
+
+const stringifyInvitationType = (type: InvitationDescriptorType): string => type.toString();

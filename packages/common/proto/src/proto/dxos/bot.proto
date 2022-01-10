@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "echo/invitation.proto";
 import "./client.proto";
 import "./config.proto";
 
@@ -36,7 +37,7 @@ message SpawnBotRequest {
   BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  dxos.client.Invitation invitation = 2;
+  dxos.echo.InvitationDescriptor invitation = 2;
 
   string secret = 3;
 }
@@ -75,7 +76,7 @@ message InitializeRequest {
   Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  dxos.client.Invitation invitation = 2;
+  dxos.echo.InvitationDescriptor invitation = 2;
 
   string secret = 3;
 }

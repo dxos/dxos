@@ -7,6 +7,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "halo/keys.proto";
 import "config.proto";
+import "echo/invitation.proto";
 
 package dxos.client;
 
@@ -42,23 +43,6 @@ message RecoverProfileRequest {
   string seedPhrase = 1;
 }
 
-message InvitationDescriptor {
-  enum Type {
-    INTERACTIVE = 1;
-    OFFLINE_KEY = 2;
-  }
-
-  Type type = 1;
-  bytes swarmKey = 2;
-  bytes invitation = 3;
-
-  /// Only present if type == OFFLINE_KEY.
-  bytes identityKey = 4;
-
-  /// Must be stripped out when passing to another peer.
-  string secret = 5;
-}
-
 enum InvitationState {
   WAITING_FOR_CONNECTION = 1;
   CONNECTED = 2;
@@ -92,7 +76,7 @@ message RedeemedInvitation {
 message AuthenticateInvitationRequest {
   /// Id from corresponding RedeemedInvitation.
   string processId = 1;
-  string secret = 2;
+  bytes secret = 2;
 }
 
 message Contact {
