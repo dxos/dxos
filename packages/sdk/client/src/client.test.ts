@@ -145,7 +145,7 @@ describe('Client', () => {
         const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
         await connectedFired;
 
-        const finishedFired = invitation.finshed.waitForCount(1);
+        const finishedFired = invitation.finished.waitForCount(1);
         acceptedInvitation.authenticate(invitation.secret);
         await finishedFired;
 

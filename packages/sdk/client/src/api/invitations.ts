@@ -20,7 +20,7 @@ export class InvitationRequest {
   /**
    * Fired when the invitation process completes successfully.
    */
-  finshed: Event;
+  finished: Event;
 
   /**
    * Fired when there's an error in the invitation process.
@@ -35,7 +35,7 @@ export class InvitationRequest {
     error: Event<Error>
   ) {
     this.connected = connected;
-    this.finshed = finished;
+    this.finished = finished;
     this.error = error;
   }
 
@@ -53,7 +53,7 @@ export class InvitationRequest {
 }
 
 /**
- * Invitation that is beeing redeemed.
+ * Invitation that is being redeemed.
  */
 export class Invitation {
   constructor (
