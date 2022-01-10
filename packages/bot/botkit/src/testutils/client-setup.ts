@@ -10,12 +10,12 @@ import { failUndefined } from '@dxos/debug';
 export interface ClientSetup {
   client: Client,
   party: PartyProxy,
-  invitation: string,
+  invitation: Awaited<ReturnType<typeof generateInvitation>>,
   secret: string
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {
-  const client = new Client(config);
+  const client = new Client(config?.values);
   await client.initialize();
   await client.halo.createProfile({ username: 'Client' });
   const party = await client.echo.createParty();
@@ -25,7 +25,7 @@ export const setupClient = async (config?: Config): Promise<ClientSetup> => {
   return {
     client,
     party,
-    invitation: invitation.invitationCode ?? failUndefined(),
+    invitation: invitation ?? failUndefined(),
     secret: invitation.secret ?? failUndefined()
   };
 };

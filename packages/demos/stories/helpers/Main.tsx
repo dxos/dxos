@@ -137,11 +137,9 @@ export const Main = ({ party, code }: MainProps) => {
 
   const handleCopyInvite = async () => {
     assert(code);
-    const invitation = await client.echo.createInvitation(party.key, {
-      secretProvider: async () => Buffer.from(code)
-    });
+    const invitation = await client.echo.createInvitation(party.key);
 
-    const invitationText = JSON.stringify(invitation.toQueryParameters());
+    const invitationText = JSON.stringify(invitation.descriptor.toQueryParameters());
     await navigator.clipboard.writeText(invitationText);
     console.log(invitationText); // Console log is required for E2E tests.
   };

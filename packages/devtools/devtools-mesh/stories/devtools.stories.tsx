@@ -82,9 +82,9 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
 
   const [peers, setPeers] = useState<any[]>([]);
   useEffect(() => {
-    controlPeer?.swarm.setTopology(topology());
+    void controlPeer?.swarm.setTopology(topology());
     for (const peer of peers) {
-      peer.swarm.setTopology(topology());
+      void peer.swarm.setTopology(topology());
     }
   }, [topology]);
 

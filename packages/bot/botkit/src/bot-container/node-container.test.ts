@@ -55,7 +55,7 @@ describe('Node container', function () {
 
     it('Starts a client bot', async () => {
       const { config } = brokerSetup;
-      const { client, invitation, secret } = await setupClient(config);
+      const { client, invitation } = await setupClient(config);
 
       const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
@@ -67,10 +67,7 @@ describe('Node container', function () {
       await handle.open(port);
       await handle.rpc.Initialize({
         config: config.values,
-        invitation: {
-          invitationCode: invitation,
-          secret
-        }
+        invitation
       });
 
       await handle.rpc.Stop();
@@ -81,7 +78,7 @@ describe('Node container', function () {
 
     it('Starts an echo-bot', async () => {
       const { config } = brokerSetup;
-      const { client, party, invitation, secret } = await setupClient(config);
+      const { client, party, invitation } = await setupClient(config);
 
       const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
@@ -93,10 +90,7 @@ describe('Node container', function () {
       await handle.open(port);
       await handle.rpc.Initialize({
         config: config.values,
-        invitation: {
-          invitationCode: invitation,
-          secret
-        }
+        invitation
       });
       const command = PublicKey.random().asUint8Array();
       await handle.rpc.Command({ command: command });
