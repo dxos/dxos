@@ -68,7 +68,12 @@ export class Stream<T> {
         }
 
         if (this._messageHandler) {
-          this._messageHandler(msg);
+          try {
+            this._messageHandler(msg);
+          } catch(error: any) {
+            // Stop error propagation.
+            throwUnhandledRejection(error);
+          }
         } else {
           assert(this._buffer);
           this._buffer.push(msg);
@@ -82,7 +87,12 @@ export class Stream<T> {
         this._isClosed = true;
         this._closeError = err;
         this._dispose?.();
-        this._closeHandler?.(err);
+        try {
+          this._closeHandler?.(err);
+        } catch(error: any) {
+          // Stop error propagation.
+          throwUnhandledRejection(error);
+        }
       }
     });
     if (disposeCb) {
@@ -127,4 +137,19 @@ export class Stream<T> {
     this._closeHandler = undefined;
     this._dispose = undefined;
   }
+}
+
+/**
+ * Asynchronously produces an unhandled rejection.
+ * 
+ * Will terminate the node process with an error.
+ * In browser results in an error message in the console.
+ * In mocha tests it fails the currently running test.
+ * 
+ * NOTE: Copied from @dxos/debug to avoid circular dependency.
+ */
+ function throwUnhandledRejection(error: Error) {
+  setTimeout(() => {
+    throw error;
+  });
 }

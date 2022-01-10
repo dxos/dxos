@@ -15,3 +15,4 @@ export * from './timeout-warning';
 export * from './log-method';
 export * from './errors';
 export * from './fail';
+export * from './throw-unhandled-rejection';
