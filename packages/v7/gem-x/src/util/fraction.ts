@@ -6,17 +6,24 @@ export type Fraction = [num: number, denum: number]
 
 export type Num = number | Fraction
 
+export type Point2 = [x: Num, y: Num]
+
+export type Bounds2 = { x: Num, y: Num, width: Num, height: Num } // TODO(burdon): Array.
+
 // TODO(burdon): Rename.
 export class Frac {
   /**
    * Create fraction.
    * @param n
    */
-  static fraction = (n: Num) => {
+  static fraction = (n: Num): Fraction => {
     return typeof n === 'number' ? [n, 1] : n;
   }
 
-  static isZero = (n: Num) => {
+  /**
+   * @param n
+   */
+  static isZero = (n: Num): boolean => {
     return typeof n === 'number' ? n === 0 : n[0] === 0;
   }
 
@@ -25,12 +32,23 @@ export class Frac {
    * @param n
    * @param d
    */
-  static validate = ([n, d]: Fraction) => {
+  static validate = ([n, d]: Fraction): Fraction => {
     if (!(d !== 0 && Number.isInteger(n) && Number.isInteger(d))) {
       throw new Error(`Invalid fraction: ${n}/${d}`);
     }
 
     return [n, d];
+  }
+
+  /**
+   * Calculate center point.
+   * @param bounds
+   */
+  // TODO(burdon): Mirror center, bounds, for Num, number, etc.
+  static center = ({ x, y, width, height }: Bounds2): Point2 => {
+    const cx = Frac.add(x, Frac.multiply(width, [1, 2]));
+    const cy = Frac.add(y, Frac.multiply(height, [1, 2]));
+    return [cx, cy];
   }
 
   /**

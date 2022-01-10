@@ -2,16 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-// Screen point.
 export type Point = [x: number, y: number]
 
-// Mappable from SVGRect (used in D3).
-export type Bounds = {
-  x: number,
-  y: number,
-  width: number,
-  height: number
-}
+export type Bounds = { x: number, y: number, width: number, height: number }
 
 export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): Bounds => {
   return {

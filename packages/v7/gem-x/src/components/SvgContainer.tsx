@@ -82,12 +82,14 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const height = controlledHeight || currentHeight;
 
   const handleResize = ({ width, height }) => {
-    const { x, y } = scale.setBounds({ x: -Math.floor(width / 2), y: -Math.floor(height / 2), width, height });
-
+    // Use translate on outer group to translate origin.
+    // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
+    // https://www.sarasoueidan.com/blog/svg-transformations (Illustrated examples).
+    // <g transform={center ? `translate(${width / 2} ${height / 2})` : undefined}>
     if (center) {
-      // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
-      svgRef.current
-        .setAttribute('viewBox', `${x},${y},${width},${height}`);
+      const { x, y } = scale.setBounds({ x: -Math.floor(width / 2), y: -Math.floor(height / 2), width, height });
+      d3.select(svgRef.current)
+        .attr('viewBox', `${x},${y},${width},${height}`);
     }
 
     if (showGrid) {
@@ -102,10 +104,6 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
 
       if (zoom) {
         const zoomCallback = d3.zoom()
-          // TODO(burdon): Make pluggable (competes with other drag/mouse handlers).
-          // .filter((event) => {
-          //   return event.shiftKey;
-          // })
           .extent([[0, 0], [width, height]])
           .scaleExtent(zoom)
           .on('zoom', ({ transform }: { transform: ZoomTransform }) => {

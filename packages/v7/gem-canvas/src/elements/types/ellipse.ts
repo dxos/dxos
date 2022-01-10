@@ -17,7 +17,8 @@ import { createFrame } from '../frame';
 const createEllipse = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Ellipse>) => {
     const data = base.data;
-    const [cx, cy, rx, ry] = scale.mapToScreen([data.cx, data.cy, data.rx, data.ry]);
+    const [cx, cy] = scale.mapPointToScreen([data.cx, data.cy]);
+    const [rx, ry] = scale.mapToScreen([data.rx, data.ry]);
 
     // eslint-disable indent
     return group.selectAll('ellipse')
@@ -107,12 +108,12 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   createBounds (): Bounds {
     const { cx, cy, rx, ry } = this.data;
-    const [x, y, width, height] = this.scale.mapToScreen([
-      Frac.sub(cx, rx),
-      Frac.sub(cy, ry),
-      Frac.multiply(rx, 2),
-      Frac.multiply(ry, 2)
-    ]);
+    const { x, y, width, height } = this.scale.mapBoundsToScreen({
+      x: Frac.sub(cx, rx),
+      y: Frac.sub(cy, ry),
+      width: Frac.multiply(rx, 2),
+      height: Frac.multiply(ry, 2)
+    });
 
     return { x, y, width, height };
   }

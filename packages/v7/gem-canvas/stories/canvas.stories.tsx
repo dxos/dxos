@@ -31,22 +31,22 @@ export default {
 // TODO(burdon): Style objects.
 
 const initial: Element<any>[] = [
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: { cx: 0, cy: 0, rx: [2, 1], ry: [2, 1] }
-  },
+  // {
+  //   id: faker.datatype.uuid(),
+  //   type: 'ellipse',
+  //   data: { cx: 0, cy: 0, rx: [2, 1], ry: [2, 1] }
+  // },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: { cx: 0, cy: 4, rx: 1, ry: 1 }
   },
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: { cx: 4, cy: 0, rx: 1, ry: 1 }
-  }
-]
+  // {
+  //   id: faker.datatype.uuid(),
+  //   type: 'ellipse',
+  //   data: { cx: 4, cy: 0, rx: 1, ry: 1 }
+  // }
+];
 
 const Info = ({ data = {} }) => (
   <div style={{
