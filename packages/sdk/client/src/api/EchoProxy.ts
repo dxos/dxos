@@ -2,20 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, latch } from '@dxos/async';
-import { defaultSecretValidator } from '@dxos/credentials';
+import assert from 'assert';
+
+import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
-import { ECHO, InvitationAuthenticator, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { failUndefined, raise } from '@dxos/debug';
+import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
+import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
-import { Party } from '../proto/gen/dxos/client';
+import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
+import { decodeInvitation, encodeInvitation } from '../util';
 import { PartyProxy } from './PartyProxy';
+import { InvitationRequest } from './invitations';
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
@@ -58,7 +62,7 @@ export class EchoProxy {
           const partyProxy = await this.createPartyProxy(party);
           this._parties.set(partyProxy.key, partyProxy);
 
-          const partyStream = this._serviceProvider.services.PartyService.SubscribeParty({ partyKey: party.publicKey });
+          const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
           partyStream.subscribe(async ({ party }) => {
             if (!party) {
               return;
@@ -129,8 +133,50 @@ export class EchoProxy {
     return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
+  /**
+   * @deprecated Use acceptInvitation instead.
+   */
   async joinParty (...args: Parameters<ECHO['joinParty']>) {
     return this._serviceProvider.echo.joinParty(...args);
+  }
+
+  /**
+   * Joins an existing Party by invitation.
+   * @returns An async function to provide secret and finishing the invitation process.
+   */
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>();
+    const [waitForParty, resolveParty] = trigger<PartyProxy>();
+
+    setImmediate(async () => {
+      const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
+        invitationCode: encodeInvitation(invitationDescriptor)
+      });
+
+      resolveInvitationProcess(invitationProcess);
+    });
+
+    const authenticate = async (secret: Buffer) => {
+      const invitationProcess = await getInvitationProcess();
+
+      const { partyKey } = await this._serviceProvider.services.PartyService.AuthenticateInvitation({
+        process: invitationProcess,
+        secret: secret.toString()
+      });
+      assert(partyKey);
+      await this._partiesChanged.waitForCondition(() => this._parties.has(partyKey));
+
+      resolveParty(this.getParty(partyKey) ?? failUndefined());
+    };
+
+    if (invitationDescriptor.secret) {
+      void authenticate(invitationDescriptor.secret);
+    }
+
+    return new Invitation(
+      waitForParty(),
+      authenticate
+    );
   }
 
   /**
@@ -139,21 +185,48 @@ export class EchoProxy {
    * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
    * The invitation flow is protected by a generated pin code.
    *
-   * To be used with `client.echo.joinParty` on the invitee side.
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
-   * @param auth.secretProvider supplies the pin code
-   * @param auth.secretValidator checks the pin code validity
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createInvitation (partyKey: PublicKey, auth: Partial<InvitationAuthenticator>, options?: InvitationOptions) {
-    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createInvitation({
-      secretValidator: auth.secretValidator ?? defaultSecretValidator,
-      secretProvider: auth.secretProvider
-    },
-    options);
+  async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
+    return new Promise((resolve, reject) => {
+      const connected = new Event();
+      const finished = new Event();
+      const error = new Event<Error>();
+
+      let hasInitiated = false; let hasConnected = false;
+
+      stream.subscribe(invitationMsg => {
+        if (!hasInitiated) {
+          hasInitiated = true;
+          const descriptor = decodeInvitation(invitationMsg.invitationCode!);
+          descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
+          resolve(new InvitationRequest(descriptor, connected, finished, error));
+        }
+
+        if (invitationMsg.connected && !hasConnected) {
+          hasConnected = true;
+          connected.emit();
+        }
+
+        if (invitationMsg.finished) {
+          finished.emit();
+          stream.close();
+        }
+
+        if (invitationMsg.error) {
+          error.emit(new Error(invitationMsg.error));
+        }
+      }, error => {
+        if (error) {
+          console.error(error);
+          reject(error);
+          // TODO(rzadp): Handle retry.
+        }
+      });
+    });
   }
 
   /**
@@ -163,7 +236,7 @@ export class EchoProxy {
    * The invitee (recipient) needs to be known ahead of time.
    * Invitation it not valid for other users.
    *
-   * To be used with `client.echo.joinParty` on the invitee side.
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
    * @param recipientKey the invitee (recipient for the invitation).

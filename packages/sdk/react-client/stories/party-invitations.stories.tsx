@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { encodeInvitation, decodeInvitation } from '@dxos/client';
+import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
@@ -18,9 +18,7 @@ import {
   useClient,
   useContacts,
   useParties,
-  useProfile,
-  useSecretGenerator,
-  useSecretProvider
+  useProfile
 } from '../src';
 import {
   ClientPanel,
@@ -42,31 +40,47 @@ const PartyInvitationContainer = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const [secretProvider, pin, resetPin] = useSecretGenerator();
   const [contact, setContact] = useState<string>();
   const [contacts] = useContacts();
+  const [pin, setPin] = useState('');
+
+  const resetInvitations = () => {
+    setInvitationCode('');
+    setPin('');
+  };
 
   const handleCreateParty = () => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
       setPartyKey(party.key);
-      setInvitationCode('');
-      resetPin();
+      resetInvitations();
     });
   };
 
+  // const handleCreateInvitation = async () => {
+  //   const invitation = await client.createHaloInvitation({
+  //     onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
+  //       setInvitation(undefined);
+  //       setPin('');
+  //     },
+  //     onPinGenerated: setPin
+  //   });
+
+  //   setInvitation(invitation);
+  // };
+
   const handleCreateInvitation = () => {
     setImmediate(async () => {
-      const invitation = (contact)
-        ? await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
-        : await client.echo.createInvitation(partyKey!, { secretProvider }, {
-          onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-            setInvitationCode(undefined);
-            resetPin();
-          }
-        });
-
-      setInvitationCode(encodeInvitation(invitation));
+      resetInvitations();
+      if (contact) {
+        const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!));
+        setInvitationCode(encodeInvitation(invitation));
+      } else {
+        const invitation = await client.echo.createInvitation(partyKey!);
+        invitation.connected.on(() => setPin(invitation.secret.toString()));
+        invitation.finshed.on(() => resetInvitations());
+        setInvitationCode(encodeInvitation(invitation.descriptor));
+      }
     });
   };
 
@@ -124,31 +138,39 @@ const PartyInvitationContainer = () => {
   );
 };
 
+interface Status {
+  error?: any,
+  party?: string,
+  invitation?: Invitation
+}
+
 /**
  * Processes party invitations.
  */
 const PartyJoinContainer = () => {
   const client = useClient();
-  const [status, setStatus] = useState({});
-  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const [status, setStatus] = useState<Status>({});
 
   const handleSubmit = async (invitationCode: string) => {
     setStatus({});
 
     try {
       const invitation = decodeInvitation(invitationCode);
-      const offline = invitation.type === InvitationDescriptorType.OFFLINE_KEY;
-      const party = await client.echo.joinParty(invitation, offline ? undefined : secretProvider);
-      await party.open();
-
-      setStatus({ party: party.key.toHex() });
+      if (invitation.type === InvitationDescriptorType.OFFLINE_KEY) {
+        const party = await client.echo.joinParty(invitation);
+        await party.open();
+        setStatus({ party: party.key.toHex() });
+      } else {
+        const redeemingInvitation = client.echo.acceptInvitation(invitation);
+        setStatus({ invitation: redeemingInvitation });
+      }
     } catch (error: any) {
       setStatus({ error });
     }
   };
 
-  const handleAuthenticate = (pin: string) => {
-    secretResolver(Buffer.from(pin));
+  const handleAuthenticate = async (pin: string) => {
+    await status.invitation?.authenticate(Buffer.from(pin));
   };
 
   return (
