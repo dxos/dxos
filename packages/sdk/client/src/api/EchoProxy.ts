@@ -151,9 +151,9 @@ export class EchoProxy {
       const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
 
       invitationProcessStream.subscribe(async process => {
-        if (process.state === InvitationState.WAITING_FOR_CONNECTION) {
-          resolveInvitationProcess(process);
-        } else if (process.state === InvitationState.FINISHED) {
+        resolveInvitationProcess(process);
+
+        if (process.state === InvitationState.FINISHED) {
           assert(process.partyKey);
           await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
 
@@ -224,7 +224,9 @@ export class EchoProxy {
 
         if (invitationMsg.state === InvitationState.ERROR) {
           assert(invitationMsg.error, 'Unknown error.');
-          error.emit(new Error(invitationMsg.error));
+          const err = new Error(invitationMsg.error)
+          reject(err);
+          error.emit(err);
         }
       }, error => {
         if (error) {

@@ -51,13 +51,12 @@ export class InvitationDescriptor {
     assert(protoInvitation.type, 'Invitation type not provided.');
     assert(protoInvitation.swarmKey, 'Invitation swarm key not provided.');
     assert(protoInvitation.invitation, 'Invitation not provided.');
-    assert(protoInvitation.identityKey, 'Invitation identity key not provided.');
 
     return new InvitationDescriptor(
       protoInvitation.type,
       protoInvitation.swarmKey,
       Buffer.from(protoInvitation.invitation),
-      PublicKey.from(protoInvitation.identityKey),
+      protoInvitation.identityKey ? PublicKey.from(protoInvitation.identityKey) : undefined,
       protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined
     );
   }

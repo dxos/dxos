@@ -15,6 +15,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
+import { throwUnhandledRejection } from '@dxos/debug';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -80,6 +81,7 @@ describe('Client', () => {
 
         const party = await inviter.echo.createParty();
         const invitation = await inviter.echo.createInvitation(party.key);
+        invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
 
         expect(inviteeParty.key).toEqual(party.key);
