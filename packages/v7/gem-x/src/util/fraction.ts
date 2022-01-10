@@ -4,7 +4,6 @@
 
 export type Fraction = [num: number, denum: number]
 
-// TODO(burdon): Remove (assume fraction everywhere).
 export type Num = number | Fraction
 
 export class FractionUtil {
@@ -17,24 +16,25 @@ export class FractionUtil {
   }
 
   /**
-   * Convert to float number.
-   * @param n
+   * @param {Fraction}
+   * Convert to rounded number.
    */
-  static toNumber = (n: Num): number => {
-    return (typeof n === 'number') ? n : n[0] / n[1];
+  static toNumber = ([n, d]: Fraction): number => {
+    return Math.round(n / d);
   }
 
   /**
-   * @param n
+   * @param {Fraction}
+   * True if zero.
    */
-  static isZero = (n: Num): boolean => {
-    return typeof n === 'number' ? n === 0 : n[0] === 0;
+  static isZero = ([n]: Fraction): boolean => {
+    return n[0] === 0;
   }
 
   /**
    * Round the number to the nearest fraction.
    * Example: 3/5 => 1/1; 3/5 (precision 2) => 1/2.
-   * @param n Value
+   * @param {Fraction}
    * @param p Precision (e.g., 1/2, 1/4, etc.)
    */
   // TODO(burdon): p as power of 2?
@@ -105,13 +105,9 @@ export class FractionUtil {
    * @param n1
    * @param n2
    */
-  static add = (n1: Num, n2: Num): Fraction => {
-    const num1 = FractionUtil.toFraction(n1);
-    const num2 = FractionUtil.toFraction(n2);
-
-    const d = num1[1] * num2[1]; // Same denom.
-    const n = (num1[0] * num2[1]) + (num2[0] * num1[1]);
-
+  static add = (n1: Fraction, n2: Fraction): Fraction => {
+    const d = n1[1] * n2[1]; // Same denom.
+    const n = (n1[0] * n2[1]) + (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
   }
 
@@ -119,13 +115,9 @@ export class FractionUtil {
    * @param n1
    * @param n2
    */
-  static subtract = (n1: Num, n2: Num): Fraction => {
-    const num1 = FractionUtil.toFraction(n1);
-    const num2 = FractionUtil.toFraction(n2);
-
-    const d = num1[1] * num2[1]; // Same denom.
-    const n = (num1[0] * num2[1]) - (num2[0] * num1[1]);
-
+  static subtract = (n1: Fraction, n2: Fraction): Fraction => {
+    const d = n1[1] * n2[1]; // Same denom.
+    const n = (n1[0] * n2[1]) - (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
   }
 
@@ -133,13 +125,9 @@ export class FractionUtil {
    * @param n1
    * @param n2
    */
-  static multiply = (n1: Num, n2: Num): Fraction => {
-    const num1 = FractionUtil.toFraction(n1);
-    const num2 = FractionUtil.toFraction(n2);
-
-    const n = num1[0] * num2[0];
-    const d = num1[1] * num2[1];
-
+  static multiply = (n1: Fraction, n2: Fraction): Fraction => {
+    const n = n1[0] * n2[0];
+    const d = n1[1] * n2[1];
     return FractionUtil.simplify([n, d]);
   }
 
@@ -147,13 +135,9 @@ export class FractionUtil {
    * @param n1
    * @param n2
    */
-  static divide = (n1: Num, n2: Num): Fraction => {
-    const num1 = FractionUtil.toFraction(n1);
-    const num2 = FractionUtil.toFraction(n2);
-
-    const n = num1[0] * num2[1];
-    const d = num1[1] * num2[0];
-
+  static divide = (n1: Fraction, n2: Fraction): Fraction => {
+    const n = n1[0] * n2[1];
+    const d = n1[1] * n2[0];
     return FractionUtil.simplify([n, d]);
   }
 }

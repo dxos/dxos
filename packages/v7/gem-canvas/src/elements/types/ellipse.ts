@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ViewBounds, Point, Scale } from '@dxos/gem-x';
+import { ViewBounds, Point, Scale, FractionUtil, Vector } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -17,8 +17,8 @@ import { createFrame } from '../frame';
 const createEllipse = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Ellipse>) => {
     const data = base.data;
-    const [cx, cy] = scale.mapPointToScreen([data.cx, data.cy]);
-    const [rx, ry] = scale.mapToScreen([data.rx, data.ry]);
+    const [cx, cy] = scale.model.toPoint(data.center);
+    const [rx, ry] = scale.model.toValues([data.rx, data.ry]);
 
     // eslint-disable indent
     return group.selectAll('ellipse')
@@ -39,14 +39,15 @@ const createEllipse = (scale: Scale): D3Callable => {
           selection
             .attr('cursor', 'move')
             .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
-              const [dx, dy] = scale.mapToModel(delta, commit);
-              const { cx, cy, rx, ry } = data;
+              const { x: dx, y: dy } = scale.screen.toVertex(delta);
+              const { center, ...rest } = data;
               base.onSelect(true);
               base.onUpdate({
-                cx: FractionUtil.add(cx, dx),
-                cy: FractionUtil.add(cy, dy),
-                rx,
-                ry
+                ...rest,
+                center: {
+                  x: FractionUtil.add(center.x, dx),
+                  y: FractionUtil.add(center.y, dy)
+                }
               });
             }));
         }
@@ -85,13 +86,15 @@ export class EllipseElement extends BaseElement<Ellipse> {
   type = 'ellipse' as ElementType;
 
   createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): Ellipse {
-    let { x, y, width, height } = bounds;
-    if (mod?.constrain) {
-      // TODO(burdon): Maintain aspect (not square).
-      width = height = Math.max(width, height);
-    }
+    // let { x, y, width, height } = bounds;
+
+    // TODO(burdon): Maintain aspect (not square).
+    // if (mod?.constrain) {
+    // width = height = Math.max(width, height);
+    // }
 
     // TODO(burdon): Center relative to original center.
+    /*
     if (mod?.center) {
       const { cx, cy } = this.data ?? { cx: x, cy: y };
       const size = [width / 2, height / 2];
@@ -104,18 +107,27 @@ export class EllipseElement extends BaseElement<Ellipse> {
       const [rx, ry] = this.scale.mapToModel(size, commit, 2);
       return valid({ cx, cy, rx, ry }, commit);
     }
+    */
+
+    const b = this.scale.screen.toBounds(bounds);
+    const center = Vector.center(b);
+    const { width, height } = b;
+
+    return {
+      center,
+      rx: FractionUtil.divide(width, [2, 1]),
+      ry: FractionUtil.divide(height, [2, 1])
+    };
   }
 
   createBounds (): ViewBounds {
-    const { cx, cy, rx, ry } = this.data;
-    const { x, y, width, height } = this.scale.mapBoundsToScreen({
-      x: FractionUtil.subtract(cx, rx),
-      y: FractionUtil.subtract(cy, ry),
-      width: FractionUtil.multiply(rx, 2),
-      height: FractionUtil.multiply(ry, 2)
+    const { center: { x, y }, rx, ry } = this.data;
+    return this.scale.model.toBounds({
+      x: FractionUtil.subtract(x, rx),
+      y: FractionUtil.subtract(y, ry),
+      width: FractionUtil.multiply(rx, [2, 1]),
+      height: FractionUtil.multiply(ry, [2, 1])
     });
-
-    return { x, y, width, height };
   }
 
   // TODO(burdon): Generic.

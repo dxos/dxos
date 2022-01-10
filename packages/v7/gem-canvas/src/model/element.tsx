@@ -2,42 +2,61 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Num } from '@dxos/gem-x';
+import { Bounds, Fraction, Vector } from '@dxos/gem-x';
+
+// TODO(burdon): Generic (e.g., styles); Common opts (e.g., text).
+
+//
+// Circle
+//
 
 export type Circle = {
-  cx: Num
-  cy: Num
-  r: Num
+  center: Vector
+  r: Fraction
 }
+
+//
+// Ellipse
+//
 
 export type Ellipse = {
-  cx: Num
-  cy: Num
-  rx: Num
-  ry: Num
+  center: Vector
+  rx: Fraction
+  ry: Fraction
 }
+
+//
+// Rect
+//
 
 export type Rect = {
-  x: Num
-  y: Num
-  width: Num
-  height: Num
+  bounds: Bounds
 }
 
+//
+// Line
+//
+
 export type Line = {
-  x1: Num
-  y1: Num
-  x2: Num
-  y2: Num
+  pos1: Vector
+  pos2: Vector
 }
+
+//
+// Path
+//
 
 export type PathType = 'linear' | 'basis' | 'cardinal' | 'step'
 
 export type Path = {
   type?: PathType
   closed?: boolean
-  points: [ x: number, y: number ][]
+  points: Vector[]
 }
+
+//
+// Elements
+//
 
 export type ElementId = string
 

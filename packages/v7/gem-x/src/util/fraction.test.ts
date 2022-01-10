@@ -27,7 +27,7 @@ test('factors', () => {
 });
 
 test('add', () => {
-  expect(FractionUtil.add([1, 1], 0)).toEqual([1, 1]);
+  expect(FractionUtil.add([1, 1], [1, 0])).toEqual([1, 1]);
   expect(FractionUtil.add([4, 2], [8, 3])).toEqual([14, 3]);
 });
 

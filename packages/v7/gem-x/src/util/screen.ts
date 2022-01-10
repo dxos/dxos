@@ -2,11 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Rename Point, ViewBounds (doc user space).
-//  - View util.
-
 export type Point = [x: number, y: number]
 
+// TODO(burdon): Rename?
 export type ViewBounds = { x: number, y: number, width: number, height: number }
 
 export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): ViewBounds => {

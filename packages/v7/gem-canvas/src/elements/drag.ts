@@ -22,7 +22,6 @@ export const getEventMod = (event: KeyboardEvent) => ({
  * @param onUpdate
  * @param onStart
  */
-// TODO(burdon): Create type for modifiers.
 export const dragBounds = (
   scale: Scale,
   onUpdate: (bounds: ViewBounds, mod: EventMod, commit?: boolean) => void,
@@ -32,18 +31,18 @@ export const dragBounds = (
 
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
-      start = scale.snap(scale.translatePoint([event.x, event.y]));
+      start = scale.screen.snapPoint([event.x, event.y]);
       onStart?.();
     })
     .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = scale.translatePoint([event.x, event.y]);
+      const current: Point = scale.screen.snapPoint([event.x, event.y]);
       const bounds = createBounds(start, current);
       onUpdate(bounds, mod);
     })
     .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = scale.translatePoint([event.x, event.y]);
+      const current: Point = scale.screen.snapPoint([event.x, event.y]);
       const bounds = createBounds(start, current);
       onUpdate(bounds, mod, true);
     });

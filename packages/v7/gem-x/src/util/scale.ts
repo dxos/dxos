@@ -78,6 +78,8 @@ export class Scale {
     // TODO(burdon): Depends on k transform.
     snap: (array: number[]) => array.map(n => Math.round(n / this._gridSize) * this._gridSize),
 
+    snapPoint: ([x, y]): Point => [x, y].map(n => Math.round(n / this._gridSize) * this._gridSize) as Point,
+
     toValues: (values: number[]): Fraction[] => {
       return values.map(value => FractionUtil.divide(FractionUtil.toFraction(value), [1, this._gridSize]));
     },
@@ -85,8 +87,8 @@ export class Scale {
     toVertex: (point: Point): Vertex => {
       const [x, y] = point;
       return {
-        x: FractionUtil.divide(x, this._gridSize),
-        y: FractionUtil.divide(-y, this._gridSize)
+        x: FractionUtil.toFraction(x / this._gridSize),
+        y: FractionUtil.toFraction(-y / this._gridSize)
       };
     },
 
@@ -94,8 +96,8 @@ export class Scale {
       const { x, y, width, height } = bounds;
       return {
         ...this.screen.toVertex([x, y]),
-        width: FractionUtil.divide(width, this._gridSize),
-        height: FractionUtil.divide(height, this._gridSize)
+        width: FractionUtil.toFraction(width / this._gridSize),
+        height: FractionUtil.toFraction(height / this._gridSize)
       };
     }
   }

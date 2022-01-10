@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-x';
+import { FullScreen, SvgContainer, useScale, useStateRef, Vector } from '@dxos/gem-x';
 
 import { Canvas, Element, ElementId, ElementType, ElementDataType, Tool, Toolbar, createKeyHandlers } from '../src';
 
@@ -31,21 +31,11 @@ export default {
 // TODO(burdon): Style objects.
 
 const initial: Element<any>[] = [
-  // {
-  //   id: faker.datatype.uuid(),
-  //   type: 'ellipse',
-  //   data: { cx: 0, cy: 0, rx: [2, 1], ry: [2, 1] }
-  // },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
-    data: { cx: 0, cy: 4, rx: 1, ry: 1 }
-  },
-  // {
-  //   id: faker.datatype.uuid(),
-  //   type: 'ellipse',
-  //   data: { cx: 4, cy: 0, rx: 1, ry: 1 }
-  // }
+    data: { center: Vector.toVertex({ x: 0, y: 2 }), rx: [1, 1], ry: [1, 1] }
+  }
 ];
 
 const Info = ({ data = {} }) => (
