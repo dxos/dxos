@@ -11,10 +11,11 @@ import { SwarmKey } from '@dxos/echo-protocol';
 import { InvalidInvitationError } from '../errors';
 import * as proto from '@dxos/echo-protocol'
 
-export type InvitationDescriptorType = proto.InvitationDescriptor.Type;
+// Re-exporting type enum from protobuf definitions.
+export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
 
 /**
- * A serialized version of InvitationDescriptor that's sutable to be encoded as an URL query string.
+ * A serialized version of InvitationDescriptor that's suitable to be encoded as an URL query string.
  */
 export interface InvitationQueryParameters {
   hash: string
