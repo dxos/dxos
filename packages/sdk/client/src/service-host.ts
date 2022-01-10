@@ -16,12 +16,13 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse, InvitationDescriptor as ProtoInvitationDescriptor } from './proto/gen/dxos/client';
+import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { decodeInvitation, resultSetToStream, encodeInvitation, fromProtoInvitation, toProtoInvitation } from './util';
+import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
 import { PublicKey } from '@dxos/crypto';
 interface InviterInvitation {
+  // TODO(rzadp): Change it to use descrptiors with secrets build-in instead.
   invitationCode: string
   secret: string | undefined
 }
@@ -93,10 +94,10 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         CreateInvitation: () => new Stream(({ next, close }) => {
           setImmediate(async () => {
-            const secret = generatePasscode();
+            const secret = Buffer.from(generatePasscode());
             let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
             const secretProvider = async () => {
-              next({ descriptor: toProtoInvitation(invitation, secret), state: InvitationState.CONNECTED });
+              next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
               return Buffer.from(secret);
             };
             invitation = await this._echo.halo.createInvitation({
@@ -108,9 +109,10 @@ export class ClientServiceHost implements ClientServiceProvider {
                 close();
               }
             });
+            invitation.secret = secret;
             const invitationCode = encodeInvitation(invitation);
-            this._inviterInvitations.push({ invitationCode, secret });
-            next({ descriptor: toProtoInvitation(invitation, secret), state: InvitationState.WAITING_FOR_CONNECTION });
+            this._inviterInvitations.push({ invitationCode, secret: invitation.secret.toString() });
+            next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
           });
         }),
         AcceptInvitation: (request) => new Stream(({ next, close }) => {
@@ -130,7 +132,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           };
 
           // Joining process is kicked off, and will await authentication with a secret.
-          const haloPartyPromise = this._echo.halo.join(fromProtoInvitation(request), secretProvider);
+          const haloPartyPromise = this._echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
           next({ id, state: InvitationState.CONNECTED });
           
@@ -147,7 +149,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
-          invitation.secret = request.secret;
+          invitation.secret = request.secret.toString();
           invitation.secretTrigger?.();
         },
         SubscribeContacts: () => {
@@ -273,9 +275,10 @@ export class ClientServiceHost implements ClientServiceProvider {
                   close();
                 }
               });
+              invitation.secret = Buffer.from(secret);
               const invitationCode = encodeInvitation(invitation);
               this._inviterInvitations.push({ invitationCode, secret });
-              next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: toProtoInvitation(invitation, secret) });
+              next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
             } catch (error: any) {
               next({ state: InvitationState.ERROR, error: error.message });
               close();
@@ -299,7 +302,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           };
 
           // Joining process is kicked off, and will await authentication with a secret.
-          const haloPartyPromise = this.echo.joinParty(fromProtoInvitation(request), secretProvider);
+          const haloPartyPromise = this.echo.joinParty(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
           next({ id, state: InvitationState.CONNECTED });
           
@@ -316,7 +319,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
-          invitation.secret = request.secret;
+          invitation.secret = request.secret.toString();
           invitation.secretTrigger?.();
         },
         SubscribeMembers: (request) => {
