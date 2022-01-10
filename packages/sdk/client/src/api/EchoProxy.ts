@@ -6,11 +6,12 @@ import assert from 'assert';
 
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
 import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Invitation } from '.';
@@ -160,8 +161,9 @@ export class EchoProxy {
           resolveParty(this.getParty(process.partyKey) ?? failUndefined());
         }
       }, error => {
-        if (error) {
-          throw error; // TODO(rzadp): Report as event in returned invitation.
+        if (error && !(error instanceof RpcClosedError)) {
+          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          throwUnhandledRejection(error);
         }
       });
     });
@@ -224,7 +226,7 @@ export class EchoProxy {
 
         if (invitationMsg.state === InvitationState.ERROR) {
           assert(invitationMsg.error, 'Unknown error.');
-          const err = new Error(invitationMsg.error)
+          const err = new Error(invitationMsg.error);
           reject(err);
           error.emit(err);
         }

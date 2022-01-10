@@ -7,6 +7,7 @@ import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -15,7 +16,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
-import { throwUnhandledRejection } from '@dxos/debug';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -138,7 +138,6 @@ describe('Client', () => {
 
         await client.halo.createProfile();
         const party = await client.echo.createParty();
-        await party.open();
 
         await party.setTitle('test-party');
         const title = party.getProperty('title');
@@ -152,7 +151,6 @@ describe('Client', () => {
 
         await client.halo.createProfile();
         const party = await client.echo.createParty();
-        await party.open();
 
         const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
         await item1.model.setProperty('prop1', 'x');

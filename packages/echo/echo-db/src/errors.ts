@@ -35,3 +35,9 @@ export class InvalidInvitationError extends DXOSError {
     super('INVALID_INVITATION', 'Invitation is invalid.');
   }
 }
+
+export class EchoNotOpenError extends DXOSError {
+  constructor () {
+    super('ECHO_NOT_OPEN', 'Echo not open.');
+  }
+}

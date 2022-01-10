@@ -26,6 +26,7 @@ import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, Part
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
+import { EchoNotOpenError } from './errors';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -320,7 +321,7 @@ export class ECHO {
    * @param {PartyKey} partyKey
    */
   getParty (partyKey: PartyKey): Party | undefined {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    assert(this._partyManager.isOpen, new EchoNotOpenError());
 
     const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
@@ -333,7 +334,7 @@ export class ECHO {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    assert(this._partyManager.isOpen, new EchoNotOpenError());
 
     return new ResultSet(
       this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
@@ -353,7 +354,7 @@ export class ECHO {
   //   code const { status } = useInvitationStatus(invitationProcess)
   //   code const party = await client.joinParty(invitation)..ready;
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    assert(this._partyManager.isOpen, new EchoNotOpenError());
 
     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);

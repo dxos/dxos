@@ -106,7 +106,12 @@ export class Stream<T> {
     assert(this._buffer); // Must be not-null.
 
     for (const message of this._buffer) {
-      onMessage(message);
+      try {
+        onMessage(message);
+      } catch(error: any) {
+        // Stop error propagation.
+        throwUnhandledRejection(error);
+      }
     }
     this._buffer = null;
 

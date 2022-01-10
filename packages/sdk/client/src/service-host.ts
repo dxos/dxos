@@ -11,7 +11,7 @@ import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
+import { ECHO, EchoNotOpenError, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -175,14 +175,22 @@ export class ClientServiceHost implements ClientServiceProvider {
       PartyService: {
         SubscribeToParty: (request) => {
           const update = (next: (message: SubscribePartyResponse) => void) => {
-            const party = this._echo.getParty(request.partyKey);
-            next({
-              party: party && {
-                publicKey: party.key,
-                isOpen: party.isOpen,
-                isActive: party.isActive
+            try {
+              const party = this._echo.getParty(request.partyKey);
+              next({
+                party: party && {
+                  publicKey: party.key,
+                  isOpen: party.isOpen,
+                  isActive: party.isActive
+                }
+              });
+            } catch (error) {
+              if (error instanceof EchoNotOpenError) {
+                // Do nothing.
+              } else {
+                throw error;
               }
-            });
+            }
           };
 
           const party = this._echo.getParty(request.partyKey);
