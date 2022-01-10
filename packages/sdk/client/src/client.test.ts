@@ -5,17 +5,16 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep, waitForCondition } from '@dxos/async';
+import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
+import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
-import { InvitationRequest, RedeemedInvitation } from './proto/gen/dxos/client';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {

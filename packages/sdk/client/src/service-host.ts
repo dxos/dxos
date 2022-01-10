@@ -10,8 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { failUndefined, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptorType, OpenProgress, Party, PartyNotFoundError } from '@dxos/echo-db';
+import { raise } from '@dxos/debug';
+import { ECHO, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -19,8 +19,8 @@ import { ClientServiceProvider, ClientServices } from './interfaces';
 import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
-import { PublicKey } from '@dxos/crypto';
+import { encodeInvitation, resultSetToStream } from './util';
+
 interface InviterInvitation {
   // TODO(rzadp): Change it to use descrptiors with secrets build-in instead.
   invitationCode: string
@@ -135,12 +135,12 @@ export class ClientServiceHost implements ClientServiceProvider {
           const haloPartyPromise = this._echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
           next({ id, state: InvitationState.CONNECTED });
-          
+
           haloPartyPromise.then(party => {
-            next({id, state: InvitationState.FINISHED, partyKey: party.key})
+            next({ id, state: InvitationState.FINISHED, partyKey: party.key });
           }).catch(err => {
-            next({id, state: InvitationState.ERROR, error: String(err)})
-          })
+            next({ id, state: InvitationState.ERROR, error: String(err) });
+          });
         }),
         AuthenticateInvitation: async (request) => {
           assert(request.processId, 'Process ID is missing.');
@@ -241,15 +241,15 @@ export class ClientServiceHost implements ClientServiceProvider {
           } // Undefined preserves previous state.
 
           if (request.activeGlobal === true) {
-            await party.activate({global: true});
+            await party.activate({ global: true });
           } else if (request.activeGlobal === false) {
-            await party.deactivate({global: true});
+            await party.deactivate({ global: true });
           } // Undefined preserves previous state.
 
           if (request.activeDevice === true) {
-            await party.activate({device: true});
+            await party.activate({ device: true });
           } else if (request.activeDevice === false) {
-            await party.deactivate({device: true});
+            await party.deactivate({ device: true });
           } // Undefined preserves previous state.
           return {
             publicKey: party.key,
@@ -305,12 +305,12 @@ export class ClientServiceHost implements ClientServiceProvider {
           const haloPartyPromise = this.echo.joinParty(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
           next({ id, state: InvitationState.CONNECTED });
-          
+
           haloPartyPromise.then(party => {
-            next({id, state: InvitationState.FINISHED, partyKey: party.key})
+            next({ id, state: InvitationState.FINISHED, partyKey: party.key });
           }).catch(err => {
-            next({id, state: InvitationState.ERROR, error: String(err)})
-          })
+            next({ id, state: InvitationState.ERROR, error: String(err) });
+          });
         }),
         AuthenticateInvitation: async (request) => {
           assert(request.processId, 'Process ID is missing.');

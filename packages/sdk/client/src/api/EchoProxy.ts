@@ -17,7 +17,6 @@ import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { decodeInvitation, encodeInvitation } from '../util';
 import { PartyProxy } from './PartyProxy';
 import { InvitationRequest } from './invitations';
 
@@ -152,20 +151,19 @@ export class EchoProxy {
       const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
 
       invitationProcessStream.subscribe(async process => {
-        if(process.state === InvitationState.WAITING_FOR_CONNECTION) {
+        if (process.state === InvitationState.WAITING_FOR_CONNECTION) {
           resolveInvitationProcess(process);
-        } else if(process.state === InvitationState.FINISHED) {
+        } else if (process.state === InvitationState.FINISHED) {
           assert(process.partyKey);
           await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
 
           resolveParty(this.getParty(process.partyKey) ?? failUndefined());
         }
       }, error => {
-        if(error) {
+        if (error) {
           throw error; // TODO(rzadp): Report as event in returned invitation.
         }
-      })
-
+      });
     });
 
     const authenticate = async (secret: Buffer) => {
@@ -173,7 +171,7 @@ export class EchoProxy {
 
       await this._serviceProvider.services.PartyService.AuthenticateInvitation({
         processId: invitationProcess.id,
-        secret,
+        secret
       });
     };
 
@@ -209,7 +207,7 @@ export class EchoProxy {
 
       stream.subscribe(invitationMsg => {
         if (!hasInitiated) {
-          assert(invitationMsg.descriptor, 'Missing invitation descriptor.')
+          assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
           hasInitiated = true;
           resolve(new InvitationRequest(InvitationDescriptor.fromProto(invitationMsg.descriptor), connected, finished, error));
         }
@@ -225,7 +223,7 @@ export class EchoProxy {
         }
 
         if (invitationMsg.state === InvitationState.ERROR) {
-          assert(invitationMsg.error, 'Unknown error.')
+          assert(invitationMsg.error, 'Unknown error.');
           error.emit(new Error(invitationMsg.error));
         }
       }, error => {

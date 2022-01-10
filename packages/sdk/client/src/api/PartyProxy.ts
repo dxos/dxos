@@ -78,8 +78,8 @@ export class PartyProxy {
   }
 
   async setActive (active: boolean, options: ActivationOptions) {
-    const activeGlobal = options.global ? active : undefined
-    const activeDevice = options.device ? active : undefined
+    const activeGlobal = options.global ? active : undefined;
+    const activeDevice = options.device ? active : undefined;
     await this._serviceProvider.services.PartyService.SetPartyState({
       partyKey: this.key,
       activeGlobal,

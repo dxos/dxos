@@ -102,15 +102,15 @@ export class HaloProxy {
           resolve(redeemedInvitation);
         }
         if (redeemedInvitation.state === InvitationState.ERROR) {
-          reject(redeemedInvitation.error)
+          reject(redeemedInvitation.error);
         }
       }, error => {
-        if(error) {
-          reject(error)
+        if (error) {
+          reject(error);
         }
-      })
+      });
     });
-    
+
     return async (secret: string) => {
       await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
         processId: redeemedInvitation.id,
@@ -132,7 +132,7 @@ export class HaloProxy {
         } else {
           const pendingInvitation: PendingInvitation = {
             invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
-            pin: invitationMsg.descriptor!.secret!.toString(),
+            pin: invitationMsg.descriptor!.secret!.toString()
           };
           if (invitationMsg.descriptor?.secret && options?.onPinGenerated) {
             options.onPinGenerated(invitationMsg.descriptor.secret.toString());

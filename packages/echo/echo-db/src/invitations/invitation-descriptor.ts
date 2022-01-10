@@ -7,9 +7,9 @@ import stableStringify from 'json-stable-stringify';
 
 import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
+import * as proto from '@dxos/echo-protocol';
 
 import { InvalidInvitationError } from '../errors';
-import * as proto from '@dxos/echo-protocol'
 
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
@@ -27,10 +27,10 @@ export interface InvitationQueryParameters {
 
 /**
  * Describes an issued invitation.
- * 
+ *
  * Can be serialized to protobuf or JSON.
  * Invitations can be interactive or offline.
- * 
+ *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
  */
 export class InvitationDescriptor {
@@ -52,13 +52,13 @@ export class InvitationDescriptor {
     assert(protoInvitation.swarmKey, 'Invitation swarm key not provided.');
     assert(protoInvitation.invitation, 'Invitation not provided.');
     assert(protoInvitation.identityKey, 'Invitation identity key not provided.');
-  
+
     return new InvitationDescriptor(
       protoInvitation.type,
       protoInvitation.swarmKey,
       Buffer.from(protoInvitation.invitation),
       PublicKey.from(protoInvitation.identityKey),
-      protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined,
+      protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined
     );
   }
 
@@ -95,7 +95,7 @@ export class InvitationDescriptor {
     const query: Partial<InvitationQueryParameters> = {
       swarmKey: keyToString(this.swarmKey),
       invitation: keyToString(this.invitation),
-      type: stringifyInvitationType(this.type),
+      type: stringifyInvitationType(this.type)
     };
 
     if (this.identityKey) {
@@ -113,8 +113,8 @@ export class InvitationDescriptor {
       swarmKey: this.swarmKey,
       invitation: this.invitation,
       identityKey: this.identityKey?.asUint8Array(),
-      secret: this.secret,
-    }
+      secret: this.secret
+    };
   }
 }
 
@@ -122,6 +122,6 @@ const parseInvitationType = (str: string): InvitationDescriptorType => {
   const type = parseInt(str);
   assert(type === 1 || type === 2, 'Invalid invitation type');
   return type;
-}
+};
 
 const stringifyInvitationType = (type: InvitationDescriptorType): string => type.toString();

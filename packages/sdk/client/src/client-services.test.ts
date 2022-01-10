@@ -2,11 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { latch, trigger } from '@dxos/async';
-import { RpcClosedError } from '@dxos/rpc';
-import { afterTest } from '@dxos/testutils';
 import assert from 'assert';
 import { it as test } from 'mocha';
+
+import { latch } from '@dxos/async';
+import { RpcClosedError } from '@dxos/rpc';
+import { afterTest } from '@dxos/testutils';
+
 import { Client } from './client';
 import { InvitationRequest, RedeemedInvitation } from './proto/gen/dxos/client';
 
@@ -17,9 +19,9 @@ const setup = async () => {
 
   return {
     client,
-    services: client.services,
-  }
-}
+    services: client.services
+  };
+};
 
 describe('Client Services', () => {
   describe('device invitations', () => {
@@ -31,15 +33,14 @@ describe('Client Services', () => {
 
       await inviter.services.ProfileService.CreateProfile({ username: 'test-user' });
 
-
       const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
         inviter.services.ProfileService.CreateInvitation().subscribe(resolve, reject);
       });
-      assert(invitation.descriptor)
+      assert(invitation.descriptor);
 
       const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
         invitee.services.ProfileService.AcceptInvitation(invitation.descriptor!).subscribe(resolve, reject);
-      })
+      });
 
       await invitee.services.ProfileService.AuthenticateInvitation({
         processId: redeemedInvitation.id,
