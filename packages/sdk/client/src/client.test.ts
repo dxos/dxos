@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
-import { InvitationProcess } from './proto/gen/dxos/client';
+import { InvitationRequest, RedeemedInvitation } from './proto/gen/dxos/client';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -39,7 +39,7 @@ describe('Client', () => {
     });
 
     describe('profile', () => {
-      test('creates a remote profile', async () => {
+      test('creates a profile', async () => {
         const client = await createClient();
 
         await client.initialize();
@@ -64,45 +64,6 @@ describe('Client', () => {
         await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
         expect(client.halo.hasProfile()).toBeTruthy();
       });
-    });
-
-    describe('device invitations', () => {
-      test('creates and joins a HALO invitation', async () => {
-        const inviter = await createClient();
-        await inviter.initialize();
-        afterTest(() => inviter.destroy());
-        const invitee = await createClient();
-        await invitee.initialize();
-        afterTest(() => invitee.destroy());
-
-        await inviter.halo.createProfile({ username: 'test-user' });
-
-        // TODO(dmaretskyi): Refactor to not use services directly.
-        let inviteeInvitationProcess: InvitationProcess;
-        inviter.services.ProfileService.CreateInvitation().subscribe(async inviterInvitation => {
-          if (!inviteeInvitationProcess) {
-            inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
-          } else if (inviterInvitation.secret) {
-            await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
-          }
-        }, (error) => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
-
-        const [inviteeProfileLatch, inviteeProfileTrigger] = latch();
-        invitee.services.ProfileService.SubscribeProfile().subscribe(inviteeProfile => {
-          if (inviteeProfile.profile?.username === 'test-user') {
-            inviteeProfileTrigger();
-          }
-        }, error => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
-        await inviteeProfileLatch;
-      }).timeout(5000);
     });
 
     describe('party invitations', () => {
