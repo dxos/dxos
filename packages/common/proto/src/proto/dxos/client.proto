@@ -77,7 +77,7 @@ message InvitationRequest {
 }
 
 /// Invitation that is being redeemed.
-message RedeeemedInvitation {
+message RedeemedInvitation {
   string id = 1;
 
   InvitationState state = 2;
@@ -110,7 +110,7 @@ service ProfileService {
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
     
   rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
-  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeeemedInvitation);
+  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
     
   rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
@@ -163,7 +163,7 @@ service PartyService {
   rpc SetPartyState(SetPartyStateRequest) returns(Party);
 
   rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
-  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeeemedInvitation);
+  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
