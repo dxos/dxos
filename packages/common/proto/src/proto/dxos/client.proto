@@ -42,26 +42,57 @@ message RecoverProfileRequest {
   string seedPhrase = 1;
 }
 
-message Invitation {
-  // TODO(dmaretskyi): Split into fields.
-  string invitationCode = 1;
-  string secret = 2;
-  bool connected = 3;
-  bool finished = 4;
-  string error = 5;
+message InvitationDescriptor {
+  enum Type {
+    INTERACTIVE = 1;
+    OFFLINE_KEY = 2;
+  }
+
+  Type type = 1;
+  bytes swarmKey = 2;
+  bytes invitation = 3;
+
+  /// Only present if type == OFFLINE_KEY.
+  bytes identityKey = 4;
+
+  /// Must be stripped out when passing to another peer.
+  bytes secret = 5;
 }
 
-message InvitationProcess {
+enum InvitationState {
+  WAITING_FOR_CONNECTION = 1;
+  CONNECTED = 2;
+  FINISHED = 3;
+  ERROR = 4;
+}
+
+/// Invitation process created by sender.
+message InvitationRequest {
+  InvitationDescriptor descriptor = 1;
+
+  InvitationState state = 2;
+
+  /// Only if state == ERROR.
+  string error = 3;
+}
+
+/// Invitation that is being redeemed.
+message RedeeemedInvitation {
   string id = 1;
+
+  InvitationState state = 2;
+
+  /// Only if state == ERROR.
+  string error = 3;
+
+  /// Only on party invitations that are finished.
+  dxos.halo.keys.PubKey partyKey = 4;
 }
 
 message AuthenticateInvitationRequest {
-  InvitationProcess process = 1;
+  /// Id from corresponding RedeemedInvitation.
+  string processId = 1;
   string secret = 2;
-}
-
-message AuthenticateInvitationResponse {
-  Profile profile = 1;
 }
 
 message Contact {
@@ -78,9 +109,9 @@ service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
     
-  rpc CreateInvitation(google.protobuf.Empty) returns (stream Invitation);
-  rpc AcceptInvitation(Invitation) returns (InvitationProcess);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
+  rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
+  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeeemedInvitation);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
     
   rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
 }
@@ -90,28 +121,23 @@ service ProfileService {
 //
 
 message Party {
+  message Member {
+    required dxos.halo.keys.PubKey publicKey = 1;
+    string displayName = 2;
+  }
+
   required dxos.halo.keys.PubKey publicKey = 1;
   required bool isOpen = 2;
   required bool isActive = 3;
-}
 
-message SubscribePartyRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
-}
-
-message SubscribePartyResponse {
-  Party party = 1;
+  repeated Member members = 4;
 }
 
 message SubscribePartiesResponse {
   repeated Party parties = 1;
 }
 
-message OpenPartyRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
-}
-
-message ClosePartyRequest {
+message CreateInvitationRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
 }
 
@@ -120,54 +146,24 @@ message PartyActivationOptions {
   bool device = 2;
 }
 
-message ActivatePartyRequest {
+message SetPartyStateRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
-  required PartyActivationOptions options = 2;
-}
 
-message DeactivatePartyRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
-  required PartyActivationOptions options = 2;
-}
-
-message CreateInvitationRequest {
-  required dxos.halo.keys.PubKey publicKey = 1;
-}
-
-message SubscribeMembersRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
-}
-
-message SubscribeMembersResponse {
-  // TODO(wittjosiah): Factor out.
-  message PartyMember {
-    required dxos.halo.keys.PubKey publicKey = 1;
-    string displayName = 2;
-  }
-
-  repeated PartyMember members = 1;
-}
-
-message AuthenticatePartyInvitationResponse {
-  dxos.halo.keys.PubKey partyKey = 1;
+  bool open = 2;
+  bool activeGlobal = 3;
+  bool activeDevice = 4;
 }
 
 service PartyService {
-  rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
 
-  rpc OpenParty(OpenPartyRequest) returns(google.protobuf.Empty);
-  rpc CloseParty(ClosePartyRequest) returns(google.protobuf.Empty);
+  /// Open and close or activate and deactivate a party.
+  rpc SetPartyState(SetPartyStateRequest) returns(Party);
 
-  rpc ActivateParty(ActivatePartyRequest) returns(google.protobuf.Empty);
-  rpc DeactivateParty(DeactivatePartyRequest) returns(google.protobuf.Empty);
-
-  rpc CreateInvitation(CreateInvitationRequest) returns (stream Invitation);
-  rpc AcceptInvitation(Invitation) returns (InvitationProcess);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (AuthenticatePartyInvitationResponse);
-
-  rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
+  rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
+  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeeemedInvitation);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
