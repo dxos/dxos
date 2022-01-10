@@ -21,8 +21,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "base-x": "~3.0.9"
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",

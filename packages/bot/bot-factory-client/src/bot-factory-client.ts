@@ -11,7 +11,6 @@ import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/netwo
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { generateInvitation } from './generate-invitation';
 import { schema } from './proto/gen';
 import { BotFactoryService, BotPackageSpecifier } from './proto/gen/dxos/bot';
 
@@ -93,10 +92,10 @@ export class BotFactoryClient {
 
   async spawn (pkg: BotPackageSpecifier, client: Client, party: PartyProxy) {
     assert(this._rpc, 'Bot factory client is not started');
-    const invitation = await generateInvitation(client, party);
+    const invitation = await client.echo.createInvitation(party.key);
     const { id } = await this._rpc.rpc.SpawnBot({
       package: pkg,
-      invitation
+      invitation: invitation.descriptor.toProto(),
     });
     assert(id);
     const handle = new BotHandle(id, this._rpc);
