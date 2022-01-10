@@ -78,7 +78,7 @@ const PartyInvitationContainer = () => {
       } else {
         const invitation = await client.echo.createInvitation(partyKey!);
         invitation.connected.on(() => setPin(invitation.secret.toString()));
-        invitation.finshed.on(() => resetInvitations());
+        invitation.finished.on(() => resetInvitations());
         setInvitationCode(encodeInvitation(invitation.descriptor));
       }
     });
