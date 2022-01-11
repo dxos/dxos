@@ -22,9 +22,9 @@ import { createStorageObjects } from './storage';
 import { encodeInvitation, resultSetToStream } from './util';
 
 interface InviterInvitation {
-  // TODO(rzadp): Change it to use descrptiors with secrets build-in instead.
+  // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
   invitationCode: string
-  secret: string | undefined
+  secret: Uint8Array | undefined
 }
 
 interface InviteeInvitation {
@@ -111,7 +111,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             });
             invitation.secret = secret;
             const invitationCode = encodeInvitation(invitation);
-            this._inviterInvitations.push({ invitationCode, secret: invitation.secret.toString() });
+            this._inviterInvitations.push({ invitationCode, secret: invitation.secret });
             next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
           });
         }),
@@ -269,7 +269,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
           setImmediate(async () => {
             try {
-              const secret = generatePasscode();
+              const secret = Buffer.from(generatePasscode());
               const secretProvider = async () => {
                 next({ state: InvitationState.CONNECTED });
                 return Buffer.from(secret);
