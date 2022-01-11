@@ -106,6 +106,7 @@ export class Scale {
 
     toBounds: (bounds: ViewBounds): Bounds => {
       const { x, y, width, height } = bounds;
+      // TODO(burdon): Invert height?
       return {
         ...this.screen.toVertex([x, y]),
         width: FractionUtil.toFraction(width / this._gridSize),

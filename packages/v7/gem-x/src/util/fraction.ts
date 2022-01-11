@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 export type Fraction = [num: number, denum: number]
 
 export type Num = number | Fraction
@@ -15,11 +17,22 @@ export class FractionUtil {
     return typeof n === 'number' ? [n, 1] : n;
   }
 
+  static validate = (...f: Fraction[]): Fraction[] => {
+    f.forEach(([n, d]) => {
+      if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) {
+        throw new Error(`Invalid fraction: ${n}/${d}`);
+      }
+    });
+
+    return f;
+  };
+
   /**
    * @param {Fraction}
    * Convert to rounded number.
    */
   static toNumber = ([n, d]: Fraction): number => {
+    FractionUtil.validate([n, d]);
     return n / d;
   }
 
@@ -39,6 +52,7 @@ export class FractionUtil {
    */
   // TODO(burdon): p as power of 2?
   static round = ([n, d]: Fraction, p = 1): Fraction => {
+    FractionUtil.validate([n, d]);
     if (p > d) {
       return [n, d];
     }
@@ -57,6 +71,7 @@ export class FractionUtil {
    * @param d
    */
   static simplify = ([n, d]: Fraction): Fraction => {
+    FractionUtil.validate([n, d]);
     if (d < 1) {
       const t = n / d;
       if (Math.floor(t) === t) {
@@ -86,13 +101,17 @@ export class FractionUtil {
    * @param n
    */
   static factors = (n: number): number[] => {
+    assert(Number.isFinite(n), `Invalid number: ${n}`);
+
     const factors = [1];
-    let f = 1;
-    do {
-      if (n % ++f === 0) {
-        factors.push(f);
-      }
-    } while (n / f > 1);
+    if (Number.isSafeInteger(n)) {
+      let f = 1;
+      do {
+        if (n % ++f === 0) {
+          factors.push(f);
+        }
+      } while ((n / f) > 1 && f < 100);
+    }
 
     return factors;
   }
@@ -106,6 +125,7 @@ export class FractionUtil {
    * @param n2
    */
   static add = (n1: Fraction, n2: Fraction): Fraction => {
+    FractionUtil.validate(n1, n2);
     const d = n1[1] * n2[1]; // Same denom.
     const n = (n1[0] * n2[1]) + (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
@@ -116,6 +136,7 @@ export class FractionUtil {
    * @param n2
    */
   static subtract = (n1: Fraction, n2: Fraction): Fraction => {
+    FractionUtil.validate(n1, n2);
     const d = n1[1] * n2[1]; // Same denom.
     const n = (n1[0] * n2[1]) - (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
@@ -126,6 +147,7 @@ export class FractionUtil {
    * @param n2
    */
   static multiply = (n1: Fraction, n2: Fraction): Fraction => {
+    FractionUtil.validate(n1, n2);
     const n = n1[0] * n2[0];
     const d = n1[1] * n2[1];
     return FractionUtil.simplify([n, d]);
@@ -136,6 +158,7 @@ export class FractionUtil {
    * @param n2
    */
   static divide = (n1: Fraction, n2: Fraction): Fraction => {
+    FractionUtil.validate(n1, n2);
     const n = n1[0] * n2[1];
     const d = n1[1] * n2[0];
     return FractionUtil.simplify([n, d]);

@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ViewBounds, Point, createBounds, contains } from './screen';
+import { ViewBounds, Point, Screen } from './screen';
 
-test('Bounds', () => {
+test('createBounds', () => {
   const tests: { p1: Point, p2: Point, bounds: ViewBounds }[] = [
     {
       p1: [0, 0],
@@ -24,15 +24,15 @@ test('Bounds', () => {
   ];
 
   tests.forEach(({ p1, p2, bounds }) => {
-    expect(createBounds(p1, p2)).toEqual(bounds);
+    expect(Screen.createBounds(p1, p2)).toEqual(bounds);
   });
 });
 
-test('Contains', () => {
-  const bounds = createBounds([0, 0], [5, 5]);
+test('contains', () => {
+  const bounds = Screen.createBounds([0, 0], [5, 5]);
 
-  expect(contains(bounds, [0, 0])).toBeTruthy();
-  expect(contains(bounds, [2, 1])).toBeTruthy();
-  expect(contains(bounds, [5, 5])).toBeTruthy();
-  expect(contains(bounds, [0, 6])).toBeFalsy();
+  expect(Screen.contains(bounds, [0, 0])).toBeTruthy();
+  expect(Screen.contains(bounds, [2, 1])).toBeTruthy();
+  expect(Screen.contains(bounds, [5, 5])).toBeTruthy();
+  expect(Screen.contains(bounds, [0, 6])).toBeFalsy();
 });

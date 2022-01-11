@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { ViewBounds, Point, Scale, createBounds } from '@dxos/gem-x';
+import { ViewBounds, Point, Scale, Screen } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
 
@@ -37,13 +37,13 @@ export const dragBounds = (
     .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
       const current: Point = scale.screen.snapPoint([event.x, event.y]);
-      const bounds = createBounds(start, current);
+      const bounds = Screen.createBounds(start, current);
       onUpdate(bounds, mod);
     })
     .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
       const current: Point = scale.screen.snapPoint([event.x, event.y]);
-      const bounds = createBounds(start, current);
+      const bounds = Screen.createBounds(start, current);
       onUpdate(bounds, mod, true);
     });
 };

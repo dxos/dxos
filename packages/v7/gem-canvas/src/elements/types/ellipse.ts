@@ -66,6 +66,7 @@ const createEllipse = (scale: Scale): D3Callable => {
  * @param data
  * @param commit
  */
+/*
 const valid = (data: Ellipse, commit: boolean) => {
   if (commit) {
     const { rx, ry } = data;
@@ -76,6 +77,7 @@ const valid = (data: Ellipse, commit: boolean) => {
 
   return data;
 };
+*/
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
@@ -86,6 +88,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
+  // TODO(burdon): Drag should snap, then find nearest fraction here.
   createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): Ellipse {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);
