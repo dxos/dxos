@@ -168,7 +168,7 @@ export class EchoProxy {
       });
     });
 
-    const authenticate = async (secret: Buffer) => {
+    const authenticate = async (secret: Uint8Array) => {
       const invitationProcess = await getInvitationProcess();
 
       await this._serviceProvider.services.PartyService.AuthenticateInvitation({

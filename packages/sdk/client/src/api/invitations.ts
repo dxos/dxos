@@ -43,7 +43,7 @@ export class InvitationRequest {
     return this._descriptor;
   }
 
-  get secret (): Buffer {
+  get secret (): Uint8Array {
     return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
   }
 
@@ -58,7 +58,7 @@ export class InvitationRequest {
 export class Invitation {
   constructor (
     private readonly _partyPromise: Promise<PartyProxy>,
-    private readonly _onAuthenticate: (secret: Buffer) => void
+    private readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}
 
   /**
@@ -68,7 +68,7 @@ export class Invitation {
     return this._partyPromise;
   }
 
-  authenticate (secret: Buffer) {
+  authenticate (secret: Uint8Array) {
     this._onAuthenticate(secret);
   }
 }
