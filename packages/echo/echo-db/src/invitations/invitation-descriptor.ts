@@ -65,21 +65,19 @@ export class InvitationDescriptor {
   constructor (
     public readonly type: InvitationDescriptorType,
     public readonly swarmKey: SwarmKey,
-    public readonly invitation: Buffer,
+    public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
-    public secret?: Buffer
+    public secret?: Uint8Array
   ) {
     assert(type);
-    assert(Buffer.isBuffer(swarmKey));
-    assert(Buffer.isBuffer(invitation));
+    assert(swarmKey instanceof Uint8Array);
+    assert(invitation instanceof Uint8Array);
     if (identityKey) {
       PublicKey.assertValidPublicKey(identityKey);
     }
-
-    this.type = type;
-    this.swarmKey = swarmKey;
-    this.invitation = invitation;
-    this.identityKey = identityKey;
+    if(secret) {
+      assert(secret instanceof Uint8Array);
+    }
   }
 
   get hash () {

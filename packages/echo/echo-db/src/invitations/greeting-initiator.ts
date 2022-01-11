@@ -89,7 +89,7 @@ export class GreetingInitiator {
     // TODO(dboreham): Invitation is actually invitationID.
     const localPeerId = invitation;
     log('Local PeerId:', keyToString(localPeerId));
-    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, new Greeter().createMessageHandler());
+    this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(localPeerId), new Greeter().createMessageHandler());
 
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
 
