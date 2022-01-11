@@ -49,6 +49,14 @@ export class Scale {
   //
 
   readonly model = {
+    // TODO(burdon): Depends on scale (precision).
+    snapValues: (array: Fraction[]) => array.map(n => FractionUtil.round(n)),
+
+    snapVertex: ({ x, y }: Vertex): Vertex => {
+      const [sx, sy] = this.model.snapValues([x, y]);
+      return { x: sx, y: sy };
+    },
+
     toValues: (values: Fraction[]): number[] => {
       return values.map(value => Math.round(FractionUtil.toNumber(value) * this._gridSize));
     },
@@ -75,10 +83,14 @@ export class Scale {
   //
 
   readonly screen = {
-    // TODO(burdon): Depends on k transform.
-    snap: (array: number[]) => array.map(n => Math.round(n / this._gridSize) * this._gridSize),
+    snapValues: (array: number[]) => array.map(n => Math.round(n / this._gridSize) * this._gridSize),
 
     snapPoint: ([x, y]): Point => [x, y].map(n => Math.round(n / this._gridSize) * this._gridSize) as Point,
+
+    snapBounds: ({ x, y, width, height }) => {
+      [x, y, width, height] = this.screen.snapValues([x, y, width, height]);
+      return { x, y, width, height };
+    },
 
     toValues: (values: number[]): Fraction[] => {
       return values.map(value => FractionUtil.divide(FractionUtil.toFraction(value), [1, this._gridSize]));

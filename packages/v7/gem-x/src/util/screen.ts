@@ -16,6 +16,18 @@ export const createBounds = ([x1, y1]: Point, [x2, y2]: Point): ViewBounds => {
   };
 };
 
+// TODO(burdon): Renmae.
+// TODO(burdon): Move utils here.
+
+export class Screen {
+  static center = ({ x, y, width, height }: ViewBounds): Point => {
+    return [
+      x + width / 2,
+      y + height / 2
+    ];
+  }
+}
+
 export const contains = (bounds: ViewBounds, point: Point): boolean => {
   const [x, y] = point;
 

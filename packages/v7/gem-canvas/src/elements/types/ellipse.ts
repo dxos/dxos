@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ViewBounds, Point, Scale, FractionUtil, Vector } from '@dxos/gem-x';
+import { ViewBounds, Point, Scale, Screen, FractionUtil } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -41,13 +41,14 @@ const createEllipse = (scale: Scale): D3Callable => {
             .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
               const { x: dx, y: dy } = scale.screen.toVertex(delta);
               const { center, ...rest } = data;
+              const update = {
+                x: FractionUtil.add(center.x, dx),
+                y: FractionUtil.add(center.y, dy)
+              };
               base.onSelect(true);
               base.onUpdate({
                 ...rest,
-                center: {
-                  x: FractionUtil.add(center.x, dx),
-                  y: FractionUtil.add(center.y, dy)
-                }
+                center: commit ? scale.model.snapVertex(update) : update
               });
             }));
         }
@@ -86,32 +87,12 @@ export class EllipseElement extends BaseElement<Ellipse> {
   type = 'ellipse' as ElementType;
 
   createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): Ellipse {
-    // let { x, y, width, height } = bounds;
-
-    // TODO(burdon): Maintain aspect (not square).
-    // if (mod?.constrain) {
-    // width = height = Math.max(width, height);
-    // }
-
-    // TODO(burdon): Center relative to original center.
-    /*
-    if (mod?.center) {
-      const { cx, cy } = this.data ?? { cx: x, cy: y };
-      const size = [width / 2, height / 2];
-      const [rx, ry] = this.scale.mapToModel(size, commit, 2);
-      return valid({ cx, cy, rx, ry }, commit);
-    } else {
-      const pos: Point = [x + width / 2, y + height / 2];
-      const size = [width / 2, height / 2];
-      const [cx, cy] = this.scale.mapToModel(pos, commit, 2);
-      const [rx, ry] = this.scale.mapToModel(size, commit, 2);
-      return valid({ cx, cy, rx, ry }, commit);
+    if (commit) {
+      bounds = this.scale.screen.snapBounds(bounds);
     }
-    */
 
-    const b = this.scale.screen.toBounds(bounds);
-    const center = Vector.center(b);
-    const { width, height } = b;
+    const center = this.scale.screen.toVertex(Screen.center(bounds));
+    const { width, height } = this.scale.screen.toBounds(bounds);
 
     return {
       center,

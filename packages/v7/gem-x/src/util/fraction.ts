@@ -20,7 +20,7 @@ export class FractionUtil {
    * Convert to rounded number.
    */
   static toNumber = ([n, d]: Fraction): number => {
-    return Math.round(n / d);
+    return n / d;
   }
 
   /**
@@ -39,7 +39,7 @@ export class FractionUtil {
    */
   // TODO(burdon): p as power of 2?
   static round = ([n, d]: Fraction, p = 1): Fraction => {
-    if (p >= d) {
+    if (p > d) {
       return [n, d];
     }
 

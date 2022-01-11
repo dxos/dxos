@@ -16,5 +16,5 @@ test('conversion', () => {
 
 test('snap', () => {
   const scale = new Scale(16);
-  expect(scale.screen.snap([3, 9])).toEqual([0, 16]);
+  expect(scale.screen.snapValues([3, 9])).toEqual([0, 16]);
 });
