@@ -57,16 +57,6 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     return cloneDeep(get(this._pendingObject ?? this._object, path, defaultValue));
   }
 
-  private async _makeMutation (mutation: ObjectMutationSet) {
-    // Create optimistic result.
-    this._pendingObject ??= { ...this._object };
-    MutationUtil.applyMutationSet(this._pendingObject, mutation);
-
-    // Process the mutations.
-    const receipt = await this.write(mutation);
-    await receipt.waitToBeProcessed();
-  }
-
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [
@@ -132,6 +122,16 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     assert(snapshot.root);
     ValueUtil.applyValue(obj, 'root', snapshot.root);
     this._object = obj.root;
+  }
+
+  private async _makeMutation (mutation: ObjectMutationSet) {
+    // Create optimistic result.
+    this._pendingObject ??= { ...this._object };
+    MutationUtil.applyMutationSet(this._pendingObject, mutation);
+
+    // Process the mutations.
+    const receipt = await this.write(mutation);
+    await receipt.waitToBeProcessed();
   }
 
   async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {

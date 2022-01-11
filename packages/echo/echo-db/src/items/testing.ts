@@ -8,7 +8,8 @@ import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
-import { Database, FeedDatabaseBackend, RemoteDatabaseBackend } from '.';
+import { Database } from './database';
+import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 import { DataServiceHost } from './data-service-host';
 import { DataServiceRouter } from './data-service-router';
 
@@ -25,7 +26,8 @@ export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   return database;
 };
 
-export const createRemoteDatabaseFromDataServiceHost = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
+export const createRemoteDatabaseFromDataServiceHost =
+  async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
   const partyKey = PublicKey.random();
   const dataServiceRouter = new DataServiceRouter();
   dataServiceRouter.trackParty(partyKey, dataServiceHost);

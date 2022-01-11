@@ -9,7 +9,7 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from '.';
+import { Item } from './item';
 import { DataServiceHost } from './data-service-host';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
