@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -10,7 +11,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ClientServiceProvider } from '../interfaces';
 import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceProxy } from '../service-proxy';
-import { streamToResultSet } from '../util';
+import { decodeInvitation, streamToResultSet } from '../util';
+import { InvitationRequest } from './invitations';
 
 export class PartyProxy {
   private readonly _database?: Database;
@@ -18,6 +20,9 @@ export class PartyProxy {
   readonly key: PartyKey;
   readonly isOpen: boolean;
   readonly isActive: boolean;
+
+  readonly activeInvitations: InvitationRequest[] = [];
+  readonly invitationsUpdate = new Event();
 
   constructor (
     private _serviceProvider: ClientServiceProvider,
@@ -80,6 +85,68 @@ export class PartyProxy {
 
   async deactivate (options: ActivationOptions) {
     await this._serviceProvider.services.PartyService.DeactivateParty({ partyKey: this.key, options });
+  }
+
+  /**
+   * Creates an invitation to a given party.
+   * The Invitation flow requires the inviter and invitee to be online at the same time.
+   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
+   *
+   * @param partyKey the Party to create the invitation for.
+   */
+  async createInvitation (): Promise<InvitationRequest> {
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: this.key });
+    return new Promise((resolve, reject) => {
+      const connected = new Event();
+      const finished = new Event();
+      const error = new Event<Error>();
+      let invitation: InvitationRequest;
+
+      connected.on(() => this.invitationsUpdate.emit());
+
+      stream.subscribe(invitationMsg => {
+        if (!invitation) {
+          const descriptor = decodeInvitation(invitationMsg.invitationCode!);
+          descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
+          invitation = new InvitationRequest(descriptor, connected, finished, error);
+          this.activeInvitations.push(invitation);
+          this.invitationsUpdate.emit();
+          resolve(invitation);
+        }
+
+        if (invitationMsg.connected && !invitation.hasConnected) {
+          connected.emit();
+        }
+
+        if (invitationMsg.finished) {
+          finished.emit();
+          this.removeInvitation(invitation);
+          stream.close();
+        }
+
+        if (invitationMsg.error) {
+          error.emit(new Error(invitationMsg.error));
+        }
+      }, error => {
+        if (error) {
+          console.error(error);
+          reject(error);
+          // TODO(rzadp): Handle retry.
+        }
+      });
+    });
+  }
+
+  removeInvitation (invitation: InvitationRequest) {
+    const index = this.activeInvitations.findIndex(activeInvitation =>
+      // TODO(wittjosiah): Better comparison.
+      activeInvitation.toString() === invitation.toString()
+    );
+    this.activeInvitations.splice(index, 1);
+    this.invitationsUpdate.emit();
   }
 
   queryMembers () {

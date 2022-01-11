@@ -13,13 +13,12 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { decodeInvitation, encodeInvitation } from '../util';
+import { encodeInvitation } from '../util';
 import { PartyProxy } from './PartyProxy';
-import { InvitationRequest } from './invitations';
+import { Invitation, InvitationRequest } from './invitations';
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
@@ -190,43 +189,12 @@ export class EchoProxy {
    * @param partyKey the Party to create the invitation for.
    */
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
-    return new Promise((resolve, reject) => {
-      const connected = new Event();
-      const finished = new Event();
-      const error = new Event<Error>();
+    const party = this.getParty(partyKey);
+    if (!party) {
+      throw Error('Party not found');
+    }
 
-      let hasInitiated = false; let hasConnected = false;
-
-      stream.subscribe(invitationMsg => {
-        if (!hasInitiated) {
-          hasInitiated = true;
-          const descriptor = decodeInvitation(invitationMsg.invitationCode!);
-          descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
-          resolve(new InvitationRequest(descriptor, connected, finished, error));
-        }
-
-        if (invitationMsg.connected && !hasConnected) {
-          hasConnected = true;
-          connected.emit();
-        }
-
-        if (invitationMsg.finished) {
-          finished.emit();
-          stream.close();
-        }
-
-        if (invitationMsg.error) {
-          error.emit(new Error(invitationMsg.error));
-        }
-      }, error => {
-        if (error) {
-          console.error(error);
-          reject(error);
-          // TODO(rzadp): Handle retry.
-        }
-      });
-    });
+    return party.createInvitation();
   }
 
   /**

@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitation' | 'title' | 'members'>
+export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'>
 
 /**
  * Manages the workflow for inviting a new device to a HALO party.
@@ -18,35 +18,36 @@ export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitatio
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const client = useClient();
 
-  const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
-    const id = v4();
-    const invitation = await client.createHaloInvitation({
-      onFinish: () => {
-        setInvitations(invitations => invitations.filter(invitation => invitation.id !== id));
-      },
-      onPinGenerated: (pin) => {
-        setInvitations(invitations => {
-          const invitationWithPin = invitations.find(invitation => invitation.id === id);
-          if (!invitationWithPin) {
-            return invitations;
-          }
-          return [
-            ...invitations.filter(invitation => invitation.id !== id),
-            { ...invitationWithPin, pin }
-          ];
-        });
-      }
-    });
+  // const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
+  //   const id = v4();
+  //   const invitation = await client.createHaloInvitation({
+  //     onFinish: () => {
+  //       setInvitations(invitations => invitations.filter(invitation => invitation.id !== id));
+  //     },
+  //     onPinGenerated: (pin) => {
+  //       setInvitations(invitations => {
+  //         const invitationWithPin = invitations.find(invitation => invitation.id === id);
+  //         if (!invitationWithPin) {
+  //           return invitations;
+  //         }
+  //         return [
+  //           ...invitations.filter(invitation => invitation.id !== id),
+  //           { ...invitationWithPin, pin }
+  //         ];
+  //       });
+  //     }
+  //   });
 
-    const pendingInvitation: PendingInvitation = { ...invitation, id };
-    setInvitations(invitations => [...invitations, pendingInvitation]);
-  };
+  //   const pendingInvitation: PendingInvitation = { ...invitation, id };
+  //   setInvitations(invitations => [...invitations, pendingInvitation]);
+  // };
 
   return (
     <SharingDialog
       {...props}
       title='Halo Sharing'
-      onCreateInvitation={handleCreateInvitation}
+      onCreateInvitation={() => {}}
+      onCancelInvitation={() => {}}
     />
   );
 };

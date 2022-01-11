@@ -12,6 +12,8 @@ import { PartyProxy } from './PartyProxy';
  * Invitation created by sender.
  */
 export class InvitationRequest {
+  private _hasConnected = false;
+
   /**
    * Fired when the remote peer connects.
    */
@@ -37,6 +39,10 @@ export class InvitationRequest {
     this.connected = connected;
     this.finshed = finished;
     this.error = error;
+
+    this.connected.on(() => {
+      this._hasConnected = true;
+    });
   }
 
   get descriptor (): InvitationDescriptor {
@@ -45,6 +51,13 @@ export class InvitationRequest {
 
   get secret (): Buffer {
     return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
+  }
+
+  /**
+   * True if the connected event has been fired.
+   */
+  get hasConnected (): boolean {
+    return this._hasConnected;
   }
 
   toString () {
