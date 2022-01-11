@@ -95,7 +95,7 @@ export class BotFactoryClient {
     const invitation = await client.echo.createInvitation(party.key);
     const { id } = await this._rpc.rpc.SpawnBot({
       package: pkg,
-      invitation: invitation.descriptor.toProto(),
+      invitation: invitation.descriptor.toProto()
     });
     assert(id);
     const handle = new BotHandle(id, this._rpc);

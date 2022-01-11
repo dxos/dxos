@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { throwUnhandledRejection } from "@dxos/debug";
+import { throwUnhandledRejection } from '@dxos/debug';
 
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 

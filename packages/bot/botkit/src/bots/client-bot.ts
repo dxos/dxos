@@ -10,7 +10,6 @@ import { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
-import { decodeInvitation } from '../utils';
 
 const log = debug('dxos:bot:client-bot');
 

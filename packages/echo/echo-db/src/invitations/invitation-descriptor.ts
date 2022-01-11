@@ -75,7 +75,7 @@ export class InvitationDescriptor {
     if (identityKey) {
       PublicKey.assertValidPublicKey(identityKey);
     }
-    if(secret) {
+    if (secret) {
       assert(secret instanceof Uint8Array);
     }
   }

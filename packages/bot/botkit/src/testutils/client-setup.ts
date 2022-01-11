@@ -4,7 +4,8 @@
 
 import { Client, PartyProxy } from '@dxos/client';
 import { Config } from '@dxos/config';
-import * as proto from '../proto/gen/dxos/echo/invitation'
+
+import * as proto from '../proto/gen/dxos/echo/invitation';
 
 export interface ClientSetup {
   client: Client,
@@ -23,6 +24,6 @@ export const setupClient = async (config?: Config): Promise<ClientSetup> => {
   return {
     client,
     party,
-    invitation: invitation.descriptor.toProto(),
+    invitation: invitation.descriptor.toProto()
   };
 };

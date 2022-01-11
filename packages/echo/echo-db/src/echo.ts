@@ -16,6 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { EchoNotOpenError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
@@ -26,7 +27,6 @@ import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, Part
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
-import { EchoNotOpenError } from './errors';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
