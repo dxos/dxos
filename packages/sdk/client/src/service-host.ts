@@ -28,7 +28,7 @@ interface InviterInvitation {
 }
 
 interface InviteeInvitation {
-  secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
+  secret?: Uint8Array | undefined // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void // Is triggered after supplying the secret.
 }
 
@@ -149,7 +149,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
-          invitation.secret = request.secret.toString();
+          invitation.secret = request.secret;
           invitation.secretTrigger?.();
         },
         SubscribeContacts: () => {
@@ -317,6 +317,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           haloPartyPromise.then(party => {
             next({ id, state: InvitationState.FINISHED, partyKey: party.key });
           }).catch(err => {
+            console.error(err);
             next({ id, state: InvitationState.ERROR, error: String(err) });
           });
         }),
@@ -327,7 +328,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
-          invitation.secret = request.secret.toString();
+          invitation.secret = request.secret;
           invitation.secretTrigger?.();
         },
         SubscribeMembers: (request) => {
