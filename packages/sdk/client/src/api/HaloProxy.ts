@@ -130,7 +130,7 @@ export class HaloProxy {
           options?.onFinish?.({});
           stream.close();
         } else {
-          const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined
+          const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined;
           const pendingInvitation: PendingInvitation = {
             invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
             pin
