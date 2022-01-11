@@ -11,6 +11,9 @@ import * as proto from '@dxos/echo-protocol';
 
 import { InvalidInvitationError } from '../errors';
 
+// Workaround for swc not properly handling namespace re-exports.
+const ___WORKAROUND = proto;
+
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
 
