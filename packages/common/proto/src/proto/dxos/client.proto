@@ -46,7 +46,8 @@ message Invitation {
   // TODO(dmaretskyi): Split into fields.
   string invitationCode = 1;
   string secret = 2;
-  bool finished = 3;
+  bool connected = 3;
+  bool finished = 4;
   string error = 5;
 }
 
@@ -147,8 +148,12 @@ message SubscribeMembersResponse {
   repeated PartyMember members = 1;
 }
 
+message AuthenticatePartyInvitationResponse {
+  dxos.halo.keys.PubKey partyKey = 1;
+}
+
 service PartyService {
-  rpc SubscribeParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
+  rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
@@ -159,10 +164,9 @@ service PartyService {
   rpc ActivateParty(ActivatePartyRequest) returns(google.protobuf.Empty);
   rpc DeactivateParty(DeactivatePartyRequest) returns(google.protobuf.Empty);
 
-  rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
-
+  rpc CreateInvitation(CreateInvitationRequest) returns (stream Invitation);
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (stream AuthenticateInvitationResponse);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (AuthenticatePartyInvitationResponse);
 
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 }

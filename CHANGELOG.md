@@ -1,5 +1,35 @@
 # Change Log
 
+### [2.19.9](https://www.github.com/dxos/protocols/compare/v2.19.8...v2.19.9) (2022-01-10)
+
+
+### Bug Fixes
+
+* Subscribe to party check if ECHO is open ([#811](https://www.github.com/dxos/protocols/issues/811)) ([7f8cf4f](https://www.github.com/dxos/protocols/commit/7f8cf4ff77b9ec742a82d098160dbc3fbf7f7443))
+
+### [2.19.8](https://www.github.com/dxos/protocols/compare/v2.19.7...v2.19.8) (2022-01-07)
+
+
+### Features
+
+* Bot factory use IPFS and DXNS in main script ([#804](https://www.github.com/dxos/protocols/issues/804)) ([02c1eb0](https://www.github.com/dxos/protocols/commit/02c1eb09d0da13b254773a2f3c32cf7cfef8c5a4))
+* Party invitations in remote mode ([#782](https://www.github.com/dxos/protocols/issues/782)) ([1dd2f6c](https://www.github.com/dxos/protocols/commit/1dd2f6c48d77f11390fa9dca550a60cd0c428b19))
+
+
+### Bug Fixes
+
+* **react-components:** adjust jittering on custom text field ([#807](https://www.github.com/dxos/protocols/issues/807)) ([98e1d63](https://www.github.com/dxos/protocols/commit/98e1d63ed685aac079c80968de4b7ea7c908e3ad))
+* Unsubscribe single party in service host ([#809](https://www.github.com/dxos/protocols/issues/809)) ([de7d76e](https://www.github.com/dxos/protocols/commit/de7d76e96a7bc78893e293f65683864c99bc4d5d))
+
+### [2.19.7](https://www.github.com/dxos/protocols/compare/v2.19.6...v2.19.7) (2022-01-03)
+
+
+### Features
+
+* Add client RPC trace to devtools ([#800](https://www.github.com/dxos/protocols/issues/800)) ([3aa68bc](https://www.github.com/dxos/protocols/commit/3aa68bc88235277617e4539bdfded450376362fb))
+* Introduce content loader in bot factory ([#796](https://www.github.com/dxos/protocols/issues/796)) ([6cf543b](https://www.github.com/dxos/protocols/commit/6cf543b246ac15a5eed025472ef8d11a4d6d3d60))
+* Load config from env variables in bot factory ([#802](https://www.github.com/dxos/protocols/issues/802)) ([3672cc3](https://www.github.com/dxos/protocols/commit/3672cc3734a2532feb60260c7fa65610b12fd1f4))
+
 ### [2.19.6](https://www.github.com/dxos/protocols/compare/v2.19.5...v2.19.6) (2021-12-29)
 
 

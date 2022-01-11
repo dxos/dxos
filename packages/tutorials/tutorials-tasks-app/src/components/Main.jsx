@@ -38,9 +38,6 @@ const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex'
   },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1
-  },
   logo: {
     marginRight: theme.spacing(2)
   },

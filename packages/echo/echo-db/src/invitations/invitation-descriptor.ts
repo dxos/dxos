@@ -60,7 +60,8 @@ export class InvitationDescriptor {
     public readonly type: InvitationDescriptorType,
     public readonly swarmKey: SwarmKey,
     public readonly invitation: Buffer,
-    public readonly identityKey?: PublicKey
+    public readonly identityKey?: PublicKey,
+    public secret?: Buffer
   ) {
     assert(type);
     assert(Buffer.isBuffer(swarmKey));

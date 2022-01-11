@@ -3,22 +3,43 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { createApiPromise, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';
-import { BotFactory, BotController } from './bot-factory';
+import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader } from './bot-factory';
 import { getConfig } from './config';
+
+const log = debug('dxos:botkit:bot-factory:main');
 
 const main = async () => {
   const config = getConfig();
   assert(config.get('version') === undefined, 'Only config v0 is supported');
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
+
+  const dxnsServer = config.get('services.dxns.server');
+  let contentResolver: ContentResolver | undefined;
+  if (dxnsServer) {
+    const apiPromise = await createApiPromise(dxnsServer);
+    const registry = new RegistryClient(apiPromise);
+    contentResolver = new DXNSContentResolver(registry);
+  }
+
+  const ipfsGateway = config.get('services.ipfs.gateway');
+  let contentLoader: ContentLoader | undefined;
+  if (ipfsGateway) {
+    contentLoader = new IPFSContentLoader(ipfsGateway);
+  }
+
   const botFactory = new BotFactory({
     botContainer,
-    config
+    config,
+    contentResolver,
+    contentLoader
   });
 
   const signal = config.get('services.signal.server');
@@ -33,7 +54,7 @@ const main = async () => {
   const controller = new BotController(botFactory, networkManager);
   await controller.start(topic);
 
-  console.log(`Listening on ${topic}`);
+  log(`Listening on ${topic}`);
 };
 
 void main();

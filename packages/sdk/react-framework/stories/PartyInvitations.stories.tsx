@@ -12,8 +12,7 @@ import {
   ClientProvider,
   ProfileInitializer,
   useClient,
-  useParties,
-  useSecretGenerator
+  useParties
 } from '@dxos/react-client';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
@@ -141,18 +140,16 @@ const AutoInvitationGenerator = ({
   onInvite: (invitationCode: string) => void
 }) => {
   const client = useClient();
-  const [secretProvider, pin, resetPin] = useSecretGenerator();
+  const [pin, setPin] = useState('');
 
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
-      const invitation = await client.echo.createInvitation(party.key, { secretProvider }, {
-        onFinish: () => {
-          resetPin();
-        }
-      });
+      const invitation = await client.echo.createInvitation(party.key);
+      invitation.finshed.on(() => setPin(''));
+      invitation.connected.on(() => setPin(invitation.secret.toString()));
 
-      onInvite(encodeInvitation(invitation));
+      onInvite(encodeInvitation(invitation.descriptor));
     });
   }, []);
 
