@@ -29,11 +29,11 @@ export class Screen {
         y: y - height,
         width: width * 2,
         height: height * 2
-      }
+      };
     } else {
       return {
         x, y, width, height
-      }
+      };
     }
   };
 
