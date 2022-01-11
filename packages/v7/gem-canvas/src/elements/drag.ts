@@ -5,11 +5,9 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { ViewBounds, Point, Scale, Screen } from '@dxos/gem-x';
+import { ScreenBounds, Point, Scale, Screen, EventMod } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
-
-export type EventMod = { center?: boolean, constrain?: boolean }
 
 export const getEventMod = (event: KeyboardEvent) => ({
   center: event.metaKey,
@@ -18,13 +16,15 @@ export const getEventMod = (event: KeyboardEvent) => ({
 
 /**
  * Drag handler to compute bounds for creating and resizing elements.
+ * NOTE: Event (x, y) coordinates are relative the the drag container.
+ * https://github.com/d3/d3-drag/blob/main/README.md#drag_container
  * @param scale
  * @param onUpdate
  * @param onStart
  */
 export const dragBounds = (
   scale: Scale,
-  onUpdate: (bounds: ViewBounds, mod: EventMod, commit?: boolean) => void,
+  onUpdate: (bounds: ScreenBounds, mod: EventMod, commit?: boolean) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   let start: Point;
@@ -36,20 +36,22 @@ export const dragBounds = (
     })
     .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = scale.screen.snapPoint([event.x, event.y]);
-      const bounds = Screen.createBounds(start, current);
+      const current: Point = [event.x, event.y];
+      const bounds = Screen.createBounds(start, current, mod);
       onUpdate(bounds, mod);
     })
     .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
       const current: Point = scale.screen.snapPoint([event.x, event.y]);
-      const bounds = Screen.createBounds(start, current);
+      const bounds = Screen.createBounds(start, current, mod);
       onUpdate(bounds, mod, true);
     });
 };
 
 /**
  * Drag handler to compute delta for moving elements.
+ * NOTE: Event (x, y) coordinates are relative the the drag container.
+ * https://github.com/d3/d3-drag/blob/main/README.md#drag_container
  * @param onMove
  */
 export const dragMove = (

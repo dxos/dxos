@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ViewBounds, Point, Scale, Screen, FractionUtil } from '@dxos/gem-x';
+import { ScreenBounds, Point, Scale, Screen, FractionUtil } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -39,6 +39,7 @@ const createEllipse = (scale: Scale): D3Callable => {
           selection
             .attr('cursor', 'move')
             .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
+              // TODO(burdon): Sometimes snap to nearest corner (not center?)
               const { x: dx, y: dy } = scale.screen.toVertex(delta);
               const { center, ...rest } = data;
               const update = {
@@ -88,8 +89,8 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
-  // TODO(burdon): Drag should snap, then find nearest fraction here.
-  createData (bounds: ViewBounds, mod?: EventMod, commit?: boolean): Ellipse {
+  // TODO(burdon): Drag should first snap (screen), then find nearest fraction here.
+  createData (bounds: ScreenBounds, mod?: EventMod, commit?: boolean): Ellipse {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
@@ -104,7 +105,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
     };
   }
 
-  createBounds (): ViewBounds {
+  createBounds (): ScreenBounds {
     const { center: { x, y }, rx, ry } = this.data;
     return this.scale.model.toBounds({
       x: FractionUtil.subtract(x, rx),

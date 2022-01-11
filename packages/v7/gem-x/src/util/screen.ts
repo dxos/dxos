@@ -4,28 +4,47 @@
 
 export type Point = [x: number, y: number]
 
-// TODO(burdon): Rename?
-export type ViewBounds = { x: number, y: number, width: number, height: number }
+export type ScreenBounds = { x: number, y: number, width: number, height: number }
 
-// TODO(burdon): Rename?
+// TODO(burdon): Rename (and variable).
+export type EventMod = { center?: boolean, constrain?: boolean }
+
 export class Screen {
-  static createBounds = ([x1, y1]: Point, [x2, y2]: Point): ViewBounds => {
-    return {
-      x: Math.min(x1, x2),
-      y: Math.min(y1, y2),
-      width: Math.abs(x2 - x1),
-      height: Math.abs(y2 - y1)
-    };
+  static createBounds = ([x1, y1]: Point, [x2, y2]: Point, options: EventMod = {}): ScreenBounds => {
+    const { constrain, center } = options;
+
+    const x = Math.min(x1, x2);
+    const y = Math.min(y1, y2);
+
+    let width = Math.abs(x2 - x1);
+    let height = Math.abs(y2 - y1);
+
+    if (constrain) {
+      width = height = Math.max(width, height);
+    }
+
+    if (center) {
+      return {
+        x: x - width,
+        y: y - height,
+        width: width * 2,
+        height: height * 2
+      }
+    } else {
+      return {
+        x, y, width, height
+      }
+    }
   };
 
-  static center = ({ x, y, width, height }: ViewBounds): Point => {
+  static center = ({ x, y, width, height }: ScreenBounds): Point => {
     return [
       x + width / 2,
       y + height / 2
     ];
   }
 
-  static contains = (bounds: ViewBounds, point: Point): boolean => {
+  static contains = (bounds: ScreenBounds, point: Point): boolean => {
     const [x, y] = point;
 
     if (x < bounds.x || y < bounds.y) {

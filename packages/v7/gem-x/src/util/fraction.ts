@@ -50,13 +50,8 @@ export class FractionUtil {
    * @param {Fraction}
    * @param p Precision (e.g., 1/2, 1/4, etc.)
    */
-  // TODO(burdon): p as power of 2?
   static round = ([n, d]: Fraction, p = 1): Fraction => {
     FractionUtil.validate([n, d]);
-    if (p > d) {
-      return [n, d];
-    }
-
     const v = Math.round(FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p])));
     return FractionUtil.simplify([v, p]);
   };

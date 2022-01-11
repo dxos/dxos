@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { ViewBounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
+import { ScreenBounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
 
 import { BaseElement, ElementCache, EventMod, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
@@ -115,15 +115,11 @@ export const Canvas = ({
   //
   // eslint-disable indent
   useEffect(() => {
-    const handleUpdate = (bounds: ViewBounds, mod: EventMod, commit: boolean) => {
+    const handleUpdate = (bounds: ScreenBounds, mod: EventMod, commit: boolean) => {
       const cursor = cursorRef.current;
       const data = cursor.createData(bounds, mod, commit);
 
       if (commit) {
-        // TODO(burdon): Reset.
-        // cursorRef.current._data = undefined;
-        console.log('commit', JSON.stringify(data));
-
         d3.select(cursorGroup.current)
           .selectAll('g')
           .remove();
@@ -150,7 +146,9 @@ export const Canvas = ({
     // Drag handler.
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
+      .attr('cursor', 'crosshair')
       .call(dragBounds(scale, handleUpdate, () => onSelect(undefined))
+        .container(() => svgRef.current)
         .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
   }, [svgRef, cursorGroup]);
   // eslint-enable indent

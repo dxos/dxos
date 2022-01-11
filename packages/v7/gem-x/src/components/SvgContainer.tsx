@@ -152,9 +152,11 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
           visibility // Prevents objects jumping after viewbox set.
         }}
       >
-        <g ref={gridRef} className='grid' />
-        <g ref={childrenRef}>
-          {children}
+        <g>
+          <g ref={gridRef} className='grid' />
+          <g ref={childrenRef}>
+            {children}
+          </g>
         </g>
       </svg>
     </div>

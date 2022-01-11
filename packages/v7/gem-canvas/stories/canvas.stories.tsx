@@ -34,7 +34,7 @@ const initial: Element<any>[] = [
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
-    data: { center: Vector.toVertex({ x: 0, y: 2 }), rx: [1, 1], ry: [1, 1] }
+    data: { center: Vector.toVertex({ x: 2, y: 3 }), rx: [1, 1], ry: [1, 1] }
   }
 ];
 

@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { ViewBounds, Point } from '@dxos/gem-x';
+import { ScreenBounds, Point } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
@@ -31,7 +31,7 @@ const handles: Handle[] = [
  * @param handle
  * @param delta
  */
-const computeBounds = (bounds: ViewBounds, handle: Handle, delta: Point): ViewBounds => {
+const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): ScreenBounds => {
   let { x, y, width, height } = bounds;
 
   // Clip direction.

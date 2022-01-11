@@ -23,6 +23,7 @@ test('round', () => {
   expect(FractionUtil.round([2, 3])).toEqual([1, 1]);
   expect(FractionUtil.round([3, 4], 4)).toEqual([3, 4]);
   expect(FractionUtil.round([7, 5], 4)).toEqual([3, 2]); // 7/5 = 1.4 => 1.5 => 3/2
+  expect(FractionUtil.round([1.75, 1], 4)).toEqual([7, 4]);
 });
 
 test('factors', () => {
