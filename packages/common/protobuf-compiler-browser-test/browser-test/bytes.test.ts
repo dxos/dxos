@@ -12,28 +12,11 @@ import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from '../..
 import { schema } from '../../protobuf-compiler/test/proto/gen'
 import { MyKey } from '../../protobuf-compiler/test/my-key';
 
-it('encode and decode', async () => {
-  const codec = schema.getCodecForType('dxos.test.TaskList')
+it('bytes fields get decoded to Uint8Array', () => {
+  const codec = schema.getCodecForType('dxos.test.Scalars');
 
-  const initial: TaskList = {
-    tasks: [
-      {
-        id: 'foo',
-        title: 'Bar',
-        key: new MyKey(Buffer.from('foo')),
-        type: TaskType.COMPLETED,
-        googleAny: {
-          __type_url: 'dxos.test.SubstitutedByInterface',
-          foo: 'foo',
-        }
-      },
-      {
-        id: 'baz',
-        title: 'Baz',
-        key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS,
-      }
-    ],
+  const initial: Scalars = {
+    bytesField: new Uint8Array(Buffer.from('world')),
   }
 
   const encoded = codec.encode(initial)
@@ -43,4 +26,5 @@ it('encode and decode', async () => {
   const decoded = codec.decode(encoded)
 
   expect(decoded).toEqual(initial)
+  expect(decoded.bytesField).toBeInstanceOf(Uint8Array)
 })
