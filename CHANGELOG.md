@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.19.9](https://www.github.com/dxos/protocols/compare/v2.19.8...v2.19.9) (2022-01-10)
+
+
+### Bug Fixes
+
+* Subscribe to party check if ECHO is open ([#811](https://www.github.com/dxos/protocols/issues/811)) ([7f8cf4f](https://www.github.com/dxos/protocols/commit/7f8cf4ff77b9ec742a82d098160dbc3fbf7f7443))
+
 ### [2.19.8](https://www.github.com/dxos/protocols/compare/v2.19.7...v2.19.8) (2022-01-07)
 
 
