@@ -13,8 +13,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceProvider } from '../interfaces';
+import { InvitationProcess, Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
 import { decodeInvitation, encodeInvitation } from '../util';
 import { Invitation, InvitationRequest } from './invitations';
@@ -29,8 +29,8 @@ export class EchoProxy {
   constructor (
     private readonly _serviceProvider: ClientServiceProvider
   ) {
-    this._modelFactory = _serviceProvider instanceof ClientServiceHost ?
-      _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost
+      ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
