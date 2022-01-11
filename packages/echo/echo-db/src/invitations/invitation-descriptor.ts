@@ -11,11 +11,12 @@ import * as proto from '@dxos/echo-protocol';
 
 import { InvalidInvitationError } from '../errors';
 
-// Workaround for swc not properly handling namespace re-exports.
-const ___WORKAROUND = proto;
-
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
+
+// Workaround for swc not properly handling namespace re-exports.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ___WORKAROUND = proto;
 
 /**
  * A serialized version of InvitationDescriptor that's suitable to be encoded as an URL query string.
