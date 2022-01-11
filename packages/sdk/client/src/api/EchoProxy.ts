@@ -159,6 +159,11 @@ export class EchoProxy {
           await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
 
           resolveParty(this.getParty(process.partyKey) ?? failUndefined());
+        } else if (process.state === InvitationState.ERROR) {
+          assert(process.error);
+          const error = new Error(process.error);
+          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          throwUnhandledRejection(error);
         }
       }, error => {
         if (error && !(error instanceof RpcClosedError)) {
