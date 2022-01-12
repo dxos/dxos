@@ -17,19 +17,19 @@ package dxos.echo.object;
  */
 message Value {
   oneof Type {
-    bool      null                    = 1;    // Explicit null vs undefined.
+    bool null                         = 1;    // Explicit null vs undefined.
 
-    bool      bool                    = 2;
-    int32     int                     = 3;
-    float     float                   = 4;
-    string    string                  = 5;
+    bool bool                         = 2;
+    int32 int                         = 3;
+    float float                       = 4;
+    string string                     = 5;
 
-    string    timestamp               = 10;   // https://en.wikipedia.org/wiki/Unix_time
-    string    datetime                = 11;   // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
-    bytes     bytes                   = 12;
+    string timestamp                  = 10;   // https://en.wikipedia.org/wiki/Unix_time
+    string datetime                   = 11;   // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
+    bytes bytes                       = 12;
 
-    KeyValueObject    object                  = 20;
-    Array     array                   = 21;
+    KeyValueObject object             = 20;
+    Array array                       = 21;
   }
 }
 

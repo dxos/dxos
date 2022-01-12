@@ -14,11 +14,10 @@ import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
-import { ModelConstructionOptions } from '.';
 import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
-import { ItemManager } from './item-manager';
+import { ItemManager, ModelConstructionOptions } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer');
 

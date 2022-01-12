@@ -6,7 +6,9 @@ import { build } from 'esbuild';
 import { promises as fs } from 'fs';
 import { join, resolve, relative } from 'path';
 
-import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
+import {
+  NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin
+} from '@dxos/esbuild-plugins';
 
 export interface BuildTestsOpts {
   outDir: string,

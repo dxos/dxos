@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './EchoProxy';
-export * from './HaloProxy';
-export * from './PartyProxy';
+export * from './echo-proxy';
+export * from './halo-proxy';
 export * from './invitations';
+export * from './party-proxy';
