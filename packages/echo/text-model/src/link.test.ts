@@ -11,8 +11,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from './text-model';
 
 // TODO(burdon): Replace with echo-testing.
-const OBJECT_EDITOR = 'dxn://example/object/editor';
-const TEXT_CONTENT = 'dxn://example/text/content';
+const OBJECT_EDITOR = 'example:object/editor';
+const TEXT_CONTENT = 'example:text/content';
 
 test('directed links between ObjectModel and TextModel', async () => {
   const echo = await createTestInstance({ initialize: true });

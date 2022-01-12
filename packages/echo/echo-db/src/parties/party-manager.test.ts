@@ -264,7 +264,7 @@ describe('Party manager', () => {
     expect(partyB).toBeDefined();
 
     const [updated, onUpdate] = latch();
-    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -275,7 +275,7 @@ describe('Party manager', () => {
         }
       });
 
-    const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
+    const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' });
     log(`A created ${itemA.id}`);
     await updated;
   });
@@ -319,7 +319,7 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
-    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -331,7 +331,7 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' });
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.
@@ -401,7 +401,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -413,7 +413,7 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.
@@ -461,7 +461,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -473,7 +473,7 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.

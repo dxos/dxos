@@ -28,7 +28,7 @@ describe('SnapshotStore', () => {
       database: {
         items: [{
           itemId: createId(),
-          itemType: 'dxn://example/test'
+          itemType: 'example:test'
         }]
       }
     };

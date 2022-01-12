@@ -13,9 +13,9 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
-const OBJECT_ORG = 'dxn://example/object/org';
-const OBJECT_PERSON = 'dxn://example/object/person';
-const LINK_EMPLOYEE = 'dxn://example/link/employee';
+const OBJECT_ORG = 'example:object/org';
+const OBJECT_PERSON = 'example:object/person';
+const LINK_EMPLOYEE = 'example:link/employee';
 
 describe('Database', () => {
   describe('remote', () => {
