@@ -392,6 +392,10 @@ export class ItemManager {
     return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
   }
 
+  /**
+   * Recursive method to unlink and remove items from the active set.
+   * @param itemId
+   */
   deconstructItem (itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
@@ -439,9 +443,10 @@ export class ItemManager {
     this._itemUpdate.emit(item);
   }
 
+  // TODO(burdon): Factor out to test queries separately?
   private _matchesFilter (item: Item<any>, filter: ItemFilter) {
     if (item.deleted) {
-      if (filter?.deleted === ItemFilterDeleted.IGNORE_DELETED ?? true) {
+      if (filter.deleted === undefined || filter.deleted === ItemFilterDeleted.IGNORE_DELETED) {
         return false;
       }
     } else if (filter.deleted === ItemFilterDeleted.SHOW_DELETED_ONLY) {

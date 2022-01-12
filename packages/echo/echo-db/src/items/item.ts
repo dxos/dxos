@@ -69,7 +69,7 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   get readOnly () {
-    return !this._writeStream;
+    return !this._writeStream || this._deleted;
   }
 
   get deleted () {
@@ -104,12 +104,17 @@ export class Item<M extends Model> extends Entity<M> {
   /**
    * Delete the item.
    */
-  // TODO(burdon): Restore.
+  // TODO(burdon): Referential integrity (e.g., delete/hide children?)
   // TODO(burdon): Queries should skip deleted items (unless requested).
   // TODO(burdon): Garbage collection (snapshots should drop deleted items).
+  // TODO(burdon): Prevent updates to model if deleted.
+  // TODO(burdon): If deconstructed (itemManager.deconstructItem) then how to query?
   async delete () {
     if (!this._writeStream) {
       throw new Error(`Item is read-only: ${this.id}`);
+    }
+    if (this.deleted) {
+      return;
     }
 
     await this._writeStream.write({
@@ -120,9 +125,28 @@ export class Item<M extends Model> extends Entity<M> {
     });
   }
 
+  /**
+   * Restore deleted item.
+   */
+  async restore () {
+    if (!this._writeStream) {
+      throw new Error(`Item is read-only: ${this.id}`);
+    }
+    if (!this.deleted) {
+      throw new Error(`Item was note delted: ${this.id}`);
+    }
+
+    await this._writeStream.write({
+      itemId: this.id,
+      itemMutation: {
+        action: ItemMutation.Action.RESTORE
+      }
+    });
+  }
+
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
-    if (!this._writeStream) {
+    if (!this._writeStream || this.readOnly) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
 
@@ -141,6 +165,34 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   /**
+   * Process a mutation from the stream.
+   * @private (Package-private).
+   */
+  _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+    const { action, parentId } = mutation;
+
+    switch (action) {
+      case ItemMutation.Action.DELETE: {
+        this._deleted = true;
+        break;
+      }
+
+      case ItemMutation.Action.RESTORE: {
+        this._deleted = false;
+        break;
+      }
+    }
+
+    // TODO(burdon): Convert to Action.
+    if (parentId) {
+      const parent = getItem(parentId);
+      this._updateParent(parent);
+    }
+
+    this._onUpdate.emit(this);
+  }
+
+  /**
    * Atomically update parent/child relationship.
    * @param parent
    * @private
@@ -156,28 +208,5 @@ export class Item<M extends Model> extends Entity<M> {
     } else {
       this._parent = null;
     }
-  }
-
-  /**
-   * Process a mutation from the stream.
-   * @private (Package-private).
-   */
-  _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    const { action, parentId } = mutation;
-
-    switch (action) {
-      case ItemMutation.Action.DELETE: {
-        this._deleted = true;
-        break;
-      }
-    }
-
-    // TODO(burdon): Convert to Action.
-    if (parentId) {
-      const parent = getItem(parentId);
-      this._updateParent(parent);
-    }
-
-    this._onUpdate.emit(this);
   }
 }
