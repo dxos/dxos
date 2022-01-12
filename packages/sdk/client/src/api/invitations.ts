@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
-import { PartyProxy } from './PartyProxy';
+import { PartyProxy } from './party-proxy';
 
 /**
  * Invitation created by sender.

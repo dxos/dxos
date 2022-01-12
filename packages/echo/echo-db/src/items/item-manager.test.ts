@@ -10,7 +10,7 @@ import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { DefaultModel } from '.';
+import { DefaultModel } from './default-model';
 import { ItemManager } from './item-manager';
 
 describe('ItemManager', () => {

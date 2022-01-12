@@ -9,8 +9,8 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from '.';
 import { DataServiceHost } from './data-service-host';
+import { Item } from './item';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'dxn://example/object/org';
