@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+// TODO(burdon): Move Item specific to echo.item?
 package dxos.echo.feed;
 
 import "google/protobuf/any.proto";
@@ -56,6 +57,12 @@ message EchoEnvelope {
   bytes mutation = 12;
 }
 
+// TODO(burdon): Document (different from parent/child).?
+message LinkData {
+  string source = 1;
+  string target = 2;
+}
+
 /**
  * Item creation.
  */
@@ -66,14 +73,16 @@ message ItemGenesis {
   LinkData link = 4;
 }
 
-message LinkData {
-  string source = 1;
-  string target = 2;
-}
-
 /**
  * Item mutation.
  */
 message ItemMutation {
-  string parentId = 1;
+  enum Action {
+    NOOP = 0;
+    DELETE = 1;
+    RESTORE = 2;
+  }
+
+  string parentId = 1;  // TODO(burdon): Define Action type?
+  Action action = 2;
 }

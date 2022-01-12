@@ -21,10 +21,17 @@ import { Link } from './link';
 
 const log = debug('dxos:echo:item-manager');
 
+export enum ItemFilterDeleted {
+  IGNORE_DELETED = 0,
+  SHOW_DELETED = 1,
+  SHOW_DELETED_ONLY = 2
+}
+
 export interface ItemFilter {
   type?: ItemType | ItemType[]
   parent?: ItemID | ItemID[]
   id?: ItemID | ItemID[]
+  deleted?: ItemFilterDeleted
 }
 
 export interface ModelConstructionOptions {
@@ -45,30 +52,45 @@ export interface LinkConstructionOptions extends ModelConstructionOptions {
   target: ItemID;
 }
 
+// TODO(burdon): Factor out.
+function equalsOrIncludes<T> (value: T, expected: T | T[]) {
+  if (Array.isArray(expected)) {
+    return expected.includes(value);
+  } else {
+    return expected === value;
+  }
+}
+
 /**
  * Manages the creation and indexing of items.
  */
 export class ItemManager {
   private readonly _itemUpdate = new Event<Entity<any>>();
 
+  /**
+   * Update event.
+   */
   readonly debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
 
-  // Map of active items.
+  /**
+   * Map of active items.
+   * @private
+   */
   private readonly _entities = new Map<ItemID, Entity<any>>();
 
   /**
    * Map of item promises (waiting for item construction after genesis message has been written).
+   * @private
    */
   private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
 
   /**
-   * @param partyKey
-   * @param modelFactory
-   * @param writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
+   * @param _modelFactory
+   * @param _writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
   constructor (
-     private readonly _modelFactory: ModelFactory,
-     private readonly _writeStream?: FeedWriter<EchoEnvelope>
+    private readonly _modelFactory: ModelFactory,
+    private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
   get entities () {
@@ -175,11 +197,14 @@ export class ItemManager {
     return link;
   }
 
-  private async _constructModel ({ modelType, itemId, modelSnapshot, initialMutations }: ModelConstructionOptions): Promise<Model<any>> {
+  private async _constructModel ({
+    modelType, itemId, modelSnapshot, initialMutations
+  }: ModelConstructionOptions): Promise<Model<any>> {
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
       throw new UnknownModelError(modelType);
     }
+
     const modelMeta = this._modelFactory.getModelMeta(modelType);
 
     //
@@ -359,8 +384,8 @@ export class ItemManager {
     return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
-        !(item.model instanceof DefaultModel) &&
-        this._matchesFilter(item, filter)
+        // TODO(burdon): Document why skipping DefaultModel? (E.g., transient?)
+        !(item.model instanceof DefaultModel) && this._matchesFilter(item, filter)
       ));
   }
 
@@ -416,6 +441,14 @@ export class ItemManager {
   }
 
   private _matchesFilter (item: Item<any>, filter: ItemFilter) {
+    if (item.deleted) {
+      if (filter?.deleted === ItemFilterDeleted.IGNORE_DELETED ?? true) {
+        return false;
+      }
+    } else if (filter.deleted === ItemFilterDeleted.SHOW_DELETED_ONLY) {
+      return false;
+    }
+
     if (filter.type && (!item.type || !equalsOrIncludes(item.type, filter.type))) {
       return false;
     }
@@ -429,15 +462,6 @@ export class ItemManager {
     }
 
     return true;
-  }
-}
-
-// TODO(burdon): Factor out.
-function equalsOrIncludes<T> (value: T, expected: T | T[]) {
-  if (Array.isArray(expected)) {
-    return expected.includes(value);
-  } else {
-    return expected === value;
   }
 }
 
