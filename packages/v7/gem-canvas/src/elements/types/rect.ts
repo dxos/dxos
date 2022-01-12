@@ -45,7 +45,7 @@ const createRect = (scale: Scale): D3Callable => {
                 y: FractionUtil.add(y, dy),
                 width,
                 height
-              }
+              };
 
               base.onSelect(true);
               base.onUpdate({
