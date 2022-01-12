@@ -5,11 +5,11 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { ScreenBounds, Point, Scale, Screen, EventMod } from '@dxos/gem-x';
+import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
 
-export const getEventMod = (event: KeyboardEvent) => ({
+export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   center: event.metaKey,
   constrain: event.shiftKey
 });
@@ -22,9 +22,10 @@ export const getEventMod = (event: KeyboardEvent) => ({
  * @param onUpdate
  * @param onStart
  */
+// TODO(burdon): Event x, y is wrong if grid is translated (needs to be mapped).
 export const dragBounds = (
   scale: Scale,
-  onUpdate: (bounds: ScreenBounds, mod: EventMod, commit?: boolean) => void,
+  onUpdate: (bounds: ScreenBounds, mod: Modifiers, commit?: boolean) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   let start: Point;
@@ -55,7 +56,7 @@ export const dragBounds = (
  * @param onMove
  */
 export const dragMove = (
-  onMove: (delta: Point, mod: EventMod, commit?: boolean) => void
+  onMove: (delta: Point, mod: Modifiers, commit?: boolean) => void
 ): DragBehavior<any, any, any> => {
   let start: Point;
 

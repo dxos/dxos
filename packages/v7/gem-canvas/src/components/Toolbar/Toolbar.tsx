@@ -33,13 +33,10 @@ export const Toolbar = ({
 
   const tools: { type: Tool }[] = [
     {
-      type: 'circle'
+      type: 'rect'
     },
     {
       type: 'ellipse'
-    },
-    {
-      type: 'rect'
     },
     {
       type: 'line'

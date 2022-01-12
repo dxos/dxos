@@ -14,19 +14,19 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Need to keep original size (Don't change element.data until commit).
-//  - Constraints.
-//  - Save items (model).
-
-// TODO(burdon): Snap.
-
-// TODO(burdon): Implement path to test model.
-
-// TODO(burdon): Info panel with element info.
+// TODO(burdon): Fix event x, y (when moved).
+// TODO(burdon): Show connect points on hightlight.
+// TODO(burdon): Drag to draw line.
 // TODO(burdon): Use debug for logging.
 
-// TODO(burdon): Think about undo.
-// TODO(burdon): Factor out special cases for path (in handlers).
+// TODO(burdon): Items (model).
+// TODO(burdon): Copy/paste.
+// TODO(burdon): Undo.
+
+// TODO(burdon): Constrain on resize.
+// TODO(burdon): Snap center/bounds on move.
+// TODO(burdon): Implement path to test model.
+// TODO(burdon): Info panel with element info.
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 // TODO(burdon): Style objects.
 
@@ -35,6 +35,16 @@ const initial: Element<any>[] = [
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: { center: Vector.toVertex({ x: 2, y: 3 }), rx: [1, 1], ry: [1, 1] }
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'ellipse',
+    data: { center: Vector.toVertex({ x: 6, y: 3 }), rx: [1, 2], ry: [1, 2] }
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'rect',
+    data: { bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 }) }
   }
 ];
 
@@ -55,7 +65,7 @@ export const Primary = () => {
   const scale = useScale({ gridSize: 32 });
   const [elements, setElements] = useState<Element<any>[]>(initial);
   const [selected, setSelected, selectedRef] = useStateRef<Element<any>>();
-  const [tool, setTool] = useState<Tool>('ellipse');
+  const [tool, setTool] = useState<Tool>();
 
   // TODO(burdon): Randomizer.
   // useEffect(() => {

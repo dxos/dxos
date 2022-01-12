@@ -2,14 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { EventMod, getEventMod } from '../../elements';
+import { Modifiers } from '@dxos/gem-x';
+
+import { getEventMod } from '../../elements';
 import { D3Callable } from '../../types';
 
 export type ActionType = 'enter' | 'delete' | 'cancel'
 
 export type Action = {
   action: ActionType,
-  mod: EventMod
+  mod: Modifiers
 }
 
 /**

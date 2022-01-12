@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ScreenBounds, Point, Scale, Screen, FractionUtil } from '@dxos/gem-x';
+import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { BaseElement } from '../base';
-import { EventMod, dragMove } from '../drag';
+import { dragMove } from '../drag';
 import { createFrame } from '../frame';
 
 /**
@@ -38,18 +38,19 @@ const createEllipse = (scale: Scale): D3Callable => {
         if (base.onUpdate) {
           selection
             .attr('cursor', 'move')
-            .call(dragMove((delta: Point, mod: EventMod, commit?: boolean) => {
-              // TODO(burdon): Sometimes snap to nearest corner (not center?)
+            .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
+              // TODO(burdon): Snap to edge unless mod (center).
               const { x: dx, y: dy } = scale.screen.toVertex(delta);
               const { center, ...rest } = data;
-              const update = {
+              const moved = {
                 x: FractionUtil.add(center.x, dx),
                 y: FractionUtil.add(center.y, dy)
               };
+
               base.onSelect(true);
               base.onUpdate({
                 ...rest,
-                center: commit ? scale.model.snapVertex(update) : update
+                center: commit ? scale.model.snapVertex(moved) : moved
               });
             }));
         }
@@ -67,7 +68,6 @@ const createEllipse = (scale: Scale): D3Callable => {
  * @param data
  * @param commit
  */
-/*
 const valid = (data: Ellipse, commit: boolean) => {
   if (commit) {
     const { rx, ry } = data;
@@ -78,7 +78,6 @@ const valid = (data: Ellipse, commit: boolean) => {
 
   return data;
 };
-*/
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
@@ -90,7 +89,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
   type = 'ellipse' as ElementType;
 
   // TODO(burdon): Drag should first snap (screen), then find nearest fraction here.
-  createData (bounds: ScreenBounds, mod?: EventMod, commit?: boolean): Ellipse {
+  createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Ellipse {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
@@ -98,11 +97,11 @@ export class EllipseElement extends BaseElement<Ellipse> {
     const center = this.scale.screen.toVertex(Screen.center(bounds));
     const { width, height } = this.scale.screen.toBounds(bounds);
 
-    return {
+    return valid({
       center,
       rx: FractionUtil.divide(width, [2, 1]),
       ry: FractionUtil.divide(height, [2, 1])
-    };
+    }, commit);
   }
 
   createBounds (): ScreenBounds {

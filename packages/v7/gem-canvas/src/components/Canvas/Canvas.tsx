@@ -6,9 +6,9 @@ import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { ScreenBounds, defaultScale, Scale, useStateRef } from '@dxos/gem-x';
+import { Modifiers, ScreenBounds, Scale, defaultScale, useStateRef } from '@dxos/gem-x';
 
-import { BaseElement, ElementCache, EventMod, createElement, dragBounds } from '../../elements';
+import { BaseElement, ElementCache, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
 
@@ -28,7 +28,7 @@ const styles = css`
   }
 
   // TODO(burdon): Scope.
-  ellipse {
+  ellipse, rect {
     stroke: #666;
     stroke-width: 2;
     fill: #F5F5F5;
@@ -115,7 +115,7 @@ export const Canvas = ({
   //
   // eslint-disable indent
   useEffect(() => {
-    const handleUpdate = (bounds: ScreenBounds, mod: EventMod, commit: boolean) => {
+    const handleUpdate = (bounds: ScreenBounds, mod: Modifiers, commit: boolean) => {
       const cursor = cursorRef.current;
       const data = cursor.createData(bounds, mod, commit);
 

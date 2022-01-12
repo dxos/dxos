@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ScreenBounds, Scale } from '@dxos/gem-x';
+import { Modifiers, ScreenBounds, Scale } from '@dxos/gem-x';
 
 import { Element, ElementDataType, ElementType } from '../model';
 import { D3Callable } from '../types';
-import { EventMod } from './drag';
 
 /**
  * Graphical element.
@@ -88,7 +87,7 @@ export abstract class BaseElement<T extends ElementDataType> {
    * @param mod
    * @param commit
    */
-  abstract createData (bounds: ScreenBounds, mod?: EventMod, commit?: boolean): T;
+  abstract createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): T;
 
   /**
    * Create bounding box from data.

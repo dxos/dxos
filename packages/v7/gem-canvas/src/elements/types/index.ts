@@ -3,3 +3,4 @@
 //
 
 export * from './ellipse';
+export * from './rect';

@@ -4,11 +4,11 @@
 
 import * as d3 from 'd3';
 
-import { ScreenBounds, Point } from '@dxos/gem-x';
+import { Modifiers, ScreenBounds, Point } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
-import { EventMod, getEventMod } from './drag';
+import { getEventMod } from './drag';
 
 type Handle = { id: string, p: Point, cursor: string }
 
@@ -60,7 +60,7 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
  * @param onUpdate
  */
 const handleDrag = (
-  onUpdate: (handle: Handle, delta: Point, mod: EventMod, commit?: boolean) => void
+  onUpdate: (handle: Handle, delta: Point, mod: Modifiers, commit?: boolean) => void
 ): D3Callable => {
   let start: Point;
   let subject: Handle;
@@ -93,7 +93,7 @@ export const createFrame = (): D3Callable => {
     const cy = y + height / 2;
 
     // eslint-disable indent
-    group.selectAll('rect')
+    group.selectAll('rect.frame')
       .data(active ? ['_frame_'] : [])
       .join('rect')
       .classed('frame', true)

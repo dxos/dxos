@@ -6,12 +6,14 @@ export type Point = [x: number, y: number]
 
 export type ScreenBounds = { x: number, y: number, width: number, height: number }
 
-// TODO(burdon): Rename (and variable).
-export type EventMod = { center?: boolean, constrain?: boolean }
+export type Modifiers = {
+  center?: boolean
+  constrain?: boolean
+}
 
 export class Screen {
-  static createBounds = ([x1, y1]: Point, [x2, y2]: Point, options: EventMod = {}): ScreenBounds => {
-    const { constrain, center } = options;
+  static createBounds = ([x1, y1]: Point, [x2, y2]: Point, mod: Modifiers = {}): ScreenBounds => {
+    const { constrain, center } = mod;
 
     const x = Math.min(x1, x2);
     const y = Math.min(y1, y2);

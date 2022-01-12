@@ -41,7 +41,7 @@ export class FractionUtil {
    * True if zero.
    */
   static isZero = ([n]: Fraction): boolean => {
-    return n[0] === 0;
+    return n === 0;
   }
 
   /**
