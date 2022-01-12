@@ -25,7 +25,7 @@ const generators = {
     name: faker.company.companyName(),
     description: faker.lorem.sentence(),
     // TODO(burdon): Converted to object.
-    labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
+    labels: faker.random.arrayElements(labels, faker.datatype.number({ min: 0, max: 3 }))
   }),
 
   [OBJECT_PERSON]: () => ({
@@ -113,7 +113,7 @@ export class Generator {
       const person = await this._database.createItem({
         model: ObjectModel, type: OBJECT_PERSON, props: createProps(OBJECT_PERSON)
       });
-      const count = faker.random.number({ min: 0, max: 2 });
+      const count = faker.datatype.number({ min: 0, max: 2 });
       const orgs = faker.random.arrayElements(organizations, count);
       return orgs.map((org: Item<any>) => this._database.createLink({
         type: LINK_EMPLOYEE, source: org, target: person
@@ -129,7 +129,7 @@ export class Generator {
 
       // Task child nodes.
       // TODO(burdon): Assign to people (query people from org).
-      await Promise.all(times(faker.random.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
+      await Promise.all(times(faker.datatype.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
         await this._database.createItem({
           model: ObjectModel, type: OBJECT_TASK, props: createProps(OBJECT_TASK), parent: project.id
         });

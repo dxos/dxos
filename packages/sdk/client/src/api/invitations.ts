@@ -44,7 +44,7 @@ export class InvitationRequest {
   }
 
   get secret (): Buffer {
-    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
+    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set.'));
   }
 
   toString () {
@@ -53,7 +53,7 @@ export class InvitationRequest {
 }
 
 /**
- * Invitation that is beeing redeemed.
+ * Invitation being redeemed by receiver.
  */
 export class Invitation {
   constructor (
@@ -61,14 +61,16 @@ export class Invitation {
     private readonly _onAuthenticate: (secret: Buffer) => void
   ) {}
 
+  // TODO(burdon): Why buffer in public API?
+  authenticate (secret: Buffer) {
+    this._onAuthenticate(secret);
+  }
+
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
+  // TODO(burdon): Rename getParty.
   wait (): Promise<PartyProxy> {
     return this._partyPromise;
-  }
-
-  authenticate (secret: Buffer) {
-    this._onAuthenticate(secret);
   }
 }

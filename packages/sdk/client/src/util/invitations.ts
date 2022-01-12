@@ -9,6 +9,7 @@ import { InvitationDescriptor } from '@dxos/echo-db';
 // Encode with only alpha-numberic characters.
 export const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
+// TODO(burdon): Move to class utility?
 export const encodeInvitation = (invitation: InvitationDescriptor) => {
   const buffer = Buffer.from(JSON.stringify(invitation.toQueryParameters()));
   return base62.encode(buffer);

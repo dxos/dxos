@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import { PartyProxy } from '@dxos/client';
+import { PartyProxy, encodeInvitation } from '@dxos/client';
 import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
@@ -89,10 +89,10 @@ const VIEW_GRAPH = 4;
 
 interface MainProps {
   party: PartyProxy | Party
-  code?: string
+  showInvitation?: boolean
 }
 
-export const Main = ({ party, code }: MainProps) => {
+export const Main = ({ party, showInvitation }: MainProps) => {
   const classes = useStyles();
   const client = useClient();
 
@@ -127,7 +127,7 @@ export const Main = ({ party, code }: MainProps) => {
       props: {
         name: name,
         description: faker.lorem.sentence(),
-        labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
+        labels: faker.random.arrayElements(labels, faker.datatype.number({ min: 0, max: 3 }))
       }
     });
 
@@ -136,15 +136,19 @@ export const Main = ({ party, code }: MainProps) => {
   };
 
   const handleCopyInvite = async () => {
-    assert(code);
     const invitation = await client.echo.createInvitation(party.key);
+    const encodedInvitation = encodeInvitation(invitation.descriptor);
 
-    const invitationText = JSON.stringify(invitation.descriptor.toQueryParameters());
-    await navigator.clipboard.writeText(invitationText);
-    console.log(invitationText); // Console log is required for E2E tests.
+    // TODO(burdon): Downside here is no way to prevent sender from being lazy (sending secret together).
+    const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
+    await navigator.clipboard.writeText(text);
+    // TODO(burdon): E2E probably broken.
+    // Console log is required for E2E tests.
+    console.log(text);
   };
 
-  // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
+  // TODO(burdon): Show/hide components to maintain state (and test subscriptions).
+  //  Show for first time on select.
   return (
     <div className={classes.root}>
       <Toolbar variant='dense' disableGutters classes={{ root: classes.toolbar }}>
@@ -155,7 +159,7 @@ export const Main = ({ party, code }: MainProps) => {
           <ViewButton view={VIEW_GRID} icon={GridIcon} />
           <ViewButton view={VIEW_GRAPH} icon={GraphIcon} />
         </div>
-        {code && (
+        {showInvitation && (
           <Button onClick={handleCopyInvite}>Copy invite</Button>
         )}
       </Toolbar>
