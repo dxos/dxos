@@ -9,6 +9,7 @@ import { createId } from '@dxos/crypto';
 import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { Item } from 'src/items/item';
 
 import { DefaultModel } from './default-model';
 import { ItemManager } from './item-manager';
@@ -39,12 +40,30 @@ describe('ItemManager', () => {
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
       const item = await itemManager.constructItem(defaultOpts());
-
       expect(itemManager.entities.size).toEqual(1);
 
       itemManager.deconstructItem(item.id);
-
       expect(itemManager.entities.size).toEqual(0);
+    });
+  });
+
+  describe('query items', () => {
+    test.only('basic query', async (done) => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      await Promise.all(Array.from({ length: 10 }).map(() => itemManager.constructItem({
+        itemId: createId(),
+        modelType: ObjectModel.meta.type,
+        itemType: undefined
+      })));
+
+      const result = await itemManager.queryItems();
+      result.subscribe((items: Item<any>[]) => {
+        console.log('>>>', items);
+        expect(items).toHaveLength(10);
+        done();
+      });
     });
   });
 

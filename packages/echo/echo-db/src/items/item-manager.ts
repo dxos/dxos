@@ -270,7 +270,6 @@ export class ItemManager {
    * @param [parentId] - ItemID of the parent of this Item (optional).
    * @param initialMutations
    * @param modelSnapshot
-   * @param link
    */
   @timed(5_000)
   async constructItem ({
