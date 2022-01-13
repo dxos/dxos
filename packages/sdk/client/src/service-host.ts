@@ -181,7 +181,8 @@ export class ClientServiceHost implements ClientServiceProvider {
                 party: party && {
                   publicKey: party.key,
                   isOpen: party.isOpen,
-                  isActive: party.isActive
+                  isActive: party.isActive,
+                  members: party.queryMembers().value
                 }
               });
             } catch (error) {
@@ -223,7 +224,8 @@ export class ClientServiceHost implements ClientServiceProvider {
               parties: parties.map(party => ({
                 publicKey: party.key,
                 isOpen: party.isOpen,
-                isActive: party.isActive
+                isActive: party.isActive,
+                members: party.queryMembers().value
               }))
             });
           });

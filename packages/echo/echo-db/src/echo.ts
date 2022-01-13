@@ -334,7 +334,9 @@ export class ECHO {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     return new ResultSet(
       this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
