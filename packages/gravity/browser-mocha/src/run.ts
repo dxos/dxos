@@ -11,7 +11,7 @@ import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
 
-import { Browser, RunOptions } from '.';
+import { Browser, RunOptions } from './runner';
 
 /**
  * Timeout for testing framework to initialize and to load tests.

@@ -10,26 +10,26 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { failUndefined, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, OpenProgress, Party, PartyNotFoundError } from '@dxos/echo-db';
+import { raise } from '@dxos/debug';
+import { ECHO, EchoNotOpenError, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
+import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
+import { encodeInvitation, resultSetToStream } from './util';
 
 interface InviterInvitation {
+  // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
   invitationCode: string
-  secret: string | undefined
+  secret: Uint8Array | undefined
 }
 
 interface InviteeInvitation {
-  secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
+  secret?: Uint8Array | undefined // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void // Is triggered after supplying the secret.
-  joinPromise?: () => Promise<Party> // Resolves when the joining process finishes.
 }
 
 export class ClientServiceHost implements ClientServiceProvider {
@@ -94,10 +94,10 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         CreateInvitation: () => new Stream(({ next, close }) => {
           setImmediate(async () => {
-            const secret = generatePasscode();
+            const secret = Buffer.from(generatePasscode());
             let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
             const secretProvider = async () => {
-              next({ invitationCode: encodeInvitation(invitation), secret });
+              next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
               return Buffer.from(secret);
             };
             invitation = await this._echo.halo.createInvitation({
@@ -105,18 +105,18 @@ export class ClientServiceHost implements ClientServiceProvider {
               secretValidator: defaultSecretValidator
             }, {
               onFinish: () => {
-                next({ finished: true });
+                next({ state: InvitationState.SUCCESS });
                 close();
               }
             });
+            invitation.secret = secret;
             const invitationCode = encodeInvitation(invitation);
-            this._inviterInvitations.push({ invitationCode, secret });
-            next({ invitationCode });
+            this._inviterInvitations.push({ invitationCode, secret: invitation.secret });
+            next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
           });
         }),
-        AcceptInvitation: async (request) => {
+        AcceptInvitation: (request) => new Stream(({ next, close }) => {
           const id = v4();
-          assert(request.invitationCode, 'InvitationCode not provided.');
           const [secretLatch, secretTrigger] = latch();
           const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
@@ -132,29 +132,26 @@ export class ClientServiceHost implements ClientServiceProvider {
           };
 
           // Joining process is kicked off, and will await authentication with a secret.
-          const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
-          inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
+          const haloPartyPromise = this._echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
-          return { id };
-        },
-        AuthenticateInvitation: (request) => new Stream(({ next, close }) => {
-          assert(request.process?.id, 'Process ID is missing.');
-          const invitation = this._inviteeInvitations.get(request.process?.id);
+          next({ id, state: InvitationState.CONNECTED });
+
+          haloPartyPromise.then(party => {
+            next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+          }).catch(err => {
+            next({ id, state: InvitationState.ERROR, error: String(err) });
+          });
+        }),
+        AuthenticateInvitation: async (request) => {
+          assert(request.processId, 'Process ID is missing.');
+          const invitation = this._inviteeInvitations.get(request.processId);
           assert(invitation, 'Invitation not found.');
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
-
-          next({});
-          void invitation.joinPromise?.().then(() => {
-            const profile = this._echo.halo.getProfile();
-            assert(profile, 'Profile not created.');
-            next({ profile });
-            close();
-          });
-        }),
+        },
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {
             return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
@@ -178,7 +175,7 @@ export class ClientServiceHost implements ClientServiceProvider {
       PartyService: {
         SubscribeToParty: (request) => {
           const update = (next: (message: SubscribePartyResponse) => void) => {
-            if (this._echo.isOpen) {
+            try {
               const party = this._echo.getParty(request.partyKey);
               next({
                 party: party && {
@@ -187,6 +184,12 @@ export class ClientServiceHost implements ClientServiceProvider {
                   isActive: party.isActive
                 }
               });
+            } catch (error) {
+              if (error instanceof EchoNotOpenError) {
+                // Do nothing.
+              } else {
+                throw error;
+              }
             }
           };
 
@@ -233,45 +236,42 @@ export class ClientServiceHost implements ClientServiceProvider {
             isActive: party.isActive
           };
         },
-        OpenParty: async (request) => {
+        SetPartyState: async (request) => {
           const party = this._echo.getParty(request.partyKey);
           if (!party) {
             throw new Error('Party not found');
           }
 
-          await party.open();
-        },
-        CloseParty: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
+          if (request.open === true) {
+            await party.open();
+          } else if (request.open === false) {
+            await party.close();
+          } // Undefined preserves previous state.
 
-          await party.close();
-        },
-        ActivateParty: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
+          if (request.activeGlobal === true) {
+            await party.activate({ global: true });
+          } else if (request.activeGlobal === false) {
+            await party.deactivate({ global: true });
+          } // Undefined preserves previous state.
 
-          await party.activate(request.options);
-        },
-        DeactivateParty: async (request) => {
-          const party = this._echo.getParty(request.partyKey);
-          if (!party) {
-            throw new Error('Party not found');
-          }
-
-          await party.deactivate(request.options);
+          if (request.activeDevice === true) {
+            await party.activate({ device: true });
+          } else if (request.activeDevice === false) {
+            await party.deactivate({ device: true });
+          } // Undefined preserves previous state.
+          return {
+            publicKey: party.key,
+            isOpen: party.isOpen,
+            isActive: party.isActive
+          };
         },
         CreateInvitation: (request) => new Stream(({ next, close }) => {
-          const party = this.echo.getParty(request.publicKey) ?? raise(new PartyNotFoundError(request.publicKey));
+          const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
           setImmediate(async () => {
             try {
-              const secret = generatePasscode();
+              const secret = Buffer.from(generatePasscode());
               const secretProvider = async () => {
-                next({ connected: true });
+                next({ state: InvitationState.CONNECTED });
                 return Buffer.from(secret);
               };
               const invitation = await party.createInvitation({
@@ -279,22 +279,22 @@ export class ClientServiceHost implements ClientServiceProvider {
                 secretValidator: defaultSecretValidator
               }, {
                 onFinish: () => {
-                  next({ finished: true });
+                  next({ state: InvitationState.SUCCESS });
                   close();
                 }
               });
+              invitation.secret = Buffer.from(secret);
               const invitationCode = encodeInvitation(invitation);
               this._inviterInvitations.push({ invitationCode, secret });
-              next({ invitationCode, secret });
+              next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
             } catch (error: any) {
-              next({ error: error.message });
+              next({ state: InvitationState.ERROR, error: error.message });
               close();
             }
           });
         }),
-        AcceptInvitation: async (request) => {
+        AcceptInvitation: (request) => new Stream(({ next, close }) => {
           const id = v4();
-          assert(request.invitationCode, 'InvitationCode not provided.');
           const [secretLatch, secretTrigger] = latch();
           const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
@@ -310,26 +310,26 @@ export class ClientServiceHost implements ClientServiceProvider {
           };
 
           // Joining process is kicked off, and will await authentication with a secret.
-          const partyPromise = this.echo.joinParty(decodeInvitation(request.invitationCode), secretProvider);
-          inviteeInvitation.joinPromise = () => partyPromise; // After awaiting this we have a finished joining flow.
+          const haloPartyPromise = this.echo.joinParty(InvitationDescriptor.fromProto(request), secretProvider);
           this._inviteeInvitations.set(id, inviteeInvitation);
-          return { id };
-        },
+          next({ id, state: InvitationState.CONNECTED });
+
+          haloPartyPromise.then(party => {
+            next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+          }).catch(err => {
+            console.error(err);
+            next({ id, state: InvitationState.ERROR, error: String(err) });
+          });
+        }),
         AuthenticateInvitation: async (request) => {
-          assert(request.process?.id, 'Process ID is missing.');
-          const invitation = this._inviteeInvitations.get(request.process?.id);
+          assert(request.processId, 'Process ID is missing.');
+          const invitation = this._inviteeInvitations.get(request.processId);
           assert(invitation, 'Invitation not found.');
           assert(request.secret, 'Secret not provided.');
 
           // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
-
-          const party = await invitation.joinPromise?.() ?? failUndefined();
-
-          return {
-            partyKey: party.key
-          };
         },
         SubscribeMembers: (request) => {
           const party = this._echo.getParty(request.partyKey);

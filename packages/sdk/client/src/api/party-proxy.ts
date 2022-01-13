@@ -3,7 +3,9 @@
 //
 
 import { failUndefined } from '@dxos/debug';
-import { ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend } from '@dxos/echo-db';
+import {
+  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
+} from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -67,25 +69,30 @@ export class PartyProxy {
   }
 
   async open () {
-    await this._serviceProvider.services.PartyService.OpenParty({ partyKey: this.key });
+    return this.setOpen(true);
   }
 
-  async close () {
-    await this._serviceProvider.services.PartyService.CloseParty({ partyKey: this.key });
+  async setOpen (open: boolean) {
+    await this._serviceProvider.services.PartyService.SetPartyState({
+      partyKey: this.key,
+      open
+    });
   }
 
-  async activate (options: ActivationOptions) {
-    await this._serviceProvider.services.PartyService.ActivateParty({ partyKey: this.key, options });
-  }
-
-  async deactivate (options: ActivationOptions) {
-    await this._serviceProvider.services.PartyService.DeactivateParty({ partyKey: this.key, options });
+  async setActive (active: boolean, options: ActivationOptions) {
+    const activeGlobal = options.global ? active : undefined;
+    const activeDevice = options.device ? active : undefined;
+    await this._serviceProvider.services.PartyService.SetPartyState({
+      partyKey: this.key,
+      activeGlobal,
+      activeDevice
+    });
   }
 
   queryMembers () {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key }),
-      (response) => response?.members ?? []
+      this._serviceProvider.services.PartyService.SubscribeParties(),
+      (response) => response?.parties?.find(party => party.publicKey.equals(this.key))?.members ?? []
     );
   }
 

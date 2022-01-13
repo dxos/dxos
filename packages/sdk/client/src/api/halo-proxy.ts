@@ -7,7 +7,7 @@ import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions,
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
-import { Profile } from '../proto/gen/dxos/client';
+import { InvitationState, Profile, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { encodeInvitation } from '../util';
 
 export interface CreateInvitationOptions extends InvitationOptions {
@@ -93,12 +93,28 @@ export class HaloProxy {
    * @returns An async function to provide secret and finishing the invitation process.
    */
   async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
-    const invitationProcess = await this._serviceProvider.services.ProfileService.AcceptInvitation({
-      invitationCode: encodeInvitation(invitationDescriptor)
+    const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
+      const invitationProcessStream = this._serviceProvider.services.ProfileService.AcceptInvitation(
+        invitationDescriptor.toProto()
+      );
+      invitationProcessStream.subscribe(redeemedInvitation => {
+        if (redeemedInvitation.state === InvitationState.CONNECTED) {
+          resolve(redeemedInvitation);
+        }
+        if (redeemedInvitation.state === InvitationState.ERROR) {
+          reject(redeemedInvitation.error);
+        }
+      }, error => {
+        if (error) {
+          reject(error);
+        }
+      });
     });
+
     return async (secret: string) => {
       await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
-        process: invitationProcess, secret
+        processId: redeemedInvitation.id,
+        secret: Buffer.from(secret)
       });
     };
   }
@@ -110,16 +126,17 @@ export class HaloProxy {
     const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
-        if (invitationMsg.finished) {
+        if (invitationMsg.state === InvitationState.SUCCESS) {
           options?.onFinish?.({});
           stream.close();
         } else {
+          const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined;
           const pendingInvitation: PendingInvitation = {
-            invitationCode: invitationMsg.invitationCode!,
-            pin: invitationMsg.secret
+            invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
+            pin
           };
-          if (invitationMsg.secret && options?.onPinGenerated) {
-            options.onPinGenerated(invitationMsg.secret);
+          if (pin && options?.onPinGenerated) {
+            options.onPinGenerated(pin);
           }
           resolve(pendingInvitation);
         }

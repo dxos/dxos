@@ -4,7 +4,7 @@
 
 import yargs from 'yargs';
 
-import { Browser, run } from '.';
+import { Browser, run } from './runner';
 
 interface Argv {
   files: string[]
