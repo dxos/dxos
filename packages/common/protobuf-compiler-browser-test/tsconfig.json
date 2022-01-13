@@ -1,13 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "noEmit": true
   },
   "types": [
     "mocha"
   ],
   "references": [],
   "include": [
-    "src"
+    "src",
+    "browser-test"
   ]
 }
