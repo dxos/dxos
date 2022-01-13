@@ -6,31 +6,31 @@ import assert from 'assert';
 
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
 import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
+import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
-import { InvitationProcess, Party } from '../proto/gen/dxos/client';
+import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { decodeInvitation, encodeInvitation } from '../util';
-import { Invitation, InvitationRequest } from './invitations';
+import { InvitationRequest } from './invitations';
 import { PartyProxy } from './party-proxy';
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
-  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
+  private _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider
   ) {
-    this._modelFactory = _serviceProvider instanceof ClientServiceHost
-      ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
@@ -145,28 +145,41 @@ export class EchoProxy {
    * @returns An async function to provide secret and finishing the invitation process.
    */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
-    const [getInvitationProcess, resolveInvitationProcess] = trigger<InvitationProcess>();
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitation>();
     const [waitForParty, resolveParty] = trigger<PartyProxy>();
 
     setImmediate(async () => {
-      const invitationProcess = await this._serviceProvider.services.PartyService.AcceptInvitation({
-        invitationCode: encodeInvitation(invitationDescriptor)
-      });
+      const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
 
-      resolveInvitationProcess(invitationProcess);
+      invitationProcessStream.subscribe(async process => {
+        resolveInvitationProcess(process);
+
+        if (process.state === InvitationState.SUCCESS) {
+          assert(process.partyKey);
+          await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
+
+          resolveParty(this.getParty(process.partyKey) ?? failUndefined());
+        } else if (process.state === InvitationState.ERROR) {
+          assert(process.error);
+          const error = new Error(process.error);
+          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          throwUnhandledRejection(error);
+        }
+      }, error => {
+        if (error && !(error instanceof RpcClosedError)) {
+          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          throwUnhandledRejection(error);
+        }
+      });
     });
 
-    const authenticate = async (secret: Buffer) => {
+    const authenticate = async (secret: Uint8Array) => {
       const invitationProcess = await getInvitationProcess();
 
-      const { partyKey } = await this._serviceProvider.services.PartyService.AuthenticateInvitation({
-        process: invitationProcess,
-        secret: secret.toString()
+      await this._serviceProvider.services.PartyService.AuthenticateInvitation({
+        processId: invitationProcess.id,
+        secret
       });
-      assert(partyKey);
-      await this._partiesChanged.waitForCondition(() => this._parties.has(partyKey));
-
-      resolveParty(this.getParty(partyKey) ?? failUndefined());
     };
 
     if (invitationDescriptor.secret) {
@@ -189,8 +202,9 @@ export class EchoProxy {
    *
    * @param partyKey the Party to create the invitation for.
    */
+  // TODO(rzadp): Move to PartyProxy.
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ publicKey: partyKey });
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey });
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();
@@ -200,24 +214,26 @@ export class EchoProxy {
 
       stream.subscribe(invitationMsg => {
         if (!hasInitiated) {
+          assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
           hasInitiated = true;
-          const descriptor = decodeInvitation(invitationMsg.invitationCode!);
-          descriptor.secret = invitationMsg.secret ? Buffer.from(invitationMsg.secret) : undefined;
-          resolve(new InvitationRequest(descriptor, connected, finished, error));
+          resolve(new InvitationRequest(InvitationDescriptor.fromProto(invitationMsg.descriptor), connected, finished, error));
         }
 
-        if (invitationMsg.connected && !hasConnected) {
+        if (invitationMsg.state === InvitationState.CONNECTED && !hasConnected) {
           hasConnected = true;
           connected.emit();
         }
 
-        if (invitationMsg.finished) {
+        if (invitationMsg.state === InvitationState.SUCCESS) {
           finished.emit();
           stream.close();
         }
 
-        if (invitationMsg.error) {
-          error.emit(new Error(invitationMsg.error));
+        if (invitationMsg.state === InvitationState.ERROR) {
+          assert(invitationMsg.error, 'Unknown error.');
+          const err = new Error(invitationMsg.error);
+          reject(err);
+          error.emit(err);
         }
       }, error => {
         if (error) {

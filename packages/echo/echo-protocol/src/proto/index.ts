@@ -10,6 +10,7 @@ export * from './gen/dxos/echo/metadata';
 export * from './gen/dxos/echo/snapshot';
 export * from './gen/dxos/echo/testing';
 export * from './gen/dxos/echo/service';
+export * from './gen/dxos/echo/invitation';
 
 export * from './messages';
 

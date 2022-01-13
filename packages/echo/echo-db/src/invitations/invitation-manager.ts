@@ -51,7 +51,7 @@ export class InvitationManager {
     await this._partyProcessor.writeHaloMessage(invitationMessage);
 
     return new InvitationDescriptor(
-      InvitationDescriptorType.OFFLINE_KEY,
+      InvitationDescriptorType.OFFLINE,
       this._partyProcessor.partyKey.asBuffer(),
       invitationMessage.payload.signed.payload.id
     );

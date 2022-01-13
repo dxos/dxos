@@ -490,6 +490,10 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/protobuf-compiler-browser-test",
+      "projectFolder": "packages/common/protobuf-compiler-browser-test"
+    },
+    {
       "packageName": "@dxos/protobuf-test",
       "projectFolder": "packages/common/protobuf-test"
     },
