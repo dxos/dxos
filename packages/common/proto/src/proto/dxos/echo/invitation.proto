@@ -8,14 +8,12 @@ package dxos.echo.invitation;
 
 message InvitationDescriptor {
   /**
-  * Defines an invitation type.
-  *
-  * Interactive invitation is when both peers are online at the same time.
-  *
-  * Offline is when only a single peer needs to be online at the time.
-  */
+   * Defines an invitation type.
+   */
   enum Type {
+    /// Interactive invitation is when both peers are online at the same time.
     INTERACTIVE = 1;
+    /// Offline is when only a single peer needs to be online at the time.
     OFFLINE = 2;
   }
 
