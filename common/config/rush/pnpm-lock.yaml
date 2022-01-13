@@ -337,7 +337,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -421,7 +421,7 @@ importers:
       '@dxos/async': link:../common/async
       '@dxos/debug': link:../common/debug
       '@dxos/esbuild-plugins': link:../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../toolchains/toolchain-node-library
       '@types/d3': 7.0.0
       '@types/faker': 5.5.9
@@ -636,7 +636,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -700,7 +700,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -813,7 +813,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/network-manager': workspace:*
@@ -863,7 +863,7 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.37
       '@types/react-copy-to-clipboard': 5.0.2
@@ -2007,7 +2007,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.0.1
@@ -2049,7 +2049,7 @@ importers:
       use-subscription: 1.5.1_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@mui/material': 5.2.3_5539cae010396b202b015f3568914e95
       '@testing-library/react': 11.2.7_react-dom@17.0.2+react@17.0.2
@@ -2080,7 +2080,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
@@ -2127,7 +2127,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/react-client': link:../react-client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
@@ -2163,7 +2163,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2218,7 +2218,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
@@ -2249,7 +2249,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -2274,7 +2274,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.7
       '@types/lodash': 4.14.178
@@ -2292,7 +2292,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@polkadot/api': 4.17.1
@@ -2338,7 +2338,7 @@ importers:
       protobufjs: 6.11.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2
+      '@dxos/esbuild-server': 1.7.3
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@polkadot/typegen': 4.17.1
       '@types/chai': 4.3.0
@@ -2361,7 +2361,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2410,7 +2410,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
@@ -2517,7 +2517,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.2
+      '@dxos/esbuild-server': ~1.7.3
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -2542,7 +2542,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.2_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.3_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -5142,15 +5142,14 @@ packages:
       - webpack-command
     dev: true
 
-  /@dxos/esbuild-server/1.7.2:
-    resolution: {integrity: sha512-wuo9Fn/4ykGt+45HUVoP4y7W9hytJySzvqIIlnZ47LUe0xxEFvr1mNlCVDvEebuqxB83u2n7XV13t2vAB+y4qQ==}
+  /@dxos/esbuild-server/1.7.3:
+    resolution: {integrity: sha512-fc8kX2fw/vuPkpyMPtOAJVvc4caq/zx5x1DYoCFAdss7ug2FnxxqYwD4c6SqExWf7IVW0p3eud8vmm+McCBNCA==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
       '@mdx-js/esbuild': 2.0.0-rc.1_esbuild@0.12.29
       '@mdx-js/mdx': 2.0.0-rc.2
       '@mdx-js/react': 2.0.0-rc.2_react@17.0.2
-      '@styled-icons/material-outlined': 10.34.0_c17876e09d792e0c7b0f44e49f814625
       chalk: 4.1.2
       esbuild: 0.12.29
       glob: 7.2.0
@@ -5163,7 +5162,6 @@ packages:
       react-syntax-highlighter: 15.4.5_react@17.0.2
       rehype-highlight: 5.0.1
       styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-      styled-icons: 10.45.0_c17876e09d792e0c7b0f44e49f814625
       theme-ui: 0.12.1_@babel+core@7.16.5+react@17.0.2
       yargs: 17.3.0
     transitivePeerDependencies:
@@ -5171,15 +5169,14 @@ packages:
       - supports-color
     dev: true
 
-  /@dxos/esbuild-server/1.7.2_@types+react@17.0.37:
-    resolution: {integrity: sha512-wuo9Fn/4ykGt+45HUVoP4y7W9hytJySzvqIIlnZ47LUe0xxEFvr1mNlCVDvEebuqxB83u2n7XV13t2vAB+y4qQ==}
+  /@dxos/esbuild-server/1.7.3_@types+react@17.0.37:
+    resolution: {integrity: sha512-fc8kX2fw/vuPkpyMPtOAJVvc4caq/zx5x1DYoCFAdss7ug2FnxxqYwD4c6SqExWf7IVW0p3eud8vmm+McCBNCA==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
       '@mdx-js/esbuild': 2.0.0-rc.1_esbuild@0.12.29
       '@mdx-js/mdx': 2.0.0-rc.2
       '@mdx-js/react': 2.0.0-rc.2_react@17.0.2
-      '@styled-icons/material-outlined': 10.34.0_c17876e09d792e0c7b0f44e49f814625
       chalk: 4.1.2
       esbuild: 0.12.29
       glob: 7.2.0
@@ -5192,7 +5189,6 @@ packages:
       react-syntax-highlighter: 15.4.5_react@17.0.2
       rehype-highlight: 5.0.1
       styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-      styled-icons: 10.45.0_c17876e09d792e0c7b0f44e49f814625
       theme-ui: 0.12.1_23551ae5df81be1ad77d4e4acd306532
       yargs: 17.3.0
     transitivePeerDependencies:
@@ -6924,450 +6920,6 @@ packages:
     resolution: {integrity: sha512-MZPUxrmFubI36XS1DI3qmI0YdN1gks62JtFZvxR67ljjSNCeK6U08Zx4msEWOXuofgqUt6zPHSi1H9fbjR/NRA==}
     dependencies:
       '@sinonjs/commons': 1.8.3
-
-  /@styled-icons/bootstrap/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-UpzdVUR7r9BNqEfPrMchJdgMZEg9eXQxLQJUXM0ouvbI5o9j21/y1dGameO4PZtYbutT/dWv5O6y24z5JWzd5w==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/boxicons-logos/10.38.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-DpkUi9qV76RsyuzihQhfCho142WCxK/2oUfjcqo6BsP92qxV+4rtS5nfVsmqfnSEef4av+qSeg33fJWDyURyKg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/boxicons-regular/10.38.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-xjhafoa0/EeYtQOyTw+ohuSlBx599t8l8++JH1tQlM0l73dP4icTpF4znYL+HhZeaUe3D+UhrkfWuBBua2w2Qw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/boxicons-solid/10.38.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-uuMtF1R61smQT5r6HIYMHvpVD0XSErXXNQYl5d6lCtMyefd0gIE5Rw+iD9i/RxHFUHNHbvL69LvitCLtNWrSqw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/crypto/10.38.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-SOfJFfofCOgExaRB0u3AA7Fdv2vbFIxtCAmyNDdjqvnTncg4HVPEg5+rysN3oHGiJBF8+uqUdtLerx3rmhYI7g==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/entypo-social/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-amhrYcc/buvTJrunRnYNeFNJ5Ru1ByV/pcICj7An9TF/NNC4exfnzaoUzOJNcMGOHU5jphrqjSosC4pQNJKqkA==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/entypo/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-9hl109HydOfi/q9ceqoI9Bmj5tv1v/RoUY2nbuGuVtKDVNCVw7WQ0eTiZkb1OgiVYsJXs6xQBcNZdVeo4en/lQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/evaicons-outline/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-ONPKJO+u3DB/rsCJdIKt6OBoKBvIvM/EsulxuWniRPPr0rR5lwueGocJpJmEUi+C4gsMllBSkcL5cOdFyd1Nbw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/evaicons-solid/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-74S0zzxovKTXNpID8bXB4Qy34EBq3vuVAlTd9xsT2gY16BtPH7JcGHLmtQpbpJcHuWkcQH4bSv+GLq+0/i/ljQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/evil/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-rU5MrgMow9I0Vkqo6V5WkTcj0o1toDzn8kQSQywTL1N7JuyATKZgN3kgkzNUgHd5LorcsGMetPsvDmgS31XAPw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/fa-brands/10.38.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-zZzGkcshXIF55geFIpMzMLH6tSPzQeeFPFZ1RMrZ3TWBjUuquMx+vYFsO7kzq939X84gLjmpkJZsAP9QKJFvMg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/fa-regular/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-QUqljT+uIfowGurV5GzjnHA1qvq922H+6yGRzQYBxBZ5Vgaak4Q71jtCSMqZKXcOG3tngMyhrOuaNaPOw1Q1pQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/fa-solid/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-PnJMUPcbuPA7gswxl9FKd725qaqP5VSbmX7rk+ZZ7ivdA6Dbi1VoKYXqAc62OEisGDhzn5g56KbBvE14W1n7vw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/feather/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-UdhKaUC8T98V5H4WEh+UBRfVT7ZTcPpgUUrXlRM2CWanuNIUKpIjj0SKhsnkuprqtzV1L6s3Koa40VTfpG9LYQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/fluentui-system-filled/10.35.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-uupqp8u2FdnpOhVPAIAVb9Ax8p6Yu/ZDsRq3XUHhDd0e4Mb1e2KIXorwg1sRfR+PHCvWLbu6knIt17Az1OlmHQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/fluentui-system-regular/10.35.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-DHZRTLw6tGkmG6EOo46iHsta6xx+Gd71iHEg5GTVTsoUtk2ZFHL1GRW9KPnkcPPB6h3/QQE4c36MyHFPvPfjzA==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/foundation/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-RJksGQoStOqVQegwvtDTqrhEQjc7x5izqzBuwMw6R+18XcBC+pP8oRtuisv2ogn5icVrN/FWQHMx8EJ14jMdig==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/heroicons-outline/10.36.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-1IcNp8rjPetb5IMvSzCgh1/QDsz7brzMKv6AEbchByKM6oyOsv9p2PapGMRs6L5rH3LDGzouxNSYPUES8aY3Vw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/heroicons-solid/10.36.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-cbC0roQSwvrw+ryVx1MfK3NAxh5CyOCzJwFgwZTuXsYpk7IVNNFFSRn1uRGaFDHn3aLLEikMkxxR4q5NM07ZpA==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/icomoon/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-nimtxPqlA6K2iNDeGCCYrFvPbjJl2TwM+YtX55RYC3YJFrh+MeKL+F60uvzoKWY3vZ1vsmQR3iW+aRFQHvhIOw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/ionicons-outline/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-8zLCIizxxKAA8tpJLmEnfXy+NcWW7CIxaqDQPZ/GEri4f6GA4QEf4BxCz+XXfEBoBthj+cPr/3d8oB7YygC5TQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/ionicons-sharp/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-2vmb5xa0fNDWe6QoKsfATilv9Qvlnv4z/3m1NMY+tU5ER+Z9YvPQkLcRqeS/dpm4HHfRAlGsVX5A8r8B+rPnag==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/ionicons-solid/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-gp85y8VbxhBUx0xP3eokyxIkAiWkSaJO3kN1/mGfCSKcWllLBhoHikyGjWAxFPMunhzix4PM0tVudWrsSxmLeQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/material-outlined/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-scn3Ih15t82rUJPI9vwnZaYL6ZiDhlYoashIJAs8c8QjJfK0rWdt+hr3E6/0wixx67BkLB3j96Jn9y+qXfVVIQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/material-rounded/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-Y2QB3bz+tDmrtcgNXKIPnw8xqarObpcFxOapkP3pMDGl+guCgV5jNHrE8xTKyN5lYYQmm9oBZ5odwgT3B+Uw5g==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/material-sharp/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-XY1N68Tj5TyyAHJDQwYtasKis4xuNl5xjbISdz8zreWlsY5N4nO4rh/SgAUYvblz+Xjf4P+JZAF22foVpZwIeg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/material-twotone/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-o5EwR1WdjUwNebFAWqIiZwbP1ibOPy8vHX0KdkV0WDZTCXDW5Nhj3C5JeTAwPeRtFU+Bxt7NHjUmrsm3jNRzzw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/material/10.34.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-BQCyzAN0RhkpI6mpIP7RvUoZOZ15d5opKfQRqQXVOfKD3Dkyi26Uog1KTuaaa/MqtqrWaYXC6Y1ypanvfpyL2g==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/octicons/10.44.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-7pLWrUDkc/acwJ4ayL+Xmb7o1j5WUB6nI5dATRPzcm2CENUdEEyf17uL1J9qwB5aFoyDpo7c/UYWtq5QpGpk6A==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/open-iconic/10.18.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-H+uiRUDm09SXlOgJheOmhT0KeLs5uBS85H2VF1ypMN1m/vy/NdaGP5QAvWTCzBk088JJGYEkvhb4i4pGcwRsEA==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/remix-editor/10.33.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-V1jZ3G1J8PaBiIwf2Va7UuEXot8xR39UQ3XNIJNQClnGA04ahTsEC2mpN5pHwr4mkJijXu0Htjhnf/YiWYVsCw==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/remix-fill/10.18.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-FbnQMvxt2R7CYb8j/dVAXd31CDg4k3vX1zG/9GH9qpL536yxndnyopa7hwF/Yisy2pzR7uNlNXmTQAmYK2HSrg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/remix-line/10.18.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-UZllhk6hEWFyZt+jdPCO4zbeM0P3Y/Lc1iWWOwUXGP5AzStM2KadjaGpi99FhNfrvrly98cVB8b4M/GVExYn0Q==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/simple-icons/10.45.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-2agGgrxuiBjicbz5kgF1M691oNfRUYwSWy80kqJCEGXyJ9YGtLWXTSNdLYMk0Dt4JnL0/3eKItU9jYf24rCcJg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/styled-icon/10.6.3_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-/A95L3peioLoWFiy+/eKRhoQ9r/oRrN/qzbSX4hXU1nGP2rUXcX3LWUhoBNAOp9Rw38ucc/4ralY427UUNtcGQ==}
-    peerDependencies:
-      react: '*'
-      styled-components: '>=4.1.0 <6'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@emotion/is-prop-valid': 0.8.8
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/typicons/10.18.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-VN9vEzeAn5//uUvBN2N/OAXnrC6zCERu1eXUiXmYTwd7n8ZoMMASKmVWrAho20YmhUjEPZdSvS1cJ/pzV9K6Zg==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
-
-  /@styled-icons/zondicons/10.18.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-P+XDzHRjY7zgcOYI22VJPg4GW01760VICwMSF2vJFRd0bux3hKIJI8voABA9v00Ce1TeOZnUbKcgQFBNIThs5w==}
-    peerDependencies:
-      react: '*'
-      styled-components: '*'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
-    dev: true
 
   /@styled-system/background/5.1.2:
     resolution: {integrity: sha512-jtwH2C/U6ssuGSvwTN3ri/IyjdHb8W9X/g8Y0JLcrH02G+BW3OS8kZdHphF1/YyRklnrKrBT2ngwGUK6aqqV3A==}
@@ -23849,54 +23401,6 @@ packages:
       react-is: 17.0.2
       shallowequal: 1.1.0
       supports-color: 5.5.0
-    dev: true
-
-  /styled-icons/10.45.0_c17876e09d792e0c7b0f44e49f814625:
-    resolution: {integrity: sha512-oUsAAr95m+IPS3JxExaxdxoVA6FIqTPEykebMe7h7rkD6X5JS5K37kg4HlWJOcpMznL0Vj3GW6S5LF1qqUwN7Q==}
-    peerDependencies:
-      react: '*'
-      styled-components: '>=4.1.0 <6'
-    dependencies:
-      '@babel/runtime': 7.16.3
-      '@styled-icons/bootstrap': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/boxicons-logos': 10.38.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/boxicons-regular': 10.38.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/boxicons-solid': 10.38.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/crypto': 10.38.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/entypo': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/entypo-social': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/evaicons-outline': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/evaicons-solid': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/evil': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/fa-brands': 10.38.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/fa-regular': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/fa-solid': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/feather': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/fluentui-system-filled': 10.35.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/fluentui-system-regular': 10.35.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/foundation': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/heroicons-outline': 10.36.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/heroicons-solid': 10.36.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/icomoon': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/ionicons-outline': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/ionicons-sharp': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/ionicons-solid': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/material': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/material-outlined': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/material-rounded': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/material-sharp': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/material-twotone': 10.34.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/octicons': 10.44.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/open-iconic': 10.18.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/remix-editor': 10.33.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/remix-fill': 10.18.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/remix-line': 10.18.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/simple-icons': 10.45.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/styled-icon': 10.6.3_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/typicons': 10.18.0_c17876e09d792e0c7b0f44e49f814625
-      '@styled-icons/zondicons': 10.18.0_c17876e09d792e0c7b0f44e49f814625
-      react: 17.0.2
-      styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
     dev: true
 
   /styled-system/5.1.5:
