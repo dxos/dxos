@@ -34,6 +34,7 @@ export default {
 // TODO(burdon): Perf avoid re-render everything on every update.
 // TODO(burdon): Use debug for logging (check perf.)
 
+// TODO(burdon): Temporariliy move element to top when active.
 // TODO(burdon): Drag to draw line.
 // TODO(burdon): Show connect points on hightlight.
 // TODO(burdon): Drag line.

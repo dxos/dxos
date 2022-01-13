@@ -11,7 +11,7 @@ import { BaseElement, ControlPoint } from './base';
 import { getEventMod } from './drag';
 
 const FrameProps = {
-  handleRadius: 6
+  handleRadius: 7
 };
 
 type Handle = { id: string, p: Point, cursor: string }
