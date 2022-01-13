@@ -11,7 +11,7 @@ import { useClient } from '../client';
 /**
  * Returns all known Contacts across all Parties.
  * Contacts are known members of a common Party.
- * Requires ClientConext to be set via ClientProvider.
+ * Requires ClientContext to be set via ClientProvider.
  */
 export const useContacts = () => {
   const client = useClient();
