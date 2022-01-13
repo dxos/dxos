@@ -154,7 +154,7 @@ export class EchoProxy {
       invitationProcessStream.subscribe(async process => {
         resolveInvitationProcess(process);
 
-        if (process.state === InvitationState.FINISHED) {
+        if (process.state === InvitationState.SUCCESS) {
           assert(process.partyKey);
           await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
 
@@ -224,7 +224,7 @@ export class EchoProxy {
           connected.emit();
         }
 
-        if (invitationMsg.state === InvitationState.FINISHED) {
+        if (invitationMsg.state === InvitationState.SUCCESS) {
           finished.emit();
           stream.close();
         }

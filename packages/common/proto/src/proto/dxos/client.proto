@@ -46,7 +46,7 @@ message RecoverProfileRequest {
 enum InvitationState {
   WAITING_FOR_CONNECTION = 1;
   CONNECTED = 2;
-  FINISHED = 3;
+  SUCCESS = 3;
   ERROR = 4;
 }
 

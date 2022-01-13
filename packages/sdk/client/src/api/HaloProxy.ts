@@ -126,7 +126,7 @@ export class HaloProxy {
     const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
-        if (invitationMsg.state === InvitationState.FINISHED) {
+        if (invitationMsg.state === InvitationState.SUCCESS) {
           options?.onFinish?.({});
           stream.close();
         } else {

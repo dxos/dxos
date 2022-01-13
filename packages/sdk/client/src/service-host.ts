@@ -105,7 +105,7 @@ export class ClientServiceHost implements ClientServiceProvider {
               secretValidator: defaultSecretValidator
             }, {
               onFinish: () => {
-                next({ state: InvitationState.FINISHED });
+                next({ state: InvitationState.SUCCESS });
                 close();
               }
             });
@@ -137,7 +137,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           next({ id, state: InvitationState.CONNECTED });
 
           haloPartyPromise.then(party => {
-            next({ id, state: InvitationState.FINISHED, partyKey: party.key });
+            next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
           }).catch(err => {
             next({ id, state: InvitationState.ERROR, error: String(err) });
           });
@@ -279,7 +279,7 @@ export class ClientServiceHost implements ClientServiceProvider {
                 secretValidator: defaultSecretValidator
               }, {
                 onFinish: () => {
-                  next({ state: InvitationState.FINISHED });
+                  next({ state: InvitationState.SUCCESS });
                   close();
                 }
               });
@@ -315,7 +315,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           next({ id, state: InvitationState.CONNECTED });
 
           haloPartyPromise.then(party => {
-            next({ id, state: InvitationState.FINISHED, partyKey: party.key });
+            next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
           }).catch(err => {
             console.error(err);
             next({ id, state: InvitationState.ERROR, error: String(err) });
