@@ -6,9 +6,11 @@
 import expect from 'expect';
 import { firefox, Page } from 'playwright';
 
+import { sleep } from '@dxos/async';
+
 import { Browser } from './utils';
 
-const INVITATION_REGEX = /swarmKey/g;
+const INVITATION_REGEX = /encodedInvitation/g;
 const BASE_URL = 'http://localhost:8080/#/';
 
 const createParty = async (page: Page) => {
@@ -34,6 +36,12 @@ const createInvitation = async (page: Page): Promise<string> => {
   return invitationText!;
 };
 
+const joinInvitation = async (page: Page, invitation: string) => {
+  await page.fill('#start-dialog-invitation-input', invitation);
+  await sleep(100);
+  await page.click('//button[text()=\'Join Party\']');
+};
+
 const createItem = async (page: Page): Promise<string> => {
   const itemName = `${Math.random().toString().slice(5)}`;
   await page.click('.MuiFab-root'); // The 'Add' fab button.
@@ -47,16 +55,15 @@ describe('Demo - Primary and Peers', async function () {
   this.timeout(30000);
   this.retries(0);
   const browser = firefox;
-  const primaryUrl = `${BASE_URL}__story/stories-demo-index-story-tsx/Primary`;
-  const peersUrl = `${BASE_URL}__story/stories-demo-index-story-tsx/Peers`;
+  const peersUrl = `${BASE_URL}__story/stories-views-stories-tsx/Peers`;
   let alice: Browser;
   let bob: Browser;
 
   before(async () => {
     alice = new Browser();
     bob = new Browser();
-    await alice.launchBrowser(browser, 'about:blank');
-    await bob.launchBrowser(browser, 'about:blank');
+    await alice.launchBrowser(browser, peersUrl);
+    await bob.launchBrowser(browser, peersUrl);
   });
 
   after(async () => {
@@ -64,5 +71,12 @@ describe('Demo - Primary and Peers', async function () {
     await bob.closeBrowser();
   });
 
-  // TODO(rzadp): Add cases for HALO invitations and Party invitations.
+  it('Peers storybook with Party invitations', async () => {
+    await createParty(alice.page!);
+    const itemName = await createItem(alice.page!);
+    const invitation = await createInvitation(alice.page!);
+
+    await joinInvitation(bob.page!, invitation);
+    await bob.page!.waitForSelector(`span:has-text("${itemName}")`);
+  });
 });
