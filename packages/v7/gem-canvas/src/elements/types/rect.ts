@@ -20,9 +20,14 @@ const createRect = (scale: Scale): D3Callable => {
     const { x, y, width, height } = scale.model.toBounds(data.bounds);
 
     // eslint-disable indent
-    return group.selectAll('rect')
+    group
+      .selectAll('rect')
       .data(['_main_'])
       .join('rect')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height)
       .call(selection => {
         // Select.
         // TODO(burdon): Generic.
@@ -54,11 +59,7 @@ const createRect = (scale: Scale): D3Callable => {
               });
             }));
         }
-      })
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
+      });
     // eslint-enable indent
   };
 };
@@ -88,7 +89,6 @@ export class RectElement extends BaseElement<Rect> {
 
   type = 'rect' as ElementType;
 
-  // TODO(burdon): Drag should first snap (screen), then find nearest fraction here.
   createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Rect {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);

@@ -28,7 +28,7 @@ const styles = css`
   }
 
   // TODO(burdon): Scope.
-  ellipse, rect {
+  circle, ellipse, line, path, rect {
     stroke: #666;
     stroke-width: 2;
     fill: #F5F5F5;

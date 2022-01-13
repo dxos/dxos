@@ -4,11 +4,15 @@
 
 import * as d3 from 'd3';
 
-import { Modifiers, ScreenBounds, Point } from '@dxos/gem-x';
+import { Modifiers, ScreenBounds, Point, Scale } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { BaseElement } from './base';
 import { getEventMod } from './drag';
+
+const FrameProps = {
+  handleRadius: 6
+};
 
 type Handle = { id: string, p: Point, cursor: string }
 
@@ -115,7 +119,27 @@ export const createFrame = (): D3Callable => {
       .attr('cursor', h => h.cursor)
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
       .attr('cy', ({ p }) => cy - p[1] * height / 2)
-      .attr('r', 5); // TODO(burdon): Grow as zoomed.
+      .attr('r', FrameProps.handleRadius);
     // eslint-enable indent
+  };
+};
+
+/**
+ * Draw control points.
+ */
+export const createControlPoints = (scale: Scale): D3Callable => {
+  return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
+    const { points } = base.data;
+    const p = points.map(p => scale.model.toPoint(p));
+
+    // TODO(burdon): Move out (show on hover).
+    group
+      .selectAll('circle.frame-handle')
+      .data(active ? p : [])
+      .join('circle')
+      .classed('frame-handle', true)
+      .attr('cx', p => p[0])
+      .attr('cy', p => p[1])
+      .attr('r', FrameProps.handleRadius);
   };
 };

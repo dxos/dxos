@@ -8,7 +8,20 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { FullScreen, SvgContainer, useScale, useStateRef, Vector } from '@dxos/gem-x';
 
-import { Canvas, Element, ElementId, ElementType, ElementDataType, Tool, Toolbar, createKeyHandlers } from '../src';
+import {
+  Canvas,
+  Element,
+  ElementId,
+  ElementType,
+  ElementDataType,
+  Ellipse,
+  Line,
+  Path,
+  Rect,
+  Tool,
+  Toolbar,
+  createKeyHandlers,
+} from '../src';
 
 export default {
   title: 'gem-canvas/Canvas'
@@ -33,21 +46,51 @@ export default {
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 // TODO(burdon): Styles and style objects.
 
+const check = <T extends any>(value: T): T => value;
+
 const initial: Element<any>[] = [
   {
     id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: { center: Vector.toVertex({ x: 2, y: 3 }), rx: [1, 1], ry: [1, 1] }
+    type: 'line',
+    data: check<Line>({
+      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 6, y: 3 })
+    })
   },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
-    data: { center: Vector.toVertex({ x: 6, y: 3 }), rx: [1, 2], ry: [1, 2] }
+    data: check<Ellipse>({
+      center: Vector.toVertex({ x: 2, y: 3 }), rx: [1, 1], ry: [1, 1]
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'ellipse',
+    data: check<Ellipse>({
+      center: Vector.toVertex({ x: 6, y: 3 }), rx: [1, 2], ry: [1, 2]
+    })
   },
   {
     id: faker.datatype.uuid(),
     type: 'rect',
-    data: { bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 }) }
+    data: check<Rect>({
+      bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 })
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'path',
+    data: check<Path>({
+      points: [
+        Vector.toVertex({ x: -6, y: 4 }),
+        Vector.toVertex({ x: -4, y: 6 }),
+        Vector.toVertex({ x: -2, y: 2 }),
+        Vector.toVertex({ x: -3, y: -1 }),
+        Vector.toVertex({ x: -5, y: 1 }),
+      ],
+      curve: 'cardinal',
+      closed: true
+    })
   }
 ];
 

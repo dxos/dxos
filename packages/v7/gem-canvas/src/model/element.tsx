@@ -46,10 +46,10 @@ export type Line = {
 // Path
 //
 
-export type PathType = 'linear' | 'basis' | 'cardinal' | 'step'
+export type CurveType = 'basis' | 'cardinal' | 'linear' | 'step'
 
 export type Path = {
-  type?: PathType
+  curve?: CurveType
   closed?: boolean
   points: Vector[]
 }

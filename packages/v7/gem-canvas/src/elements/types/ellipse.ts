@@ -21,9 +21,14 @@ const createEllipse = (scale: Scale): D3Callable => {
     const [rx, ry] = scale.model.toValues([data.rx, data.ry]);
 
     // eslint-disable indent
-    return group.selectAll('ellipse')
+    group
+      .selectAll('ellipse')
       .data(['_main_'])
       .join('ellipse')
+      .attr('cx', cx)
+      .attr('cy', cy)
+      .attr('rx', rx)
+      .attr('ry', ry)
       .call(selection => {
         // Select.
         // TODO(burdon): Generic.
@@ -54,11 +59,7 @@ const createEllipse = (scale: Scale): D3Callable => {
               });
             }));
         }
-      })
-      .attr('cx', cx)
-      .attr('cy', cy)
-      .attr('rx', rx)
-      .attr('ry', ry);
+      });
     // eslint-enable indent
   };
 };
@@ -88,7 +89,6 @@ export class EllipseElement extends BaseElement<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
-  // TODO(burdon): Drag should first snap (screen), then find nearest fraction here.
   createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Ellipse {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);

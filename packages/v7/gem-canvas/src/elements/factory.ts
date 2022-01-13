@@ -5,7 +5,7 @@
 import { Scale } from '@dxos/gem-x';
 
 import { Element, ElementType } from '../model';
-import { EllipseElement, RectElement } from './types';
+import { EllipseElement, LineElement, PathElement, RectElement } from './types';
 
 /**
  * Create element wrapper.
@@ -20,6 +20,14 @@ export const createElement = (scale: Scale, type: ElementType, element?: Element
   switch (type) {
     case 'ellipse': {
       return new EllipseElement(scale, element, onSelect, onUpdate);
+    }
+
+    case 'line': {
+      return new LineElement(scale, element, onSelect, onUpdate);
+    }
+
+    case 'path': {
+      return new PathElement(scale, element, onSelect, onUpdate);
     }
 
     case 'rect': {

@@ -41,8 +41,11 @@ export class ElementCache {
       const base = this.getElement(element.id) ??
         createElement(this._scale, element.type, element, this._onSelect, this._onUpdate);
 
-      base.setSelected(element.id === selected?.id);
+      if (base) {
+        base.setSelected(element.id === selected?.id);
+      }
+
       return base;
-    });
+    }).filter(Boolean);
   }
 }
