@@ -141,7 +141,6 @@ export const Main = ({ party, showInvitation }: MainProps) => {
     // TODO(burdon): Downside here is no way to prevent sender from being lazy (sending secret together).
     const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
     await navigator.clipboard.writeText(text);
-    // TODO(burdon): E2E probably broken.
     // Console log is required for E2E tests.
     console.log(text);
   };
