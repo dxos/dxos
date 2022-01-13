@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
-import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import { PartyProxy, decodeInvitation } from '@dxos/client';
+import { Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
@@ -58,8 +58,6 @@ export const Primary = () => {
  * @constructor
  */
 export const Peers = () => {
-  const code = '0000';
-
   const Root = () => {
     const client = useClient();
     const [party, setParty] = useState<PartyProxy | Party>();
@@ -76,18 +74,17 @@ export const Peers = () => {
       setParty(party);
     };
 
-    const handleJoinParty = async (invitationCode: string) => {
-      const party = await client.echo.joinParty(
-        InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)), async () => Buffer.from(code)
-      );
-
-      await party.open();
+    const handleJoinParty = async (invitationText: string) => {
+      const { encodedInvitation, secret } = JSON.parse(invitationText);
+      const invitation = client.echo.acceptInvitation(decodeInvitation(encodedInvitation));
+      invitation.authenticate(Buffer.from(secret));
+      const party = await invitation.wait();
       setParty(party);
     };
 
     if (party) {
       return (
-        <Main party={party} code={code} />
+        <Main party={party} showInvitation />
       );
     }
 

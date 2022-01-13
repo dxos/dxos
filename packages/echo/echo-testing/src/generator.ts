@@ -9,14 +9,14 @@ import { Database, Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
-export const OBJECT_ORG = 'dxn://example/object/org';
-export const OBJECT_PERSON = 'dxn://example/object/person';
-export const OBJECT_PROJECT = 'dxn://example/object/project';
-export const OBJECT_TASK = 'dxn://example/object/task';
+export const OBJECT_ORG = 'example:object/org';
+export const OBJECT_PERSON = 'example:object/person';
+export const OBJECT_PROJECT = 'example:object/project';
+export const OBJECT_TASK = 'example:object/task';
 
-export const LINK_EMPLOYEE = 'dxn://example/link/employee';
-export const LINK_PROJECT = 'dxn://example/link/project';
-export const LINK_ASSIGNED = 'dxn://example/link/assigned';
+export const LINK_EMPLOYEE = 'example:link/employee';
+export const LINK_PROJECT = 'example:link/project';
+export const LINK_ASSIGNED = 'example:link/assigned';
 
 export const labels = ['low', 'high', 'extra', 'medium'];
 
@@ -25,7 +25,7 @@ const generators = {
     name: faker.company.companyName(),
     description: faker.lorem.sentence(),
     // TODO(burdon): Converted to object.
-    labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
+    labels: faker.random.arrayElements(labels, faker.datatype.number({ min: 0, max: 3 }))
   }),
 
   [OBJECT_PERSON]: () => ({
@@ -113,7 +113,7 @@ export class Generator {
       const person = await this._database.createItem({
         model: ObjectModel, type: OBJECT_PERSON, props: createProps(OBJECT_PERSON)
       });
-      const count = faker.random.number({ min: 0, max: 2 });
+      const count = faker.datatype.number({ min: 0, max: 2 });
       const orgs = faker.random.arrayElements(organizations, count);
       return orgs.map((org: Item<any>) => this._database.createLink({
         type: LINK_EMPLOYEE, source: org, target: person
@@ -129,7 +129,7 @@ export class Generator {
 
       // Task child nodes.
       // TODO(burdon): Assign to people (query people from org).
-      await Promise.all(times(faker.random.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
+      await Promise.all(times(faker.datatype.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
         await this._database.createItem({
           model: ObjectModel, type: OBJECT_TASK, props: createProps(OBJECT_TASK), parent: project.id
         });

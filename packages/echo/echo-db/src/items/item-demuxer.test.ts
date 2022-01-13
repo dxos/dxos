@@ -56,7 +56,7 @@ describe('Item demuxer', () => {
     const message: EchoEnvelope = {
       itemId,
       genesis: {
-        itemType: 'dxn://dxos/item/test',
+        itemType: 'dxos:item/test',
         modelType: TestModel.meta.type
       }
     };
