@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import faker from 'faker';
 import React, { useState } from 'react';
 
