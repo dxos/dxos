@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "echo/invitation.proto";
 import "./client.proto";
 import "./config.proto";
+import "./echo/invitation.proto";
 
 package dxos.bot;
 
