@@ -71,7 +71,7 @@ describe('ECHO', () => {
         });
 
         // TODO(burdon): Check item mutations.
-        const result = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue();
+        const result = party.database.select(s => s.filter({ type: 'dxos:item/document' }).items).getValue();
         expect(result).toHaveLength(2);
         onUpdate();
       });
@@ -86,9 +86,9 @@ describe('ECHO', () => {
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     // TODO(burdon): Test item mutations.
-    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/kanban' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/kanban' });
 
     await updated;
     unsubscribe();
@@ -112,7 +112,7 @@ describe('ECHO', () => {
           log('Item:', String(item));
         });
 
-        const item = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue()[0];
+        const item = party.database.select(s => s.filter({ type: 'dxos:item/document' }).items).getValue()[0];
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -128,7 +128,7 @@ describe('ECHO', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parent = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
+    const parent = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
 
     await updated;
@@ -150,12 +150,12 @@ describe('ECHO', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parentA = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
+    const parentA = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });
     expect(parentA.children).toHaveLength(1);
     expect(parentA.children[0].id).toEqual(childA.id);
 
-    const parentB = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
+    const parentB = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
     const childB = await party.database.createItem({ model: ObjectModel, parent: parentB.id });
     expect(parentB.children).toHaveLength(1);
     expect(parentB.children[0].id).toEqual(childB.id);
@@ -300,12 +300,12 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      const updated = partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await partyA.database
-        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       log(`A created ${itemA.id}`);
 
       // Now wait to see it on B.
@@ -397,7 +397,7 @@ describe('ECHO', () => {
     // Empty across the board.
     for (const node of [a1, a2, b1, b2]) {
       const [party] = node.queryParties().value;
-      expect(party.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items).getValue().length).toBe(0);
+      expect(party.database.select(s => s.filter({ type: 'example:item/test' }).items).getValue().length).toBe(0);
     }
 
     for await (const node of [a1, a2, b1, b2]) {
@@ -408,7 +408,7 @@ describe('ECHO', () => {
       for (const otherNode of [a1, a2, b1, b2].filter(x => x !== node)) {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
-        otherParty.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+        otherParty.database.select(s => s.filter({ type: 'example:item/test' }).items)
           .update.on(items => {
             if (items.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
@@ -418,7 +418,7 @@ describe('ECHO', () => {
         itemPromises.push(updated);
       }
 
-      item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+      item = await party.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       await Promise.all(itemPromises);
     }
   }).timeout(20_000);
@@ -459,12 +459,12 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = b.queryParties().value[0].database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      const updated = b.queryParties().value[0].database.select(s => s.filter({ type: 'example:item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await a.queryParties().value[0].database
-        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       log(`A created ${itemA.id}`);
 
       // Now wait to see it on B.
@@ -589,7 +589,7 @@ describe('ECHO', () => {
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
 
-    partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+    partyA.database.select(s => s.filter({ type: 'example:item/test' }).items)
       .update.on(items => {
         if (items.length) {
           const [receivedItem] = items;
@@ -599,10 +599,10 @@ describe('ECHO', () => {
         }
       });
 
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
     await updated; // Wait for update.
 
-    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+    expect((partyA.database.select(s => s.filter({ type: 'example:item/test' }).items))
       .getValue().length)
       .toEqual(1);
 
@@ -613,9 +613,9 @@ describe('ECHO', () => {
     expect(partyA.isActive).toBe(true);
 
     await partyA.database
-      .select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .select(s => s.filter({ type: 'example:item/test' }).items)
       .update.waitFor(items => items.length > 0);
-    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+    expect((partyA.database.select(s => s.filter({ type: 'example:item/test' }).items))
       .getValue()
       .length
     ).toEqual(1);

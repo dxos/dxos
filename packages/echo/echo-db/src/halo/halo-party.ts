@@ -9,10 +9,10 @@ import { PartyInternal } from '../parties';
 import { ContactManager } from './contact-manager';
 import { Preferences } from './preferences';
 
-export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxn://dxos/item/halo/party-descriptor';
-export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxn://dxos/item/halo/contact-list';
-export const HALO_PARTY_PREFERENCES_TYPE = 'dxn://dxos/item/halo/preferences';
-export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxn://dxos/item/halo/device/preferences';
+export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';
+export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxos:item/halo/contact-list';
+export const HALO_PARTY_PREFERENCES_TYPE = 'dxos:item/halo/preferences';
+export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/preferences';
 
 /**
  * A record in HALO party representing a party that user is currently a member of.

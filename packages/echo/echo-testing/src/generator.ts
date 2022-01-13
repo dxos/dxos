@@ -9,14 +9,14 @@ import { Database, Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
-export const OBJECT_ORG = 'dxn://example/object/org';
-export const OBJECT_PERSON = 'dxn://example/object/person';
-export const OBJECT_PROJECT = 'dxn://example/object/project';
-export const OBJECT_TASK = 'dxn://example/object/task';
+export const OBJECT_ORG = 'example:object/org';
+export const OBJECT_PERSON = 'example:object/person';
+export const OBJECT_PROJECT = 'example:object/project';
+export const OBJECT_TASK = 'example:object/task';
 
-export const LINK_EMPLOYEE = 'dxn://example/link/employee';
-export const LINK_PROJECT = 'dxn://example/link/project';
-export const LINK_ASSIGNED = 'dxn://example/link/assigned';
+export const LINK_EMPLOYEE = 'example:link/employee';
+export const LINK_PROJECT = 'example:link/project';
+export const LINK_ASSIGNED = 'example:link/assigned';
 
 export const labels = ['low', 'high', 'extra', 'medium'];
 
