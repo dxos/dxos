@@ -15,11 +15,9 @@ it('bytes fields get decoded to Uint8Array', () => {
   };
 
   const encoded = codec.encode(initial);
-
   expect(encoded).toBeInstanceOf(Uint8Array);
 
   const decoded = codec.decode(encoded);
-
   expect(decoded).toEqual(initial);
   expect(decoded.bytesField).toBeInstanceOf(Uint8Array);
 });
