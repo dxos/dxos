@@ -2,16 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { generateInvitation } from '@dxos/bot-factory-client';
 import { Client, PartyProxy } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { failUndefined } from '@dxos/debug';
+
+import * as proto from '../proto/gen/dxos/echo/invitation';
 
 export interface ClientSetup {
   client: Client,
   party: PartyProxy,
-  invitation: Awaited<ReturnType<typeof generateInvitation>>,
-  secret: string
+  invitation: proto.InvitationDescriptor,
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {
@@ -20,12 +19,11 @@ export const setupClient = async (config?: Config): Promise<ClientSetup> => {
   await client.halo.createProfile({ username: 'Client' });
   const party = await client.echo.createParty();
 
-  const invitation = await generateInvitation(client, party);
+  const invitation = await client.echo.createInvitation(party.key);
 
   return {
     client,
     party,
-    invitation: invitation ?? failUndefined(),
-    secret: invitation.secret ?? failUndefined()
+    invitation: invitation.descriptor.toProto()
   };
 };

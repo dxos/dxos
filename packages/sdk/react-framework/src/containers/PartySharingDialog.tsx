@@ -40,7 +40,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
         ];
       });
     });
-    invitation.finshed.on(() => setInvitations(invitations => invitations.filter(invitation => invitation.id !== id)));
+    invitation.finished.on(() => setInvitations(invitations => invitations.filter(invitation => invitation.id !== id)));
 
     const pendingInvitation: PendingInvitation = {
       id,

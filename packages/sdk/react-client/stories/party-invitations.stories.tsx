@@ -78,7 +78,7 @@ const PartyInvitationContainer = () => {
       } else {
         const invitation = await client.echo.createInvitation(partyKey!);
         invitation.connected.on(() => setPin(invitation.secret.toString()));
-        invitation.finshed.on(() => resetInvitations());
+        invitation.finished.on(() => resetInvitations());
         setInvitationCode(encodeInvitation(invitation.descriptor));
       }
     });
@@ -156,7 +156,7 @@ const PartyJoinContainer = () => {
 
     try {
       const invitation = decodeInvitation(invitationCode);
-      if (invitation.type === InvitationDescriptorType.OFFLINE_KEY) {
+      if (invitation.type === InvitationDescriptorType.OFFLINE) {
         const party = await client.echo.joinParty(invitation);
         await party.open();
         setStatus({ party: party.key.toHex() });

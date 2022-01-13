@@ -20,7 +20,7 @@ export class InvitationRequest {
   /**
    * Fired when the invitation process completes successfully.
    */
-  finshed: Event;
+  finished: Event;
 
   /**
    * Fired when there's an error in the invitation process.
@@ -35,7 +35,7 @@ export class InvitationRequest {
     error: Event<Error>
   ) {
     this.connected = connected;
-    this.finshed = finished;
+    this.finished = finished;
     this.error = error;
   }
 
@@ -43,8 +43,8 @@ export class InvitationRequest {
     return this._descriptor;
   }
 
-  get secret (): Buffer {
-    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set.'));
+  get secret (): Uint8Array {
+    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
   }
 
   toString () {
@@ -53,18 +53,13 @@ export class InvitationRequest {
 }
 
 /**
- * Invitation being redeemed by receiver.
+ * Invitation that is being redeemed.
  */
 export class Invitation {
   constructor (
     private readonly _partyPromise: Promise<PartyProxy>,
-    private readonly _onAuthenticate: (secret: Buffer) => void
+    private readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}
-
-  // TODO(burdon): Why buffer in public API?
-  authenticate (secret: Buffer) {
-    this._onAuthenticate(secret);
-  }
 
   /**
    * Wait for the invitation flow to complete and return the target party.
@@ -72,5 +67,9 @@ export class Invitation {
   // TODO(burdon): Rename getParty.
   wait (): Promise<PartyProxy> {
     return this._partyPromise;
+  }
+
+  authenticate (secret: Uint8Array) {
+    this._onAuthenticate(secret);
   }
 }
