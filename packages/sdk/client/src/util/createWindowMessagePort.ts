@@ -17,7 +17,7 @@ export const createWindowMessagePort = (): RpcPort => {
       const listener: EventListener = (ev) => {
         const payload = (ev as any)?.data?.payloadFromContentScriptToApp;
         if (payload) {
-          cb(payload);
+          cb(new Uint8Array(payload));
         }
       };
       window.addEventListener('message', listener);

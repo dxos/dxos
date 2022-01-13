@@ -7,10 +7,9 @@ import debug from 'debug';
 
 import { Client } from '@dxos/client';
 import { SecretProvider } from '@dxos/credentials';
-import { Party } from '@dxos/echo-db';
+import { InvitationDescriptor, Party } from '@dxos/echo-db';
 
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
-import { decodeInvitation } from '../utils';
 
 const log = debug('dxos:bot:client-bot');
 
@@ -27,10 +26,10 @@ export class ClientBot implements BotService {
     log('Client bot create profile');
     await this.client.halo.createProfile({ username: 'Bot' });
 
-    if (request.invitation?.invitationCode) {
+    if (request.invitation) {
       const secret = request.invitation.secret;
       assert(secret, 'Secret must be provided with invitation');
-      const invitation = decodeInvitation(request.invitation.invitationCode);
+      const invitation = InvitationDescriptor.fromProto(request.invitation);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       log('Client bot join party');
       // TODO(yivlad): errors are not handled well in RPC.

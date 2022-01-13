@@ -146,7 +146,7 @@ const AutoInvitationGenerator = ({
     setImmediate(async () => {
       const party = await client.echo.createParty();
       const invitation = await client.echo.createInvitation(party.key);
-      invitation.finshed.on(() => setPin(''));
+      invitation.finished.on(() => setPin(''));
       invitation.connected.on(() => setPin(invitation.secret.toString()));
 
       onInvite(encodeInvitation(invitation.descriptor));
