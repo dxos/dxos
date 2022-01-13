@@ -68,7 +68,7 @@ describe('Client - nonpersistent', () => {
     });
 
     const party = await client.echo.createParty();
-    const item = await party.database.createItem({ model: ObjectModel, type: 'dxn://test' });
+    const item = await party.database.createItem({ model: ObjectModel, type: 'example:item/test' });
     await item.model.setProperty('foo', 'bar');
 
     const otherClient = new Client(defaultTestingConfig);
@@ -81,7 +81,7 @@ describe('Client - nonpersistent', () => {
     const invite = await client.echo.createInvitation(party.key);
     const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).wait();
 
-    const otherItem = otherParty.database.select(s => s.filter({ type: 'dxn://test' }).items).getValue()[0];
+    const otherItem = otherParty.database.select(s => s.filter({ type: 'example:item/test' }).items).getValue()[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();
