@@ -16,14 +16,14 @@ message InvitationDescriptor {
   */
   enum Type {
     INTERACTIVE = 1;
-    OFFLINE_KEY = 2;
+    OFFLINE = 2;
   }
 
   Type type = 1;
   bytes swarmKey = 2;
   bytes invitation = 3;
 
-  /// Only present if type == OFFLINE_KEY.
+  /// Only present if type == OFFLINE.
   bytes identityKey = 4;
 
   /// Must be stripped out when passing to another peer.
