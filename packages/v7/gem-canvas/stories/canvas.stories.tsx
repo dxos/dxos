@@ -27,21 +27,26 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Fix event x, y for drag/move (when moved/scaled: require grid to translate point).
+// TODO(burdon): Commit/update model.
+// TODO(burdon): Items (model update) and basic frame.
+// TODO(burdon): Refresh/render button.
+
+// TODO(burdon): Perf avoid re-render everything on every update.
 // TODO(burdon): Use debug for logging (check perf.)
 
-// TODO(burdon): Show connect points on hightlight.
 // TODO(burdon): Drag to draw line.
-// TODO(burdon): Text.
+// TODO(burdon): Show connect points on hightlight.
+// TODO(burdon): Drag line.
+// TODO(burdon): Create path.
+// TODO(burdon): Drag path.
+// TODO(burdon): Text element and editor.
 
-// TODO(burdon): Items (model update) and basic frame.
-
+// TODO(burdon): Select all (copy, move, delete).
 // TODO(burdon): Copy/paste.
 // TODO(burdon): Undo.
 
 // TODO(burdon): Constrain on resize.
 // TODO(burdon): Snap center/bounds on move.
-// TODO(burdon): Implement path to test model.
 // TODO(burdon): Info panel with element info.
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 // TODO(burdon): Styles and style objects.
@@ -49,13 +54,6 @@ export default {
 const check = <T extends any>(value: T): T => value;
 
 const initial: Element<any>[] = [
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 6, y: 3 })
-    })
-  },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
@@ -67,9 +65,46 @@ const initial: Element<any>[] = [
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: check<Ellipse>({
-      center: Vector.toVertex({ x: 6, y: 3 }), rx: [1, 2], ry: [1, 2]
+      center: Vector.toVertex({ x: 6, y: 5 }), rx: [1, 2], ry: [1, 2]
     })
   },
+  {
+    id: faker.datatype.uuid(),
+    type: 'ellipse',
+    data: check<Ellipse>({
+      center: Vector.toVertex({ x: 10, y: -2 }), rx: [1, 2], ry: [1, 2]
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'ellipse',
+    data: check<Ellipse>({
+      center: Vector.toVertex({ x: -1, y: 3 }), rx: [1, 2], ry: [1, 2]
+    })
+  },
+
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 6, y: 5 })
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 10, y: -2 })
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: -1, y: 3 })
+    })
+  },
+
   {
     id: faker.datatype.uuid(),
     type: 'rect',
@@ -77,16 +112,17 @@ const initial: Element<any>[] = [
       bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 })
     })
   },
+
   {
     id: faker.datatype.uuid(),
     type: 'path',
     data: check<Path>({
       points: [
-        Vector.toVertex({ x: -6, y: 4 }),
-        Vector.toVertex({ x: -4, y: 6 }),
-        Vector.toVertex({ x: -2, y: 2 }),
-        Vector.toVertex({ x: -3, y: -1 }),
-        Vector.toVertex({ x: -5, y: 1 }),
+        Vector.toVertex({ x: -8, y: 4 }),
+        Vector.toVertex({ x: -6, y: 6 }),
+        Vector.toVertex({ x: -4, y: 2 }),
+        Vector.toVertex({ x: -5, y: -1 }),
+        Vector.toVertex({ x: -7, y: 1 }),
       ],
       curve: 'cardinal',
       closed: true
@@ -128,7 +164,8 @@ export const Primary = () => {
     setSelected(element);
   };
 
-  const handleUpdate = (element: Element<any>) => {
+  const handleUpdate = (element: Element<any>, commit?: boolean) => {
+    // TODO(burdon): Chance to reject commit.
     setElements(elements => [...elements.filter(({ id }) => element.id !== id), element])
   };
 
@@ -156,6 +193,12 @@ export const Primary = () => {
     d3.select(document.body)
       .call(createKeyHandlers(({ action }) => {
         switch (action) {
+          case 'cancel': {
+            setTool(undefined);
+            setSelected(undefined);
+            break;
+          }
+
           case 'delete': {
             if (selectedRef.current) {
               handleDelete(selectedRef.current.id);

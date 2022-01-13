@@ -54,8 +54,8 @@ const createEllipse = (scale: Scale): D3Callable => {
 
               base.onSelect(true);
               base.onUpdate({
-                ...rest,
-                center: commit ? scale.model.snapVertex(moved) : moved
+                center: commit ? scale.model.snapVertex(moved) : moved,
+                ...rest
               });
             }));
         }
@@ -84,12 +84,29 @@ const valid = (data: Ellipse, commit: boolean) => {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
  */
 export class EllipseElement extends BaseElement<Ellipse> {
-  _frame = createFrame();
+  _frame = createFrame(this.scale);
   _main = createEllipse(this.scale);
 
   type = 'ellipse' as ElementType;
 
-  createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Ellipse {
+  override draw (): D3Callable {
+    return group => {
+      group.call(this._main, group.datum());
+      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+    };
+  }
+
+  override getBounds (): ScreenBounds {
+    const { center: { x, y }, rx, ry } = this.data;
+    return this.scale.model.toBounds({
+      x: FractionUtil.subtract(x, rx),
+      y: FractionUtil.subtract(y, ry),
+      width: FractionUtil.multiply(rx, [2, 1]),
+      height: FractionUtil.multiply(ry, [2, 1])
+    });
+  }
+
+  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Ellipse {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
@@ -102,23 +119,5 @@ export class EllipseElement extends BaseElement<Ellipse> {
       rx: FractionUtil.divide(width, [2, 1]),
       ry: FractionUtil.divide(height, [2, 1])
     }, commit);
-  }
-
-  createBounds (): ScreenBounds {
-    const { center: { x, y }, rx, ry } = this.data;
-    return this.scale.model.toBounds({
-      x: FractionUtil.subtract(x, rx),
-      y: FractionUtil.subtract(y, ry),
-      width: FractionUtil.multiply(rx, [2, 1]),
-      height: FractionUtil.multiply(ry, [2, 1])
-    });
-  }
-
-  // TODO(burdon): Generic.
-  draw (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
-    };
   }
 }

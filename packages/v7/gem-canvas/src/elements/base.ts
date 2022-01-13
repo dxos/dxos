@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, ScreenBounds, Scale } from '@dxos/gem-x';
+import { Modifiers, Point, Screen, ScreenBounds, Scale } from '@dxos/gem-x';
 
 import { Element, ElementDataType, ElementType } from '../model';
 import { D3Callable } from '../types';
+
+export type ControlPoint = { i: number, point: Point }
 
 /**
  * Graphical element.
@@ -21,7 +23,7 @@ export abstract class BaseElement<T extends ElementDataType> {
     private readonly _scale: Scale,
     private readonly _element?: Element<T>,
     private readonly _onSelect?: (element: Element<T>) => void,
-    private readonly _onUpdate?: (element: Element<T>) => void,
+    private readonly _onUpdate?: (element: Element<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
   ) {
     this._data = this._element?.data;
@@ -68,18 +70,29 @@ export abstract class BaseElement<T extends ElementDataType> {
     this._onCreate?.(this.type, this._data);
   }
 
-  onUpdate (data: T) {
+  onUpdate (data: T, commit?: boolean) {
     this._data = data;
 
-    // TODO(burdon): Don't update until commit.
-    if (this._element) {
+    // TODO(burdon): Revert _data if no ACK.
+    if (commit) {
       this._element.data = data;
     }
-
-    this._onUpdate?.(this.element);
+    this._onUpdate?.(this.element, commit);
   }
 
   abstract readonly type: ElementType;
+
+  /**
+   * Callable renderer.
+   */
+  abstract draw (): D3Callable;
+
+  /**
+   * Create bounding box from data.
+   */
+  getBounds (): ScreenBounds {
+    throw new Error();
+  }
 
   /**
    * Create element data from bounds.
@@ -87,15 +100,35 @@ export abstract class BaseElement<T extends ElementDataType> {
    * @param mod
    * @param commit
    */
-  abstract createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): T;
+  createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): T {
+    throw new Error();
+  }
 
   /**
-   * Create bounding box from data.
+   * Create element data from points.
+   * @param p1
+   * @param p2
+   * @param mod
+   * @param commit
    */
-  abstract createBounds (): ScreenBounds;
+  createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): T {
+    return this.createFromBounds(Screen.createBounds(p1, p2, mod));
+  }
 
   /**
-   * Callable renderer.
+   * Get control points.
    */
-  abstract draw (): D3Callable;
+  getControlPoints (): ControlPoint[] {
+    return [];
+  }
+
+  /**
+   * Update referenced point.
+   * @param point
+   * @param delta
+   * @param commit
+   */
+  updateControlPoint (point: ControlPoint, delta: Point, commit?: boolean): T {
+    throw new Error();
+  }
 }

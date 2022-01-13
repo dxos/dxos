@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Bounds, Fraction, Vector } from '@dxos/gem-x';
+import { Bounds, Fraction, Vertex } from '@dxos/gem-x';
 
 // TODO(burdon): Generic (e.g., styles); Common opts (e.g., text).
 
@@ -11,7 +11,7 @@ import { Bounds, Fraction, Vector } from '@dxos/gem-x';
 //
 
 export type Circle = {
-  center: Vector
+  center: Vertex
   r: Fraction
 }
 
@@ -20,7 +20,7 @@ export type Circle = {
 //
 
 export type Ellipse = {
-  center: Vector
+  center: Vertex
   rx: Fraction
   ry: Fraction
 }
@@ -38,8 +38,8 @@ export type Rect = {
 //
 
 export type Line = {
-  pos1: Vector
-  pos2: Vector
+  pos1: Vertex
+  pos2: Vertex
 }
 
 //
@@ -51,7 +51,7 @@ export type CurveType = 'basis' | 'cardinal' | 'linear' | 'step'
 export type Path = {
   curve?: CurveType
   closed?: boolean
-  points: Vector[]
+  points: Vertex[]
 }
 
 //

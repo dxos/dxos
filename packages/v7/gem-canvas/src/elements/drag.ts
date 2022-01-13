@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-x';
+import { Modifiers, Point, Scale } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
 
@@ -22,30 +22,27 @@ export const getEventMod = (event: KeyboardEvent): Modifiers => ({
  * @param onUpdate
  * @param onStart
  */
-// TODO(burdon): Event x, y is wrong if grid is translated (needs to be mapped).
 export const dragBounds = (
   scale: Scale,
-  onUpdate: (bounds: ScreenBounds, mod: Modifiers, commit?: boolean) => void,
+  onUpdate: (p1: Point, p2: Point, mod: Modifiers, commit?: boolean) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   let start: Point;
 
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
-      start = scale.screen.snapPoint([event.x, event.y]);
+      start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onStart?.();
     })
     .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = [event.x, event.y];
-      const bounds = Screen.createBounds(start, current, mod);
-      onUpdate(bounds, mod);
+      const current: Point = scale.translate([event.x, event.y]);
+      onUpdate(start, current, mod);
     })
     .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = scale.screen.snapPoint([event.x, event.y]);
-      const bounds = Screen.createBounds(start, current, mod);
-      onUpdate(bounds, mod, true);
+      const current: Point = scale.screen.snapPoint(scale.translate([event.x, event.y]));
+      onUpdate(start, current, mod, true);
     });
 };
 

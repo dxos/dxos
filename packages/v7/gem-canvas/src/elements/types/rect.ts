@@ -54,8 +54,8 @@ const createRect = (scale: Scale): D3Callable => {
 
               base.onSelect(true);
               base.onUpdate({
-                ...rest,
-                bounds: commit ? scale.model.snapBounds(moved) : moved
+                bounds: commit ? scale.model.snapBounds(moved) : moved,
+                ...rest
               });
             }));
         }
@@ -84,12 +84,24 @@ const valid = (data: Rect, commit: boolean) => {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
  */
 export class RectElement extends BaseElement<Rect> {
-  _frame = createFrame();
+  _frame = createFrame(this.scale);
   _main = createRect(this.scale);
 
   type = 'rect' as ElementType;
 
-  createData (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Rect {
+  override draw (): D3Callable {
+    return group => {
+      group.call(this._main, group.datum());
+      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+    };
+  }
+
+  override getBounds (): ScreenBounds {
+    const { bounds } = this.data;
+    return this.scale.model.toBounds(bounds);
+  }
+
+  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Rect {
     if (commit) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
@@ -97,18 +109,5 @@ export class RectElement extends BaseElement<Rect> {
     return valid({
       bounds: this.scale.screen.toBounds(bounds)
     }, commit);
-  }
-
-  createBounds (): ScreenBounds {
-    const { bounds } = this.data;
-    return this.scale.model.toBounds(bounds);
-  }
-
-  // TODO(burdon): Generic.
-  draw (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
-    };
   }
 }

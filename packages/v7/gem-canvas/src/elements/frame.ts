@@ -7,7 +7,7 @@ import * as d3 from 'd3';
 import { Modifiers, ScreenBounds, Point, Scale } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
-import { BaseElement } from './base';
+import { BaseElement, ControlPoint } from './base';
 import { getEventMod } from './drag';
 
 const FrameProps = {
@@ -63,11 +63,11 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
  * Handle drag handles.
  * @param onUpdate
  */
-const handleDrag = (
-  onUpdate: (handle: Handle, delta: Point, mod: Modifiers, commit?: boolean) => void
+const handleDrag = <T extends any>(
+  onUpdate: (handle: T, delta: Point, mod: Modifiers, commit?: boolean) => void
 ): D3Callable => {
   let start: Point;
-  let subject: Handle;
+  let subject: T;
 
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
@@ -89,9 +89,9 @@ const handleDrag = (
 /**
  * Draw the resizable frame.
  */
-export const createFrame = (): D3Callable => {
+export const createFrame = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
-    const { x, y, width, height } = base.createBounds();
+    const { x, y, width, height } = base.getBounds();
 
     const cx = x + width / 2;
     const cy = y + height / 2;
@@ -110,16 +110,16 @@ export const createFrame = (): D3Callable => {
       .selectAll('circle')
       .data(resizable ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
-      .call(handleDrag((handle, delta, mod, commit) => {
-        const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        const data = base.createData(bounds, mod, commit);
-        base.onUpdate(data);
-      }))
       .classed('frame-handle', true)
       .attr('cursor', h => h.cursor)
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
       .attr('cy', ({ p }) => cy - p[1] * height / 2)
-      .attr('r', FrameProps.handleRadius);
+      .attr('r', FrameProps.handleRadius)
+      .call(handleDrag<Handle>((handle, delta, mod, commit) => {
+        const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        const data = base.createFromBounds(bounds, mod, commit);
+        base.onUpdate(data, commit);
+      }));
     // eslint-enable indent
   };
 };
@@ -129,17 +129,22 @@ export const createFrame = (): D3Callable => {
  */
 export const createControlPoints = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
-    const { points } = base.data;
-    const p = points.map(p => scale.model.toPoint(p));
+    const points = active ? base.getControlPoints() : [];
 
-    // TODO(burdon): Move out (show on hover).
+    // eslint-disable indent
     group
       .selectAll('circle.frame-handle')
-      .data(active ? p : [])
+      .data(points)
       .join('circle')
       .classed('frame-handle', true)
-      .attr('cx', p => p[0])
-      .attr('cy', p => p[1])
-      .attr('r', FrameProps.handleRadius);
+      .attr('cursor', 'move')
+      .attr('cx', p => p.point[0])
+      .attr('cy', p => p.point[1])
+      .attr('r', FrameProps.handleRadius)
+      .call(handleDrag<ControlPoint>((point, delta, mod, commit) => {
+        const data = base.updateControlPoint(point, delta, commit);
+        base.onUpdate(data, commit);
+      }));
+    // eslint-enable indent
   };
 };

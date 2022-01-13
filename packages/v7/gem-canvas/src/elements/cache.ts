@@ -17,7 +17,7 @@ export class ElementCache {
   constructor (
     private readonly _scale: Scale,
     private readonly _onSelect?: (element: Element<any>) => void,
-    private readonly _onUpdate?: (element: Element<any>) => void
+    private readonly _onUpdate?: (element: Element<any>, commit?: boolean) => void
   ) {}
 
   toString () {

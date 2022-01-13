@@ -65,7 +65,7 @@ export class Screen {
    * @param p1
    * @param p2
    */
-  static distance = (p1: Point, p2: Point) => {
+  static len = (p1: Point, p2: Point) => {
     return Math.sqrt(Math.pow(Math.abs(p1[0] - p2[0]), 2) + Math.pow(Math.abs(p1[1] - p2[1]), 2));
   };
 

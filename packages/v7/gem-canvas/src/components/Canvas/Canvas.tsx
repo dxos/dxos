@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { Modifiers, ScreenBounds, Scale, defaultScale, useStateRef } from '@dxos/gem-x';
+import { Modifiers, Scale, defaultScale, useStateRef, Point } from '@dxos/gem-x';
 
 import { BaseElement, ElementCache, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
@@ -27,7 +27,15 @@ const styles = css`
     fill: #EEE;
   }
 
+  rect.line-touch {
+    stroke: none;
+    fill: transparent;
+  }
+
+  //
   // TODO(burdon): Scope.
+  //
+
   circle, ellipse, line, path, rect {
     stroke: #666;
     stroke-width: 2;
@@ -43,7 +51,7 @@ interface CanvasProps {
   elements?: Element<any>[]
   selected?: Element<any>
   onSelect?: (element: Element<any>) => void
-  onUpdate?: (element: Element<any>) => void
+  onUpdate?: (element: Element<any>, boolean?: boolean) => void
   onCreate?: (type: ElementType, data: ElementDataType) => void
   onDelete?: (id: ElementId) => void
 }
@@ -107,7 +115,7 @@ export const Canvas = ({
   useEffect(() => {
     const cursor = tool ? createElement(scale, tool) : undefined;
     cursor?.setSelected(true);
-    setCursor(cursor);
+    setCursor(cursor); // TODO(burdon): ???
   }, [tool]);
 
   //
@@ -115,9 +123,9 @@ export const Canvas = ({
   //
   // eslint-disable indent
   useEffect(() => {
-    const handleUpdate = (bounds: ScreenBounds, mod: Modifiers, commit: boolean) => {
+    const handleUpdate = (p1: Point, p2: Point, mod: Modifiers, commit: boolean) => {
       const cursor = cursorRef.current;
-      const data = cursor.createData(bounds, mod, commit);
+      const data = cursor.createFromExtent(p1, p2, mod, commit);
 
       if (commit) {
         d3.select(cursorGroup.current)
@@ -143,7 +151,7 @@ export const Canvas = ({
       }
     };
 
-    // Drag handler.
+    // Drag to create new element.
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
       .attr('cursor', 'crosshair')

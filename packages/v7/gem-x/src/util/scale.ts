@@ -13,7 +13,7 @@ import { Bounds, Vertex } from './vector';
  */
 export class Scale {
   private _bounds: ScreenBounds; // TODO(burdon): Remove.
-  private _transform: ZoomTransform; // TODO(burdon): Remove.
+  private _transform: ZoomTransform;
 
   constructor (
     private readonly _gridSize: number = 16
@@ -42,6 +42,14 @@ export class Scale {
   // TODO(burdon): Remove.
   setTransform (transform: ZoomTransform) {
     this._transform = transform;
+  }
+
+  translate (point: Point): Point {
+    const { x, y, k } = this._transform ?? { x: 0, y: 0, k: 1 };
+    return [
+      (point[0] - x) / k,
+      (point[1] - y) / k
+    ];
   }
 
   /**
