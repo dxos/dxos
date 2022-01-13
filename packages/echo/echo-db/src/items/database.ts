@@ -155,7 +155,7 @@ export class Database {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
-   * @param [filter] {SelectFilter}
+   * @param [selector] {SelectFilter}
    */
   select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
     const result = this._itemManager.queryItems({});
