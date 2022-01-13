@@ -14,12 +14,15 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Fix event x, y (when moved).
+// TODO(burdon): Fix event x, y for drag/move (when moved/scaled: require grid to translate point).
+// TODO(burdon): Use debug for logging (check perf.)
+
 // TODO(burdon): Show connect points on hightlight.
 // TODO(burdon): Drag to draw line.
-// TODO(burdon): Use debug for logging.
+// TODO(burdon): Text.
 
-// TODO(burdon): Items (model).
+// TODO(burdon): Items (model update) and basic frame.
+
 // TODO(burdon): Copy/paste.
 // TODO(burdon): Undo.
 
@@ -28,7 +31,7 @@ export default {
 // TODO(burdon): Implement path to test model.
 // TODO(burdon): Info panel with element info.
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
-// TODO(burdon): Style objects.
+// TODO(burdon): Styles and style objects.
 
 const initial: Element<any>[] = [
   {
