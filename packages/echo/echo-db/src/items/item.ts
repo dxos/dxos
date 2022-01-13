@@ -5,10 +5,9 @@
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
 
-import { SelectionResult } from '.';
 import { Entity } from './entity';
 import type { Link } from './link';
-import { Selection } from './selection';
+import { Selection, SelectionResult } from './selection';
 
 /**
  * A globally addressable data item.
@@ -39,13 +38,11 @@ export class Item<M extends Model> extends Entity<M> {
 
   /**
    * Items are constructed by the `Database` object.
-   * @param {ItemID} _itemId      - Addressable ID.
-   * @param {ItemType} _itemType  - User defined type (DXN).
-   * @param {Model} _modelMeta    - Data model metadata.
-   * @param {Model} _model        - Data model (provided by `ModelFactory`).
+   * @param {ItemID} itemId       - Addressable ID.
+   * @param {ItemType} itemType   - User defined type (DXN).
+   * @param {Model} model         - Data model (provided by `ModelFactory`).
    * @param [_writeStream]        - Write stream (if not read-only).
    * @param {Item<any>} [parent]  - Parent Item (if not a root Item).
-   * @param {LinkData} [link]
    */
   constructor (
     itemId: ItemID,
@@ -55,7 +52,6 @@ export class Item<M extends Model> extends Entity<M> {
     parent?: Item<any> | null
   ) {
     super(itemId, itemType, model);
-
     this._updateParent(parent);
   }
 
@@ -85,7 +81,7 @@ export class Item<M extends Model> extends Entity<M> {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
-   * @param [filter] {SelectFilter}
+   * @param [selector] {SelectFilter}
    */
   select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
     const selection = new Selection(() => [this], this._onUpdate.discardParameter());

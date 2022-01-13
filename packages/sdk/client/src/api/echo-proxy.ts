@@ -18,7 +18,7 @@ import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
-import { PartyProxy } from './PartyProxy';
+import { PartyProxy } from './party-proxy';
 import { InvitationRequest } from './invitations';
 
 export class EchoProxy {
