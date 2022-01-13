@@ -130,7 +130,7 @@ export const Primary = () => {
   const rows = [...new Array(100)].map((_, i) => ({
     id: `item-${i}`,
     checked: i % 5 === 0,
-    title: faker.lorem.sentences(1 + faker.random.number(3)),
+    title: faker.lorem.sentences(1 + faker.datatype.number(3)),
     status: i % 3 === 0
   }));
 
