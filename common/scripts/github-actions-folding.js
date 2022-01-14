@@ -8,6 +8,8 @@ const childProcess = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
 
+fs.rmSync('./failure-summary.log');
+
 const [cmd, ...args] = process.argv.slice(2);
 
 const cspr = childProcess.spawn(cmd, args, { shell: true, stdio: ['ignore', 'pipe', 'pipe']})
