@@ -171,10 +171,7 @@ export class PartyProxy {
   }
 
   removeInvitation (invitation: InvitationRequest) {
-    const index = this.activeInvitations.findIndex(activeInvitation =>
-      // TODO(wittjosiah): Better comparison.
-      activeInvitation.toString() === invitation.toString()
-    );
+    const index = this.activeInvitations.findIndex(activeInvitation => activeInvitation === invitation);
     this.activeInvitations.splice(index, 1);
     this.invitationsUpdate.emit();
   }

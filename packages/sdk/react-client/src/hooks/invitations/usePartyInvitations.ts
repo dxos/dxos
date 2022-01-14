@@ -14,10 +14,7 @@ export const usePartyInvitations = (partyKey?: PublicKey) => {
   const [invitations, setInvitations] = useState<InvitationRequest[]>(party?.activeInvitations ?? []);
 
   useEffect(() => {
-    if (!party) {
-      return;
-    }
-    return party.invitationsUpdate.on(() => {
+    return party?.invitationsUpdate.on(() => {
       setInvitations([...party.activeInvitations]);
     });
   }, [party]);

@@ -197,11 +197,7 @@ export class EchoProxy {
    */
   // TODO(rzadp): Move to PartyProxy.
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
-    const party = this.getParty(partyKey);
-    if (!party) {
-      throw Error('Party not found');
-    }
-
+    const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation();
   }
 
