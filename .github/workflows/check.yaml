@@ -36,7 +36,7 @@ jobs:
         if: failure()
         run: |
           SUMMARY_COMMENT=$(cat ./failure-summary.log)
-          echo "SUMMARY_COMMENT<<EOF" >> $GITHUB_ENV
+          echo "SUMMARY_COMMENT=<<EOF" >> $GITHUB_ENV
           echo "$SUMMARY_COMMENT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Add summary comment
