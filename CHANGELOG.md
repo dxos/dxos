@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.19.10](https://www.github.com/dxos/protocols/compare/v2.19.9...v2.19.10) (2022-01-13)
+
+
+### Bug Fixes
+
+* Add avsc, thrift, electron as external modules ([#823](https://www.github.com/dxos/protocols/issues/823)) ([1130d7c](https://www.github.com/dxos/protocols/commit/1130d7c5ed49b5dbb0dcc9d842c8647a19904bbb))
+* update docs generation and fix typo on comments. ([#810](https://www.github.com/dxos/protocols/issues/810)) ([4d1968f](https://www.github.com/dxos/protocols/commit/4d1968fc3948832f454fb8760904ca0c95d9b175))
+
 ### [2.19.9](https://www.github.com/dxos/protocols/compare/v2.19.8...v2.19.9) (2022-01-10)
 
 

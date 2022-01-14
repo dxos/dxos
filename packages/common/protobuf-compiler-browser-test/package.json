@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler-browser-test",
-  "version": "2.19.9",
+  "version": "2.19.10",
   "private": true,
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -16,13 +16,13 @@
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium"
   },
   "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "browser-mocha": "~1.4.8",
-    "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@dxos/browser-mocha": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "browser-mocha": "~1.4.8",
+    "expect": "~27.0.2",
     "mocha": "~8.4.0"
   }
 }

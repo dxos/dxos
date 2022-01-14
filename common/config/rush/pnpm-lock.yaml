@@ -1003,6 +1003,7 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/util': link:../../common/util
       debug: 4.3.3
+      pify: 5.0.0
       readable-stream: 3.6.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -1016,7 +1017,6 @@ importers:
       '@types/pumpify': 1.4.1
       '@types/readable-stream': 2.3.9
       faker: 5.5.3
-      pify: 5.0.0
       tempy: 1.0.1
 
   ../../packages/echo/echo-testing:
