@@ -194,7 +194,6 @@ export class Item<M extends Model> extends Entity<M> {
   /**
    * Atomically update parent/child relationship.
    * @param parent
-   * @private
    */
   private _updateParent (parent: Item<any> | null | undefined) {
     if (this._parent) {
