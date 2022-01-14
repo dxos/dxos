@@ -321,7 +321,9 @@ export class ECHO {
    * @param {PartyKey} partyKey
    */
   getParty (partyKey: PartyKey): Party | undefined {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
