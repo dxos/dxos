@@ -93,7 +93,7 @@ export const Primary = () => {
       data: {
         bounds: { x: [4, 1], y: [1, 1], width: [4, 1], height: [4, 1] },
         class: 'style-1',
-        style: { rx: 1, 'font-size': 24 },
+        style: { rx: [1, 1], 'font-size': 24 },
         text: 'Rect'
       }
     },
