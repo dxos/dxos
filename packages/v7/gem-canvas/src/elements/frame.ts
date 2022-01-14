@@ -132,7 +132,6 @@ export const createFrame = (scale: Scale): D3Callable => {
 export const createConectionPoints = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<any>, active?: boolean) => {
     const { x, y, width, height } = base.getBounds();
-
     const cx = x + width / 2;
     const cy = y + height / 2;
 
