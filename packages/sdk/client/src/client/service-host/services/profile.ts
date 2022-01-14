@@ -8,33 +8,52 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Contacts, InvitationState, ProfileService } from '../../../proto/gen/dxos/client';
+import {
+  InvitationState,
+  ProfileService as IProfileService,
+  AuthenticateInvitationRequest,
+  SubscribeProfileResponse,
+  InvitationRequest,
+  CreateProfileRequest,
+  Contacts,
+  RedeemedInvitation,
+  Profile
+  , RecoverProfileRequest
+} from '../../../proto/gen/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
 import { encodeInvitation, resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
-export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {
-  const inviterInvitations: InviterInvitations = [];
-  const inviteeInvitations: InviteeInvitations = new Map();
+export class ProfileService implements IProfileService {
+  private inviterInvitations: InviterInvitations = [];
+  private inviteeInvitations: InviteeInvitations = new Map();
 
-  return {
-    SubscribeProfile: () => new Stream(({ next }) => {
+  constructor (private echo: ECHO) {}
+
+  SubscribeProfile (): Stream<SubscribeProfileResponse> {
+    return new Stream(({ next }) => {
       const emitNext = () => next({
-        profile: echo.halo.isInitialized ? echo.halo.getProfile() : undefined
+        profile: this.echo.halo.isInitialized ? this.echo.halo.getProfile() : undefined
       });
 
       emitNext();
-      return echo.halo.subscribeToProfile(emitNext);
-    }),
-    CreateProfile: async (opts) => {
-      return echo.halo.createProfile(opts);
-    },
-    RecoverProfile: () => {
-      throw new Error('Not implemented');
-    },
-    CreateInvitation: () => new Stream(({ next, close }) => {
+      return this.echo.halo.subscribeToProfile(emitNext);
+    });
+  }
+
+  async CreateProfile (request: CreateProfileRequest) {
+    return this.echo.halo.createProfile(request);
+  }
+
+  async RecoverProfile (request: RecoverProfileRequest): Promise<Profile> {
+    throw new Error('Not implemented');
+  }
+
+  CreateInvitation (): Stream<InvitationRequest> {
+    return new Stream(({ next, close }) => {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
         let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
@@ -42,7 +61,7 @@ export const createProfileService = ({ echo }: CreateServicesOpts): ProfileServi
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
         };
-        invitation = await echo.halo.createInvitation({
+        invitation = await this.echo.halo.createInvitation({
           secretProvider,
           secretValidator: defaultSecretValidator
         }, {
@@ -53,11 +72,14 @@ export const createProfileService = ({ echo }: CreateServicesOpts): ProfileServi
         });
         invitation.secret = secret;
         const invitationCode = encodeInvitation(invitation);
-        inviterInvitations.push({ invitationCode, secret: invitation.secret });
+        this.inviterInvitations.push({ invitationCode, secret: invitation.secret });
         next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
       });
-    }),
-    AcceptInvitation: (request) => new Stream(({ next, close }) => {
+    });
+  }
+
+  AcceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+    return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
       const inviteeInvitation: InviteeInvitation = { secretTrigger };
@@ -74,8 +96,8 @@ export const createProfileService = ({ echo }: CreateServicesOpts): ProfileServi
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
-      inviteeInvitations.set(id, inviteeInvitation);
+      const haloPartyPromise = this.echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
+      this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
       haloPartyPromise.then(party => {
@@ -83,35 +105,41 @@ export const createProfileService = ({ echo }: CreateServicesOpts): ProfileServi
       }).catch(err => {
         next({ id, state: InvitationState.ERROR, error: String(err) });
       });
-    }),
-    AuthenticateInvitation: async (request) => {
-      assert(request.processId, 'Process ID is missing.');
-      const invitation = inviteeInvitations.get(request.processId);
-      assert(invitation, 'Invitation not found.');
-      assert(request.secret, 'Secret not provided.');
+    });
+  }
 
-      // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
-      invitation.secret = request.secret;
-      invitation.secretTrigger?.();
-    },
-    SubscribeContacts: () => {
-      if (echo.halo.isInitialized) {
-        return resultSetToStream(echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
-      } else {
-        return new Stream(({ next }) => {
-          const subGroup = new SubscriptionGroup();
+  async AuthenticateInvitation (request: AuthenticateInvitationRequest) {
+    assert(request.processId, 'Process ID is missing.');
+    const invitation = this.inviteeInvitations.get(request.processId);
+    assert(invitation, 'Invitation not found.');
+    assert(request.secret, 'Secret not provided.');
 
-          setImmediate(async () => {
-            await echo.halo.identityReady.waitForCondition(() => echo.halo.isInitialized);
+    // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
+    invitation.secret = request.secret;
+    invitation.secretTrigger?.();
+  }
 
-            const resultSet = echo.halo.queryContacts();
-            next({ contacts: resultSet.value });
-            subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
-          });
+  SubscribeContacts (): Stream<Contacts> {
+    if (this.echo.halo.isInitialized) {
+      return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
+    } else {
+      return new Stream(({ next }) => {
+        const subGroup = new SubscriptionGroup();
 
-          return () => subGroup.unsubscribe();
+        setImmediate(async () => {
+          await this.echo.halo.identityReady.waitForCondition(() => this.echo.halo.isInitialized);
+
+          const resultSet = this.echo.halo.queryContacts();
+          next({ contacts: resultSet.value });
+          subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
         });
-      }
+
+        return () => subGroup.unsubscribe();
+      });
     }
-  };
+  }
+}
+
+export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {
+  return new ProfileService(echo);
 };
