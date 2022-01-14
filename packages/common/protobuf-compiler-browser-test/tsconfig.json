@@ -7,7 +7,17 @@
   "types": [
     "mocha"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../../gravity/browser-mocha"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../protobuf-compiler"
+    }
+  ],
   "include": [
     "src",
     "browser-test"
