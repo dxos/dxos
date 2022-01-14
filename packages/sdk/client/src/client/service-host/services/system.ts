@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServices } from '../../../interfaces';
+import { SystemService } from '../../../proto/gen/dxos/client';
 import { CreateServicesOpts } from './interfaces';
 
-export const createSystemService = ({ config, echo }: CreateServicesOpts): ClientServices['SystemService'] => {
+export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => {
   return {
     GetConfig: async () => {
       return {

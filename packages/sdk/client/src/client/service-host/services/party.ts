@@ -11,12 +11,11 @@ import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/
 import { raise } from '@dxos/debug';
 import { EchoNotOpenError, InvitationDescriptor, PartyNotFoundError } from '@dxos/echo-db';
 
-import { ClientServices } from '../../../interfaces';
-import { InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from '../../../proto/gen/dxos/client';
+import { InvitationState, PartyService, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from '../../../proto/gen/dxos/client';
 import { encodeInvitation, resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
-export const createPartyService = ({ echo }: CreateServicesOpts): ClientServices['PartyService'] => {
+export const createPartyService = ({ echo }: CreateServicesOpts): PartyService => {
   const inviterInvitations: InviterInvitations = [];
   const inviteeInvitations: InviteeInvitations = new Map();
 

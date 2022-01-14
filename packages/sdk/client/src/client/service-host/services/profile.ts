@@ -11,12 +11,11 @@ import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ClientServices } from '../../../interfaces';
-import { Contacts, InvitationState } from '../../../proto/gen/dxos/client';
+import { Contacts, InvitationState, ProfileService } from '../../../proto/gen/dxos/client';
 import { encodeInvitation, resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
-export const createProfileService = ({ echo }: CreateServicesOpts): ClientServices['ProfileService'] => {
+export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {
   const inviterInvitations: InviterInvitations = [];
   const inviteeInvitations: InviteeInvitations = new Map();
 
