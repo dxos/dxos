@@ -17,9 +17,9 @@ import { InvitationRequest } from './invitations';
 export class PartyProxy {
   private readonly _database?: Database;
 
-  readonly key: PartyKey;
-  readonly isOpen: boolean;
-  readonly isActive: boolean;
+  private _key: PartyKey;
+  private _isOpen: boolean;
+  private _isActive: boolean;
 
   readonly activeInvitations: InvitationRequest[] = [];
   readonly invitationsUpdate = new Event();
@@ -29,9 +29,9 @@ export class PartyProxy {
     private _modelFactory: ModelFactory,
     _party: Party
   ) {
-    this.key = _party.publicKey;
-    this.isOpen = _party.isOpen;
-    this.isActive = _party.isActive;
+    this._key = _party.publicKey;
+    this._isOpen = _party.isOpen;
+    this._isActive = _party.isActive;
 
     if (!_party.isOpen) {
       return;
@@ -40,10 +40,10 @@ export class PartyProxy {
     if (_serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
-        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this.key)
+        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key)
       );
     } else {
-      const party = this._serviceProvider.echo.getParty(this.key) ?? failUndefined();
+      const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
     }
   }
@@ -58,6 +58,24 @@ export class PartyProxy {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
+  }
+
+  processPartyUpdate (party: Party) {
+    this._key = party.publicKey;
+    this._isOpen = party.isOpen;
+    this._isActive = party.isActive;
+  }
+
+  get key () {
+    return this._key;
+  }
+
+  get isOpen () {
+    return this._isOpen;
+  }
+
+  get isActive () {
+    return this._isActive;
   }
 
   /**

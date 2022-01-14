@@ -58,7 +58,8 @@ export class EchoProxy {
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          const partyProxy = await this.createPartyProxy(party);
+          const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
+          await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
 
           const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
@@ -67,8 +68,7 @@ export class EchoProxy {
               return;
             }
 
-            const partyProxy = await this.createPartyProxy(party);
-            this._parties.set(partyProxy.key, partyProxy);
+            partyProxy.processPartyUpdate(party);
             this._partiesChanged.emit();
           }, () => {});
           this._subscriptions.push(() => partyStream.close());
@@ -120,12 +120,6 @@ export class EchoProxy {
    */
   getParty (partyKey: PartyKey): PartyProxy | undefined {
     return this._parties.get(partyKey);
-  }
-
-  private async createPartyProxy (party: Party): Promise<PartyProxy> {
-    const proxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
-    await proxy.init();
-    return proxy;
   }
 
   queryParties (): ResultSet<PartyProxy> {
