@@ -32,13 +32,21 @@ jobs:
           # Build with tests
           # TODO(burdon): Move to separate action (run once per evening).
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+      - name: Prepare summary comment
+        run: |
+          SUMMARY_COMMENT=$(cat ./failure-summary.log)
+          echo "SUMMARY_COMMENT<<EOF" >> $GITHUB_ENV
+          echo "$SUMMARY_COMMENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Add summary comment
         uses: mshick/add-pr-comment@v1
         with:
           message: |
-            **Hello**
-            🌏
-            !
+            Here's the summary of the build failures for ${{ github.sha }}:
+
+            ```
+            ${{ env.env.SUMMARY_COMMENT }}
+            ```
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
           allow-repeats: false # This is the default
