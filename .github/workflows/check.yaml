@@ -33,7 +33,7 @@ jobs:
           # TODO(burdon): Move to separate action (run once per evening).
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
       - name: Add summary comment
-        uses: machine-learning-apps/pr-comment@master
+        uses: dxos/pr-comment@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
