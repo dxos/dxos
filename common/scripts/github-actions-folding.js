@@ -38,7 +38,7 @@ rlErr.on('line', line => {
   linesInCurrentGroup.push(line);
 
   if(line.trim().endsWith('failed to build.')) {
-      fs.appendFileSync('./failed-build.log', linesInCurrentGroup.join('\n') + '\n');
+      fs.appendFileSync('./failure-summary.log', linesInCurrentGroup.join('\n') + '\n');
       linesInCurrentGroup = []
   }
 })
