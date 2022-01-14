@@ -47,12 +47,11 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   const [propertyValue, setPropertyValue] = useState('');
 
   const handlePartyOpenToggle = (party: PartyProxy) => {
-    void (party.isOpen ? party.close() : party.open());
+    void party.setOpen(!party.isOpen);
   };
 
   const handlePartyActiveToggle = (party: PartyProxy) => {
-    const options = { global: true };
-    void (party.isActive ? party.deactivate(options) : party.activate(options));
+    void party.setActive(!party.isActive, { global: true });
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {

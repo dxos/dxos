@@ -233,7 +233,7 @@ export class Client {
           const decodedMutation = model.meta.mutation.decode(mutation.mutation);
           await (createdItem.model as any).write(decodedMutation);
         }
-      } else if (item.modelType === 'dxn://dxos.org/model/object') {
+      } else if (item.modelType === 'dxos:model/object') {
         assert(item?.model?.custom);
         assert(model.meta.snapshotCodec);
         assert(createdItem?.model);
@@ -250,7 +250,7 @@ export class Client {
         }
 
         await createdItem.model.setProperties(obj.root);
-      } else if (item.modelType === 'dxn://dxos.org/model/text') {
+      } else if (item.modelType === 'dxos:model/text') {
         assert(item?.model?.custom);
         assert(model.meta.snapshotCodec);
         assert(createdItem?.model);

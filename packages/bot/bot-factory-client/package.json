@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot-factory-client",
-  "version": "2.19.9",
+  "version": "2.19.11",
   "description": "Bot",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -21,8 +21,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "base-x": "~3.0.9"
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",

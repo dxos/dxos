@@ -5,17 +5,17 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep, waitForCondition } from '@dxos/async';
+import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
+import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
-import { InvitationProcess } from './proto/gen/dxos/client';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -39,7 +39,7 @@ describe('Client', () => {
     });
 
     describe('profile', () => {
-      test('creates a remote profile', async () => {
+      test('creates a profile', async () => {
         const client = await createClient();
 
         await client.initialize();
@@ -66,45 +66,6 @@ describe('Client', () => {
       });
     });
 
-    describe('device invitations', () => {
-      test('creates and joins a HALO invitation', async () => {
-        const inviter = await createClient();
-        await inviter.initialize();
-        afterTest(() => inviter.destroy());
-        const invitee = await createClient();
-        await invitee.initialize();
-        afterTest(() => invitee.destroy());
-
-        await inviter.halo.createProfile({ username: 'test-user' });
-
-        // TODO(dmaretskyi): Refactor to not use services directly.
-        let inviteeInvitationProcess: InvitationProcess;
-        inviter.services.ProfileService.CreateInvitation().subscribe(async inviterInvitation => {
-          if (!inviteeInvitationProcess) {
-            inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
-          } else if (inviterInvitation.secret) {
-            await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
-          }
-        }, (error) => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
-
-        const [inviteeProfileLatch, inviteeProfileTrigger] = latch();
-        invitee.services.ProfileService.SubscribeProfile().subscribe(inviteeProfile => {
-          if (inviteeProfile.profile?.username === 'test-user') {
-            inviteeProfileTrigger();
-          }
-        }, error => {
-          if (!(error instanceof RpcClosedError)) {
-            throw error;
-          }
-        });
-        await inviteeProfileLatch;
-      }).timeout(5000);
-    });
-
     describe('party invitations', () => {
       test('creates and joins a Party invitation', async () => {
         const inviter = await createClient();
@@ -120,9 +81,13 @@ describe('Client', () => {
 
         const party = await inviter.echo.createParty();
         const invitation = await inviter.echo.createInvitation(party.key);
+        invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
 
         expect(inviteeParty.key).toEqual(party.key);
+
+        const members = party.queryMembers().value;
+        expect(members.length).toEqual(2);
       }).timeout(5000);
 
       test('invitation callbacks are fired', async () => {
@@ -145,7 +110,7 @@ describe('Client', () => {
         const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
         await connectedFired;
 
-        const finishedFired = invitation.finshed.waitForCount(1);
+        const finishedFired = invitation.finished.waitForCount(1);
         acceptedInvitation.authenticate(invitation.secret);
         await finishedFired;
 
@@ -176,7 +141,6 @@ describe('Client', () => {
 
         await client.halo.createProfile();
         const party = await client.echo.createParty();
-        await party.open();
 
         await party.setTitle('test-party');
         const title = party.getProperty('title');
@@ -190,7 +154,6 @@ describe('Client', () => {
 
         await client.halo.createProfile();
         const party = await client.echo.createParty();
-        await party.open();
 
         const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
         await item1.model.setProperty('prop1', 'x');

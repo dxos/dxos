@@ -21,7 +21,7 @@ import { PartyCore, PartyOptions } from './party-core';
 import { PartyFeedProvider } from './party-feed-provider';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
 
-export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
+export const PARTY_ITEM_TYPE = 'dxos:item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
 
 // TODO(burdon): Factor out public API.

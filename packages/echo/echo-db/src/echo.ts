@@ -16,6 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { EchoNotOpenError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
@@ -320,7 +321,9 @@ export class ECHO {
    * @param {PartyKey} partyKey
    */
   getParty (partyKey: PartyKey): Party | undefined {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
@@ -333,7 +336,9 @@ export class ECHO {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     return new ResultSet(
       this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
@@ -353,7 +358,7 @@ export class ECHO {
   //   code const { status } = useInvitationStatus(invitationProcess)
   //   code const party = await client.joinParty(invitation)..ready;
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
+    assert(this._partyManager.isOpen, new EchoNotOpenError());
 
     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);

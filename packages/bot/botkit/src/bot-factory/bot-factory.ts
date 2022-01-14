@@ -108,8 +108,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Initializing bot`);
       await handle.rpc.Initialize({
         config: this._config.values,
-        invitation: request.invitation,
-        secret: request.secret
+        invitation: request.invitation
       });
       log(`[${id}] Initialization complete`);
       this._bots.set(id, handle);

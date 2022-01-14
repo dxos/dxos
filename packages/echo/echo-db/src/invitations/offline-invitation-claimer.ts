@@ -47,7 +47,7 @@ export class OfflineInvitationClaimer {
     private readonly _networkManager: NetworkManager,
     private readonly _invitationDescriptor: InvitationDescriptor
   ) {
-    assert(InvitationDescriptorType.OFFLINE_KEY === _invitationDescriptor.type);
+    assert(InvitationDescriptorType.OFFLINE === _invitationDescriptor.type);
   }
 
   get state () {
@@ -105,7 +105,7 @@ export class OfflineInvitationClaimer {
     // We expect to receive a new swarm/rendezvousKey to use for the full Greeting process.
     const claimResponse = await this._greeterPlugin.send(
       responderPeerId,
-      createGreetingClaimMessage(invitationID)
+      createGreetingClaimMessage(Buffer.from(invitationID))
     ) as ClaimResponse;
     const { id, rendezvousKey } = claimResponse;
     assert(id && rendezvousKey);

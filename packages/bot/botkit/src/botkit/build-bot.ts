@@ -25,7 +25,10 @@ export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
       'typeforce',
       'sodium-universal',
       'sodium-native',
-      'ws'
+      'ws',
+      'avsc',
+      'thrift',
+      'electron'
     ]
   });
 };

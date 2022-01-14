@@ -20,7 +20,6 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      base-x: ~3.0.9
       expect: ~27.0.2
     dependencies:
       '@dxos/async': link:../../common/async
@@ -32,7 +31,6 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/rpc': link:../../common/rpc
-      base-x: 3.0.9
     devDependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -234,6 +232,26 @@ importers:
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.5.3
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
+
+  ../../packages/common/protobuf-compiler-browser-test:
+    specifiers:
+      '@dxos/browser-mocha': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/protobuf-compiler': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/mocha': ~8.2.2
+      browser-mocha: ~1.4.8
+      expect: ~27.0.2
+      mocha: ~8.4.0
+    devDependencies:
+      '@dxos/browser-mocha': link:../../gravity/browser-mocha
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/protobuf-compiler': link:../protobuf-compiler
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.3
+      browser-mocha: 1.4.8
+      expect: 27.0.6
+      mocha: 8.4.0
 
   ../../packages/common/protobuf-test:
     specifiers: {}
@@ -983,6 +1001,7 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/util': link:../../common/util
       debug: 4.3.3
+      pify: 5.0.0
       readable-stream: 3.6.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -996,7 +1015,6 @@ importers:
       '@types/pumpify': 1.4.1
       '@types/readable-stream': 2.3.9
       faker: 5.5.3
-      pify: 5.0.0
       tempy: 1.0.1
 
   ../../packages/echo/echo-testing:
@@ -9989,6 +10007,10 @@ packages:
     resolution: {integrity: sha1-trvgsGdLnXGXCMo43owjfLUmw9E=}
     dev: true
 
+  /async/0.9.2:
+    resolution: {integrity: sha1-rqdNXmHB+JlhO/ZL2mbUx48v0X0=}
+    dev: true
+
   /async/2.6.3:
     resolution: {integrity: sha512-zflvls11DCy+dQWzTW2dzuilv8Z5X/pjfmZOWba6TNIVDm+2UDaJmXSOXlasHKfNBs8oo3M0aT50fDEWfKZjXg==}
     dependencies:
@@ -10603,6 +10625,14 @@ packages:
 
   /brorand/1.1.0:
     resolution: {integrity: sha1-EsJe/kCkXjwyPrhnWgoM5XsiNx8=}
+
+  /browser-mocha/1.4.8:
+    resolution: {integrity: sha1-xHfIyTA7Or3stAO7qCoXxQmWQt0=}
+    dependencies:
+      debug: 2.6.9
+      ejs: 3.1.6
+      wd-exec: 1.1.6
+    dev: true
 
   /browser-process-hrtime/1.0.0:
     resolution: {integrity: sha512-9o5UecI3GhkpM6DrXr69PblIuWxPKk9Y0jHBRhdocZ2y7YECBFCsHm79Pr3OyR2AvjhDkabFJaDJMYRazHgsow==}
@@ -13235,6 +13265,14 @@ packages:
     requiresBuild: true
     dev: false
 
+  /ejs/3.1.6:
+    resolution: {integrity: sha512-9lt9Zse4hPucPkoP7FHDF0LQAlGyF9JVpnClFLFH3aSSbxmyoqINRpp/9wePWJTUl4KOQwRL72Iw3InHPDkoGw==}
+    engines: {node: '>=0.10.0'}
+    hasBin: true
+    dependencies:
+      jake: 10.8.2
+    dev: true
+
   /electron-to-chromium/1.4.16:
     resolution: {integrity: sha512-BQb7FgYwnu6haWLU63/CdVW+9xhmHls3RCQUFiV4lvw3wimEHTVcUk2hkuZo76QhR8nnDdfZE7evJIZqijwPdA==}
 
@@ -14474,6 +14512,12 @@ packages:
 
   /file-uri-to-path/1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+
+  /filelist/1.0.2:
+    resolution: {integrity: sha512-z7O0IS8Plc39rTCq6i6iHxk43duYOn8uFJiWSewIq0Bww1RNybVHSCjahmcC87ZqAm4OTvFzlzeGu3XAzG1ctQ==}
+    dependencies:
+      minimatch: 3.0.4
+    dev: true
 
   /filename-reserved-regex/2.0.0:
     resolution: {integrity: sha1-q/c9+rc10EVECr/qLZHzieu/oik=}
@@ -16745,6 +16789,16 @@ packages:
       has-to-string-tag-x: 1.4.1
       is-object: 1.0.2
 
+  /jake/10.8.2:
+    resolution: {integrity: sha512-eLpKyrfG3mzvGE2Du8VoPbeSkRry093+tyNjdYaBbJS9v17knImYGNXQCUV0gLxQtF82m3E8iRb/wdSQZLoq7A==}
+    hasBin: true
+    dependencies:
+      async: 0.9.2
+      chalk: 2.4.2
+      filelist: 1.0.2
+      minimatch: 3.0.4
+    dev: true
+
   /jed/1.1.1:
     resolution: {integrity: sha1-elSbvZ/+FYWwzQoZHiAwVb7ldLQ=}
     dev: true
@@ -18974,6 +19028,10 @@ packages:
   /mimic-response/3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
+    dev: true
+
+  /min-request/1.4.1:
+    resolution: {integrity: sha1-F2NM+0M2ANPbOADGl7tpbu+FidI=}
     dev: true
 
   /mini-create-react-context/0.4.1_prop-types@15.7.2+react@17.0.2:
@@ -25263,6 +25321,13 @@ packages:
     resolution: {integrity: sha1-8LDc+RW8X/FSivrbLA4XtTLaL+g=}
     dependencies:
       defaults: 1.0.3
+
+  /wd-exec/1.1.6:
+    resolution: {integrity: sha1-jqHlERgDKmN9UXoXLXknH66Il2Q=}
+    dependencies:
+      debug: 2.6.9
+      min-request: 1.4.1
+    dev: true
 
   /web-ext/6.6.0_5759b7e109f16724996aaec5078cdf0a:
     resolution: {integrity: sha512-ja9kuCleKQLesUEx+tEl6ByxwVF1CVCjSc3V0ag78S40NWDRTBJhXwc4c+qlyZ0h/XefXc3waxnsq1izUBe/Nw==}

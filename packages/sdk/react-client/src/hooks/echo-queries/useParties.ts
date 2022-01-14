@@ -11,7 +11,7 @@ import { useClient } from '../client';
 
 /**
  * Get a specific Party.
- * Requires ClientConext to be set via ClientProvider.
+ * Requires ClientContext to be set via ClientProvider.
  */
 export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
   const client = useClient();
@@ -21,7 +21,7 @@ export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
 
 /**
  * Get all Parties available to current user.
- * Requires ClientConext to be set via ClientProvider.
+ * Requires ClientContext to be set via ClientProvider.
  */
 export const useParties = () => {
   const client = useClient();

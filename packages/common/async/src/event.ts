@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { throwUnhandledRejection } from '@dxos/debug';
+
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 
 export type Effect = () => (() => void) | undefined;
@@ -276,9 +278,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     try {
       await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
       listener(data);
-    } catch (err) {
-      // Throw an unhandled rejection.
-      void Promise.reject(err);
+    } catch (error: any) {
+      // Stop error propagation.
+      throwUnhandledRejection(error);
     }
   }
 
