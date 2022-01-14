@@ -68,8 +68,8 @@ export const ModalDialog = ({
       <DialogContent
         dividers={dividers}
         sx={{
-          '& .MuiFormControl-root > div:first-of-type': {
-            marginTop: '4px' // Room for first control border.
+          '& .MuiFormControl-root': {
+            marginTop: 1 // Room for first control border.
           }
         }}
       >
