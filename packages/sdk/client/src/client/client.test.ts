@@ -85,6 +85,9 @@ describe('Client', () => {
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
 
         expect(inviteeParty.key).toEqual(party.key);
+
+        const members = party.queryMembers().value;
+        expect(members.length).toEqual(2);
       }).timeout(5000);
 
       test('invitation callbacks are fired', async () => {
