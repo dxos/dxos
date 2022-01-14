@@ -212,7 +212,6 @@ describe('Database', () => {
         const items = result.getValue();
         expect(items).toHaveLength(10);
 
-
         const update = result.update.waitForCount(1);
         await items[0].delete();
         await update;
