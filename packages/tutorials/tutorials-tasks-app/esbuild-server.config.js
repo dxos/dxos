@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-// const { yamlPlugin } = require('esbuild-plugin-yaml');
-
 const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
 const { ConfigPlugin } = require('@dxos/config/esbuild-plugin');
 
@@ -12,14 +10,13 @@ module.exports = {
     sourcemap: true
   },
   entryPoints: [
-    'src/index.tsx'
+    'src/main.tsx'
   ],
   plugins: [
     NodeGlobalsPolyfillPlugin(),
     FixMemdownPlugin(),
     NodeModulesPlugin(),
-    ConfigPlugin(),
-    // yamlPlugin()
+    ConfigPlugin()
   ],
   outdir: 'dist',
   staticDir: 'public'
