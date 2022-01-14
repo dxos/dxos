@@ -17,10 +17,9 @@ import { RpcPort } from '@dxos/rpc';
 import { EchoProxy, CreateInvitationOptions, HaloProxy } from './api';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { isNode } from './platform';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
-import { createWindowMessagePort } from './util';
+import { createWindowMessagePort, isNode } from './util';
 
 const log = debug('dxos:client');
 

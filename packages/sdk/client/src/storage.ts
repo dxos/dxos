@@ -10,7 +10,7 @@ import { defs } from '@dxos/config';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { InvalidConfigurationError } from './errors';
-import { isNode } from './platform';
+import { isNode } from './util';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
