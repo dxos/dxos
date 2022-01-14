@@ -3,9 +3,9 @@
 //
 
 import React from 'react';
-import { v4 } from 'uuid';
+// import { v4 } from 'uuid';
 
-import { PendingInvitation } from '@dxos/client';
+// import { PendingInvitation } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
@@ -16,7 +16,7 @@ export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitatio
  * Manages the workflow for inviting a new device to a HALO party.
  */
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
-  const client = useClient();
+  // const client = useClient();
 
   // const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
   //   const id = v4();

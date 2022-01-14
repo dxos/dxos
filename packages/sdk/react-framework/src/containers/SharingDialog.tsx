@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { useState } from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 import urlJoin from 'url-join';
 
@@ -12,13 +12,11 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
-import { encodeInvitation, InvitationRequest, PendingInvitation } from '@dxos/client';
+import { encodeInvitation, InvitationRequest } from '@dxos/client';
 import { PartyMember } from '@dxos/echo-db';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
-
-import { usePendingInvitations } from '../hooks';
 
 interface PendingInvitationProps {
   invitationCode: string
