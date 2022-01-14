@@ -14,9 +14,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
+import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { ClientServiceHost } from '../service-host';
 import { Invitation, InvitationRequest } from './invitations';
 import { PartyProxy } from './party-proxy';
 
