@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import expectExport from 'expect';
 import { FractionUtil } from './fraction';
 
 test('invalid', () => {
@@ -32,6 +33,14 @@ test('factors', () => {
   expect(FractionUtil.factors(20)).toEqual([1, 2, 4, 5, 10, 20]);
   expect(FractionUtil.factors(8.5)).toEqual([1]);
 });
+
+test('equals', () => {
+  expect(FractionUtil.equals([0, 1], [0, 1])).toBeTruthy();
+  expect(FractionUtil.equals([1, 3], [1, 3])).toBeTruthy();
+  expect(FractionUtil.equals([2, 5], [4, 10])).toBeTruthy();
+  expect(FractionUtil.equals([1, 3], [2, 3])).toBeFalsy();
+  expect(FractionUtil.equals([0, 1], [1, 1])).toBeFalsy();
+})
 
 test('simplify', () => {
   expect(FractionUtil.simplify([0, 1])).toEqual([0, 1]);
