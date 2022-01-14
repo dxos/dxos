@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "2.19.10",
+  "version": "2.19.11",
   "description": "Basic crypto key utils",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
