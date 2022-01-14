@@ -17,7 +17,6 @@ import { Selection, SelectionResult } from './selection';
 export class Item<M extends Model> extends Entity<M> {
   /**
    * Parent item (or null if this item is a root item).
-   * @private
    */
   private _parent: Item<any> | null = null;
 
