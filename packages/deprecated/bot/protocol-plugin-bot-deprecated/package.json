@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-bot-deprecated",
-  "version": "2.19.10",
+  "version": "2.19.11",
   "description": "Protocol plugin for managing the life-cycle of bots.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
   "bugs": {
