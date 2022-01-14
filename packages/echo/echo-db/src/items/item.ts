@@ -24,7 +24,7 @@ export class Item<M extends Model> extends Entity<M> {
    * Denotes soft delete.
    * Item can be restored until garbage collection (e.g., via snapshots).
    */
-  private _deleted: boolean = false;
+  private _deleted = false;
 
   /**
    * Managed set of child items.
