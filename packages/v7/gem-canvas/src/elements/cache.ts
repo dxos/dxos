@@ -40,7 +40,7 @@ export class ElementCache {
   updateElements (elements: Element<any>[], selected?: Element<any>) {
     this._elements = elements.map(element => {
       const base = this.getElement(element.id) ??
-        createElement(this._scale, element.type, element, this._onRepaint, this._onSelect, this._onUpdate);
+        createElement(element.type, this, this._scale, element, this._onRepaint, this._onSelect, this._onUpdate);
 
       if (base) {
         base.setSelected(element.id === selected?.id);

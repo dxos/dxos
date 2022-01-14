@@ -133,7 +133,7 @@ export const Canvas = ({
   // Create cursor.
   //
   useEffect(() => {
-    const cursor = tool ? createElement(scale, tool) : undefined;
+    const cursor = tool ? createElement(tool, elementCache, scale) : undefined;
     cursor?.setSelected(true);
     setCursor(cursor); // TODO(burdon): ???
   }, [tool]);

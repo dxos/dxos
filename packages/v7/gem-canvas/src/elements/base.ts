@@ -6,8 +6,21 @@ import { Modifiers, Point, Screen, ScreenBounds, Scale } from '@dxos/gem-x';
 
 import { Element, ElementDataType, ElementType } from '../model';
 import { D3Callable } from '../types';
+import { ElementCache } from './cache';
 
 export type ControlPoint = { i: number, point: Point }
+
+export interface BaseElementConstructor<T extends ElementDataType> {
+  new (
+    cache: ElementCache,
+    scale: Scale,
+    element?: Element<T>,
+    onRepaint?: () => void,
+    onSelect?: (element: Element<T>) => void,
+    onUpdate?: (element: Element<T>, commit?: boolean) => void,
+    onCreate?: (type: ElementType, data: T) => void
+  ): BaseElement<T>;
+}
 
 /**
  * Graphical element.
@@ -22,14 +35,19 @@ export abstract class BaseElement<T extends ElementDataType> {
   private _data;
 
   constructor (
+    private readonly _cache: ElementCache,
     private readonly _scale: Scale,
     private readonly _element?: Element<T>,
-    private readonly _repaint?: () => void,
+    private readonly _onRepaint?: () => void,
     private readonly _onSelect?: (element: Element<T>) => void,
     private readonly _onUpdate?: (element: Element<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
   ) {
     this._data = this._element?.data;
+  }
+
+  get cache () {
+    return this._cache;
   }
 
   get scale () {
@@ -61,7 +79,7 @@ export abstract class BaseElement<T extends ElementDataType> {
   }
 
   toString () {
-    return `Element(${this._element.id})`;
+    return `Element(${this.type}: ${this._element.id})`;
   }
 
   setSelected (selected: boolean) {
@@ -81,7 +99,7 @@ export abstract class BaseElement<T extends ElementDataType> {
   onHover (hover: boolean) {
     this._modified = true;
     this._hover = hover;
-    this._repaint?.();
+    this._onRepaint?.();
   }
 
   onCreate (data: T) {

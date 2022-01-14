@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, Scale, FractionUtil, Point, Screen } from '@dxos/gem-x';
+import { Modifiers, Scale, FractionUtil, Point, Screen, Vector } from '@dxos/gem-x';
 
-import { ElementType, Line } from '../../model';
+import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { BaseElement, ControlPoint } from '../base';
+import { ElementCache } from '../cache';
 import { createControlPoints } from '../frame';
 
 /**
@@ -29,16 +30,26 @@ const createHidden = (pos1: Point, pos2: Point) => {
   return { theta, bounds };
 };
 
+// TODO(burdon): Get connection point.
+// TODO(burdon): If no position then auto-select.
+const getPos = (cache, { id, position }) => {
+  const e: BaseElement<any> = cache.getElement(id);
+  return Vector.center(e.data.bounds); // TODO(burdon): Type-specific.
+}
+
 /**
  * Renderer.
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/line
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
+ * @param cache
  * @param scale
  */
-// TODO(burdon): Merge with path, polygon?
-const createLine = (scale: Scale): D3Callable => {
+const createLine = (cache: ElementCache, scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Line>) => {
-    const { pos1, pos2 } = base.data;
+    let { pos1, pos2, source, target } = base.data;
+    pos1 ||= getPos(cache, source);
+    pos2 ||= getPos(cache, target);
+
     const [x1, y1] = scale.model.toPoint(pos1);
     const [x2, y2] = scale.model.toPoint(pos2);
 
@@ -109,7 +120,7 @@ const valid = (data: Line, commit: boolean) => {
  */
 export class LineElement extends BaseElement<Line> {
   _handles = createControlPoints(this.scale);
-  _main = createLine(this.scale);
+  _main = createLine(this.cache, this.scale);
 
   type = 'line' as ElementType;
 

@@ -6,37 +6,39 @@ import { Scale } from '@dxos/gem-x';
 
 import { Element, ElementType } from '../model';
 import { EllipseElement, LineElement, PathElement, RectElement } from './types';
+import { ElementCache } from './cache';
+import { BaseElementConstructor } from './base';
+
+const constructors = {
+  'ellipse': EllipseElement,
+  'line': LineElement,
+  'path': PathElement,
+  'rect': RectElement
+};
 
 /**
  * Create element wrapper.
- * @param scale
  * @param type
+ * @param cache
+ * @param scale
  * @param element
  * @param onRepaint
  * @param onSelect
  * @param onUpdate
  */
-export const createElement = (scale: Scale, type: ElementType, element?: Element<any>, onRepaint?, onSelect?, onUpdate?) => {
-  // TODO(burdon): Convert to factory?
-  switch (type) {
-    case 'ellipse': {
-      return new EllipseElement(scale, element, onRepaint, onSelect, onUpdate);
-    }
-
-    case 'line': {
-      return new LineElement(scale, element, onRepaint, onSelect, onUpdate);
-    }
-
-    case 'path': {
-      return new PathElement(scale, element, onRepaint, onSelect, onUpdate);
-    }
-
-    case 'rect': {
-      return new RectElement(scale, element, onRepaint, onSelect, onUpdate);
-    }
-
-    default: {
-      console.warn(`Invalid type: ${type}`);
-    }
+export const createElement = (
+  type: ElementType,
+  cache: ElementCache,
+  scale: Scale,
+  element?: Element<any>,
+  onRepaint?,
+  onSelect?,
+  onUpdate?
+) => {
+  const Constructor: BaseElementConstructor<any> = constructors[type];
+  if (!Constructor) {
+    console.warn(`Invalid type: ${type}`);
+  } else {
+    return new Constructor(cache, scale, element, onRepaint, onSelect, onUpdate);
   }
 };

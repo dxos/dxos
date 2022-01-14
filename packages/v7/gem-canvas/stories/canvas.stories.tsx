@@ -27,12 +27,11 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
+// TODO(burdon): Line snap to connector.
+
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
-
-// TODO(burdon): Line snap to connector.
-//  - Element data needs access to referenced object.
 
 // TODO(burdon): Merge line, polyline.
 // TODO(burdon): Create path (multi-point).
@@ -53,7 +52,62 @@ export default {
 
 const check = <T extends any>(value: T): T => value;
 
+const ids = [
+  faker.datatype.uuid(),
+  faker.datatype.uuid(),
+  faker.datatype.uuid()
+];
+
 const initial: Element<any>[] = [
+  {
+    id: ids[0],
+    type: 'rect',
+    data: check<Rect>({
+      bounds: Vector.toBounds({ x: -6, y: -4, width: 4, height: 2 }),
+      text: 'DXOS'
+    })
+  },
+  {
+    id: ids[1],
+    type: 'rect',
+    data: check<Rect>({
+      bounds: Vector.toBounds({ x: 2, y: -4, width: 4, height: 2 }),
+      text: 'ECHO'
+    })
+  },
+  {
+    id: ids[2],
+    type: 'rect',
+    data: check<Rect>({
+      bounds: Vector.toBounds({ x: -12, y: -4, width: 4, height: 2 }),
+      text: 'HALO'
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      source: {
+        id: ids[0]
+      },
+      target: {
+        id: ids[1]
+      }
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      source: {
+        id: ids[0]
+      },
+      target: {
+        id: ids[2]
+      }
+    })
+  },
+
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
@@ -110,23 +164,14 @@ const initial: Element<any>[] = [
 
   {
     id: faker.datatype.uuid(),
-    type: 'rect',
-    data: check<Rect>({
-      bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 }),
-      text: 'DXOS'
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
     type: 'path',
     data: check<Path>({
       points: [
-        Vector.toVertex({ x: -8, y: 4 }),
-        Vector.toVertex({ x: -6, y: 6 }),
-        Vector.toVertex({ x: -4, y: 2 }),
-        Vector.toVertex({ x: -5, y: -1 }),
-        Vector.toVertex({ x: -7, y: 1 }),
+        Vector.toVertex({ x: -8, y: 8 }),
+        Vector.toVertex({ x: -6, y: 10 }),
+        Vector.toVertex({ x: -4, y: 4 }),
+        Vector.toVertex({ x: -5, y: 3 }),
+        Vector.toVertex({ x: -7, y: 5 }),
       ],
       curve: 'cardinal',
       closed: true

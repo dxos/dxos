@@ -40,15 +40,15 @@ export type Rect = {
 //
 
 export type Line = {
-  pos1: Vertex
-  pos2: Vertex
+  pos1?: Vertex
+  pos2?: Vertex
   source?: {
     id: ElementId
-    position: string // E.g., 'w', 'wn', 'ws' (12 points).
+    position?: string // E.g., 'w', 'wn', 'ws' (12 points).
   }
   target?: {
     id: ElementId
-    position: string
+    position?: string
   }
 }
 
