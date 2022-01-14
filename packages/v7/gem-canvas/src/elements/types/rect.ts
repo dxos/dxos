@@ -8,7 +8,7 @@ import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { BaseElement } from '../base';
 import { dragMove } from '../drag';
-import { createFrame } from '../frame';
+import { createConectionPoints, createFrame } from '../frame';
 
 /**
  * Renderer.
@@ -33,6 +33,13 @@ const createRect = (scale: Scale): D3Callable => {
         // TODO(burdon): Generic.
         if (base.onSelect) {
           selection
+            // https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
+            .on('mouseover', () => {
+              base.onHover(true);
+            })
+            .on('mouseout', () => {
+              base.onHover(false);
+            })
             .on('click', () => {
               base.onSelect(true);
             });
@@ -85,13 +92,15 @@ const valid = (data: Rect, commit: boolean) => {
  */
 export class RectElement extends BaseElement<Rect> {
   _frame = createFrame(this.scale);
+  _connectors = createConectionPoints(this.scale);
   _main = createRect(this.scale);
 
   type = 'rect' as ElementType;
 
-  override draw (): D3Callable {
+  override drawable (): D3Callable {
     return group => {
       group.call(this._main, group.datum());
+      group.call(this._connectors, group.datum(), !this.selected && this.hover);
       group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
     };
   }

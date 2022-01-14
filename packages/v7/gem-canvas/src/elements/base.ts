@@ -14,7 +14,9 @@ export type ControlPoint = { i: number, point: Point }
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element#graphics_elements
  */
 export abstract class BaseElement<T extends ElementDataType> {
+  private _modified = true;
   private _selected = false;
+  private _hover = false;
 
   // TODO(burdon): Manipulate clone until commit.
   private _data;
@@ -22,6 +24,7 @@ export abstract class BaseElement<T extends ElementDataType> {
   constructor (
     private readonly _scale: Scale,
     private readonly _element?: Element<T>,
+    private readonly _repaint?: () => void,
     private readonly _onSelect?: (element: Element<T>) => void,
     private readonly _onUpdate?: (element: Element<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
@@ -41,8 +44,16 @@ export abstract class BaseElement<T extends ElementDataType> {
     return this._data;
   }
 
+  get modified () {
+    return this._modified;
+  }
+
   get selected () {
     return this._selected;
+  }
+
+  get hover () {
+    return this._hover;
   }
 
   get resizable () {
@@ -54,15 +65,23 @@ export abstract class BaseElement<T extends ElementDataType> {
   }
 
   setSelected (selected: boolean) {
+    this._modified = true;
     this._selected = selected;
   }
 
   onSelect (select: boolean) {
+    this._modified = true;
     if (select && !this.selected) {
       this._onSelect?.(this.element);
     } else if (!select && this.selected) {
       this._onSelect?.(undefined);
     }
+  }
+
+  onHover (hover: boolean) {
+    this._modified = true;
+    this._hover = hover;
+    this._repaint?.();
   }
 
   onCreate (data: T) {
@@ -77,7 +96,13 @@ export abstract class BaseElement<T extends ElementDataType> {
     if (commit) {
       this._element.data = data;
     }
+    this._modified = true;
     this._onUpdate?.(this.element, commit);
+  }
+
+  draw () {
+    this._modified = false;
+    return this.drawable();
   }
 
   abstract readonly type: ElementType;
@@ -85,7 +110,7 @@ export abstract class BaseElement<T extends ElementDataType> {
   /**
    * Callable renderer.
    */
-  abstract draw (): D3Callable;
+  abstract drawable (): D3Callable;
 
   /**
    * Create bounding box from data.

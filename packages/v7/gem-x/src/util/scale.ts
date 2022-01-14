@@ -12,7 +12,6 @@ import { Bounds, Vertex } from './vector';
  * Scale to map vector space to view (screen) space.
  */
 export class Scale {
-  private _bounds: ScreenBounds; // TODO(burdon): Remove.
   private _transform: ZoomTransform;
 
   constructor (
@@ -23,23 +22,10 @@ export class Scale {
     return this._gridSize;
   }
 
-  // TODO(burdon): Remove.
-  get bounds () {
-    return this._bounds;
-  }
-
-  // TODO(burdon): Remove.
   get transform () {
     return this._transform;
   }
 
-  // TODO(burdon): Remove.
-  setBounds (bounds: ScreenBounds): ScreenBounds {
-    this._bounds = bounds;
-    return this._bounds;
-  }
-
-  // TODO(burdon): Remove.
   setTransform (transform: ZoomTransform) {
     this._transform = transform;
   }
@@ -57,7 +43,7 @@ export class Scale {
    * Model points are represented by fractions (to preserve precision) and use normal cartesian coordinates.
    */
   readonly model = {
-    // TODO(burdon): Depends on scale (precision).
+    // TODO(burdon): Precision depends on scale.
     snapValues: (array: Fraction[]): Fraction[] => array.map(n => FractionUtil.round(n)),
 
     snapVertex: ({ x, y }: Vertex): Vertex => {

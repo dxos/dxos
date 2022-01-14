@@ -16,6 +16,7 @@ export class ElementCache {
 
   constructor (
     private readonly _scale: Scale,
+    private readonly _onRepaint?: () => void,
     private readonly _onSelect?: (element: Element<any>) => void,
     private readonly _onUpdate?: (element: Element<any>, commit?: boolean) => void
   ) {}
@@ -39,7 +40,7 @@ export class ElementCache {
   updateElements (elements: Element<any>[], selected?: Element<any>) {
     this._elements = elements.map(element => {
       const base = this.getElement(element.id) ??
-        createElement(this._scale, element.type, element, this._onSelect, this._onUpdate);
+        createElement(this._scale, element.type, element, this._onRepaint, this._onSelect, this._onUpdate);
 
       if (base) {
         base.setSelected(element.id === selected?.id);

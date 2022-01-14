@@ -74,7 +74,7 @@ export class PathElement extends BaseElement<Path> {
 
   type = 'path' as ElementType;
 
-  override draw (): D3Callable {
+  override drawable (): D3Callable {
     return group => {
       group.call(this._main, group.datum());
       group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);

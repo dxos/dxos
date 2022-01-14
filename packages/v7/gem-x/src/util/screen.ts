@@ -76,6 +76,7 @@ export class Screen {
    * @param v2
    * @param p
    */
+  // TODO(burdon): https://bl.ocks.org/1wheel/464141fe9b940153e636 (Nice line intersection demo).
   static normal = (v1: Point, v2: Point, p: Point) => {
     const d2 = (p1: Point, p2: Point) => Math.pow(Math.abs(p1[0] - p2[0]), 2) + Math.pow(Math.abs(p1[1] - p2[1]), 2);
 

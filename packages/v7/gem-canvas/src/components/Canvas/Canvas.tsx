@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { RefObject, useEffect, useMemo, useRef } from 'react';
+import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { Modifiers, Scale, defaultScale, useStateRef, Point } from '@dxos/gem-x';
@@ -14,33 +14,37 @@ import { Tool } from '../../tools';
 
 // TODO(burdon): Create theme.
 const styles = css`
-  rect.frame {
-    stroke: cornflowerblue;
-    stroke-width: 1;
-    // stroke-dasharray: 8,2;
-    fill: none;    
-  }
+  g.element, g.cursor {
+    circle, ellipse, line, path, rect {
+      stroke: #666;
+      stroke-width: 2;
+      fill: #F5F5F5;
+      opacity: 0.7;
+    }
   
-  circle.frame-handle {
-    stroke: cornflowerblue;
-    stroke-width: 1;
-    fill: #EEE;
-  }
-
-  rect.line-touch {
-    stroke: none;
-    fill: transparent;
-  }
-
-  //
-  // TODO(burdon): Scope.
-  //
-
-  circle, ellipse, line, path, rect {
-    stroke: #666;
-    stroke-width: 2;
-    fill: #F5F5F5;
-    opacity: 0.7;
+    // TODO(burdon): Create separate group for frames/handles.
+  
+    rect.frame {
+      stroke: cornflowerblue;
+      stroke-width: 1;
+      fill: none;    
+    }
+    
+    circle.frame-handle {
+      stroke: cornflowerblue;
+      stroke-width: 1;
+      fill: #EEE;
+    }
+  
+    circle.connection-handle {
+      stroke: none;
+      fill: cornflowerblue;
+    }
+  
+    rect.line-touch {
+      stroke: none;
+      fill: transparent;
+    }
   }
 `;
 
@@ -80,9 +84,12 @@ export const Canvas = ({
   onCreate,
   onDelete
 }: CanvasProps) => {
+  const [repaint, setRepaint] = useState(Date.now());
+  const handleRepaint = () => setRepaint(Date.now());
+
   // Rendered elements.
   const elementGroup = useRef<SVGSVGElement>();
-  const elementCache = useMemo(() => new ElementCache(scale, onSelect, onUpdate), [scale]);
+  const elementCache = useMemo(() => new ElementCache(scale, handleRepaint, onSelect, onUpdate), [scale]);
 
   // New element cursor.
   const cursorGroup = useRef<SVGSVGElement>();
@@ -145,6 +152,9 @@ export const Canvas = ({
           .selectAll('g')
           .data([cursor])
           .join('g')
+          // Allow mouse events (e.g., mouseover) to flow-through to elements below (e.g., hover).
+          // https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
+          .style('pointer-events', 'none')
           .each((element, i, nodes) => {
             d3.select(nodes[i]).call(element.draw());
           });
@@ -167,19 +177,28 @@ export const Canvas = ({
   // eslint-disable indent
   useEffect(() => {
     d3.select(elementGroup.current)
-      .selectAll('g')
+      .selectAll('g.element')
       .data(elementCache.elements, ({ element }: BaseElement<any>) => element.id)
       .join('g')
+      .classed('element', true)
       .each((element, i, nodes) => {
-        d3.select(nodes[i]).call(element.draw());
+        // Only draw if updated.
+        if (element.modified) {
+          d3.select(nodes[i]).call(element.draw());
+        }
+
+        // Temporarily move to the front.
+        if (element.selected) {
+          d3.select(nodes[i]).raise();
+        }
       });
-  }, [elementGroup, elements, selected]);
+  }, [elementGroup, elements, selected, repaint]);
   // eslint-enable indent
 
   return (
     <g className={styles}>
       <g ref={elementGroup} />
-      <g ref={cursorGroup} />
+      <g ref={cursorGroup} className='cursor' />
     </g>
   );
 };

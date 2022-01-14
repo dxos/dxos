@@ -33,7 +33,7 @@ export interface ResizeCallbackProps {
   transform?: any
 }
 
-export type Zoom = [min: number, max: number]; // TODO(burdon): Use FractionUtil.
+export type Zoom = [min: number, max: number];
 
 export const defaultScale = new Scale(32);
 
@@ -88,7 +88,8 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
     // https://www.sarasoueidan.com/blog/svg-transformations (Illustrated examples).
     // <g transform={center ? `translate(${width / 2} ${height / 2})` : undefined}>
     if (center) {
-      const { x, y } = scale.setBounds({ x: -Math.floor(width / 2), y: -Math.floor(height / 2), width, height });
+      const x = -Math.floor(width / 2);
+      const y = -Math.floor(height / 2);
       d3.select(svgRef.current)
         .attr('viewBox', `${x},${y},${width},${height}`);
     }

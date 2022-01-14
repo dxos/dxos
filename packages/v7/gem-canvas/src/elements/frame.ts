@@ -29,6 +29,8 @@ const handles: Handle[] = [
   { id: 'nw-resize', p: [-1, 1], cursor: 'nwse-resize' }
 ];
 
+const connectionHandles = handles.filter(({ p: [x, y] }) => Math.abs(x + y) === 1);
+
 /**
  * Compute updated bounds by dragging handles.
  * @param bounds
@@ -107,7 +109,7 @@ export const createFrame = (scale: Scale): D3Callable => {
       .attr('height', height);
 
     group
-      .selectAll('circle')
+      .selectAll('circle.frame-handle')
       .data(resizable ? handles : [], (handle: Handle) => handle.id)
       .join('circle')
       .classed('frame-handle', true)
@@ -125,6 +127,38 @@ export const createFrame = (scale: Scale): D3Callable => {
 };
 
 /**
+ * Draw line connection points.
+ */
+export const createConectionPoints = (scale: Scale): D3Callable => {
+  return (group: D3Selection, base: BaseElement<any>, active?: boolean) => {
+    const { x, y, width, height } = base.getBounds();
+
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
+    // TODO(burdon): Configure point.
+    // eslint-disable indent
+    group
+      .selectAll('circle.connection-handle')
+      .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
+      .join('circle')
+      .classed('connection-handle', true)
+      // Don't consume events (prevents handle from obscuring mouseenter).
+      .style('pointer-events', 'none')
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy - p[1] * height / 2)
+      .attr('r', FrameProps.handleRadius);
+      // TODO(burdon): Support drag from connection point to start line.
+      // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
+      //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+      //   const data = base.createFromBounds(bounds, mod, commit);
+      //   base.onUpdate(data, commit);
+      // }));
+    // eslint-enable indent
+  };
+};
+
+/**
  * Draw control points.
  */
 export const createControlPoints = (scale: Scale): D3Callable => {
@@ -137,6 +171,8 @@ export const createControlPoints = (scale: Scale): D3Callable => {
       .data(points)
       .join('circle')
       .classed('frame-handle', true)
+      // TODO(burdon): Don't consume events while actively dragging.
+      // .style('pointer-events', 'none')
       .attr('cursor', 'move')
       .attr('cx', p => p.point[0])
       .attr('cy', p => p.point[1])

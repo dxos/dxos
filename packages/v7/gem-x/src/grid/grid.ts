@@ -54,6 +54,8 @@ const createGrid = ({ scale, width, height }: GridProps) => {
   // Scale grid size.
   const mod = (n, size, delta = 0) => (Math.floor(n / size + delta) * size);
 
+  // TODO(burdon): Use d3.difference to skip existing elements.
+
   // Major grid lines.
   const majorSize = scale.gridSize;
   const xMajor = d3.range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);

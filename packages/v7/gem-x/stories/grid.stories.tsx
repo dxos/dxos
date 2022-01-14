@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { FractionUtil, FullScreen, Scale, SvgContainer, Vector } from '../src';
@@ -24,8 +24,15 @@ const styles = css`
 
 export const Primary = () => {
   const scale = useMemo(() => new Scale(32), []);
-  const [r] = scale.model.toValues([FractionUtil.toFraction(1)]);
-  const [x, y] = scale.model.toPoint(Vector.toVertex({ x: -4, y: 2 }));
+  const [{ r, x, y }, setData] = useState({ r: 0, x: 0, y: 0 });
+
+  useEffect(() => {
+    setTimeout(() => {
+      const [r] = scale.model.toValues([FractionUtil.toFraction(1)]);
+      const [x, y] = scale.model.toPoint(Vector.toVertex({ x: -4, y: 2 }));
+      setData({ r, x, y });
+    }, 1000);
+  }, []);
 
   return (
     <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
@@ -34,10 +41,12 @@ export const Primary = () => {
         scale={scale}
         zoom={[1/4, 8]}
       >
-        <g className={styles}>
-          <circle cx={x} cy={y} r={r} />
-          <text x={x} y={y} textAnchor='middle' dominantBaseline='middle'>Zoom</text>
-        </g>
+        {r && (
+          <g className={styles}>
+            <circle cx={x} cy={y} r={r} />
+            <text x={x} y={y} textAnchor='middle' dominantBaseline='middle'>Zoom</text>
+          </g>
+        )}
       </SvgContainer>
     </FullScreen>
   );

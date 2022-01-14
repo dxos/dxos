@@ -27,7 +27,7 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Commit/update model.
+// TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
 
