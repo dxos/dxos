@@ -238,7 +238,7 @@ export class RpcPeer {
         if (response.close) {
           close();
         } else if (response.error) {
-          assert(response.error.name);
+          ass ert(response.error.name);
           assert(response.error.message);
           assert(response.error.stack);
           // TODO(marik-d): Stack trace might be lost because the stream producer function is called asynchronously.
