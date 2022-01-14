@@ -321,7 +321,9 @@ export class ECHO {
    * @param {PartyKey} partyKey
    */
   getParty (partyKey: PartyKey): Party | undefined {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
@@ -334,7 +336,9 @@ export class ECHO {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+    if (!this._partyManager.isOpen) {
+      throw new EchoNotOpenError();
+    }
 
     return new ResultSet(
       this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))

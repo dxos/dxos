@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.19.11](https://www.github.com/dxos/protocols/compare/v2.19.10...v2.19.11) (2022-01-14)
+
+
+### Bug Fixes
+
+* Move `pify` as a dependency of `echo-protocol` ([e797b18](https://www.github.com/dxos/protocols/commit/e797b1830116636d37a32553f82974805365e682))
+* Party proxy pass members ([#825](https://www.github.com/dxos/protocols/issues/825)) ([daf5cb5](https://www.github.com/dxos/protocols/commit/daf5cb5fbc52f6b767325e09a0a62427b88ba891))
+
 ### [2.19.10](https://www.github.com/dxos/protocols/compare/v2.19.9...v2.19.10) (2022-01-13)
 
 
