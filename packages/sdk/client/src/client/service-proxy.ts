@@ -5,7 +5,7 @@
 import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { ClientServiceProvider, ClientServices, clientServiceBundle } from './interfaces';
+import { ClientServiceProvider, ClientServices, clientServiceBundle } from '../interfaces';
 
 /**
  * Implements services that are not local to the app.
