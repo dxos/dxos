@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
+
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
-import debug from 'debug';
 
 import { Entity } from './entity';
 import type { Link } from './link';
