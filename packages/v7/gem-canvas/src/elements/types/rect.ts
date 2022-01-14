@@ -2,22 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, FractionUtil, ScreenBounds, Point, Scale } from '@dxos/gem-x';
+import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen } from '@dxos/gem-x';
 
 import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { BaseElement } from '../base';
 import { dragMove } from '../drag';
 import { createConectionPoints, createFrame } from '../frame';
+import { crateText } from './text';
 
 /**
  * Renderer.
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
  * @param scale
  */
 const createRect = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Rect>) => {
     const data = base.data;
     const { x, y, width, height } = scale.model.toBounds(data.bounds);
+    const { text } = data;
 
     // eslint-disable indent
     group
@@ -67,6 +70,10 @@ const createRect = (scale: Scale): D3Callable => {
             }));
         }
       });
+
+    const [cx, cy] = Screen.center({ x, y, width, height });
+    group
+      .call(crateText({ cx, cy, text }));
     // eslint-enable indent
   };
 };
@@ -88,7 +95,7 @@ const valid = (data: Rect, commit: boolean) => {
 };
 
 /**
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
+ * Rect element.
  */
 export class RectElement extends BaseElement<Rect> {
   _frame = createFrame(this.scale);
@@ -116,6 +123,7 @@ export class RectElement extends BaseElement<Rect> {
     }
 
     return valid({
+      ...this.data,
       bounds: this.scale.screen.toBounds(bounds)
     }, commit);
   }

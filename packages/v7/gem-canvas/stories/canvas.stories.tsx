@@ -31,21 +31,20 @@ export default {
 // TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
 
-// TODO(burdon): Perf avoid re-render everything on every update.
-// TODO(burdon): Use debug for logging (check perf.)
+// TODO(burdon): Line snap to connector.
+//  - Element data needs access to referenced object.
 
-// TODO(burdon): Temporariliy move element to top when active.
-// TODO(burdon): Drag to draw line.
-// TODO(burdon): Show connect points on hightlight.
-// TODO(burdon): Drag line.
-// TODO(burdon): Create path.
+// TODO(burdon): Merge line, polyline.
+// TODO(burdon): Create path (multi-point).
 // TODO(burdon): Drag path.
 // TODO(burdon): Text element and editor.
 
+// TODO(burdon): Drag to select.
 // TODO(burdon): Select all (copy, move, delete).
 // TODO(burdon): Copy/paste.
 // TODO(burdon): Undo.
 
+// TODO(burdon): Use debug for logging (check perf.)
 // TODO(burdon): Constrain on resize.
 // TODO(burdon): Snap center/bounds on move.
 // TODO(burdon): Info panel with element info.
@@ -66,21 +65,24 @@ const initial: Element<any>[] = [
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: check<Ellipse>({
-      center: Vector.toVertex({ x: 6, y: 5 }), rx: [1, 2], ry: [1, 2]
+      center: Vector.toVertex({ x: 6, y: 5 }), rx: [1, 2], ry: [1, 2],
+      text: 'A'
     })
   },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: check<Ellipse>({
-      center: Vector.toVertex({ x: 10, y: -2 }), rx: [1, 2], ry: [1, 2]
+      center: Vector.toVertex({ x: 10, y: -2 }), rx: [1, 2], ry: [1, 2],
+      text: 'B'
     })
   },
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
     data: check<Ellipse>({
-      center: Vector.toVertex({ x: -1, y: 3 }), rx: [1, 2], ry: [1, 2]
+      center: Vector.toVertex({ x: -1, y: 3 }), rx: [1, 2], ry: [1, 2],
+      text: 'C'
     })
   },
 
@@ -110,7 +112,8 @@ const initial: Element<any>[] = [
     id: faker.datatype.uuid(),
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 })
+      bounds: Vector.toBounds({ x: 1, y: -4, width: 2, height: 2 }),
+      text: 'DXOS'
     })
   },
 
@@ -192,8 +195,13 @@ export const Primary = () => {
   // Keys.
   useEffect(() => {
     d3.select(document.body)
-      .call(createKeyHandlers(({ action }) => {
+      .call(createKeyHandlers(({ action, tool }) => {
         switch (action) {
+          case 'tool': {
+            setTool(tool);
+            break;
+          }
+
           case 'cancel': {
             setTool(undefined);
             setSelected(undefined);

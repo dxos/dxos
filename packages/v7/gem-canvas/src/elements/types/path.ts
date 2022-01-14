@@ -20,6 +20,7 @@ const curves: { [index: string]: any } = {
 
 /**
  * Renderer.
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
  * @param scale
  */
 const createPath = (scale: Scale): D3Callable => {
@@ -66,7 +67,7 @@ const valid = (data: Path, commit: boolean) => {
 };
 
 /**
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
+ * Path element.
  */
 export class PathElement extends BaseElement<Path> {
   _handles = createControlPoints(this.scale);

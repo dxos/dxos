@@ -9,15 +9,18 @@ import { D3Callable, D3Selection } from '../../types';
 import { BaseElement } from '../base';
 import { dragMove } from '../drag';
 import { createConectionPoints, createFrame } from '../frame';
+import { crateText } from './text';
 
 /**
  * Renderer.
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
  * @param scale
  */
 const createEllipse = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Ellipse>) => {
     const data = base.data;
-    const [cx, cy] = scale.model.toPoint(data.center);
+    const { center, text } = data;
+    const [cx, cy] = scale.model.toPoint(center);
     const [rx, ry] = scale.model.toValues([data.rx, data.ry]);
 
     // eslint-disable indent
@@ -67,6 +70,9 @@ const createEllipse = (scale: Scale): D3Callable => {
             }));
         }
       });
+
+    group
+      .call(crateText({ cx, cy, text }));
     // eslint-enable indent
   };
 };
@@ -88,7 +94,7 @@ const valid = (data: Ellipse, commit: boolean) => {
 };
 
 /**
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse
+ * Ellipse element.
  */
 export class EllipseElement extends BaseElement<Ellipse> {
   _frame = createFrame(this.scale);
@@ -124,6 +130,7 @@ export class EllipseElement extends BaseElement<Ellipse> {
     const { width, height } = this.scale.screen.toBounds(bounds);
 
     return valid({
+      ...this.data,
       center,
       rx: FractionUtil.divide(width, [2, 1]),
       ry: FractionUtil.divide(height, [2, 1])

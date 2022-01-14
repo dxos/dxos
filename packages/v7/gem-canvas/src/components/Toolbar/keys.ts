@@ -5,13 +5,22 @@
 import { Modifiers } from '@dxos/gem-x';
 
 import { getEventMod } from '../../elements';
+import { Tool } from '../../tools';
 import { D3Callable } from '../../types';
 
-export type ActionType = 'enter' | 'delete' | 'cancel'
+export type ActionType = 'enter' | 'delete' | 'cancel' | 'tool'
 
 export type Action = {
-  action: ActionType,
+  action: ActionType
   mod: Modifiers
+  tool?: Tool
+}
+
+const keyMap: { [ key: string ]: Tool } = {
+  'r': 'rect',
+  'l': 'line',
+  'e': 'ellipse',
+  'p': 'path'
 }
 
 /**
@@ -36,6 +45,14 @@ export const createKeyHandlers = (
 
         case 'Escape': {
           onAction({ action: 'cancel', mod });
+          break;
+        }
+
+        default: {
+          const tool = keyMap[event.key];
+          if (tool) {
+            onAction({ action: 'tool', mod, tool });
+          }
           break;
         }
       }

@@ -31,8 +31,11 @@ const createHidden = (pos1: Point, pos2: Point) => {
 
 /**
  * Renderer.
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/line
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
  * @param scale
  */
+// TODO(burdon): Merge with path, polygon?
 const createLine = (scale: Scale): D3Callable => {
   return (group: D3Selection, base: BaseElement<Line>) => {
     const { pos1, pos2 } = base.data;
@@ -44,10 +47,22 @@ const createLine = (scale: Scale): D3Callable => {
       .selectAll('line')
       .data(['_main_'])
       .join('line')
+      .attr('marker-end', () => 'url(#marker_arrow)')
       .attr('x1', x1)
       .attr('y1', y1)
       .attr('x2', x2)
       .attr('y2', y2);
+
+    // TODO(burdon): Convert to polyline with multiple hidden rects.
+    /*
+    const points = [[x1, y1], [x2, y2]];
+    group
+      .selectAll('polyline')
+      .data(['_main_'])
+      .join('polyline')
+      .attr('marker-end', () => 'url(#marker_arrow)')
+      .attr('points', points.map(([x, y]) => `${x},${y}`).join(' '));
+    */
 
     // Hidden bounds.
     const { theta, bounds } = createHidden([x1, y1], [x2, y2]);
@@ -58,7 +73,7 @@ const createLine = (scale: Scale): D3Callable => {
       .selectAll('rect.line-touch')
       .data([bounds])
       .join('rect')
-      .classed('line-touch', true)
+      .attr('class', 'line-touch')
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
       .attr('transform', `translate(0, -${height / 2}) rotate(${theta}, ${x}, ${y + height / 2})`)
       .attr('x', d => d.x)
@@ -81,13 +96,16 @@ const createLine = (scale: Scale): D3Callable => {
 const valid = (data: Line, commit: boolean) => {
   if (commit) {
     const { pos1, pos2 } = data;
+    if (FractionUtil.equals(pos1.x, pos2.x) && FractionUtil.equals(pos1.y, pos2.y)) {
+      return;
+    }
   }
 
   return data;
 };
 
 /**
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/line
+ * Line element.
  */
 export class LineElement extends BaseElement<Line> {
   _handles = createControlPoints(this.scale);
@@ -103,10 +121,10 @@ export class LineElement extends BaseElement<Line> {
   }
 
   override createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): Line {
-    return {
+    return valid({
       pos1: this.scale.screen.toVertex(p1),
       pos2: this.scale.screen.toVertex(p2)
-    };
+    }, commit);
   }
 
   override getControlPoints (): ControlPoint[] {

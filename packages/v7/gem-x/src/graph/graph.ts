@@ -37,7 +37,9 @@ export class GraphRenderer extends Renderer<Graph> {
 
     const links = root.selectAll('g.links')
       .data([{ id: 'links' }])
-      .join('g').classed('links', true);
+      .join('g')
+      .attr('class', 'links');
+
     links.selectAll('path')
       .data(layout.links || [])
       .join('path')
@@ -54,7 +56,9 @@ export class GraphRenderer extends Renderer<Graph> {
 
     const circles = root.selectAll('g.nodes')
       .data([{ id: 'nodes' }])
-      .join('g').classed('nodes', true);
+      .join('g')
+      .attr('class', 'nodes');
+
     circles.selectAll('circle')
       .data(layout.nodes || [])
       .join('circle')

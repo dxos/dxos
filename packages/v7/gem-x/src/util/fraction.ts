@@ -56,6 +56,25 @@ export class FractionUtil {
     return FractionUtil.simplify([v, p]);
   };
 
+  /**
+   * Tests if equals.
+   * @param n1
+   * @param n2
+   */
+  static equals = (n1: Fraction, n2: Fraction) => {
+    if (n1[1] === n2[1]) {
+      return n1[0] === n2[0];
+    }
+
+    const s1 = FractionUtil.simplify(n1);
+    const s2 = FractionUtil.simplify(n2);
+    if (s1[1] === s2[1]) {
+      return s1[0] === s2[0];
+    } else {
+      return false;
+    }
+  }
+
   //
   // Normalization.
   //

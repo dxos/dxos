@@ -8,20 +8,30 @@ import { css } from '@emotion/css';
 
 import { Modifiers, Scale, defaultScale, useStateRef, Point } from '@dxos/gem-x';
 
-import { BaseElement, ElementCache, createElement, dragBounds } from '../../elements';
+import { BaseElement, ElementCache, createMarkers, createElement, dragBounds } from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
 
 // TODO(burdon): Create theme.
 const styles = css`
+  marker {
+    path.arrow {
+      stroke: blue;
+      fill: none;
+    }
+  }
+
   g.element, g.cursor {
-    circle, ellipse, line, path, rect {
+    circle, ellipse, line, path, polygon, polyline, rect {
       stroke: #666;
       stroke-width: 2;
       fill: #F5F5F5;
       opacity: 0.7;
     }
-  
+    line, polyline { 
+      stroke: blue;
+    }
+
     // TODO(burdon): Create separate group for frames/handles.
   
     rect.frame {
@@ -87,6 +97,9 @@ export const Canvas = ({
   const [repaint, setRepaint] = useState(Date.now());
   const handleRepaint = () => setRepaint(Date.now());
 
+  // Markers.
+  const markersGroup = useRef<SVGSVGElement>();
+
   // Rendered elements.
   const elementGroup = useRef<SVGSVGElement>();
   const elementCache = useMemo(() => new ElementCache(scale, handleRepaint, onSelect, onUpdate), [scale]);
@@ -128,6 +141,7 @@ export const Canvas = ({
   //
   // Render cursor.
   //
+  // TODO(burdon): Factor out.
   // eslint-disable indent
   useEffect(() => {
     const handleUpdate = (p1: Point, p2: Point, mod: Modifiers, commit: boolean) => {
@@ -152,6 +166,7 @@ export const Canvas = ({
           .selectAll('g')
           .data([cursor])
           .join('g')
+          .attr('class', 'cursor')
           // Allow mouse events (e.g., mouseover) to flow-through to elements below (e.g., hover).
           // https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
           .style('pointer-events', 'none')
@@ -180,7 +195,7 @@ export const Canvas = ({
       .selectAll('g.element')
       .data(elementCache.elements, ({ element }: BaseElement<any>) => element.id)
       .join('g')
-      .classed('element', true)
+      .attr('class', 'element')
       .each((element, i, nodes) => {
         // Only draw if updated.
         if (element.modified) {
@@ -195,10 +210,15 @@ export const Canvas = ({
   }, [elementGroup, elements, selected, repaint]);
   // eslint-enable indent
 
+  useEffect(() => {
+    d3.select(markersGroup.current).call(createMarkers());
+  }, [markersGroup]);
+
   return (
     <g className={styles}>
+      <g ref={markersGroup} />
       <g ref={elementGroup} />
-      <g ref={cursorGroup} className='cursor' />
+      <g ref={cursorGroup} />
     </g>
   );
 };
