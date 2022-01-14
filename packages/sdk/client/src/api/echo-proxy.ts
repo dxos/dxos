@@ -17,7 +17,7 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { Invitation } from '.';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { ClientServiceHost } from '../service-host';
+import { ClientServiceHost } from '../client/service-host';
 import { InvitationRequest } from './invitations';
 import { PartyProxy } from './party-proxy';
 

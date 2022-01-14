@@ -14,12 +14,12 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy, CreateInvitationOptions, HaloProxy } from './api';
-import { DevtoolsHook } from './devtools';
-import { ClientServiceProvider, ClientServices } from './interfaces';
+import { EchoProxy, CreateInvitationOptions, HaloProxy } from '../api';
+import { DevtoolsHook } from '../devtools';
+import { ClientServiceProvider, ClientServices } from '../interfaces';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
-import { createWindowMessagePort, isNode } from './util';
+import { createWindowMessagePort, isNode } from '../util';
 
 const log = debug('dxos:client');
 

@@ -14,12 +14,12 @@ import { raise } from '@dxos/debug';
 import { ECHO, EchoNotOpenError, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
-import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from './proto/gen/dxos/client';
-import { DevtoolsHost } from './proto/gen/dxos/devtools';
+import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../../devtools';
+import { ClientServiceProvider, ClientServices } from '../../interfaces';
+import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from '../../proto/gen/dxos/client';
+import { DevtoolsHost } from '../../proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { encodeInvitation, resultSetToStream } from './util';
+import { encodeInvitation, resultSetToStream } from '../../util';
 
 interface InviterInvitation {
   // TODO(rzadp): Change it to use descriptors with secrets build-in instead.

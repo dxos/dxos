@@ -10,7 +10,7 @@ import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
-import { InvitationRequest, RedeemedInvitation } from './proto/gen/dxos/client';
+import { InvitationRequest, RedeemedInvitation } from '../proto/gen/dxos/client';
 
 const setup = async () => {
   const client = new Client();

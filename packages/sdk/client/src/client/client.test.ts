@@ -15,7 +15,7 @@ import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
-import { clientServiceBundle } from './interfaces';
+import { clientServiceBundle } from '../interfaces';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
