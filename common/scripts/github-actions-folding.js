@@ -26,6 +26,7 @@ rl.on('line', line => {
     }
     groupStarted = true
     process.stdout.write(`::group::${line}\n`)
+    
     linesInCurrentGroup = [];
   } else {
     process.stdout.write(line + '\n')
