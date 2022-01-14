@@ -2,19 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+import { v4 } from 'uuid';
+
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { EchoNotOpenError, InvitationDescriptor, PartyNotFoundError } from '@dxos/echo-db';
-import assert from 'assert';
-import { v4 } from 'uuid';
+
 import { ClientServices } from '../../../interfaces';
 import { InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from '../../../proto/gen/dxos/client';
 import { encodeInvitation, resultSetToStream } from '../../../util';
-import { CreateServicesOpts } from './interfaces';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
-export const createPartyService = ({config, echo}: CreateServicesOpts): ClientServices['PartyService'] => {
+export const createPartyService = ({ echo }: CreateServicesOpts): ClientServices['PartyService'] => {
+  const inviterInvitations: InviterInvitations = [];
+  const inviteeInvitations: InviteeInvitations = new Map();
+
   return {
     SubscribeToParty: (request) => {
       const update = (next: (message: SubscribePartyResponse) => void) => {
@@ -128,7 +133,7 @@ export const createPartyService = ({config, echo}: CreateServicesOpts): ClientSe
           });
           invitation.secret = Buffer.from(secret);
           const invitationCode = encodeInvitation(invitation);
-          host._inviterInvitations.push({ invitationCode, secret });
+          inviterInvitations.push({ invitationCode, secret });
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
         } catch (error: any) {
           next({ state: InvitationState.ERROR, error: error.message });
@@ -154,7 +159,7 @@ export const createPartyService = ({config, echo}: CreateServicesOpts): ClientSe
 
       // Joining process is kicked off, and will await authentication with a secret.
       const haloPartyPromise = echo.joinParty(InvitationDescriptor.fromProto(request), secretProvider);
-      host._inviteeInvitations.set(id, inviteeInvitation);
+      inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
       haloPartyPromise.then(party => {
@@ -166,7 +171,7 @@ export const createPartyService = ({config, echo}: CreateServicesOpts): ClientSe
     }),
     AuthenticateInvitation: async (request) => {
       assert(request.processId, 'Process ID is missing.');
-      const invitation = host._inviteeInvitations.get(request.processId);
+      const invitation = inviteeInvitations.get(request.processId);
       assert(invitation, 'Invitation not found.');
       assert(request.secret, 'Secret not provided.');
 
@@ -197,5 +202,5 @@ export const createPartyService = ({config, echo}: CreateServicesOpts): ClientSe
         });
       }
     }
-  }
-}
+  };
+};

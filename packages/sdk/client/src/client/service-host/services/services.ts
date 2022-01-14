@@ -23,4 +23,4 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
       }
     }
   };
-}
+};

@@ -2,19 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+import { v4 } from 'uuid';
+
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
-import assert from 'assert';
-import { v4 } from 'uuid';
+
 import { ClientServices } from '../../../interfaces';
 import { Contacts, InvitationState } from '../../../proto/gen/dxos/client';
 import { encodeInvitation, resultSetToStream } from '../../../util';
-import { CreateServicesOpts } from './interfaces';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
-export const createProfileService = ({config, echo}: CreateServicesOpts): ClientServices['ProfileService'] => {
+export const createProfileService = ({ echo }: CreateServicesOpts): ClientServices['ProfileService'] => {
+  const inviterInvitations: InviterInvitations = [];
+  const inviteeInvitations: InviteeInvitations = new Map();
+
   return {
     SubscribeProfile: () => new Stream(({ next }) => {
       const emitNext = () => next({
@@ -49,7 +54,7 @@ export const createProfileService = ({config, echo}: CreateServicesOpts): Client
         });
         invitation.secret = secret;
         const invitationCode = encodeInvitation(invitation);
-        host._inviterInvitations.push({ invitationCode, secret: invitation.secret });
+        inviterInvitations.push({ invitationCode, secret: invitation.secret });
         next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
       });
     }),
@@ -71,7 +76,7 @@ export const createProfileService = ({config, echo}: CreateServicesOpts): Client
 
       // Joining process is kicked off, and will await authentication with a secret.
       const haloPartyPromise = echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
-      host._inviteeInvitations.set(id, inviteeInvitation);
+      inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
       haloPartyPromise.then(party => {
@@ -82,7 +87,7 @@ export const createProfileService = ({config, echo}: CreateServicesOpts): Client
     }),
     AuthenticateInvitation: async (request) => {
       assert(request.processId, 'Process ID is missing.');
-      const invitation = host._inviteeInvitations.get(request.processId);
+      const invitation = inviteeInvitations.get(request.processId);
       assert(invitation, 'Invitation not found.');
       assert(request.secret, 'Secret not provided.');
 
@@ -109,5 +114,5 @@ export const createProfileService = ({config, echo}: CreateServicesOpts): Client
         });
       }
     }
-  }
-}
+  };
+};

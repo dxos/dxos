@@ -15,9 +15,9 @@ import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Invitation } from '.';
+import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { ClientServiceHost } from '../client/service-host';
 import { InvitationRequest } from './invitations';
 import { PartyProxy } from './party-proxy';
 

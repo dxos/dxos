@@ -2,42 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-import { v4 } from 'uuid';
-
-import { latch } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { raise } from '@dxos/debug';
-import { ECHO, EchoNotOpenError, InvitationDescriptor, OpenProgress, PartyNotFoundError } from '@dxos/echo-db';
-import { SubscriptionGroup } from '@dxos/util';
+import { ECHO, OpenProgress } from '@dxos/echo-db';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../../devtools';
 import { ClientServiceProvider, ClientServices } from '../../interfaces';
-import { Contacts, InvitationState, SubscribeMembersResponse, SubscribePartiesResponse, SubscribePartyResponse } from '../../proto/gen/dxos/client';
 import { DevtoolsHost } from '../../proto/gen/dxos/devtools';
-import { createStorageObjects } from './storage';
-import { encodeInvitation, resultSetToStream } from '../../util';
 import { createServices } from './services';
-
-interface InviterInvitation {
-  // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
-  invitationCode: string
-  secret: Uint8Array | undefined
-}
-
-interface InviteeInvitation {
-  secret?: Uint8Array | undefined // Can be undefined initially, then set after receiving secret from the inviter.
-  secretTrigger?: () => void // Is triggered after supplying the secret.
-}
+import { createStorageObjects } from './storage';
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
-  private readonly _inviterInvitations: InviterInvitation[] = []; // List of pending invitations from the inviter side.
-  private readonly _inviteeInvitations: Map<string, InviteeInvitation> = new Map(); // Map of pending invitations from the invitee side.
-
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
 
   constructor (
@@ -63,9 +39,9 @@ export class ClientServiceHost implements ClientServiceProvider {
     });
 
     this.services = {
-      ...createServices({config: this._config, echo: this._echo}),
-      DevtoolsHost: this._createDevtoolsService(),
-    }
+      ...createServices({ config: this._config, echo: this._echo }),
+      DevtoolsHost: this._createDevtoolsService()
+    };
   }
 
   readonly services: ClientServices;
