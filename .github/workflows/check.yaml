@@ -46,11 +46,16 @@ jobs:
         uses: mshick/add-pr-comment@v1
         with:
           message: |
-            Here's the summary of the build failures for ${{ github.sha }}:
+            <details>
+            <summary>Here's the summary of the build failures for ${{ github.sha }}:</summary>
+            <p>
 
             ```
             ${{ steps.summary_comment.outputs.summary_comment }}
             ```
+
+            </p>
+            </details>
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
           allow-repeats: false # This is the default
