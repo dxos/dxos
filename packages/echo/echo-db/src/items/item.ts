@@ -4,10 +4,13 @@
 
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
+import debug from 'debug';
 
 import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection, SelectionResult } from './selection';
+
+const log = debug('dxos:echo-db:items:item');
 
 /**
  * A globally addressable data item.
@@ -116,12 +119,16 @@ export class Item<M extends Model> extends Entity<M> {
       return;
     }
 
+    const onUpdate = this._onUpdate.waitFor(() => this.deleted);
+
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {
         action: ItemMutation.Action.DELETE
       }
     });
+
+    await onUpdate;
   }
 
   /**
@@ -135,12 +142,16 @@ export class Item<M extends Model> extends Entity<M> {
       throw new Error(`Item was note delted: ${this.id}`);
     }
 
+    const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
+
     await this._writeStream.write({
       itemId: this.id,
       itemMutation: {
         action: ItemMutation.Action.RESTORE
       }
     });
+
+    await onUpdate;
   }
 
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
@@ -168,6 +179,8 @@ export class Item<M extends Model> extends Entity<M> {
    * @private (Package-private).
    */
   _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+    log('_processMutation %s', JSON.stringify(mutation));
+
     const { action, parentId } = mutation;
 
     switch (action) {

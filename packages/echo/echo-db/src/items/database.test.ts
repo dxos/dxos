@@ -120,6 +120,19 @@ describe('Database', () => {
       expect(parent.children[0] === child).toBeTruthy();
     });
 
+    test('delete & restore an item', async () => {
+      const { backend: database } = await setup(); // TODO(dmaretskyi): Make work in remote mode.
+
+      const item = await database.createItem({ model: ObjectModel });
+      expect(item.deleted).toBeFalsy();
+
+      await item.delete();
+      expect(item.deleted).toBeTruthy();
+
+      await item.restore();
+      expect(item.deleted).toBeFalsy();
+    });
+
     test('link', async () => {
       const { frontend: database } = await setup();
 
