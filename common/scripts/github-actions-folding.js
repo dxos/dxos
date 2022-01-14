@@ -8,7 +8,9 @@ const childProcess = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
 
-fs.rmSync('./failure-summary.log');
+try {
+  fs.rmSync('./failure-summary.log');
+} catch{}
 
 const [cmd, ...args] = process.argv.slice(2);
 
@@ -26,7 +28,7 @@ rl.on('line', line => {
     }
     groupStarted = true
     process.stdout.write(`::group::${line}\n`)
-    
+
     linesInCurrentGroup = [];
   } else {
     process.stdout.write(line + '\n')
@@ -41,7 +43,12 @@ rlErr.on('line', line => {
   linesInCurrentGroup.push(line);
 
   if(line.trim().endsWith('failed to build.')) {
-      fs.appendFileSync('./failure-summary.log', linesInCurrentGroup.join('\n') + '\n');
+      try {
+        fs.appendFileSync('./failure-summary.log', linesInCurrentGroup.join('\n') + '\n');
+      } catch(err) {
+        console.error('Error in log script')  
+        console.error(err)  
+      }
       linesInCurrentGroup = []
   }
 })
