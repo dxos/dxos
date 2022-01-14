@@ -203,19 +203,21 @@ describe('Database', () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
-        await Promise.all(Array.from({ length: 10 }).map(() => {
-          return database.createItem({ model: TestListModel });
-        }));
+        await Promise.all(Array.from({ length: 10 }).map(() =>
+          database.createItem({ model: TestListModel })
+        ));
 
         // TODO(burdon): Trigger result on initial subscription.
         const result = database.select(s => s.items);
         const items = result.getValue();
         expect(items).toHaveLength(10);
 
+
+        const update = result.update.waitForCount(1);
         await items[0].delete();
+        await update;
 
         {
-          await result.update.waitForCount(1);
           const items = result.getValue();
           expect(items).toHaveLength(9);
         }
