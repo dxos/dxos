@@ -33,12 +33,14 @@ jobs:
           # TODO(burdon): Move to separate action (run once per evening).
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
       - name: Prepare summary comment
+        if: failure()
         run: |
           SUMMARY_COMMENT=$(cat ./failure-summary.log)
           echo "SUMMARY_COMMENT<<EOF" >> $GITHUB_ENV
           echo "$SUMMARY_COMMENT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Add summary comment
+        if: failure()
         uses: mshick/add-pr-comment@v1
         with:
           message: |
