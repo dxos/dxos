@@ -6,7 +6,7 @@ import React from 'react';
 // import { v4 } from 'uuid';
 
 // import { PendingInvitation } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+// import { useClient } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 

@@ -10,7 +10,7 @@ import { Alert, Box, Button } from '@mui/material';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-import { ErrorBoundary, ErrorView, FrameworkContextProvider, useErrors } from '../src';
+import { ErrorBoundary, ErrorView, useErrors } from '../src';
 
 export default {
   title: 'react-framework/ErrorBoundary'
@@ -109,9 +109,7 @@ export const Primary = () => {
       }}
     >
       <ClientProvider clientRef={clientRef}>
-        <FrameworkContextProvider>
-          <App />
-        </FrameworkContextProvider>
+        <App />
       </ClientProvider>
     </ErrorBoundary>
   );
