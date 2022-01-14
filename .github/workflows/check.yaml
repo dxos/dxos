@@ -36,8 +36,9 @@ jobs:
         if: failure()
         run: |
           SUMMARY_COMMENT=$(cat ./failure-summary.log)
-          echo "::set-output name=summary_comment::$SUMMARY_COMMENT"
-        id: summary_comment
+          echo "SUMMARY_COMMENT<<EOF" >> $GITHUB_ENV
+          echo "$SUMMARY_COMMENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Add summary comment
         if: failure()
         uses: mshick/add-pr-comment@v1
@@ -46,7 +47,7 @@ jobs:
             Here's the summary of the build failures for ${{ github.sha }}:
 
             ```
-            ${{ steps.summary_comment.outputs.summary_comment }}
+            ${{ env.env.SUMMARY_COMMENT }}
             ```
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
