@@ -6,8 +6,7 @@ import { Scale } from '@dxos/gem-x';
 
 import { ElementData, ElementType } from '../model';
 import { EllipseControl, LineControl, PathControl, RectControl } from './types';
-import { ElementCache } from './cache';
-import { ControlConstructor } from './control';
+import { ControlConstructor, ElementGetter } from './control';
 
 const constructors = {
   'ellipse': EllipseControl,
@@ -19,7 +18,7 @@ const constructors = {
 /**
  * Control factory.
  * @param type
- * @param cache
+ * @param elements
  * @param scale
  * @param element
  * @param onRepaint
@@ -28,7 +27,7 @@ const constructors = {
  */
 export const createControl = (
   type: ElementType,
-  cache: ElementCache,
+  elements: ElementGetter,
   scale: Scale,
   element?: ElementData<any>,
   onRepaint?,
@@ -39,6 +38,6 @@ export const createControl = (
   if (!Constructor) {
     console.warn(`Invalid type: ${type}`);
   } else {
-    return new Constructor(cache, scale, element, onRepaint, onSelect, onUpdate);
+    return new Constructor(elements, scale, element, onRepaint, onSelect, onUpdate);
   }
 };

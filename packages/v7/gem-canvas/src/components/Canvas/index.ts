@@ -3,3 +3,4 @@
 //
 
 export * from './Canvas';
+export * from './Cursor';

@@ -8,6 +8,7 @@ import type { DragBehavior } from 'd3';
 import { Modifiers, Point, Scale } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
+import { Control } from './control';
 
 export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   center: event.metaKey,
@@ -41,7 +42,7 @@ export const dragBounds = (
     })
     .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
-      const current: Point = scale.screen.snapPoint(scale.translate([event.x, event.y]));
+      const current = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onUpdate(start, current, mod, true);
     });
 };
@@ -60,6 +61,10 @@ export const dragMove = (
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
       start = [event.x, event.y];
+
+      // Starting source.
+      const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+      console.log('source', target);
     })
     .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
@@ -70,6 +75,10 @@ export const dragMove = (
       }
     })
     .on('end', (event: D3DragEvent) => {
+      // Ending target.
+      const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+      console.log('target', target);
+
       const mod = getEventMod(event.sourceEvent);
       const current: Point = [event.x, event.y];
       const delta: Point = [current[0] - start[0], current[1] - start[1]];

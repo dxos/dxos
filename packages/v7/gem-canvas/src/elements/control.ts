@@ -26,7 +26,7 @@ export type SelectionModel = {
 
 export interface ControlConstructor<T extends ElementDataType> {
   new (
-    cache: ElementGetter,
+    elements: ElementGetter,
     scale: Scale,
     element?: ElementData<T>,
     onRepaint?: () => void,

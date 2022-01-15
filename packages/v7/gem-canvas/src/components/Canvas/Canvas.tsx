@@ -7,19 +7,18 @@ import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
-import { defaultScale, Modifiers, Point, Scale, useStateRef } from '@dxos/gem-x';
+import { defaultScale, Scale } from '@dxos/gem-x';
 
 import {
   Control,
-  createControl,
   createMarkers,
-  dragBounds,
   ElementCache,
   ElementState,
   SelectionModel,
 } from '../../elements';
 import { ElementData, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
+import { Cursor } from './Cursor';
 
 // TODO(burdon): Create theme.
 const styles = css`
@@ -139,10 +138,6 @@ export const Canvas = ({
   const elementGroup = useRef<SVGSVGElement>();
   const elementCache = useMemo(() => new ElementCache(scale, handleRepaint, handleSelect, onUpdate), [scale]);
 
-  // New element cursor.
-  const cursorGroup = useRef<SVGSVGElement>();
-  const [cursor, setCursor, cursorRef] = useStateRef<Control<any>>();
-
   //
   // Update cache.
   //
@@ -152,7 +147,6 @@ export const Canvas = ({
 
   //
   // Deselect.
-  // TODO(burdon): Deselect on drag/update other object.
   //
   useEffect(() => {
     d3.select(svgRef.current)
@@ -165,68 +159,10 @@ export const Canvas = ({
   }, []);
 
   //
-  // Create cursor.
-  //
-  useEffect(() => {
-    const cursor = tool ? createControl(tool, elementCache, scale) : undefined;
-    cursor?.setState(ElementState.SELECTED);
-    setCursor(cursor); // TODO(burdon): ???
-  }, [tool]);
-
-  //
-  // Render cursor.
-  //
-  // TODO(burdon): Factor out.
-  // eslint-disable indent
-  useEffect(() => {
-    const handleUpdate = (p1: Point, p2: Point, mod: Modifiers, commit: boolean) => {
-      const cursor = cursorRef.current;
-
-      // TODO(burdon): If creating a line, reuse drop logic (e.g., to connect).
-      const data = cursor.createFromExtent(p1, p2, mod, commit);
-
-      if (commit) {
-        d3.select(cursorGroup.current)
-          .selectAll('g')
-          .remove();
-
-        // Too small.
-        if (!data) {
-          onSelect(undefined);
-          return;
-        }
-
-        onCreate(cursor.type, data);
-      } else {
-        cursor.onUpdate(data);
-        d3.select(cursorGroup.current)
-          .selectAll('g')
-          .data([cursor])
-          .join('g')
-          .attr('class', 'cursor')
-          // Allow mouse events (e.g., mouseover) to flow-through to elements below (e.g., hover).
-          .style('pointer-events', 'none')
-          .each((element, i, nodes) => {
-            d3.select(nodes[i]).call(element.draw());
-          });
-      }
-    };
-
-    // Drag to create new element.
-    // This must only be called once to not conflict with the SVGContainer zoom dragger.
-    d3.select(svgRef.current)
-      .attr('cursor', 'crosshair')
-      .call(dragBounds(scale, handleUpdate, () => onSelect(undefined))
-        .container(() => svgRef.current)
-        .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
-  }, [svgRef, cursorGroup]);
-  // eslint-enable indent
-
-  //
   // Render elements.
   //
-  // eslint-disable indent
   useEffect(() => {
+    // eslint-disable indent
     d3.select(elementGroup.current)
       .selectAll('g.element')
       .data(elementCache.elements, ({ element }: Control<any>) => element.id)
@@ -255,9 +191,12 @@ export const Canvas = ({
           d3.select(nodes[i]).raise();
         }
       });
+    // eslint-enable indent
   }, [elementGroup, elements, selection, repaint]);
-  // eslint-enable indent
 
+  //
+  // Markers.
+  //
   useEffect(() => {
     d3.select(markersGroup.current).call(createMarkers());
   }, [markersGroup]);
@@ -266,7 +205,14 @@ export const Canvas = ({
     <g className={clsx(styles, debug && debugStyles)}>
       <g ref={markersGroup} />
       <g ref={elementGroup} />
-      <g ref={cursorGroup} />
+      <Cursor
+        svgRef={svgRef}
+        scale={scale}
+        elements={elementCache}
+        tool={tool}
+        onSelect={onSelect}
+        onCreate={onCreate}
+      />
     </g>
   );
 };
