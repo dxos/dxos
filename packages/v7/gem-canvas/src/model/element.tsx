@@ -80,5 +80,6 @@ export type ElementType = 'circle' | 'ellipse' | 'rect' | 'line' | 'path'
 export type Element<T extends ElementDataType> = {
   id: ElementId
   type: ElementType
+  order?: number
   data: T
 }

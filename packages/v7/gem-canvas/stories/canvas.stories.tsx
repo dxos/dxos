@@ -14,10 +14,12 @@ import {
   ElementId,
   ElementType,
   ElementDataType,
+  ElementState,
   Ellipse,
   Line,
   Path,
   Rect,
+  SelectionModel,
   Tool,
   Toolbar,
   createKeyHandlers,
@@ -195,7 +197,7 @@ export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
   const [elements, setElements] = useState<Element<any>[]>(initial);
-  const [selected, setSelected, selectedRef] = useStateRef<Element<any>>();
+  const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
 
   // TODO(burdon): Randomizer.
@@ -209,8 +211,8 @@ export const Primary = () => {
   //   }, 1000);
   // }, []);
 
-  const handleSelect = (element: Element<any>) => {
-    setSelected(element);
+  const handleSelect = (selection: SelectionModel) => {
+    setSelection(selection);
   };
 
   const handleUpdate = (element: Element<any>, commit?: boolean) => {
@@ -226,7 +228,7 @@ export const Primary = () => {
         data
       };
 
-      setSelected(element);
+      setSelection({ element, state: ElementState.SELECTED });
       return [...elements, element];
     })
   }
@@ -249,14 +251,14 @@ export const Primary = () => {
 
           case 'cancel': {
             setTool(undefined);
-            setSelected(undefined);
+            setSelection(undefined);
             break;
           }
 
           case 'delete': {
-            if (selectedRef.current) {
-              handleDelete(selectedRef.current.id);
-              setSelected(undefined);
+            if (selectionRef.current) {
+              handleDelete(selectionRef.current!.element.id);
+              setSelection(undefined);
             }
           }
         }
@@ -287,7 +289,7 @@ export const Primary = () => {
             scale={scale}
             tool={tool}
             elements={elements}
-            selected={selected}
+            selection={selection}
             onSelect={handleSelect}
             onUpdate={handleUpdate}
             onCreate={handleCreate}
@@ -299,7 +301,7 @@ export const Primary = () => {
       <Info
         data={{
           elements: elements.length,
-          selected: selected?.id
+          selected: selection?.element?.id
         }}
       />
 

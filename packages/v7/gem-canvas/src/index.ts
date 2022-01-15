@@ -3,6 +3,7 @@
 //
 
 export * from './components';
+export * from './elements';
 export * from './model';
 export * from './tools';
 export * from './types';

@@ -2,13 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import { defaultScale, Modifiers, Point, Scale, useStateRef } from '@dxos/gem-x';
+import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
-import { css } from '@emotion/css';
 
-import { Modifiers, Scale, defaultScale, useStateRef, Point } from '@dxos/gem-x';
-
-import { BaseElement, ElementCache, createMarkers, createElement, dragBounds } from '../../elements';
+import {
+  BaseElement,
+  createElement,
+  createMarkers,
+  dragBounds,
+  ElementCache,
+  ElementState,
+  SelectionModel,
+} from '../../elements';
 import { Element, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
 
@@ -33,6 +40,11 @@ const styles = css`
     }
 
     // TODO(burdon): Create separate group for frames/handles.
+ 
+    input {
+      border: none;
+      outline: none;
+    }
   
     rect.frame {
       stroke: cornflowerblue;
@@ -58,14 +70,14 @@ const styles = css`
   }
 `;
 
-interface CanvasProps {
+export interface CanvasProps {
   svgRef: RefObject<SVGSVGElement>
   scale?: Scale
   tool: Tool
   elements?: Element<any>[]
-  selected?: Element<any>
-  onSelect?: (element: Element<any>) => void
-  onUpdate?: (element: Element<any>, boolean?: boolean) => void
+  selection?: SelectionModel
+  onSelect?: (selection: SelectionModel) => void
+  onUpdate?: (element: Element<any>, commit?: boolean) => void
   onCreate?: (type: ElementType, data: ElementDataType) => void
   onDelete?: (id: ElementId) => void
 }
@@ -76,7 +88,7 @@ interface CanvasProps {
  * @param scale
  * @param tool
  * @param elements
- * @param selected
+ * @param selection
  * @param onSelect
  * @param onCreate
  * @param onUpdate
@@ -88,7 +100,7 @@ export const Canvas = ({
   scale = defaultScale,
   tool,
   elements = [],
-  selected,
+  selection,
   onSelect,
   onUpdate,
   onCreate,
@@ -97,12 +109,17 @@ export const Canvas = ({
   const [repaint, setRepaint] = useState(Date.now());
   const handleRepaint = () => setRepaint(Date.now());
 
+  // TODO(burdon): Multi-select.
+  const handleSelect = (element: Element<any>, edit?: boolean) => {
+    onSelect({ element, state: edit ? ElementState.EDITING : ElementState.SELECTED });
+  }
+
   // Markers.
   const markersGroup = useRef<SVGSVGElement>();
 
   // Rendered elements.
   const elementGroup = useRef<SVGSVGElement>();
-  const elementCache = useMemo(() => new ElementCache(scale, handleRepaint, onSelect, onUpdate), [scale]);
+  const elementCache = useMemo(() => new ElementCache(scale, handleRepaint, handleSelect, onUpdate), [scale]);
 
   // New element cursor.
   const cursorGroup = useRef<SVGSVGElement>();
@@ -112,8 +129,8 @@ export const Canvas = ({
   // Update cache.
   //
   useEffect(() => {
-    elementCache.updateElements(elements, selected);
-  }, [elements, selected]);
+    elementCache.updateElements(elements, selection);
+  }, [elements, selection]);
 
   //
   // Deselect.
@@ -134,7 +151,7 @@ export const Canvas = ({
   //
   useEffect(() => {
     const cursor = tool ? createElement(tool, elementCache, scale) : undefined;
-    cursor?.setSelected(true);
+    cursor?.setState(ElementState.SELECTED);
     setCursor(cursor); // TODO(burdon): ???
   }, [tool]);
 
@@ -203,11 +220,11 @@ export const Canvas = ({
         }
 
         // Temporarily move to the front.
-        if (element.selected) {
+        if (element.active) {
           d3.select(nodes[i]).raise();
         }
       });
-  }, [elementGroup, elements, selected, repaint]);
+  }, [elementGroup, elements, selection, repaint]);
   // eslint-enable indent
 
   useEffect(() => {

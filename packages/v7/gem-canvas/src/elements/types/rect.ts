@@ -23,7 +23,6 @@ const createRect = (scale: Scale): D3Callable => {
     const { text } = data;
 
     // eslint-disable indent
-    if (false)
     group
       .selectAll('rect')
       .data(['_main_'])
@@ -46,7 +45,10 @@ const createRect = (scale: Scale): D3Callable => {
             })
             .on('click', () => {
               base.onSelect(true);
-            });
+            })
+            .on('dblclick', () => {
+              base.onEdit(true);
+            })
         }
 
         // Move.
@@ -74,7 +76,7 @@ const createRect = (scale: Scale): D3Callable => {
 
     const [cx, cy] = Screen.center({ x, y, width, height });
     group
-      .call(crateText({ cx, cy, text }));
+      .call(crateText({ cx, cy, text, editable: base.editing }));
     // eslint-enable indent
   };
 };
@@ -108,8 +110,8 @@ export class RectElement extends BaseElement<Rect> {
   override drawable (): D3Callable {
     return group => {
       group.call(this._main, group.datum());
-      // group.call(this._connectors, group.datum(), !this.selected && this.hover);
-      // group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+      group.call(this._connectors, group.datum(), !this.selected && this.hover);
+      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
     };
   }
 

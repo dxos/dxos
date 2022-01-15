@@ -4,15 +4,29 @@
 
 import { Modifiers, Point, Screen, ScreenBounds, Scale } from '@dxos/gem-x';
 
-import { Element, ElementDataType, ElementType } from '../model';
+import { Element, ElementDataType, ElementId, ElementType } from '../model';
 import { D3Callable } from '../types';
-import { ElementCache } from './cache';
 
 export type ControlPoint = { i: number, point: Point }
 
+export interface ElementGetter {
+  getElement (id: ElementId): BaseElement<any> | undefined
+}
+
+export enum ElementState {
+  NORMAL,
+  SELECTED,
+  EDITING
+}
+
+export type SelectionModel = {
+  element: Element<any> // TODO(burdon): Multiple.
+  state?: ElementState
+}
+
 export interface BaseElementConstructor<T extends ElementDataType> {
   new (
-    cache: ElementCache,
+    cache: ElementGetter,
     scale: Scale,
     element?: Element<T>,
     onRepaint?: () => void,
@@ -27,19 +41,22 @@ export interface BaseElementConstructor<T extends ElementDataType> {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element#graphics_elements
  */
 export abstract class BaseElement<T extends ElementDataType> {
+  // TODO(burdon): NOTE: Currently conflates updated data and updated state.
   private _modified = true;
-  private _selected = false;
+
+  private _state = ElementState.NORMAL;
+
   private _hover = false;
 
   // TODO(burdon): Manipulate clone until commit.
   private _data;
 
   constructor (
-    private readonly _cache: ElementCache,
+    private readonly _cache: ElementGetter,
     private readonly _scale: Scale,
     private readonly _element?: Element<T>,
     private readonly _onRepaint?: () => void,
-    private readonly _onSelect?: (element: Element<T>) => void,
+    private readonly _onSelect?: (element: Element<T>, edit?: boolean) => void,
     private readonly _onUpdate?: (element: Element<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
   ) {
@@ -66,8 +83,20 @@ export abstract class BaseElement<T extends ElementDataType> {
     return this._modified;
   }
 
+  get state () {
+    return this._state;
+  }
+
+  get active () {
+    return this.selected || this.editing;
+  }
+
   get selected () {
-    return this._selected;
+    return this._state === ElementState.SELECTED;
+  }
+
+  get editing () {
+    return this._state === ElementState.EDITING;
   }
 
   get hover () {
@@ -82,9 +111,9 @@ export abstract class BaseElement<T extends ElementDataType> {
     return `Element(${this.type}: ${this._element.id})`;
   }
 
-  setSelected (selected: boolean) {
+  setState (state: ElementState) {
     this._modified = true;
-    this._selected = selected;
+    this._state = state;
   }
 
   onSelect (select: boolean) {
@@ -92,6 +121,15 @@ export abstract class BaseElement<T extends ElementDataType> {
     if (select && !this.selected) {
       this._onSelect?.(this.element);
     } else if (!select && this.selected) {
+      this._onSelect?.(undefined);
+    }
+  }
+
+  onEdit (edit: boolean) {
+    this._modified = true;
+    if (edit && !this.editing) {
+      this._onSelect?.(this.element, true);
+    } else if (!edit && this.editing) {
       this._onSelect?.(undefined);
     }
   }
