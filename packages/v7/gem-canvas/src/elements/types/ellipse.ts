@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen } from '@dxos/gem-x';
+import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex } from '@dxos/gem-x';
 
 import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { BaseElement } from '../base';
+import { Control } from '../control';
 import { dragMove } from '../drag';
 import { createConectionPoints, createFrame } from '../frame';
 import { crateText } from './text';
@@ -17,7 +17,7 @@ import { crateText } from './text';
  * @param scale
  */
 const createEllipse = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<Ellipse>) => {
+  return (group: D3Selection, base: Control<Ellipse>) => {
     const data = base.data;
     const { center, text } = data;
     const [cx, cy] = scale.model.toPoint(center);
@@ -94,9 +94,9 @@ const valid = (data: Ellipse, commit: boolean) => {
 };
 
 /**
- * Ellipse element.
+ * Ellipse control.
  */
-export class EllipseElement extends BaseElement<Ellipse> {
+export class EllipseControl extends Control<Ellipse> {
   _frame = createFrame(this.scale);
   _connectors = createConectionPoints(this.scale);
   _main = createEllipse(this.scale);
@@ -135,5 +135,9 @@ export class EllipseElement extends BaseElement<Ellipse> {
       rx: FractionUtil.divide(width, [2, 1]),
       ry: FractionUtil.divide(height, [2, 1])
     }, commit);
+  }
+
+  getConnectionPoint (): Vertex {
+    return this.data.center;
   }
 }

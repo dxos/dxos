@@ -8,11 +8,11 @@ import { getEventMod } from '../../elements';
 import { Tool } from '../../tools';
 import { D3Callable } from '../../types';
 
-export type ActionType = 'enter' | 'delete' | 'cancel' | 'tool'
+export type ActionType = 'enter' | 'delete' | 'cancel' | 'tool' | 'debug'
 
 export type Action = {
   action: ActionType
-  mod: Modifiers
+  mod?: Modifiers
   tool?: Tool
 }
 
@@ -45,6 +45,11 @@ export const createKeyHandlers = (
 
         case 'Escape': {
           onAction({ action: 'cancel', mod });
+          break;
+        }
+
+        case 'd': {
+          onAction({ action: 'debug' })
           break;
         }
 

@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, Point, Screen, ScreenBounds, Scale } from '@dxos/gem-x';
+import { Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem-x';
 
-import { Element, ElementDataType, ElementId, ElementType } from '../model';
+import { ElementData, ElementDataType, ElementId, ElementType } from '../model';
 import { D3Callable } from '../types';
 
 export type ControlPoint = { i: number, point: Point }
 
 export interface ElementGetter {
-  getElement (id: ElementId): BaseElement<any> | undefined
+  getElement (id: ElementId): Control<any> | undefined
 }
 
 export enum ElementState {
@@ -20,27 +20,27 @@ export enum ElementState {
 }
 
 export type SelectionModel = {
-  element: Element<any> // TODO(burdon): Multiple.
+  element: ElementData<any> // TODO(burdon): Multiple.
   state?: ElementState
 }
 
-export interface BaseElementConstructor<T extends ElementDataType> {
+export interface ControlConstructor<T extends ElementDataType> {
   new (
     cache: ElementGetter,
     scale: Scale,
-    element?: Element<T>,
+    element?: ElementData<T>,
     onRepaint?: () => void,
-    onSelect?: (element: Element<T>) => void,
-    onUpdate?: (element: Element<T>, commit?: boolean) => void,
+    onSelect?: (element: ElementData<T>) => void,
+    onUpdate?: (element: ElementData<T>, commit?: boolean) => void,
     onCreate?: (type: ElementType, data: T) => void
-  ): BaseElement<T>;
+  ): Control<T>;
 }
 
 /**
- * Graphical element.
+ * Graphical control.
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element#graphics_elements
  */
-export abstract class BaseElement<T extends ElementDataType> {
+export abstract class Control<T extends ElementDataType> {
   // TODO(burdon): NOTE: Currently conflates updated data and updated state.
   private _modified = true;
 
@@ -52,19 +52,19 @@ export abstract class BaseElement<T extends ElementDataType> {
   private _data;
 
   constructor (
-    private readonly _cache: ElementGetter,
+    private readonly _elements: ElementGetter,
     private readonly _scale: Scale,
-    private readonly _element?: Element<T>,
+    private readonly _element?: ElementData<T>,
     private readonly _onRepaint?: () => void,
-    private readonly _onSelect?: (element: Element<T>, edit?: boolean) => void,
-    private readonly _onUpdate?: (element: Element<T>, commit?: boolean) => void,
+    private readonly _onSelect?: (element: ElementData<T>, edit?: boolean) => void,
+    private readonly _onUpdate?: (element: ElementData<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
   ) {
     this._data = this._element?.data;
   }
 
-  get cache () {
-    return this._cache;
+  get elements () {
+    return this._elements;
   }
 
   get scale () {
@@ -112,12 +112,13 @@ export abstract class BaseElement<T extends ElementDataType> {
   }
 
   setState (state: ElementState) {
-    this._modified = true;
-    this._state = state;
+    if (this._state !== state) {
+      this._state = state;
+      this._modified = true;
+    }
   }
 
   onSelect (select: boolean) {
-    this._modified = true;
     if (select && !this.selected) {
       this._onSelect?.(this.element);
     } else if (!select && this.selected) {
@@ -126,7 +127,6 @@ export abstract class BaseElement<T extends ElementDataType> {
   }
 
   onEdit (edit: boolean) {
-    this._modified = true;
     if (edit && !this.editing) {
       this._onSelect?.(this.element, true);
     } else if (!edit && this.editing) {
@@ -137,6 +137,7 @@ export abstract class BaseElement<T extends ElementDataType> {
   onHover (hover: boolean) {
     this._modified = true;
     this._hover = hover;
+    // TODO(burdon): Only repaint this element; construct with reference to group?
     this._onRepaint?.();
   }
 
@@ -209,7 +210,14 @@ export abstract class BaseElement<T extends ElementDataType> {
    * @param delta
    * @param commit
    */
-  updateControlPoint (point: ControlPoint, delta: Point, commit?: boolean): T {
+  updateControlPoint (point: ControlPoint, delta: Point, commit?: boolean, target?: Control<any>): T {
     throw new Error();
+  }
+
+  /**
+   * Get connection vertex for line connections.
+   */
+  getConnectionPoint (): Vertex {
+    return undefined;
   }
 }

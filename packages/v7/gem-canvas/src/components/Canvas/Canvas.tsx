@@ -2,21 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultScale, Modifiers, Point, Scale, useStateRef } from '@dxos/gem-x';
 import { css } from '@emotion/css';
+import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
+import { defaultScale, Modifiers, Point, Scale, useStateRef } from '@dxos/gem-x';
+
 import {
-  BaseElement,
-  createElement,
+  Control,
+  createControl,
   createMarkers,
   dragBounds,
   ElementCache,
   ElementState,
   SelectionModel,
 } from '../../elements';
-import { Element, ElementDataType, ElementId, ElementType } from '../../model';
+import { ElementData, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
 
 // TODO(burdon): Create theme.
@@ -70,16 +72,27 @@ const styles = css`
   }
 `;
 
+const debugStyles = css`
+  g.element, g.cursor {
+    rect.line-touch {
+      fill: pink;
+    }
+  }
+`;
+
 export interface CanvasProps {
   svgRef: RefObject<SVGSVGElement>
   scale?: Scale
   tool: Tool
-  elements?: Element<any>[]
+  elements?: ElementData<any>[]
   selection?: SelectionModel
   onSelect?: (selection: SelectionModel) => void
-  onUpdate?: (element: Element<any>, commit?: boolean) => void
+  onUpdate?: (element: ElementData<any>, commit?: boolean) => void
   onCreate?: (type: ElementType, data: ElementDataType) => void
   onDelete?: (id: ElementId) => void
+  options?: {
+    debug: boolean
+  }
 }
 
 /**
@@ -93,6 +106,7 @@ export interface CanvasProps {
  * @param onCreate
  * @param onUpdate
  * @param onDelete
+ * @param options
  * @constructor
  */
 export const Canvas = ({
@@ -104,13 +118,17 @@ export const Canvas = ({
   onSelect,
   onUpdate,
   onCreate,
-  onDelete
+  onDelete,
+  options = {
+    debug: false
+  }
 }: CanvasProps) => {
+  const { debug } = options;
   const [repaint, setRepaint] = useState(Date.now());
   const handleRepaint = () => setRepaint(Date.now());
 
   // TODO(burdon): Multi-select.
-  const handleSelect = (element: Element<any>, edit?: boolean) => {
+  const handleSelect = (element: ElementData<any>, edit?: boolean) => {
     onSelect({ element, state: edit ? ElementState.EDITING : ElementState.SELECTED });
   }
 
@@ -123,7 +141,7 @@ export const Canvas = ({
 
   // New element cursor.
   const cursorGroup = useRef<SVGSVGElement>();
-  const [cursor, setCursor, cursorRef] = useStateRef<BaseElement<any>>();
+  const [cursor, setCursor, cursorRef] = useStateRef<Control<any>>();
 
   //
   // Update cache.
@@ -150,7 +168,7 @@ export const Canvas = ({
   // Create cursor.
   //
   useEffect(() => {
-    const cursor = tool ? createElement(tool, elementCache, scale) : undefined;
+    const cursor = tool ? createControl(tool, elementCache, scale) : undefined;
     cursor?.setState(ElementState.SELECTED);
     setCursor(cursor); // TODO(burdon): ???
   }, [tool]);
@@ -163,6 +181,8 @@ export const Canvas = ({
   useEffect(() => {
     const handleUpdate = (p1: Point, p2: Point, mod: Modifiers, commit: boolean) => {
       const cursor = cursorRef.current;
+
+      // TODO(burdon): If creating a line, reuse drop logic (e.g., to connect).
       const data = cursor.createFromExtent(p1, p2, mod, commit);
 
       if (commit) {
@@ -185,7 +205,6 @@ export const Canvas = ({
           .join('g')
           .attr('class', 'cursor')
           // Allow mouse events (e.g., mouseover) to flow-through to elements below (e.g., hover).
-          // https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
           .style('pointer-events', 'none')
           .each((element, i, nodes) => {
             d3.select(nodes[i]).call(element.draw());
@@ -210,14 +229,26 @@ export const Canvas = ({
   useEffect(() => {
     d3.select(elementGroup.current)
       .selectAll('g.element')
-      .data(elementCache.elements, ({ element }: BaseElement<any>) => element.id)
-      .join('g')
-      .attr('class', 'element')
+      .data(elementCache.elements, ({ element }: Control<any>) => element.id)
+      .join(enter => {
+        return enter
+          .append('g')
+          .attr('class', 'element')
+          .on('mouseenter', function () {
+            const control = d3.select(this).datum() as Control<any>;
+            control.onHover(true);
+          })
+          .on('mouseleave', function () {
+            const control = d3.select(this).datum() as Control<any>;
+            control.onHover(false);
+          });
+      })
       .each((element, i, nodes) => {
+        // TODO(burdon): Currently disabled since otherwise connected lines won't update when dragging source/target.
         // Only draw if updated.
-        if (element.modified) {
+        // if (element.modified) {
           d3.select(nodes[i]).call(element.draw());
-        }
+        // }
 
         // Temporarily move to the front.
         if (element.active) {
@@ -232,7 +263,7 @@ export const Canvas = ({
   }, [markersGroup]);
 
   return (
-    <g className={styles}>
+    <g className={clsx(styles, debug && debugStyles)}>
       <g ref={markersGroup} />
       <g ref={elementGroup} />
       <g ref={cursorGroup} />

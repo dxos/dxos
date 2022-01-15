@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen } from '@dxos/gem-x';
+import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex, Vector } from '@dxos/gem-x';
 
 import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { BaseElement } from '../base';
+import { Control } from '../control';
 import { dragMove } from '../drag';
 import { createConectionPoints, createFrame } from '../frame';
 import { crateText } from './text';
@@ -17,7 +17,7 @@ import { crateText } from './text';
  * @param scale
  */
 const createRect = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<Rect>) => {
+  return (group: D3Selection, base: Control<Rect>) => {
     const data = base.data;
     const { x, y, width, height } = scale.model.toBounds(data.bounds);
     const { text } = data;
@@ -36,13 +36,6 @@ const createRect = (scale: Scale): D3Callable => {
         // TODO(burdon): Generic.
         if (base.onSelect) {
           selection
-            // https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
-            .on('mouseover', () => {
-              base.onHover(true);
-            })
-            .on('mouseout', () => {
-              base.onHover(false);
-            })
             .on('click', () => {
               base.onSelect(true);
             })
@@ -98,9 +91,9 @@ const valid = (data: Rect, commit: boolean) => {
 };
 
 /**
- * Rect element.
+ * Rect control.
  */
-export class RectElement extends BaseElement<Rect> {
+export class RectControl extends Control<Rect> {
   _frame = createFrame(this.scale);
   _connectors = createConectionPoints(this.scale);
   _main = createRect(this.scale);
@@ -129,5 +122,9 @@ export class RectElement extends BaseElement<Rect> {
       ...this.data,
       bounds: this.scale.screen.toBounds(bounds)
     }, commit);
+  }
+
+  getConnectionPoint (): Vertex {
+    return Vector.center(this.data.bounds);
   }
 }

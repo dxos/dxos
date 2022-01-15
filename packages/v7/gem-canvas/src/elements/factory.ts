@@ -4,20 +4,20 @@
 
 import { Scale } from '@dxos/gem-x';
 
-import { Element, ElementType } from '../model';
-import { EllipseElement, LineElement, PathElement, RectElement } from './types';
+import { ElementData, ElementType } from '../model';
+import { EllipseControl, LineControl, PathControl, RectControl } from './types';
 import { ElementCache } from './cache';
-import { BaseElementConstructor } from './base';
+import { ControlConstructor } from './control';
 
 const constructors = {
-  'ellipse': EllipseElement,
-  'line': LineElement,
-  'path': PathElement,
-  'rect': RectElement
+  'ellipse': EllipseControl,
+  'line': LineControl,
+  'path': PathControl,
+  'rect': RectControl
 };
 
 /**
- * Create element wrapper.
+ * Control factory.
  * @param type
  * @param cache
  * @param scale
@@ -26,16 +26,16 @@ const constructors = {
  * @param onSelect
  * @param onUpdate
  */
-export const createElement = (
+export const createControl = (
   type: ElementType,
   cache: ElementCache,
   scale: Scale,
-  element?: Element<any>,
+  element?: ElementData<any>,
   onRepaint?,
   onSelect?,
   onUpdate?
 ) => {
-  const Constructor: BaseElementConstructor<any> = constructors[type];
+  const Constructor: ControlConstructor<any> = constructors[type];
   if (!Constructor) {
     console.warn(`Invalid type: ${type}`);
   } else {

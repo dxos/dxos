@@ -3,6 +3,7 @@
 //
 
 import * as d3 from 'd3';
+import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -10,7 +11,7 @@ import { FullScreen, SvgContainer, useScale, useStateRef, Vector } from '@dxos/g
 
 import {
   Canvas,
-  Element,
+  ElementData,
   ElementId,
   ElementType,
   ElementDataType,
@@ -29,21 +30,25 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Line snap to connector.
+const log = debug('dxos:gem-canvas:story');
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
+
+// TODO(burdon): Line snap to connector (on create).
 
 // TODO(burdon): Merge line, polyline.
 // TODO(burdon): Create path (multi-point).
 // TODO(burdon): Drag path.
 // TODO(burdon): Text element and editor.
 
+// TODO(burdon): Only repaint if modified (incl. connected lines).
 // TODO(burdon): Drag to select.
 // TODO(burdon): Select all (copy, move, delete).
 // TODO(burdon): Copy/paste.
 // TODO(burdon): Undo.
+// TODO(burdon): Order.
 
 // TODO(burdon): Use debug for logging (check perf.)
 // TODO(burdon): Constrain on resize.
@@ -51,6 +56,10 @@ export default {
 // TODO(burdon): Info panel with element info.
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 // TODO(burdon): Styles and style objects.
+
+// Clean-up
+// TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlPoints)
+// TODO(burdon): D3Callable as functions.
 
 const check = <T extends any>(value: T): T => value;
 
@@ -60,7 +69,7 @@ const ids = [
   faker.datatype.uuid()
 ];
 
-const initial: Element<any>[] = [
+const initial: ElementData<any>[] = [
   {
     id: ids[0],
     type: 'rect',
@@ -104,9 +113,7 @@ const initial: Element<any>[] = [
       source: {
         id: ids[0]
       },
-      target: {
-        id: ids[2]
-      }
+      pos2: { x: [-7, 1], y: [-3, 1] }
     })
   },
 
@@ -196,9 +203,10 @@ const Info = ({ data = {} }) => (
 export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
-  const [elements, setElements] = useState<Element<any>[]>(initial);
+  const [elements, setElements] = useState<ElementData<any>[]>(initial);
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
+  const [debug, setDebug, debugRef] = useStateRef(false);
 
   // TODO(burdon): Randomizer.
   // useEffect(() => {
@@ -215,9 +223,10 @@ export const Primary = () => {
     setSelection(selection);
   };
 
-  const handleUpdate = (element: Element<any>, commit?: boolean) => {
+  const handleUpdate = (element: ElementData<any>, commit?: boolean) => {
     // TODO(burdon): Chance to reject commit.
-    setElements(elements => [...elements.filter(({ id }) => element.id !== id), element])
+    log('update', element.type, element.id);
+    setElements(elements => [...elements.filter(({ id }) => element.id !== id), element]);
   };
 
   const handleCreate = (type: ElementType, data: ElementDataType) => {
@@ -228,12 +237,14 @@ export const Primary = () => {
         data
       };
 
+      log('created', element.type, element.id);
       setSelection({ element, state: ElementState.SELECTED });
       return [...elements, element];
     })
   }
 
   const handleDelete = (id: ElementId) => {
+    log('delete', id);
     setElements(elements => elements.filter(element => {
       return element.id !== id
     }));
@@ -244,6 +255,11 @@ export const Primary = () => {
     d3.select(document.body)
       .call(createKeyHandlers(({ action, tool }) => {
         switch (action) {
+          case 'debug': {
+            setDebug(!debugRef.current);
+            break;
+          }
+
           case 'tool': {
             setTool(tool);
             break;
@@ -294,6 +310,9 @@ export const Primary = () => {
             onUpdate={handleUpdate}
             onCreate={handleCreate}
             onDelete={handleDelete}
+            options={{
+              debug
+            }}
           />
         </SvgContainer>
       </div>

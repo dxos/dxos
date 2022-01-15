@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as d3 from 'd3';
+
 import { Modifiers, Scale, FractionUtil, Point, Screen, Vector } from '@dxos/gem-x';
 
 import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { BaseElement, ControlPoint } from '../base';
-import { ElementCache } from '../cache';
+import { Control, ControlPoint, ElementGetter } from '../control';
 import { createControlPoints } from '../frame';
 
 /**
@@ -30,11 +31,11 @@ const createHidden = (pos1: Point, pos2: Point) => {
   return { theta, bounds };
 };
 
-// TODO(burdon): Get connection point.
-// TODO(burdon): If no position then auto-select.
-const getPos = (cache, { id, position }) => {
-  const e: BaseElement<any> = cache.getElement(id);
-  return Vector.center(e.data.bounds); // TODO(burdon): Type-specific.
+// TODO(burdon): Factor out.
+// TODO(burdon): Get connection point. If no position then auto-select.
+const getPos = (cache, { id, position }: { id: ElementId, position?: string }) => {
+  const control: Control<any> = cache.getElement(id);
+  return control.getConnectionPoint();
 }
 
 /**
@@ -44,8 +45,8 @@ const getPos = (cache, { id, position }) => {
  * @param cache
  * @param scale
  */
-const createLine = (cache: ElementCache, scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<Line>) => {
+const createLine = (cache: ElementGetter, scale: Scale): D3Callable => {
+  return (group: D3Selection, base: Control<Line>) => {
     let { pos1, pos2, source, target } = base.data;
     pos1 ||= getPos(cache, source);
     pos2 ||= getPos(cache, target);
@@ -59,6 +60,7 @@ const createLine = (cache: ElementCache, scale: Scale): D3Callable => {
       .data(['_main_'])
       .join('line')
       .attr('marker-end', () => 'url(#marker_arrow)')
+      .style('pointer-events', 'none')
       .attr('x1', x1)
       .attr('y1', y1)
       .attr('x2', x2)
@@ -75,14 +77,13 @@ const createLine = (cache: ElementCache, scale: Scale): D3Callable => {
       .attr('points', points.map(([x, y]) => `${x},${y}`).join(' '));
     */
 
-    // Hidden bounds.
+    // Hidden Rect to enable selection.
     const { theta, bounds } = createHidden([x1, y1], [x2, y2]);
     const { x, y, height } = bounds;
 
-    // Hidden Rect to enable selection.
     group
       .selectAll('rect.line-touch')
-      .data([bounds])
+      .data(base.active ? [] : [bounds])
       .join('rect')
       .attr('class', 'line-touch')
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
@@ -92,7 +93,7 @@ const createLine = (cache: ElementCache, scale: Scale): D3Callable => {
       .attr('width', d => d.width)
       .attr('height', d => d.height)
       .attr('cursor', 'default')
-      .on('click', () => {
+      .on('click', function () {
         base.onSelect(true);
       });
     // eslint-enable indent
@@ -116,11 +117,11 @@ const valid = (data: Line, commit: boolean) => {
 };
 
 /**
- * Line element.
+ * Line control.
  */
-export class LineElement extends BaseElement<Line> {
+export class LineControl extends Control<Line> {
   _handles = createControlPoints(this.scale);
-  _main = createLine(this.cache, this.scale);
+  _main = createLine(this.elements, this.scale);
 
   type = 'line' as ElementType;
 
@@ -139,14 +140,27 @@ export class LineElement extends BaseElement<Line> {
   }
 
   override getControlPoints (): ControlPoint[] {
-    const { pos1, pos2 } = this.data;
+    let { pos1, pos2, source, target } = this.data;
+    pos1 ||= getPos(this.elements, source);
+    pos2 ||= getPos(this.elements, target);
     return [pos1, pos2].map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
   }
 
-  override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean) {
+  override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean, drop?: Control<any>) {
     const { x: dx, y: dy } = this.scale.screen.toVertex(delta);
-    const { pos1, pos2, ...rest } = this.element.data;
+    let { pos1, pos2, source, target, ...rest } = this.element.data;
+    pos1 ||= getPos(this.elements, source);
+    pos2 ||= getPos(this.elements, target);
     const points = [pos1, pos2];
+
+    // Connect.
+    if (commit && drop) {
+      if (i === 0) {
+        source = { id: drop.element.id };
+      } else {
+        target = { id: drop.element.id };
+      }
+    }
 
     const snap = commit ? this.scale.model.snapVertex : p => p;
     points[i] = snap({
@@ -155,8 +169,10 @@ export class LineElement extends BaseElement<Line> {
     });
 
     return {
-      pos1: points[0],
-      pos2: points[1],
+      pos1: source ? undefined : points[0],
+      pos2: target ? undefined : points[1],
+      source,
+      target,
       ...rest
     };
   }

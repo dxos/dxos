@@ -40,7 +40,7 @@ export type Rect = {
 //
 
 export type Line = {
-  pos1?: Vertex
+  pos1?: Vertex // TODO(burdon): Combine with source/target
   pos2?: Vertex
   source?: {
     id: ElementId
@@ -77,7 +77,7 @@ export type ElementType = 'circle' | 'ellipse' | 'rect' | 'line' | 'path'
 /**
  * Data element.
  */
-export type Element<T extends ElementDataType> = {
+export type ElementData<T extends ElementDataType> = {
   id: ElementId
   type: ElementType
   order?: number

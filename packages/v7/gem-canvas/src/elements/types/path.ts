@@ -8,7 +8,7 @@ import { Point, Scale, FractionUtil } from '@dxos/gem-x';
 
 import { ElementType, Path } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { BaseElement, ControlPoint } from '../base';
+import { Control, ControlPoint } from '../control';
 import { createControlPoints } from '../frame';
 
 const curves: { [index: string]: any } = {
@@ -24,7 +24,7 @@ const curves: { [index: string]: any } = {
  * @param scale
  */
 const createPath = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<Path>) => {
+  return (group: D3Selection, base: Control<Path>) => {
     const { curve, closed, points } = base.data;
     const p = points.map(p => scale.model.toPoint(p));
     const c = curves[curve][closed ? 1 : 0];
@@ -67,9 +67,9 @@ const valid = (data: Path, commit: boolean) => {
 };
 
 /**
- * Path element.
+ * Path control.
  */
-export class PathElement extends BaseElement<Path> {
+export class PathControl extends Control<Path> {
   _handles = createControlPoints(this.scale);
   _main = createPath(this.scale);
 
@@ -87,7 +87,7 @@ export class PathElement extends BaseElement<Path> {
     return points.map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
   }
 
-  override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean) {
+  override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean, target?: Control<any>) {
     const { x: dx, y: dy } = this.scale.screen.toVertex(delta);
     const { points: p, ...rest } = this.element.data;
 

@@ -7,8 +7,12 @@ import * as d3 from 'd3';
 import { Modifiers, ScreenBounds, Point, Scale } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
-import { BaseElement, ControlPoint } from './base';
+import { Control, ControlPoint } from './control';
 import { getEventMod } from './drag';
+
+// TODO(burdon): Create events util.
+// https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
 
 const FrameProps = {
   handleRadius: 7
@@ -66,25 +70,35 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
  * @param onUpdate
  */
 const handleDrag = <T extends any>(
-  onUpdate: (handle: T, delta: Point, mod: Modifiers, commit?: boolean) => void
+  onUpdate: (handle: T, delta: Point, mod: Modifiers, commit?: boolean, target?: Control<any>) => void
 ): D3Callable => {
   let start: Point;
   let subject: T;
 
   return d3.drag()
-    .on('start', (event: D3DragEvent) => {
+    .on('start', function (event: D3DragEvent) {
       subject = event.subject;
       start = [event.x, event.y];
     })
-    .on('drag', (event: D3DragEvent) => {
+    .on('drag', function (event: D3DragEvent) {
+      // Stop consuming events once dragging (enables hover over other elements).
+      d3.select(this).style('pointer-events', 'none');
+
       const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
-    .on('end', (event: D3DragEvent) => {
+    .on('end', function (event: D3DragEvent) {
+      // Consume events again.
+      d3.select(this).style('pointer-events', undefined);
+
+      // Get drop target.
+      // const handle = d3.select(event.sourceEvent.target).datum();
+      const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+
       const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod, true);
+      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod, true, target);
     });
 };
 
@@ -92,7 +106,7 @@ const handleDrag = <T extends any>(
  * Draw the resizable frame.
  */
 export const createFrame = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
+  return (group: D3Selection, base: Control<any>, active?: boolean, resizable?: boolean) => {
     const { x, y, width, height } = base.getBounds();
 
     const cx = x + width / 2;
@@ -130,29 +144,29 @@ export const createFrame = (scale: Scale): D3Callable => {
  * Draw line connection points.
  */
 export const createConectionPoints = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<any>, active?: boolean) => {
+  return (group: D3Selection, base: Control<any>, active?: boolean) => {
     const { x, y, width, height } = base.getBounds();
     const cx = x + width / 2;
     const cy = y + height / 2;
 
-    // TODO(burdon): Configure point.
     // eslint-disable indent
     group
       .selectAll('circle.connection-handle')
       .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
-      .join('circle')
-      .attr('class', 'connection-handle')
-      // Don't consume events (prevents handle from obscuring mouseenter).
-      .style('pointer-events', 'none')
+      .join(enter => {
+        return enter
+          .append('circle')
+          .attr('class', 'connection-handle');
+        // TODO(burdon): Support drag from connection point to start line.
+        // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
+        //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        //   const data = base.createFromBounds(bounds, mod, commit);
+        //   base.onUpdate(data, commit);
+        // }));
+      })
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
       .attr('cy', ({ p }) => cy - p[1] * height / 2)
       .attr('r', FrameProps.handleRadius);
-      // TODO(burdon): Support drag from connection point to start line.
-      // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
-      //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-      //   const data = base.createFromBounds(bounds, mod, commit);
-      //   base.onUpdate(data, commit);
-      // }));
     // eslint-enable indent
   };
 };
@@ -161,25 +175,26 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
  * Draw control points.
  */
 export const createControlPoints = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: BaseElement<any>, active?: boolean, resizable?: boolean) => {
+  return (group: D3Selection, base: Control<any>, active?: boolean, resizable?: boolean) => {
     const points = active ? base.getControlPoints() : [];
 
     // eslint-disable indent
     group
       .selectAll('circle.frame-handle')
       .data(points)
-      .join('circle')
-      .attr('class', 'frame-handle')
-      // TODO(burdon): Don't consume events while actively dragging.
-      // .style('pointer-events', 'none')
+      .join(enter => {
+        return enter
+          .append('circle')
+          .attr('class', 'frame-handle')
+          .call(handleDrag<ControlPoint>((point, delta, mod, commit, target) => {
+            const data = base.updateControlPoint(point, delta, commit, target);
+            base.onUpdate(data, commit);
+          }));
+      })
       .attr('cursor', 'move')
       .attr('cx', p => p.point[0])
       .attr('cy', p => p.point[1])
-      .attr('r', FrameProps.handleRadius)
-      .call(handleDrag<ControlPoint>((point, delta, mod, commit) => {
-        const data = base.updateControlPoint(point, delta, commit);
-        base.onUpdate(data, commit);
-      }));
+      .attr('r', FrameProps.handleRadius);
     // eslint-enable indent
   };
 };
