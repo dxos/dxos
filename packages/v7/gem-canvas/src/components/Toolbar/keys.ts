@@ -49,7 +49,7 @@ export const createKeyHandlers = (
         }
 
         case 'd': {
-          onAction({ action: 'debug' })
+          onAction({ action: 'debug' });
           break;
         }
 

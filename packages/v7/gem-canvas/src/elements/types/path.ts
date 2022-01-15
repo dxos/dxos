@@ -35,20 +35,7 @@ const createPath = (scale: Scale): D3Callable => {
       .selectAll('path')
       .data(['_main_'])
       .join('path')
-      .attr('d', line(p))
-      .call(selection => {
-        // Select.
-        // TODO(burdon): Generic.
-        if (control.onSelect) {
-          selection
-            .on('click', () => {
-              control.onSelect(true);
-            })
-            .on('dblclick', () => {
-              // TODO(burdon): Add point between closest points.
-            });
-        }
-      });
+      .attr('d', line(p));
     // eslint-enable indent
   };
 };

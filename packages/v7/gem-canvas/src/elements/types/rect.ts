@@ -26,46 +26,37 @@ const createRect = (scale: Scale): D3Callable => {
     group
       .selectAll('rect')
       .data(['_main_'])
-      .join('rect')
+      .join(enter => {
+        return enter
+          .append('rect')
+          .call(selection => {
+            // Drag.
+            if (control.onUpdate) {
+              selection
+                .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
+                  const { x: dx, y: dy } = scale.screen.toVertex(delta);
+                  const { bounds: { x, y, width, height }, ...rest } = control.element.data;
+                  const moved = {
+                    x: FractionUtil.add(x, dx),
+                    y: FractionUtil.add(y, dy),
+                    width,
+                    height
+                  };
+
+                  control.onSelect(true);
+                  control.onUpdate({
+                    bounds: commit ? scale.model.snapBounds(moved) : moved,
+                    ...rest
+                  }, commit);
+                }).filter(() => control.draggable));
+            }
+          })
+      })
+      .attr('cursor', control.draggable ? 'move' : undefined)
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)
-      .attr('height', height)
-      .call(selection => {
-        // Select.
-        // TODO(burdon): Generic.
-        if (control.onSelect) {
-          selection
-            .on('click', () => {
-              control.onSelect(true);
-            })
-            .on('dblclick', () => {
-              control.onEdit(true);
-            })
-        }
-
-        // Move.
-        if (control.onUpdate) {
-          selection
-            .attr('cursor', 'move')
-            .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
-              const { x: dx, y: dy } = scale.screen.toVertex(delta);
-              const { bounds: { x, y, width, height }, ...rest } = data;
-              const moved = {
-                x: FractionUtil.add(x, dx),
-                y: FractionUtil.add(y, dy),
-                width,
-                height
-              };
-
-              control.onSelect(true);
-              control.onUpdate({
-                bounds: commit ? scale.model.snapBounds(moved) : moved,
-                ...rest
-              });
-            }));
-        }
-      });
+      .attr('height', height);
 
     const [cx, cy] = Screen.center({ x, y, width, height });
     group

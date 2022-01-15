@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useRef } from 'react';
 
-import { Modifiers, Point, Scale, useStateRef } from '@dxos/gem-x';
+import { Modifiers, Point, useStateRef } from '@dxos/gem-x';
 
 import { Tool } from '../../tools';
 
@@ -13,16 +13,17 @@ import {
   Control,
   createControl,
   dragBounds,
-  ElementGetter,
-  ElementState,
-  SelectionModel,
+  ControlContext,
+  ControlGetter,
+  ControlState,
+  SelectionModel
 } from '../../elements';
 import { ElementDataType, ElementType } from '../../model';
 
 export interface CursorProps {
   svgRef: RefObject<SVGSVGElement>
-  scale: Scale
-  elements: ElementGetter
+  context: ControlContext
+  elements: ControlGetter
   tool: Tool
   onSelect: (selection: SelectionModel) => void
   onCreate: (type: ElementType, data: ElementDataType) => void
@@ -31,7 +32,7 @@ export interface CursorProps {
 /**
  * Cursor to create new elements.
  * @param svgRef
- * @param scale
+ * @param context
  * @param elements
  * @param tool
  * @param onSelect
@@ -41,7 +42,7 @@ export interface CursorProps {
 // TODO(burdon): Rename?
 export const Cursor = ({
   svgRef,
-  scale,
+  context,
   elements,
   tool,
   onSelect,
@@ -51,11 +52,27 @@ export const Cursor = ({
   const [, setCursor, cursorRef] = useStateRef<Control<any>>();
 
   //
+  // Deselect.
+  //
+  useEffect(() => {
+    d3.select(svgRef.current)
+      .on('click', (event) => {
+        // TODO(burdon): Better way to test containing group?
+        if (event.target.parentNode) {
+          const control = d3.select(event.target.parentNode).datum();
+          if (!control) {
+            onSelect(undefined);
+          }
+        }
+      });
+  }, []);
+
+  //
   // Create cursor.
   //
   useEffect(() => {
-    const cursor = tool ? createControl(tool, elements, scale) : undefined;
-    cursor?.setState(ElementState.SELECTED);
+    const cursor = tool ? createControl(tool, context, elements) : undefined;
+    cursor?.setState(ControlState.SELECTED);
     setCursor(cursor);
   }, [tool]);
 
@@ -64,12 +81,32 @@ export const Cursor = ({
   //
   // eslint-disable indent
   useEffect(() => {
-    // TODO(burdon): Get source and target.
-    const handleUpdate = (p1: Point, p2: Point, mod: Modifiers, commit: boolean) => {
+    const handleUpdate = (
+      p1: Point,
+      p2: Point,
+      mod: Modifiers,
+      commit: boolean,
+      source: Control<any>,
+      target: Control<any>
+    ) => {
       const cursor = cursorRef.current;
-
-      // TODO(burdon): If creating a line, reuse drop logic (e.g., to connect).
       const data = cursor.createFromExtent(p1, p2, mod, commit);
+
+      // Test for source/target connection.
+      if (data && cursor.type === 'line') {
+        if (source) {
+          data.pos1 = undefined;
+          data.source = {
+            id: source.element.id
+          };
+        }
+        if (target) {
+          data.pos2 = undefined;
+          data.target = {
+            id: target.element.id
+          };
+        }
+      }
 
       if (commit) {
         d3.select(cursorGroup.current)
@@ -78,14 +115,13 @@ export const Cursor = ({
 
         // Undefined if the element is too small.
         if (!data) {
-          onSelect(undefined);
           return;
         }
 
         // Create new element.
         onCreate(cursor.type, data);
       } else {
-        cursor.onUpdate(data);
+        cursor.onUpdate(data, false);
         d3.select(cursorGroup.current)
           .selectAll('g')
           .data([cursor])
@@ -103,8 +139,8 @@ export const Cursor = ({
     // Drag to create new element.
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
-      .attr('cursor', 'crosshair')
-      .call(dragBounds(scale, handleUpdate, () => onSelect(undefined))
+      .attr('cursor', cursorRef.current ? 'crosshair' : undefined)
+      .call(dragBounds(context, handleUpdate, () => onSelect(undefined))
         .container(() => svgRef.current)
         .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
   }, [svgRef, cursorGroup]);

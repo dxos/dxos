@@ -174,6 +174,7 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
 /**
  * Draw control points.
  */
+// TODO(burdon): Rename (not control).
 export const createControlPoints = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
     const points = active ? control.getControlPoints() : [];

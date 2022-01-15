@@ -8,7 +8,7 @@ import { Modifiers, Scale, FractionUtil, Point, Screen, Vector } from '@dxos/gem
 
 import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { Control, ControlPoint, ElementGetter } from '../control';
+import { Control, ControlPoint, ControlGetter } from '../control';
 import { createControlPoints } from '../frame';
 
 /**
@@ -34,7 +34,7 @@ const createHidden = (pos1: Point, pos2: Point) => {
 // TODO(burdon): Factor out.
 // TODO(burdon): Get connection point. If no position then auto-select.
 const getPos = (cache, { id, position }: { id: ElementId, position?: string }) => {
-  const control: Control<any> = cache.getElement(id);
+  const control: Control<any> = cache.getControl(id);
   return control.getConnectionPoint();
 }
 
@@ -45,8 +45,9 @@ const getPos = (cache, { id, position }: { id: ElementId, position?: string }) =
  * @param cache
  * @param scale
  */
-const createLine = (cache: ElementGetter, scale: Scale): D3Callable => {
+const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<Line>) => {
+    // console.log(':::::::::', control.data);
     let { pos1, pos2, source, target } = control.data;
     pos1 ||= getPos(cache, source);
     pos2 ||= getPos(cache, target);

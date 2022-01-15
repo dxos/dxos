@@ -27,49 +27,36 @@ const createEllipse = (scale: Scale): D3Callable => {
     group
       .selectAll('ellipse')
       .data(['_main_'])
-      .join('ellipse')
+      .join(enter => {
+        return enter
+          .append('ellipse')
+          .call(selection => {
+            // Drag.
+            if (control.onUpdate) {
+              selection
+                .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
+                  // TODO(burdon): Snap to edge unless mod (center).
+                  const { x: dx, y: dy } = scale.screen.toVertex(delta);
+                  const { center, ...rest } = control.element.data;
+                  const moved = {
+                    x: FractionUtil.add(center.x, dx),
+                    y: FractionUtil.add(center.y, dy)
+                  };
+
+                  control.onSelect(true);
+                  control.onUpdate({
+                    center: commit ? scale.model.snapVertex(moved) : moved,
+                    ...rest
+                  }, commit);
+                }).filter(() => control.draggable));
+            }
+          })
+      })
+      .attr('cursor', control.draggable ? 'move' : undefined)
       .attr('cx', cx)
       .attr('cy', cy)
       .attr('rx', rx)
       .attr('ry', ry)
-      .call(selection => {
-        // Select.
-        // TODO(burdon): Generic.
-        if (control.onSelect) {
-          selection
-            // https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
-            .on('mouseover', () => {
-              control.onHover(true);
-            })
-            .on('mouseout', () => {
-              control.onHover(false);
-            })
-            .on('click', () => {
-              control.onSelect(true);
-            });
-        }
-
-        // Move.
-        if (control.onUpdate) {
-          selection
-            .attr('cursor', 'move')
-            .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
-              // TODO(burdon): Snap to edge unless mod (center).
-              const { x: dx, y: dy } = scale.screen.toVertex(delta);
-              const { center, ...rest } = data;
-              const moved = {
-                x: FractionUtil.add(center.x, dx),
-                y: FractionUtil.add(center.y, dy)
-              };
-
-              control.onSelect(true);
-              control.onUpdate({
-                center: commit ? scale.model.snapVertex(moved) : moved,
-                ...rest
-              });
-            }));
-        }
-      });
 
     group
       .call(crateText({ cx, cy, text }));

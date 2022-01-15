@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Scale } from '@dxos/gem-x';
-
 import { ElementData, ElementType } from '../model';
 import { EllipseControl, LineControl, PathControl, RectControl } from './types';
-import { ControlConstructor, ElementGetter } from './control';
+import { ControlConstructor, ControlContext, ControlGetter } from './control';
 
 const constructors = {
   'ellipse': EllipseControl,
@@ -18,8 +16,8 @@ const constructors = {
 /**
  * Control factory.
  * @param type
+ * @param context
  * @param elements
- * @param scale
  * @param element
  * @param onRepaint
  * @param onSelect
@@ -27,8 +25,8 @@ const constructors = {
  */
 export const createControl = (
   type: ElementType,
-  elements: ElementGetter,
-  scale: Scale,
+  context: ControlContext,
+  elements: ControlGetter,
   element?: ElementData<any>,
   onRepaint?,
   onSelect?,
@@ -38,6 +36,6 @@ export const createControl = (
   if (!Constructor) {
     console.warn(`Invalid type: ${type}`);
   } else {
-    return new Constructor(elements, scale, element, onRepaint, onSelect, onUpdate);
+    return new Constructor(context, elements, element, onRepaint, onSelect, onUpdate);
   }
 };

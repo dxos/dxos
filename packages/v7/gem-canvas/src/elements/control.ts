@@ -7,13 +7,18 @@ import { Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem
 import { ElementData, ElementDataType, ElementId, ElementType } from '../model';
 import { D3Callable } from '../types';
 
+// TODO(burdon): Rename (not control).
 export type ControlPoint = { i: number, point: Point }
 
-export interface ElementGetter {
-  getElement (id: ElementId): Control<any> | undefined
+export interface ControlContext {
+  scale: () => Scale
 }
 
-export enum ElementState {
+export interface ControlGetter {
+  getControl (id: ElementId): Control<any> | undefined
+}
+
+export enum ControlState {
   NORMAL,
   SELECTED,
   EDITING
@@ -21,13 +26,13 @@ export enum ElementState {
 
 export type SelectionModel = {
   element: ElementData<any> // TODO(burdon): Multiple.
-  state?: ElementState
+  state?: ControlState
 }
 
 export interface ControlConstructor<T extends ElementDataType> {
   new (
-    elements: ElementGetter,
-    scale: Scale,
+    context: ControlContext,
+    elements: ControlGetter,
     element?: ElementData<T>,
     onRepaint?: () => void,
     onSelect?: (element: ElementData<T>) => void,
@@ -42,33 +47,37 @@ export interface ControlConstructor<T extends ElementDataType> {
  */
 export abstract class Control<T extends ElementDataType> {
   // TODO(burdon): NOTE: Currently conflates updated data and updated state.
+  //  - Test if _data is undefined.
   private _modified = true;
 
-  private _state = ElementState.NORMAL;
+  private _state = ControlState.NORMAL;
 
   private _hover = false;
 
-  // TODO(burdon): Manipulate clone until commit.
-  private _data;
+  // Temporary data (during edit until commit).
+  private _data: T = undefined;
 
   constructor (
-    private readonly _elements: ElementGetter,
-    private readonly _scale: Scale,
+    private readonly _context: ControlContext,
+    private readonly _elements: ControlGetter,
     private readonly _element?: ElementData<T>,
     private readonly _onRepaint?: () => void,
     private readonly _onSelect?: (element: ElementData<T>, edit?: boolean) => void,
     private readonly _onUpdate?: (element: ElementData<T>, commit?: boolean) => void,
     private readonly _onCreate?: (type: ElementType, data: T) => void
-  ) {
-    this._data = this._element?.data;
-  }
+  ) {}
 
   get elements () {
     return this._elements;
   }
 
   get scale () {
-    return this._scale;
+    return this._context.scale();
+  }
+
+  // TODO(burdon): Should be updated dynamically (to trigger SVG state change).
+  get draggable () {
+    return true;
   }
 
   get element () {
@@ -76,7 +85,7 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   get data () {
-    return this._data;
+    return this._data ?? this._element?.data ?? {};
   }
 
   get modified () {
@@ -92,11 +101,11 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   get selected () {
-    return this._state === ElementState.SELECTED;
+    return this._state === ControlState.SELECTED;
   }
 
   get editing () {
-    return this._state === ElementState.EDITING;
+    return this._state === ControlState.EDITING;
   }
 
   get hover () {
@@ -111,7 +120,7 @@ export abstract class Control<T extends ElementDataType> {
     return `Element(${this.type}: ${this._element.id})`;
   }
 
-  setState (state: ElementState) {
+  setState (state: ControlState) {
     if (this._state !== state) {
       this._state = state;
       this._modified = true;
@@ -142,19 +151,22 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   onCreate (data: T) {
-    this._data = data;
-    this._onCreate?.(this.type, this._data);
+    this._onCreate?.(this.type, data);
   }
 
-  onUpdate (data: T, commit?: boolean) {
-    this._data = data;
-
+  onUpdate (data: T, commit: boolean) {
     // TODO(burdon): Revert _data if no ACK.
     if (commit) {
       this._element.data = data;
+    } else {
+      this._data = data;
     }
+
     this._modified = true;
     this._onUpdate?.(this.element, commit);
+    if (commit) {
+      this._data = undefined;
+    }
   }
 
   draw () {

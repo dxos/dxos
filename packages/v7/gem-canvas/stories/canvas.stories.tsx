@@ -7,7 +7,7 @@ import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FullScreen, SvgContainer, useScale, useStateRef, Vector } from '@dxos/gem-x';
+import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-x';
 
 import {
   Canvas,
@@ -15,22 +15,22 @@ import {
   ElementId,
   ElementType,
   ElementDataType,
-  ElementState,
-  Ellipse,
-  Line,
-  Path,
-  Rect,
+  ControlState,
   SelectionModel,
   Tool,
   Toolbar,
   createKeyHandlers,
 } from '../src';
+import { generator } from './helpers';
 
 export default {
   title: 'gem-canvas/Canvas'
 };
 
-const log = debug('dxos:gem-canvas:story');
+// TODO(burdon): Not working in book?
+const log = debug('gem:canvas:story');
+debug.enable('gem:canvas:*');
+log('Starting...');
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Items (model update) and basic frame.
@@ -61,133 +61,6 @@ const log = debug('dxos:gem-canvas:story');
 // TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlPoints)
 // TODO(burdon): D3Callable as functions.
 
-const check = <T extends any>(value: T): T => value;
-
-const ids = [
-  faker.datatype.uuid(),
-  faker.datatype.uuid(),
-  faker.datatype.uuid()
-];
-
-const initial: ElementData<any>[] = [
-  {
-    id: ids[0],
-    type: 'rect',
-    data: check<Rect>({
-      bounds: Vector.toBounds({ x: -6, y: -4, width: 4, height: 2 }),
-      text: 'DXOS'
-    })
-  },
-  {
-    id: ids[1],
-    type: 'rect',
-    data: check<Rect>({
-      bounds: Vector.toBounds({ x: 2, y: -4, width: 4, height: 2 }),
-      text: 'ECHO'
-    })
-  },
-  {
-    id: ids[2],
-    type: 'rect',
-    data: check<Rect>({
-      bounds: Vector.toBounds({ x: -12, y: -4, width: 4, height: 2 }),
-      text: 'HALO'
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      source: {
-        id: ids[0]
-      },
-      target: {
-        id: ids[1]
-      }
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      source: {
-        id: ids[0]
-      },
-      pos2: { x: [-7, 1], y: [-3, 1] }
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: check<Ellipse>({
-      center: Vector.toVertex({ x: 2, y: 3 }), rx: [1, 1], ry: [1, 1]
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: check<Ellipse>({
-      center: Vector.toVertex({ x: 6, y: 5 }), rx: [1, 2], ry: [1, 2],
-      text: 'A'
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: check<Ellipse>({
-      center: Vector.toVertex({ x: 10, y: -2 }), rx: [1, 2], ry: [1, 2],
-      text: 'B'
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'ellipse',
-    data: check<Ellipse>({
-      center: Vector.toVertex({ x: -1, y: 3 }), rx: [1, 2], ry: [1, 2],
-      text: 'C'
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 6, y: 5 })
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 10, y: -2 })
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: -1, y: 3 })
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
-    type: 'path',
-    data: check<Path>({
-      points: [
-        Vector.toVertex({ x: -8, y: 8 }),
-        Vector.toVertex({ x: -6, y: 10 }),
-        Vector.toVertex({ x: -4, y: 4 }),
-        Vector.toVertex({ x: -5, y: 3 }),
-        Vector.toVertex({ x: -7, y: 5 }),
-      ],
-      curve: 'cardinal',
-      closed: true
-    })
-  }
-];
-
 const Info = ({ data = {} }) => (
   <div style={{
     backgroundColor: '#666',
@@ -203,7 +76,7 @@ const Info = ({ data = {} }) => (
 export const Primary = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
-  const [elements, setElements] = useState<ElementData<any>[]>(initial);
+  const [elements, setElements] = useState<ElementData<any>[]>(() => generator());
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
   const [debug, setDebug, debugRef] = useStateRef(false);
@@ -227,6 +100,7 @@ export const Primary = () => {
     // TODO(burdon): Chance to reject commit.
     log('update', element.type, element.id);
     setElements(elements => [...elements.filter(({ id }) => element.id !== id), element]);
+    return true;
   };
 
   const handleCreate = (type: ElementType, data: ElementDataType) => {
@@ -238,9 +112,11 @@ export const Primary = () => {
       };
 
       log('created', element.type, element.id);
-      setSelection({ element, state: ElementState.SELECTED });
+      setSelection({ element, state: ControlState.SELECTED });
       return [...elements, element];
-    })
+    });
+
+    return true;
   }
 
   const handleDelete = (id: ElementId) => {
@@ -248,15 +124,25 @@ export const Primary = () => {
     setElements(elements => elements.filter(element => {
       return element.id !== id
     }));
+
+    return true;
   };
 
+  // Reset selection.
+  useEffect(() => {
+    setSelection(undefined);
+  }, [tool]);
+
+  //
   // Keys.
+  //
   useEffect(() => {
     d3.select(document.body)
       .call(createKeyHandlers(({ action, tool }) => {
         switch (action) {
           case 'debug': {
             setDebug(!debugRef.current);
+            console.log(JSON.stringify(elements, undefined, 2));
             break;
           }
 
