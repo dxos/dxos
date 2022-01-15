@@ -17,8 +17,8 @@ import { crateText } from './text';
  * @param scale
  */
 const createRect = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<Rect>) => {
-    const data = base.data;
+  return (group: D3Selection, control: Control<Rect>) => {
+    const data = control.data;
     const { x, y, width, height } = scale.model.toBounds(data.bounds);
     const { text } = data;
 
@@ -34,18 +34,18 @@ const createRect = (scale: Scale): D3Callable => {
       .call(selection => {
         // Select.
         // TODO(burdon): Generic.
-        if (base.onSelect) {
+        if (control.onSelect) {
           selection
             .on('click', () => {
-              base.onSelect(true);
+              control.onSelect(true);
             })
             .on('dblclick', () => {
-              base.onEdit(true);
+              control.onEdit(true);
             })
         }
 
         // Move.
-        if (base.onUpdate) {
+        if (control.onUpdate) {
           selection
             .attr('cursor', 'move')
             .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
@@ -58,8 +58,8 @@ const createRect = (scale: Scale): D3Callable => {
                 height
               };
 
-              base.onSelect(true);
-              base.onUpdate({
+              control.onSelect(true);
+              control.onUpdate({
                 bounds: commit ? scale.model.snapBounds(moved) : moved,
                 ...rest
               });
@@ -69,7 +69,7 @@ const createRect = (scale: Scale): D3Callable => {
 
     const [cx, cy] = Screen.center({ x, y, width, height });
     group
-      .call(crateText({ cx, cy, text, editable: base.editing }));
+      .call(crateText({ cx, cy, text, editable: control.editing }));
     // eslint-enable indent
   };
 };

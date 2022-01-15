@@ -106,8 +106,8 @@ const handleDrag = <T extends any>(
  * Draw the resizable frame.
  */
 export const createFrame = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<any>, active?: boolean, resizable?: boolean) => {
-    const { x, y, width, height } = base.getBounds();
+  return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
+    const { x, y, width, height } = control.getBounds();
 
     const cx = x + width / 2;
     const cy = y + height / 2;
@@ -133,8 +133,8 @@ export const createFrame = (scale: Scale): D3Callable => {
       .attr('r', FrameProps.handleRadius)
       .call(handleDrag<Handle>((handle, delta, mod, commit) => {
         const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        const data = base.createFromBounds(bounds, mod, commit);
-        base.onUpdate(data, commit);
+        const data = control.createFromBounds(bounds, mod, commit);
+        control.onUpdate(data, commit);
       }));
     // eslint-enable indent
   };
@@ -144,8 +144,8 @@ export const createFrame = (scale: Scale): D3Callable => {
  * Draw line connection points.
  */
 export const createConectionPoints = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<any>, active?: boolean) => {
-    const { x, y, width, height } = base.getBounds();
+  return (group: D3Selection, control: Control<any>, active?: boolean) => {
+    const { x, y, width, height } = control.getBounds();
     const cx = x + width / 2;
     const cy = y + height / 2;
 
@@ -160,8 +160,8 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
         // TODO(burdon): Support drag from connection point to start line.
         // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
         //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        //   const data = base.createFromBounds(bounds, mod, commit);
-        //   base.onUpdate(data, commit);
+        //   const data = control.createFromBounds(bounds, mod, commit);
+        //   control.onUpdate(data, commit);
         // }));
       })
       .attr('cx', ({ p }) => cx + p[0] * width / 2)
@@ -175,8 +175,8 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
  * Draw control points.
  */
 export const createControlPoints = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<any>, active?: boolean, resizable?: boolean) => {
-    const points = active ? base.getControlPoints() : [];
+  return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
+    const points = active ? control.getControlPoints() : [];
 
     // eslint-disable indent
     group
@@ -187,8 +187,8 @@ export const createControlPoints = (scale: Scale): D3Callable => {
           .append('circle')
           .attr('class', 'frame-handle')
           .call(handleDrag<ControlPoint>((point, delta, mod, commit, target) => {
-            const data = base.updateControlPoint(point, delta, commit, target);
-            base.onUpdate(data, commit);
+            const data = control.updateControlPoint(point, delta, commit, target);
+            control.onUpdate(data, commit);
           }));
       })
       .attr('cursor', 'move')

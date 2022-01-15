@@ -17,8 +17,8 @@ import { crateText } from './text';
  * @param scale
  */
 const createEllipse = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<Ellipse>) => {
-    const data = base.data;
+  return (group: D3Selection, control: Control<Ellipse>) => {
+    const data = control.data;
     const { center, text } = data;
     const [cx, cy] = scale.model.toPoint(center);
     const [rx, ry] = scale.model.toValues([data.rx, data.ry]);
@@ -35,22 +35,22 @@ const createEllipse = (scale: Scale): D3Callable => {
       .call(selection => {
         // Select.
         // TODO(burdon): Generic.
-        if (base.onSelect) {
+        if (control.onSelect) {
           selection
             // https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
             .on('mouseover', () => {
-              base.onHover(true);
+              control.onHover(true);
             })
             .on('mouseout', () => {
-              base.onHover(false);
+              control.onHover(false);
             })
             .on('click', () => {
-              base.onSelect(true);
+              control.onSelect(true);
             });
         }
 
         // Move.
-        if (base.onUpdate) {
+        if (control.onUpdate) {
           selection
             .attr('cursor', 'move')
             .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
@@ -62,8 +62,8 @@ const createEllipse = (scale: Scale): D3Callable => {
                 y: FractionUtil.add(center.y, dy)
               };
 
-              base.onSelect(true);
-              base.onUpdate({
+              control.onSelect(true);
+              control.onUpdate({
                 center: commit ? scale.model.snapVertex(moved) : moved,
                 ...rest
               });

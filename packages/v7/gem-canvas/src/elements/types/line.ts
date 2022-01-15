@@ -46,8 +46,8 @@ const getPos = (cache, { id, position }: { id: ElementId, position?: string }) =
  * @param scale
  */
 const createLine = (cache: ElementGetter, scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<Line>) => {
-    let { pos1, pos2, source, target } = base.data;
+  return (group: D3Selection, control: Control<Line>) => {
+    let { pos1, pos2, source, target } = control.data;
     pos1 ||= getPos(cache, source);
     pos2 ||= getPos(cache, target);
 
@@ -83,7 +83,7 @@ const createLine = (cache: ElementGetter, scale: Scale): D3Callable => {
 
     group
       .selectAll('rect.line-touch')
-      .data(base.active ? [] : [bounds])
+      .data(control.active ? [] : [bounds])
       .join('rect')
       .attr('class', 'line-touch')
       // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
@@ -94,7 +94,7 @@ const createLine = (cache: ElementGetter, scale: Scale): D3Callable => {
       .attr('height', d => d.height)
       .attr('cursor', 'default')
       .on('click', function () {
-        base.onSelect(true);
+        control.onSelect(true);
       });
     // eslint-enable indent
   };

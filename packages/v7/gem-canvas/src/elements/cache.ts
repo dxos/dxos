@@ -39,18 +39,18 @@ export class ElementCache implements ElementGetter {
 
   updateElements (elements: ElementData<any>[], selection?: SelectionModel) {
     this._elements = elements.map(element => {
-      const base = this.getElement(element.id) ??
+      const control = this.getElement(element.id) ??
         createControl(element.type, this, this._scale, element, this._onRepaint, this._onSelect, this._onUpdate);
 
-      if (base) {
+      if (control) {
         if (element.id === selection?.element?.id) {
-          base.setState(selection.state);
+          control.setState(selection.state);
         } else {
-          base.setState(undefined);
+          control.setState(undefined);
         }
       }
 
-      return base;
+      return control;
     }).filter(Boolean);
   }
 }

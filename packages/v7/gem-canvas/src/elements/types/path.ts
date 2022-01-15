@@ -24,8 +24,8 @@ const curves: { [index: string]: any } = {
  * @param scale
  */
 const createPath = (scale: Scale): D3Callable => {
-  return (group: D3Selection, base: Control<Path>) => {
-    const { curve, closed, points } = base.data;
+  return (group: D3Selection, control: Control<Path>) => {
+    const { curve, closed, points } = control.data;
     const p = points.map(p => scale.model.toPoint(p));
     const c = curves[curve][closed ? 1 : 0];
     const line = c ? d3.line().curve(c) : d3.line();
@@ -39,10 +39,10 @@ const createPath = (scale: Scale): D3Callable => {
       .call(selection => {
         // Select.
         // TODO(burdon): Generic.
-        if (base.onSelect) {
+        if (control.onSelect) {
           selection
             .on('click', () => {
-              base.onSelect(true);
+              control.onSelect(true);
             })
             .on('dblclick', () => {
               // TODO(burdon): Add point between closest points.

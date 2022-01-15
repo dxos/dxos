@@ -157,8 +157,8 @@ export const Canvas = ({
   useEffect(() => {
     d3.select(svgRef.current)
       .on('click', (event) => {
-        const base = d3.select(event.target.parentNode).datum();
-        if (!base) {
+        const control = d3.select(event.target.parentNode).datum();
+        if (!control) {
           onSelect(undefined);
         }
       });
