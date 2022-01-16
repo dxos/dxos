@@ -28,16 +28,15 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Not working in book?
 const log = debug('gem:canvas:story');
-debug.enable('*');
-log('Starting...');
+debug.enable('gem:canvas:*,-*:debug');
+
+// TODO(burdon): Remove links when delete item that is source/target.
+// TODO(burdon): Line snap to connector (on create).
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
-
-// TODO(burdon): Line snap to connector (on create).
 
 // TODO(burdon): Merge line, polyline.
 // TODO(burdon): Create path (multi-point).
@@ -100,7 +99,7 @@ export const Primary = () => {
 
   const handleUpdate = (element: ElementData<any>, commit?: boolean) => {
     // TODO(burdon): Chance to reject commit.
-    log('update', element.type, element.id);
+    commit && log('update', element.type, element.id);
     setElements(elements => [...elements.filter(({ id }) => element.id !== id), element]);
     return true;
   };
@@ -125,8 +124,9 @@ export const Primary = () => {
   const handleDelete = (id: ElementId) => {
     setSelection(undefined);
     log('delete', id);
+    // TODO(burdon): Remove dangling links (or set point to current).
     setElements(elements => elements.filter(element => {
-      return element.id !== id
+      return element.id !== id;
     }));
 
     return true;
@@ -165,6 +165,8 @@ export const Primary = () => {
             setTool(undefined);
             setSelection(undefined);
             handleRepaint();
+            const updated = elements.map(({ id, type, ...rest }) => `${id}[${type}]: ${JSON.stringify(rest)}`);
+            log(`Elements (${elements.length}):\n${updated.join('\n')}`);
             break;
           }
 
@@ -182,7 +184,7 @@ export const Primary = () => {
           }
         }
       }));
-  }, []);
+  }, [elements]); // TODO(burdon): Since stale element (fix this).
 
   return (
     <FullScreen

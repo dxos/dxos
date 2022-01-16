@@ -12,6 +12,7 @@ export type ControlPoint = { i: number, point: Point }
 
 export interface ControlContext {
   scale: () => Scale
+  draggable: () => boolean
 }
 
 export interface ControlGetter {
@@ -75,7 +76,7 @@ export abstract class Control<T extends ElementDataType> {
 
   // TODO(burdon): Should be updated dynamically (to trigger SVG state change).
   get draggable () {
-    return true;
+    return this._context.draggable();
   }
 
   get element () {

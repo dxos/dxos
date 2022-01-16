@@ -7,9 +7,9 @@ import debug from 'debug';
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
-import { defaultScale, Scale } from '@dxos/gem-x';
+import { defaultScale, Scale, useStateRef } from '@dxos/gem-x';
 
-const log = debug('gem:canvas:canvas');
+const log = debug('gem:canvas:debug');
 
 import {
   Control,
@@ -89,15 +89,22 @@ export const Canvas = ({
   }
 
   // Context
+  // TODO(burdon): Strange but don't want to trigger new ControlManager.
+  const [, setTool, toolRef] = useStateRef(tool);
+  useEffect(() => setTool(tool), [tool]);
   const context = useMemo<ControlContext>(() => ({
-    scale: () => scale
+    scale: () => scale,
+    draggable: () => {
+      return toolRef.current === undefined;
+    }
   }), [scale]);
 
   // Controls.
   const controlsGroup = useRef<SVGSVGElement>();
   const controlManager = useMemo(() => {
+    // TODO(burdon): Handle repaint differently (via events).
     return new ControlManager(context, handleRepaint, handleSelect, onUpdate)
-  }, [context]);
+  }, []);
 
   //
   // Update cache.
@@ -111,7 +118,6 @@ export const Canvas = ({
   //
   useEffect(() => {
     log('paint');
-    console.log(log.enabled);
 
     // eslint-disable indent
     d3.select(controlsGroup.current)

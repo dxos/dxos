@@ -48,7 +48,7 @@ export const createKeyHandlers = (
           break;
         }
 
-        case '=': {
+        case '\\': {
           if (event.ctrlKey) {
             onAction({ action: 'reset' })
           }

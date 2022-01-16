@@ -35,7 +35,7 @@ const createHidden = (pos1: Point, pos2: Point) => {
 // TODO(burdon): Get connection point. If no position then auto-select.
 const getPos = (cache, { id, position }: { id: ElementId, position?: string }) => {
   const control: Control<any> = cache.getControl(id);
-  return control.getConnectionPoint();
+  return control?.getConnectionPoint();
 }
 
 /**
@@ -47,10 +47,13 @@ const getPos = (cache, { id, position }: { id: ElementId, position?: string }) =
  */
 const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<Line>) => {
-    // console.log(':::::::::', control.data);
     let { pos1, pos2, source, target } = control.data;
     pos1 ||= getPos(cache, source);
     pos2 ||= getPos(cache, target);
+    // Dangling reference.
+    if (!pos1 || !pos2) {
+      return;
+    }
 
     const [x1, y1] = scale.model.toPoint(pos1);
     const [x2, y2] = scale.model.toPoint(pos2);
@@ -144,7 +147,7 @@ export class LineControl extends Control<Line> {
     let { pos1, pos2, source, target } = this.data;
     pos1 ||= getPos(this.elements, source);
     pos2 ||= getPos(this.elements, target);
-    return [pos1, pos2].map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
+    return [pos1, pos2].filter(Boolean).map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
   }
 
   override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean, drop?: Control<any>) {
