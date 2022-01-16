@@ -13,15 +13,18 @@ const check = <T extends any>(value: T): T => value;
 const ids = [
   faker.datatype.uuid(),
   faker.datatype.uuid(),
+  faker.datatype.uuid(),
   faker.datatype.uuid()
 ];
+
+// TODO(burdon): Generate from graph.
 
 export const generator = (): ElementData<any>[] => [
   {
     id: ids[0],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: -6, y: -4, width: 4, height: 2 }),
+      bounds: Vector.toBounds({ x: -2, y: -1, width: 4, height: 2 }),
       text: 'DXOS'
     })
   },
@@ -29,18 +32,28 @@ export const generator = (): ElementData<any>[] => [
     id: ids[1],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: 2, y: -4, width: 4, height: 2 }),
-      text: 'ECHO'
+      bounds: Vector.toBounds({ x: -8, y: -1, width: 4, height: 2 }),
+      text: 'MESH'
     })
   },
   {
     id: ids[2],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: -12, y: -4, width: 4, height: 2 }),
+      bounds: Vector.toBounds({ x: 4, y: -1, width: 4, height: 2 }),
       text: 'HALO'
     })
   },
+  {
+    id: ids[3],
+    type: 'rect',
+    data: check<Rect>({
+      bounds: Vector.toBounds({ x: -2, y: 3, width: 4, height: 2 }),
+      text: 'ECHO'
+    })
+  },
+
+  /*
   {
     id: faker.datatype.uuid(),
     type: 'line',
@@ -63,7 +76,9 @@ export const generator = (): ElementData<any>[] => [
       pos2: { x: [-7, 1], y: [-3, 1] }
     })
   },
+  */
 
+  /*
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
@@ -133,4 +148,5 @@ export const generator = (): ElementData<any>[] => [
       closed: true
     })
   }
+  */
 ];

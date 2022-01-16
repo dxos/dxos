@@ -45,7 +45,7 @@
     "@types/d3": "^7.1.0",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
-    "faker": "^5.5.3",
+    "@fakerjs/faker": "^2.3.0",
     "jest": "^25.5.2",
     "ts-jest": "^27.1.2",
     "typescript": "~4.5.4"

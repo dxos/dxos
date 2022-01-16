@@ -46,12 +46,10 @@ export interface ControlConstructor<T extends ElementDataType> {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element#graphics_elements
  */
 export abstract class Control<T extends ElementDataType> {
+  // TODO(burdon): Combine state, capabilities, etc.
   // TODO(burdon): NOTE: Currently conflates updated data and updated state.
-  //  - Test if _data is undefined.
   private _modified = true;
-
   private _state = ControlState.NORMAL;
-
   private _hover = false;
 
   // Temporary data (during edit until commit).
@@ -118,6 +116,13 @@ export abstract class Control<T extends ElementDataType> {
 
   toString () {
     return `Element(${this.type}: ${this._element.id})`;
+  }
+
+  clear () {
+    this._data = undefined;
+    this._modified = false;
+    this._hover = false;
+    this._state = ControlState.NORMAL;
   }
 
   setState (state: ControlState) {

@@ -52,7 +52,7 @@
     "@types/d3": "^6.3.0",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
-    "faker": "^5.5.3",
+    "@fakerjs/faker": "^2.3.0",
     "jest": "^25.5.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

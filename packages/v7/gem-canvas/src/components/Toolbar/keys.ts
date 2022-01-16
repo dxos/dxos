@@ -8,7 +8,7 @@ import { getEventMod } from '../../elements';
 import { Tool } from '../../tools';
 import { D3Callable } from '../../types';
 
-export type ActionType = 'enter' | 'delete' | 'cancel' | 'tool' | 'debug'
+export type ActionType = 'enter' | 'delete' | 'cancel' | 'tool' | 'debug' | 'reset' | 'cut'
 
 export type Action = {
   action: ActionType
@@ -48,8 +48,24 @@ export const createKeyHandlers = (
           break;
         }
 
+        case '=': {
+          if (event.ctrlKey) {
+            onAction({ action: 'reset' })
+          }
+          break;
+        }
+
+        case 'x': {
+          if (event.metaKey) {
+            onAction({ action: 'cut' })
+          }
+          break;
+        }
+
         case 'd': {
-          onAction({ action: 'debug' });
+          if (event.ctrlKey) {
+            onAction({ action: 'debug' });
+          }
           break;
         }
 

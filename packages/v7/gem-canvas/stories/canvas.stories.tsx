@@ -20,6 +20,7 @@ import {
   Tool,
   Toolbar,
   createKeyHandlers,
+  useRepaint,
 } from '../src';
 import { generator } from './helpers';
 
@@ -29,7 +30,7 @@ export default {
 
 // TODO(burdon): Not working in book?
 const log = debug('gem:canvas:story');
-debug.enable('gem:canvas:*');
+debug.enable('*');
 log('Starting...');
 
 // TODO(burdon): Commit/update model (update/reset element._data).
@@ -80,6 +81,7 @@ export const Primary = () => {
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
   const [debug, setDebug, debugRef] = useStateRef(false);
+  const [repaint, handleRepaint] = useRepaint();
 
   // TODO(burdon): Randomizer.
   // useEffect(() => {
@@ -105,6 +107,7 @@ export const Primary = () => {
 
   const handleCreate = (type: ElementType, data: ElementDataType) => {
     setElements(elements => {
+      setSelection(undefined);
       const element = {
         id: faker.datatype.uuid(),
         type,
@@ -120,6 +123,7 @@ export const Primary = () => {
   }
 
   const handleDelete = (id: ElementId) => {
+    setSelection(undefined);
     log('delete', id);
     setElements(elements => elements.filter(element => {
       return element.id !== id
@@ -142,12 +146,25 @@ export const Primary = () => {
         switch (action) {
           case 'debug': {
             setDebug(!debugRef.current);
-            console.log(JSON.stringify(elements, undefined, 2));
             break;
           }
 
           case 'tool': {
             setTool(tool);
+            break;
+          }
+
+          case 'cut': {
+            setElements([]);
+            setTool(undefined);
+            setSelection(undefined);
+            break;
+          }
+
+          case 'reset': {
+            setTool(undefined);
+            setSelection(undefined);
+            handleRepaint();
             break;
           }
 
@@ -197,7 +214,8 @@ export const Primary = () => {
             onCreate={handleCreate}
             onDelete={handleDelete}
             options={{
-              debug
+              debug,
+              repaint
             }}
           />
         </SvgContainer>

@@ -3,10 +3,13 @@
 //
 
 import clsx from 'clsx';
+import debug from 'debug';
 import * as d3 from 'd3';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defaultScale, Scale } from '@dxos/gem-x';
+
+const log = debug('gem:canvas:canvas');
 
 import {
   Control,
@@ -21,6 +24,15 @@ import { Tool } from '../../tools';
 import { Cursor } from './Cursor';
 import { canvasStyles, debugStyles } from './styles';
 
+export const useRepaint = (deps?): [number, () => void] => {
+  const [repaint, setRepaint] = useState(Date.now());
+  useEffect(() => {
+    setRepaint(Date.now());
+  }, deps ?? []);
+
+  return [repaint, () => setRepaint(Date.now())];
+}
+
 export interface CanvasProps {
   svgRef: RefObject<SVGSVGElement>
   scale?: Scale
@@ -32,7 +44,8 @@ export interface CanvasProps {
   onCreate?: (type: ElementType, data: ElementDataType) => boolean
   onDelete?: (id: ElementId) => boolean
   options?: {
-    debug: boolean
+    debug?: boolean
+    repaint?: number // Set to Date.now() to force repaint.
   }
 }
 
@@ -60,18 +73,15 @@ export const Canvas = ({
   onUpdate,
   onCreate,
   onDelete,
-  options = {
-    debug: false
-  }
+  options
 }: CanvasProps) => {
-  const { debug } = options;
+  const { debug = false } = options ?? { debug: false };
+
+  // Refresh.
+  const [repaint, handleRepaint] = useRepaint([options.repaint]);
 
   // Markers.
   const markersGroup = useRef<SVGSVGElement>();
-
-  // Refresh.
-  const [repaint, setRepaint] = useState(Date.now());
-  const handleRepaint = () => setRepaint(Date.now());
 
   // TODO(burdon): Multi-select.
   const handleSelect = (element: ElementData<any>, edit?: boolean) => {
@@ -100,6 +110,9 @@ export const Canvas = ({
   // Render elements.
   //
   useEffect(() => {
+    log('paint');
+    console.log(log.enabled);
+
     // eslint-disable indent
     d3.select(controlsGroup.current)
       .selectAll('g.element')

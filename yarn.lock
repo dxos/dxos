@@ -622,6 +622,84 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
+"@fakerjs/age@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/age/-/age-2.1.1.tgz#7c0d76759b6c82887b3f8bace457999dd9cd8c20"
+  integrity sha512-9MQcaL86EbO43d3EjoSPJ4+Yu37zEex0hH+u33zNjm7dIIrr3mEzeFBUvAow9I0sR4oK7QbM1j2Sju+PvJGpDA==
+
+"@fakerjs/animal@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/animal/-/animal-2.1.1.tgz#b699824558eb21e78929aa533b1b8fd1a530b119"
+  integrity sha512-EYHvPqdr1kIFh+2tV0ht8cixik49lTeHX66mrEevGLkRj5obkXf0JXPVHBHcIecmTH3LpyDgR6z3dGNdnQn7PA==
+
+"@fakerjs/boolean@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/boolean/-/boolean-2.1.1.tgz#27bcc4e05b42b660310fffcee0b6efa58b34271c"
+  integrity sha512-OJWuAFs3QEZangHn8tvckr2E+sevjOVwzAfsuWDwDL+ymPNCMjvISvBDW6d7k3I3wgZhjaBLngdZfEl+bhisTQ==
+
+"@fakerjs/faker@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@fakerjs/faker/-/faker-2.3.0.tgz#4222c6217d709c75c8b57c4cf427294c7e5f6f13"
+  integrity sha512-1OwF2GZQTlbymkcmpvVrJgRvSCE7HJXykyDx5fazbrbnwuasOfWBInQFD+5WAsKPCQkb26AeJJ8AAoeGBpn33g==
+  dependencies:
+    "@fakerjs/age" "^2"
+    "@fakerjs/animal" "^2"
+    "@fakerjs/boolean" "^2"
+    "@fakerjs/float" "^2"
+    "@fakerjs/gender" "^2"
+    "@fakerjs/integer" "^2"
+    "@fakerjs/ip" "^2"
+    "@fakerjs/letter" "^2"
+    "@fakerjs/profession" "^2"
+    "@fakerjs/string" "^2"
+    "@fakerjs/superhero" "^1"
+    "@fakerjs/word" "^1"
+
+"@fakerjs/float@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/float/-/float-2.1.1.tgz#fd41073f836e48d6a66808f789373096d2603e8f"
+  integrity sha512-VUX+xCzS0PW2OLtgqVxnU4qqZ3tvzyOFLKRmZlptCAmpTg3jKUbqdt8agHPL8KUjQaXr4UxHdegYNg2R2z2hAw==
+
+"@fakerjs/gender@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/gender/-/gender-2.1.1.tgz#9f78f8537f42ddeed88bcfad0d1da0fd291b49c2"
+  integrity sha512-SRLEwh0UUGh9nHElxLSEGebxisk6Zf9uWTdkt533UWDQhFyQfUOkP8BqkpSBXB8MHUn28vMEuMkKr6FgEdNXRA==
+
+"@fakerjs/integer@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/integer/-/integer-2.1.1.tgz#cb9c349e7d42eba71648b6dd6e1cf8d60de85174"
+  integrity sha512-yAqbw7SpN1p6XX5JsgIN6xrpGG6Qdl14/9x5RMUG5TL+/LVySg2TberY0rWRyYsRVpOMOJ8hhMaaBAARtxdMwA==
+
+"@fakerjs/ip@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/ip/-/ip-2.1.1.tgz#d971dd7b8cd7627f1af32e93e9149b0690cfc3c4"
+  integrity sha512-oY8+k4c04YF4eLU8brNVUAr5jvmXuzKKCn+qCseDQMK8abDarAJ/c0ig1XpZRBfywUjKxQNGZrfAEvfYiFFdeQ==
+
+"@fakerjs/letter@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/letter/-/letter-2.1.1.tgz#456001b07f726f5fb30e6d8028addadf672fb040"
+  integrity sha512-+d8Uz+UWfk+ftH82BK9oTg5UDK/izoVSuMaJohc3+uz1edO7mawt1WyY7qZnbpa91FA0SQghSa9W0wZqw6Gc0A==
+
+"@fakerjs/profession@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/profession/-/profession-2.1.1.tgz#0f1ceb7578b51de0e60580e317f6ab1c1adafd8a"
+  integrity sha512-iTBDL5sla0GqcjWPrsUvd7wBK7lw/x3p6DDLNqUk1RyDoY7VHVhfspw5FuRZnapw68yoPvUarwf7aKsQFvzG9w==
+
+"@fakerjs/string@^2":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/string/-/string-2.1.1.tgz#8265fa408535e606c4a881347670e7285baed8d4"
+  integrity sha512-6EfjvoRh+b91MjP/ciOmLJmwtEAvjAqATgaZM1khwEO0azRtnmdXHuxTVl1o+Uvq4kP2zjXvuXqkIZdprNyPyg==
+
+"@fakerjs/superhero@^1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/superhero/-/superhero-1.1.1.tgz#239b8132ea3cab02d920fd4a21592ab01730c89b"
+  integrity sha512-NIIsit+wk17HfJPqjgWf6uMIqTUp3cnzPghXDhQvuQr+zkBd/h/J9oatql6yp5D7NAMYcPG6xu0eGvNGKTxWYg==
+
+"@fakerjs/word@^1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@fakerjs/word/-/word-1.0.1.tgz#a4937c4483d3f51dc17535701a2fc41f71ed1a27"
+  integrity sha512-ilyTmSakl4K/osCEE5kUdyAFXxZnmh3WLXlQHKU4ytbkHLHh67f+h25JVrrD+N3Dv7D/7gQlfj/YBH+QuERJlw==
+
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.5.0.tgz#1407967d4c6eecd7388f83acf1eaf4d0c6e58ef9"
@@ -4358,7 +4436,7 @@ clone@^1.0.2:
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
 
-clsx@^1.0.4, clsx@^1.1.0:
+clsx@^1.0.4, clsx@^1.1.0, clsx@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/clsx/-/clsx-1.1.1.tgz#98b3134f9abbdf23b2663491ace13c5c03a73188"
   integrity sha512-6/bPho624p3S2pMyvP5kKBPXnI3ufHLObBFCfgx+LkeR5lg2XYy2hqZqUf45ypD8COn2bhgGJSUE+l5dhNBieA==

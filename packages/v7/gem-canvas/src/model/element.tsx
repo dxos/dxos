@@ -4,8 +4,6 @@
 
 import { Bounds, Fraction, Vertex } from '@dxos/gem-x';
 
-// TODO(burdon): Generic (e.g., styles); Common opts (e.g., text).
-
 //
 // Circle
 //
@@ -59,9 +57,9 @@ export type Line = {
 export type CurveType = 'basis' | 'cardinal' | 'linear' | 'step'
 
 export type Path = {
+  points: Vertex[]
   curve?: CurveType
   closed?: boolean
-  points: Vertex[]
 }
 
 //
@@ -73,6 +71,14 @@ export type ElementId = string
 export type ElementDataType = Circle | Ellipse | Rect | Line | Path
 
 export type ElementType = 'circle' | 'ellipse' | 'rect' | 'line' | 'path'
+
+// TODO(burdon): Instead of inheritance separate type for className, style, etc.
+// TODO(burdon): Property for group (e.g., contain rect and text).
+
+export type Style = {
+  class?: string
+  style: any
+}
 
 /**
  * Data element.
