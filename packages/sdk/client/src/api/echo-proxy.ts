@@ -39,7 +39,10 @@ export class EchoProxy {
   }
 
   get networkManager () {
-    return this._serviceProvider.echo.networkManager;
+    if (this._serviceProvider instanceof ClientServiceHost) {
+      return this._serviceProvider.echo.networkManager;
+    }
+    throw new Error('Network Manager not available in service proxy.');
   }
 
   toString () {
@@ -124,13 +127,6 @@ export class EchoProxy {
 
   queryParties (): ResultSet<PartyProxy> {
     return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
-  }
-
-  /**
-   * @deprecated Use acceptInvitation instead.
-   */
-  async joinParty (...args: Parameters<ECHO['joinParty']>) {
-    return this._serviceProvider.echo.joinParty(...args);
   }
 
   /**

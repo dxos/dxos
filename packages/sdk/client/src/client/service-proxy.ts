@@ -32,9 +32,4 @@ export class ClientServiceProxy implements ClientServiceProvider {
   async close () {
     this._client.close();
   }
-
-  get echo () {
-    throw new Error('Service proxy does not expose ECHO directly.');
-    return null as any;
-  }
 }

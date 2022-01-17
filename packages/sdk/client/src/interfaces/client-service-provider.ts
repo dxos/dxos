@@ -36,10 +36,4 @@ export interface ClientServiceProvider {
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
 
   close(): Promise<void>
-
-  // TODO(dmaretskyi): Remove and rely on services.
-  /**
-   * @deprecated
-   */
-  echo: ECHO
 }
