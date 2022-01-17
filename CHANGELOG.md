@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.19.12](https://www.github.com/dxos/protocols/compare/v2.19.11...v2.19.12) (2022-01-17)
+
+
+### Features
+
+* Delete items. ([#818](https://www.github.com/dxos/protocols/issues/818)) ([205501c](https://www.github.com/dxos/protocols/commit/205501cfd8e52c75a5826a03adff1966ce94d59a))
+
+
+### Bug Fixes
+
+* Margin for input in dialog ([#830](https://www.github.com/dxos/protocols/issues/830)) ([ec605ab](https://www.github.com/dxos/protocols/commit/ec605ab8302fa556264c60744bae4f4a89a0fdb9))
+
 ### [2.19.11](https://www.github.com/dxos/protocols/compare/v2.19.10...v2.19.11) (2022-01-14)
 
 
