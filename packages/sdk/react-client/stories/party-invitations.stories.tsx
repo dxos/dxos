@@ -157,7 +157,8 @@ const PartyJoinContainer = () => {
     try {
       const invitation = decodeInvitation(invitationCode);
       if (invitation.type === InvitationDescriptorType.OFFLINE) {
-        const party = await client.echo.joinParty(invitation);
+        const acceptedInvitation = await client.echo.acceptInvitation(invitation)
+        const party = await acceptedInvitation.wait();
         await party.open();
         setStatus({ party: party.key.toHex() });
       } else {
