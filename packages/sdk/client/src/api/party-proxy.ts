@@ -17,6 +17,11 @@ import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest } from './invitations';
+import { PublicKey } from '@dxos/crypto';
+
+export interface CreationInvitationOptions {
+  inviteeKey?: PublicKey
+}
 
 export class PartyProxy {
   private readonly _database?: Database;
@@ -125,10 +130,8 @@ export class PartyProxy {
    * The invitation flow is protected by a generated pin code.
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
    */
-  async createInvitation (): Promise<InvitationRequest> {
+  async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key });
     return new Promise((resolve, reject) => {
       const connected = new Event();

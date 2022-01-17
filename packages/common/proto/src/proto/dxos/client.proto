@@ -132,6 +132,9 @@ message SubscribePartiesResponse {
 
 message CreateInvitationRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
+
+  /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
+  dxos.halo.keys.PubKey inviteeKey = 2;
 }
 
 message PartyActivationOptions {
