@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
+
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
 
@@ -9,14 +11,24 @@ import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection, SelectionResult } from './selection';
 
+const log = debug('dxos:echo-db:items:item');
+
 /**
  * A globally addressable data item.
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
  */
 export class Item<M extends Model> extends Entity<M> {
-  // Parent item (or null if this item is a root item).
+  /**
+   * Parent item (or null if this item is a root item).
+   */
   private _parent: Item<any> | null = null;
+
+  /**
+   * Denotes soft delete.
+   * Item can be restored until garbage collection (e.g., via snapshots).
+   */
+  private _deleted = false;
 
   /**
    * Managed set of child items.
@@ -60,7 +72,11 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   get readOnly () {
-    return !this._writeStream;
+    return !this._writeStream || this._deleted;
+  }
+
+  get deleted () {
+    return this._deleted;
   }
 
   get parent (): Item<any> | null {
@@ -88,10 +104,61 @@ export class Item<M extends Model> extends Entity<M> {
     return new SelectionResult(selection, selector);
   }
 
+  /**
+   * Delete the item.
+   */
+  // TODO(burdon): Referential integrity (e.g., delete/hide children?)
+  // TODO(burdon): Queries should skip deleted items (unless requested).
+  // TODO(burdon): Garbage collection (snapshots should drop deleted items).
+  // TODO(burdon): Prevent updates to model if deleted.
+  // TODO(burdon): If deconstructed (itemManager.deconstructItem) then how to query?
+  async delete () {
+    if (!this._writeStream) {
+      throw new Error(`Item is read-only: ${this.id}`);
+    }
+    if (this.deleted) {
+      return;
+    }
+
+    const onUpdate = this._onUpdate.waitFor(() => this.deleted);
+
+    await this._writeStream.write({
+      itemId: this.id,
+      itemMutation: {
+        action: ItemMutation.Action.DELETE
+      }
+    });
+
+    await onUpdate;
+  }
+
+  /**
+   * Restore deleted item.
+   */
+  async restore () {
+    if (!this._writeStream) {
+      throw new Error(`Item is read-only: ${this.id}`);
+    }
+    if (!this.deleted) {
+      throw new Error(`Item was note delted: ${this.id}`);
+    }
+
+    const onUpdate = this._onUpdate.waitFor(() => !this.deleted);
+
+    await this._writeStream.write({
+      itemId: this.id,
+      itemMutation: {
+        action: ItemMutation.Action.RESTORE
+      }
+    });
+
+    await onUpdate;
+  }
+
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
-    if (!this._writeStream) {
-      throw new Error(`Read-only model: ${this.id}`);
+    if (!this._writeStream || this.readOnly) {
+      throw new Error(`Item is read-only: ${this.id}`);
     }
 
     // Wait for mutation below to be processed.
@@ -109,12 +176,27 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   /**
-   * Process a mutation on this item. Package-private.
-   * @private
+   * Process a mutation from the stream.
+   * @private (Package-private).
    */
   _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    const { parentId } = mutation;
+    log('_processMutation %s', JSON.stringify(mutation));
 
+    const { action, parentId } = mutation;
+
+    switch (action) {
+      case ItemMutation.Action.DELETE: {
+        this._deleted = true;
+        break;
+      }
+
+      case ItemMutation.Action.RESTORE: {
+        this._deleted = false;
+        break;
+      }
+    }
+
+    // TODO(burdon): Convert to Action.
     if (parentId) {
       const parent = getItem(parentId);
       this._updateParent(parent);
@@ -123,6 +205,10 @@ export class Item<M extends Model> extends Entity<M> {
     this._onUpdate.emit(this);
   }
 
+  /**
+   * Atomically update parent/child relationship.
+   * @param parent
+   */
   private _updateParent (parent: Item<any> | null | undefined) {
     if (this._parent) {
       this._parent._children.delete(this);

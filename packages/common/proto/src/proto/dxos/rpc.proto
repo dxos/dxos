@@ -50,8 +50,8 @@ message Error {
 
 message MessageTrace {
   enum Direction {
-    INCOMING = 1;
-    OUTGOING = 2;
+    INCOMING = 0;
+    OUTGOING = 1;
   }
 
   Direction direction = 1;

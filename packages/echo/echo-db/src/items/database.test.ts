@@ -11,6 +11,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
+import { ItemFilterDeleted } from './item-manager';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
@@ -35,7 +36,6 @@ describe('Database', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
       const backend = await setupBackend(modelFactory);
       const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
-
       return { backend, frontend };
     };
 
@@ -77,7 +77,6 @@ describe('Database', () => {
       const { frontend: database } = await setup();
 
       const item = await database.createItem({ model: ObjectModel });
-
       expect(item.id).not.toBeUndefined();
       expect(item.model).toBeInstanceOf(ObjectModel);
 
@@ -90,11 +89,9 @@ describe('Database', () => {
       const { frontend: database } = await setup();
 
       const item = await database.createItem({ model: ObjectModel });
-
       expect(item.model.getProperty('foo')).toBeUndefined();
 
       await item.model.setProperty('foo', 'bar');
-
       expect(item.model.getProperty('foo')).toEqual('bar');
     });
 
@@ -121,6 +118,19 @@ describe('Database', () => {
 
       expect(parent.children).toHaveLength(1);
       expect(parent.children[0] === child).toBeTruthy();
+    });
+
+    test('delete & restore an item', async () => {
+      const { backend: database } = await setup(); // TODO(dmaretskyi): Make work in remote mode.
+
+      const item = await database.createItem({ model: ObjectModel });
+      expect(item.deleted).toBeFalsy();
+
+      await item.delete();
+      expect(item.deleted).toBeTruthy();
+
+      await item.restore();
+      expect(item.deleted).toBeFalsy();
     });
 
     test('link', async () => {
@@ -185,6 +195,43 @@ describe('Database', () => {
         await frontendItem.model.update.waitForCondition(() => frontendItem.model.messages.length === 2);
 
         expect(frontendItem.model.messages).toHaveLength(2);
+      });
+    });
+
+    describe('queries', () => {
+      test('query deleted items', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const database = await setupBackend(modelFactory);
+
+        await Promise.all(Array.from({ length: 10 }).map(() =>
+          database.createItem({ model: TestListModel })
+        ));
+
+        // TODO(burdon): Trigger result on initial subscription.
+        const result = database.select(s => s.items);
+        const items = result.getValue();
+        expect(items).toHaveLength(10);
+
+        const update = result.update.waitForCount(1);
+        await items[0].delete();
+        await update;
+
+        {
+          const items = result.getValue();
+          expect(items).toHaveLength(9);
+        }
+
+        {
+          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED });
+          const items = result.getValue();
+          expect(items).toHaveLength(10);
+        }
+
+        {
+          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          const items = result.getValue();
+          expect(items).toHaveLength(1);
+        }
       });
     });
   });

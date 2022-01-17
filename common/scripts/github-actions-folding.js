@@ -6,13 +6,20 @@
 
 const childProcess = require('child_process');
 const readline = require('readline');
+const fs = require('fs');
+
+try {
+  fs.rmSync('./failure-summary.log');
+} catch{}
 
 const [cmd, ...args] = process.argv.slice(2);
 
-const cspr = childProcess.spawn(cmd, args, { shell: true, stdio: ['ignore', 'pipe', 'inherit']})
+const cspr = childProcess.spawn(cmd, args, { shell: true, stdio: ['ignore', 'pipe', 'pipe']})
 const rl = readline.createInterface({ input: cspr.stdout });
+const rlErr = readline.createInterface({ input: cspr.stderr });
 
 let groupStarted = false;
+let linesInCurrentGroup = [];
 
 rl.on('line', line => {
   if(line.includes('==[')) {
@@ -21,8 +28,28 @@ rl.on('line', line => {
     }
     groupStarted = true
     process.stdout.write(`::group::${line}\n`)
+
+    linesInCurrentGroup = [];
   } else {
     process.stdout.write(line + '\n')
+  }
+
+  linesInCurrentGroup.push(line);
+})
+
+rlErr.on('line', line => {
+  process.stderr.write(line + '\n');
+
+  linesInCurrentGroup.push(line);
+
+  if(line.trim().endsWith('failed to build.')) {
+      try {
+        fs.appendFileSync('./failure-summary.log', linesInCurrentGroup.join('\n') + '\n');
+      } catch(err) {
+        console.error('Error in log script')  
+        console.error(err)  
+      }
+      linesInCurrentGroup = []
   }
 })
 

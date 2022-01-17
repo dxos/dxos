@@ -127,6 +127,7 @@ describe('Item demuxer', () => {
         modelType: TestModel.meta.type
       }
     }));
+
     await itemManager.queryItems().update.waitForCount(1);
     const items = itemManager.queryItems().value;
     expect(items).toHaveLength(1);
@@ -198,6 +199,7 @@ describe('Item demuxer', () => {
         modelType: ObjectModel.meta.type
       }
     }));
+
     {
       await itemManager.queryItems().update.waitForCount(1);
       const items = itemManager.queryItems().value;

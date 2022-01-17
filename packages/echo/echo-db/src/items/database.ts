@@ -12,7 +12,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
 import { Item } from './item';
-import { ItemManager } from './item-manager';
+import { ItemFilter, ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
 
@@ -155,10 +155,11 @@ export class Database {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
-   * @param [selector] {SelectFilter}
+   * @param selector {SelectFilter}
+   * @param [filter]
    */
-  select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
-    const result = this._itemManager.queryItems({});
+  select<T> (selector: (selection: Selection<Item<any>>) => T, filter: ItemFilter = {}): SelectionResult<T> {
+    const result = this._itemManager.queryItems(filter);
     const selection = new Selection(() => result.value, result.update.discardParameter());
     return new SelectionResult(selection, selector);
   }
