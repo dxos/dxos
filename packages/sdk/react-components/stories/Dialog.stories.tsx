@@ -16,7 +16,7 @@ import {
 import { Dialog, DialogProps } from '../src';
 
 export default {
-  title: 'react-components/CustomizableDialog'
+  title: 'react-components/Dialog'
 };
 
 //
@@ -81,6 +81,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
             <TextField
               fullWidth
               autoFocus
+              label='Name'
               value={value}
               onChange={event => setValue(event.target.value)}
             />
@@ -132,14 +133,7 @@ export const Primary = () => {
     <Box>
       <Button onClick={reset}>Reset</Button>
 
-      <Dialog
-        {...dialogProps}
-        sx={{
-          '.MuiDialog-paper': {
-            minHeight: 200
-          }
-        }}
-      />
+      <Dialog {...dialogProps} />
     </Box>
   );
 };
