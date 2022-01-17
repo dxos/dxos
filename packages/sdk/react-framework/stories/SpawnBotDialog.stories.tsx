@@ -19,11 +19,7 @@ import {
 import { FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
-import {
-  ErrorBoundary,
-  FrameworkContextProvider,
-  SpawnBotDialog
-} from '../src';
+import { ErrorBoundary, SpawnBotDialog } from '../src';
 import { createMockRegistryWithBots } from '../src/testing';
 import { Column } from './helpers';
 
@@ -135,11 +131,9 @@ export const Primary = () => {
           <ClientProvider config={clientConfig}>
             <RegistryProvider registry={mockRegistry}>
               <ProfileInitializer>
-                <FrameworkContextProvider>
-                  <Column>
-                    <User />
-                  </Column>
-                </FrameworkContextProvider>
+                <Column>
+                  <User />
+                </Column>
               </ProfileInitializer>
             </RegistryProvider>
           </ClientProvider>

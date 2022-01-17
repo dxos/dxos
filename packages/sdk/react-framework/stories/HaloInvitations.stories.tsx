@@ -11,12 +11,7 @@ import {
 } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
-import {
-  ErrorBoundary,
-  FrameworkContextProvider,
-  HaloSharingDialog,
-  JoinHaloDialog
-} from '../src';
+import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src';
 import { Column } from './helpers';
 
 export default {
@@ -88,30 +83,26 @@ const User = ({ sharing, joining, remote }: UserProps) => {
 export const Primary = () => {
   return (
     <FullScreen>
-      <FrameworkContextProvider>
-        <ErrorBoundary>
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-around'
-          }}>
-            <ClientProvider>
-              <ProfileInitializer>
-                <FrameworkContextProvider>
-                  <Column>
-                    <User sharing />
-                  </Column>
-                </FrameworkContextProvider>
-              </ProfileInitializer>
-            </ClientProvider>
-
-            <ClientProvider>
+      <ErrorBoundary>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-around'
+        }}>
+          <ClientProvider>
+            <ProfileInitializer>
               <Column>
-                <User joining />
+                <User sharing />
               </Column>
-            </ClientProvider>
-          </Box>
-        </ErrorBoundary>
-      </FrameworkContextProvider>
+            </ProfileInitializer>
+          </ClientProvider>
+
+          <ClientProvider>
+            <Column>
+              <User joining />
+            </Column>
+          </ClientProvider>
+        </Box>
+      </ErrorBoundary>
     </FullScreen>
   );
 };
@@ -126,20 +117,18 @@ export const Remote = () => {
   return (
     <FullScreen>
       <p>Caution: This story works with Wallet extension. It does not work when embedded in an iframe. Use story directly with /#/__story/ prefix.</p>
-      <FrameworkContextProvider>
-        <ErrorBoundary>
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-around'
-          }}>
-            <ClientProvider config={remoteConfig}>
-              <Column>
-                <User remote sharing joining />
-              </Column>
-            </ClientProvider>
-          </Box>
-        </ErrorBoundary>
-      </FrameworkContextProvider>
+      <ErrorBoundary>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-around'
+        }}>
+          <ClientProvider config={remoteConfig}>
+            <Column>
+              <User remote sharing joining />
+            </Column>
+          </ClientProvider>
+        </Box>
+      </ErrorBoundary>
     </FullScreen>
   );
 };

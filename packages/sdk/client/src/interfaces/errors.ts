@@ -9,3 +9,9 @@ export class InvalidConfigurationError extends DXOSError {
     super('INVALID_CONFIGURATION', message);
   }
 }
+
+export class RemoteServiceConenctionTimeout extends DXOSError {
+  constructor (message?: string) {
+    super('REMOTE_SERVICE_CONNECTION_TIMEOUT', message);
+  }
+}

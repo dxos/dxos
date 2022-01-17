@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './useSecretGenerator';
+export * from './usePartyInvitations';
 export * from './useSecretProvider';
