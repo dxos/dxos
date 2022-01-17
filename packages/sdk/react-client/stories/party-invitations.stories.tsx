@@ -72,8 +72,8 @@ const PartyInvitationContainer = () => {
     setImmediate(async () => {
       resetInvitations();
       if (contact) {
-        const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!));
-        setInvitationCode(encodeInvitation(invitation));
+        const invitation = await client.echo.getParty(partyKey!)!.createInvitation({ inviteeKey: PublicKey.fromHex(contact!) });
+        setInvitationCode(encodeInvitation(invitation.descriptor));
       } else {
         const invitation = await client.echo.createInvitation(partyKey!);
         invitation.connected.on(() => setPin(invitation.secret.toString()));

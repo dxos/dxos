@@ -78,7 +78,7 @@ export const Peers = () => {
       const { encodedInvitation, secret } = JSON.parse(invitationText);
       const invitation = client.echo.acceptInvitation(decodeInvitation(encodedInvitation));
       invitation.authenticate(Buffer.from(secret));
-      const party = await invitation.wait();
+      const party = await invitation.getParty();
       setParty(party);
     };
 
