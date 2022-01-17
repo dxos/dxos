@@ -8,8 +8,8 @@ import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame } from '../frame';
-import { crateText } from './text';
+import { createConectionPoints, createFrame, getConnectionPoint2 } from '../frame';
+import { createText } from './text';
 
 /**
  * Renderer.
@@ -59,7 +59,7 @@ const createEllipse = (scale: Scale): D3Callable => {
       .attr('ry', ry)
 
     group
-      .call(crateText({ cx, cy, text }));
+      .call(createText({ center: [cx, cy], text }));
     // eslint-enable indent
   };
 };
@@ -123,6 +123,7 @@ export class EllipseControl extends Control<Ellipse> {
   }
 
   getConnectionPoint (handle?: string): Vertex {
-    return this.data.center;
+    const point = handle ? getConnectionPoint2(this.data.center, this.data.rx, this.data.ry, handle) : undefined;
+    return point ?? this.data.center;
   }
 }

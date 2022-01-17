@@ -36,7 +36,7 @@ export const useRepaint = (deps?): [number, () => void] => {
 export interface CanvasProps {
   svgRef: RefObject<SVGSVGElement>
   scale?: Scale
-  tool: Tool
+  tool?: Tool
   elements?: ElementData<any>[]
   selection?: SelectionModel
   onSelect?: (selection: SelectionModel) => void

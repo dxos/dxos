@@ -9,7 +9,7 @@ import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
 import { createConectionPoints, createFrame, getConnectionPoint } from '../frame';
-import { crateText } from './text';
+import { createText } from './text';
 
 /**
  * Renderer.
@@ -60,7 +60,7 @@ const createRect = (scale: Scale): D3Callable => {
 
     const [cx, cy] = Screen.center({ x, y, width, height });
     group
-      .call(crateText({ cx, cy, text, editable: control.editing }));
+      .call(createText({ center: [cx, cy], text, editable: control.editing }));
     // eslint-enable indent
   };
 };
