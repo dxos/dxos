@@ -41,12 +41,12 @@ export type Line = {
   source: {
     pos?: Vertex
     id?: ElementId
-    position?: string // E.g., 'w', 'wn', 'ws' (12 points).
+    handle?: string // E.g., 'w', 'wn', 'ws' (12 points).
   }
   target: {
     pos?: Vertex
     id?: ElementId
-    position?: string
+    handle?: string
   }
 }
 

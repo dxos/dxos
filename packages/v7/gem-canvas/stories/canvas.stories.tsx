@@ -79,7 +79,7 @@ export const Primary = () => {
   const [elements, setElements] = useState<ElementData<any>[]>(() => generator());
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
-  const [debug, setDebug, debugRef] = useStateRef(true);
+  const [debug, setDebug, debugRef] = useStateRef(false);
   const [repaint, handleRepaint] = useRepaint();
 
   // TODO(burdon): Randomizer.

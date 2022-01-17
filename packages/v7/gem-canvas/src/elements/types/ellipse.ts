@@ -90,13 +90,11 @@ export class EllipseControl extends Control<Ellipse> {
 
   type = 'ellipse' as ElementType;
 
-  override drawable (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._connectors, group.datum(), !this.selected && this.hover);
-      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
-    };
-  }
+  override drawable: D3Callable = group => {
+    group.call(this._main, group.datum());
+    group.call(this._connectors, group.datum(), !this.selected && this.hover);
+    group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+  };
 
   override getBounds (): ScreenBounds {
     const { center: { x, y }, rx, ry } = this.data;
@@ -124,7 +122,7 @@ export class EllipseControl extends Control<Ellipse> {
     }, commit);
   }
 
-  getConnectionPoint (): Vertex {
+  getConnectionPoint (handle?: string): Vertex {
     return this.data.center;
   }
 }

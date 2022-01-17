@@ -32,7 +32,7 @@ export const generator = (): ElementData<any>[] => [
     id: ids[1],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: -8, y: -1, width: 4, height: 2 }),
+      bounds: Vector.toBounds({ x: -10, y: -1, width: 4, height: 2 }),
       text: 'MESH'
     })
   },
@@ -40,7 +40,7 @@ export const generator = (): ElementData<any>[] => [
     id: ids[2],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: 4, y: -1, width: 4, height: 2 }),
+      bounds: Vector.toBounds({ x: 6, y: -1, width: 4, height: 2 }),
       text: 'HALO'
     })
   },
@@ -48,7 +48,7 @@ export const generator = (): ElementData<any>[] => [
     id: ids[3],
     type: 'rect',
     data: check<Rect>({
-      bounds: Vector.toBounds({ x: -2, y: 3, width: 4, height: 2 }),
+      bounds: Vector.toBounds({ x: -2, y: 5, width: 4, height: 2 }),
       text: 'ECHO'
     })
   },
@@ -58,35 +58,12 @@ export const generator = (): ElementData<any>[] => [
     type: 'line',
     data: check<Line>({
       source: {
-        id: ids[0]
+        id: ids[0],
+        handle: 'w'
       },
       target: {
-        id: ids[1]
-      }
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      source: {
-        pos: { x: [-1, 1], y: [8, 1] }
-      },
-      target: {
-        pos: { x: [2, 1], y: [7, 1] }
-      }
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      source: {
-        pos: { x: [3, 1], y: [10, 1] }
-      },
-      target: {
-        pos: { x: [1, 1], y: [9, 1] }
+        id: ids[1],
+        handle: 'e'
       }
     })
   },

@@ -62,12 +62,10 @@ export class PathControl extends Control<Path> {
 
   type = 'path' as ElementType;
 
-  override drawable (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);
-    };
-  }
+  override drawable: D3Callable = group => {
+    group.call(this._main, group.datum());
+    group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);
+  };
 
   override getControlPoints (): ControlPoint[] {
     const { points } = this.data;

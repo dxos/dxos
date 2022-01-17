@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { Modifiers, ScreenBounds, Point, Scale } from '@dxos/gem-x';
+import { Bounds, FractionUtil, Modifiers, Point, Scale, Screen, ScreenBounds, Vector, Vertex } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { Control, ControlPoint } from './control';
@@ -15,10 +15,10 @@ import { getEventMod } from './drag';
 // https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
 
 const FrameProps = {
-  handleRadius: 7
+  handleRadius: 9
 };
 
-type Handle = { id: string, p: Point, cursor: string }
+export type Handle = { id: string, p: Point, cursor?: string }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
 
@@ -33,7 +33,12 @@ const handles: Handle[] = [
   { id: 'nw-resize', p: [-1, 1], cursor: 'nwse-resize' }
 ];
 
-const connectionHandles = handles.filter(({ p: [x, y] }) => Math.abs(x + y) === 1);
+const connectionHandles: Handle[] = [
+  { id: 'n', p: [0, 1] },
+  { id: 'e', p: [1, 0] },
+  { id: 's', p: [0, -1] },
+  { id: 'w', p: [-1, 0] },
+]
 
 /**
  * Compute updated bounds by dragging handles.
@@ -69,8 +74,14 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
  * Handle drag handles.
  * @param onUpdate
  */
-const handleDrag = <T extends any>(
-  onUpdate: (handle: T, delta: Point, mod: Modifiers, commit?: boolean, target?: Control<any>) => void
+const handleDrag = <T extends any>(onUpdate: (
+  handle: T,
+  delta: Point,
+  mod: Modifiers,
+  commit?: boolean,
+  connection?: Control<any>,
+  connectionHandle?: string
+  ) => void
 ): D3Callable => {
   let start: Point;
   let subject: T;
@@ -93,12 +104,13 @@ const handleDrag = <T extends any>(
       d3.select(this).style('pointer-events', undefined);
 
       // Get drop target.
-      // const handle = d3.select(event.sourceEvent.target).datum();
+      const targetHandle = d3.select(event.sourceEvent.target).datum() as Handle;
       const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
 
       const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
-      onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod, true, target);
+      const delta: Point = [current[0] - start[0], current[1] - start[1]];
+      onUpdate(subject, delta, mod, true, target, targetHandle?.id);
     });
 };
 
@@ -145,9 +157,9 @@ export const createFrame = (scale: Scale): D3Callable => {
  */
 export const createConectionPoints = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean) => {
-    const { x, y, width, height } = control.getBounds();
-    const cx = x + width / 2;
-    const cy = y + height / 2;
+    const bounds = control.getBounds();
+    const [cx, cy] = Screen.center(bounds);
+    const { width, height } = bounds;
 
     // eslint-disable indent
     group
@@ -171,10 +183,20 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
   };
 };
 
+export const getConnectionPoint = (bounds: Bounds, handleId: string): Vertex => {
+  const { p } = connectionHandles.find(({ id }) => id === handleId);
+  const { x: cx, y: cy } = Vector.center(bounds);
+  const { width, height } = bounds;
+
+  return {
+    x: FractionUtil.add(cx, FractionUtil.multiply(FractionUtil.toFraction(p[0]), FractionUtil.multiply(width, [1, 2]))),
+    y: FractionUtil.add(cy, FractionUtil.multiply(FractionUtil.toFraction(p[1]), FractionUtil.multiply(height, [1, 2])))
+  };
+};
+
 /**
  * Draw control points.
  */
-// TODO(burdon): Rename (not control).
 export const createControlPoints = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
     const points = active ? control.getControlPoints() : [];
@@ -187,8 +209,8 @@ export const createControlPoints = (scale: Scale): D3Callable => {
         return enter
           .append('circle')
           .attr('class', 'frame-handle')
-          .call(handleDrag<ControlPoint>((point, delta, mod, commit, target) => {
-            const data = control.updateControlPoint(point, delta, commit, target);
+          .call(handleDrag<ControlPoint>((point, delta, mod, commit, connection, connectionHandle) => {
+            const data = control.updateControlPoint(point, delta, commit, connection, connectionHandle);
             control.onUpdate(data, commit);
           }));
       })

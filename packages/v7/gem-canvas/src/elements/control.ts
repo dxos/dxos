@@ -177,7 +177,7 @@ export abstract class Control<T extends ElementDataType> {
 
   draw () {
     this._modified = false;
-    return this.drawable();
+    return this.drawable;
   }
 
   abstract readonly type: ElementType;
@@ -185,8 +185,7 @@ export abstract class Control<T extends ElementDataType> {
   /**
    * Callable renderer.
    */
-  // TODO(burdon): Make property (not function called each time).
-  abstract drawable (): D3Callable;
+  abstract drawable: D3Callable;
 
   /**
    * Create bounding box from data.
@@ -225,18 +224,26 @@ export abstract class Control<T extends ElementDataType> {
 
   /**
    * Update referenced point.
-   * @param point
-   * @param delta
-   * @param commit
+   * @param point             Point being updated.
+   * @param delta             Dragged delta.
+   * @param commit            Commit when released.
+   * @param connection        Element to connect to.
+   * @param connectionHandle  Element's connection handle.
    */
-  updateControlPoint (point: ControlPoint, delta: Point, commit?: boolean, target?: Control<any>): T {
+  updateControlPoint (
+    point: ControlPoint,
+    delta: Point,
+    commit?: boolean,
+    connection?: Control<any>,
+    connectionHandle?: string
+  ): T {
     throw new Error();
   }
 
   /**
    * Get connection vertex for line connections.
    */
-  getConnectionPoint (): Vertex {
+  getConnectionPoint (handle?: string): Vertex {
     return undefined;
   }
 }

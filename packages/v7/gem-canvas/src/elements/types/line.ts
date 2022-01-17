@@ -45,6 +45,7 @@ const createHidden = (pos1: Point, pos2: Point) => {
 const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<Line>) => {
     let { source, target } = control.data;
+
     const pos1 = getPos(cache, source);
     const pos2 = getPos(cache, target);
 
@@ -101,14 +102,14 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
 };
 
 // TODO(burdon): Get other point (or approximation) to determine which connection point.
-// TODO(burdon): Get connection point. If no position then auto-select.
-const getPos = (cache, { pos, id, position }: { pos?: Vertex, id?: ElementId, position?: string } = {}): Vertex => {
+// TODO(burdon): If no position then auto-select.
+const getPos = (cache, { pos, id, handle }: { pos?: Vertex, id?: ElementId, handle?: string } = {}): Vertex => {
   if (pos) {
     return pos;
   }
 
   const control: Control<any> = cache.getControl(id);
-  return control?.getConnectionPoint();
+  return control?.getConnectionPoint(handle);
 };
 
 /**
@@ -134,14 +135,12 @@ export class LineControl extends Control<Line> {
   _handles = createControlPoints(this.scale);
   _main = createLine(this.elements, this.scale);
 
-  type = 'line' as ElementType;
+  override type = 'line' as ElementType;
 
-  override drawable (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);
-    };
-  }
+  override drawable: D3Callable = group => {
+    group.call(this._main, group.datum());
+    group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);
+  };
 
   override createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): Line {
     return valid({
@@ -161,7 +160,13 @@ export class LineControl extends Control<Line> {
     return [pos1, pos2].filter(Boolean).map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
   }
 
-  override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean, drop?: Control<any>) {
+  override updateControlPoint (
+    { i, point }: ControlPoint,
+    delta: Point,
+    commit?: boolean,
+    connection?: Control<any>,
+    connectionHandle?: string
+  ) {
     const { x: dx, y: dy } = this.scale.screen.toVertex(delta);
     let { source, target, ...rest } = this.element.data;
     const pos1 = getPos(this.elements, source);
@@ -171,9 +176,15 @@ export class LineControl extends Control<Line> {
     // Connect.
     if (commit) {
       if (i === 0) {
-        source = { id: drop?.element?.id };
+        source = {
+          id: connection?.element?.id,
+          handle: connectionHandle
+        };
       } else {
-        target = { id: drop?.element?.id };
+        target = {
+          id: connection?.element?.id,
+          handle: connectionHandle
+        };
       }
     }
 

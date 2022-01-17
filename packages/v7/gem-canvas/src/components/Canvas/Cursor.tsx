@@ -18,7 +18,7 @@ import {
   ControlState,
   SelectionModel
 } from '../../elements';
-import { ElementDataType, ElementType } from '../../model';
+import { ElementDataType, ElementId, ElementType } from '../../model';
 
 export interface CursorProps {
   svgRef: RefObject<SVGSVGElement>
@@ -86,23 +86,19 @@ export const Cursor = ({
       p2: Point,
       mod: Modifiers,
       commit: boolean,
-      source: Control<any>,
-      target: Control<any>
+      source?: { id?: ElementId, handle?: string },
+      target?: { id?: ElementId, handle?: string }
     ) => {
       const cursor = cursorRef.current;
       const data = cursor.createFromExtent(p1, p2, mod, commit);
 
       // Test for source/target connection.
       if (data && cursor.type === 'line') {
-        if (source) {
-          data.source = {
-            id: source.element.id
-          };
+        if (source?.id) {
+          data.source = source;
         }
-        if (target) {
-          data.target = {
-            id: target.element.id
-          };
+        if (target?.id) {
+          data.target = target;
         }
       }
 

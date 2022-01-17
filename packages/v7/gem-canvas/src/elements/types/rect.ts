@@ -8,7 +8,7 @@ import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame } from '../frame';
+import { createConectionPoints, createFrame, getConnectionPoint } from '../frame';
 import { crateText } from './text';
 
 /**
@@ -91,13 +91,11 @@ export class RectControl extends Control<Rect> {
 
   type = 'rect' as ElementType;
 
-  override drawable (): D3Callable {
-    return group => {
-      group.call(this._main, group.datum());
-      group.call(this._connectors, group.datum(), !this.selected && this.hover);
-      group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
-    };
-  }
+  override drawable: D3Callable = group => {
+    group.call(this._main, group.datum());
+    group.call(this._connectors, group.datum(), !this.selected && this.hover);
+    group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+  };
 
   override getBounds (): ScreenBounds {
     const { bounds } = this.data;
@@ -115,7 +113,8 @@ export class RectControl extends Control<Rect> {
     }, commit);
   }
 
-  getConnectionPoint (): Vertex {
-    return Vector.center(this.data.bounds);
+  getConnectionPoint (handle?: string): Vertex {
+    const point = handle ? getConnectionPoint(this.data.bounds, handle) : undefined;
+    return point ?? Vector.center(this.data.bounds);
   }
 }

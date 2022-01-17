@@ -9,6 +9,8 @@ import { Modifiers, Point } from '@dxos/gem-x';
 
 import { D3DragEvent } from '../types';
 import { Control, ControlContext } from './control';
+import { Handle } from './frame';
+import { ElementId } from '../model';
 
 export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   center: event.metaKey,
@@ -30,20 +32,24 @@ export const dragBounds = (
     p2: Point,
     mod: Modifiers,
     commit?: boolean,
-    source?: Control<any>,
-    target?: Control<any>
+    source?: { id?: ElementId, handle?: string },
+    target?: { id?: ElementId, handle?: string }
   ) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   let start: Point;
-  let source: Control<any>;
+  let source;
 
   return d3.drag()
     .on('start', (event: D3DragEvent) => {
       const scale = context.scale();
 
-      // Starting source.
-      source = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+      // Connection point.
+      source = {
+        id: (d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>)?.element.id,
+        handle: (d3.select(event.sourceEvent.target).datum() as Handle)?.id
+      };
+
       start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onStart?.();
     })
@@ -57,8 +63,12 @@ export const dragBounds = (
     .on('end', (event: D3DragEvent) => {
       const scale = context.scale();
 
-      // Ending target.
-      const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+      // Connection point.
+      const target = {
+        id: (d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>)?.element.id,
+        handle: (d3.select(event.sourceEvent.target).datum() as Handle)?.id
+      };
+
       const mod = getEventMod(event.sourceEvent);
       const current = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onUpdate(start, current, mod, true, source, target);
