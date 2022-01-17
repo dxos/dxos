@@ -66,6 +66,31 @@ export const generator = (): ElementData<any>[] => [
     })
   },
 
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      source: {
+        pos: { x: [-1, 1], y: [8, 1] }
+      },
+      target: {
+        pos: { x: [2, 1], y: [7, 1] }
+      }
+    })
+  },
+  {
+    id: faker.datatype.uuid(),
+    type: 'line',
+    data: check<Line>({
+      source: {
+        pos: { x: [3, 1], y: [10, 1] }
+      },
+      target: {
+        pos: { x: [1, 1], y: [9, 1] }
+      }
+    })
+  },
+
   /*
   {
     id: faker.datatype.uuid(),

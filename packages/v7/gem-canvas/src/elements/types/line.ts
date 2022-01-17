@@ -2,9 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
-
-import { Modifiers, Scale, FractionUtil, Point, Screen, Vector, Vertex } from '@dxos/gem-x';
+import { Modifiers, Scale, FractionUtil, Point, Screen, Vertex } from '@dxos/gem-x';
 
 import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -17,30 +15,25 @@ import { createControlPoints } from '../frame';
  * @param pos2
  */
 const createHidden = (pos1: Point, pos2: Point) => {
+  const w = 20;
+
   const hyp = Screen.len(pos1, pos2);
   const adj = pos1[0] - pos2[0];
   const opp = pos1[1] - pos2[1];
   const bounds = {
-    x: adj > 0 ? pos2[0] : pos1[0],
-    y: adj > 0 ? pos2[1] : pos1[1],
-    width: hyp,
-    height: 8
+    x: (adj > 0 ? pos2[0] : pos1[0]),
+    y: (adj > 0 ? pos2[1] : pos1[1]),
+    width: hyp + w / 2,
+    height: w
   };
 
-  const theta = (adj === 0) ? (opp < 0 ? 90 : 270) : Math.atan(opp / adj) * (180 / Math.PI);
-  return { theta, bounds };
+  const theta =  (adj === 0) ? (opp < 0 ? Math.PI / 2 : Math.PI * 3 / 2) : Math.atan(opp / adj);
+
+  // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
+  const transform = `rotate(${theta * 180 / Math.PI}, ${bounds.x}, ${bounds.y}) translate(${-w / 4}, ${-w / 2})`;
+
+  return { bounds, transform };
 };
-
-// TODO(burdon): Factor out.
-// TODO(burdon): Get connection point. If no position then auto-select.
-const getPos = (cache, { pos, id, position }: { pos?: Vertex, id?: ElementId, position?: string } = {}): Vertex => {
-  if (pos) {
-    return pos;
-  }
-
-  const control: Control<any> = cache.getControl(id);
-  return control?.getConnectionPoint();
-}
 
 /**
  * Renderer.
@@ -87,16 +80,14 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     */
 
     // Hidden Rect to enable selection.
-    const { theta, bounds } = createHidden([x1, y1], [x2, y2]);
-    const { x, y, height } = bounds;
+    const { bounds, transform } = createHidden([x1, y1], [x2, y2]);
 
     group
       .selectAll('rect.line-touch')
       .data(control.active ? [] : [bounds])
       .join('rect')
       .attr('class', 'line-touch')
-      // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
-      .attr('transform', `translate(0, -${height / 2}) rotate(${theta}, ${x}, ${y + height / 2})`)
+      .attr('transform', transform)
       .attr('x', d => d.x)
       .attr('y', d => d.y)
       .attr('width', d => d.width)
@@ -107,6 +98,17 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
       });
     // eslint-enable indent
   };
+};
+
+// TODO(burdon): Get other point (or approximation) to determine which connection point.
+// TODO(burdon): Get connection point. If no position then auto-select.
+const getPos = (cache, { pos, id, position }: { pos?: Vertex, id?: ElementId, position?: string } = {}): Vertex => {
+  if (pos) {
+    return pos;
+  }
+
+  const control: Control<any> = cache.getControl(id);
+  return control?.getConnectionPoint();
 };
 
 /**
@@ -167,11 +169,11 @@ export class LineControl extends Control<Line> {
     const points = [pos1, pos2];
 
     // Connect.
-    if (commit && drop) {
+    if (commit) {
       if (i === 0) {
-        source = { id: drop.element.id };
+        source = { id: drop?.element?.id };
       } else {
-        target = { id: drop.element.id };
+        target = { id: drop?.element?.id };
       }
     }
 
@@ -182,10 +184,14 @@ export class LineControl extends Control<Line> {
     });
 
     return {
-      pos1: source ? undefined : points[0],
-      pos2: target ? undefined : points[1],
-      source,
-      target,
+      source: {
+        ...source,
+        pos: (!commit || !source.id) ? points[0] : undefined
+      },
+      target: {
+        ...target,
+        pos: (!commit || !target.id) ? points[1] : undefined
+      },
       ...rest
     };
   }

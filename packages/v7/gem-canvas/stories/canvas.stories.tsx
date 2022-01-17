@@ -79,7 +79,7 @@ export const Primary = () => {
   const [elements, setElements] = useState<ElementData<any>[]>(() => generator());
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
-  const [debug, setDebug, debugRef] = useStateRef(false);
+  const [debug, setDebug, debugRef] = useStateRef(true);
   const [repaint, handleRepaint] = useRepaint();
 
   // TODO(burdon): Randomizer.
@@ -124,7 +124,6 @@ export const Primary = () => {
   const handleDelete = (id: ElementId) => {
     setSelection(undefined);
     log('delete', id);
-    // TODO(burdon): Remove dangling links (or set point to current).
     const remove = elements.find(element => element.id === id);
     if (remove) {
       setElements(elements => elements.filter(element => {

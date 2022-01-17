@@ -185,6 +185,7 @@ export abstract class Control<T extends ElementDataType> {
   /**
    * Callable renderer.
    */
+  // TODO(burdon): Make property (not function called each time).
   abstract drawable (): D3Callable;
 
   /**
