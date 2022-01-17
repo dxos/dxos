@@ -18,6 +18,7 @@ import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest } from './invitations';
 import { PublicKey } from '@dxos/crypto';
+import { ClientServiceHost } from '../client/service-host';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
@@ -46,12 +47,12 @@ export class PartyProxy {
       return;
     }
 
-    if (_serviceProvider instanceof ClientServiceProxy) {
+    if (this._serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
         new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key)
       );
-    } else {
+    } else if (this._serviceProvider instanceof ClientServiceHost) {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
     }

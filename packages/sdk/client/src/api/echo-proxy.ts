@@ -210,6 +210,9 @@ export class EchoProxy {
    * @param recipientKey the invitee (recipient for the invitation).
    */
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
+    if (!(this._serviceProvider instanceof ClientServiceHost)) {
+      throw new Error('Offline Invitations not yet implemented with remote services.');
+    }
     const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
   }
