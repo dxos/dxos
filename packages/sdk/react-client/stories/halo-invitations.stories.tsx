@@ -146,7 +146,7 @@ const TestApp = () => {
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
         <HaloInvitationContainer />
-        {!client.halo.isInitialized && (
+        {!profile && (
           <>
             <Divider />
             <HaloAuthenticationContainer />
