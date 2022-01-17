@@ -32,6 +32,34 @@ jobs:
           # Build with tests
           # TODO(burdon): Move to separate action (run once per evening).
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+      - name: Prepare summary comment
+        if: failure()
+        run: |
+          SUMMARY_COMMENT=$(cat ./failure-summary.log)
+          SUMMARY_COMMENT="${SUMMARY_COMMENT//'%'/'%25'}"
+          SUMMARY_COMMENT="${SUMMARY_COMMENT//$'\n'/'%0A'}"
+          SUMMARY_COMMENT="${SUMMARY_COMMENT//$'\r'/'%0D'}"
+          echo "::set-output name=summary_comment::$(echo "$SUMMARY_COMMENT")"
+        id: summary_comment
+      - name: Add summary comment
+        if: failure()
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            <details>
+            <summary>Here's the summary of the build failures for ${{ github.sha }}:</summary>
+            <p>
+
+            ```
+            ${{ steps.summary_comment.outputs.summary_comment }}
+            ```
+
+            </p>
+            </details>
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false # This is the default
+
 
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]

@@ -910,6 +910,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
@@ -943,6 +944,7 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../object-model
+      '@dxos/proto': link:../../common/proto
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
