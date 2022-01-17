@@ -125,9 +125,22 @@ export const Primary = () => {
     setSelection(undefined);
     log('delete', id);
     // TODO(burdon): Remove dangling links (or set point to current).
-    setElements(elements => elements.filter(element => {
-      return element.id !== id;
-    }));
+    const remove = elements.find(element => element.id === id);
+    if (remove) {
+      setElements(elements => elements.filter(element => {
+        if (element.id === id) {
+          return false;
+        }
+
+        if (element.type === 'line') {
+          if (element.data.source.id === id || element.data.target.id === id) {
+            return false;
+          }
+        }
+
+        return true;
+      }));
+    }
 
     return true;
   };

@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { Modifiers, Scale, FractionUtil, Point, Screen, Vector } from '@dxos/gem-x';
+import { Modifiers, Scale, FractionUtil, Point, Screen, Vector, Vertex } from '@dxos/gem-x';
 
 import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -33,7 +33,11 @@ const createHidden = (pos1: Point, pos2: Point) => {
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Get connection point. If no position then auto-select.
-const getPos = (cache, { id, position }: { id: ElementId, position?: string }) => {
+const getPos = (cache, { pos, id, position }: { pos?: Vertex, id?: ElementId, position?: string } = {}): Vertex => {
+  if (pos) {
+    return pos;
+  }
+
   const control: Control<any> = cache.getControl(id);
   return control?.getConnectionPoint();
 }
@@ -47,9 +51,10 @@ const getPos = (cache, { id, position }: { id: ElementId, position?: string }) =
  */
 const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<Line>) => {
-    let { pos1, pos2, source, target } = control.data;
-    pos1 ||= getPos(cache, source);
-    pos2 ||= getPos(cache, target);
+    let { source, target } = control.data;
+    const pos1 = getPos(cache, source);
+    const pos2 = getPos(cache, target);
+
     // Dangling reference.
     if (!pos1 || !pos2) {
       return;
@@ -111,7 +116,7 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
  */
 const valid = (data: Line, commit: boolean) => {
   if (commit) {
-    const { pos1, pos2 } = data;
+    const { source: { pos: pos1 }, target: { pos: pos2 } } = data;
     if (FractionUtil.equals(pos1.x, pos2.x) && FractionUtil.equals(pos1.y, pos2.y)) {
       return;
     }
@@ -138,23 +143,27 @@ export class LineControl extends Control<Line> {
 
   override createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): Line {
     return valid({
-      pos1: this.scale.screen.toVertex(p1),
-      pos2: this.scale.screen.toVertex(p2)
+      source: {
+        pos: this.scale.screen.toVertex(p1)
+      },
+      target: {
+        pos: this.scale.screen.toVertex(p2)
+      }
     }, commit);
   }
 
   override getControlPoints (): ControlPoint[] {
-    let { pos1, pos2, source, target } = this.data;
-    pos1 ||= getPos(this.elements, source);
-    pos2 ||= getPos(this.elements, target);
+    let { source, target } = this.data;
+    const pos1 = getPos(this.elements, source);
+    const pos2 = getPos(this.elements, target);
     return [pos1, pos2].filter(Boolean).map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));
   }
 
   override updateControlPoint ({ i, point }: ControlPoint, delta: Point, commit?: boolean, drop?: Control<any>) {
     const { x: dx, y: dy } = this.scale.screen.toVertex(delta);
-    let { pos1, pos2, source, target, ...rest } = this.element.data;
-    pos1 ||= getPos(this.elements, source);
-    pos2 ||= getPos(this.elements, target);
+    let { source, target, ...rest } = this.element.data;
+    const pos1 = getPos(this.elements, source);
+    const pos2 = getPos(this.elements, target);
     const points = [pos1, pos2];
 
     // Connect.

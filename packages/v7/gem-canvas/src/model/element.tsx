@@ -38,14 +38,14 @@ export type Rect = {
 //
 
 export type Line = {
-  pos1?: Vertex // TODO(burdon): Combine with source/target
-  pos2?: Vertex
-  source?: {
-    id: ElementId
+  source: {
+    pos?: Vertex
+    id?: ElementId
     position?: string // E.g., 'w', 'wn', 'ws' (12 points).
   }
-  target?: {
-    id: ElementId
+  target: {
+    pos?: Vertex
+    id?: ElementId
     position?: string
   }
 }

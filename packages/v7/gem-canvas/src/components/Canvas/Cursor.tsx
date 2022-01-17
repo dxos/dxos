@@ -95,13 +95,11 @@ export const Cursor = ({
       // Test for source/target connection.
       if (data && cursor.type === 'line') {
         if (source) {
-          data.pos1 = undefined;
           data.source = {
             id: source.element.id
           };
         }
         if (target) {
-          data.pos2 = undefined;
           data.target = {
             id: target.element.id
           };

@@ -53,7 +53,6 @@ export const generator = (): ElementData<any>[] => [
     })
   },
 
-  /*
   {
     id: faker.datatype.uuid(),
     type: 'line',
@@ -66,17 +65,6 @@ export const generator = (): ElementData<any>[] => [
       }
     })
   },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      source: {
-        id: ids[0]
-      },
-      pos2: { x: [-7, 1], y: [-3, 1] }
-    })
-  },
-  */
 
   /*
   {
@@ -108,28 +96,6 @@ export const generator = (): ElementData<any>[] => [
     data: check<Ellipse>({
       center: Vector.toVertex({ x: -1, y: 3 }), rx: [1, 2], ry: [1, 2],
       text: 'C'
-    })
-  },
-
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 6, y: 5 })
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: 10, y: -2 })
-    })
-  },
-  {
-    id: faker.datatype.uuid(),
-    type: 'line',
-    data: check<Line>({
-      pos1: Vector.toVertex({ x: 2, y: 3 }), pos2: Vector.toVertex({ x: -1, y: 3 })
     })
   },
 
