@@ -82,10 +82,10 @@ export class HaloProxy {
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile (seedPhrase: string) {
-    if (this._serviceProvider instanceof ClientServiceHost) {
-      await this._serviceProvider.echo.halo.recover(seedPhrase);
+    if (!(this._serviceProvider instanceof ClientServiceHost)) {
+      throw new Error('Recovering profile not yet implemented with remote services.')
     }
-    throw new Error('Recovering profile not yet implemented with remote services.')
+    await this._serviceProvider.echo.halo.recover(seedPhrase);
   }
 
   /**

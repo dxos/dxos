@@ -55,6 +55,8 @@ export class PartyProxy {
     } else if (this._serviceProvider instanceof ClientServiceHost) {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
+    } else {
+      throw new Error('Unrecognized service provider.')
     }
   }
 
