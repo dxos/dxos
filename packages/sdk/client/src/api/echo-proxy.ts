@@ -151,7 +151,7 @@ export class EchoProxy {
         } else if (process.state === InvitationState.ERROR) {
           assert(process.error);
           const error = new Error(process.error);
-          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
           throwUnhandledRejection(error);
         }
       }, error => {
