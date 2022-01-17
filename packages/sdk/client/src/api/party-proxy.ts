@@ -145,7 +145,6 @@ export class PartyProxy {
           invitation = new InvitationRequest(descriptor, connected, finished, error);
           invitation.canceled.on(() => this._removeInvitation(invitation));
 
-
           this.activeInvitations.push(invitation);
           this.invitationsUpdate.emit();
           resolve(invitation);

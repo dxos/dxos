@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
-import assert from 'assert'
 
 import { PartyProxy } from './party-proxy';
 
@@ -68,10 +69,10 @@ export class InvitationRequest {
   /**
    * Cancel the invitation.
    */
-  cancel() {
+  cancel () {
     assert(!this._isCanceled, new Error('Invitation is already canceled'));
     this._isCanceled = true;
-    
+
     this.canceled.emit();
   }
 
