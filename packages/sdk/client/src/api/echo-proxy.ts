@@ -180,6 +180,7 @@ export class EchoProxy {
     }
 
     return new Invitation(
+      invitationDescriptor,
       waitForParty(),
       authenticate
     );

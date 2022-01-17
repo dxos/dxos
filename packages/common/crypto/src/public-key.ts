@@ -115,7 +115,7 @@ export class PublicKey {
   /**
    * Same as `PublicKey.humanize()`.
    */
-  toJson () {
+  toJSON () {
     return this.toHex();
   }
 
