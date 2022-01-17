@@ -32,8 +32,8 @@
     "@dxos/proto": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
-    "readable-stream": "^3.6.0",
-    "pify": "~5.0.0"
+    "pify": "~5.0.0",
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
