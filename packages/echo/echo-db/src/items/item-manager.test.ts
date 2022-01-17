@@ -39,11 +39,9 @@ describe('ItemManager', () => {
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
       const item = await itemManager.constructItem(defaultOpts());
-
       expect(itemManager.entities.size).toEqual(1);
 
       itemManager.deconstructItem(item.id);
-
       expect(itemManager.entities.size).toEqual(0);
     });
   });

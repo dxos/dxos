@@ -11,13 +11,13 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
-type SelectFilterFunction<T extends Entity<any>> = (item: T) => boolean;
+type SelectFilterFunction<T extends Entity<any>> = (item: T) => boolean
 
 export interface SelectFilterByValue {
   type: string | string[];
 }
 
-export type SelectFilter<T extends Entity<any>> = SelectFilterFunction<T> | SelectFilterByValue;
+export type SelectFilter<T extends Entity<any>> = SelectFilterFunction<T> | SelectFilterByValue
 
 /**
  * @param filter
@@ -32,7 +32,12 @@ const createArrayFilter = (filter: SelectFilterByValue): SelectFilterFunction<En
   return (entitiy: Entity<any>) => entitiy.type !== undefined && filter.type.indexOf(entitiy.type) !== -1;
 };
 
-const filterToPredicate = <T extends Entity<any>> (filter: SelectFilter<T>): SelectFilterFunction<T> => typeof filter === 'function' ? filter : createArrayFilter(filter);
+/**
+ * @param filter
+ */
+const filterToPredicate = <T extends Entity<any>> (filter: SelectFilter<T>): SelectFilterFunction<T> => {
+  return typeof filter === 'function' ? filter : createArrayFilter(filter);
+};
 
 /**
  * Remove duplicate and undefined items.
@@ -47,7 +52,7 @@ const deduplicate = <T> (items: T[]) => Array.from(new Set(items.filter(Boolean)
  */
 export class Selection<I extends Entity<any>> {
   /**
-   * @param _items All items in the data set.
+   * @param _getItems All items in the data set.
    * @param _update Update event handler.
    */
   constructor (
