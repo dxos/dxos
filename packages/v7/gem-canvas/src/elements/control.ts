@@ -84,7 +84,7 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   get data () {
-    return this._data ?? this._element.data;
+    return this._data ?? this._element?.data;
   }
 
   get modified () {

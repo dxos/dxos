@@ -9,7 +9,7 @@ import React from 'react';
 export const canvasStyles = css`
   marker {
     path.arrow {
-      stroke: blue;
+      stroke: #666;
       fill: none;
     }
   }
@@ -20,9 +20,6 @@ export const canvasStyles = css`
       stroke-width: 2;
       fill: #F5F5F5;
       opacity: 0.7;
-    }
-    line, polyline { 
-      stroke: blue;
     }
 
     // TODO(burdon): Create separate group for frames/handles.
