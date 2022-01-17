@@ -6,7 +6,7 @@ import { promiseTimeout } from '@dxos/async';
 import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { ClientServiceProvider, ClientServices, clientServiceBundle, RemoteServiceConenctionTimeout } from '../interfaces';
+import { ClientServiceProvider, ClientServices, clientServiceBundle, RemoteServiceConnectionTimeout } from '../interfaces';
 
 /**
  * Implements services that are not local to the app.
@@ -26,7 +26,7 @@ export class ClientServiceProxy implements ClientServiceProvider {
   readonly services: ClientServices;
 
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
-    await promiseTimeout(this._client.open(), 3000, new RemoteServiceConenctionTimeout());
+    await promiseTimeout(this._client.open(), 3000, new RemoteServiceConnectionTimeout());
   }
 
   async close () {
