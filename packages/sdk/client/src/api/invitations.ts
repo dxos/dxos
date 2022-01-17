@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
+import assert from 'assert'
 
 import { PartyProxy } from './party-proxy';
 
@@ -14,21 +15,25 @@ import { PartyProxy } from './party-proxy';
 export class InvitationRequest {
   private _hasConnected = false;
 
+  private _isCanceled = false;
+
   /**
    * Fired when the remote peer connects.
    */
-  connected: Event;
+  readonly connected: Event;
 
   /**
    * Fired when the invitation process completes successfully.
    */
-  finished: Event;
+  readonly finished: Event;
 
   /**
    * Fired when there's an error in the invitation process.
    */
   // TODO(dmaretskyi): Is the error fatal? Does it terminate the invitation process?
-  error: Event<Error>;
+  readonly error: Event<Error>;
+
+  readonly canceled = new Event();
 
   constructor (
     private readonly _descriptor: InvitationDescriptor,
@@ -58,6 +63,16 @@ export class InvitationRequest {
    */
   get hasConnected (): boolean {
     return this._hasConnected;
+  }
+
+  /**
+   * Cancel the invitation.
+   */
+  cancel() {
+    assert(!this._isCanceled, new Error('Invitation is already canceled'));
+    this._isCanceled = true;
+    
+    this.canceled.emit();
   }
 
   toString () {

@@ -68,7 +68,7 @@ export class EchoProxy {
               return;
             }
 
-            partyProxy.processPartyUpdate(party);
+            partyProxy._processPartyUpdate(party);
             this._partiesChanged.emit();
           }, () => {});
           this._subscriptions.push(() => partyStream.close());

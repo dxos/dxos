@@ -64,7 +64,11 @@ export class PartyProxy {
     }
   }
 
-  processPartyUpdate (party: Party) {
+  /**
+   * Called by EchoProxy to update this party instance.
+   * @internal
+   */
+  _processPartyUpdate (party: Party) {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;
@@ -139,6 +143,9 @@ export class PartyProxy {
           assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
           const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
           invitation = new InvitationRequest(descriptor, connected, finished, error);
+          invitation.canceled.on(() => this._removeInvitation(invitation));
+
+
           this.activeInvitations.push(invitation);
           this.invitationsUpdate.emit();
           resolve(invitation);
@@ -150,7 +157,7 @@ export class PartyProxy {
 
         if (invitationMsg.state === InvitationState.SUCCESS) {
           finished.emit();
-          this.removeInvitation(invitation);
+          this._removeInvitation(invitation);
           stream.close();
         }
 
@@ -170,7 +177,7 @@ export class PartyProxy {
     });
   }
 
-  removeInvitation (invitation: InvitationRequest) {
+  private _removeInvitation (invitation: InvitationRequest) {
     const index = this.activeInvitations.findIndex(activeInvitation => activeInvitation === invitation);
     this.activeInvitations.splice(index, 1);
     this.invitationsUpdate.emit();

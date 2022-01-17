@@ -29,7 +29,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
       onCreateInvitation={async () => {
         await party!.createInvitation();
       }}
-      onCancelInvitation={invitation => party!.removeInvitation(invitation)}
+      onCancelInvitation={invitation => invitation.cancel()}
       members={members}
     />
   );
