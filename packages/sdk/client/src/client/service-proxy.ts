@@ -27,7 +27,6 @@ export class ClientServiceProxy implements ClientServiceProvider {
 
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     await promiseTimeout(this._client.open(), 3000, new RemoteServiceConenctionTimeout());
-
   }
 
   async close () {
