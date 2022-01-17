@@ -16,12 +16,7 @@ import {
 } from '@dxos/react-client';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
-import {
-  ErrorBoundary,
-  FrameworkContextProvider,
-  JoinPartyDialog,
-  PartySharingDialog
-} from '../src';
+import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
 import { Column } from './helpers';
 
 export default {
@@ -113,11 +108,9 @@ export const Primary = () => {
         }}>
           <ClientProvider>
             <ProfileInitializer>
-              <FrameworkContextProvider>
-                <Column>
-                  <Sender />
-                </Column>
-              </FrameworkContextProvider>
+              <Column>
+                <Sender />
+              </Column>
             </ProfileInitializer>
           </ClientProvider>
 

@@ -2,33 +2,40 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
+import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import {
-  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
+  ActivationOptions, Database, InvitationDescriptor, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
-import { Party } from '../proto/gen/dxos/client';
+import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
+import { InvitationRequest } from './invitations';
 
 export class PartyProxy {
   private readonly _database?: Database;
 
-  readonly key: PartyKey;
-  readonly isOpen: boolean;
-  readonly isActive: boolean;
+  private _key: PartyKey;
+  private _isOpen: boolean;
+  private _isActive: boolean;
+
+  readonly activeInvitations: InvitationRequest[] = [];
+  readonly invitationsUpdate = new Event();
 
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
     _party: Party
   ) {
-    this.key = _party.publicKey;
-    this.isOpen = _party.isOpen;
-    this.isActive = _party.isActive;
+    this._key = _party.publicKey;
+    this._isOpen = _party.isOpen;
+    this._isActive = _party.isActive;
 
     if (!_party.isOpen) {
       return;
@@ -37,10 +44,10 @@ export class PartyProxy {
     if (_serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
-        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this.key)
+        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key)
       );
     } else {
-      const party = this._serviceProvider.echo.getParty(this.key) ?? failUndefined();
+      const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
     }
   }
@@ -55,6 +62,28 @@ export class PartyProxy {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
+  }
+
+  /**
+   * Called by EchoProxy to update this party instance.
+   * @internal
+   */
+  _processPartyUpdate (party: Party) {
+    this._key = party.publicKey;
+    this._isOpen = party.isOpen;
+    this._isActive = party.isActive;
+  }
+
+  get key () {
+    return this._key;
+  }
+
+  get isOpen () {
+    return this._isOpen;
+  }
+
+  get isActive () {
+    return this._isActive;
   }
 
   /**
@@ -87,6 +116,70 @@ export class PartyProxy {
       activeGlobal,
       activeDevice
     });
+  }
+
+  /**
+   * Creates an invitation to a given party.
+   * The Invitation flow requires the inviter and invitee to be online at the same time.
+   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.echo.acceptInvitation` on the invitee side.
+   *
+   * @param partyKey the Party to create the invitation for.
+   */
+  async createInvitation (): Promise<InvitationRequest> {
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key });
+    return new Promise((resolve, reject) => {
+      const connected = new Event();
+      const finished = new Event();
+      const error = new Event<Error>();
+      let invitation: InvitationRequest;
+
+      connected.on(() => this.invitationsUpdate.emit());
+
+      stream.subscribe(invitationMsg => {
+        if (!invitation) {
+          assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
+          const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
+          invitation = new InvitationRequest(descriptor, connected, finished, error);
+          invitation.canceled.on(() => this._removeInvitation(invitation));
+
+          this.activeInvitations.push(invitation);
+          this.invitationsUpdate.emit();
+          resolve(invitation);
+        }
+
+        if (invitationMsg.state === InvitationState.CONNECTED && !invitation.hasConnected) {
+          connected.emit();
+        }
+
+        if (invitationMsg.state === InvitationState.SUCCESS) {
+          finished.emit();
+          this._removeInvitation(invitation);
+          stream.close();
+        }
+
+        if (invitationMsg.state === InvitationState.ERROR) {
+          assert(invitationMsg.error, 'Unknown error.');
+          const err = new Error(invitationMsg.error);
+          reject(err);
+          error.emit(err);
+        }
+      }, error => {
+        if (error) {
+          console.error(error);
+          reject(error);
+          // TODO(rzadp): Handle retry.
+        }
+      });
+    });
+  }
+
+  private _removeInvitation (invitation: InvitationRequest) {
+    const index = this.activeInvitations.findIndex(activeInvitation => activeInvitation === invitation);
+    this.activeInvitations.splice(index, 1);
+    this.invitationsUpdate.emit();
   }
 
   queryMembers () {

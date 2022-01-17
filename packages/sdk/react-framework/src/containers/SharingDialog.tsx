@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { useState } from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 import urlJoin from 'url-join';
 
@@ -12,13 +12,11 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
-import type { PendingInvitation } from '@dxos/client';
+import { encodeInvitation, InvitationRequest } from '@dxos/client';
 import { PartyMember } from '@dxos/echo-db';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
-
-import { usePendingInvitations } from '../hooks';
 
 interface PendingInvitationProps {
   invitationCode: string
@@ -122,8 +120,10 @@ export interface SharingDialogProps {
   open: boolean
   modal?: boolean
   title: string,
+  invitations?: InvitationRequest[]
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
-  onCreateInvitation: (setInvitations: Dispatch<SetStateAction<PendingInvitation[]>>) => () => (void | Promise<void>)
+  onCreateInvitation: () => (void | Promise<void>)
+  onCancelInvitation: (invitation: InvitationRequest) => void
   onClose?: () => void
   createUrl?: (invitationCode: string) => string
 }
@@ -138,15 +138,13 @@ export const SharingDialog = ({
   open,
   modal,
   title,
+  invitations = [],
   members = [],
   createUrl = defaultCreateUrl,
   onCreateInvitation,
+  onCancelInvitation,
   onClose
 }: SharingDialogProps) => {
-  const [invitations, setInvitations] = usePendingInvitations();
-
-  const handleCreateInvitation = onCreateInvitation(setInvitations);
-
   return (
     <Dialog
       open={open}
@@ -155,7 +153,7 @@ export const SharingDialog = ({
       content={(
         <>
           <Box>
-            <Button onClick={handleCreateInvitation}>Create Invitation</Button>
+            <Button onClick={onCreateInvitation}>Create Invitation</Button>
           </Box>
 
           <Box sx={{
@@ -166,16 +164,13 @@ export const SharingDialog = ({
             maxHeight: 5 * 40,
             overflow: 'auto'
           }}>
-            {invitations.map(({ invitationCode, pin }, i) => (
+            {invitations.map((invitation, i) => (
               <PendingInvitationView
                 key={i}
-                invitationCode={invitationCode}
-                pin={pin}
+                invitationCode={encodeInvitation(invitation.descriptor)}
+                pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
                 createUrl={createUrl}
-                onCancel={() => {
-                  invitations.splice(i, 1);
-                  setInvitations([...invitations]);
-                }}
+                onCancel={() => onCancelInvitation(invitation)}
               />
             ))}
           </Box>

@@ -22,7 +22,7 @@ import { clientServiceBundle } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
-import { FrameworkContextProvider, JoinPartyDialog } from '@dxos/react-framework';
+import { JoinPartyDialog } from '@dxos/react-framework';
 import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
@@ -98,79 +98,77 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   };
 
   return (
-    <FrameworkContextProvider>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      width: 420,
+      overflow: 'hidden',
+      backgroundColor: '#EEE'
+    }}>
+      <>
+        <Menu
+          open={Boolean(menuAnchorEl)}
+          anchorEl={menuAnchorEl}
+          onClose={() => setMenuAnchorEl(null)}
+        >
+          <MenuItem
+            disabled={!profile}
+            onClick={() => {
+              setMenuAnchorEl(null);
+              void handleTestData();
+            }}
+          >
+            Generate Test Data
+          </MenuItem>
+          <MenuItem
+            disabled={!profile}
+            onClick={() => {
+              setMenuAnchorEl(null);
+              setShowJoinParty(true);
+            }}
+          >
+            Join Party
+          </MenuItem>
+        </Menu>
+
+        <JoinPartyDialog
+          open={showJoinParty}
+          onClose={() => setShowJoinParty(false)}
+          closeOnSuccess
+        />
+      </>
+
+      <Box sx={{
+        paddingRight: 1
+      }}>
+        <Card sx={{ margin: 1 }}>
+          <CardActions>
+            <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile} variant='outlined'>
+              Profile
+            </Button>
+            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>
+              Party
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
+              <MenuIcon />
+            </IconButton>
+          </CardActions>
+        </Card>
+      </Box>
+
       <Box sx={{
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: 420,
-        overflow: 'hidden',
-        backgroundColor: '#EEE'
+        overflow: 'scroll',
+        paddingRight: 1
       }}>
-        <>
-          <Menu
-            open={Boolean(menuAnchorEl)}
-            anchorEl={menuAnchorEl}
-            onClose={() => setMenuAnchorEl(null)}
-          >
-            <MenuItem
-              disabled={!profile}
-              onClick={() => {
-                setMenuAnchorEl(null);
-                void handleTestData();
-              }}
-            >
-              Generate Test Data
-            </MenuItem>
-            <MenuItem
-              disabled={!profile}
-              onClick={() => {
-                setMenuAnchorEl(null);
-                setShowJoinParty(true);
-              }}
-            >
-              Join Party
-            </MenuItem>
-          </Menu>
-
-          <JoinPartyDialog
-            open={showJoinParty}
-            onClose={() => setShowJoinParty(false)}
-            closeOnSuccess
-          />
-        </>
-
-        <Box sx={{
-          paddingRight: 1
-        }}>
-          <Card sx={{ margin: 1 }}>
-            <CardActions>
-              <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile} variant='outlined'>
-                Profile
-              </Button>
-              <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>
-                Party
-              </Button>
-              <Box sx={{ flex: 1 }} />
-              <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
-                <MenuIcon />
-              </IconButton>
-            </CardActions>
-          </Card>
-        </Box>
-
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          overflow: 'scroll',
-          paddingRight: 1
-        }}>
-          <Box>
-            {parties.map(party => <PartyCard key={party.key.toHex()} party={party} />)}
-          </Box>
+        <Box>
+          {parties.map(party => <PartyCard key={party.key.toHex()} party={party} />)}
         </Box>
       </Box>
-    </FrameworkContextProvider>
+    </Box>
   );
 };

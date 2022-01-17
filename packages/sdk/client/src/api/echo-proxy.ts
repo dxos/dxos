@@ -14,11 +14,10 @@ import { ObjectModel } from '@dxos/object-model';
 import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Invitation } from '.';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
-import { InvitationState, Party, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { InvitationRequest } from './invitations';
+import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
+import { Invitation, InvitationRequest } from './invitations';
 import { PartyProxy } from './party-proxy';
 
 export class EchoProxy {
@@ -59,7 +58,8 @@ export class EchoProxy {
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          const partyProxy = await this.createPartyProxy(party);
+          const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
+          await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
 
           const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
@@ -68,8 +68,7 @@ export class EchoProxy {
               return;
             }
 
-            const partyProxy = await this.createPartyProxy(party);
-            this._parties.set(partyProxy.key, partyProxy);
+            partyProxy._processPartyUpdate(party);
             this._partiesChanged.emit();
           }, () => {});
           this._subscriptions.push(() => partyStream.close());
@@ -121,12 +120,6 @@ export class EchoProxy {
    */
   getParty (partyKey: PartyKey): PartyProxy | undefined {
     return this._parties.get(partyKey);
-  }
-
-  private async createPartyProxy (party: Party): Promise<PartyProxy> {
-    const proxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
-    await proxy.init();
-    return proxy;
   }
 
   queryParties (): ResultSet<PartyProxy> {
@@ -204,45 +197,8 @@ export class EchoProxy {
    */
   // TODO(rzadp): Move to PartyProxy.
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey });
-    return new Promise((resolve, reject) => {
-      const connected = new Event();
-      const finished = new Event();
-      const error = new Event<Error>();
-
-      let hasInitiated = false; let hasConnected = false;
-
-      stream.subscribe(invitationMsg => {
-        if (!hasInitiated) {
-          assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
-          hasInitiated = true;
-          resolve(new InvitationRequest(InvitationDescriptor.fromProto(invitationMsg.descriptor), connected, finished, error));
-        }
-
-        if (invitationMsg.state === InvitationState.CONNECTED && !hasConnected) {
-          hasConnected = true;
-          connected.emit();
-        }
-
-        if (invitationMsg.state === InvitationState.SUCCESS) {
-          finished.emit();
-          stream.close();
-        }
-
-        if (invitationMsg.state === InvitationState.ERROR) {
-          assert(invitationMsg.error, 'Unknown error.');
-          const err = new Error(invitationMsg.error);
-          reject(err);
-          error.emit(err);
-        }
-      }, error => {
-        if (error) {
-          console.error(error);
-          reject(error);
-          // TODO(rzadp): Handle retry.
-        }
-      });
-    });
+    const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
+    return party.createInvitation();
   }
 
   /**
