@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -163,6 +163,10 @@ export class EchoProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
+      if(invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+        throw new Error('Cannot authenticate offline invitation.');
+      }
+      
       const invitationProcess = await getInvitationProcess();
 
       await this._serviceProvider.services.PartyService.AuthenticateInvitation({
@@ -171,7 +175,7 @@ export class EchoProxy {
       });
     };
 
-    if (invitationDescriptor.secret) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
       void authenticate(invitationDescriptor.secret);
     }
 
@@ -190,8 +194,9 @@ export class EchoProxy {
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
+   * 
+   * @deprecated Use party.createInvitation(...).
    */
-  // TODO(rzadp): Move to PartyProxy.
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
     const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation();

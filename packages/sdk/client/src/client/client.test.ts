@@ -16,6 +16,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
+import assert from 'assert'
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -80,9 +81,9 @@ describe('Client', () => {
         await invitee.halo.createProfile({ username: 'invitee' });
 
         const party = await inviter.echo.createParty();
-        const invitation = await inviter.echo.createInvitation(party.key);
+        const invitation = await party.createInvitation();
         invitation.error.on(throwUnhandledRejection);
-        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).wait();
+        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
 
         expect(inviteeParty.key).toEqual(party.key);
 
@@ -102,7 +103,7 @@ describe('Client', () => {
         await invitee.halo.createProfile({ username: 'invitee' });
 
         const party = await inviter.echo.createParty();
-        const invitation = await inviter.echo.createInvitation(party.key);
+        const invitation = await party.createInvitation();
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
@@ -114,8 +115,33 @@ describe('Client', () => {
         acceptedInvitation.authenticate(invitation.secret);
         await finishedFired;
 
-        const inviteeParty = await acceptedInvitation.wait();
+        const inviteeParty = await acceptedInvitation.getParty();
         expect(inviteeParty.key).toEqual(party.key);
+      }).timeout(5000);
+
+      test('creates and joins an offline Party invitation', async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        await invitee.halo.createProfile({ username: 'invitee' });
+
+        const party = await inviter.echo.createParty();
+        assert(invitee.halo.profile)
+        const invitation = await party.createInvitation({inviteeKey: invitee.halo.profile.publicKey});
+        expect(invitation.descriptor.secret).toBeUndefined();
+        invitation.error.on(throwUnhandledRejection);
+        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+
+        expect(inviteeParty.key).toEqual(party.key);
+
+        const members = party.queryMembers().value;
+        expect(members.length).toEqual(2);
       }).timeout(5000);
     });
 

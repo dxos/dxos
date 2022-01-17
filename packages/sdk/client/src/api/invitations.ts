@@ -93,8 +93,7 @@ export class Invitation {
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
-  // TODO(burdon): Rename getParty.
-  wait (): Promise<PartyProxy> {
+  getParty (): Promise<PartyProxy> {
     return this._partyPromise;
   }
 

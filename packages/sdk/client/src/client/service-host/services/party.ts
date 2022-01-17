@@ -9,7 +9,7 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { ECHO, EchoNotOpenError, InvitationDescriptor, PartyNotFoundError } from '@dxos/echo-db';
+import { ECHO, EchoNotOpenError, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError } from '@dxos/echo-db';
 
 import {
   InvitationState,
@@ -30,7 +30,6 @@ import { encodeInvitation, resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
 class PartyService implements IPartyService {
-  private inviterInvitations: InviterInvitations = [];
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (private echo: ECHO) {}
@@ -138,24 +137,34 @@ class PartyService implements IPartyService {
       const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
       setImmediate(async () => {
         try {
-          const secret = Buffer.from(generatePasscode());
-          const secretProvider = async () => {
-            next({ state: InvitationState.CONNECTED });
-            return Buffer.from(secret);
-          };
-          const invitation = await party.createInvitation({
-            secretProvider,
-            secretValidator: defaultSecretValidator
-          }, {
-            onFinish: () => {
-              next({ state: InvitationState.SUCCESS });
-              close();
-            }
-          });
-          invitation.secret = Buffer.from(secret);
-          const invitationCode = encodeInvitation(invitation);
-          this.inviterInvitations.push({ invitationCode, secret });
+          let invitation: InvitationDescriptor;
+          if(!request.inviteeKey) {
+            const secret = Buffer.from(generatePasscode());
+            const secretProvider = async () => {
+              next({ state: InvitationState.CONNECTED });
+              return Buffer.from(secret);
+            };
+            invitation = await party.createInvitation({
+              secretProvider,
+              secretValidator: defaultSecretValidator
+            }, {
+              onFinish: () => {
+                next({ state: InvitationState.SUCCESS });
+                close();
+              }
+            });
+
+            assert (invitation.type === InvitationDescriptorType.INTERACTIVE)
+            invitation.secret = Buffer.from(secret)
+          } else {
+            invitation = await party.createOfflineInvitation(request.inviteeKey);
+          }
+          
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
+
+          if(invitation.type === InvitationDescriptorType.OFFLINE) {
+            close();
+          }
         } catch (error: any) {
           next({ state: InvitationState.ERROR, error: error.message });
           close();
@@ -182,15 +191,20 @@ class PartyService implements IPartyService {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.echo.joinParty(InvitationDescriptor.fromProto(request), secretProvider);
+      const partyPromise = this.echo.joinParty(
+        InvitationDescriptor.fromProto(request),
+        request.type === InvitationDescriptorType.INTERACTIVE? secretProvider : undefined
+      );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      haloPartyPromise.then(party => {
+      partyPromise.then(party => {
         next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
       }).catch(err => {
         console.error(err);
         next({ id, state: InvitationState.ERROR, error: String(err) });
+      }).finally(() => {
+        close();
       });
     });
   }

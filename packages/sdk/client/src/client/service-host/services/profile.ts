@@ -28,7 +28,6 @@ import { encodeInvitation, resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
 
 export class ProfileService implements IProfileService {
-  private inviterInvitations: InviterInvitations = [];
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (private echo: ECHO) {}
@@ -71,8 +70,6 @@ export class ProfileService implements IProfileService {
           }
         });
         invitation.secret = secret;
-        const invitationCode = encodeInvitation(invitation);
-        this.inviterInvitations.push({ invitationCode, secret: invitation.secret });
         next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
       });
     });

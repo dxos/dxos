@@ -135,7 +135,7 @@ export class PartyProxy {
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key });
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();
