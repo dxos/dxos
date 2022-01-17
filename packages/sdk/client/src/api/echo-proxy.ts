@@ -163,10 +163,10 @@ export class EchoProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
-      if(invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
-      
+
       const invitationProcess = await getInvitationProcess();
 
       await this._serviceProvider.services.PartyService.AuthenticateInvitation({
@@ -195,7 +195,7 @@ export class EchoProxy {
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
-   * 
+   *
    * @deprecated Use party.createInvitation(...).
    */
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {

@@ -91,7 +91,7 @@ export class Invitation {
     private readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}
 
-  get descriptor() {
+  get descriptor () {
     return this._descriptor;
   }
 
@@ -106,7 +106,7 @@ export class Invitation {
     this._onAuthenticate(secret);
   }
 
-  toJSON() {
+  toJSON () {
     return this.descriptor.toProto();
   }
 }

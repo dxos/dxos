@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
   ActivationOptions, Database, InvitationDescriptor, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
@@ -12,13 +13,12 @@ import {
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
+import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest } from './invitations';
-import { PublicKey } from '@dxos/crypto';
-import { ClientServiceHost } from '../client/service-host';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
@@ -56,7 +56,7 @@ export class PartyProxy {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
     } else {
-      throw new Error('Unrecognized service provider.')
+      throw new Error('Unrecognized service provider.');
     }
   }
 

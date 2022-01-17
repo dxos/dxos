@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -16,7 +17,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
-import assert from 'assert'
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -132,8 +132,8 @@ describe('Client', () => {
         await invitee.halo.createProfile({ username: 'invitee' });
 
         const party = await inviter.echo.createParty();
-        assert(invitee.halo.profile)
-        const invitation = await party.createInvitation({inviteeKey: invitee.halo.profile.publicKey});
+        assert(invitee.halo.profile);
+        const invitation = await party.createInvitation({ inviteeKey: invitee.halo.profile.publicKey });
         expect(invitation.descriptor.secret).toBeUndefined();
         invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();

@@ -138,7 +138,7 @@ class PartyService implements IPartyService {
       setImmediate(async () => {
         try {
           let invitation: InvitationDescriptor;
-          if(!request.inviteeKey) {
+          if (!request.inviteeKey) {
             const secret = Buffer.from(generatePasscode());
             const secretProvider = async () => {
               next({ state: InvitationState.CONNECTED });
@@ -154,15 +154,15 @@ class PartyService implements IPartyService {
               }
             });
 
-            assert (invitation.type === InvitationDescriptorType.INTERACTIVE)
-            invitation.secret = Buffer.from(secret)
+            assert(invitation.type === InvitationDescriptorType.INTERACTIVE);
+            invitation.secret = Buffer.from(secret);
           } else {
             invitation = await party.createOfflineInvitation(request.inviteeKey);
           }
-          
+
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-          if(invitation.type === InvitationDescriptorType.OFFLINE) {
+          if (invitation.type === InvitationDescriptorType.OFFLINE) {
             close();
           }
         } catch (error: any) {
@@ -193,7 +193,7 @@ class PartyService implements IPartyService {
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
         InvitationDescriptor.fromProto(request),
-        request.type === InvitationDescriptorType.INTERACTIVE? secretProvider : undefined
+        request.type === InvitationDescriptorType.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
