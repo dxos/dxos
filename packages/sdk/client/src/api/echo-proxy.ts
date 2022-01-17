@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -201,25 +201,5 @@ export class EchoProxy {
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
     const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation();
-  }
-
-  /**
-   * Function to create an Offline Invitation for a recipient to a given party.
-   * Offline Invitation, unlike regular invitation, does NOT require
-   * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
-   * The invitee (recipient) needs to be known ahead of time.
-   * Invitation it not valid for other users.
-   *
-   * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param recipientKey the invitee (recipient for the invitation).
-   */
-  async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    if (!(this._serviceProvider instanceof ClientServiceHost)) {
-      throw new Error('Offline Invitations not yet implemented with remote services.');
-    }
-    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createOfflineInvitation(recipientKey);
   }
 }

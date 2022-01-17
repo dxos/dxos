@@ -10,7 +10,6 @@ import {
 
 import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
-import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
   ClientProvider,
@@ -155,7 +154,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(decodeInvitation(invitationCode))
+      const invitation = await client.echo.acceptInvitation(decodeInvitation(invitationCode));
       setStatus({ invitation });
 
       const party = await invitation.getParty();

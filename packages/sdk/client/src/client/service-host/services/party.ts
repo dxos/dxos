@@ -26,8 +26,8 @@ import {
   SubscribeMembersRequest
 } from '../../../proto/gen/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
-import { encodeInvitation, resultSetToStream } from '../../../util';
-import { CreateServicesOpts, InviteeInvitation, InviteeInvitations, InviterInvitations } from './interfaces';
+import { resultSetToStream } from '../../../util';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
 
 class PartyService implements IPartyService {
   private inviteeInvitations: InviteeInvitations = new Map();

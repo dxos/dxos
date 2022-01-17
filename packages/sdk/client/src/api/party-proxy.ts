@@ -129,10 +129,12 @@ export class PartyProxy {
   /**
    * Creates an invitation to a given party.
    * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
+   * If the invitee is known ahead of time, `inviteeKey` can be provide to not require the secret exchange.
    * The invitation flow is protected by a generated pin code.
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
+   * 
+   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required, but only the specified recipient can accept the invitation.
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });

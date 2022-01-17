@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { OpenProgress } from '@dxos/echo-db';
 import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
 import { createServiceBundle } from '@dxos/rpc';
 
