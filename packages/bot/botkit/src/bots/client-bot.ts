@@ -5,9 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Client } from '@dxos/client';
-import { SecretProvider } from '@dxos/credentials';
-import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import { Client, PartyProxy } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
 
@@ -15,7 +14,7 @@ const log = debug('dxos:bot:client-bot');
 
 export class ClientBot implements BotService {
   protected client: Client | undefined;
-  protected party: Party | undefined;
+  protected party: PartyProxy | undefined;
 
   async Initialize (request: InitializeRequest) {
     log('Client bot start initilizing');
@@ -27,14 +26,12 @@ export class ClientBot implements BotService {
     await this.client.halo.createProfile({ username: 'Bot' });
 
     if (request.invitation) {
-      const secret = request.invitation.secret;
-      assert(secret, 'Secret must be provided with invitation');
+      assert(request.invitation.secret, 'Secret must be provided with invitation');
       const invitation = InvitationDescriptor.fromProto(request.invitation);
-      const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       log('Client bot join party');
       // TODO(yivlad): errors are not handled well in RPC.
       try {
-        this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
+        this.party = await this.client.echo.acceptInvitation(invitation).getParty();
       } catch (e: unknown) {
         throw new Error(`Failed to join party: ${e}`);
       }

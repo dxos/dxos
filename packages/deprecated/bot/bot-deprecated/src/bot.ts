@@ -195,7 +195,7 @@ export class Bot extends EventEmitter {
       log(`Joining party with invitation: ${JSON.stringify(invitation)}`);
 
       assert(invitation.hash);
-      const party = await this._client!.echo.joinParty(
+      const party = await (this._client!.echo as any).joinParty( // This is broken.
         InvitationDescriptor.fromQueryParameters(invitation as any), secretProvider);
       await party.open();
     }

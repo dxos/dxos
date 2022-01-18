@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { OpenProgress } from '@dxos/echo-db';
 import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
 import { createServiceBundle } from '@dxos/rpc';
 
@@ -36,10 +36,4 @@ export interface ClientServiceProvider {
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
 
   close(): Promise<void>
-
-  // TODO(dmaretskyi): Remove and rely on services.
-  /**
-   * @deprecated
-   */
-  echo: ECHO
 }

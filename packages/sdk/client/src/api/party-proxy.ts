@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
   ActivationOptions, Database, InvitationDescriptor, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
@@ -12,11 +13,16 @@ import {
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
+import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest } from './invitations';
+
+export interface CreationInvitationOptions {
+  inviteeKey?: PublicKey
+}
 
 export class PartyProxy {
   private readonly _database?: Database;
@@ -41,14 +47,16 @@ export class PartyProxy {
       return;
     }
 
-    if (_serviceProvider instanceof ClientServiceProxy) {
+    if (this._serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
         new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key)
       );
-    } else {
+    } else if (this._serviceProvider instanceof ClientServiceHost) {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
+    } else {
+      throw new Error('Unrecognized service provider.');
     }
   }
 
@@ -121,15 +129,15 @@ export class PartyProxy {
   /**
    * Creates an invitation to a given party.
    * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
+   * If the invitee is known ahead of time, `inviteeKey` can be provide to not require the secret exchange.
    * The invitation flow is protected by a generated pin code.
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
-   * @param partyKey the Party to create the invitation for.
+   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required, but only the specified recipient can accept the invitation.
    */
-  async createInvitation (): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key });
+  async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
+    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();

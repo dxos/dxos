@@ -86,19 +86,27 @@ export class InvitationRequest {
  */
 export class Invitation {
   constructor (
+    private readonly _descriptor: InvitationDescriptor,
     private readonly _partyPromise: Promise<PartyProxy>,
     private readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}
 
+  get descriptor () {
+    return this._descriptor;
+  }
+
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
-  // TODO(burdon): Rename getParty.
-  wait (): Promise<PartyProxy> {
+  getParty (): Promise<PartyProxy> {
     return this._partyPromise;
   }
 
   authenticate (secret: Uint8Array) {
     this._onAuthenticate(secret);
+  }
+
+  toJSON () {
+    return this.descriptor.toProto();
   }
 }

@@ -10,7 +10,6 @@ import {
 
 import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
-import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
   ClientProvider,
@@ -73,8 +72,8 @@ const PartyInvitationContainer = () => {
     setImmediate(async () => {
       resetInvitations();
       if (contact) {
-        const invitation = await client.echo.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!));
-        setInvitationCode(encodeInvitation(invitation));
+        const invitation = await client.echo.getParty(partyKey!)!.createInvitation({ inviteeKey: PublicKey.fromHex(contact!) });
+        setInvitationCode(encodeInvitation(invitation.descriptor));
       } else {
         const invitation = await client.echo.createInvitation(partyKey!);
         invitation.connected.on(() => setPin(invitation.secret.toString()));
@@ -155,15 +154,11 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = decodeInvitation(invitationCode);
-      if (invitation.type === InvitationDescriptorType.OFFLINE) {
-        const party = await client.echo.joinParty(invitation);
-        await party.open();
-        setStatus({ party: party.key.toHex() });
-      } else {
-        const redeemingInvitation = client.echo.acceptInvitation(invitation);
-        setStatus({ invitation: redeemingInvitation });
-      }
+      const invitation = await client.echo.acceptInvitation(decodeInvitation(invitationCode));
+      setStatus({ invitation });
+
+      const party = await invitation.getParty();
+      setStatus({ party: party.key.toHex() });
     } catch (error: any) {
       setStatus({ error });
     }
