@@ -83,6 +83,9 @@ describe('Client', () => {
         expect(client.halo.profile).toBeDefined();
 
         const recoveredClient = await createClient();
+        await recoveredClient.initialize();
+        afterTest(() => recoveredClient.destroy());
+
         await recoveredClient.halo.recoverProfile(seedPhrase);
         await waitForCondition(() => !!recoveredClient.halo.hasProfile(), 2000);
 
