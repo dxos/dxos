@@ -68,7 +68,7 @@ describe('Client', () => {
     });
 
     describe('party invitations', () => {
-      test('creates and joins a Party invitation', async () => {
+      const prepareInvitations = async () => {
         const inviter = await createClient();
         await inviter.initialize();
         afterTest(() => inviter.destroy());
@@ -79,6 +79,12 @@ describe('Client', () => {
 
         await inviter.halo.createProfile({ username: 'inviter' });
         await invitee.halo.createProfile({ username: 'invitee' });
+
+        return { inviter, invitee };
+      };
+
+      test('creates and joins a Party invitation', async () => {
+        const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
@@ -92,23 +98,15 @@ describe('Client', () => {
       }).timeout(5000);
 
       test('invitation callbacks are fired', async () => {
-        const inviter = await createClient();
-        await inviter.initialize();
-        afterTest(() => inviter.destroy());
-        const invitee = await createClient();
-        await invitee.initialize();
-        afterTest(() => invitee.destroy());
-
-        await inviter.halo.createProfile({ username: 'inviter' });
-        await invitee.halo.createProfile({ username: 'invitee' });
+        const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
-        const reincodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
-        const acceptedInvitation = invitee.echo.acceptInvitation(reincodedDescriptor);
+        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const acceptedInvitation = invitee.echo.acceptInvitation(reencodedDescriptor);
         await connectedFired;
 
         const finishedFired = invitation.finished.waitForCount(1);
@@ -120,16 +118,7 @@ describe('Client', () => {
       }).timeout(5000);
 
       test('creates and joins an offline Party invitation', async () => {
-        const inviter = await createClient();
-        await inviter.initialize();
-        afterTest(() => inviter.destroy());
-
-        const invitee = await createClient();
-        await invitee.initialize();
-        afterTest(() => invitee.destroy());
-
-        await inviter.halo.createProfile({ username: 'inviter' });
-        await invitee.halo.createProfile({ username: 'invitee' });
+        const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
         assert(invitee.halo.profile);
