@@ -16,7 +16,8 @@ import { RpcPort } from '@dxos/rpc';
 
 import { EchoProxy, CreateInvitationOptions, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
-import { ClientServiceProvider, ClientServices } from '../interfaces';
+import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
+import { System } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
@@ -49,11 +50,12 @@ export class Client {
   public readonly version = '1.0.0';
 
   private readonly _config: Config;
-  private readonly _serviceProvider: ClientServiceProvider;
+  private readonly _options: ClientOptions;
+  private readonly _mode: System.Mode;
+  private _serviceProvider!: ClientServiceProvider;
 
-  // TODO(burdon): Why is this different from a service provider?
-  private readonly _halo: HaloProxy;
-  private readonly _echo: EchoProxy;
+  private _halo!: HaloProxy;
+  private _echo!: EchoProxy;
 
   private _initialized = false;
 
@@ -61,43 +63,34 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: defs.Config | Config = {}, options: ClientOptions = {}) {
+  constructor(config: defs.Config | Config = {}, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
+    this._options = options;
+
     // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
     debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
-    if (this._config.values.system?.remote) {
-      if (!options.rpcPort && isNode()) {
-        throw new Error('RPC port is required to run client in remote mode on Node environment.');
-      }
 
-      log('Creating client proxy.');
-      this._serviceProvider = new ClientServiceProxy(options.rpcPort ?? createWindowMessagePort());
-    } else {
-      log('Creating client host.');
-      this._serviceProvider = new ClientServiceHost(this._config);
-    }
-
-    this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider);
+    this._mode = this._config.get('system.mode', System.Mode.AUTOMATIC)!;
+    log(`mode=${System.Mode[this._mode]}`);
   }
 
-  toString () {
+  toString() {
     return `Client(${JSON.stringify(this.info())})`;
   }
 
-  info () {
+  info() {
     return {
       initialized: this.initialized,
       echo: this.echo.info()
     };
   }
 
-  get config (): Config {
+  get config(): Config {
     return this._config;
   }
 
@@ -105,29 +98,38 @@ export class Client {
    * Has the Client been initialized?
    * Initialize by calling `.initialize()`
    */
-  get initialized () {
+  get initialized() {
     return this._initialized;
   }
 
   /**
    * ECHO database.
    */
-  get echo (): EchoProxy {
+  get echo(): EchoProxy {
+    assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
 
   /**
    * HALO credentials.
    */
-  get halo (): HaloProxy {
+  get halo(): HaloProxy {
+    assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
 
   /**
    * Client services that can be proxied.
    */
-  get services (): ClientServices {
+  get services(): ClientServices {
     return this._serviceProvider.services;
+  }
+
+  /**
+   * Returns true if client is connected to a remote services protvider.
+   */
+  get isRemote(): boolean {
+    return this._serviceProvider instanceof ClientServiceProxy;
   }
 
   /**
@@ -135,7 +137,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize (onProgressCallback?: (progress: OpenProgress) => void) {
+  async initialize(onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._initialized) {
       return;
     }
@@ -146,7 +148,43 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    await this._serviceProvider.open(onProgressCallback);
+
+    if (this._mode === System.Mode.REMOTE) {
+      if (!this._options.rpcPort && isNode()) {
+        throw new Error('RPC port is required to run client in remote mode on Node environment.');
+      }
+
+      log('Creating client proxy.');
+      this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
+      await this._serviceProvider.open(onProgressCallback);
+    } else if (this._mode === System.Mode.LOCAL) {
+      log('Creating client host.');
+      this._serviceProvider = new ClientServiceHost(this._config);
+      await this._serviceProvider.open(onProgressCallback);
+    } else {
+      if (!this._options.rpcPort && isNode()) {
+        log('Creating client host.');
+        this._serviceProvider = new ClientServiceHost(this._config);
+        await this._serviceProvider.open(onProgressCallback);
+      } else {
+        try {
+          log('Creating client proxy.');
+          this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
+          await this._serviceProvider.open(onProgressCallback);
+        } catch (error) {
+          if (error instanceof RemoteServiceConnectionTimeout) {
+            log('Failed to connect to remote services. Starting local services.');
+            this._serviceProvider = new ClientServiceHost(this._config);
+            await this._serviceProvider.open(onProgressCallback);
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
+
+    this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider);
 
     this._halo._open();
     this._echo._open();
@@ -159,7 +197,7 @@ export class Client {
    * Cleanup, release resources.
    */
   @synchronized
-  async destroy () {
+  async destroy() {
     await this._echo._close();
     this._halo._close();
 
@@ -178,7 +216,7 @@ export class Client {
   // TODO(burdon): Should not require reloading the page (make re-entrant).
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
-  async reset () {
+  async reset() {
     await this.services.SystemService.Reset();
     this._initialized = false;
   }
@@ -192,7 +230,7 @@ export class Client {
    * This solution is appropriate only for short term, expected to work only in Teamwork
    */
   @synchronized
-  async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
+  async createPartyFromSnapshot(snapshot: DatabaseSnapshot) {
     const party = await this.echo.createParty();
     const items = snapshot.items ?? [];
 
@@ -276,7 +314,7 @@ export class Client {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createHaloInvitation (options?: CreateInvitationOptions) {
+  async createHaloInvitation(options?: CreateInvitationOptions) {
     return await this.halo.createInvitation(options);
   }
 
@@ -290,7 +328,7 @@ export class Client {
    *
    * @returns An async function to provide secret and finishing the invitation process.
   */
-  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor) {
+  async joinHaloInvitation(invitationDescriptor: InvitationDescriptor) {
     return await this.halo.acceptInvitation(invitationDescriptor);
   }
 
@@ -302,7 +340,7 @@ export class Client {
    * Registers a new ECHO model.
    */
   // TODO(burdon): Expose echo directly?
-  registerModel (constructor: ModelConstructor<any>): this {
+  registerModel(constructor: ModelConstructor<any>): this {
     this.echo.modelFactory.registerModel(constructor);
     return this;
   }
@@ -318,7 +356,7 @@ export class Client {
    *
    * @deprecated Service host implements the devtools service itself. This is left for legacy devtools versions.
    */
-  getDevtoolsContext (): DevtoolsHook {
+  getDevtoolsContext(): DevtoolsHook {
     const devtoolsContext: DevtoolsHook = {
       client: this,
       serviceHost: this._serviceProvider

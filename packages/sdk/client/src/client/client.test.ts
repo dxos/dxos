@@ -202,7 +202,7 @@ describe('Client', () => {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({ system: { remote: true } }, { rpcPort: proxyPort });
+      return new Client({ }, { rpcPort: proxyPort });
     });
   });
 
@@ -217,8 +217,9 @@ describe('Client', () => {
     };
 
     {
-      const client = new Client(config).registerModel(TestModel);
+      const client = new Client(config);
       await client.initialize();
+      client.registerModel(TestModel)
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
       const item = await party.database.createItem({ model: TestModel, type: 'test' });
