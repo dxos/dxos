@@ -26,6 +26,7 @@ const keyMap: { [ key: string ]: Tool } = {
 /**
  * Keyboard event handler.
  */
+// TODO(burdon): Define keymap (to display).
 export const createKeyHandlers = (
   onAction: (action: Action) => void
 ): D3Callable => {

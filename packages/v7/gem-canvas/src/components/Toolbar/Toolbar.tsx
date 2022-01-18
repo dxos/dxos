@@ -2,10 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import React, { FC } from 'react';
 import { css } from '@emotion/css';
 
 import { Tool } from '../../tools';
+import {
+  Circle as CircleIcon,
+  Line as LineIcon,
+  Path as PathIcon,
+  Rect as RectIcon
+} from './icons';
 
 export interface ToolbarProps {
   tool?: Tool
@@ -17,44 +23,50 @@ export const Toolbar = ({
   onSelect
 }: ToolbarProps) => {
   const styles = css`
+    display: flex;
     background-color: #999;
     padding: 4px;
-    button {
-      color: #999;
-      margin: 1px;
-      border: none;
-      outline: none;
+    div {
+      width: 32px;
+      height: 32px;
     }
-    button.active {
-      color: #000;
+    div path {
+      fill: #666;
+    }
+    div.active path {
+      fill: #000;
     }
   `;
 
-  const tools: { type: Tool }[] = [
+  const tools: { type: Tool, icon: FC }[] = [
     {
-      type: 'rect'
+      type: 'rect',
+      icon: RectIcon
     },
     {
-      type: 'ellipse'
+      type: 'ellipse',
+      icon: CircleIcon
     },
     {
-      type: 'line'
+      type: 'line',
+      icon: LineIcon
     },
     {
-      type: 'path'
+      type: 'path',
+      icon: PathIcon
     }
   ];
 
   return (
     <div className={styles}>
-      {tools.map(({ type }) => (
-        <button
+      {tools.map(({ type, icon: Icon }) => (
+        <div
           key={type}
           className={tool === type ? 'active' : ''}
           onClick={() => onSelect(tool === type ? undefined : type)}
         >
-          {type}
-        </button>
+          <Icon />
+        </div>
       ))}
     </div>
   );
