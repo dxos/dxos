@@ -118,9 +118,7 @@ export class HaloFactory {
 
     const invitationDescriptor = await recoverer.claim();
 
-    const halo = await this._joinHalo(invitationDescriptor, recoverer.createSecretProvider());
-    await recoverer.destroy();
-    return halo;
+    return this._joinHalo(invitationDescriptor, recoverer.createSecretProvider());
   }
 
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
