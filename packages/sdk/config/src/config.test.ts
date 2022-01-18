@@ -6,6 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
+import { System } from './proto/gen/dxos/config';
 import envmap from './testing/env_map.json';
 import defaults from './testing/test.json';
 import { ConfigV1Object } from './types';
@@ -119,4 +120,14 @@ test('mapToKeyValuesping', () => {
     TEST_CLIENT_ID: 123,
     TEST_CLIENT_TAG: 'testing'
   });
+});
+
+test('string values for enums are parsed', () => {
+  const config = new Config({
+    system: {
+      mode: 'automatic'
+    }
+  });
+
+  expect(config.get('system.mode')).toEqual(System.Mode.AUTOMATIC);
 });

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Type } from 'protobufjs';
+import { Enum, Type } from 'protobufjs';
 
 import { schema } from './proto/gen';
 import { Config as ConfigObject } from './proto/gen/dxos/config';
@@ -17,15 +17,15 @@ export function sanitizeConfig (value: any): ConfigObject | ConfigV1Object {
   // TODO(egorgripasov): Clean once old config deprecated.
   const confRootType = value?.version === 1 ? configV1RootType : configRootType;
 
-  const error = confRootType.protoType.verify(value);
-  if (error) {
-    console.warn(`Invalid config: ${error}`);
-  }
-
   const ctx: Context = { errors: [] };
   visitMessage(confRootType.protoType, value, '', ctx);
   if (ctx.errors.length > 0) {
     console.warn(`Invalid config:\n${ctx.errors.join('\n')}`);
+  }
+
+  const error = confRootType.protoType.verify(value);
+  if (error) {
+    console.warn(`Invalid config: ${error}`);
   }
 
   return value;
@@ -48,9 +48,32 @@ function visitMessage (type: Type, value: any, path: string, context: Context) {
     }
 
     field.resolve();
-    if (!field.resolvedType || !(field.resolvedType instanceof Type)) {
+    if (!field.resolvedType) {
       continue;
     }
-    visitMessage(field.resolvedType, value[key], `${path}.${key}`, context);
+    if (field.resolvedType instanceof Type) {
+      visitMessage(field.resolvedType, value[key], `${path}.${key}`, context);
+    } else if (field.resolvedType instanceof Enum) {
+      value[key] = sanitizeEnum(field.resolvedType, value[key], `${path}.${key}`, context);
+    }
   }
+}
+
+function sanitizeEnum (type: Enum, value: any, path: string, context: Context): any {
+  if (type.valuesById[value]) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalizedValue = value.toLowerCase();
+    for (const [name, tag] of Object.entries(type.values)) {
+      if (name.toLowerCase() === normalizedValue) {
+        return tag;
+      }
+    }
+  }
+
+  context.errors.push(`Invalid enum value: value=${JSON.stringify(value)} enum=${type.fullName} path=${path}`);
+
+  return value;
 }
