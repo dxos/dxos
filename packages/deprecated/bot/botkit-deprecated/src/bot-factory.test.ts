@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { BotFactory } from './bot-factory';
 
 describe('BotFactory', () => {
-  test('start & stop', async () => {
+  test.skip('start & stop', async () => {
     const botFactory = new BotFactory(new Config({
       bot: {
         topic: PublicKey.random().toHex(),

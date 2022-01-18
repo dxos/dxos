@@ -12,7 +12,7 @@ import { BotPlugin } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { Bot } from './bot';
 
-test('start a bot', async () => {
+test.skip('start a bot', async () => {
   const controlTopic = PublicKey.random();
 
   const networkManager = new NetworkManager();
