@@ -36,13 +36,13 @@ function execBuild (opts: BuildOptions = {}) {
   }
 
   try {
-    fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
+    fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true, force: true });
   } catch (err: any) {
     console.log(err.message);
   }
 
   try {
-    fs.rmSync(join(project.packageRoot, 'dist'), { recursive: true });
+    fs.rmSync(join(project.packageRoot, 'dist'), { recursive: true, force: true });
   } catch (err: any) {
     console.log(err.message);
   }
