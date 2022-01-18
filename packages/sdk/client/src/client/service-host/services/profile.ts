@@ -49,7 +49,7 @@ export class ProfileService implements IProfileService {
 
   async RecoverProfile (request: RecoverProfileRequest): Promise<Profile> {
     if (!request.seedPhrase) {
-      throw new Error('Recovery SeedPhrase not provided.')
+      throw new Error('Recovery SeedPhrase not provided.');
     }
     await this.echo.open();
     await this.echo.halo.recover(request.seedPhrase);

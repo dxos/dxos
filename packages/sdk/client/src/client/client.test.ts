@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
@@ -17,7 +18,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -90,9 +90,9 @@ describe('Client', () => {
         await waitForCondition(() => !!recoveredClient.halo.hasProfile(), 2000);
 
         expect(recoveredClient.halo.profile).toBeDefined();
-        expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey)
+        expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey);
         expect(recoveredClient.halo.profile!.username).toEqual('test-user');
-      }).timeout(2000)
+      }).timeout(2000);
     });
 
     describe('party invitations', () => {
