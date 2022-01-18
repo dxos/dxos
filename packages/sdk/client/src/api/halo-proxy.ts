@@ -85,7 +85,9 @@ export class HaloProxy {
     if (!(this._serviceProvider instanceof ClientServiceHost)) {
       throw new Error('Recovering profile not yet implemented with remote services.');
     }
+    await this._serviceProvider.echo.open();
     await this._serviceProvider.echo.halo.recover(seedPhrase);
+    this._profile = this._serviceProvider.echo.halo.getProfile();
   }
 
   /**

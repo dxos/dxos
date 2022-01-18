@@ -17,6 +17,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -65,6 +66,30 @@ describe('Client', () => {
         await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
         expect(client.halo.hasProfile()).toBeTruthy();
       });
+
+      test('Recovers a profile with a seed phrase', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        const seedPhrase = generateSeedPhrase();
+        const keyPair = keyPairFromSeedPhrase(seedPhrase);
+
+        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
+
+        expect(profile).toBeDefined();
+        expect(profile?.username).toEqual('test-user');
+
+        expect(client.halo.profile).toBeDefined();
+
+        const recoveredClient = await createClient();
+        await recoveredClient.halo.recoverProfile(seedPhrase);
+        await waitForCondition(() => !!recoveredClient.halo.hasProfile(), 2000);
+
+        expect(recoveredClient.halo.profile).toBeDefined();
+        expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey)
+        expect(recoveredClient.halo.profile!.username).toEqual('test-user');
+      }).timeout(2000)
     });
 
     describe('party invitations', () => {
