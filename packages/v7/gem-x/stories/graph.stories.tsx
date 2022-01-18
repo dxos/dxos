@@ -105,7 +105,7 @@ export const Primary = () => {
   }, [svgRef]);
 
   return (
-    <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
+    <FullScreen>
       <SvgContainer
         ref={svgRef}
         zoom={[1/4, 8]}
@@ -116,7 +116,6 @@ export const Primary = () => {
         <g ref={graphRef} className={styles.graph} />
         <g ref={statsRef} className={styles.stats} />
       </SvgContainer>
-
       <Knobs className={styles.knobs} />
     </FullScreen>
   );

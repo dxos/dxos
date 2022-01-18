@@ -139,6 +139,8 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
     <div
       ref={div}
       style={{
+        display: 'flex',
+        flex: 1,
         overflow: 'hidden',
         width: controlledWidth || '100%',
         height: controlledHeight

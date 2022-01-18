@@ -4,7 +4,7 @@
 
 import { Modifiers } from '@dxos/gem-x';
 
-import { getEventMod } from '../../elements';
+import { getEventMod } from '../../controls';
 import { Tool } from '../../tools';
 import { D3Callable } from '../../types';
 

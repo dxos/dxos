@@ -4,3 +4,5 @@
 
 export * from './Canvas';
 export * from './Toolbar';
+
+export * from './markers';

@@ -8,7 +8,7 @@ import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame, getConnectionPoint } from '../frame';
+import { createConectionPoints, createFrame, getConectionHandle } from '../frame';
 import { createText } from './text';
 
 /**
@@ -114,7 +114,17 @@ export class RectControl extends Control<Rect> {
   }
 
   getConnectionPoint (handle?: string): Vertex {
-    const point = handle ? getConnectionPoint(this.data.bounds, handle) : undefined;
-    return point ?? Vector.center(this.data.bounds);
+    const center = Vector.center(this.data.bounds);
+    if (!handle) {
+      return center;
+    }
+
+    const { x, y } = center;
+    const { width, height } = this.data.bounds;
+    const { p } = getConectionHandle(handle);
+    return {
+      x: FractionUtil.add(x, FractionUtil.multiply(FractionUtil.toFraction(p[0]), FractionUtil.multiply(width, [1, 2]))),
+      y: FractionUtil.add(y, FractionUtil.multiply(FractionUtil.toFraction(p[1]), FractionUtil.multiply(height, [1, 2])))
+    };
   }
 }

@@ -17,8 +17,7 @@ export class ControlManager implements ControlGetter {
     private readonly _onRepaint?: () => void,
     private readonly _onSelect?: (element: ElementData<any>, edit?: boolean) => void,
     private readonly _onUpdate?: (element: ElementData<any>, commit?: boolean) => void
-  ) {
-  }
+  ) {}
 
   toString () {
     return `ControlManager(${this._controls.length})`;
@@ -26,10 +25,6 @@ export class ControlManager implements ControlGetter {
 
   get elements (): Control<any>[] {
     return this._controls;
-  }
-
-  clear () {
-    this._controls = [];
   }
 
   getControl (id: ElementId) {

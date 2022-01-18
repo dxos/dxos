@@ -4,18 +4,7 @@
 
 import * as d3 from 'd3';
 
-import {
-  Bounds,
-  Fraction,
-  FractionUtil,
-  Modifiers,
-  Point,
-  Scale,
-  Screen,
-  ScreenBounds,
-  Vector,
-  Vertex,
-} from '@dxos/gem-x';
+import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-x';
 
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { Control, ControlPoint } from './control';
@@ -50,6 +39,8 @@ const connectionHandles: Handle[] = [
   { id: 's', p: [0, -1] },
   { id: 'w', p: [-1, 0] },
 ]
+
+export const getConectionHandle = (handleId: string): Handle => connectionHandles.find(({ id }) => id === handleId);
 
 /**
  * Compute updated bounds by dragging handles.
@@ -191,30 +182,6 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
       .attr('cy', ({ p }) => cy - p[1] * height / 2)
       .attr('r', FrameProps.handleRadius);
     // eslint-enable indent
-  };
-};
-
-/**
- * @param bounds
- * @param handleId
- */
-export const getConnectionPoint = (bounds: Bounds, handleId: string): Vertex => {
-  const { p } = connectionHandles.find(({ id }) => id === handleId);
-  const { x: cx, y: cy } = Vector.center(bounds);
-  const { width, height } = bounds;
-
-  return {
-    x: FractionUtil.add(cx, FractionUtil.multiply(FractionUtil.toFraction(p[0]), FractionUtil.multiply(width, [1, 2]))),
-    y: FractionUtil.add(cy, FractionUtil.multiply(FractionUtil.toFraction(p[1]), FractionUtil.multiply(height, [1, 2])))
-  };
-};
-// TODO(burdon): Unify with above.
-export const getConnectionPoint2 = (center: Vertex, rx: Fraction, ry: Fraction, handleId: string): Vertex => {
-  const { p } = connectionHandles.find(({ id }) => id === handleId);
-
-  return {
-    x: FractionUtil.add(center.x, FractionUtil.multiply(FractionUtil.toFraction(p[0]), rx)),
-    y: FractionUtil.add(center.y, FractionUtil.multiply(FractionUtil.toFraction(p[1]), ry))
   };
 };
 

@@ -8,7 +8,7 @@ import { ElementType, Ellipse } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame, getConnectionPoint2 } from '../frame';
+import { createConectionPoints, createFrame, getConectionHandle } from '../frame';
 import { createText } from './text';
 
 /**
@@ -123,7 +123,15 @@ export class EllipseControl extends Control<Ellipse> {
   }
 
   getConnectionPoint (handle?: string): Vertex {
-    const point = handle ? getConnectionPoint2(this.data.center, this.data.rx, this.data.ry, handle) : undefined;
-    return point ?? this.data.center;
+    const { center, rx, ry } = this.data;
+    if (!handle) {
+      return center;
+    }
+
+    const { p } = getConectionHandle(handle);
+    return {
+      x: FractionUtil.add(center.x, FractionUtil.multiply(FractionUtil.toFraction(p[0]), rx)),
+      y: FractionUtil.add(center.y, FractionUtil.multiply(FractionUtil.toFraction(p[1]), ry))
+    };
   }
 }

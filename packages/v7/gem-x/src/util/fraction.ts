@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+// TODO(burdon): Protobuf mapping?
 export type Fraction = [num: number, denum: number]
 
 export type Num = number | Fraction
@@ -17,14 +18,14 @@ export class FractionUtil {
     return typeof n === 'number' ? [n, 1] : n;
   }
 
-  static validate = (...f: Fraction[]): Fraction[] => {
-    f.forEach(([n, d]) => {
+  static validate = (...fraction: Fraction[]): Fraction[] => {
+    fraction.forEach(([n, d]) => {
       if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) {
         throw new Error(`Invalid fraction: ${n}/${d}`);
       }
     });
 
-    return f;
+    return fraction;
   };
 
   /**

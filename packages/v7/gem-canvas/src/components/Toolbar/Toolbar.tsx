@@ -17,14 +17,13 @@ export const Toolbar = ({
   onSelect
 }: ToolbarProps) => {
   const styles = css`
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 8px;
-    
+    background-color: #999;
+    padding: 4px;
     button {
       color: #999;
-      margin-right: 4px;
+      margin: 1px;
+      border: none;
+      outline: none;
     }
     button.active {
       color: #000;

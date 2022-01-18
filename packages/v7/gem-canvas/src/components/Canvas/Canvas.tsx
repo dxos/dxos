@@ -16,11 +16,11 @@ import {
   ControlContext,
   ControlManager,
   ControlState,
-  SelectionModel,
-  createMarkers,
-} from '../../elements';
+  SelectionModel
+} from '../../controls';
 import { ElementData, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
+import { createMarkers } from '../markers';
 import { Cursor } from './Cursor';
 import { canvasStyles, debugStyles } from './styles';
 
@@ -140,15 +140,15 @@ export const Canvas = ({
             control.onHover(false);
           });
       })
-      .each((element, i, nodes) => {
+      .each((control, i, nodes) => {
         // TODO(burdon): Currently disabled since otherwise connected lines won't update when dragging source/target.
         // Only draw if updated.
         // if (element.modified) {
-          d3.select(nodes[i]).call(element.draw());
+          d3.select(nodes[i]).call(control.draw());
         // }
 
         // Temporarily move to the front.
-        if (element.active) {
+        if (control.active) {
           d3.select(nodes[i]).raise();
         }
       });

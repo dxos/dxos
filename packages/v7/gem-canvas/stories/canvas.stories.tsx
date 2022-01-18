@@ -31,11 +31,9 @@ export default {
 const log = debug('gem:canvas:story');
 debug.enable('gem:canvas:*,-*:debug');
 
-// TODO(burdon): Remove links when delete item that is source/target.
-// TODO(burdon): Line snap to connector (on create).
+// TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
 
 // TODO(burdon): Commit/update model (update/reset element._data).
-// TODO(burdon): Items (model update) and basic frame.
 // TODO(burdon): Refresh/render button.
 
 // TODO(burdon): Merge line, polyline.
@@ -199,18 +197,17 @@ export const Primary = () => {
   }, [elements]); // TODO(burdon): Since stale element (fix this).
 
   return (
-    <FullScreen
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#F9F9F9'
-      }}
-    >
+    <FullScreen>
       <div style={{
         display: 'flex',
         flex: 1,
-        overflow: 'hidden'
+        flexDirection: 'column'
       }}>
+        <Toolbar
+          tool={tool}
+          onSelect={tool => setTool(tool)}
+        />
+
         <SvgContainer
           ref={svgRef}
           scale={scale}
@@ -233,19 +230,14 @@ export const Primary = () => {
             }}
           />
         </SvgContainer>
+
+        <Info
+          data={{
+            elements: elements.length,
+            selected: selection?.element?.id
+          }}
+        />
       </div>
-
-      <Info
-        data={{
-          elements: elements.length,
-          selected: selection?.element?.id
-        }}
-      />
-
-      <Toolbar
-        tool={tool}
-        onSelect={tool => setTool(tool)}
-      />
     </FullScreen>
   );
 };

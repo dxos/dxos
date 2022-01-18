@@ -10,7 +10,7 @@ import { FullScreen, SvgContainer } from '@dxos/gem-x';
 import { createText } from '../src';
 
 export default {
-  title: 'text',
+  title: 'gem-canvas/Text',
 };
 
 export const Primary = () => {
@@ -31,23 +31,10 @@ export const Primary = () => {
   }, [textGroup, text]);
 
   return (
-    <FullScreen
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#F9F9F9'
-      }}
-    >
-      {/* TODO(burdon): Wrap SVGContainer with flexbox to avoid requirement. */}
-      <div style={{
-        display: 'flex',
-        flex: 1,
-        overflow: 'hidden'
-      }}>
-        <SvgContainer grid>
-          <g ref={textGroup} />
-        </SvgContainer>
-      </div>
+    <FullScreen>
+      <SvgContainer grid>
+        <g ref={textGroup} />
+      </SvgContainer>
     </FullScreen>
   );
 };

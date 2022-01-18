@@ -17,7 +17,7 @@ import {
   ControlGetter,
   ControlState,
   SelectionModel
-} from '../../elements';
+} from '../../controls';
 import { ElementDataType, ElementId, ElementType } from '../../model';
 
 export interface CursorProps {

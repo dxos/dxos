@@ -35,7 +35,7 @@ export const Primary = () => {
   }, []);
 
   return (
-    <FullScreen style={{ backgroundColor: '#F9F9F9' }}>
+    <FullScreen>
       <SvgContainer
         grid
         scale={scale}
