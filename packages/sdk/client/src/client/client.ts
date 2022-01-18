@@ -63,7 +63,7 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor(config: defs.Config | Config = {}, options: ClientOptions = {}) {
+  constructor (config: defs.Config | Config = {}, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -79,18 +79,18 @@ export class Client {
     log(`mode=${System.Mode[this._mode]}`);
   }
 
-  toString() {
+  toString () {
     return `Client(${JSON.stringify(this.info())})`;
   }
 
-  info() {
+  info () {
     return {
       initialized: this.initialized,
       echo: this.echo.info()
     };
   }
 
-  get config(): Config {
+  get config (): Config {
     return this._config;
   }
 
@@ -98,14 +98,14 @@ export class Client {
    * Has the Client been initialized?
    * Initialize by calling `.initialize()`
    */
-  get initialized() {
+  get initialized () {
     return this._initialized;
   }
 
   /**
    * ECHO database.
    */
-  get echo(): EchoProxy {
+  get echo (): EchoProxy {
     assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
@@ -113,7 +113,7 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo(): HaloProxy {
+  get halo (): HaloProxy {
     assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
@@ -121,14 +121,14 @@ export class Client {
   /**
    * Client services that can be proxied.
    */
-  get services(): ClientServices {
+  get services (): ClientServices {
     return this._serviceProvider.services;
   }
 
   /**
    * Returns true if client is connected to a remote services protvider.
    */
-  get isRemote(): boolean {
+  get isRemote (): boolean {
     return this._serviceProvider instanceof ClientServiceProxy;
   }
 
@@ -137,7 +137,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  async initialize(onProgressCallback?: (progress: OpenProgress) => void) {
+  async initialize (onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._initialized) {
       return;
     }
@@ -147,7 +147,6 @@ export class Client {
       // TODO(burdon): Tie to global error handling (or event).
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
-
 
     if (this._mode === System.Mode.REMOTE) {
       if (!this._options.rpcPort && isNode()) {
@@ -197,7 +196,7 @@ export class Client {
    * Cleanup, release resources.
    */
   @synchronized
-  async destroy() {
+  async destroy () {
     await this._echo._close();
     this._halo._close();
 
@@ -216,7 +215,7 @@ export class Client {
   // TODO(burdon): Should not require reloading the page (make re-entrant).
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
-  async reset() {
+  async reset () {
     await this.services.SystemService.Reset();
     this._initialized = false;
   }
@@ -230,7 +229,7 @@ export class Client {
    * This solution is appropriate only for short term, expected to work only in Teamwork
    */
   @synchronized
-  async createPartyFromSnapshot(snapshot: DatabaseSnapshot) {
+  async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
     const party = await this.echo.createParty();
     const items = snapshot.items ?? [];
 
@@ -314,7 +313,7 @@ export class Client {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createHaloInvitation(options?: CreateInvitationOptions) {
+  async createHaloInvitation (options?: CreateInvitationOptions) {
     return await this.halo.createInvitation(options);
   }
 
@@ -328,7 +327,7 @@ export class Client {
    *
    * @returns An async function to provide secret and finishing the invitation process.
   */
-  async joinHaloInvitation(invitationDescriptor: InvitationDescriptor) {
+  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor) {
     return await this.halo.acceptInvitation(invitationDescriptor);
   }
 
@@ -340,7 +339,7 @@ export class Client {
    * Registers a new ECHO model.
    */
   // TODO(burdon): Expose echo directly?
-  registerModel(constructor: ModelConstructor<any>): this {
+  registerModel (constructor: ModelConstructor<any>): this {
     this.echo.modelFactory.registerModel(constructor);
     return this;
   }
@@ -356,7 +355,7 @@ export class Client {
    *
    * @deprecated Service host implements the devtools service itself. This is left for legacy devtools versions.
    */
-  getDevtoolsContext(): DevtoolsHook {
+  getDevtoolsContext (): DevtoolsHook {
     const devtoolsContext: DevtoolsHook = {
       client: this,
       serviceHost: this._serviceProvider
