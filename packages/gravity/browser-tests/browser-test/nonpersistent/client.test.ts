@@ -78,8 +78,8 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test 2'
     });
 
-    const invite = await client.echo.createInvitation(party.key);
-    const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).wait();
+    const invite = await party.createInvitation();
+    const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
 
     const otherItem = otherParty.database.select(s => s.filter({ type: 'example:item/test' }).items).getValue()[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
@@ -110,8 +110,8 @@ describe('Client - nonpersistent', () => {
     // Online (adds contact).
     {
       const party1A = await clientA.echo.createParty();
-      const invite1 = await clientA.echo.createInvitation(party1A.key);
-      await clientB.echo.acceptInvitation(invite1.descriptor).wait();
+      const invite1 = await party1A.createInvitation();
+      await clientB.echo.acceptInvitation(invite1.descriptor).getParty();
     }
 
     const contact = (await contactPromise)[0];
@@ -119,8 +119,8 @@ describe('Client - nonpersistent', () => {
     // Offline (use existing contact).
     {
       const party2A = await clientA.echo.createParty();
-      const invite2 = await clientA.echo.createOfflineInvitation(party2A.key, contact.publicKey);
-      await clientB.echo.joinParty(invite2);
+      const invite2 = await party2A.createInvitation({ inviteeKey: contact.publicKey });
+      await clientB.echo.acceptInvitation(invite2.descriptor).getParty();
     }
 
     await clientA.destroy();

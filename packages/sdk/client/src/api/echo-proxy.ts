@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -39,7 +39,10 @@ export class EchoProxy {
   }
 
   get networkManager () {
-    return this._serviceProvider.echo.networkManager;
+    if (this._serviceProvider instanceof ClientServiceHost) {
+      return this._serviceProvider.echo.networkManager;
+    }
+    throw new Error('Network Manager not available in service proxy.');
   }
 
   toString () {
@@ -127,13 +130,6 @@ export class EchoProxy {
   }
 
   /**
-   * @deprecated Use acceptInvitation instead.
-   */
-  async joinParty (...args: Parameters<ECHO['joinParty']>) {
-    return this._serviceProvider.echo.joinParty(...args);
-  }
-
-  /**
    * Joins an existing Party by invitation.
    * @returns An async function to provide secret and finishing the invitation process.
    */
@@ -155,7 +151,7 @@ export class EchoProxy {
         } else if (process.state === InvitationState.ERROR) {
           assert(process.error);
           const error = new Error(process.error);
-          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+          // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
           throwUnhandledRejection(error);
         }
       }, error => {
@@ -167,6 +163,10 @@ export class EchoProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
+      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+        throw new Error('Cannot authenticate offline invitation.');
+      }
+
       const invitationProcess = await getInvitationProcess();
 
       await this._serviceProvider.services.PartyService.AuthenticateInvitation({
@@ -175,11 +175,12 @@ export class EchoProxy {
       });
     };
 
-    if (invitationDescriptor.secret) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
       void authenticate(invitationDescriptor.secret);
     }
 
     return new Invitation(
+      invitationDescriptor,
       waitForParty(),
       authenticate
     );
@@ -194,27 +195,11 @@ export class EchoProxy {
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
+   *
+   * @deprecated Use party.createInvitation(...).
    */
-  // TODO(rzadp): Move to PartyProxy.
   async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
     const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation();
-  }
-
-  /**
-   * Function to create an Offline Invitation for a recipient to a given party.
-   * Offline Invitation, unlike regular invitation, does NOT require
-   * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
-   * The invitee (recipient) needs to be known ahead of time.
-   * Invitation it not valid for other users.
-   *
-   * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param recipientKey the invitee (recipient for the invitation).
-   */
-  async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createOfflineInvitation(recipientKey);
   }
 }
