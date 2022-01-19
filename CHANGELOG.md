@@ -1,5 +1,22 @@
 # Change Log
 
+## [2.21.0](https://www.github.com/dxos/protocols/compare/v2.20.0...v2.21.0) (2022-01-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Automatic client mode (#841)
+
+### Features
+
+* Automatic client mode ([#841](https://www.github.com/dxos/protocols/issues/841)) ([020bff5](https://www.github.com/dxos/protocols/commit/020bff5957a9769a5f7fda5ed63dc5e2642e0724))
+
+
+### Bug Fixes
+
+* **client:** Make PartyProxy queryMembers responsive ([#850](https://www.github.com/dxos/protocols/issues/850)) ([2433426](https://www.github.com/dxos/protocols/commit/243342686f803ce471c6b65890f923967c443d05))
+* React framework types ([#848](https://www.github.com/dxos/protocols/issues/848)) ([e197fd2](https://www.github.com/dxos/protocols/commit/e197fd2e705e03cbc8e04913f1b11716587f8acd))
+
 ## [2.20.0](https://www.github.com/dxos/protocols/compare/v2.19.11...v2.20.0) (2022-01-18)
 
 
