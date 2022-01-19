@@ -149,37 +149,11 @@ export class Client {
     }, t * 1000);
 
     if (this._mode === System.Mode.REMOTE) {
-      if (!this._options.rpcPort && isNode()) {
-        throw new Error('RPC port is required to run client in remote mode on Node environment.');
-      }
-
-      log('Creating client proxy.');
-      this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
-      await this._serviceProvider.open(onProgressCallback);
+      await this.initializeRemote(onProgressCallback);
     } else if (this._mode === System.Mode.LOCAL) {
-      log('Creating client host.');
-      this._serviceProvider = new ClientServiceHost(this._config);
-      await this._serviceProvider.open(onProgressCallback);
+      await this.initializeLocal(onProgressCallback);
     } else {
-      if (!this._options.rpcPort && isNode()) {
-        log('Creating client host.');
-        this._serviceProvider = new ClientServiceHost(this._config);
-        await this._serviceProvider.open(onProgressCallback);
-      } else {
-        try {
-          log('Creating client proxy.');
-          this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
-          await this._serviceProvider.open(onProgressCallback);
-        } catch (error) {
-          if (error instanceof RemoteServiceConnectionTimeout) {
-            log('Failed to connect to remote services. Starting local services.');
-            this._serviceProvider = new ClientServiceHost(this._config);
-            await this._serviceProvider.open(onProgressCallback);
-          } else {
-            throw error;
-          }
-        }
-      }
+      await this.initializeAuto(onProgressCallback);
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
@@ -190,6 +164,39 @@ export class Client {
 
     this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
+  }
+
+  private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      throw new Error('RPC port is required to run client in remote mode on Node environment.');
+    }
+
+    log('Creating client proxy.');
+    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
+    log('Creating client host.');
+    this._serviceProvider = new ClientServiceHost(this._config);
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  private async initializeAuto (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      await this.initializeLocal(onProgressCallback);
+    } else {
+      try {
+        await this.initializeRemote(onProgressCallback);
+      } catch (error) {
+        if (error instanceof RemoteServiceConnectionTimeout) {
+          log('Failed to connect to remote services. Starting local services.');
+          await this.initializeLocal(onProgressCallback);
+        } else {
+          throw error;
+        }
+      }
+    }
   }
 
   /**
