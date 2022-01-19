@@ -14,11 +14,11 @@ export interface ExecJestOpts {
   userArgs?: string[]
 }
 
-export function execJest ({ project, userArgs = [], forceClose }: ExecJestOpts) {
+export async function execJest ({ project, userArgs = [], forceClose }: ExecJestOpts) {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
     : join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.json');
-  execTool('jest', [
+  await execTool('jest', [
     '--config', config,
     '--passWithNoTests',
     '--rootDir', project.packageRoot,

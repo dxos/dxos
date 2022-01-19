@@ -15,6 +15,8 @@ import { execLint } from './tools/lint';
 import { execMocha } from './tools/mocha';
 import { execPackageScript } from './tools/packageScript';
 
+const PACKAGE_TIMEOUT = 10 * 60 * 1000;
+
 interface BuildOptions {
   watch?: boolean
 }
@@ -24,7 +26,7 @@ interface BuildOptions {
  *
  * @param opts.watch Keep tsc running in watch mode.
  */
-function execBuild (opts: BuildOptions = {}) {
+async function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
 
   if (project.packageJsonContents.jest) {
@@ -57,7 +59,7 @@ function execBuild (opts: BuildOptions = {}) {
       ? join(project.packageRoot, 'src/proto/substitutions.ts')
       : undefined;
 
-    execTool('build-protobuf', [
+    await execTool('build-protobuf', [
       '-o',
       join(project.packageRoot, 'src/proto/gen'),
       ...(substitutions ? ['-s', substitutions] : []),
@@ -66,21 +68,30 @@ function execBuild (opts: BuildOptions = {}) {
   }
 
   console.log(chalk.bold`\ntypescript`);
-  execTool('tsc', opts.watch ? ['--watch'] : []);
+  await execTool('tsc', opts.watch ? ['--watch'] : []);
 }
 
-function execTest (userArgs?: string[]) {
+async function execTest (userArgs?: string[]) {
   const project = Project.load();
   const forceClose = project.toolchainConfig.forceCloseTests ?? false;
   const jsdom = project.toolchainConfig.jsdom ?? false;
 
   if (project.toolchainConfig.testingFramework === 'mocha') {
     console.log(chalk.bold`\nmocha`);
-    execMocha({ userArgs, forceClose, jsdom });
+    await execMocha({ userArgs, forceClose, jsdom });
   } else {
     console.log(chalk.bold`\njest`);
-    execJest({ project, userArgs, forceClose });
+    await execJest({ project, userArgs, forceClose });
   }
+}
+
+function setPackageTimeout () {
+  const id = setTimeout(() => {
+    process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+    process.exit(1);
+  }, PACKAGE_TIMEOUT);
+
+  return () => clearTimeout(id);
 }
 
 // eslint-disable-next-line no-unused-expressions
@@ -95,9 +106,9 @@ yargs(process.argv.slice(2))
         default: false
       })
       .strict(),
-    (argv) => {
+    async (argv) => {
       const before = Date.now();
-      execBuild({ watch: argv.watch });
+      await execBuild({ watch: argv.watch });
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
     }
   )
@@ -106,55 +117,61 @@ yargs(process.argv.slice(2))
     'build, lint, and test the package',
     yargs => yargs
       .strict(),
-    () => {
+    async () => {
       const project = Project.load();
 
+      const clear = setPackageTimeout();
+
       const before = Date.now();
-      execBuild();
+      await execBuild();
 
       console.log(chalk.bold`\neslint`);
-      execLint(project);
+      await execLint(project);
 
-      execTest();
+      await execTest();
 
       // Additional test steps execution placed here to allow to run tests without additional steps.
       // Additional test steps are executed by default only when build:test is run.
       for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
         console.log(chalk.bold`\n${step}`);
-        execPackageScript(project, step, []);
+        await execPackageScript(project, step, []);
       }
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
+      clear();
     }
   )
   .command(
     'lint',
     'run linter',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    ({ _ }) => {
+    async ({ _ }) => {
       const project = Project.load();
-      execLint(project, _.slice(1).map(String));
+      await execLint(project, _.slice(1).map(String));
     }
   )
   .command(
     'test',
     'run tests',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    ({ _ }) => {
-      execTest(_.slice(1).map(String));
+    async ({ _ }) => {
+      const clear = setPackageTimeout();
+
+      await execTest(_.slice(1).map(String));
+      clear();
     }
   )
   .command<{ command: string }>(
     ['* <command>', 'run <command>'],
     'run script or a tool',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    ({ command, _ }) => {
+    async ({ command, _ }) => {
       const project = Project.load();
 
       if (project.packageJsonContents.scripts?.[command]) {
-        execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
+        await execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
       } else {
-        execCommand(command, _.map(String));
+        await execCommand(command, _.map(String));
       }
     }
   )
