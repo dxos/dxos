@@ -86,10 +86,12 @@ async function execTest (userArgs?: string[]) {
 }
 
 function setPackageTimeout () {
-  setTimeout(() => {
+  const id = setTimeout(() => {
     process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
     process.exit(1);
   }, PACKAGE_TIMEOUT);
+
+  return () => clearTimeout(id);
 }
 
 // eslint-disable-next-line no-unused-expressions
@@ -118,7 +120,7 @@ yargs(process.argv.slice(2))
     async () => {
       const project = Project.load();
 
-      setPackageTimeout();
+      const clear = setPackageTimeout();
 
       const before = Date.now();
       await execBuild();
@@ -136,6 +138,7 @@ yargs(process.argv.slice(2))
       }
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
+      clear();
     }
   )
   .command(
@@ -152,9 +155,10 @@ yargs(process.argv.slice(2))
     'run tests',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     async ({ _ }) => {
-      setPackageTimeout();
+      const clear = setPackageTimeout();
 
       await execTest(_.slice(1).map(String));
+      clear();
     }
   )
   .command<{ command: string }>(
