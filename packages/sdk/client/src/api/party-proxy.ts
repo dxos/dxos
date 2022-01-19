@@ -192,8 +192,8 @@ export class PartyProxy {
 
   queryMembers () {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.SubscribeParties(),
-      (response) => response?.parties?.find(party => party.publicKey.equals(this.key))?.members ?? []
+      this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key }),
+      (response) => response?.members ?? []
     );
   }
 
