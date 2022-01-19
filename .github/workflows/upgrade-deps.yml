@@ -27,7 +27,7 @@ jobs:
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
             sudo ./common/scripts/install-dependencies.sh
 
-            npx npm-check-updates -u --deep '@dxos/*'
+            npx npm-check-updates@12.1.0 -u --deep '@dxos/*'
 
             npm install -g @microsoft/rush pnpm
             node common/scripts/install-run-rush.js update
