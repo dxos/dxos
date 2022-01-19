@@ -14,14 +14,12 @@ export const usePartyInvitations = (partyKey?: PublicKey) => {
   const [invitations, setInvitations] = useState<InvitationRequest[]>(party?.activeInvitations ?? []);
 
   useEffect(() => {
+    setInvitations(party?.activeInvitations ?? []);
+
     return party?.invitationsUpdate.on(() => {
       setInvitations([...party.activeInvitations]);
     });
   }, [party]);
-
-  useEffect(() => {
-    setInvitations([]);
-  }, [party?.key.toHex()]);
 
   return invitations;
 };
