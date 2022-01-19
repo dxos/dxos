@@ -87,6 +87,7 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
       <JoinPartyDialog
         open={open}
         invitationCode={invitationCode}
+        onJoin={(party) => console.log(`Joined party: ${party.key.toHex()}`)}
         onClose={() => setOpen(false)}
         closeOnSuccess={true}
         modal={false}
