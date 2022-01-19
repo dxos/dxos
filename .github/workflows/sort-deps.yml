@@ -19,8 +19,8 @@ jobs:
         uses: technote-space/create-pr-action@v2
         with:
           EXECUTE_COMMANDS: |
-            npx @sfomin/for-each-package -n "@dxos/*" "npx sort-package-json"
-            npx @monorepo-utils/workspaces-to-typescript-project-references
+            npx @sfomin/for-each-package@0.0.2 -n "@dxos/*" "npx sort-package-json@1.53.1"
+            npx @monorepo-utils/workspaces-to-typescript-project-references@2.7.4
           COMMIT_MESSAGE: 'chore: Sort package.json and update references in tsconfig.json files'
           COMMIT_NAME: 'GitHub Actions'
           COMMIT_EMAIL: 'ci@dxos.org'
