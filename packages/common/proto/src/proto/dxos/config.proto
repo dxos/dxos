@@ -58,6 +58,18 @@ message System {
     string path = 4;
   }
 
+  /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy. Defaults to AUTOMATIC.
+  enum Mode {
+    /// Connects to the browser wallet if avialable, otherwise runs services in the local mode.
+    AUTOMATIC = 0;
+
+    /// Run services in the local mode.
+    LOCAL = 1;
+
+    /// Connect to the browser wallet or to the remote services through the RPC port.
+    REMOTE = 2;
+  }
+
   // TODO(dmaretskyi): Move into KUBE service?
   string certEndpoint = 1;
   string debug = 2 [(env) = "DEBUG"];
@@ -69,9 +81,8 @@ message System {
 
   /// Milliseconds
   int32 invitation_expiration = 6;
-
-  /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy.
-  bool remote = 7;
+  
+  Mode mode = 7;
 }
 
 /// Services provided to all DXOS agents
