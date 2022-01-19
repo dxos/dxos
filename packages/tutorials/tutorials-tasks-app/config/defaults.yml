@@ -4,6 +4,7 @@ app:
 system:
   storage:
     persistent: true
+  #debug: dxos*
 services:
   signal:
     server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
