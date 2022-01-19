@@ -16,7 +16,8 @@ import { RpcPort } from '@dxos/rpc';
 
 import { EchoProxy, CreateInvitationOptions, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
-import { ClientServiceProvider, ClientServices } from '../interfaces';
+import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
+import { System } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
@@ -49,11 +50,12 @@ export class Client {
   public readonly version = '1.0.0';
 
   private readonly _config: Config;
-  private readonly _serviceProvider: ClientServiceProvider;
+  private readonly _options: ClientOptions;
+  private readonly _mode: System.Mode;
+  private _serviceProvider!: ClientServiceProvider;
 
-  // TODO(burdon): Why is this different from a service provider?
-  private readonly _halo: HaloProxy;
-  private readonly _echo: EchoProxy;
+  private _halo!: HaloProxy;
+  private _echo!: EchoProxy;
 
   private _initialized = false;
 
@@ -67,23 +69,14 @@ export class Client {
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
+    this._options = options;
+
     // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
     debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
-    if (this._config.values.system?.remote) {
-      if (!options.rpcPort && isNode()) {
-        throw new Error('RPC port is required to run client in remote mode on Node environment.');
-      }
 
-      log('Creating client proxy.');
-      this._serviceProvider = new ClientServiceProxy(options.rpcPort ?? createWindowMessagePort());
-    } else {
-      log('Creating client host.');
-      this._serviceProvider = new ClientServiceHost(this._config);
-    }
-
-    this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider);
+    this._mode = this._config.get('system.mode', System.Mode.AUTOMATIC)!;
+    log(`mode=${System.Mode[this._mode]}`);
   }
 
   toString () {
@@ -113,6 +106,7 @@ export class Client {
    * ECHO database.
    */
   get echo (): EchoProxy {
+    assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
 
@@ -120,6 +114,7 @@ export class Client {
    * HALO credentials.
    */
   get halo (): HaloProxy {
+    assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
 
@@ -128,6 +123,13 @@ export class Client {
    */
   get services (): ClientServices {
     return this._serviceProvider.services;
+  }
+
+  /**
+   * Returns true if client is connected to a remote services protvider.
+   */
+  get isRemote (): boolean {
+    return this._serviceProvider instanceof ClientServiceProxy;
   }
 
   /**
@@ -146,13 +148,55 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    await this._serviceProvider.open(onProgressCallback);
+    if (this._mode === System.Mode.REMOTE) {
+      await this.initializeRemote(onProgressCallback);
+    } else if (this._mode === System.Mode.LOCAL) {
+      await this.initializeLocal(onProgressCallback);
+    } else {
+      await this.initializeAuto(onProgressCallback);
+    }
+
+    this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider);
 
     this._halo._open();
     this._echo._open();
 
     this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
+  }
+
+  private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      throw new Error('RPC port is required to run client in remote mode on Node environment.');
+    }
+
+    log('Creating client proxy.');
+    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
+    log('Creating client host.');
+    this._serviceProvider = new ClientServiceHost(this._config);
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  private async initializeAuto (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      await this.initializeLocal(onProgressCallback);
+    } else {
+      try {
+        await this.initializeRemote(onProgressCallback);
+      } catch (error) {
+        if (error instanceof RemoteServiceConnectionTimeout) {
+          log('Failed to connect to remote services. Starting local services.');
+          await this.initializeLocal(onProgressCallback);
+        } else {
+          throw error;
+        }
+      }
+    }
   }
 
   /**

@@ -48,7 +48,14 @@ export class ProfileService implements IProfileService {
   }
 
   async RecoverProfile (request: RecoverProfileRequest): Promise<Profile> {
-    throw new Error('Not implemented');
+    if (!request.seedPhrase) {
+      throw new Error('Recovery SeedPhrase not provided.');
+    }
+    await this.echo.open();
+    await this.echo.halo.recover(request.seedPhrase);
+    const profile = this.echo.halo.getProfile();
+    assert(profile, 'Recovering profile failed.');
+    return profile;
   }
 
   CreateInvitation (): Stream<InvitationRequest> {

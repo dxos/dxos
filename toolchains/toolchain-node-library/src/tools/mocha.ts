@@ -10,9 +10,9 @@ export interface ExecMochaOpts {
   jsdom?: boolean
 }
 
-export function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
+export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
   const jsdomArray = jsdom ? ['-r', 'jsdom-global/register'] : [];
-  execTool('mocha', [
+  await execTool('mocha', [
     '-r', '@swc-node/register',
     '-r', require.resolve('./wtfnode.js'),
     ...jsdomArray,

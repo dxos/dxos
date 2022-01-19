@@ -1,14 +1,10 @@
 app:
   title: "Tasks App"
 
-# Uncomment for remote mode
-# system:
-#   remote: true
-
-# Uncomment for local mode
 system:
   storage:
     persistent: true
+  #debug: dxos*
 services:
   signal:
     server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"

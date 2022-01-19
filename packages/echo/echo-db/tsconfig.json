@@ -38,6 +38,9 @@
       "path": "../object-model"
     },
     {
+      "path": "../../common/proto"
+    },
+    {
       "path": "../../mesh/protocol"
     },
     {
