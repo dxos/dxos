@@ -15,6 +15,8 @@ import { execLint } from './tools/lint';
 import { execMocha } from './tools/mocha';
 import { execPackageScript } from './tools/packageScript';
 
+const PACKAGE_TIMEOUT = 10 //10 * 60 * 1000;
+
 interface BuildOptions {
   watch?: boolean
 }
@@ -83,6 +85,14 @@ function execTest (userArgs?: string[]) {
   }
 }
 
+function setPackageTimeout () {
+  console.log('set timeout')
+  setTimeout(() => {
+    process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+    process.exit(1);
+  }, 10);
+}
+
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
   .command<{ watch?: boolean }>(
@@ -108,6 +118,8 @@ yargs(process.argv.slice(2))
       .strict(),
     () => {
       const project = Project.load();
+
+      setPackageTimeout();
 
       const before = Date.now();
       execBuild();
@@ -141,6 +153,8 @@ yargs(process.argv.slice(2))
     'run tests',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
+      setPackageTimeout();
+
       execTest(_.slice(1).map(String));
     }
   )
