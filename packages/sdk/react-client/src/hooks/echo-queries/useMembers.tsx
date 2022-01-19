@@ -18,6 +18,7 @@ export const useMembers = (party: PartyProxy | undefined) => {
     setMembers(result.value);
 
     return result.subscribe(() => {
+      // TODO(wittjosiah): Remove interval.
       const update = setInterval(() => {
         const newMembers = party.queryMembers().value;
         const isNameFilled = newMembers.every(m => m.displayName);
@@ -27,7 +28,7 @@ export const useMembers = (party: PartyProxy | undefined) => {
         }
       }, 1000);
     });
-  }, [party && party.key.toString()]);
+  }, [party?.key.toString()]);
 
   return members;
 };
