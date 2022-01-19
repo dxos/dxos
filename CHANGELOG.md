@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.21.1](https://www.github.com/dxos/protocols/compare/v2.21.0...v2.21.1) (2022-01-19)
+
+
+### Features
+
+* Add onJoin callback to JoinPartyDialog ([#851](https://www.github.com/dxos/protocols/issues/851)) ([7f9332c](https://www.github.com/dxos/protocols/commit/7f9332c0f1ee160b2e093df93953bc5733bcb277))
+
 ## [2.21.0](https://www.github.com/dxos/protocols/compare/v2.20.0...v2.21.0) (2022-01-19)
 
 
