@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.21.2](https://www.github.com/dxos/protocols/compare/v2.21.1...v2.21.2) (2022-01-19)
+
+
+### Bug Fixes
+
+* Party invitations missing when dialog first opens ([#853](https://www.github.com/dxos/protocols/issues/853)) ([2c52f4b](https://www.github.com/dxos/protocols/commit/2c52f4b6e064337bd6bfbca1bfb4a8fe86db4c98))
+
 ### [2.21.1](https://www.github.com/dxos/protocols/compare/v2.21.0...v2.21.1) (2022-01-19)
 
 
