@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
+import { defs } from '@dxos/config';
 import {
   ClientProvider, ConfigProvider, ProfileInitializer, useParties, useRemoteParties, useProfile
 } from '@dxos/react-client';
@@ -110,7 +111,7 @@ export const Primary = () => {
 export const Remote = () => {
   const remoteConfig: ConfigProvider = {
     system: {
-      remote: true
+      mode: defs.System.Mode.REMOTE
     }
   };
 
