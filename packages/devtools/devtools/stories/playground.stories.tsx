@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
+import { defs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { RpcPort, createLinkedPorts } from '@dxos/rpc';
@@ -25,7 +26,7 @@ const DevTools = ({ port }: { port: RpcPort }) => {
         <ClientProvider
           config={{
             system: {
-              remote: true
+              mode: defs.System.Mode.REMOTE
             }
           }}
           options={{
