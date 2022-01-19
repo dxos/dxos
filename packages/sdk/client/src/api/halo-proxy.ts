@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { InvitationState, Profile, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { encodeInvitation } from '../util';
@@ -82,10 +81,8 @@ export class HaloProxy {
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile (seedPhrase: string) {
-    if (!(this._serviceProvider instanceof ClientServiceHost)) {
-      throw new Error('Recovering profile not yet implemented with remote services.');
-    }
-    await this._serviceProvider.echo.halo.recover(seedPhrase);
+    this._profile = await this._serviceProvider.services.ProfileService.RecoverProfile({ seedPhrase });
+    return this._profile;
   }
 
   /**

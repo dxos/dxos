@@ -1,5 +1,24 @@
 # Change Log
 
+## [2.20.0](https://www.github.com/dxos/protocols/compare/v2.19.11...v2.20.0) (2022-01-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* Store active invitations in party proxy (#816)
+
+### Features
+
+* Delete items. ([#818](https://www.github.com/dxos/protocols/issues/818)) ([205501c](https://www.github.com/dxos/protocols/commit/205501cfd8e52c75a5826a03adff1966ce94d59a))
+* HALO Recovery in remote mode ([#838](https://www.github.com/dxos/protocols/issues/838)) ([b4a312f](https://www.github.com/dxos/protocols/commit/b4a312f7144cf6036229802e19ea001c5325ff97))
+* Offline invitations in remote mode ([#837](https://www.github.com/dxos/protocols/issues/837)) ([5c35698](https://www.github.com/dxos/protocols/commit/5c356987fca9382415edf098cee3d1ecfabd7c23))
+* Store active invitations in party proxy ([#816](https://www.github.com/dxos/protocols/issues/816)) ([c38ceb6](https://www.github.com/dxos/protocols/commit/c38ceb6de74b25189dff2da887e09d4892abc39a))
+
+
+### Bug Fixes
+
+* Margin for input in dialog ([#830](https://www.github.com/dxos/protocols/issues/830)) ([ec605ab](https://www.github.com/dxos/protocols/commit/ec605ab8302fa556264c60744bae4f4a89a0fdb9))
+
 ### [2.19.11](https://www.github.com/dxos/protocols/compare/v2.19.10...v2.19.11) (2022-01-14)
 
 

@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
@@ -65,6 +66,33 @@ describe('Client', () => {
         await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
         expect(client.halo.hasProfile()).toBeTruthy();
       });
+
+      test('Recovers a profile with a seed phrase', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        const seedPhrase = generateSeedPhrase();
+        const keyPair = keyPairFromSeedPhrase(seedPhrase);
+
+        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
+
+        expect(profile).toBeDefined();
+        expect(profile?.username).toEqual('test-user');
+
+        expect(client.halo.profile).toBeDefined();
+
+        const recoveredClient = await createClient();
+        await recoveredClient.initialize();
+        afterTest(() => recoveredClient.destroy());
+
+        await recoveredClient.halo.recoverProfile(seedPhrase);
+        await waitForCondition(() => !!recoveredClient.halo.hasProfile(), 2000);
+
+        expect(recoveredClient.halo.profile).toBeDefined();
+        expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey);
+        expect(recoveredClient.halo.profile!.username).toEqual('test-user');
+      }).timeout(2000);
     });
 
     describe('party invitations', () => {
