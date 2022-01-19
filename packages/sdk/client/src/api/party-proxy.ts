@@ -18,27 +18,26 @@ import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
-import { InvitationRequest } from './invitations';
+import { InvitationRequest, InvitationProxy} from './invitations';
+import { Invitation } from './invitations';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
-export class PartyProxy {
+export class PartyProxy extends InvitationProxy {
   private readonly _database?: Database;
 
   private _key: PartyKey;
   private _isOpen: boolean;
   private _isActive: boolean;
 
-  readonly activeInvitations: InvitationRequest[] = [];
-  readonly invitationsUpdate = new Event();
-
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
     _party: Party
   ) {
+    super();
     this._key = _party.publicKey;
     this._isOpen = _party.isOpen;
     this._isActive = _party.isActive;
@@ -138,56 +137,7 @@ export class PartyProxy {
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });
-    return new Promise((resolve, reject) => {
-      const connected = new Event();
-      const finished = new Event();
-      const error = new Event<Error>();
-      let invitation: InvitationRequest;
-
-      connected.on(() => this.invitationsUpdate.emit());
-
-      stream.subscribe(invitationMsg => {
-        if (!invitation) {
-          assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
-          const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
-          invitation = new InvitationRequest(descriptor, connected, finished, error);
-          invitation.canceled.on(() => this._removeInvitation(invitation));
-
-          this.activeInvitations.push(invitation);
-          this.invitationsUpdate.emit();
-          resolve(invitation);
-        }
-
-        if (invitationMsg.state === InvitationState.CONNECTED && !invitation.hasConnected) {
-          connected.emit();
-        }
-
-        if (invitationMsg.state === InvitationState.SUCCESS) {
-          finished.emit();
-          this._removeInvitation(invitation);
-          stream.close();
-        }
-
-        if (invitationMsg.state === InvitationState.ERROR) {
-          assert(invitationMsg.error, 'Unknown error.');
-          const err = new Error(invitationMsg.error);
-          reject(err);
-          error.emit(err);
-        }
-      }, error => {
-        if (error) {
-          console.error(error);
-          reject(error);
-          // TODO(rzadp): Handle retry.
-        }
-      });
-    });
-  }
-
-  private _removeInvitation (invitation: InvitationRequest) {
-    const index = this.activeInvitations.findIndex(activeInvitation => activeInvitation === invitation);
-    this.activeInvitations.splice(index, 1);
-    this.invitationsUpdate.emit();
+    return this.createInvitationRequest({stream})
   }
 
   queryMembers () {

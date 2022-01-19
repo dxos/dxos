@@ -86,9 +86,51 @@ export class HaloProxy {
   }
 
   /**
-   * Joins an existing identity HALO by invitation.
-   * @returns An async function to provide secret and finishing the invitation process.
+   * Creates an invitation to an existing HALO party.
+   * Used to authorize another device of the same user.
+   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.halo.joinHaloInvitation` on the invitee side.
    */
+     async createInvitation (): Promise<PendingInvitation> {
+      const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
+      return new Promise((resolve, reject) => {
+        stream.subscribe(invitationMsg => {
+          if (invitationMsg.state === InvitationState.SUCCESS) {
+            options?.onFinish?.({});
+            stream.close();
+          } else {
+            const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined;
+            const pendingInvitation: PendingInvitation = {
+              invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
+              pin
+            };
+            if (pin && options?.onPinGenerated) {
+              options.onPinGenerated(pin);
+            }
+            resolve(pendingInvitation);
+          }
+        }, error => {
+          if (error) {
+            console.error(error);
+            reject(error);
+            // TODO(rzadp): Handle retry.
+          }
+        });
+      });
+    }
+
+  /**
+   * Joins an existing identity HALO by invitation.
+   * Used to authorize another device of the same user.
+   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.halo.createHaloInvitation` on the inviter side.
+   *
+   * @returns An async function to provide secret and finishing the invitation process.
+  */
   async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
     const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
       const invitationProcessStream = this._serviceProvider.services.ProfileService.AcceptInvitation(
@@ -114,37 +156,6 @@ export class HaloProxy {
         secret: Buffer.from(secret)
       });
     };
-  }
-
-  /**
-   * Create an invitation to an exiting identity HALO.
-   */
-  async createInvitation (options?: CreateInvitationOptions): Promise<PendingInvitation> {
-    const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
-    return new Promise((resolve, reject) => {
-      stream.subscribe(invitationMsg => {
-        if (invitationMsg.state === InvitationState.SUCCESS) {
-          options?.onFinish?.({});
-          stream.close();
-        } else {
-          const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined;
-          const pendingInvitation: PendingInvitation = {
-            invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
-            pin
-          };
-          if (pin && options?.onPinGenerated) {
-            options.onPinGenerated(pin);
-          }
-          resolve(pendingInvitation);
-        }
-      }, error => {
-        if (error) {
-          console.error(error);
-          reject(error);
-          // TODO(rzadp): Handle retry.
-        }
-      });
-    });
   }
 
   /**
