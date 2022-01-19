@@ -4,4 +4,3 @@
 
 export * from './client-service-provider';
 export * from './errors';
-export * from './pending-invitation';

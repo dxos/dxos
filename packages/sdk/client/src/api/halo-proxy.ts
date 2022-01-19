@@ -2,19 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
-import { SubscriptionGroup } from '@dxos/util';
+import assert from 'assert';
 
-import { ClientServiceProvider, PendingInvitation } from '../interfaces';
+import { Event, trigger } from '@dxos/async';
+import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationDescriptorType, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
+import { SubscriptionGroup } from '@dxos/util';
+import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
+
+import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Profile, RedeemedInvitation } from '../proto/gen/dxos/client';
 import { encodeInvitation } from '../util';
+import { throwUnhandledRejection } from '@dxos/debug';
+import { RpcClosedError } from '@dxos/rpc';
 
 export interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
 }
 
-export class HaloProxy {
+export class HaloProxy extends InvitationProxy {
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
 
@@ -23,9 +28,11 @@ export class HaloProxy {
 
   private readonly _subscriptions = new SubscriptionGroup();
 
-  constructor (private readonly _serviceProvider: ClientServiceProvider) {}
+  constructor (private readonly _serviceProvider: ClientServiceProvider) {
+    super();
+  }
 
-  toString () {
+  override toString () {
     return `HaloProxy(${this._profile?.publicKey})`;
   }
 
@@ -93,32 +100,9 @@ export class HaloProxy {
    *
    * To be used with `client.halo.joinHaloInvitation` on the invitee side.
    */
-     async createInvitation (): Promise<PendingInvitation> {
+     async createInvitation (): Promise<InvitationRequest> {
       const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
-      return new Promise((resolve, reject) => {
-        stream.subscribe(invitationMsg => {
-          if (invitationMsg.state === InvitationState.SUCCESS) {
-            options?.onFinish?.({});
-            stream.close();
-          } else {
-            const pin = invitationMsg.descriptor?.secret ? Buffer.from(invitationMsg.descriptor.secret).toString() : undefined;
-            const pendingInvitation: PendingInvitation = {
-              invitationCode: encodeInvitation(InvitationDescriptor.fromProto(invitationMsg.descriptor!)),
-              pin
-            };
-            if (pin && options?.onPinGenerated) {
-              options.onPinGenerated(pin);
-            }
-            resolve(pendingInvitation);
-          }
-        }, error => {
-          if (error) {
-            console.error(error);
-            reject(error);
-            // TODO(rzadp): Handle retry.
-          }
-        });
-      });
+      return this.createInvitationRequest({stream});
     }
 
   /**
@@ -131,31 +115,55 @@ export class HaloProxy {
    *
    * @returns An async function to provide secret and finishing the invitation process.
   */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
-    const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
-      const invitationProcessStream = this._serviceProvider.services.ProfileService.AcceptInvitation(
-        invitationDescriptor.toProto()
-      );
-      invitationProcessStream.subscribe(redeemedInvitation => {
-        if (redeemedInvitation.state === InvitationState.CONNECTED) {
-          resolve(redeemedInvitation);
-        }
-        if (redeemedInvitation.state === InvitationState.ERROR) {
-          reject(redeemedInvitation.error);
-        }
-      }, error => {
-        if (error) {
-          reject(error);
-        }
-      });
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitation>();
+    const [waitForFinish, resolveFinish] = trigger<void>();
+
+    const invitationProcessStream = this._serviceProvider.services.ProfileService.AcceptInvitation(invitationDescriptor.toProto());
+
+    invitationProcessStream.subscribe(async process => {
+      resolveInvitationProcess(process);
+
+      if (process.state === InvitationState.SUCCESS) {
+        assert(process.partyKey);
+        await this._profileChanged.waitForCondition(() => !!this.profile?.publicKey);
+
+        resolveFinish();
+      } else if (process.state === InvitationState.ERROR) {
+        assert(process.error);
+        const error = new Error(process.error);
+        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        throwUnhandledRejection(error);
+      }
+    }, error => {
+      if (error && !(error instanceof RpcClosedError)) {
+        // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        throwUnhandledRejection(error);
+      }
     });
 
-    return async (secret: string) => {
+    const authenticate = async (secret: Uint8Array) => {
+      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+        throw new Error('Cannot authenticate offline invitation.');
+      }
+
+      const invitationProcess = await getInvitationProcess();
+
       await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
-        processId: redeemedInvitation.id,
-        secret: Buffer.from(secret)
+        processId: invitationProcess.id,
+        secret
       });
     };
+
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
+      void authenticate(invitationDescriptor.secret);
+    }
+
+    return new Invitation(
+      invitationDescriptor,
+      waitForFinish(),
+      authenticate
+    );
   }
 
   /**
