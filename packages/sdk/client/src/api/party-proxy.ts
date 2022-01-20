@@ -13,6 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
+import { Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest, InvitationProxy } from './invitations';
 

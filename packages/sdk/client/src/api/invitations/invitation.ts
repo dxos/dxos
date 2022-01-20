@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationDescriptor, InvitationDescriptorType } from '@dxos/echo-db';
-import { assert } from 'console';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 /**
  * Invitation that is being redeemed.
@@ -12,13 +11,16 @@ import { assert } from 'console';
 export class Invitation<T = void> {
   constructor (
     protected readonly _descriptor: InvitationDescriptor,
-    protected readonly _invitationPromise: Promise<T>
-  ) {
-    assert(_descriptor.type === InvitationDescriptorType.OFFLINE, 'Interactive invitation should be used with `AuthenticatedInvitation` class.');
-  }
+    protected readonly _invitationPromise: Promise<T>,
+    protected readonly _onAuthenticate: (secret: Uint8Array) => void
+  ) {}
 
   get descriptor () {
     return this._descriptor;
+  }
+
+  authenticate (secret: Uint8Array) {
+    this._onAuthenticate(secret);
   }
 
   /**
@@ -30,23 +32,5 @@ export class Invitation<T = void> {
 
   toJSON () {
     return this.descriptor.toProto();
-  }
-}
-
-/**
- * Invitation that is being redeemed.
- * It works in interactive mode and requires authentication.
- */
- export class AuthenticatedInvitation<T = void> extends Invitation<T> {
-  constructor (
-    _descriptor: InvitationDescriptor,
-    _invitationPromise: Promise<T>,
-    protected readonly _onAuthenticate: (secret: Uint8Array) => void
-  ) {
-    super(_descriptor, _invitationPromise);
-  }
-
-  authenticate (secret: Uint8Array) {
-    this._onAuthenticate(secret);
   }
 }

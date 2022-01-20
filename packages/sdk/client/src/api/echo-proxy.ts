@@ -4,23 +4,21 @@
 
 import assert from 'assert';
 
-import { Event, latch, trigger } from '@dxos/async';
+import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptorType, ResultSet } from '@dxos/echo-db';
+import { failUndefined } from '@dxos/debug';
+import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
-import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { AuthenticatedInvitation } from './invitations';
+import { Invitation, InvitationProxy } from './invitations';
 import { PartyProxy } from './party-proxy';
 
-export class PartyInvitation extends AuthenticatedInvitation<PartyProxy> {
+export class PartyInvitation extends Invitation<PartyProxy> {
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
@@ -140,51 +138,25 @@ export class EchoProxy {
 
   /**
    * Joins an existing Party by invitation.
-   * @returns An async function to provide secret and finishing the invitation process.
+   *
+   * To be used with `party.createInvitation` on the inviter side.
    */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation {
-    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitation>();
-    const [waitForParty, resolveParty] = trigger<PartyProxy>();
-
     const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
-
-    invitationProcessStream.subscribe(async process => {
-      resolveInvitationProcess(process);
-
-      if (process.state === InvitationState.SUCCESS) {
-        assert(process.partyKey);
-        await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
-
-        resolveParty(this.getParty(process.partyKey) ?? failUndefined());
-      } else if (process.state === InvitationState.ERROR) {
-        assert(process.error);
-        const error = new Error(process.error);
-        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
-        throwUnhandledRejection(error);
-      }
-    }, error => {
-      if (error && !(error instanceof RpcClosedError)) {
-        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
-        throwUnhandledRejection(error);
+    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
+      stream: invitationProcessStream,
+      invitationDescriptor,
+      onAuthenticate: async (request) => {
+        await this._serviceProvider.services.PartyService.AuthenticateInvitation(request);
       }
     });
 
-    const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
-        throw new Error('Cannot authenticate offline invitation.');
-      }
-
-      const invitationProcess = await getInvitationProcess();
-
-      await this._serviceProvider.services.PartyService.AuthenticateInvitation({
-        processId: invitationProcess.id,
-        secret
-      });
+    const waitForParty = async () => {
+      const process = await waitForFinish();
+      assert(process.partyKey);
+      await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
+      return this.getParty(process.partyKey) ?? failUndefined();
     };
-
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
-      void authenticate(invitationDescriptor.secret);
-    }
 
     return new PartyInvitation(
       invitationDescriptor,

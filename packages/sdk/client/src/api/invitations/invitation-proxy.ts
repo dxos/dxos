@@ -4,15 +4,28 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event, trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { throwUnhandledRejection } from '@dxos/debug';
+import { InvitationDescriptor, InvitationDescriptorType } from '@dxos/echo-db';
+import { RpcClosedError } from '@dxos/rpc';
 
-import { InvitationRequest as InvitationRequestProto, InvitationState } from '../../proto/gen/dxos/client';
+import { AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto } from '../../proto/gen/dxos/client';
 import { InvitationRequest } from './invitation-request';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>
+}
+
+export interface HandleInvitationRedemptionOpts {
+  stream: Stream<RedeemedInvitationProto>,
+  invitationDescriptor: InvitationDescriptor,
+  onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>
+}
+
+export interface HandleInvitationRedemptionResult {
+  waitForFinish: () => Promise<RedeemedInvitationProto>,
+  authenticate: (secret: Uint8Array) => void
 }
 
 export class InvitationProxy {
@@ -70,5 +83,53 @@ export class InvitationProxy {
     const index = this.activeInvitations.findIndex(activeInvitation => activeInvitation === invitation);
     this.activeInvitations.splice(index, 1);
     this.invitationsUpdate.emit();
+  }
+
+  static handleInvitationRedemption (
+    { stream, invitationDescriptor, onAuthenticate }: HandleInvitationRedemptionOpts
+  ): HandleInvitationRedemptionResult {
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitationProto>();
+    const [waitForFinish, resolveFinish] = trigger<RedeemedInvitationProto>();
+
+    stream.subscribe(async process => {
+      resolveInvitationProcess(process);
+
+      if (process.state === InvitationState.SUCCESS) {
+        resolveFinish(process);
+      } else if (process.state === InvitationState.ERROR) {
+        assert(process.error);
+        const error = new Error(process.error);
+        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        throwUnhandledRejection(error);
+      }
+    }, error => {
+      if (error && !(error instanceof RpcClosedError)) {
+        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        throwUnhandledRejection(error);
+      }
+    });
+
+    const authenticate = async (secret: Uint8Array) => {
+      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+        throw new Error('Cannot authenticate offline invitation.');
+      }
+
+      const invitationProcess = await getInvitationProcess();
+
+      await onAuthenticate({
+        processId: invitationProcess.id,
+        secret
+      });
+    };
+
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
+      // Authenticate straight away, if secret is already provided.
+      void authenticate(invitationDescriptor.secret);
+    }
+
+    return {
+      authenticate,
+      waitForFinish
+    };
   }
 }
