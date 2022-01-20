@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { PartyProxy, decodeInvitation } from '@dxos/client';
-import { Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
@@ -55,12 +54,11 @@ export const Primary = () => {
 
 /**
  * Enables shared parties and replication.
- * @constructor
  */
 export const Peers = () => {
   const Root = () => {
     const client = useClient();
-    const [party, setParty] = useState<PartyProxy | Party>();
+    const [party, setParty] = useState<PartyProxy>();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();

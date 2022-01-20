@@ -22,7 +22,6 @@ import {
 import { makeStyles } from '@mui/styles';
 
 import { PartyProxy, encodeInvitation } from '@dxos/client';
-import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector, useClient } from '@dxos/react-client';
@@ -87,7 +86,7 @@ const VIEW_GRID = 3;
 const VIEW_GRAPH = 4;
 
 interface MainProps {
-  party: PartyProxy | Party
+  party: PartyProxy
   showInvitation?: boolean
 }
 
@@ -135,7 +134,7 @@ export const Main = ({ party, showInvitation }: MainProps) => {
   };
 
   const handleCopyInvite = async () => {
-    const invitation = await client.echo.createInvitation(party.key);
+    const invitation = await party.createInvitation();
     const encodedInvitation = encodeInvitation(invitation.descriptor);
 
     // TODO(burdon): Downside here is no way to prevent sender from being lazy (sending secret together).

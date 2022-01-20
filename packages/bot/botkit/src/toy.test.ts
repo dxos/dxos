@@ -90,7 +90,6 @@ describe('In-Memory', () => {
 
       const botHandle = await botFactoryClient.spawn(
         {},
-        client,
         party
       );
 
@@ -165,7 +164,6 @@ describe('Node', () => {
         {
           dxn: botDXN
         },
-        client,
         party
       );
 

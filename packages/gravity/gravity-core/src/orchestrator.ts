@@ -186,7 +186,7 @@ export class Orchestrator {
 
   // TODO(egorgripasov): Takes non-defined time; wait for node to appear in control party?
   async _inviteBot (botId: string) {
-    const invitation = await this._client.echo.createInvitation(this._party.key);
+    const invitation = await this._party.createInvitation();
 
     await this._factoryClient.sendInvitationRequest(botId, this._party.key.toHex(), {}, invitation.descriptor.toQueryParameters());
 
