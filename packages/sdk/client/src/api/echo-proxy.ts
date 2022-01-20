@@ -17,10 +17,10 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { Invitation } from './invitations';
+import { AuthenticatedInvitation } from './invitations';
 import { PartyProxy } from './party-proxy';
 
-export class PartyInvitation extends Invitation<PartyProxy> {
+export class PartyInvitation extends AuthenticatedInvitation<PartyProxy> {
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
@@ -164,7 +164,7 @@ export class EchoProxy {
       }
     }, error => {
       if (error && !(error instanceof RpcClosedError)) {
-        // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
         throwUnhandledRejection(error);
       }
     });

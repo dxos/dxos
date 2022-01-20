@@ -12,7 +12,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Profile, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
+import { Invitation, InvitationProxy, InvitationRequest, AuthenticatedInvitation } from './invitations';
 
 export interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
@@ -136,7 +136,7 @@ export class HaloProxy extends InvitationProxy {
       }
     }, error => {
       if (error && !(error instanceof RpcClosedError)) {
-        // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
+        // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
         throwUnhandledRejection(error);
       }
     });
@@ -158,7 +158,7 @@ export class HaloProxy extends InvitationProxy {
       void authenticate(invitationDescriptor.secret);
     }
 
-    return new Invitation(
+    return new AuthenticatedInvitation(
       invitationDescriptor,
       waitForFinish(),
       authenticate
