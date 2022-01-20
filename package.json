@@ -17,7 +17,7 @@
   "workspaces": {
     "packages": [
       "packages/experimental/*",
-      "packages/v7/*"
+      "packages/v2/*"
     ]
   },
   "scripts": {
