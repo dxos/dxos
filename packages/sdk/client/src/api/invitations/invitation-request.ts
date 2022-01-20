@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
-import assert from 'assert';
 
 /**
  * Invitation created by sender.

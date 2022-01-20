@@ -24,7 +24,7 @@ import { makeStyles } from '@mui/styles';
 import { PartyProxy, encodeInvitation } from '@dxos/client';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, searchSelector, useClient } from '@dxos/react-client';
+import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
   CardView,
@@ -92,7 +92,6 @@ interface MainProps {
 
 export const Main = ({ party, showInvitation }: MainProps) => {
   const classes = useStyles();
-  const client = useClient();
 
   const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);

@@ -2,13 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-
-import { Event } from '@dxos/async';
-import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
-
-import { PartyProxy } from '../party-proxy';
 
 /**
  * Invitation that is being redeemed.

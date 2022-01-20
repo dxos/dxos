@@ -6,8 +6,8 @@ import assert from 'assert';
 
 import { Event, latch, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { failUndefined, throwUnhandledRejection } from '@dxos/debug';
+import { InvitationDescriptor, InvitationDescriptorType, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -17,7 +17,7 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { Invitation, InvitationRequest } from './invitations';
+import { Invitation } from './invitations';
 import { PartyProxy } from './party-proxy';
 
 export class PartyInvitation extends Invitation<PartyProxy> {

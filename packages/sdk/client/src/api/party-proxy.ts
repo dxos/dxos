@@ -2,13 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
-import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  ActivationOptions, Database, InvitationDescriptor, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
+  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -16,10 +13,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
-import { InvitationState, Party } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
-import { InvitationRequest, InvitationProxy} from './invitations';
-import { Invitation } from './invitations';
+import { InvitationRequest, InvitationProxy } from './invitations';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
@@ -137,7 +132,7 @@ export class PartyProxy extends InvitationProxy {
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });
-    return this.createInvitationRequest({stream})
+    return this.createInvitationRequest({ stream });
   }
 
   queryMembers () {

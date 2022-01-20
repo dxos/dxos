@@ -2,10 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { InvitationDescriptor } from '@dxos/echo-db';
-import assert from 'assert';
+
 import { InvitationRequest as InvitationRequestProto, InvitationState } from '../../proto/gen/dxos/client';
 import { InvitationRequest } from './invitation-request';
 
@@ -17,7 +19,7 @@ export class InvitationProxy {
   readonly activeInvitations: InvitationRequest[] = [];
   readonly invitationsUpdate = new Event();
 
-  protected async createInvitationRequest ({stream}: CreateInvitationRequestOpts): Promise<InvitationRequest> {
+  protected async createInvitationRequest ({ stream }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();

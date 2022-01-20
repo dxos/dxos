@@ -8,13 +8,13 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { InvitationDescriptor, OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
+import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy, CreateInvitationOptions, HaloProxy } from '../api';
+import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { System } from '../proto/gen/dxos/config';

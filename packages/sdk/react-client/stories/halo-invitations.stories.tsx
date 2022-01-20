@@ -46,8 +46,8 @@ const HaloInvitationContainer = () => {
     const invitation = await client.halo.createInvitation();
     invitation.finished.on(() => resetInvitations());
     invitation.connected.on(() => {
-      setPin(invitation.secret.toString())
-    })
+      setPin(invitation.secret.toString());
+    });
 
     setInvitationCode(encodeInvitation(invitation.descriptor));
   };
@@ -109,7 +109,6 @@ const HaloAuthenticationContainer = () => {
       const invitationDescriptor = decodeInvitation(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
-
     } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });

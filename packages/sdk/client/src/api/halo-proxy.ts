@@ -5,15 +5,14 @@
 import assert from 'assert';
 
 import { Event, trigger } from '@dxos/async';
+import { throwUnhandledRejection } from '@dxos/debug';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationDescriptorType, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
+import { RpcClosedError } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
-import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
 
 import { ClientServiceProvider } from '../interfaces';
 import { InvitationState, Profile, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { encodeInvitation } from '../util';
-import { throwUnhandledRejection } from '@dxos/debug';
-import { RpcClosedError } from '@dxos/rpc';
+import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
 
 export interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
@@ -100,10 +99,10 @@ export class HaloProxy extends InvitationProxy {
    *
    * To be used with `client.halo.joinHaloInvitation` on the invitee side.
    */
-     async createInvitation (): Promise<InvitationRequest> {
-      const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
-      return this.createInvitationRequest({stream});
-    }
+  async createInvitation (): Promise<InvitationRequest> {
+    const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
+    return this.createInvitationRequest({ stream });
+  }
 
   /**
    * Joins an existing identity HALO by invitation.

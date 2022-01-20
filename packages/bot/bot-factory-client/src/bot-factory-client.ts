@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { promiseTimeout } from '@dxos/async';
-import type { PartyProxy, Client } from '@dxos/client';
+import type { PartyProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
