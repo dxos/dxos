@@ -6,8 +6,14 @@ import { useState } from 'react';
 
 import { trigger } from '@dxos/async';
 
-export const useSecretProvider = <T> (): [() => Promise<T>, (value: T) => void] => {
-  const [[provider, resolver]] = useState(() => trigger<T>());
+type Provider<T> = () => Promise<T>;
+type Resolver<T> = (value: T) => void;
+type Reset = () => void;
 
-  return [provider, resolver];
+export const useSecretProvider = <T> (): [Provider<T>, Resolver<T>, Reset] => {
+  const [[provider, resolver], setState] = useState(() => trigger<T>());
+
+  const reset = () => setState(() => trigger<T>());
+
+  return [provider, resolver, reset];
 };

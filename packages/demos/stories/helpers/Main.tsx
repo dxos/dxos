@@ -22,10 +22,9 @@ import {
 import { makeStyles } from '@mui/styles';
 
 import { PartyProxy, encodeInvitation } from '@dxos/client';
-import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, searchSelector, useClient } from '@dxos/react-client';
+import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
   CardView,
@@ -87,13 +86,12 @@ const VIEW_GRID = 3;
 const VIEW_GRAPH = 4;
 
 interface MainProps {
-  party: PartyProxy | Party
+  party: PartyProxy
   showInvitation?: boolean
 }
 
 export const Main = ({ party, showInvitation }: MainProps) => {
   const classes = useStyles();
-  const client = useClient();
 
   const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);
@@ -135,7 +133,7 @@ export const Main = ({ party, showInvitation }: MainProps) => {
   };
 
   const handleCopyInvite = async () => {
-    const invitation = await client.echo.createInvitation(party.key);
+    const invitation = await party.createInvitation();
     const encodedInvitation = encodeInvitation(invitation.descriptor);
 
     // TODO(burdon): Downside here is no way to prevent sender from being lazy (sending secret together).

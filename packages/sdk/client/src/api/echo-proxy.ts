@@ -4,21 +4,28 @@
 
 import assert from 'assert';
 
-import { Event, latch, trigger } from '@dxos/async';
+import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise, throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
+import { failUndefined } from '@dxos/debug';
+import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { RpcClosedError } from '@dxos/rpc';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
-import { InvitationState, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { Invitation, InvitationRequest } from './invitations';
+import { Invitation, InvitationProxy } from './invitations';
 import { PartyProxy } from './party-proxy';
+
+export class PartyInvitation extends Invitation<PartyProxy> {
+  /**
+   * Wait for the invitation flow to complete and return the target party.
+   */
+  getParty (): Promise<PartyProxy> {
+    return this.wait();
+  }
+}
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
@@ -131,75 +138,30 @@ export class EchoProxy {
 
   /**
    * Joins an existing Party by invitation.
-   * @returns An async function to provide secret and finishing the invitation process.
+   *
+   * To be used with `party.createInvitation` on the inviter side.
    */
-  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
-    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitation>();
-    const [waitForParty, resolveParty] = trigger<PartyProxy>();
-
-    setImmediate(async () => {
-      const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
-
-      invitationProcessStream.subscribe(async process => {
-        resolveInvitationProcess(process);
-
-        if (process.state === InvitationState.SUCCESS) {
-          assert(process.partyKey);
-          await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
-
-          resolveParty(this.getParty(process.partyKey) ?? failUndefined());
-        } else if (process.state === InvitationState.ERROR) {
-          assert(process.error);
-          const error = new Error(process.error);
-          // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
-          throwUnhandledRejection(error);
-        }
-      }, error => {
-        if (error && !(error instanceof RpcClosedError)) {
-          // TODO(dmaretskyi): Should reuslt in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
-          throwUnhandledRejection(error);
-        }
-      });
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation {
+    const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
+    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
+      stream: invitationProcessStream,
+      invitationDescriptor,
+      onAuthenticate: async (request) => {
+        await this._serviceProvider.services.PartyService.AuthenticateInvitation(request);
+      }
     });
 
-    const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
-        throw new Error('Cannot authenticate offline invitation.');
-      }
-
-      const invitationProcess = await getInvitationProcess();
-
-      await this._serviceProvider.services.PartyService.AuthenticateInvitation({
-        processId: invitationProcess.id,
-        secret
-      });
+    const waitForParty = async () => {
+      const process = await waitForFinish();
+      assert(process.partyKey);
+      await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
+      return this.getParty(process.partyKey) ?? failUndefined();
     };
 
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
-      void authenticate(invitationDescriptor.secret);
-    }
-
-    return new Invitation(
+    return new PartyInvitation(
       invitationDescriptor,
       waitForParty(),
       authenticate
     );
-  }
-
-  /**
-   * Creates an invitation to a given party.
-   * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   *
-   * @deprecated Use party.createInvitation(...).
-   */
-  async createInvitation (partyKey: PublicKey): Promise<InvitationRequest> {
-    const party = this.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createInvitation();
   }
 }
