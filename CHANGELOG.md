@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.22.0](https://www.github.com/dxos/protocols/compare/v2.21.2...v2.22.0) (2022-01-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactor Party and Halo invitations (#856)
+
+### Features
+
+* Refactor Party and Halo invitations ([#856](https://www.github.com/dxos/protocols/issues/856)) ([33d9f47](https://www.github.com/dxos/protocols/commit/33d9f4759b32a732ad6cedc4af6eacd186b0890c))
+
 ### [2.21.2](https://www.github.com/dxos/protocols/compare/v2.21.1...v2.21.2) (2022-01-19)
 
 
