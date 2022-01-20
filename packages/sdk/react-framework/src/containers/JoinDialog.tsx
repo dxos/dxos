@@ -6,9 +6,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { decodeInvitation } from '@dxos/client';
+import { decodeInvitation, PartyProxy } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
-import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
@@ -31,7 +31,7 @@ export interface JoinDialogProps {
   open: boolean
   title: string
   invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
+  onJoin: (joinOptions: JoinOptions) => Promise<PartyProxy | void>
   onClose?: () => void
   closeOnSuccess?: boolean
   modal?: boolean

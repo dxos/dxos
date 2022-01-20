@@ -1,5 +1,36 @@
 # Change Log
 
+### [2.21.2](https://www.github.com/dxos/protocols/compare/v2.21.1...v2.21.2) (2022-01-19)
+
+
+### Bug Fixes
+
+* Party invitations missing when dialog first opens ([#853](https://www.github.com/dxos/protocols/issues/853)) ([2c52f4b](https://www.github.com/dxos/protocols/commit/2c52f4b6e064337bd6bfbca1bfb4a8fe86db4c98))
+
+### [2.21.1](https://www.github.com/dxos/protocols/compare/v2.21.0...v2.21.1) (2022-01-19)
+
+
+### Features
+
+* Add onJoin callback to JoinPartyDialog ([#851](https://www.github.com/dxos/protocols/issues/851)) ([7f9332c](https://www.github.com/dxos/protocols/commit/7f9332c0f1ee160b2e093df93953bc5733bcb277))
+
+## [2.21.0](https://www.github.com/dxos/protocols/compare/v2.20.0...v2.21.0) (2022-01-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Automatic client mode (#841)
+
+### Features
+
+* Automatic client mode ([#841](https://www.github.com/dxos/protocols/issues/841)) ([020bff5](https://www.github.com/dxos/protocols/commit/020bff5957a9769a5f7fda5ed63dc5e2642e0724))
+
+
+### Bug Fixes
+
+* **client:** Make PartyProxy queryMembers responsive ([#850](https://www.github.com/dxos/protocols/issues/850)) ([2433426](https://www.github.com/dxos/protocols/commit/243342686f803ce471c6b65890f923967c443d05))
+* React framework types ([#848](https://www.github.com/dxos/protocols/issues/848)) ([e197fd2](https://www.github.com/dxos/protocols/commit/e197fd2e705e03cbc8e04913f1b11716587f8acd))
+
 ## [2.20.0](https://www.github.com/dxos/protocols/compare/v2.19.11...v2.20.0) (2022-01-18)
 
 
