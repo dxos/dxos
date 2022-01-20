@@ -160,6 +160,19 @@ describe('Client', () => {
         const members = party.queryMembers().value;
         expect(members.length).toEqual(2);
       }).timeout(5000);
+
+      test('creates and joins more than 1 Party', async () => {
+        const { inviter, invitee } = await prepareInvitations();
+
+        for (let i = 0; i < 3; i++) {
+          const party = await inviter.echo.createParty();
+          const invitation = await party.createInvitation();
+          invitation.error.on(throwUnhandledRejection);
+          const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+
+          expect(inviteeParty.key).toEqual(party.key);
+        }
+      }).timeout(5000);
     });
 
     describe('HALO invitations', () => {
