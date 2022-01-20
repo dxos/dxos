@@ -19,7 +19,7 @@ export const Primary = () => {
 
   useEffect(() => {
     const callable = createText({
-      center: [-64, -16],
+      bounds: { x: -64, y: -16, width: 128, height: 32 },
       text,
       editable: true,
       onUpdate: (text: string) => setText(text),

@@ -21,6 +21,11 @@ export const canvasStyles = css`
       fill: #F5F5F5;
       opacity: 0.7;
     }
+    
+    text, input {
+      font-size: 18px;
+      font-family: sans-serif;
+    }
 
     // TODO(burdon): Create separate group for frames/handles.
  

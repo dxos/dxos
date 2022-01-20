@@ -58,9 +58,18 @@ const createRect = (scale: Scale): D3Callable => {
       .attr('width', width)
       .attr('height', height);
 
-    const [cx, cy] = Screen.center({ x, y, width, height });
     group
-      .call(createText({ center: [cx, cy], text, editable: control.editing }));
+      .call(createText({
+        editable: control.editing,
+        bounds: { x, y, width, height },
+        text,
+        onUpdate: (value: string) => {
+          const { text, ...rest } = control.data;
+          control.onUpdate({ text: value, ...rest }, true);
+          control.onEdit(false);
+        },
+        onCancel: () => control.onEdit(false)
+      }));
     // eslint-enable indent
   };
 };
@@ -93,7 +102,7 @@ export class RectControl extends Control<Rect> {
 
   override drawable: D3Callable = group => {
     group.call(this._main, group.datum());
-    group.call(this._connectors, group.datum(), !this.selected && this.hover);
+    group.call(this._connectors, group.datum(), !this.editing && !this.selected && this.hover);
     group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
   };
 

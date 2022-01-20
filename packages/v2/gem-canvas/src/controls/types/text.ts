@@ -2,25 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Point } from '@dxos/gem-core';
+import { Point, ScreenBounds } from '@dxos/gem-core';
 
 import { D3Callable } from '../../types';
 
 // TODO(burdon): Same API as createLine (i.e., update Control).
 export const createText = ({
-  center,
+  bounds,
   text,
   editable = false,
   onUpdate,
   onCancel
 }: {
-  center: Point,
+  bounds: ScreenBounds,
   text: string,
   editable?: boolean,
   onUpdate?: (text: string) => void,
   onCancel?: () => void
 }): D3Callable => {
-  const [x, y] = center;
+  const { x, y, width, height } = bounds;
 
   return group => {
     // eslint-disable indent
@@ -30,8 +30,8 @@ export const createText = ({
       .style('pointer-events', 'none')
       .style('dominant-baseline', 'central')
       .style('text-anchor', 'middle')
-      .attr('x', x)
-      .attr('y', y)
+      .attr('x', x + width / 2)
+      .attr('y', y + height / 2)
       .text(text);
 
     // TODO(burdon): Loses focus when hover status changes.
@@ -39,23 +39,36 @@ export const createText = ({
       .selectAll('foreignObject')
       .data(editable ? ['_editable_'] : [])
       .join('foreignObject')
-        .style('width', 128)
-        .style('height', 32)
+        .style('width', width)
+        .style('height', height)
         .attr('x', x)
-        .attr('y', y)
+        .attr('y', y - 1) // TODO(burdon): SVG Text is 0.5 pixels off.
 
       .selectAll('input')
       .data([{ id: 'text', text }], ({ id }) => id)
-      .join('xhtml:input')
+      .join(enter => {
+        // Create and focus.
+        const input =  enter.append('xhtml:input');
+        if (input.node()) {
+          setTimeout(() => {
+            (input.node() as HTMLInputElement)?.focus();
+          });
+        }
+        return input;
+      })
         .style('width', '100%')
         .style('height', '100%')
         .style('border', 'none')
         .style('outline', 'none')
         .style('padding', 0)
         .style('text-align', 'center')
-        // .style('background', 'transparent')
+        .style('background', 'transparent')
         .attr('type', 'text')
         .property('value', d => d.text)
+        .on('blur', (event) => {
+          const text = (event.target as HTMLInputElement).value;
+          onUpdate?.(text);
+        })
         .on('keydown', (event: KeyboardEvent, d) => {
           const text = (event.target as HTMLInputElement).value;
           switch (event.key) {
@@ -64,13 +77,14 @@ export const createText = ({
               onUpdate?.(text);
               break;
             }
-            // TODO(burdon): Force update.
             case 'Escape': {
               (event.target as HTMLInputElement).value = d.text;
               onCancel?.();
               break;
             }
           }
+
+          event.stopPropagation();
         });
     // eslint-enable indent
   };

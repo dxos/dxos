@@ -127,17 +127,30 @@ export const Canvas = ({
         return enter
           .append('g')
           .attr('class', 'element')
+          // TODO(burdon): Factor out.
           .on('click', function () {
             const control = d3.select(this).datum() as Control<any>;
-            control.onSelect(true);
+            if (!control.editing) {
+              control.onSelect(true);
+            }
+          })
+          .on('dblclick', function () {
+            const control = d3.select(this).datum() as Control<any>;
+            if (!control.editing) {
+              control.onEdit(true);
+            }
           })
           .on('mouseenter', function () {
             const control = d3.select(this).datum() as Control<any>;
-            control.onHover(true);
+            if (!control.editing) {
+              control.onHover(true);
+            }
           })
           .on('mouseleave', function () {
             const control = d3.select(this).datum() as Control<any>;
-            control.onHover(false);
+            if (!control.editing) {
+              control.onHover(false);
+            }
           });
       })
       .each((control, i, nodes) => {

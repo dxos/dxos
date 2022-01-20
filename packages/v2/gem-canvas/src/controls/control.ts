@@ -126,12 +126,20 @@ export abstract class Control<T extends ElementDataType> {
     this._state = ControlState.NORMAL;
   }
 
+  /**
+   * Called by framework (not on control directly).
+   * @param state
+   */
   setState (state: ControlState) {
     if (this._state !== state) {
       this._state = state;
       this._modified = true;
     }
   }
+
+  //
+  // Event handlers.
+  //
 
   onSelect (select: boolean) {
     if (select && !this.selected) {
@@ -142,6 +150,7 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   onEdit (edit: boolean) {
+    this._hover = false;
     if (edit && !this.editing) {
       this._onSelect?.(this.element, true);
     } else if (!edit && this.editing) {

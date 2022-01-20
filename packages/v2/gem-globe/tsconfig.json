@@ -22,6 +22,6 @@
     "stories",
   ],
   "references": [
-    { "path": "../gem-x" }
+    { "path": "../gem-core" }
   ]
 }

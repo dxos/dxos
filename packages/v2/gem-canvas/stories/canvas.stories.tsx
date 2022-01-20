@@ -113,6 +113,7 @@ export const Primary = () => {
 
       log('created', element.type, element.id);
       setSelection({ element, state: ControlState.SELECTED });
+      setTool(undefined);
       return [...elements, element];
     });
 

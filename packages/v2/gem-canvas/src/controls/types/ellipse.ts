@@ -22,6 +22,7 @@ const createEllipse = (scale: Scale): D3Callable => {
     const { center, text } = data;
     const [cx, cy] = scale.model.toPoint(center);
     const [rx, ry] = scale.model.toValues([data.rx, data.ry]);
+    const bounds = control.getBounds();
 
     // eslint-disable indent
     group
@@ -59,7 +60,7 @@ const createEllipse = (scale: Scale): D3Callable => {
       .attr('ry', ry)
 
     group
-      .call(createText({ center: [cx, cy], text }));
+      .call(createText({ bounds, text }));
     // eslint-enable indent
   };
 };
@@ -92,7 +93,7 @@ export class EllipseControl extends Control<Ellipse> {
 
   override drawable: D3Callable = group => {
     group.call(this._main, group.datum());
-    group.call(this._connectors, group.datum(), !this.selected && this.hover);
+    group.call(this._connectors, group.datum(), !this.editing && !this.selected && this.hover);
     group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
   };
 
