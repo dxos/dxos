@@ -160,6 +160,47 @@ describe('Client', () => {
         const members = party.queryMembers().value;
         expect(members.length).toEqual(2);
       }).timeout(5000);
+
+      test('creates and joins more than 1 Party', async () => {
+        const { inviter, invitee } = await prepareInvitations();
+
+        for (let i = 0; i < 3; i++) {
+          const party = await inviter.echo.createParty();
+          const invitation = await party.createInvitation();
+          invitation.error.on(throwUnhandledRejection);
+          const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+
+          expect(inviteeParty.key).toEqual(party.key);
+        }
+      }).timeout(5000);
+    });
+
+    describe('HALO invitations', () => {
+      const prepareInvitations = async () => {
+        const inviter = await createClient();
+        await inviter.initialize();
+        afterTest(() => inviter.destroy());
+
+        const invitee = await createClient();
+        await invitee.initialize();
+        afterTest(() => invitee.destroy());
+
+        await inviter.halo.createProfile({ username: 'inviter' });
+        expect(inviter.halo.profile).not.toBeUndefined();
+
+        return { inviter, invitee };
+      };
+
+      test('creates and joins a HALO invitation', async () => {
+        const { inviter, invitee } = await prepareInvitations();
+        expect(invitee.halo.profile).toBeUndefined();
+
+        const invitation = await inviter.halo.createInvitation();
+        invitation.error.on(throwUnhandledRejection);
+        await invitee.halo.acceptInvitation(invitation.descriptor).wait();
+
+        expect(invitee.halo.profile).not.toBeUndefined();
+      }).timeout(5000);
     });
 
     describe('data', () => {

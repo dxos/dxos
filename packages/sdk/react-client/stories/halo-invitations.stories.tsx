@@ -8,8 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { Awaited } from '@dxos/async';
-import { Client, decodeInvitation, PendingInvitation } from '@dxos/client';
+import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
 
 import {
   ClientProvider,
@@ -33,19 +32,24 @@ export default {
  */
 const HaloInvitationContainer = () => {
   const client = useClient();
-  const [invitation, setInvitation] = useState<PendingInvitation | undefined>();
+  const [invitationCode, setInvitationCode] = useState<string>();
   const [pin, setPin] = useState('');
 
+  const resetInvitations = () => {
+    setInvitationCode('');
+    setPin('');
+  };
+
   const handleCreateInvitation = async () => {
-    const invitation = await client.createHaloInvitation({
-      onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-        setInvitation(undefined);
-        setPin('');
-      },
-      onPinGenerated: setPin
+    resetInvitations();
+
+    const invitation = await client.halo.createInvitation();
+    invitation.finished.on(() => resetInvitations());
+    invitation.connected.on(() => {
+      setPin(invitation.secret.toString());
     });
 
-    setInvitation(invitation);
+    setInvitationCode(encodeInvitation(invitation.descriptor));
   };
 
   if (!client.halo.hasProfile()) {
@@ -62,13 +66,13 @@ const HaloInvitationContainer = () => {
         </Button>
       </Toolbar>
 
-      {invitation && (
+      {invitationCode && (
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
             multiline
             fullWidth
-            value={invitation.invitationCode}
+            value={invitationCode}
             maxRows={3}
           />
         </Box>
@@ -90,7 +94,7 @@ const HaloInvitationContainer = () => {
 interface Status {
   error?: any,
   identity?: string,
-  finishAuthentication?: Awaited<ReturnType<Client['joinHaloInvitation']>>
+  invitation?: Invitation
 }
 
 /**
@@ -102,13 +106,9 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitation = decodeInvitation(invitationCode);
-
-      // Claim an invitation for this device to join an existing Halo.
-      if (invitation.identityKey) {
-        const finishAuthentication = await client.joinHaloInvitation(invitation);
-        setStatus({ identity: invitation.identityKey.toString(), finishAuthentication });
-      }
+      const invitationDescriptor = decodeInvitation(invitationCode);
+      const invitation = await client.halo.acceptInvitation(invitationDescriptor);
+      setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
     } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });
@@ -116,7 +116,7 @@ const HaloAuthenticationContainer = () => {
   };
 
   const handleAuthenticate = async (pin: string) => {
-    await status.finishAuthentication?.(pin);
+    await status.invitation?.authenticate(Buffer.from(pin));
   };
 
   return (

@@ -55,13 +55,14 @@ export const JoinDialog = ({
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
-  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
     setError(undefined);
     setProcessing(false);
     setInvitationCode('');
+    resetSecret();
     setState(PartyJoinState.INIT);
   };
 

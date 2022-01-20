@@ -19,7 +19,7 @@ export const setupClient = async (config?: Config): Promise<ClientSetup> => {
   await client.halo.createProfile({ username: 'Client' });
   const party = await client.echo.createParty();
 
-  const invitation = await client.echo.createInvitation(party.key);
+  const invitation = await party.createInvitation();
 
   return {
     client,

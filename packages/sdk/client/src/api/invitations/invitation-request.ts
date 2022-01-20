@@ -8,8 +8,6 @@ import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
-import { PartyProxy } from './party-proxy';
-
 /**
  * Invitation created by sender.
  */
@@ -78,35 +76,5 @@ export class InvitationRequest {
 
   toString () {
     return `InvitationRequest(${JSON.stringify(this._descriptor.toQueryParameters())})`;
-  }
-}
-
-/**
- * Invitation that is being redeemed.
- */
-export class Invitation {
-  constructor (
-    private readonly _descriptor: InvitationDescriptor,
-    private readonly _partyPromise: Promise<PartyProxy>,
-    private readonly _onAuthenticate: (secret: Uint8Array) => void
-  ) {}
-
-  get descriptor () {
-    return this._descriptor;
-  }
-
-  /**
-   * Wait for the invitation flow to complete and return the target party.
-   */
-  getParty (): Promise<PartyProxy> {
-    return this._partyPromise;
-  }
-
-  authenticate (secret: Uint8Array) {
-    this._onAuthenticate(secret);
-  }
-
-  toJSON () {
-    return this.descriptor.toProto();
   }
 }

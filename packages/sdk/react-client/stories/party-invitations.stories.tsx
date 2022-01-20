@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
+import { decodeInvitation, encodeInvitation, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 
 import {
@@ -56,30 +56,20 @@ const PartyInvitationContainer = () => {
     });
   };
 
-  // const handleCreateInvitation = async () => {
-  //   const invitation = await client.createHaloInvitation({
-  //     onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-  //       setInvitation(undefined);
-  //       setPin('');
-  //     },
-  //     onPinGenerated: setPin
-  //   });
-
-  //   setInvitation(invitation);
-  // };
-
   const handleCreateInvitation = () => {
     setImmediate(async () => {
       resetInvitations();
-      if (contact) {
-        const invitation = await client.echo.getParty(partyKey!)!.createInvitation({ inviteeKey: PublicKey.fromHex(contact!) });
-        setInvitationCode(encodeInvitation(invitation.descriptor));
-      } else {
-        const invitation = await client.echo.createInvitation(partyKey!);
+
+      const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
+        inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
+      });
+      invitation.finished.on(() => resetInvitations());
+
+      if (!contact) {
         invitation.connected.on(() => setPin(invitation.secret.toString()));
-        invitation.finished.on(() => resetInvitations());
-        setInvitationCode(encodeInvitation(invitation.descriptor));
       }
+
+      setInvitationCode(encodeInvitation(invitation.descriptor));
     });
   };
 
@@ -140,7 +130,7 @@ const PartyInvitationContainer = () => {
 interface Status {
   error?: any,
   party?: string,
-  invitation?: Invitation
+  invitation?: PartyInvitation
 }
 
 /**

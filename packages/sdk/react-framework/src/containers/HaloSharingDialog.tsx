@@ -3,10 +3,8 @@
 //
 
 import React from 'react';
-// import { v4 } from 'uuid';
 
-// import { PendingInvitation } from '@dxos/client';
-// import { useClient } from '@dxos/react-client';
+import { useClient, useHaloInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
@@ -16,38 +14,18 @@ export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitatio
  * Manages the workflow for inviting a new device to a HALO party.
  */
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
-  // const client = useClient();
-
-  // const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
-  //   const id = v4();
-  //   const invitation = await client.createHaloInvitation({
-  //     onFinish: () => {
-  //       setInvitations(invitations => invitations.filter(invitation => invitation.id !== id));
-  //     },
-  //     onPinGenerated: (pin) => {
-  //       setInvitations(invitations => {
-  //         const invitationWithPin = invitations.find(invitation => invitation.id === id);
-  //         if (!invitationWithPin) {
-  //           return invitations;
-  //         }
-  //         return [
-  //           ...invitations.filter(invitation => invitation.id !== id),
-  //           { ...invitationWithPin, pin }
-  //         ];
-  //       });
-  //     }
-  //   });
-
-  //   const pendingInvitation: PendingInvitation = { ...invitation, id };
-  //   setInvitations(invitations => [...invitations, pendingInvitation]);
-  // };
+  const client = useClient();
+  const invitations = useHaloInvitations(client);
 
   return (
     <SharingDialog
       {...props}
       title='Halo Sharing'
-      onCreateInvitation={() => {}}
-      onCancelInvitation={() => {}}
+      invitations={invitations}
+      onCreateInvitation={async () => {
+        await client.halo.createInvitation();
+      }}
+      onCancelInvitation={invitation => invitation.cancel()}
     />
   );
 };

@@ -72,7 +72,7 @@ describe('In-Memory', () => {
     });
 
     it('Spawns a bot with a client', async () => {
-      const { client, party } = clientSetup;
+      const { party } = clientSetup;
 
       const nm1 = new NetworkManager();
       const nm2 = new NetworkManager();
@@ -90,7 +90,6 @@ describe('In-Memory', () => {
 
       const botHandle = await botFactoryClient.spawn(
         {},
-        client,
         party
       );
 
@@ -138,7 +137,7 @@ describe('Node', () => {
     });
 
     it('Spawns an echo-bot', async () => {
-      const { client, party } = clientSetup;
+      const { party } = clientSetup;
       const { config } = brokerSetup;
 
       const nm1 = new NetworkManager();
@@ -165,7 +164,6 @@ describe('Node', () => {
         {
           dxn: botDXN
         },
-        client,
         party
       );
 

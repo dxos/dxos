@@ -8,13 +8,13 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { InvitationDescriptor, OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
+import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy, CreateInvitationOptions, HaloProxy } from '../api';
+import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { System } from '../proto/gen/dxos/config';
@@ -307,35 +307,6 @@ export class Client {
     }
 
     return party;
-  }
-
-  /**
-   * Creates an invitation to a HALO party.
-   * Used to authorize another device of the same user.
-   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.joinHaloInvitation` on the invitee side.
-   *
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
-   */
-  async createHaloInvitation (options?: CreateInvitationOptions) {
-    return await this.halo.createInvitation(options);
-  }
-
-  /**
-   * Creates an invitation to a HALO party.
-   * Used to authorize another device of the same user.
-   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.createHaloInvitation` on the inviter side.
-   *
-   * @returns An async function to provide secret and finishing the invitation process.
-  */
-  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor) {
-    return await this.halo.acceptInvitation(invitationDescriptor);
   }
 
   //
