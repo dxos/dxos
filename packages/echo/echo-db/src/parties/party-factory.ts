@@ -234,7 +234,7 @@ export class PartyFactory {
     return party;
   }
 
-  async cloneParty(snapshot: PartySnapshot): Promise<PartyInternal> {
+  async cloneParty (snapshot: PartySnapshot): Promise<PartyInternal> {
     const identity = this._identityProvider();
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
@@ -291,30 +291,30 @@ export class PartyFactory {
     //   keyAdmitMessage,
     //   [partyKey]
     // ));
-    
+
     // for(const message of snapshot.halo?.messages?.slice(2) || []) {
     //   await party.processor.writeHaloMessage(message);
     // }
 
     // Write messages to create ECHO items.
     const feedWriter = createFeedWriter(writableFeed.feed);
-    for(const item of snapshot.database?.items || []) {
+    for (const item of snapshot.database?.items || []) {
       const message: FeedMessage = {
         echo: {
           itemId: item.itemId ?? failUndefined(),
           genesis: {
             itemType: item.itemType,
             modelType: item.modelType,
-            modelVersion: item.modelVersion,
+            modelVersion: item.modelVersion
           },
           itemMutation: {
-            parentId: item.parentId,
+            parentId: item.parentId
           },
           snapshot: item.model,
-          timeframe: new Timeframe(),
+          timeframe: new Timeframe()
         }
-      }
-      await feedWriter.write(message)
+      };
+      await feedWriter.write(message);
     }
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.

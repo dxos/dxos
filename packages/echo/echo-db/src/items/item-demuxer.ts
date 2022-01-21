@@ -131,13 +131,13 @@ export class ItemDemuxer {
       }
 
       if (snapshot) {
-        if(snapshot.custom) {
+        if (snapshot.custom) {
           const item = this._itemManager.getItem(itemId) as Item<Model<any>>;
           assert(item);
-          assert(item.model.modelMeta.snapshotCodec)
+          assert(item.model.modelMeta.snapshotCodec);
           await item.model.restoreFromSnapshot(item.model.modelMeta.snapshotCodec.decode(snapshot.custom));
-        } else if(snapshot.array) {
-          for(const message of snapshot.array.mutations ?? []) {
+        } else if (snapshot.array) {
+          for (const message of snapshot.array.mutations ?? []) {
             await this._itemManager.processModelMessage(itemId, message);
           }
         }

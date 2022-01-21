@@ -497,7 +497,7 @@ describe('Party manager', () => {
     }
   }).timeout(10_000);
 
-  test.only('Clone party', async () => {
+  test('Clone party', async () => {
     const { partyManager } = await setup();
 
     const original = await partyManager.createParty();
@@ -508,8 +508,8 @@ describe('Party manager', () => {
     const clone = await partyManager.cloneParty(original.createSnapshot());
     expect(clone.key.equals(original.key)).toBe(false);
     const item = await clone.database.getItem(item2.id);
-    assert(item)
+    assert(item);
     expect(item.model.getProperty('foo')).toBe('bar');
-    expect(item.parent).toBeDefined()
+    expect(item.parent).toBeDefined();
   });
 });
