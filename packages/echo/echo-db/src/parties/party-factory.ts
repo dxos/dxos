@@ -15,8 +15,8 @@ import {
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
-import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { failUndefined, timed } from '@dxos/debug';
+import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -231,6 +231,95 @@ export class PartyFactory {
         ));
       }
     }
+    return party;
+  }
+
+  async cloneParty(snapshot: PartySnapshot): Promise<PartyInternal> {
+    const identity = this._identityProvider();
+
+    assert(!this._options.readOnly, 'PartyFactory is read-only');
+    assert(identity.identityGenesis, 'IdentityGenesis must exist');
+    assert(identity.deviceKeyChain, 'Device KeyChain must exist');
+
+    const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await this.constructParty(partyKey.publicKey);
+
+    // Connect the pipeline.
+    await party.open();
+
+    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+
+    // PartyGenesis (self-signed by Party).
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      identity.signer,
+      partyKey,
+      writableFeed.key,
+      partyKey)
+    );
+
+    // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
+    await party.processor.writeHaloMessage(createEnvelopeMessage(
+      identity.signer,
+      partyKey.publicKey,
+      wrapMessage(identity.identityGenesis),
+      [partyKey]
+    ));
+
+    // FeedAdmit (signed by the Device KeyChain).
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      identity.signer,
+      partyKey.publicKey,
+      writableFeed.key,
+      [identity.deviceKeyChain]
+    ));
+
+    // IdentityInfo in an Envelope signed by the Device KeyChain.
+    if (identity.identityInfo) {
+      await party.processor.writeHaloMessage(createEnvelopeMessage(
+        identity.signer,
+        partyKey.publicKey,
+        wrapMessage(identity.identityInfo),
+        [identity.deviceKeyChain]
+      ));
+    }
+
+    // const keyAdmitMessage = snapshot.halo?.messages?.[1];
+    // assert(keyAdmitMessage);
+    // await party.processor.writeHaloMessage(createEnvelopeMessage(
+    //   identity.signer,
+    //   partyKey.publicKey,
+    //   keyAdmitMessage,
+    //   [partyKey]
+    // ));
+    
+    // for(const message of snapshot.halo?.messages?.slice(2) || []) {
+    //   await party.processor.writeHaloMessage(message);
+    // }
+
+    // Write messages to create ECHO items.
+    const feedWriter = createFeedWriter(writableFeed.feed);
+    for(const item of snapshot.database?.items || []) {
+      const message: FeedMessage = {
+        echo: {
+          itemId: item.itemId ?? failUndefined(),
+          genesis: {
+            itemType: item.itemType,
+            modelType: item.modelType,
+            modelVersion: item.modelVersion,
+          },
+          itemMutation: {
+            parentId: item.parentId,
+          },
+          snapshot: item.model,
+          timeframe: new Timeframe(),
+        }
+      }
+      await feedWriter.write(message)
+    }
+
+    // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
+    await identity.keyring.deleteSecretKey(partyKey);
+
     return party;
   }
 }
