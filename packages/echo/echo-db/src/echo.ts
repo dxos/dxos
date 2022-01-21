@@ -316,7 +316,7 @@ export class ECHO {
     return new Party(impl);
   }
 
-  async cloneParty(snapshot: PartySnapshot) {
+  async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
     const impl = await this._partyManager.cloneParty(snapshot);

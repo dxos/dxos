@@ -21,12 +21,14 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 
 import { PartySharingDialog, SpawnBotDialog } from '@dxos/react-framework'
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
+import { proto } from '@dxos/client'
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -118,6 +120,21 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
     await item.model.setProperty('complete', event.target.checked);
   };
 
+  const handleDownload = async () => {
+    if(!party) {
+      return;
+    }
+
+    const snapshot = await party.createSnapshot();
+
+    const blob = new Blob([proto.schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot)]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${party.key.toHex()}.party`;
+    a.click();
+  }
+
   if (!partyKey) {
     return null;
   }
@@ -201,6 +218,15 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
             onClick={() => setPartyInvitationDialog(true)}
           >
             <ShareIcon />
+          </Fab>
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="download"
+            title="Download party"
+            onClick={handleDownload}
+          >
+            <DownloadIcon />
           </Fab>
         </div>
       )}

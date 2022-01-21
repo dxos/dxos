@@ -8,3 +8,4 @@ export * from './client';
 export * from './devtools/devtools-context';
 export * from './devtools/devtools-host-events';
 export * from './util';
+export * as proto from './proto/gen';
