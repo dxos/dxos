@@ -49,6 +49,9 @@
       "path": "../../common/rpc"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../echo/echo-db"
     },
     {
