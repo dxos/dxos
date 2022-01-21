@@ -29,9 +29,7 @@ describe.skip('Party Test Cases', () => {
 
 
   describe('As a user that wants to invite a user then', () => {
-
     it('I should be able to copy the invitation code to clipboard', () => alice.party.copyInvitationCode())
-
   })
 
   describe('', () => {

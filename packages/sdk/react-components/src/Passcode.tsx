@@ -173,6 +173,7 @@ export const Passcode = ({
         >
           <input
             ref={inputRef}
+            className="dxos-passcode"
             value={value}
             type='number'
             onChange={handleChange}
