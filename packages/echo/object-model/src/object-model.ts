@@ -7,14 +7,37 @@ import debug from 'debug';
 import cloneDeep from 'lodash/cloneDeep';
 import get from 'lodash/get';
 
-import { FeedMeta } from '@dxos/echo-protocol';
-import { ModelMeta, Model } from '@dxos/model-factory';
+import { FeedMeta, MutationMeta } from '@dxos/echo-protocol';
+import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 
 const log = debug('dxos:echo:object-model');
+
+class ObjectModelStateMachiene implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
+  private _object = {};
+
+  getState(): Record<string, any> {
+    return this._object;
+  }
+  process(mutation: ObjectMutationSet, meta: MutationMeta): void {
+    MutationUtil.applyMutationSet(this._object, mutation);
+  }
+  snapshot(): ObjectSnapshot {
+    return {
+      root: ValueUtil.createMessage(this._object)
+    };
+  }
+  reset(snapshot: ObjectSnapshot): void {
+    const obj: any = {};
+    assert(snapshot.root);
+    ValueUtil.applyValue(obj, 'root', snapshot.root);
+    this._object = obj.root;
+  }
+
+}
 
 /**
  * Object mutation model.
@@ -23,6 +46,7 @@ export class ObjectModel extends Model<ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
+    stateMachiene: () => new ObjectModelStateMachiene(),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
@@ -34,17 +58,12 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     snapshotCodec: schema.getCodecForType('dxos.echo.object.ObjectSnapshot')
   };
 
-  private _object = {};
-
-  // Optimistic state.
-  private _pendingObject: object | undefined;
-
   /**
    * Returns an immutable object.
    */
   // TODO(burdon): Rename getProperties.
   toObject () {
-    return this._pendingObject ? cloneDeep(this._pendingObject) : cloneDeep(this._object);
+    return cloneDeep(this._getState());
   }
 
   /**
@@ -54,7 +73,7 @@ export class ObjectModel extends Model<ObjectMutationSet> {
    * @param [defaultValue]
    */
   getProperty (path: string, defaultValue: any = undefined): any {
-    return cloneDeep(get(this._pendingObject ?? this._object, path, defaultValue));
+    return cloneDeep(get(this._getState(), path, defaultValue));
   }
 
   async setProperty (key: string, value: any) {
@@ -111,36 +130,9 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     });
   }
 
-  override createSnapshot () {
-    return {
-      root: ValueUtil.createMessage(this._object)
-    };
-  }
-
-  override async restoreFromSnapshot (snapshot: ObjectSnapshot) {
-    const obj: any = {};
-    assert(snapshot.root);
-    ValueUtil.applyValue(obj, 'root', snapshot.root);
-    this._object = obj.root;
-  }
-
   private async _makeMutation (mutation: ObjectMutationSet) {
-    // Create optimistic result.
-    this._pendingObject ??= { ...this._object };
-    MutationUtil.applyMutationSet(this._pendingObject, mutation);
-
     // Process the mutations.
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
-  }
-
-  async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {
-    log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
-    MutationUtil.applyMutationSet(this._object, message);
-
-    // Clear pending updates as the actual state is newer now.
-    // TODO(marik-d): What happens when multiple mutations are pending at once?
-    this._pendingObject = undefined;
-    return true;
   }
 }

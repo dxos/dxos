@@ -6,32 +6,59 @@ import assert from 'assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
 import { FeedWriter, ItemID, MutationMeta } from '@dxos/echo-protocol';
-import { Model, ModelMeta } from '@dxos/model-factory';
+import { Model, ModelMeta, StateMachine } from '@dxos/model-factory';
 
 import { schema } from './proto/gen';
 import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
 
-export class TextModel extends Model<Mutation> {
+class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
+  private _doc = new Doc();
+  
+  getState(): Doc {
+    return this._doc;
+  }
+  process(mutation: Mutation, meta: MutationMeta): void {
+    const { update, clientId } = mutation;
+    assert(update);
+
+    if (clientId !== this._doc.clientID) {
+      applyUpdate(this._doc, update, { docClientId: clientId });
+    }
+  }               
+  snapshot() {
+    return {
+      data: encodeStateAsUpdate(this._doc)
+    };
+  }
+  reset(snapshot: Snapshot): void {
+    assert(snapshot.data);
+
+    applyUpdate(this._doc, snapshot.data);
+  }
+
+}
+
+export class TextModel extends Model<Doc, Mutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/text',
+    stateMachiene: () => new TextModelStateMachiene(),
     mutation: schema.getCodecForType('dxos.echo.text.Mutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
   };
 
-  private _doc = new Doc();
 
   constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<Mutation>) {
     super(meta, itemId, writeStream);
 
-    this._doc.on('update', this._handleDocUpdated.bind(this));
+    this._getState().on('update', this._handleDocUpdated.bind(this));
   }
 
-  get doc () {
-    return this._doc;
+  get doc (): Doc {
+    return this._getState();
   }
 
   get content () {
-    return this._doc.getXmlFragment('content');
+    return this._getState().getXmlFragment('content');
   }
 
   get textContent () {
@@ -39,18 +66,18 @@ export class TextModel extends Model<Mutation> {
   }
 
   private async _handleDocUpdated (update: Uint8Array, origin: any) {
-    const remote = origin && origin.docClientId && origin.docClientId !== this._doc.clientID;
+    const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
 
     if (!remote) {
       await this.write({
         update,
-        clientId: this._doc.clientID
+        clientId: this._getState().clientID
       });
     }
   }
 
   private _transact (fn: () => void) {
-    return this._doc.transact(fn, { docClientId: this._doc.clientID });
+    return this._getState().transact(fn, { docClientId: this._getState().clientID });
   }
 
   private _textContentInner = (node: any): string => {
@@ -112,28 +139,5 @@ export class TextModel extends Model<Mutation> {
 
   insert (index: number, text: string) {
     return this._transact(() => this._insertInner(this.content, index, text));
-  }
-
-  async _processMessage (meta: MutationMeta, message: Mutation): Promise<boolean> {
-    const { update, clientId } = message;
-    assert(update);
-
-    if (clientId !== this._doc.clientID) {
-      applyUpdate(this._doc, update, { docClientId: clientId });
-    }
-
-    return true;
-  }
-
-  override createSnapshot (): Snapshot {
-    return {
-      data: encodeStateAsUpdate(this._doc)
-    };
-  }
-
-  override async restoreFromSnapshot (snapshot: Snapshot) {
-    assert(snapshot.data);
-
-    applyUpdate(this._doc, snapshot.data);
   }
 }

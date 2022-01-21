@@ -4,7 +4,25 @@
 
 import { NOOP_CODEC } from '@dxos/codec-protobuf';
 import { ModelMutation, MutationMeta } from '@dxos/echo-protocol';
-import { Model, ModelMeta, ModelType } from '@dxos/model-factory';
+import { Model, ModelMeta, ModelType, StateMachine } from '@dxos/model-factory';
+
+class DefaultModelStateMachiene implements StateMachine<ModelMutation[], Uint8Array, any> {
+  private readonly _state: ModelMutation[] = [];
+
+  getState(): ModelMutation[] {
+    return this._state;
+  }
+  process(mutation: Uint8Array, meta: MutationMeta): void {
+    this._state.push({ mutation, meta });
+  }
+
+  snapshot() {
+    throw new Error('Method not implemented.');
+  }
+  reset(snapshot: any): void {
+    throw new Error('Method not implemented.');
+  }
+}
 
 /**
  * Is instantiated for items that have unregistered types.
@@ -12,24 +30,18 @@ import { Model, ModelMeta, ModelType } from '@dxos/model-factory';
  * this model holds enough information to instantiate that model on-the-fly.
  */
 // TODO(burdon): Optional. Set as null and ignore messages for items that have unregistered models?
-export class DefaultModel extends Model<Uint8Array> {
+export class DefaultModel extends Model<ModelMutation[], Uint8Array> {
   static meta: ModelMeta = {
     type: 'dxos:model/default',
+    stateMachiene: () => new DefaultModelStateMachiene(),
     mutation: NOOP_CODEC
   };
-
-  private _mutations: ModelMutation[] = [];
 
   public snapshot: Uint8Array | undefined;
 
   public originalModelType!: ModelType;
 
   get mutations () {
-    return this._mutations;
-  }
-
-  async _processMessage (meta: MutationMeta, mutation: Uint8Array) {
-    this._mutations.push({ meta, mutation });
-    return false;
+    return this._getState();
   }
 }
