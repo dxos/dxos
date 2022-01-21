@@ -6,8 +6,7 @@ import { firefox } from 'playwright';
 
 import { baseUrl, Browser, TaskApp } from './utils';
 
-// TODO(rzadp): Add back after `PartyJoinDialog` and `PartyInvitationDialog` API is stable.
-describe.skip('Party Test Cases', () => {
+describe('Party Test Cases', () => {
   let chocolatesCounter = 1
   let listName = 'My Party List';
   let taskName = `Buy ${chocolatesCounter} chocolate(s) for the team`;
@@ -29,9 +28,7 @@ describe.skip('Party Test Cases', () => {
 
 
   describe('As a user that wants to invite a user then', () => {
-
     it('I should be able to copy the invitation code to clipboard', () => alice.party.copyInvitationCode())
-
   })
 
   describe('', () => {
