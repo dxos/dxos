@@ -55,7 +55,7 @@ export class TaskApp extends AppSimulator {
   async createTask(listName: string, taskName: string) {
     await this.browser.getPage().click(`li :text("${listName}")`);
 
-    await this.browser.getPage().fill('input', taskName);
+    await this.browser.getPage().fill("//input[@type='text'] ", taskName);
 
     await this.browser.getPage().click('[aria-label="create"]');
 
