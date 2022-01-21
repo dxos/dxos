@@ -40,9 +40,9 @@ export interface CanvasProps {
   elements?: ElementData<any>[]
   selection?: SelectionModel
   onSelect?: (selection: SelectionModel) => void
-  onUpdate?: (element: ElementData<any>, commit?: boolean) => boolean
-  onCreate?: (type: ElementType, data: ElementDataType) => boolean
-  onDelete?: (id: ElementId) => boolean
+  onCreate?: (type: ElementType, data: ElementDataType) => void
+  onUpdate?: (element: ElementData<any>, commit?: boolean) => void
+  onDelete?: (id: ElementId) => void
   options?: {
     debug?: boolean
     repaint?: number // Set to Date.now() to force repaint.
@@ -70,8 +70,8 @@ export const Canvas = ({
   elements = [],
   selection,
   onSelect,
-  onUpdate,
   onCreate,
+  onUpdate,
   onDelete,
   options
 }: CanvasProps) => {
@@ -103,7 +103,7 @@ export const Canvas = ({
   const controlsGroup = useRef<SVGSVGElement>();
   const controlManager = useMemo(() => {
     // TODO(burdon): Handle repaint differently (via events).
-    return new ControlManager(context, handleRepaint, handleSelect, onUpdate)
+    return new ControlManager(context, handleRepaint, handleSelect, onUpdate);
   }, []);
 
   //

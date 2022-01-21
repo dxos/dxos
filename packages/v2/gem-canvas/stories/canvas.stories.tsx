@@ -4,7 +4,6 @@
 
 import * as d3 from 'd3';
 import debug from 'debug';
-import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
@@ -21,213 +20,14 @@ import {
   SelectionModel,
   StatusBar,
   Tool,
-  Toolbar
+  Toolbar,
+  useMemoryElementModel,
 } from '../src';
-import { generator } from './helpers';
 
-export default {
-  title: 'gem-canvas/Canvas'
-};
+import { generator } from './helpers';
 
 const log = debug('gem:canvas:story');
 debug.enable('gem:canvas:*,-*:debug');
-
-/**
- *
- */
-// TODO(burdon): Prototype before changing story.
-class ElementModel {
-  // TODO(burdon): Replaces useSelection hook (i.e., requires database instance)? Or meta hook?
-  // TODO(burdon): Provide subscription?
-  _elements = new Map<ElementId, ElementData<any>>();
-
-  async create (type: ElementType, data: ElementDataType): Promise<ElementData<any>> {
-    const element = {
-      id: faker.datatype.uuid(),
-      type,
-      data
-    };
-
-    this._elements.set(element.id, element);
-    return element;
-  }
-
-  async update (element: ElementData<any>): Promise<ElementData<any>> {
-    this._elements.set(element.id, element);
-    return element;
-  };
-
-  async delete (id: ElementId): Promise<ElementId> {
-    this._elements.delete(id);
-    return id;
-  };
-}
-
-const Container = () => {
-  const svgRef = useRef<SVGSVGElement>();
-  const scale = useScale({ gridSize: 32 });
-
-  // State.
-  const [elements, setElements] = useState<ElementData<any>[]>(() => generator());
-  const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
-  const [tool, setTool] = useState<Tool>();
-  const [showGrid, setShowGrid, showGridRef] = useStateRef(true); // TODO(burdon): Generalize to options.
-  const [debug, setDebug, debugRef] = useStateRef(false);
-
-  const handleSelect = (selection: SelectionModel) => {
-    setSelection(selection);
-  };
-
-  const handleUpdate = (element: ElementData<any>, commit?: boolean) => {
-    commit && log('update', element.type, element.id);
-    setElements(elements => [...elements.filter(({ id }) => element.id !== id), element]);
-
-    // TODO(burdon): Chance to reject commit.
-    return true;
-  };
-
-  const handleCreate = (type: ElementType, data: ElementDataType) => {
-    setElements(elements => {
-      const element = {
-        id: faker.datatype.uuid(),
-        type,
-        data
-      };
-
-      log('created', element.type, element.id);
-      setSelection({ element, state: ControlState.SELECTED });
-      setTool(undefined);
-      return [...elements, element];
-    });
-
-    // TODO(burdon): Chance to reject commit.
-    return true;
-  }
-
-  const handleDelete = (id: ElementId) => {
-    setSelection(undefined);
-    log('delete', id);
-    const remove = elements.find(element => element.id === id);
-    if (remove) {
-      setElements(elements => elements.filter(element => {
-        if (element.id === id) {
-          return false;
-        }
-
-        if (element.type === 'line') {
-          if (element.data.source.id === id || element.data.target.id === id) {
-            return false;
-          }
-        }
-
-        return true;
-      }));
-    }
-
-    // TODO(burdon): Chance to reject commit.
-    return true;
-  };
-
-  // Reset selection.
-  useEffect(() => {
-    setSelection(undefined);
-  }, [tool]);
-
-  //
-  // Keys.
-  //
-  useEffect(() => {
-    d3.select(document.body)
-      .call(createKeyHandlers(({ action, tool }) => {
-        switch (action) {
-          case ActionType.DEBUG: {
-            setDebug(!debugRef.current);
-            break;
-          }
-
-          case ActionType.RESET: {
-            setTool(undefined);
-            setSelection(undefined);
-            const updated = elements.map(({ id, type, ...rest }) => `${id}[${type}]: ${JSON.stringify(rest)}`);
-            log(`Elements (${elements.length}):\n${updated.join('\n')}`);
-            break;
-          }
-
-          case ActionType.TOGGLE_GRID: {
-            setShowGrid(!showGridRef.current);
-            break;
-          }
-
-          case ActionType.TOOL_SELECT: {
-            setTool(tool);
-            break;
-          }
-
-          case ActionType.CUT: {
-            setElements([]);
-            setTool(undefined);
-            setSelection(undefined);
-            break;
-          }
-
-          case ActionType.CANCEL: {
-            setTool(undefined);
-            setSelection(undefined);
-            break;
-          }
-
-          case ActionType.DELETE: {
-            if (selectionRef.current) {
-              handleDelete(selectionRef.current!.element.id);
-              setSelection(undefined);
-            }
-          }
-        }
-      }));
-  }, [elements]);
-
-  return (
-    <FullScreen>
-      <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <Toolbar
-            tool={tool}
-            onSelect={tool => setTool(tool)}
-          />
-
-          <SvgContainer
-            ref={svgRef}
-            scale={scale}
-            zoom={[1/4, 8]}
-            grid={showGrid}
-          >
-            <Canvas
-              svgRef={svgRef}
-              scale={scale}
-              tool={tool}
-              elements={elements}
-              selection={selection}
-              onSelect={handleSelect}
-              onUpdate={handleUpdate}
-              onCreate={handleCreate}
-              onDelete={handleDelete}
-              options={{
-                debug
-              }}
-            />
-          </SvgContainer>
-        </div>
-
-        <StatusBar
-          data={{
-            elements: elements.length,
-            selected: selection?.element?.id
-          }}
-        />
-      </div>
-    </FullScreen>
-  );
-};
 
 // TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
 
@@ -257,14 +57,140 @@ const Container = () => {
 // TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlPoints)
 // TODO(burdon): D3Callable as functions.
 
-export const Primary = () => {
-  const [elements, setElements] = useState<ElementData<any>[]>(() => generator());
-  const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
+export default {
+  title: 'gem-canvas/Canvas'
+};
 
-  // TODO(burdon): Move handlers.
+// TODO(burdon): Factor out.
+const Container = () => {
+  const svgRef = useRef<SVGSVGElement>();
+  const scale = useScale({ gridSize: 32 });
+  const [elements, model] = useMemoryElementModel(() => generator());
+
+  // State.
+  const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
+  const [tool, setTool] = useState<Tool>();
+  const [showGrid, setShowGrid, showGridRef] = useStateRef(true); // TODO(burdon): Generalize to options.
+  const [debug, setDebug, debugRef] = useStateRef(false);
+
+  const handleSelect = (selection: SelectionModel) => {
+    setSelection(selection);
+  };
+
+  const handleCreate = async (type: ElementType, data: ElementDataType) => {
+    const element = await model.create(type, data);
+    setSelection({ element, state: ControlState.SELECTED });
+    setTool(undefined);
+    return true; // TODO(burdon): Chance to reject commit.
+  }
+
+  const handleUpdate = async (element: ElementData<any>) => {
+    await model.update(element);
+    return true; // TODO(burdon): Chance to reject commit.
+  };
+
+  const handleDelete = async (id: ElementId) => {
+    await model.delete(id);
+    setSelection(undefined);
+    return true; // TODO(burdon): Chance to reject commit.
+  };
+
+  // Reset selection.
+  useEffect(() => {
+    setSelection(undefined);
+  }, [tool]);
+
+  //
+  // Keys.
+  //
+  useEffect(() => {
+    d3.select(document.body)
+      .call(createKeyHandlers(async ({ action, tool }) => {
+        switch (action) {
+          case ActionType.DEBUG: {
+            setDebug(!debugRef.current);
+            break;
+          }
+
+          case ActionType.RESET: {
+            setTool(undefined);
+            setSelection(undefined);
+            const updated = elements.map(({ id, type, ...rest }) => `${id}[${type}]: ${JSON.stringify(rest)}`);
+            log(`Elements (${elements.length}):\n${updated.join('\n')}`);
+            break;
+          }
+
+          case ActionType.TOGGLE_GRID: {
+            setShowGrid(!showGridRef.current);
+            break;
+          }
+
+          case ActionType.TOOL_SELECT: {
+            setTool(tool);
+            break;
+          }
+
+          case ActionType.CANCEL: {
+            setTool(undefined);
+            setSelection(undefined);
+            break;
+          }
+
+          case ActionType.DELETE: {
+            if (selectionRef.current) {
+              await handleDelete(selectionRef.current!.element.id);
+              setSelection(undefined);
+            }
+          }
+        }
+      }));
+  }, [elements]);
 
   return (
-    <Container
-    />
+    <FullScreen>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flex: 1 }}>
+          <Toolbar
+            tool={tool}
+            onSelect={tool => setTool(tool)}
+          />
+
+          <SvgContainer
+            ref={svgRef}
+            scale={scale}
+            zoom={[1/4, 8]}
+            grid={showGrid}
+          >
+            <Canvas
+              svgRef={svgRef}
+              scale={scale}
+              tool={tool}
+              elements={elements}
+              selection={selection}
+              onSelect={handleSelect}
+              onCreate={handleCreate}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              options={{
+                debug
+              }}
+            />
+          </SvgContainer>
+        </div>
+
+        <StatusBar
+          data={{
+            elements: elements.length,
+            selected: selection?.element?.id
+          }}
+        />
+      </div>
+    </FullScreen>
+  );
+};
+
+export const Primary = () => {
+  return (
+    <Container />
   );
 }

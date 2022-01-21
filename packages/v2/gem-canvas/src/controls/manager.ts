@@ -32,9 +32,17 @@ export class ControlManager implements ControlGetter {
   }
 
   updateElements (elements: ElementData<any>[], selection?: SelectionModel) {
+    const handleUpdate = (element, commit) => {
+      if (commit) {
+        this._onUpdate(element);
+      } else {
+        this._onRepaint();
+      }
+    }
+
     this._controls = elements.map(element => {
       const control = this.getControl(element.id) ??
-        createControl(element.type, this._context, this, element, this._onRepaint, this._onSelect, this._onUpdate);
+        createControl(element.type, this._context, this, element, this._onRepaint, this._onSelect, handleUpdate);
 
       if (control) {
         if (element.id === selection?.element?.id) {

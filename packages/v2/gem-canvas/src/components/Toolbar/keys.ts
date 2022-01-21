@@ -15,7 +15,6 @@ export enum ActionType {
   TOOL_SELECT,
   DEBUG,
   RESET,
-  CUT,
   TOGGLE_GRID,
   SHOW_KEYMAP
 }
@@ -63,11 +62,6 @@ const keyMap: { key: string, mod?: string, action: Action }[] = [
     key: '\\',
     mod: 'ctrlKey',
     action: { action: ActionType.RESET }
-  },
-  {
-    key: 'x',
-    mod: 'metaKey',
-    action: { action: ActionType.CUT }
   },
   {
     key: 'd',
