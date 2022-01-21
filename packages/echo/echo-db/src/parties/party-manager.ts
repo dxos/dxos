@@ -10,7 +10,7 @@ import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
@@ -187,6 +187,28 @@ export class PartyManager {
     // TODO(marik-d): Somehow check that we don't already have this party.
     // TODO(telackey): We can check the PartyKey during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+    await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
+
+    // TODO(telackey): This is wrong, as we'll just open both writable feeds of it next time causing confusion.
+    if (this._parties.has(party.key)) {
+      await party.close();
+      // TODO(marik-d): Handle this gracefully.
+      throw new Error(`Party already exists ${party.key.toHex()}`);
+    }
+
+    this._setParty(party);
+    await this._recordPartyJoining(party);
+    await this._updateContactList(party);
+    return party;
+  }
+
+  @synchronized
+  async cloneParty (snapshot: PartySnapshot) {
+    assert(this._open, 'PartyManager is not open.');
+
+    // TODO(marik-d): Somehow check that we don't already have this party.
+    // TODO(telackey): We can check the PartyKey during the greeting flow.
+    const party = await this._partyFactory.cloneParty(snapshot);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
     // TODO(telackey): This is wrong, as we'll just open both writable feeds of it next time causing confusion.
