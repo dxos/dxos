@@ -146,7 +146,7 @@ export const JoinDialog = ({
   const getDialogProps = (state: PartyJoinState) => {
     const joinPartyContent = (
       <TextField
-        id="join-dialog-invitation-code"
+        id='join-dialog-invitation-code'
         ref={inputRef}
         autoFocus
         fullWidth

@@ -46,9 +46,9 @@ const PendingInvitationView = ({
             <HashIcon value={invitationCode} />
           </IconButton>
           <Clipboard
-            text={pin ? pin : invitationCode}
+            text={pin || invitationCode}
             // An alternative way of getting code/pin, if for some reason copy-to-clipboard does not work.
-            onCopy={() => console.log(pin ? pin : invitationCode)}
+            onCopy={() => console.log(pin || invitationCode)}
           >
             <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
               Pending invitation...
