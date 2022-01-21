@@ -22,7 +22,7 @@ export type Handle = { id: string, p: Point, cursor?: string }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
 
-const handles: Handle[] = [
+const resizeHandles: Handle[] = [
   { id: 'n-resize', p: [0, 1], cursor: 'ns-resize' },
   { id: 'ne-resize', p: [1, 1], cursor: 'nesw-resize' },
   { id: 'e-resize', p: [1, 0], cursor: 'ew-resize' },
@@ -43,7 +43,7 @@ const connectionHandles: Handle[] = [
 export const getConectionHandle = (handleId: string): Handle => connectionHandles.find(({ id }) => id === handleId);
 
 /**
- * Compute updated bounds by dragging handles.
+ * Compute updated bounds by dragging resizeHandle.
  * @param bounds
  * @param handle
  * @param delta
@@ -73,7 +73,7 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
 };
 
 /**
- * Handle drag handles.
+ * Handle drag resizeHandle.
  * @param onUpdate
  */
 const handleDrag = <T extends any>(onUpdate: (
@@ -102,12 +102,13 @@ const handleDrag = <T extends any>(onUpdate: (
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
     .on('end', function (event: D3DragEvent) {
-      // Consume events again.
+      // Start consuming events again.
       d3.select(this).style('pointer-events', undefined);
 
       // Get drop target.
-      const targetHandle = d3.select(event.sourceEvent.target).datum() as Handle;
-      const target = d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>;
+      // TODO(burdon): Traverse hierarchy to find root control.
+      const target = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
+      const targetHandle = d3.select<any, Handle>(event.sourceEvent.target).datum();
 
       const mod = getEventMod(event.sourceEvent);
       const current = [event.x, event.y];
@@ -126,19 +127,31 @@ export const createFrame = (scale: Scale): D3Callable => {
     const cx = x + width / 2;
     const cy = y + height / 2;
 
+    const container = group
+      .selectAll('g')
+      .data(['frame-group'])
+      .join('g');
+
     // eslint-disable indent
-    group.selectAll('rect.frame')
-      .data(active ? ['_frame_'] : [])
+    // Frame container.
+    container
+      .selectAll('rect.frame-border')
+      .data(active ? ['frame-border'] : [])
       .join('rect')
-      .attr('class', 'frame')
+      .attr('class', 'frame-border')
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)
       .attr('height', height);
 
-    group
+    // Resize handles.
+    container
+      .selectAll('g')
+      .data(['frame-resize-handles'])
+      .join('g')
+
       .selectAll('circle.frame-handle')
-      .data(resizable ? handles : [], (handle: Handle) => handle.id)
+      .data(resizable ? resizeHandles : [], (handle: Handle) => handle.id)
       .join('circle')
       .attr('class', 'frame-handle')
       .attr('cursor', h => h.cursor)
@@ -155,6 +168,38 @@ export const createFrame = (scale: Scale): D3Callable => {
 };
 
 /**
+ * Draw control points (e.g., for line, path).
+ */
+export const createControlPoints = (scale: Scale): D3Callable => {
+  return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
+    const points = active ? control.getControlPoints() : [];
+
+    // eslint-disable indent
+    group
+      .selectAll('g')
+      .data(['control-group'])
+      .join('g')
+
+      .selectAll('circle.frame-handle')
+      .data(points)
+      .join(enter => {
+        return enter
+          .append('circle')
+          .attr('class', 'frame-handle')
+          .call(handleDrag<ControlPoint>((point, delta, mod, commit, connection, connectionHandle) => {
+            const data = control.updateControlPoint(point, delta, commit, connection, connectionHandle);
+            control.onUpdate(data, commit);
+          }));
+      })
+      .attr('cursor', 'move')
+      .attr('cx', p => p.point[0])
+      .attr('cy', p => p.point[1])
+      .attr('r', FrameProps.handleRadius);
+    // eslint-enable indent
+  };
+};
+
+/**
  * Draw line connection points.
  */
 export const createConectionPoints = (scale: Scale): D3Callable => {
@@ -165,6 +210,10 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
 
     // eslint-disable indent
     group
+      .selectAll('g')
+      .data(['connection-group'])
+      .join('g')
+
       .selectAll('circle.connection-handle')
       .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
       .join(enter => {
@@ -185,30 +234,3 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
   };
 };
 
-/**
- * Draw control points.
- */
-export const createControlPoints = (scale: Scale): D3Callable => {
-  return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
-    const points = active ? control.getControlPoints() : [];
-
-    // eslint-disable indent
-    group
-      .selectAll('circle.frame-handle')
-      .data(points)
-      .join(enter => {
-        return enter
-          .append('circle')
-          .attr('class', 'frame-handle')
-          .call(handleDrag<ControlPoint>((point, delta, mod, commit, connection, connectionHandle) => {
-            const data = control.updateControlPoint(point, delta, commit, connection, connectionHandle);
-            control.onUpdate(data, commit);
-          }));
-      })
-      .attr('cursor', 'move')
-      .attr('cx', p => p.point[0])
-      .attr('cy', p => p.point[1])
-      .attr('r', FrameProps.handleRadius);
-    // eslint-enable indent
-  };
-};

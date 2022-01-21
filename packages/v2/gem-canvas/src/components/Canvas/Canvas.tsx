@@ -20,9 +20,9 @@ import {
 } from '../../controls';
 import { ElementData, ElementDataType, ElementId, ElementType } from '../../model';
 import { Tool } from '../../tools';
+import { canvasStyles, debugStyles, elementStyles } from '../styles';
 import { createMarkers } from '../markers';
 import { Cursor } from './Cursor';
-import { canvasStyles, debugStyles } from './styles';
 
 export const useRepaint = (deps?): [number, () => void] => {
   const [repaint, setRepaint] = useState(Date.now());
@@ -126,7 +126,6 @@ export const Canvas = ({
       .join(enter => {
         return enter
           .append('g')
-          .attr('class', 'element')
           // TODO(burdon): Factor out.
           .on('click', function () {
             const control = d3.select(this).datum() as Control<any>;
@@ -153,6 +152,7 @@ export const Canvas = ({
             }
           });
       })
+      .attr('class', d => clsx('element', elementStyles['default'], elementStyles[d.data.style]))
       .each((control, i, nodes) => {
         // TODO(burdon): Currently disabled since otherwise connected lines won't update when dragging source/target.
         // Only draw if updated.
@@ -161,7 +161,7 @@ export const Canvas = ({
         // }
 
         // Temporarily move to the front.
-        if (control.active) {
+        if (control.active || control.hover) {
           d3.select(nodes[i]).raise();
         }
       });

@@ -45,9 +45,12 @@ export const dragBounds = (
       const scale = context.scale();
 
       // Connection point.
+      // TODO(burdon): Traverse hierarchy to find root control.
+      const control = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
+      const handle = d3.select<any, Handle>(event.sourceEvent.target).datum();
       source = {
-        id: (d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>)?.element.id,
-        handle: (d3.select(event.sourceEvent.target).datum() as Handle)?.id
+        id: control?.element.id,
+        handle: handle?.id
       };
 
       start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
@@ -64,9 +67,12 @@ export const dragBounds = (
       const scale = context.scale();
 
       // Connection point.
+      // TODO(burdon): Traverse hierarchy to find root control.
+      const control = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
+      const handle = d3.select<any, Handle>(event.sourceEvent.target).datum();
       const target = {
-        id: (d3.select(event.sourceEvent.target.parentNode).datum() as Control<any>)?.element.id,
-        handle: (d3.select(event.sourceEvent.target).datum() as Handle)?.id
+        id: control?.element.id,
+        handle: handle?.id
       };
 
       const mod = getEventMod(event.sourceEvent);

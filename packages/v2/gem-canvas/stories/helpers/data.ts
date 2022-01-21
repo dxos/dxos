@@ -25,7 +25,8 @@ export const generator = (): ElementData<any>[] => [
     type: 'rect',
     data: check<Rect>({
       bounds: Vector.toBounds({ x: -2, y: -1, width: 4, height: 2 }),
-      text: 'DXOS'
+      text: 'DXOS',
+      style: 'style-1'
     })
   },
   {
@@ -33,7 +34,8 @@ export const generator = (): ElementData<any>[] => [
     type: 'rect',
     data: check<Rect>({
       bounds: Vector.toBounds({ x: -10, y: -1, width: 4, height: 2 }),
-      text: 'MESH'
+      text: 'MESH',
+      style: 'style-2'
     })
   },
   {
@@ -41,7 +43,8 @@ export const generator = (): ElementData<any>[] => [
     type: 'rect',
     data: check<Rect>({
       bounds: Vector.toBounds({ x: 6, y: -1, width: 4, height: 2 }),
-      text: 'HALO'
+      text: 'HALO',
+      style: 'style-3'
     })
   },
   {

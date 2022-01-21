@@ -3,20 +3,22 @@
 //
 
 import * as d3 from 'd3';
+import clsx from 'clsx';
 import React, { RefObject, useEffect, useRef } from 'react';
 
 import { Modifiers, Point, useStateRef } from '@dxos/gem-core';
 
 import { Tool } from '../../tools';
+import { elementStyles } from '../styles';
 
 import {
   Control,
-  createControl,
-  dragBounds,
   ControlContext,
   ControlGetter,
   ControlState,
-  SelectionModel
+  SelectionModel,
+  createControl,
+  dragBounds
 } from '../../controls';
 import { ElementDataType, ElementId, ElementType } from '../../model';
 
@@ -120,7 +122,7 @@ export const Cursor = ({
           .selectAll('g')
           .data([cursor])
           .join('g')
-          .attr('class', 'cursor')
+          .attr('class', clsx('cursor', elementStyles['default']))
           // Allow mouse events to flow-through to elements below (e.g., hover).
           .style('pointer-events', 'none')
           .each((element, i, nodes) => {

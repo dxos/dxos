@@ -31,6 +31,7 @@ export type Ellipse = {
 export type Rect = {
   bounds: Bounds
   text?: string
+  style?: string // TODO(burdon): Generalize.
 }
 
 //

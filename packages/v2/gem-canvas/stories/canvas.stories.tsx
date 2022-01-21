@@ -17,6 +17,7 @@ import {
   ElementDataType,
   ElementId,
   ElementType,
+  Palette,
   SelectionModel,
   StatusBar,
   Tool,
@@ -147,13 +148,15 @@ const Container = () => {
   }, [elements]);
 
   return (
-    <FullScreen>
+    <FullScreen style={{ backgroundColor: '#EEE' }}>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <div style={{ display: 'flex', flex: 1 }}>
-          <Toolbar
-            tool={tool}
-            onSelect={tool => setTool(tool)}
-          />
+          <div style={{ display: 'flex', height: '100%', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <Toolbar
+              tool={tool}
+              onSelect={tool => setTool(tool)}
+            />
+          </div>
 
           <SvgContainer
             ref={svgRef}

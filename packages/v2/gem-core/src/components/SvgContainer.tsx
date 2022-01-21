@@ -13,6 +13,8 @@ import { grid } from '../grid';
 import { Scale } from '../util';
 
 const defaultStyles = css`
+  background-color: #FFF;
+
   g.grid {
     path.axis {
       stroke: #C0C0C0;
