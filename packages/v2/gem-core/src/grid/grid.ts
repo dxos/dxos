@@ -9,6 +9,7 @@ import { Scale } from '../util';
 
 interface GridProps {
   scale: Scale
+  show?: boolean
   transform?: ZoomTransform
   width: number
   height: number
@@ -92,8 +93,8 @@ const createGrid = ({ scale, width, height }: GridProps) => {
   return paths;
 };
 
-export const grid = ({ scale, width, height }: GridProps) => (el) => {
-  const paths = createGrid({ scale, width, height });
+export const grid = ({ scale, width, height, show = true }: GridProps) => (el) => {
+  const paths = show ? createGrid({ scale, width, height }) : [];
 
   // Construct grid.
   el.selectAll('path')

@@ -3,6 +3,7 @@
 //
 
 export * from './Canvas';
+export * from './StatusBar';
 export * from './Toolbar';
 
 export * from './markers';

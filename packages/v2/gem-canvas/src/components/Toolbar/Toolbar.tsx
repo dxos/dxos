@@ -24,17 +24,20 @@ export const Toolbar = ({
 }: ToolbarProps) => {
   const styles = css`
     display: flex;
-    background-color: #999;
-    padding: 8px;
-    div {
-      width: 24px;
-      height: 24px;
+    flex-direction: column;
+    padding: 0;
+    background-color: #EEE;
+    button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      padding-top: 2px;
+      border: none;
+      outline: none;
+      background-color: #EEE;
     }
-    div path {
-      fill: #666;
-    }
-    div.active path {
-      fill: #000;
+    button.active {
+      background-color: #CCC;
     }
   `;
 
@@ -51,22 +54,24 @@ export const Toolbar = ({
       type: 'line',
       icon: LineIcon
     },
+    /*
     {
       type: 'path',
       icon: PathIcon
     }
+    */
   ];
 
   return (
     <div className={styles}>
       {tools.map(({ type, icon: Icon }) => (
-        <div
+        <button
           key={type}
           className={tool === type ? 'active' : ''}
           onClick={() => onSelect(tool === type ? undefined : type)}
         >
           <Icon />
-        </div>
+        </button>
       ))}
     </div>
   );

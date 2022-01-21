@@ -59,8 +59,19 @@ const createEllipse = (scale: Scale): D3Callable => {
       .attr('rx', rx)
       .attr('ry', ry)
 
+    // TODO(burdon): Factor out.
     group
-      .call(createText({ bounds, text }));
+      .call(createText({
+        editable: control.editing,
+        bounds,
+        text,
+        onUpdate: (value: string) => {
+          const { text, ...rest } = control.data;
+          control.onUpdate({ text: value, ...rest }, true);
+          control.onEdit(false);
+        },
+        onCancel: () => control.onEdit(false)
+      }));
     // eslint-enable indent
   };
 };

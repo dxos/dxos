@@ -58,6 +58,7 @@ const createRect = (scale: Scale): D3Callable => {
       .attr('width', width)
       .attr('height', height);
 
+    // TODO(burdon): Factor out.
     group
       .call(createText({
         editable: control.editing,

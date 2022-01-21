@@ -94,10 +94,9 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
         .attr('viewBox', `${x},${y},${width},${height}`);
     }
 
-    if (showGrid) {
-      d3.select(gridRef.current)
-        .call(grid({ scale, width, height }));
-    }
+    // Grid.
+    d3.select(gridRef.current)
+      .call(grid({ scale, width, height, show: showGrid }));
   }
 
   useEffect(() => {
