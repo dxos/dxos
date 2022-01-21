@@ -8,7 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { codec, DataService, PartyKey } from '@dxos/echo-protocol';
+import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
@@ -310,6 +310,16 @@ export class ECHO {
     await this.open();
 
     const impl = await this._partyManager.createParty();
+    await impl.open();
+
+    // TODO(burdon): Don't create a new instance (maintain map).
+    return new Party(impl);
+  }
+
+  async cloneParty(snapshot: PartySnapshot) {
+    await this.open();
+
+    const impl = await this._partyManager.cloneParty(snapshot);
     await impl.open();
 
     // TODO(burdon): Don't create a new instance (maintain map).
