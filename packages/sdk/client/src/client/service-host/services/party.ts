@@ -23,9 +23,12 @@ import {
   AuthenticateInvitationRequest,
   InvitationRequest,
   RedeemedInvitation,
-  SubscribeMembersRequest
+  SubscribeMembersRequest,
+  Party,
+  CreateSnaspotRequest
 } from '../../../proto/gen/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
+import { PartySnapshot } from '../../../proto/gen/dxos/echo/snapshot';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
 
@@ -95,6 +98,15 @@ class PartyService implements IPartyService {
 
   async CreateParty () {
     const party = await this.echo.createParty();
+    return {
+      publicKey: party.key,
+      isOpen: party.isOpen,
+      isActive: party.isActive
+    };
+  }
+
+  async CloneParty (snapshot: PartySnapshot): Promise<Party> {
+    const party = await this.echo.cloneParty(snapshot);
     return {
       publicKey: party.key,
       isOpen: party.isOpen,
@@ -242,6 +254,12 @@ class PartyService implements IPartyService {
         };
       });
     }
+  }
+
+  CreateSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
+    assert(request.partyKey);
+    const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    return party.createSnapshot();
   }
 }
 

@@ -163,4 +163,8 @@ export class PartyProxy extends InvitationProxy {
     const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
     return items[0];
   }
+
+  createSnapshot () {
+    return this._serviceProvider.services.PartyService.CreateSnapshot({ partyKey: this.key });
+  }
 }

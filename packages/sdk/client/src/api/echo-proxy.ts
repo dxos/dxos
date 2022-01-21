@@ -8,7 +8,7 @@ import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
@@ -111,6 +111,27 @@ export class EchoProxy {
     const [partyReceivedPromise, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.CreateParty();
+
+    const handler = () => {
+      if (this._parties.has(party.publicKey)) {
+        partyReceived();
+      }
+    };
+    this._partiesChanged.on(handler);
+    handler();
+    await partyReceivedPromise;
+    this._partiesChanged.off(handler);
+
+    return this._parties.get(party.publicKey)!;
+  }
+
+  /**
+   * Clones the party from a snapshot.
+   */
+  async cloneParty (snapshot: PartySnapshot): Promise<PartyProxy> {
+    const [partyReceivedPromise, partyReceived] = latch();
+
+    const party = await this._serviceProvider.services.PartyService.CloneParty(snapshot);
 
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
