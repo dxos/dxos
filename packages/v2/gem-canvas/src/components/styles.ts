@@ -49,7 +49,7 @@ export const canvasStyles = css`
   }
 
   // TODO(burdon): Scope handles.
-  g.element, g.cursor {
+  g.control, g.cursor {
     input {
       border: none;
       outline: none;
@@ -68,7 +68,7 @@ export const canvasStyles = css`
     }
   
     circle.connection-handle {
-      fill: #bbdefb;
+      fill: #fafafa;
       stroke: #1565c0;
       stroke-width: 1;
     }
@@ -81,9 +81,10 @@ export const canvasStyles = css`
 `;
 
 export const debugStyles = css`
-  g.element, g.cursor {
+  g.control, g.cursor {
     rect.line-touch {
       fill: pink;
+      opacity: 0.5;
     }
   }
 `;

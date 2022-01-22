@@ -4,7 +4,7 @@
 
 import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex } from '@dxos/gem-core';
 
-import { ElementType, Ellipse } from '../../model';
+import { ElementType, Ellipse, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
@@ -77,22 +77,6 @@ const createEllipse = (scale: Scale): D3Callable => {
 };
 
 /**
- * Check not too small.
- * @param data
- * @param commit
- */
-const valid = (data: Ellipse, commit: boolean) => {
-  if (commit) {
-    const { rx, ry } = data;
-    if (FractionUtil.isZero(rx) || FractionUtil.isZero(ry)) {
-      return;
-    }
-  }
-
-  return data;
-};
-
-/**
  * Ellipse control.
  */
 export class EllipseControl extends Control<Ellipse> {
@@ -118,20 +102,25 @@ export class EllipseControl extends Control<Ellipse> {
     });
   }
 
-  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Ellipse {
-    if (commit) {
+  override checkBounds (data: Ellipse) {
+    const { rx, ry } = data;
+    return (FractionUtil.toNumber(rx) >= 1 && FractionUtil.toNumber(ry) >= 1);
+  }
+
+  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, snap?: boolean): Ellipse {
+    if (snap) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
 
     const center = this.scale.screen.toVertex(Screen.center(bounds));
     const { width, height } = this.scale.screen.toBounds(bounds);
 
-    return valid({
+    return {
       ...this.data,
       center,
       rx: FractionUtil.divide(width, [2, 1]),
       ry: FractionUtil.divide(height, [2, 1])
-    }, commit);
+    };
   }
 
   getConnectionPoint (handle?: string): Vertex {

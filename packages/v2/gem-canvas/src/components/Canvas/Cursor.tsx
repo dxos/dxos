@@ -94,20 +94,25 @@ export const Cursor = ({
       const cursor = cursorRef.current;
       const data = cursor.createFromExtent(p1, p2, mod, commit);
 
-      // Test for source/target connection.
-      if (data && cursor.type === 'line') {
-        if (source?.id) {
-          data.source = source;
-        }
-        if (target?.id) {
-          data.target = target;
-        }
-      }
-
       if (commit) {
+        // Remove cursor.
         d3.select(cursorGroup.current)
           .selectAll('g')
           .remove();
+
+        if (!cursor.checkBounds(data)) {
+          return;
+        }
+
+        // Test for source/target connection.
+        if (data && cursor.type === 'line') {
+          if (source?.id) {
+            data.source = source;
+          }
+          if (target?.id) {
+            data.target = target;
+          }
+        }
 
         // Undefined if the element is too small.
         if (!data) {
@@ -120,14 +125,14 @@ export const Cursor = ({
         cursor.onUpdate(data, false);
         d3.select(cursorGroup.current)
           .selectAll('g')
-          .data([cursor])
-          .join('g')
-          .attr('class', clsx('cursor', elementStyles['default']))
-          // Allow mouse events to flow-through to elements below (e.g., hover).
-          .style('pointer-events', 'none')
-          .each((element, i, nodes) => {
-            d3.select(nodes[i]).call(element.draw());
-          });
+            .data([cursor])
+            .join('g')
+            .attr('class', clsx('cursor', elementStyles['default']))
+            // Allow mouse events to flow-through to elements below (e.g., hover).
+            .style('pointer-events', 'none')
+            .each((element, i, nodes) => {
+              d3.select(nodes[i]).call(element.draw());
+            });
       }
     };
 

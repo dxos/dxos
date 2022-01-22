@@ -8,9 +8,15 @@ import type { DragBehavior } from 'd3';
 import { Modifiers, Point } from '@dxos/gem-core';
 
 import { D3DragEvent } from '../types';
-import { Control, ControlContext } from './control';
-import { Handle } from './frame';
-import { ElementId } from '../model';
+import { ControlContext } from './control';
+import { Connection, getConnection } from './frame';
+
+// TODO(burdon): Factor out events util.
+// https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
+
+// Drag docs:
+// https://github.com/d3/d3-drag/blob/main/README.md#drag-events
 
 export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   center: event.metaKey,
@@ -32,8 +38,8 @@ export const dragBounds = (
     p2: Point,
     mod: Modifiers,
     commit?: boolean,
-    source?: { id?: ElementId, handle?: string },
-    target?: { id?: ElementId, handle?: string }
+    source?: Connection,
+    target?: Connection
   ) => void,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
@@ -41,40 +47,24 @@ export const dragBounds = (
   let source;
 
   return d3.drag()
+    .container(function () {
+      return this.closest('svg'); // Container for d3.pointer.
+    })
     .on('start', (event: D3DragEvent) => {
       const scale = context.scale();
-
-      // Connection point.
-      // TODO(burdon): Traverse hierarchy to find root control.
-      const control = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
-      const handle = d3.select<any, Handle>(event.sourceEvent.target).datum();
-      source = {
-        id: control?.element.id,
-        handle: handle?.id
-      };
-
+      source = getConnection(event.sourceEvent);
       start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onStart?.();
     })
     .on('drag', (event: D3DragEvent) => {
       const scale = context.scale();
-
       const mod = getEventMod(event.sourceEvent);
       const current: Point = scale.translate([event.x, event.y]);
       onUpdate(start, current, mod, false, source);
     })
     .on('end', (event: D3DragEvent) => {
       const scale = context.scale();
-
-      // Connection point.
-      // TODO(burdon): Traverse hierarchy to find root control.
-      const control = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
-      const handle = d3.select<any, Handle>(event.sourceEvent.target).datum();
-      const target = {
-        id: control?.element.id,
-        handle: handle?.id
-      };
-
+      const target = getConnection(event.sourceEvent);
       const mod = getEventMod(event.sourceEvent);
       const current = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onUpdate(start, current, mod, true, source, target);
@@ -93,6 +83,9 @@ export const dragMove = (
   let start: Point;
 
   return d3.drag()
+    .container(function () {
+      return this.closest('svg'); // Container for d3.pointer.
+    })
     .on('start', (event: D3DragEvent) => {
       start = [event.x, event.y];
     })

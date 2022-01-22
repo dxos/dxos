@@ -6,41 +6,76 @@ import * as d3 from 'd3';
 
 import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-core';
 
+import { ElementId } from '../model';
 import { D3Callable, D3DragEvent, D3Selection } from '../types';
-import { Control, ControlPoint } from './control';
+import { Control } from './control';
 import { getEventMod } from './drag';
 
-// TODO(burdon): Create events util.
-// https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
-// https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseenter_event
-
 const FrameProps = {
-  handleRadius: 9
+  controlRadius: 7,
+  connectionRadius: 9
 };
 
-export type Handle = { id: string, p: Point, cursor?: string }
+/**
+ * Moveable control handle (e.g., for path).
+ */
+export type ControlHandle = {
+  i: number
+  point: Point
+}
+
+/**
+ * Frame handle (resize or connection).
+ */
+export type Handle = {
+  type: string
+  id: string
+  p: Point // TODO(burdon): Rename delta?
+  cursor?: string
+}
+
+/**
+ * Reference to connection point.
+ */
+export type Connection = {
+  handle?: string
+  id?: ElementId
+}
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
 
 const resizeHandles: Handle[] = [
-  { id: 'n-resize', p: [0, 1], cursor: 'ns-resize' },
-  { id: 'ne-resize', p: [1, 1], cursor: 'nesw-resize' },
-  { id: 'e-resize', p: [1, 0], cursor: 'ew-resize' },
-  { id: 'se-resize', p: [1, -1], cursor: 'nwse-resize' },
-  { id: 's-resize', p: [0, -1], cursor: 'ns-resize' },
-  { id: 'sw-resize', p: [-1, -1], cursor: 'nesw-resize' },
-  { id: 'w-resize', p: [-1, 0], cursor: 'ew-resize' },
-  { id: 'nw-resize', p: [-1, 1], cursor: 'nwse-resize' }
+  { type: 'resize', id: 'n-resize', p: [0, 1], cursor: 'ns-resize' },
+  { type: 'resize', id: 'ne-resize', p: [1, 1], cursor: 'nesw-resize' },
+  { type: 'resize', id: 'e-resize', p: [1, 0], cursor: 'ew-resize' },
+  { type: 'resize', id: 'se-resize', p: [1, -1], cursor: 'nwse-resize' },
+  { type: 'resize', id: 's-resize', p: [0, -1], cursor: 'ns-resize' },
+  { type: 'resize', id: 'sw-resize', p: [-1, -1], cursor: 'nesw-resize' },
+  { type: 'resize', id: 'w-resize', p: [-1, 0], cursor: 'ew-resize' },
+  { type: 'resize', id: 'nw-resize', p: [-1, 1], cursor: 'nwse-resize' }
 ];
 
 const connectionHandles: Handle[] = [
-  { id: 'n', p: [0, 1] },
-  { id: 'e', p: [1, 0] },
-  { id: 's', p: [0, -1] },
-  { id: 'w', p: [-1, 0] },
+  { type: 'connection', id: 'n', p: [0, 1] },
+  { type: 'connection', id: 'e', p: [1, 0] },
+  { type: 'connection', id: 's', p: [0, -1] },
+  { type: 'connection', id: 'w', p: [-1, 0] },
 ]
 
 export const getConectionHandle = (handleId: string): Handle => connectionHandles.find(({ id }) => id === handleId);
+
+export const getConnection = (event): Connection => {
+  const handle = d3.select<any, Handle>(event.target).datum();
+  if (handle?.type !== 'connection') {
+    return undefined;
+  }
+
+  const control = d3.select<any, Control<any>>(event.target.closest('g.control')).datum();
+  return {
+    id: control.element.id,
+    handle: handle.id
+  };
+}
 
 /**
  * Compute updated bounds by dragging resizeHandle.
@@ -72,48 +107,46 @@ const computeBounds = (bounds: ScreenBounds, handle: Handle, delta: Point): Scre
   return { x, y, width, height };
 };
 
-/**
- * Handle drag resizeHandle.
- * @param onUpdate
- */
-const handleDrag = <T extends any>(onUpdate: (
+type DragCallback<T> = (
   handle: T,
   delta: Point,
   mod: Modifiers,
   commit?: boolean,
-  connection?: Control<any>,
-  connectionHandle?: string
-  ) => void
-): D3Callable => {
+  connection?: Connection
+) => void;
+
+/**
+ * Drag handler for resize or control handles.
+ * @param scale
+ * @param onUpdate
+ */
+const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3Callable => {
   let start: Point;
   let subject: T;
 
   return d3.drag()
+    .container(function () {
+      return this.closest('svg'); // Container for d3.pointer.
+    })
     .on('start', function (event: D3DragEvent) {
       subject = event.subject;
-      start = [event.x, event.y];
+      start = scale.translate([event.x, event.y]);
     })
     .on('drag', function (event: D3DragEvent) {
-      // Stop consuming events once dragging (enables hover over other elements).
+      // Stop consuming events (enables hover over other elements while dragging).
       d3.select(this).style('pointer-events', 'none');
-
+      const current = scale.translate([event.x, event.y]);
       const mod = getEventMod(event.sourceEvent);
-      const current = [event.x, event.y];
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
     .on('end', function (event: D3DragEvent) {
       // Start consuming events again.
       d3.select(this).style('pointer-events', undefined);
-
-      // Get drop target.
-      // TODO(burdon): Traverse hierarchy to find root control.
-      const target = d3.select<any, Control<any>>(event.sourceEvent.target.parentNode.parentNode).datum();
-      const targetHandle = d3.select<any, Handle>(event.sourceEvent.target).datum();
-
+      const connection = getConnection(event.sourceEvent);
       const mod = getEventMod(event.sourceEvent);
-      const current = [event.x, event.y];
+      const current = scale.translate([event.x, event.y]);
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
-      onUpdate(subject, delta, mod, true, target, targetHandle?.id);
+      onUpdate(subject, delta, mod, true, connection);
     });
 };
 
@@ -136,33 +169,35 @@ export const createFrame = (scale: Scale): D3Callable => {
     // Frame container.
     container
       .selectAll('rect.frame-border')
-      .data(active ? ['frame-border'] : [])
-      .join('rect')
-      .attr('class', 'frame-border')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
+        .data(active ? ['frame-border'] : [])
+        .join('rect')
+        .attr('class', 'frame-border')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height);
 
     // Resize handles.
     container
       .selectAll('g')
-      .data(['frame-resize-handles'])
-      .join('g')
+        .data(['frame-resize-handles'])
+        .join('g')
 
       .selectAll('circle.frame-handle')
-      .data(resizable ? resizeHandles : [], (handle: Handle) => handle.id)
-      .join('circle')
-      .attr('class', 'frame-handle')
-      .attr('cursor', h => h.cursor)
-      .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy - p[1] * height / 2)
-      .attr('r', FrameProps.handleRadius)
-      .call(handleDrag<Handle>((handle, delta, mod, commit) => {
-        const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        const data = control.createFromBounds(bounds, mod, commit);
-        control.onUpdate(data, commit);
-      }));
+        .data(resizable ? resizeHandles : [], (handle: Handle) => handle.id)
+        .join('circle')
+        .attr('class', 'frame-handle')
+        .attr('cursor', h => h.cursor)
+        .attr('cx', ({ p }) => cx + p[0] * width / 2)
+        .attr('cy', ({ p }) => cy - p[1] * height / 2)
+        .attr('r', FrameProps.controlRadius)
+        .call(dragHandle<Handle>(scale, (handle, delta, mod, commit) => {
+          const bounds = computeBounds({ x, y, width, height }, handle, delta);
+          const data = control.createFromBounds(bounds, mod, commit);
+          if (control.checkBounds(data)) {
+            control.onUpdate(data, commit);
+          }
+        }));
     // eslint-enable indent
   };
 };
@@ -170,31 +205,31 @@ export const createFrame = (scale: Scale): D3Callable => {
 /**
  * Draw control points (e.g., for line, path).
  */
-export const createControlPoints = (scale: Scale): D3Callable => {
+export const createControlHandles = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
     const points = active ? control.getControlPoints() : [];
 
     // eslint-disable indent
     group
       .selectAll('g')
-      .data(['control-group'])
-      .join('g')
+        .data(['control-group'])
+        .join('g')
 
       .selectAll('circle.frame-handle')
-      .data(points)
-      .join(enter => {
-        return enter
-          .append('circle')
-          .attr('class', 'frame-handle')
-          .call(handleDrag<ControlPoint>((point, delta, mod, commit, connection, connectionHandle) => {
-            const data = control.updateControlPoint(point, delta, commit, connection, connectionHandle);
-            control.onUpdate(data, commit);
-          }));
-      })
-      .attr('cursor', 'move')
-      .attr('cx', p => p.point[0])
-      .attr('cy', p => p.point[1])
-      .attr('r', FrameProps.handleRadius);
+        .data(resizable ? points : [])
+        .join(enter => {
+          return enter
+            .append('circle')
+            .attr('class', 'frame-handle')
+            .call(dragHandle<ControlHandle>(scale, (point, delta, mod, commit, connection) => {
+              const data = control.updateControlPoint(point, delta, commit, connection);
+              control.onUpdate(data, commit);
+            }));
+        })
+        .attr('cursor', 'move')
+        .attr('cx', p => p.point[0])
+        .attr('cy', p => p.point[1])
+        .attr('r', FrameProps.controlRadius);
     // eslint-enable indent
   };
 };
@@ -211,25 +246,25 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('g')
-      .data(['connection-group'])
-      .join('g')
+        .data(['connection-group'])
+        .join('g')
 
       .selectAll('circle.connection-handle')
-      .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
-      .join(enter => {
-        return enter
-          .append('circle')
-          .attr('class', 'connection-handle');
-        // TODO(burdon): Support drag from connection point to start line.
-        // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
-        //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-        //   const data = control.createFromBounds(bounds, mod, commit);
-        //   control.onUpdate(data, commit);
-        // }));
-      })
-      .attr('cx', ({ p }) => cx + p[0] * width / 2)
-      .attr('cy', ({ p }) => cy - p[1] * height / 2)
-      .attr('r', FrameProps.handleRadius);
+        .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
+        .join(enter => {
+          return enter
+            .append('circle')
+            .attr('class', 'connection-handle');
+          // TODO(burdon): Support drag from connection point to start line.
+          // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
+          //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+          //   const data = control.createFromBounds(bounds, mod, commit);
+          //   control.onUpdate(data, commit);
+          // }));
+        })
+        .attr('cx', ({ p }) => cx + p[0] * width / 2)
+        .attr('cy', ({ p }) => cy - p[1] * height / 2)
+        .attr('r', FrameProps.connectionRadius);
     // eslint-enable indent
   };
 };

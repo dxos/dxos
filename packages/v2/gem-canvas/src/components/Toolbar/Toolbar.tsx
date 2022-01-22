@@ -4,27 +4,22 @@
 
 import React, { FC } from 'react';
 import { css } from '@emotion/css';
-import {
-  RadioButtonUnchecked as CircleIcon,
-  ArrowRightAlt as LineIcon,
-  Timeline as PathIcon,
-  Crop32 as RectIcon
-} from '@material-ui/icons';
 
 import { Tool } from '../../tools';
+import { Action, Binding, actions } from './actions';
 
 export interface ToolbarProps {
   tool?: Tool
-  onSelect?: (tool?: Tool) => void
+  onAction?: (action: Action) => void
 }
 
 export const Toolbar = ({
-  tool,
-  onSelect
+  tool: current,
+  onAction
 }: ToolbarProps) => {
   const styles = css`
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     padding: 0;
     background-color: #EEE;
     button {
@@ -41,38 +36,40 @@ export const Toolbar = ({
     }
   `;
 
-  const tools: { type: Tool, icon: FC }[] = [
-    {
-      type: 'rect',
-      icon: RectIcon
-    },
-    {
-      type: 'ellipse',
-      icon: CircleIcon
-    },
-    {
-      type: 'line',
-      icon: LineIcon
-    },
-    /*
-    {
-      type: 'path',
-      icon: PathIcon
-    }
-    */
-  ];
-
   return (
     <div className={styles}>
-      {tools.map(({ type, icon: Icon }) => (
-        <button
-          key={type}
-          className={tool === type ? 'active' : ''}
-          onClick={() => onSelect(tool === type ? undefined : type)}
-        >
-          <Icon />
-        </button>
-      ))}
+      <div>
+        {actions['tools'].map((binding: Binding) => {
+          const { action, icon: Icon, label } = binding;
+          const { tool } = action;
+          return (
+            <button
+              key={tool}
+              className={tool === current ? 'active' : ''}
+              title={label}
+              onClick={() => onAction(action)}
+            >
+              <Icon />
+            </button>
+          );
+        })}
+      </div>
+
+      <div>
+        {actions['view'].map((binding: Binding) => {
+          const { action, icon: Icon, label } = binding;
+          const { tool } = action;
+          return (
+            <button
+              key={tool}
+              title={label}
+              onClick={() => onAction(action)}
+            >
+              <Icon />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

@@ -127,7 +127,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
             // NOTE: Possible error if mismatched d3 versions:
             //   Uncaught TypeError: selection5.interrupt is not a function
             //   https://github.com/d3/d3-zoom/issues/167
-            zoomCallback.transform(d3.select(svgRef.current), d3.zoomIdentity);
+            // zoomCallback.transform(d3.select(svgRef.current), d3.zoomIdentity);
           });
       }
 

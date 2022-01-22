@@ -6,9 +6,7 @@ import { Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem
 
 import { ElementData, ElementDataType, ElementId, ElementType } from '../model';
 import { D3Callable } from '../types';
-
-// TODO(burdon): Rename (not control).
-export type ControlPoint = { i: number, point: Point }
+import { Connection, ControlHandle } from './frame';
 
 export interface ControlContext {
   scale: () => Scale
@@ -204,12 +202,20 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   /**
+   * Check if bounds meet minimums.
+   * @param data
+   */
+  checkBounds (data: T): boolean {
+    return true;
+  }
+
+  /**
    * Create element data from bounds.
    * @param bounds
    * @param mod
-   * @param commit
+   * @param snap
    */
-  createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): T {
+  createFromBounds (bounds: ScreenBounds, mod?: Modifiers, snap?: boolean): T {
     throw new Error();
   }
 
@@ -218,16 +224,16 @@ export abstract class Control<T extends ElementDataType> {
    * @param p1
    * @param p2
    * @param mod
-   * @param commit
+   * @param snap
    */
-  createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): T {
-    return this.createFromBounds(Screen.createBounds(p1, p2, mod));
+  createFromExtent (p1: Point, p2: Point, mod?: Modifiers, snap?: boolean): T {
+    return this.createFromBounds(Screen.createBounds(p1, p2, mod), mod, snap);
   }
 
   /**
    * Get control points.
    */
-  getControlPoints (): ControlPoint[] {
+  getControlPoints (): ControlHandle[] {
     return [];
   }
 
@@ -236,15 +242,13 @@ export abstract class Control<T extends ElementDataType> {
    * @param point             Point being updated.
    * @param delta             Dragged delta.
    * @param commit            Commit when released.
-   * @param connection        Element to connect to.
-   * @param connectionHandle  Element's connection handle.
+   * @param connection        Connection point.
    */
   updateControlPoint (
-    point: ControlPoint,
+    point: ControlHandle,
     delta: Point,
     commit?: boolean,
-    connection?: Control<any>,
-    connectionHandle?: string
+    connection?: Connection
   ): T {
     throw new Error();
   }

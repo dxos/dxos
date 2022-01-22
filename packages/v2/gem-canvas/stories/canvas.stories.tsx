@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
 import * as d3 from 'd3';
 import debug from 'debug';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
-
 import {
+  Action,
   ActionType,
   Canvas,
   ControlState,
@@ -17,7 +17,6 @@ import {
   ElementDataType,
   ElementId,
   ElementType,
-  Palette,
   SelectionModel,
   StatusBar,
   Tool,
@@ -30,11 +29,14 @@ import { generator } from './helpers';
 const log = debug('gem:canvas:story');
 debug.enable('gem:canvas:*,-*:debug');
 
+// TODO(burdon): styled-components warning
 // TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Refresh/render button.
 
+// TODO(burdon): Only show Hover while drawing line.
+// TODO(burdon): Resize drag sometimes not working unless clicked (order of handlers).
 // TODO(burdon): Merge line, polyline.
 // TODO(burdon): Create path (multi-point).
 // TODO(burdon): Drag path.
@@ -55,7 +57,7 @@ debug.enable('gem:canvas:*,-*:debug');
 // TODO(burdon): Styles and style objects.
 
 // Clean-up
-// TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlPoints)
+// TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlHandles)
 // TODO(burdon): D3Callable as functions.
 
 export default {
@@ -74,14 +76,21 @@ const Container = () => {
   const [showGrid, setShowGrid, showGridRef] = useStateRef(true); // TODO(burdon): Generalize to options.
   const [debug, setDebug, debugRef] = useStateRef(false);
 
+  // Reset selection.
+  useEffect(() => {
+    if (tool) {
+      setSelection(undefined);
+    }
+  }, [tool]);
+
   const handleSelect = (selection: SelectionModel) => {
     setSelection(selection);
   };
 
   const handleCreate = async (type: ElementType, data: ElementDataType) => {
     const element = await model.create(type, data);
-    setSelection({ element, state: ControlState.SELECTED });
     setTool(undefined);
+    setSelection({ element, state: ControlState.SELECTED });
     return true; // TODO(burdon): Chance to reject commit.
   }
 
@@ -96,90 +105,90 @@ const Container = () => {
     return true; // TODO(burdon): Chance to reject commit.
   };
 
-  // Reset selection.
-  useEffect(() => {
-    setSelection(undefined);
-  }, [tool]);
+  const handleAction = async (action: Action) => {
+    const { type } = action;
+    switch (type) {
+      case ActionType.DEBUG: {
+        setDebug(!debugRef.current);
+        break;
+      }
+
+      case ActionType.RESET: {
+        setTool(undefined);
+        setSelection(undefined);
+        const updated = elements.map(({ id, type, ...rest }) => `${id}[${type}]: ${JSON.stringify(rest)}`);
+        log(`Elements (${elements.length}):\n${updated.join('\n')}`);
+        break;
+      }
+
+      case ActionType.TOGGLE_GRID: {
+        setShowGrid(!showGridRef.current);
+        break;
+      }
+
+      // TODO(burdon): Reset zoom.
+      case ActionType.RESET_ZOOM: {
+        break;
+      }
+
+      case ActionType.TOOL_SELECT: {
+        const { tool } = action;
+        setTool(tool);
+        break;
+      }
+
+      case ActionType.CANCEL: {
+        setTool(undefined);
+        setSelection(undefined);
+        break;
+      }
+
+      case ActionType.DELETE: {
+        if (selectionRef.current) {
+          await handleDelete(selectionRef.current!.element.id);
+          setSelection(undefined);
+        }
+      }
+    }
+  };
 
   //
   // Keys.
   //
   useEffect(() => {
     d3.select(document.body)
-      .call(createKeyHandlers(async ({ action, tool }) => {
-        switch (action) {
-          case ActionType.DEBUG: {
-            setDebug(!debugRef.current);
-            break;
-          }
-
-          case ActionType.RESET: {
-            setTool(undefined);
-            setSelection(undefined);
-            const updated = elements.map(({ id, type, ...rest }) => `${id}[${type}]: ${JSON.stringify(rest)}`);
-            log(`Elements (${elements.length}):\n${updated.join('\n')}`);
-            break;
-          }
-
-          case ActionType.TOGGLE_GRID: {
-            setShowGrid(!showGridRef.current);
-            break;
-          }
-
-          case ActionType.TOOL_SELECT: {
-            setTool(tool);
-            break;
-          }
-
-          case ActionType.CANCEL: {
-            setTool(undefined);
-            setSelection(undefined);
-            break;
-          }
-
-          case ActionType.DELETE: {
-            if (selectionRef.current) {
-              await handleDelete(selectionRef.current!.element.id);
-              setSelection(undefined);
-            }
-          }
-        }
-      }));
+      .call(createKeyHandlers(handleAction));
   }, [elements]);
 
   return (
     <FullScreen style={{ backgroundColor: '#EEE' }}>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <div style={{ display: 'flex', height: '100%', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Toolbar
-              tool={tool}
-              onSelect={tool => setTool(tool)}
-            />
-          </div>
+        <Toolbar
+          tool={tool}
+          onAction={handleAction}
+        />
 
-          <SvgContainer
-            ref={svgRef}
+        <SvgContainer
+          ref={svgRef}
+          scale={scale}
+          zoom={[1/4, 8]}
+          grid={showGrid}
+        >
+          <Canvas
+            svgRef={svgRef}
             scale={scale}
-            zoom={[1/4, 8]}
-            grid={showGrid}
-          >
-            <Canvas
-              svgRef={svgRef}
-              scale={scale}
-              tool={tool}
-              elements={elements}
-              selection={selection}
-              onSelect={handleSelect}
-              onCreate={handleCreate}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-              options={{
-                debug
-              }}
-            />
-          </SvgContainer>
-        </div>
+            tool={tool}
+            elements={elements}
+            selection={selection}
+            onSelect={handleSelect}
+            onCreate={handleCreate}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            options={{
+              debug
+            }}
+          />
+        </SvgContainer>
 
         <StatusBar
           data={{

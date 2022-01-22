@@ -38,14 +38,6 @@ export class FractionUtil {
   }
 
   /**
-   * @param {Fraction}
-   * True if zero.
-   */
-  static isZero = ([n]: Fraction): boolean => {
-    return n === 0;
-  }
-
-  /**
    * Round the number to the nearest fraction.
    * Example: 3/5 => 1/1; 3/5 (precision 2) => 1/2.
    * @param {Fraction}
@@ -57,6 +49,10 @@ export class FractionUtil {
     return FractionUtil.simplify([v, p]);
   };
 
+  //
+  // Boolean.
+  //
+
   /**
    * Tests if equals.
    * @param n1
@@ -64,6 +60,14 @@ export class FractionUtil {
    */
   static equals = (n1: Fraction, n2: Fraction) => {
     return (n1[0] * n2[1]) === (n1[1] * n2[0]);
+  }
+
+  /**
+   * @param {Fraction}
+   * True if zero.
+   */
+  static isZero = ([n]: Fraction): boolean => {
+    return n === 0;
   }
 
   //

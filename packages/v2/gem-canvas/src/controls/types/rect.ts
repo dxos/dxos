@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex, Vector } from '@dxos/gem-core';
+import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Vertex, Vector, Bounds } from '@dxos/gem-core';
 
 import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
@@ -76,22 +76,6 @@ const createRect = (scale: Scale): D3Callable => {
 };
 
 /**
- * Check not too small.
- * @param data
- * @param commit
- */
-const valid = (data: Rect, commit: boolean) => {
-  if (commit) {
-    const { bounds: { width, height } } = data;
-    if (FractionUtil.isZero(width) || FractionUtil.isZero(height)) {
-      return;
-    }
-  }
-
-  return data;
-};
-
-/**
  * Rect control.
  */
 export class RectControl extends Control<Rect> {
@@ -112,15 +96,20 @@ export class RectControl extends Control<Rect> {
     return this.scale.model.toBounds(bounds);
   }
 
-  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, commit?: boolean): Rect {
-    if (commit) {
+  override checkBounds (data: Rect) {
+    const { bounds: { width, height } } = data;
+    return (FractionUtil.toNumber(width) >= 1 && FractionUtil.toNumber(height) >= 1);
+  }
+
+  override createFromBounds (bounds: ScreenBounds, mod?: Modifiers, snap?: boolean): Rect {
+    if (snap) {
       bounds = this.scale.screen.snapBounds(bounds);
     }
 
-    return valid({
+    return {
       ...this.data,
       bounds: this.scale.screen.toBounds(bounds)
-    }, commit);
+    };
   }
 
   getConnectionPoint (handle?: string): Vertex {

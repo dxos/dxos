@@ -121,7 +121,7 @@ export const Canvas = ({
 
     // eslint-disable indent
     d3.select(controlsGroup.current)
-      .selectAll('g.element')
+      .selectAll('g.control')
       .data(controlManager.elements, ({ element }: Control<any>) => element.id)
       .join(enter => {
         return enter
@@ -134,6 +134,7 @@ export const Canvas = ({
             }
           })
           .on('dblclick', function () {
+            // TODO(burdon): Collides with zoom.
             const control = d3.select(this).datum() as Control<any>;
             if (!control.editing) {
               control.onEdit(true);
@@ -152,7 +153,7 @@ export const Canvas = ({
             }
           });
       })
-      .attr('class', d => clsx('element', elementStyles['default'], elementStyles[d.data.style]))
+      .attr('class', d => clsx('control', elementStyles['default'], elementStyles[d.data.style]))
       .each((control, i, nodes) => {
         // TODO(burdon): Currently disabled since otherwise connected lines won't update when dragging source/target.
         // Only draw if updated.

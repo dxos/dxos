@@ -6,8 +6,8 @@ import { Modifiers, Scale, FractionUtil, Point, Screen, Vertex } from '@dxos/gem
 
 import { ElementId, ElementType, Line } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
-import { Control, ControlPoint, ControlGetter } from '../control';
-import { createControlPoints } from '../frame';
+import { Control, ControlGetter } from '../control';
+import { Connection, ControlHandle, createControlHandles } from '../frame';
 
 /**
  * Hidden bounds for click handler.
@@ -60,14 +60,14 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('line')
-      .data(['_main_'])
-      .join('line')
-      .attr('marker-end', () => 'url(#marker_arrow)')
-      .style('pointer-events', 'none')
-      .attr('x1', x1)
-      .attr('y1', y1)
-      .attr('x2', x2)
-      .attr('y2', y2);
+        .data(['_main_'])
+        .join('line')
+        .attr('marker-end', () => 'url(#marker_arrow)')
+        .style('pointer-events', 'none')
+        .attr('x1', x1)
+        .attr('y1', y1)
+        .attr('x2', x2)
+        .attr('y2', y2);
 
     // TODO(burdon): Convert to polyline with multiple hidden rects.
     /*
@@ -85,18 +85,18 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
 
     group
       .selectAll('rect.line-touch')
-      .data(control.active ? [] : [bounds])
-      .join('rect')
-      .attr('class', 'line-touch')
-      .attr('transform', transform)
-      .attr('x', d => d.x)
-      .attr('y', d => d.y)
-      .attr('width', d => d.width)
-      .attr('height', d => d.height)
-      .attr('cursor', 'default')
-      .on('click', function () {
-        control.onSelect(true);
-      });
+        .data(control.active ? [] : [bounds])
+        .join('rect')
+        .attr('class', 'line-touch')
+        .attr('transform', transform)
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('width', d => d.width)
+        .attr('height', d => d.height)
+        .attr('cursor', 'default')
+        .on('click', function () {
+          control.onSelect(true);
+        });
     // eslint-enable indent
   };
 };
@@ -132,14 +132,14 @@ const valid = (data: Line, commit: boolean) => {
  * Line control.
  */
 export class LineControl extends Control<Line> {
-  _handles = createControlPoints(this.scale);
+  _handles = createControlHandles(this.scale);
   _main = createLine(this.elements, this.scale);
 
   override type = 'line' as ElementType;
 
   override drawable: D3Callable = group => {
-    group.call(this._main, group.datum());
     group.call(this._handles, group.datum(), this.selected, this.selected && this.resizable);
+    group.call(this._main, group.datum());
   };
 
   override createFromExtent (p1: Point, p2: Point, mod?: Modifiers, commit?: boolean): Line {
@@ -153,7 +153,7 @@ export class LineControl extends Control<Line> {
     }, commit);
   }
 
-  override getControlPoints (): ControlPoint[] {
+  override getControlPoints (): ControlHandle[] {
     let { source, target } = this.data;
     const pos1 = getPos(this.elements, source);
     const pos2 = getPos(this.elements, target);
@@ -161,11 +161,10 @@ export class LineControl extends Control<Line> {
   }
 
   override updateControlPoint (
-    { i, point }: ControlPoint,
+    { i, point }: ControlHandle,
     delta: Point,
     commit?: boolean,
-    connection?: Control<any>,
-    connectionHandle?: string
+    connection?: Connection
   ) {
     const { x: dx, y: dy } = this.scale.screen.toVertex(delta);
     let { source, target, ...rest } = this.element.data;
@@ -176,15 +175,9 @@ export class LineControl extends Control<Line> {
     // Connect.
     if (commit) {
       if (i === 0) {
-        source = {
-          id: connection?.element?.id,
-          handle: connectionHandle
-        };
+        source = connection;
       } else {
-        target = {
-          id: connection?.element?.id,
-          handle: connectionHandle
-        };
+        target = connection;
       }
     }
 
@@ -197,11 +190,11 @@ export class LineControl extends Control<Line> {
     return {
       source: {
         ...source,
-        pos: (!commit || !source.id) ? points[0] : undefined
+        pos: (!commit || !source?.id) ? points[0] : undefined
       },
       target: {
         ...target,
-        pos: (!commit || !target.id) ? points[1] : undefined
+        pos: (!commit || !target?.id) ? points[1] : undefined
       },
       ...rest
     };
