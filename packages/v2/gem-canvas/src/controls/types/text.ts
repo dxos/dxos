@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Point, ScreenBounds } from '@dxos/gem-core';
+import { ScreenBounds } from '@dxos/gem-core';
 
 import { D3Callable } from '../../types';
 

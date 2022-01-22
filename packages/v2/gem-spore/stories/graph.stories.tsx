@@ -7,18 +7,9 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
+import { FullScreen, Scale, SvgContainer, useStateRef } from '@dxos/gem-core';
 
-import { Scale, useStateRef } from '../src';
-
-import {
-  FullScreen,
-  GraphForceProjector,
-  GraphRenderer,
-  Part,
-  Surface,
-  Scene,
-  SvgContainer
-} from '../src';
+import { GraphForceProjector, GraphRenderer, Part, Surface, Scene } from '../src';
 
 import {
   StatsProjector,
