@@ -89,6 +89,9 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
     // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
     // https://www.sarasoueidan.com/blog/svg-transformations (Illustrated examples).
     // <g transform={center ? `translate(${width / 2} ${height / 2})` : undefined}>
+    // TODO(burdon): Sub-pixel issue?: http://diveintohtml5.info/canvas.html
+    // <g transform='translate(0.5, 0.5)'
+
     if (center) {
       const x = -Math.floor(width / 2);
       const y = -Math.floor(height / 2);

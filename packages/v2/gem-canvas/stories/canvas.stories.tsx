@@ -32,6 +32,8 @@ debug.enable('gem:canvas:*,-*:debug');
 // TODO(burdon): styled-components warning
 // TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
 
+// TODO(burdon): See different layers in draw.io for elements, cursor, and connection points.
+
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Refresh/render button.
 

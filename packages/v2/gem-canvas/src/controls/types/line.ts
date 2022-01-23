@@ -83,6 +83,8 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     // Hidden Rect to enable selection.
     const { bounds, transform } = createHidden([x1, y1], [x2, y2]);
 
+    // TODO(burdon): Replace with path (see draw.io):
+    //  fill="none" stroke-miterlimit="10" pointer-events="stroke" visibility="hidden" stroke-width="9"
     group
       .selectAll('rect.line-touch')
         .data(control.active ? [] : [bounds])

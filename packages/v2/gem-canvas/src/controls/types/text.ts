@@ -42,7 +42,7 @@ export const createText = ({
         .style('width', width)
         .style('height', height)
         .attr('x', x)
-        .attr('y', y - 1) // TODO(burdon): SVG Text is 0.5 pixels off.
+        .attr('y', y - 0.5) // Seems off by a sub-pixel (retina screen only?)
 
       .selectAll('input')
       .data([{ id: 'text', text }], ({ id }) => id)
