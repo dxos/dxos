@@ -3,18 +3,14 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 import cloneDeep from 'lodash/cloneDeep';
 import get from 'lodash/get';
 
-import { FeedMeta, MutationMeta } from '@dxos/echo-protocol';
+import { MutationMeta } from '@dxos/echo-protocol';
 import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
-import { jsonReplacer } from '@dxos/util';
 
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
-
-const log = debug('dxos:echo:object-model');
 
 class ObjectModelStateMachiene implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
   private _object = {};
