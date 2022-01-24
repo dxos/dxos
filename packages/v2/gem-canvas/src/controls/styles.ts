@@ -11,31 +11,46 @@ export const elementStyles = {
     circle, ellipse, line, path, polygon, polyline, rect {
       fill: #fafafa; // 50
       stroke: #757575; // 600;
-      stroke-width: 2;
+      stroke-width: 1;
     }
     text, input {
       font-size: 18px;
       font-family: sans-serif;
+    }
+    line {
+      stroke-width: 2;
     }
   `),
 
   // Custom.
   'style-1': css(`
     circle, ellipse, line, path, polygon, polyline, rect {
+      fill: #eceff1;
+      stroke: #546e7a;
+    }
+  `),
+  'style-2': css(`
+    circle, ellipse, line, path, polygon, polyline, rect {
       fill: #e3f2fd;
       stroke: #1e88e5;
     }
   `),
-  'style-2': css(`
+  'style-3': css(`
     circle, ellipse, line, path, polygon, polyline, rect {
       fill: #e0f2f1;
       stroke: #00897b;
     }
   `),
-  'style-3': css(`
+  'style-4': css(`
     circle, ellipse, line, path, polygon, polyline, rect {
       fill: #fbe9e7;
       stroke: #f4511e;
+    }
+  `),
+  'style-5': css(`
+    circle, ellipse, line, path, polygon, polyline, rect {
+      fill: #f3e5f5;
+      stroke: #8e24aa;
     }
   `),
 };
@@ -108,4 +123,4 @@ export const debugStyles = css`
   }
 `;
 
-export const styleNames = ['style-1', 'style-2', 'style-3'];
+export const styleNames = ['style-1', 'style-2', 'style-3', 'style-4', 'style-5'];

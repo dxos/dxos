@@ -45,11 +45,8 @@ const createEllipse = (scale: Scale): D3Callable => {
                   };
 
                   control.onSelect(true);
-                  control.onUpdate({
-                    center: commit ? scale.model.snapVertex(moved) : moved,
-                    ...rest
-                  }, commit);
-                }).filter(() => control.draggable));
+                  control.onUpdate({ center: commit ? scale.model.snapVertex(moved) : moved, ...rest }, commit);
+                }).filter(event => control.draggable && !event.ctrlKey && !event.button));
             }
           })
       })
@@ -87,9 +84,10 @@ export class EllipseControl extends Control<Ellipse> {
   type = 'ellipse' as ElementType;
 
   override drawable: D3Callable = group => {
+    const control = group.datum(); // TODO(burdon): Pattern.
     group.call(this._main, group.datum());
-    group.call(this._connectors, group.datum(), !this.editing && !this.selected && this.hover);
     group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+    group.call(this._connectors, control, !this.draggable && !this.editing && !this.selected && this.hover);
   };
 
   override getBounds (): ScreenBounds {

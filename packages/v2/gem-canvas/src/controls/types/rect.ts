@@ -31,6 +31,7 @@ const createRect = (scale: Scale): D3Callable => {
           .append('rect')
           .call(selection => {
             // Drag.
+            // TODO(burdon): Factor out common with ellipse.
             if (control.onUpdate) {
               selection
                 .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
@@ -44,11 +45,8 @@ const createRect = (scale: Scale): D3Callable => {
                   };
 
                   control.onSelect(true);
-                  control.onUpdate({
-                    bounds: commit ? scale.model.snapBounds(moved) : moved,
-                    ...rest
-                  }, commit);
-                }).filter(() => control.draggable));
+                  control.onUpdate({ bounds: commit ? scale.model.snapBounds(moved) : moved, ...rest }, commit);
+                }).filter(event => control.draggable && !event.ctrlKey && !event.button));
             }
           })
       })
@@ -89,7 +87,7 @@ export class RectControl extends Control<Rect> {
     const control = group.datum(); // TODO(burdon): Pattern.
     group.call(this._main, control);
     group.call(this._frame, control, this.selected, this.selected && this.resizable);
-    group.call(this._connectors, control, !this.editing && !this.selected && this.hover);
+    group.call(this._connectors, control, !this.draggable && !this.editing && !this.selected && this.hover);
   };
 
   override getBounds (): ScreenBounds {

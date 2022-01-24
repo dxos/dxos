@@ -28,16 +28,16 @@ import {
 import { generator } from './helpers';
 
 const log = debug('gem:canvas:story');
-// debug.enable('gem:canvas:*,-*:debug');
-debug.enable('gem:canvas:*');
+debug.enable('gem:canvas:*,-*:debug');
+// debug.enable('gem:canvas:*');
 
-// TODO(burdon): styled-components warning
-// TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
-
-// TODO(burdon): See different layers in draw.io for elements, cursor, and connection points.
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Refresh/render button.
+
+// TODO(burdon): styled-components warning
+// TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
+// TODO(burdon): See different layers in draw.io for elements, cursor, and connection points.
 
 // TODO(burdon): Only show Hover while drawing line.
 // TODO(burdon): Resize drag sometimes not working unless clicked (order of handlers).
@@ -68,10 +68,11 @@ export default {
   title: 'gem-canvas/Canvas'
 };
 
-// TODO(burdon): Factor out.
 const Container = () => {
   const svgRef = useRef<SVGSVGElement>();
   const scale = useScale({ gridSize: 32 });
+
+  // TODO(burdon): Factor out.
   const [elements, model] = useMemoryElementModel(() => generator());
 
   // State.
@@ -170,6 +171,18 @@ const Container = () => {
         <Toolbar
           tool={tool}
           onAction={handleAction}
+          onStyle={(style: string) => {
+            if (selection) {
+              const { element } = selection;
+              const { data } = element;
+              element.data = {
+                ...data,
+                style
+              };
+
+              void handleUpdate(element);
+            }
+          }}
         />
 
         <SvgContainer
