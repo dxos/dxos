@@ -135,7 +135,7 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
   }
 
   createSnapshot (): any {
-    this._stateMachine.snapshot();
+    return this._stateMachine.snapshot();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

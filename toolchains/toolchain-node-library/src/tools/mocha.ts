@@ -15,6 +15,7 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   await execTool('mocha', [
     '-r', '@swc-node/register',
     '-r', require.resolve('./wtfnode.js'),
+    '-r', require.resolve('./catch-unhandled-rejections.js'),
     ...jsdomArray,
 
     forceClose ? '--exit' : '--no-exit',

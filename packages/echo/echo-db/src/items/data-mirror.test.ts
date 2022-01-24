@@ -16,9 +16,10 @@ import { DataServiceRouter } from './data-service-router';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { promiseTimeout } from '@dxos/async';
 
 describe('DataMirror', () => {
-  test('basic', async () => {
+  test.only('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();
@@ -42,7 +43,7 @@ describe('DataMirror', () => {
     dataMirror.open();
 
     // Create item
-    const promise = mirrorItemManager.debouncedItemUpdate.waitForCount(1);
+    const promise = promiseTimeout(mirrorItemManager.debouncedItemUpdate.waitForCount(1), 1000, new Error('timeout'));
 
     const item = await itemManager.createItem(
       ObjectModel.meta.type
@@ -58,7 +59,7 @@ describe('DataMirror', () => {
 
     // Mutate model
     await Promise.all([
-      mirroredItem!.model.update.waitForCount(1),
+      promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
       item.model.setProperty('foo', 'bar')
     ]);
 
