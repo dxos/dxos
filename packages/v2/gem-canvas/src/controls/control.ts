@@ -49,7 +49,7 @@ export abstract class Control<T extends ElementDataType> {
   // TODO(burdon): NOTE: Currently conflates updated data and updated state.
   private _modified = true;
   private _state = ControlState.NORMAL;
-  private _hover = false;
+  private _hover = false; // TODO(burdon): Combine.
 
   // Temporary data (during edit until commit).
   private _data: T = undefined;
@@ -132,11 +132,13 @@ export abstract class Control<T extends ElementDataType> {
     if (this._state !== state) {
       this._state = state;
       this._modified = true;
+      this._hover = false;
     }
   }
 
   //
   // Event handlers.
+  // TODO(burdon): Be clearer on who calls these methods and when.
   //
 
   onSelect (select: boolean) {
@@ -192,6 +194,7 @@ export abstract class Control<T extends ElementDataType> {
   /**
    * Callable renderer.
    */
+  // TODO(burdon): Split into main element group and cursor group.
   abstract drawable: D3Callable;
 
   /**

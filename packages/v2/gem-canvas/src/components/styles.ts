@@ -54,25 +54,44 @@ export const canvasStyles = css`
       border: none;
       outline: none;
     }
-
-    rect.frame-border {
-      fill: none;    
-      stroke: #1565c0;
-      stroke-width: 1;
-    }
     
-    circle.frame-handle {
-      fill: #bbdefb;
-      stroke: #1565c0;
-      stroke-width: 1;
+    g.frame {
+      rect {
+        fill: none;    
+        stroke: #1565c0;
+        stroke-width: 2;
+      }
+      
+      g.resize-handles {
+        circle {
+          fill: #bbdefb;
+          stroke: #1565c0;
+          stroke-width: 1;
+        }
+      }
     }
-  
-    circle.connection-handle {
-      fill: #fafafa;
-      stroke: #1565c0;
-      stroke-width: 1;
+
+    g.control-handles {
+      circle {
+        fill: #bbdefb;
+        stroke: #1565c0;
+        stroke-width: 1;
+      }
     }
-  
+
+    g.connection-handles {
+      circle {
+        fill: #fafafa;
+        stroke: #1565c0;
+        stroke-width: 1;
+      }
+      circle.target {
+        fill: limegreen;
+        stroke-width: 2;
+      }
+    }
+
+    // TODO(burdon): Replace with path.  
     rect.line-touch {
       fill: transparent;
       stroke: none;

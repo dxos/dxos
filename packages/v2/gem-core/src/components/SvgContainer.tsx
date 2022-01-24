@@ -109,21 +109,20 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
       handleResize({ width, height });
 
       if (zoom) {
-        const zoomCallback = d3.zoom()
-          .extent([[0, 0], [width, height]])
-          .scaleExtent(zoom)
-          .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
-            scale.setTransform(transform);
-            handleResize({ width, height });
-            d3.select((zoomRoot ?? childrenRef).current)
-              .attr('transform', transform as any);
-          })
-
-        // Zoom must be applied to SVG element.
-        // https://github.com/d3/d3-zoom#zoom_on
+        // Zoom must be applied to root SVG element.
+        // https://github.com/d3/d3-zoom
         // https://www.d3indepth.com/zoom-and-pan
         d3.select(svgRef.current)
-          .call(zoomCallback)
+          .call(d3.zoom()
+            // .filter(() => false)
+            .extent([[0, 0], [width, height]])
+            .scaleExtent(zoom)
+            .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
+              scale.setTransform(transform);
+              handleResize({ width, height });
+              d3.select((zoomRoot ?? childrenRef).current)
+                .attr('transform', transform as any);
+            }))
           // https://github.com/d3/d3-zoom#zoom_on
           // NOTE(12/30.21): Default dblclick handler throws error.
           .on('dblclick.zoom', function (s) {

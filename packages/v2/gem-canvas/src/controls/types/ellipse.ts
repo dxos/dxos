@@ -8,7 +8,7 @@ import { ElementType, Ellipse, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame, getConectionHandle } from '../frame';
+import { createConectionHandles, createFrame, getConectionHandle } from '../frame';
 import { createText } from './text';
 
 /**
@@ -53,7 +53,7 @@ const createEllipse = (scale: Scale): D3Callable => {
             }
           })
       })
-      .attr('cursor', control.draggable ? 'move' : undefined)
+      .style('cursor', control.draggable ? 'move' : undefined)
       .attr('cx', cx)
       .attr('cy', cy)
       .attr('rx', rx)
@@ -81,7 +81,7 @@ const createEllipse = (scale: Scale): D3Callable => {
  */
 export class EllipseControl extends Control<Ellipse> {
   _frame = createFrame(this.scale);
-  _connectors = createConectionPoints(this.scale);
+  _connectors = createConectionHandles(this.scale);
   _main = createEllipse(this.scale);
 
   type = 'ellipse' as ElementType;

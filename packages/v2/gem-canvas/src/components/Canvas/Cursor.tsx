@@ -58,7 +58,7 @@ export const Cursor = ({
   //
   useEffect(() => {
     d3.select(svgRef.current)
-      .on('click', (event) => {
+      .on('click', function (event) {
         // TODO(burdon): Better way to test containing group?
         if (event.target.parentNode) {
           const control = d3.select(event.target.parentNode).datum();
@@ -136,11 +136,10 @@ export const Cursor = ({
       }
     };
 
-    // TODO(burdon): Prevent control dragging while tool selected.
     // Drag to create new element.
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
-      .attr('cursor', cursorRef.current ? 'crosshair' : undefined)
+      .style('cursor', cursorRef.current ? 'crosshair' : undefined)
       .call(dragBounds(context, handleUpdate, () => onSelect(undefined))
         .container(() => svgRef.current)
         .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.

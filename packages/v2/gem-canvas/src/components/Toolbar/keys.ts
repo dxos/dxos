@@ -15,7 +15,7 @@ export const createKeyHandlers = (
   onAction: (action: Action) => void
 ): D3Callable => {
   return selection => selection
-    .on('keydown', (event: KeyboardEvent) => {
+    .on('keydown', function (event: KeyboardEvent) {
       const binding = bindings.find(binding => (binding.key === event.key) && (!binding.mod || event[binding.mod]))
       if (binding) {
         if (binding.action.type === ActionType.SHOW_KEYMAP) {

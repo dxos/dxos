@@ -8,7 +8,7 @@ import { ElementType, Rect } from '../../model';
 import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { dragMove } from '../drag';
-import { createConectionPoints, createFrame, getConectionHandle } from '../frame';
+import { createConectionHandles, createFrame, getConectionHandle } from '../frame';
 import { createText } from './text';
 
 /**
@@ -52,7 +52,7 @@ const createRect = (scale: Scale): D3Callable => {
             }
           })
       })
-      .attr('cursor', control.draggable ? 'move' : undefined)
+      .style('cursor', control.draggable ? 'move' : undefined)
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)
@@ -63,7 +63,7 @@ const createRect = (scale: Scale): D3Callable => {
       .call(createText({
         editable: control.editing,
         bounds: { x, y, width, height },
-        text,
+        text: control.element.id.substr(0, 4), // TODO(burdon): Debug mode.
         onUpdate: (value: string) => {
           const { text, ...rest } = control.data;
           control.onUpdate({ text: value, ...rest }, true);
@@ -79,16 +79,17 @@ const createRect = (scale: Scale): D3Callable => {
  * Rect control.
  */
 export class RectControl extends Control<Rect> {
-  _frame = createFrame(this.scale);
-  _connectors = createConectionPoints(this.scale);
   _main = createRect(this.scale);
+  _frame = createFrame(this.scale);
+  _connectors = createConectionHandles(this.scale);
 
   type = 'rect' as ElementType;
 
   override drawable: D3Callable = group => {
-    group.call(this._main, group.datum());
-    group.call(this._connectors, group.datum(), !this.editing && !this.selected && this.hover);
-    group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
+    const control = group.datum(); // TODO(burdon): Pattern.
+    group.call(this._main, control);
+    group.call(this._frame, control, this.selected, this.selected && this.resizable);
+    group.call(this._connectors, control, !this.editing && !this.selected && this.hover);
   };
 
   override getBounds (): ScreenBounds {

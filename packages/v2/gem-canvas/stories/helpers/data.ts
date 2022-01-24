@@ -69,6 +69,7 @@ export const generator = (): ElementData<any>[] => [
     })
   },
 
+  /*
   {
     id: faker.datatype.uuid(),
     type: 'ellipse',
@@ -92,4 +93,5 @@ export const generator = (): ElementData<any>[] => [
       closed: true
     })
   }
+  */
 ];

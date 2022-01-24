@@ -25,7 +25,7 @@ export const createText = ({
   return group => {
     // eslint-disable indent
     group.selectAll('text')
-      .data(!editable && text ? ['_readonly_'] : [])
+      .data(!editable && text ? ['readonly'] : [])
       .join('text')
       .style('pointer-events', 'none')
       .style('dominant-baseline', 'central')
@@ -37,7 +37,7 @@ export const createText = ({
     // TODO(burdon): Loses focus when hover status changes.
     group
       .selectAll('foreignObject')
-      .data(editable ? ['_editable_'] : [])
+      .data(editable ? ['editable'] : [])
       .join('foreignObject')
         .style('width', width)
         .style('height', height)
@@ -65,11 +65,11 @@ export const createText = ({
         .style('background', 'transparent')
         .attr('type', 'text')
         .property('value', d => d.text)
-        .on('blur', (event) => {
+        .on('blur', function (event) {
           const text = (event.target as HTMLInputElement).value;
           onUpdate?.(text);
         })
-        .on('keydown', (event: KeyboardEvent, d) => {
+        .on('keydown', function (event: KeyboardEvent, d) {
           const text = (event.target as HTMLInputElement).value;
           switch (event.key) {
             // TODO(burdon): Update when lose focus.

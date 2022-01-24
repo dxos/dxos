@@ -13,7 +13,7 @@ import { getEventMod } from './drag';
 
 const FrameProps = {
   controlRadius: 7,
-  connectionRadius: 9
+  connectionRadius: 11
 };
 
 /**
@@ -64,13 +64,17 @@ const connectionHandles: Handle[] = [
 
 export const getConectionHandle = (handleId: string): Handle => connectionHandles.find(({ id }) => id === handleId);
 
+/**
+ * Find the element and connection handle from the target of the current DOM event.
+ * @param event
+ */
 export const getConnection = (event): Connection => {
-  const handle = d3.select<any, Handle>(event.target).datum();
+  const handle = d3.select<SVGElement, Handle>(event.target).datum();
   if (handle?.type !== 'connection') {
     return undefined;
   }
 
-  const control = d3.select<any, Control<any>>(event.target.closest('g.control')).datum();
+  const control = d3.select<SVGElement, Control<any>>(event.target.closest('g.control')).datum();
   return {
     id: control.element.id,
     handle: handle.id
@@ -121,9 +125,12 @@ type DragCallback<T> = (
  * @param onUpdate
  */
 const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3Callable => {
+  let subject: T; // Handle.
   let start: Point;
-  let subject: T;
+  let target: SVGElement;
+  let connection: Connection;
 
+  // TODO(burdon): Reconcile with dragBounds.
   return d3.drag()
     .container(function () {
       return this.closest('svg'); // Container for d3.pointer.
@@ -135,23 +142,29 @@ const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3C
     .on('drag', function (event: D3DragEvent) {
       // Stop consuming events (enables hover over other elements while dragging).
       d3.select(this).style('pointer-events', 'none');
+      connection = getConnection(event.sourceEvent);
+      if (connection && event.sourceEvent.target !== target) {
+        d3.select(target).classed('target', false);
+        target = event.sourceEvent.target;
+        d3.select(target).classed('target', true);
+      }
       const current = scale.translate([event.x, event.y]);
       const mod = getEventMod(event.sourceEvent);
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
     })
     .on('end', function (event: D3DragEvent) {
       // Start consuming events again.
-      d3.select(this).style('pointer-events', undefined);
-      const connection = getConnection(event.sourceEvent);
-      const mod = getEventMod(event.sourceEvent);
+      d3.select(this).style('pointer-events', 'auto');
       const current = scale.translate([event.x, event.y]);
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
+      const mod = getEventMod(event.sourceEvent);
       onUpdate(subject, delta, mod, true, connection);
     });
 };
 
 /**
  * Draw the resizable frame.
+ * @param scale
  */
 export const createFrame = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean, resizable?: boolean) => {
@@ -161,33 +174,31 @@ export const createFrame = (scale: Scale): D3Callable => {
     const cy = y + height / 2;
 
     const container = group
-      .selectAll('g')
-      .data(['frame-group'])
-      .join('g');
+      .selectAll('g.frame')
+      .data(active ? ['frame'] : [])
+      .join('g')
+      .attr('class', 'frame')
 
     // eslint-disable indent
     // Frame container.
     container
-      .selectAll('rect.frame-border')
-        .data(active ? ['frame-border'] : [])
-        .join('rect')
-        .attr('class', 'frame-border')
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
+      .append('rect')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height);
 
     // Resize handles.
     container
-      .selectAll('g')
-        .data(['frame-resize-handles'])
+      .selectAll('g.resize-handles') // TODO(burdon): Just append.
+        .data(resizable ? ['frame-resize-handles'] : [])
         .join('g')
+        .attr('class', 'resize-handles')
 
-      .selectAll('circle.frame-handle')
-        .data(resizable ? resizeHandles : [], (handle: Handle) => handle.id)
+      .selectAll<SVGElement, Handle>('circle')
+        .data(resizeHandles, handle => handle.id)
         .join('circle')
-        .attr('class', 'frame-handle')
-        .attr('cursor', h => h.cursor)
+        .style('cursor', handle => handle.cursor)
         .attr('cx', ({ p }) => cx + p[0] * width / 2)
         .attr('cy', ({ p }) => cy - p[1] * height / 2)
         .attr('r', FrameProps.controlRadius)
@@ -211,22 +222,22 @@ export const createControlHandles = (scale: Scale): D3Callable => {
 
     // eslint-disable indent
     group
-      .selectAll('g')
-        .data(['control-group'])
+      .selectAll('g.control-handles')
+        .data(resizable ? ['control-handles'] : [])
         .join('g')
+        .attr('class', 'control-handles')
 
-      .selectAll('circle.frame-handle')
-        .data(resizable ? points : [])
+      .selectAll<SVGElement, ControlHandle>('circle')
+        .data(points)
         .join(enter => {
           return enter
             .append('circle')
-            .attr('class', 'frame-handle')
             .call(dragHandle<ControlHandle>(scale, (point, delta, mod, commit, connection) => {
               const data = control.updateControlPoint(point, delta, commit, connection);
               control.onUpdate(data, commit);
             }));
         })
-        .attr('cursor', 'move')
+        .style('cursor', 'move')
         .attr('cx', p => p.point[0])
         .attr('cy', p => p.point[1])
         .attr('r', FrameProps.controlRadius);
@@ -237,7 +248,7 @@ export const createControlHandles = (scale: Scale): D3Callable => {
 /**
  * Draw line connection points.
  */
-export const createConectionPoints = (scale: Scale): D3Callable => {
+export const createConectionHandles = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean) => {
     const bounds = control.getBounds();
     const [cx, cy] = Screen.center(bounds);
@@ -245,16 +256,16 @@ export const createConectionPoints = (scale: Scale): D3Callable => {
 
     // eslint-disable indent
     group
-      .selectAll('g')
-        .data(['connection-group'])
+      .selectAll<SVGElement, Handle[]>('g.connection-handles')
+        .data(active ? [connectionHandles] : [])
         .join('g')
+        .attr('class', 'connection-handles')
 
-      .selectAll('circle.connection-handle')
-        .data(active ? connectionHandles : [], (handle: Handle) => handle.id)
+      .selectAll<SVGElement, Handle>('circle')
+        .data(d => d, handle => handle.id)
         .join(enter => {
           return enter
             .append('circle')
-            .attr('class', 'connection-handle');
           // TODO(burdon): Support drag from connection point to start line.
           // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
           //   const bounds = computeBounds({ x, y, width, height }, handle, delta);

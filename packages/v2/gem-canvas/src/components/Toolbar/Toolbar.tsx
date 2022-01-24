@@ -56,12 +56,11 @@ export const Toolbar = ({
       </div>
 
       <div>
-        {actions['view'].map((binding: Binding) => {
+        {actions['view'].map((binding: Binding, i) => {
           const { action, icon: Icon, label } = binding;
-          const { tool } = action;
           return (
             <button
-              key={tool}
+              key={i}
               title={label}
               onClick={() => onAction(action)}
             >

@@ -100,6 +100,7 @@ export const grid = ({ scale, width, height, show = true }: GridProps) => (el) =
   el.selectAll('path')
     .data(paths, path => path.id)
     .join('path')
+    .style('pointer-events', 'none')
     .attr('d', d => d.path)
     .attr('class', d => d.class);
 

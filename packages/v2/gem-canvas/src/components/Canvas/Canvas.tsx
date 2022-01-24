@@ -18,7 +18,7 @@ import {
   ControlState,
   SelectionModel
 } from '../../controls';
-import { ElementData, ElementDataType, ElementId, ElementType } from '../../model';
+import { ElementData, ElementDataType, ElementId, ElementType, Line } from '../../model';
 import { Tool } from '../../tools';
 import { canvasStyles, debugStyles, elementStyles } from '../styles';
 import { createMarkers } from '../markers';
@@ -117,51 +117,66 @@ export const Canvas = ({
   // Render elements.
   //
   useEffect(() => {
-    log('paint');
+    const modified = [];
+    controlManager.controls.forEach(control => {
+      if (control.modified) {
+        modified.push(control.element.id);
+      }
+
+      // TODO(burdon): Hack to add dependencies.
+      if (control.element.type === 'line') {
+        const data: Line = control.data;
+        if (data.source?.id && controlManager.getControl(data.source?.id)?.modified
+          || data.target?.id && controlManager.getControl(data.target?.id)?.modified) {
+          modified.push(control.element.id);
+        }
+      }
+    })
 
     // eslint-disable indent
     d3.select(controlsGroup.current)
-      .selectAll('g.control')
-      .data(controlManager.elements, ({ element }: Control<any>) => element.id)
+      .selectAll<SVGElement, Control<any>>('g.control')
+      .data(controlManager.controls, control => control.element.id)
       .join(enter => {
+        log('enter', enter.size());
         return enter
           .append('g')
-          // TODO(burdon): Factor out.
           .on('click', function () {
-            const control = d3.select(this).datum() as Control<any>;
+            const control = d3.select<SVGElement, Control<any>>(this).datum();
             if (!control.editing) {
               control.onSelect(true);
             }
           })
           .on('dblclick', function () {
-            // TODO(burdon): Collides with zoom.
-            const control = d3.select(this).datum() as Control<any>;
+            const control = d3.select<SVGElement, Control<any>>(this).datum();
             if (!control.editing) {
               control.onEdit(true);
             }
           })
           .on('mouseenter', function () {
-            const control = d3.select(this).datum() as Control<any>;
-            if (!control.editing) {
+            const control = d3.select<SVGElement, Control<any>>(this).datum();
+            if (!control.editing && !control.selected) {
               control.onHover(true);
             }
           })
+          // TODO(burdon): Doesn't leave if dragging and exit via handle.
           .on('mouseleave', function () {
-            const control = d3.select(this).datum() as Control<any>;
-            if (!control.editing) {
+            const control = d3.select<SVGElement, Control<any>>(this).datum();
+            if (!control.editing && !control.selected) {
               control.onHover(false);
             }
           });
       })
       .attr('class', d => clsx('control', elementStyles['default'], elementStyles[d.data.style]))
       .each((control, i, nodes) => {
-        // TODO(burdon): Currently disabled since otherwise connected lines won't update when dragging source/target.
-        // Only draw if updated.
-        // if (element.modified) {
+        // Draw if modified.
+        if (modified.includes(control.element.id)) {
+          log('update', control.element.id);
           d3.select(nodes[i]).call(control.draw());
-        // }
+        }
 
         // Temporarily move to the front.
+        // TODO(burdon): Move frames, etc. to different group.
         if (control.active || control.hover) {
           d3.select(nodes[i]).raise();
         }

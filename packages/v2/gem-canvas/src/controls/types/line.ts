@@ -95,7 +95,7 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
         .attr('y', d => d.y)
         .attr('width', d => d.width)
         .attr('height', d => d.height)
-        .attr('cursor', 'default')
+        .style('cursor', 'default')
         .on('click', function () {
           control.onSelect(true);
         });

@@ -23,7 +23,7 @@ export class ControlManager implements ControlGetter {
     return `ControlManager(${this._controls.length})`;
   }
 
-  get elements (): Control<any>[] {
+  get controls (): Control<any>[] {
     return this._controls;
   }
 

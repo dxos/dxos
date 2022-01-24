@@ -27,7 +27,8 @@ import {
 import { generator } from './helpers';
 
 const log = debug('gem:canvas:story');
-debug.enable('gem:canvas:*,-*:debug');
+// debug.enable('gem:canvas:*,-*:debug');
+debug.enable('gem:canvas:*');
 
 // TODO(burdon): styled-components warning
 // TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
