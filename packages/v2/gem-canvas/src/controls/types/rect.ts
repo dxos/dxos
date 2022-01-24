@@ -63,7 +63,7 @@ const createRect = (scale: Scale): D3Callable => {
       .call(createText({
         editable: control.editing,
         bounds: { x, y, width, height },
-        text: control.element.id.substr(0, 4), // TODO(burdon): Debug mode.
+        text: control.debug ? control?.element?.id.substring(0, 4) : text,
         onUpdate: (value: string) => {
           const { text, ...rest } = control.data;
           control.onUpdate({ text: value, ...rest }, true);

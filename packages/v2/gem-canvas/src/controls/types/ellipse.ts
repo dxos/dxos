@@ -64,7 +64,7 @@ const createEllipse = (scale: Scale): D3Callable => {
       .call(createText({
         editable: control.editing,
         bounds,
-        text,
+        text: control.debug ? control?.element?.id.substring(0, 4) : text,
         onUpdate: (value: string) => {
           const { text, ...rest } = control.data;
           control.onUpdate({ text: value, ...rest }, true);

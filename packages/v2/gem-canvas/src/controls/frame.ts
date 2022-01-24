@@ -175,18 +175,21 @@ export const createFrame = (scale: Scale): D3Callable => {
 
     const container = group
       .selectAll('g.frame')
-      .data(active ? ['frame'] : [])
-      .join('g')
-      .attr('class', 'frame')
+        .data(active ? ['frame'] : [])
+        .join('g')
+        .attr('class', 'frame')
 
     // eslint-disable indent
     // Frame container.
     container
-      .append('rect')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height);
+      .selectAll('rect.frame-border')
+        .data(['frame-border'])
+        .join('rect')
+        .attr('class', 'frame-border')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height);
 
     // Resize handles.
     container
@@ -194,6 +197,7 @@ export const createFrame = (scale: Scale): D3Callable => {
         .data(resizable ? ['frame-resize-handles'] : [])
         .join('g')
         .attr('class', 'resize-handles')
+        .raise()
 
       .selectAll<SVGElement, Handle>('circle')
         .data(resizeHandles, handle => handle.id)

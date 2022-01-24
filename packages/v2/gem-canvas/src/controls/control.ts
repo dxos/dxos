@@ -10,6 +10,7 @@ import { Connection, ControlHandle } from './frame';
 
 export interface ControlContext {
   scale: () => Scale
+  debug: () => boolean
   draggable: () => boolean
 }
 
@@ -70,6 +71,10 @@ export abstract class Control<T extends ElementDataType> {
 
   get scale () {
     return this._context.scale();
+  }
+
+  get debug () {
+    return this._context.debug();
   }
 
   // TODO(burdon): Should be updated dynamically (to trigger SVG state change).

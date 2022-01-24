@@ -62,12 +62,12 @@ export const actions: { [index: string]: Binding[] } = {
       label: 'Line',
       action: { type: ActionType.TOOL_SELECT, tool: 'line' }
     },
-    {
-      key: 'p',
-      icon: PathIcon,
-      label: 'Path',
-      action: { type: ActionType.TOOL_SELECT, tool: 'path' }
-    }
+    // {
+    //   key: 'p',
+    //   icon: PathIcon,
+    //   label: 'Path',
+    //   action: { type: ActionType.TOOL_SELECT, tool: 'path' }
+    // }
   ],
 
   view: [
@@ -77,11 +77,11 @@ export const actions: { [index: string]: Binding[] } = {
       label: 'Toggle grid',
       action: { type: ActionType.TOGGLE_GRID }
     },
-    {
-      icon: ZoomOutIcon,
-      label: 'Reset zoom',
-      action: { type: ActionType.RESET_ZOOM }
-    }
+    // {
+    //   icon: ZoomOutIcon,
+    //   label: 'Reset zoom',
+    //   action: { type: ActionType.RESET_ZOOM }
+    // }
   ],
 
   global: [

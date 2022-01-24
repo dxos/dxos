@@ -9,7 +9,6 @@ import React, { RefObject, useEffect, useRef } from 'react';
 import { Modifiers, Point, useStateRef } from '@dxos/gem-core';
 
 import { Tool } from '../../tools';
-import { elementStyles } from '../styles';
 
 import {
   Control,
@@ -18,7 +17,8 @@ import {
   ControlState,
   SelectionModel,
   createControl,
-  dragBounds
+  dragBounds,
+  elementStyles
 } from '../../controls';
 import { ElementDataType, ElementId, ElementType } from '../../model';
 

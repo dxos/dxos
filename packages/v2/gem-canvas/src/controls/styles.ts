@@ -56,12 +56,12 @@ export const canvasStyles = css`
     }
     
     g.frame {
-      rect {
-        fill: none;    
+      rect.frame-border {
+        fill: none;
         stroke: #1565c0;
-        stroke-width: 2;
+        stroke-width: 1;
       }
-      
+
       g.resize-handles {
         circle {
           fill: #bbdefb;

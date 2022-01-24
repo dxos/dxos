@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
 import * as d3 from 'd3';
 import debug from 'debug';
 import React, { useEffect, useRef, useState } from 'react';
+
+import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
 
 import {
   Action,

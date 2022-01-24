@@ -7,7 +7,7 @@ import React from 'react';
 import { css } from '@emotion/css';
 import { Crop32 as RectIcon } from '@material-ui/icons';
 
-import { elementStyles, styleNames } from '../styles';
+import { elementStyles, styleNames } from '../../controls';
 
 export interface PaletteProps {
   selected?: string
