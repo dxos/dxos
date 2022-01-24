@@ -28,9 +28,8 @@ import {
 import { generator } from './helpers';
 
 const log = debug('gem:canvas:story');
-debug.enable('gem:canvas:*,-*:debug');
+debug.enable('gem:canvas:*,-*:render');
 // debug.enable('gem:canvas:*');
-
 
 // TODO(burdon): Commit/update model (update/reset element._data).
 // TODO(burdon): Refresh/render button.
@@ -39,8 +38,6 @@ debug.enable('gem:canvas:*,-*:debug');
 // TODO(burdon): Tighten model/screen differences (e.g., frame, drag).
 // TODO(burdon): See different layers in draw.io for elements, cursor, and connection points.
 
-// TODO(burdon): Only show Hover while drawing line.
-// TODO(burdon): Resize drag sometimes not working unless clicked (order of handlers).
 // TODO(burdon): Merge line, polyline.
 // TODO(burdon): Create path (multi-point).
 // TODO(burdon): Drag path.
@@ -59,10 +56,6 @@ debug.enable('gem:canvas:*,-*:debug');
 // TODO(burdon): Info panel with element info.
 // TODO(burdon): Toolbar panel (color, line weight, path type, etc.)
 // TODO(burdon): Styles and style objects.
-
-// Clean-up
-// TODO(burdon): Consistent join pattern to avoid recreating closures (e.g., frame createControlHandles)
-// TODO(burdon): D3Callable as functions.
 
 export default {
   title: 'gem-canvas/Canvas'
@@ -87,6 +80,10 @@ const Container = () => {
       setSelection(undefined);
     }
   }, [tool]);
+
+  //
+  // Event handlers.
+  //
 
   const handleSelect = (selection: SelectionModel) => {
     setSelection(selection);
@@ -166,21 +163,15 @@ const Container = () => {
   }, [elements]);
 
   return (
-    <FullScreen style={{ backgroundColor: '#EEE' }}>
+    <FullScreen>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
         <Toolbar
           tool={tool}
           onAction={handleAction}
           onStyle={(style: string) => {
             if (selection) {
-              const { element } = selection;
-              const { data } = element;
-              element.data = {
-                ...data,
-                style
-              };
-
-              void handleUpdate(element);
+              const { element: { data, ...rest } } = selection;
+              void handleUpdate({ ...rest, data: { ...data, style } });
             }
           }}
         />

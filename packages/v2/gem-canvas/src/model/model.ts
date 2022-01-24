@@ -43,7 +43,7 @@ export class ElementModel {
   }
 
   async update (element: ElementData<any>): Promise<ElementData<any>> {
-    this._elements.set(element.id, element);
+    this._elements.set(element.id, { ...element });
     log('updated', JSON.stringify(element));
     this.subscription.emit(Array.from(this._elements.values()));
     return element;

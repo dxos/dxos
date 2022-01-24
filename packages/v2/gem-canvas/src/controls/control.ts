@@ -58,7 +58,7 @@ export abstract class Control<T extends ElementDataType> {
   constructor (
     private readonly _context: ControlContext,
     private readonly _elements: ControlGetter,
-    private readonly _element?: ElementData<T>,
+    private _element?: ElementData<T>,
     private readonly _onRepaint?: () => void,
     private readonly _onSelect?: (element: ElementData<T>, edit?: boolean) => void,
     private readonly _onUpdate?: (element: ElementData<T>, commit?: boolean) => void,
@@ -127,6 +127,11 @@ export abstract class Control<T extends ElementDataType> {
     this._modified = false;
     this._hover = false;
     this._state = ControlState.NORMAL;
+  }
+
+  update (element: ElementData<T>) {
+    this._element = element;
+    this._data = element.data;
   }
 
   /**
