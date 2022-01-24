@@ -6,6 +6,7 @@ import assert from 'assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
+
 import { StateMachine } from './state-machiene';
 
 //

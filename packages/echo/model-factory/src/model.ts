@@ -8,8 +8,8 @@ import { Event } from '@dxos/async';
 import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 
-import { ModelMessage, ModelMeta } from './types';
 import { StateMachine } from './state-machiene';
+import { ModelMessage, ModelMeta } from './types';
 
 export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
@@ -61,7 +61,7 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
     this._stateMachine = meta.stateMachiene();
   }
 
-  protected _getState(): TState {
+  protected _getState (): TState {
     return this._stateMachine.getState();
   }
 
@@ -125,7 +125,6 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
       }
     };
   }
-
 
   async processMessage (meta: MutationMeta, message: TMutation): Promise<void> {
     this._stateMachine.process(message, meta);

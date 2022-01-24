@@ -9,17 +9,19 @@ import { Model, ModelMeta, ModelType, StateMachine } from '@dxos/model-factory';
 class DefaultModelStateMachiene implements StateMachine<ModelMutation[], Uint8Array, any> {
   private readonly _state: ModelMutation[] = [];
 
-  getState(): ModelMutation[] {
+  getState (): ModelMutation[] {
     return this._state;
   }
-  process(mutation: Uint8Array, meta: MutationMeta): void {
+
+  process (mutation: Uint8Array, meta: MutationMeta): void {
     this._state.push({ mutation, meta });
   }
 
-  snapshot() {
+  snapshot () {
     throw new Error('Method not implemented.');
   }
-  reset(snapshot: any): void {
+
+  reset (snapshot: any): void {
     throw new Error('Method not implemented.');
   }
 }

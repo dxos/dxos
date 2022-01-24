@@ -3,27 +3,29 @@
 //
 
 import { checkType } from '@dxos/debug';
-import { FeedMeta, TestItemMutation, schema, MutationMeta } from '@dxos/echo-protocol';
+import { TestItemMutation, schema, MutationMeta } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
 import { StateMachine } from '../state-machiene';
 import { ModelMeta } from '../types';
 
-class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMutation, any>  {
+class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMutation, any> {
   private readonly _state = new Map();
 
-  getState(): Map<any, any> {
+  getState (): Map<any, any> {
     return this._state;
   }
-  process(mutation: TestItemMutation, meta: MutationMeta): void {
+
+  process (mutation: TestItemMutation, meta: MutationMeta): void {
     const { key, value } = mutation;
     this._state.set(key, value);
   }
 
-  snapshot() {
+  snapshot () {
     throw new Error('Method not implemented.');
   }
-  reset(snapshot: any): void {
+
+  reset (snapshot: any): void {
     throw new Error('Method not implemented.');
   }
 }
@@ -35,7 +37,7 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test',
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation'),
-    stateMachiene: () => new TestModelStateMachiene(),
+    stateMachiene: () => new TestModelStateMachiene()
   };
 
   get keys () {

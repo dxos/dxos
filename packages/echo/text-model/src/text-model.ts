@@ -13,29 +13,31 @@ import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
 
 class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
   private _doc = new Doc();
-  
-  getState(): Doc {
+
+  getState (): Doc {
     return this._doc;
   }
-  process(mutation: Mutation, meta: MutationMeta): void {
+
+  process (mutation: Mutation, meta: MutationMeta): void {
     const { update, clientId } = mutation;
     assert(update);
 
     if (clientId !== this._doc.clientID) {
       applyUpdate(this._doc, update, { docClientId: clientId });
     }
-  }               
-  snapshot() {
+  }
+
+  snapshot () {
     return {
       data: encodeStateAsUpdate(this._doc)
     };
   }
-  reset(snapshot: Snapshot): void {
+
+  reset (snapshot: Snapshot): void {
     assert(snapshot.data);
 
     applyUpdate(this._doc, snapshot.data);
   }
-
 }
 
 export class TextModel extends Model<Doc, Mutation> {
@@ -45,7 +47,6 @@ export class TextModel extends Model<Doc, Mutation> {
     mutation: schema.getCodecForType('dxos.echo.text.Mutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
   };
-
 
   constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<Mutation>) {
     super(meta, itemId, writeStream);

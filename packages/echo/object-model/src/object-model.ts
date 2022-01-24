@@ -19,24 +19,26 @@ const log = debug('dxos:echo:object-model');
 class ObjectModelStateMachiene implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
   private _object = {};
 
-  getState(): Record<string, any> {
+  getState (): Record<string, any> {
     return this._object;
   }
-  process(mutation: ObjectMutationSet, meta: MutationMeta): void {
+
+  process (mutation: ObjectMutationSet, meta: MutationMeta): void {
     MutationUtil.applyMutationSet(this._object, mutation);
   }
-  snapshot(): ObjectSnapshot {
+
+  snapshot (): ObjectSnapshot {
     return {
       root: ValueUtil.createMessage(this._object)
     };
   }
-  reset(snapshot: ObjectSnapshot): void {
+
+  reset (snapshot: ObjectSnapshot): void {
     const obj: any = {};
     assert(snapshot.root);
     ValueUtil.applyValue(obj, 'root', snapshot.root);
     this._object = obj.root;
   }
-
 }
 
 /**

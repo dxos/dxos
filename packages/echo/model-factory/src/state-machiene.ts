@@ -1,4 +1,8 @@
-import { MutationMeta } from "@dxos/echo-protocol";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { MutationMeta } from '@dxos/echo-protocol';
 
 export interface StateMachine<TState, TMutation, TSnapshot> {
   getState(): TState;
