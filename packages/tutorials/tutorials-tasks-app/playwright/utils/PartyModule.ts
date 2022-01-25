@@ -1,4 +1,5 @@
 import { decodeInvitation } from '@dxos/client';
+import assert from 'assert';
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';
@@ -54,7 +55,7 @@ export class PartyModule extends AppSimulator {
 
     await this.browser.getPage().click('[title="Invite people"]');
     await this.browser.getPage().click("//*[contains(text(),'Create Invitation')]");
-    await this.browser.getPage().click('[title="Copy to clipboard"]');
+    await this.browser.getPage().click("//*[contains(text(),'Pending invitation')]");
 
     await invitationPromise;
 
@@ -66,7 +67,7 @@ export class PartyModule extends AppSimulator {
   async redeemInvitation(invitationCode: string, getPinFromInviter: () => Promise<string>) {
     await this.browser.getPage().click('[title="Redeem invitation"]');
 
-    await this.browser.getPage().fill('textarea', invitationCode);
+    await this.browser.getPage().fill('#join-dialog-invitation-code', invitationCode);
 
     await this.browser.getPage().click('button:has-text("Process")');
 
@@ -74,19 +75,25 @@ export class PartyModule extends AppSimulator {
   }
 
   async getPinCode(): Promise<string> {
-    const passcode = await this.browser.getPage().waitForSelector('#party-invitation-dialog-pin', { timeout: 5000 });
+    await this.browser.getPage().waitForSelector('[title="Copy passcode."]', { timeout: 5000 });
+    let pinCode: string;
 
-    expect(passcode).toBeDefined();
-
-    const pinCode = await passcode.innerText();
-
-    expect(pinCode).toBeDefined();
-
-    return pinCode;
+    const pinCodePromise = this.browser.getPage().waitForEvent('console', message => {
+      const text = message.text();
+      if (text.length === 4) {
+        pinCode = text;
+        return true;
+      }
+      return false;
+    });
+    await this.browser.getPage().click("//*[contains(text(),'Pending invitation')]", { timeout: 5000 });
+    await pinCodePromise
+    return pinCode!;
   }
 
   async enterPinCode(pinCode: string) {
-    await this.browser.getPage().fill('input', pinCode);
-    await this.browser.getPage().click('button:has-text("Submit")');
+    assert(!!pinCode, 'Missing pinCode')
+    await this.browser.getPage().fill("//input[@class='dxos-passcode']", pinCode);
+    // It auto-submits after filling passcode without the need to click any "submit" button.
   }
 }
