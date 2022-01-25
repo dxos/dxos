@@ -2454,6 +2454,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.7.4
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -2512,6 +2513,7 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.7.4_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
