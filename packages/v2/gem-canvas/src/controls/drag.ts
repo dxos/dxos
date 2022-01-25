@@ -9,7 +9,7 @@ import { Modifiers, Point } from '@dxos/gem-core';
 
 import { D3DragEvent } from '../types';
 import { ControlContext } from './control';
-import { Connection, getConnection } from './frame';
+import { Connection, getConnection, ConnectionTracker } from './frame';
 
 // TODO(burdon): Factor out events util.
 // https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
@@ -23,6 +23,15 @@ export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   constrain: event.shiftKey
 });
 
+type DragCallback<T> = (
+  p1: Point,
+  p2: Point,
+  mod: Modifiers,
+  commit?: boolean,
+  source?: Connection,
+  target?: Connection
+) => void
+
 /**
  * Drag handler to compute bounds for creating and resizing elements.
  * NOTE: Event (x, y) coordinates are relative the the drag container.
@@ -33,17 +42,10 @@ export const getEventMod = (event: KeyboardEvent): Modifiers => ({
  */
 export const dragBounds = (
   context: ControlContext,
-  onUpdate: (
-    p1: Point,
-    p2: Point,
-    mod: Modifiers,
-    commit?: boolean,
-    source?: Connection,
-    target?: Connection
-  ) => void,
+  onUpdate: DragCallback<any>,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
-  let source: Connection;
+  const tracker = new ConnectionTracker();
   let start: Point;
 
   // TODO(burdon): Reconcile with dragHandle.
@@ -53,22 +55,23 @@ export const dragBounds = (
     })
     .on('start', function (event: D3DragEvent) {
       const scale = context.scale();
-      source = getConnection(event.sourceEvent);
+      tracker.start(event.sourceEvent);
       start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onStart?.();
     })
     .on('drag', function (event: D3DragEvent) {
       const scale = context.scale();
       const mod = getEventMod(event.sourceEvent);
+      tracker.update(event.sourceEvent);
       const current = scale.translate([event.x, event.y]);
-      onUpdate(start, current, mod, false, source);
+      onUpdate(start, current, mod, false, tracker.source);
     })
     .on('end', function (event: D3DragEvent) {
       const scale = context.scale();
-      const target = getConnection(event.sourceEvent);
+      tracker.update(event.sourceEvent, true);
       const current = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       const mod = getEventMod(event.sourceEvent);
-      onUpdate(start, current, mod, true, source, target);
+      onUpdate(start, current, mod, true, tracker.source, tracker.target);
     });
 };
 

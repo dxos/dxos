@@ -18,7 +18,7 @@ import {
   SelectionModel,
   createControl,
   dragBounds,
-  elementStyles
+  elementStyles, Connection,
 } from '../../controls';
 import { ElementDataType, ElementId, ElementType } from '../../model';
 
@@ -88,8 +88,8 @@ export const Cursor = ({
       p2: Point,
       mod: Modifiers,
       commit: boolean,
-      source?: { id?: ElementId, handle?: string },
-      target?: { id?: ElementId, handle?: string }
+      source?: Connection,
+      target?: Connection
     ) => {
       const cursor = cursorRef.current;
       const data = cursor.createFromExtent(p1, p2, mod, commit);

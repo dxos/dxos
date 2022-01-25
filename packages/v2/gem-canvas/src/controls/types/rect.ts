@@ -25,7 +25,7 @@ const createRect = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('rect')
-      .data(['_main_'])
+      .data(['main'])
       .join(enter => {
         return enter
           .append('rect')

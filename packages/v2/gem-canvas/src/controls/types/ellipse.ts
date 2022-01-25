@@ -27,7 +27,7 @@ const createEllipse = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('ellipse')
-      .data(['_main_'])
+      .data(['main'])
       .join(enter => {
         return enter
           .append('ellipse')

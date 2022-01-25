@@ -60,7 +60,7 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('line')
-        .data(['_main_'])
+        .data(['main'])
         .join('line')
         .attr('marker-end', () => 'url(#marker_arrow)')
         .style('pointer-events', 'none')
@@ -74,7 +74,7 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     const points = [[x1, y1], [x2, y2]];
     group
       .selectAll('polyline')
-      .data(['_main_'])
+      .data(['main'])
       .join('polyline')
       .attr('marker-end', () => 'url(#marker_arrow)')
       .attr('points', points.map(([x, y]) => `${x},${y}`).join(' '));

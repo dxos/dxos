@@ -32,6 +32,8 @@ export const renderControls = (controlsGroup, controlManager, debug = false) => 
       // Create control groups.
       return enter
         .append('g')
+        // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
+        .attr('data-id', control => control.element.id)
         .on('click', function () {
           const control = d3.select<SVGElement, Control<any>>(this).datum();
           if (!control.editing) {
@@ -67,12 +69,19 @@ export const renderControls = (controlsGroup, controlManager, debug = false) => 
         log('update', control.element.id);
         d3.select(nodes[i]).call(control.draw());
       }
-
-      // Temporarily move to the front.
-      // TODO(burdon): Move frames, etc. to different group.
-      if (control.active || control.connections) {
-        d3.select(nodes[i]).raise();
+    })
+    // TODO(burdon): Respect set order.
+    // Pull selected to front and lines to back.
+    .sort((control1: Control<any>, control2: Control<any>) => {
+      const t1 = control1.element.type;
+      const t2 = control2.element.type;
+      if (control1.selected) {
+        return 1;
       }
+      if (control2.selected) {
+        return -1;
+      }
+      return (t1 === 'line') ? -1 : (t2 === 'line') ? 1 : 0;
     });
   // eslint-enable indent
 };

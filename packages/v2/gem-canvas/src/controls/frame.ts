@@ -3,6 +3,7 @@
 //
 
 import * as d3 from 'd3';
+import type { DragBehavior } from 'd3';
 
 import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-core';
 
@@ -69,16 +70,65 @@ export const getConectionHandle = (handleId: string): Handle => connectionHandle
  * @param event
  */
 export const getConnection = (event): Connection => {
-  const handle = d3.select<SVGElement, Handle>(event.target).datum();
-  if (handle?.type !== 'connection') {
-    return undefined;
+  const root = event.target.closest('g.control');
+  if (root) {
+    const control = d3.select<SVGElement, Control<any>>(root).datum();
+    const handle = d3.select<SVGElement, Handle>(event.target).datum();
+    return {
+      id: control.element.id,
+      handle: handle?.id
+    };
+  }
+}
+
+/**
+ * Track source/target conections while dragging.
+ */
+export class ConnectionTracker {
+  private _source: Connection;
+  private _target: Connection;
+  private _highight: SVGElement;
+
+  constructor (
+    private readonly _class = 'target'
+  ) {}
+
+  get source () {
+    return this._source;
   }
 
-  const control = d3.select<SVGElement, Control<any>>(event.target.closest('g.control')).datum();
-  return {
-    id: control.element.id,
-    handle: handle.id
-  };
+  get target () {
+    return this._target;
+  }
+
+  start (event: Event) {
+    this._source = this._highlight(event);
+    return this._source;
+  }
+
+  update(event: Event, end = false) {
+    this._target = this._highlight(event);
+    if (end) {
+      this.end();
+    }
+
+    return this._target;
+  }
+
+  end () {
+    this._highlight();
+  }
+
+  _highlight (event?: Event) {
+    const connection = event && getConnection(event);
+    if (connection && this._highight !== event.target) {
+      d3.select(this._highight).classed(this._class, false);
+      this._highight = event.target as SVGElement;
+      d3.select(this._highight).classed(this._class, true);
+    }
+
+    return connection;
+  }
 }
 
 /**
@@ -124,11 +174,13 @@ type DragCallback<T> = (
  * @param scale
  * @param onUpdate
  */
-const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3Callable => {
+const dragHandle = <T extends any>(
+  scale: Scale,
+  onUpdate: DragCallback<T>
+): DragBehavior<any, any, any> => {
+  const tracker = new ConnectionTracker();
   let subject: T; // Handle.
   let start: Point;
-  let target: SVGElement;
-  let connection: Connection;
 
   // TODO(burdon): Reconcile with dragBounds.
   return d3.drag()
@@ -142,12 +194,7 @@ const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3C
     .on('drag', function (event: D3DragEvent) {
       // Stop consuming events (enables hover over other elements while dragging).
       d3.select(this).style('pointer-events', 'none');
-      connection = getConnection(event.sourceEvent);
-      if (connection && event.sourceEvent.target !== target) {
-        d3.select(target).classed('target', false);
-        target = event.sourceEvent.target;
-        d3.select(target).classed('target', true);
-      }
+      tracker.update(event.sourceEvent);
       const current = scale.translate([event.x, event.y]);
       const mod = getEventMod(event.sourceEvent);
       onUpdate(subject, [current[0] - start[0], current[1] - start[1]], mod);
@@ -155,10 +202,11 @@ const dragHandle = <T extends any>(scale: Scale, onUpdate: DragCallback<T>): D3C
     .on('end', function (event: D3DragEvent) {
       // Start consuming events again.
       d3.select(this).style('pointer-events', 'auto');
+      tracker.end();
       const current = scale.translate([event.x, event.y]);
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
       const mod = getEventMod(event.sourceEvent);
-      onUpdate(subject, delta, mod, true, connection);
+      onUpdate(subject, delta, mod, true, tracker.target);
     });
 };
 
@@ -253,6 +301,8 @@ export const createControlHandles = (scale: Scale): D3Callable => {
 /**
  * Draw line connection points.
  */
+// TODO(burdon): Map points onto grid points.
+// TODO(burdon): Enable center point.
 export const createConectionHandles = (scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<any>, active?: boolean) => {
     const bounds = control.getBounds();

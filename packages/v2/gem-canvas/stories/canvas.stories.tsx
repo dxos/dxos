@@ -164,7 +164,7 @@ const Container = () => {
 
   return (
     <FullScreen>
-      <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
         <Toolbar
           tool={tool}
           onAction={handleAction}

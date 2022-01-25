@@ -33,7 +33,7 @@ const createPath = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('path')
-      .data(['_main_'])
+      .data(['main'])
       .join('path')
       .attr('d', line(p));
     // eslint-enable indent

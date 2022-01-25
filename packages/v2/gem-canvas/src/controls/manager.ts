@@ -37,11 +37,11 @@ export class ControlManager implements ControlGetter {
    * @param debug
    */
   getModified (controlManager, debug = false): ElementId[] {
-    const modified: ElementId[] = debug ? controlManager.controls.map(control => control.element.id) : [];
+    const modified = new Set<ElementId>(debug ? controlManager.controls.map(control => control.element.id) : undefined);
     if (!debug) {
       controlManager.controls.forEach(control => {
         if (control.modified) {
-          modified.push(control.element.id);
+          modified.add(control.element.id);
         }
 
         // TODO(burdon): Hack to add dependencies.
@@ -49,13 +49,13 @@ export class ControlManager implements ControlGetter {
           const data: Line = control.data;
           if (data.source?.id && controlManager.getControl(data.source?.id)?.modified
             || data.target?.id && controlManager.getControl(data.target?.id)?.modified) {
-            modified.push(control.element.id);
+            modified.add(control.element.id);
           }
         }
       });
     }
 
-    return modified;
+    return Array.from(modified);
   };
 
   /**
