@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
+import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -71,6 +71,13 @@ export class EchoProxy {
           const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
           await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
+
+          // TODO(dmaretskyi): Replace with selection API when it has update filtering.
+          partyProxy.database.entityUpdate.on(entity => {
+            if (entity.type === PARTY_ITEM_TYPE) {
+              this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
+            }
+          });
 
           const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
           partyStream.subscribe(async ({ party }) => {
