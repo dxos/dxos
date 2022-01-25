@@ -114,15 +114,15 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   get connections () {
-    return this._hover && !this.editing && !this.selected;
+    return this._hover && this.editable && !this.selected && !this.editing;
   }
 
   get resizable () {
-    return this.selected && this.editable && this._element;
+    return this.editable && this.selected && this._element;
   }
 
   toString () {
-    return `Element(${this.type}: ${this._element.id})`;
+    return `Control(${this.type}: ${this._element.id})`;
   }
 
   /**
