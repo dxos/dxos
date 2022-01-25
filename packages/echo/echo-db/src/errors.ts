@@ -41,3 +41,9 @@ export class EchoNotOpenError extends DXOSError {
     super('ECHO_NOT_OPEN', 'Echo not open.');
   }
 }
+
+export class InvalidStoredDataError extends DXOSError {
+  constructor (message: string = 'unknown reason') {
+    super('INVALID_STORED_DATA', `Stored data is invalid: ${message}`);
+  }
+}

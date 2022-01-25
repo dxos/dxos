@@ -22,11 +22,12 @@ import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DefaultModel } from './items';
 import { DataServiceRouter } from './items/data-service-router';
-import { MetadataStore } from './metadata';
+import { MetadataStore, STORAGE_VERSION } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
+import { InvalidStoredDataError } from './errors';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -239,6 +240,11 @@ export class ECHO {
     }
 
     await this._metadataStore.load();
+
+    if(this._metadataStore.version !== STORAGE_VERSION) {
+      throw new InvalidStoredDataError(`version missmatch: expected version ${STORAGE_VERSION} but the data was saved from ${this._metadataStore.version}`);
+    }
+
     await this._keyring.load();
     await this._metadataStore.load();
     await this.halo.open(onProgressCallback);

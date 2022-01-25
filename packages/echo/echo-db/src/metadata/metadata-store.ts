@@ -10,14 +10,31 @@ import { PublicKey } from '@dxos/crypto';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
+/**
+ * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
+ * 
+ * Should be incremented every time there's a breaking change to the stored data. 
+ */
+export const STORAGE_VERSION = 1;
+
+
 const log = debug('dxos:snapshot-store');
 
 export class MetadataStore {
-  private _metadata: EchoMetadata = {};
+  private _metadata: EchoMetadata = {
+    version: STORAGE_VERSION,
+    parties: [],
+    created: new Date(),
+    updated: new Date(),
+  };
 
   constructor (
     private readonly _storage: IStorage
   ) {}
+
+  get version(): number {
+    return this._metadata.version ?? 0;
+  }
 
   /**
    * Returns a list of currently saved parties. The list and objects in it can be modified addParty and
@@ -35,7 +52,6 @@ export class MetadataStore {
     try {
       const { size } = await pify(file.stat.bind(file))();
       if (size === 0) {
-        this._metadata = { parties: [] };
         return;
       }
 
@@ -43,7 +59,6 @@ export class MetadataStore {
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        this._metadata = { parties: [] };
         return;
       } else {
         throw err;
@@ -54,11 +69,18 @@ export class MetadataStore {
   }
 
   private async _save (): Promise<void> {
+    const data: EchoMetadata = {
+      ...this._metadata,
+      version: STORAGE_VERSION,
+      created: this._metadata.created ?? new Date(),
+      updated: new Date(),
+    };
+
     const file = this._storage.createOrOpen('EchoMetadata');
 
     try {
-      const data = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(this._metadata));
-      await pify(file.write.bind(file))(0, data);
+      const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
+      await pify(file.write.bind(file))(0, encoded);
     } finally {
       await pify(file.close.bind(file))();
     }
