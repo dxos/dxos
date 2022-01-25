@@ -13,7 +13,6 @@ import {
   ActionType,
   Canvas,
   ControlState,
-  createKeyHandlers,
   ElementData,
   ElementDataType,
   ElementId,
@@ -22,7 +21,8 @@ import {
   StatusBar,
   Tool,
   Toolbar,
-  useMemoryElementModel,
+  createKeyHandlers,
+  useMemoryElementModel
 } from '../src';
 
 import { generator } from './helpers';

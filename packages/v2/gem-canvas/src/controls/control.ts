@@ -46,13 +46,13 @@ export interface ControlConstructor<T extends ElementDataType> {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element#graphics_elements
  */
 export abstract class Control<T extends ElementDataType> {
-  // TODO(burdon): Combine state, capabilities, etc.
+  // TODO(burdon): Combine state, hover, capabilities, etc.
   // TODO(burdon): NOTE: Currently conflates updated data and updated state.
-  private _modified = true;
+  private _modified = true; // TODO(burdon): Rename repaint?
   private _state = ControlState.NORMAL;
-  private _hover = false; // TODO(burdon): Combine.
+  private _hover = false;
 
-  // Temporary data (during edit until commit).
+  // Transient data (during edit until commit).
   private _data: T = undefined;
 
   constructor (
@@ -77,7 +77,6 @@ export abstract class Control<T extends ElementDataType> {
     return this._context.debug();
   }
 
-  // TODO(burdon): Should be updated dynamically (to trigger SVG state change).
   get draggable () {
     return this._context.draggable();
   }
@@ -115,23 +114,21 @@ export abstract class Control<T extends ElementDataType> {
   }
 
   get resizable () {
-    return Boolean(this._element);
+    return Boolean(this._element); // TODO(burdon): Read-only mode.
   }
 
   toString () {
     return `Element(${this.type}: ${this._element.id})`;
   }
 
-  clear () {
-    this._data = undefined;
-    this._modified = false;
-    this._hover = false;
-    this._state = ControlState.NORMAL;
-  }
-
+  /**
+   * Update data.
+   * @param element
+   */
   update (element: ElementData<T>) {
     this._element = element;
     this._data = element.data;
+    this._modified = true;
   }
 
   /**
@@ -171,8 +168,7 @@ export abstract class Control<T extends ElementDataType> {
   onHover (hover: boolean) {
     this._modified = true;
     this._hover = hover;
-    // TODO(burdon): Only repaint this element; construct with reference to group?
-    this._onRepaint?.();
+    this._onRepaint?.(); // TODO(burdon): Event.
   }
 
   onCreate (data: T) {
