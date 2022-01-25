@@ -366,6 +366,7 @@ export class ItemManager {
     const decoded = item.modelMeta.mutation.decode(message.mutation);
 
     await item.model.processMessage(message.meta, decoded);
+    this.itemUpdate.emit(item);
   }
 
   /**
