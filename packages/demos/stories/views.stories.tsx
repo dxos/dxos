@@ -5,12 +5,12 @@
 import React, { useEffect, useState } from 'react';
 
 import { PartyProxy } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
 import { ONLINE_CONFIG, StartDialog } from '../src';
 import { Main } from './helpers';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 export default {
   title: 'demos/views'
