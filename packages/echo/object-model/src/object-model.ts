@@ -12,7 +12,7 @@ import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 
-class ObjectModelStateMachiene implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
+class ObjectModelStateMachine implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
   private _object = {};
 
   getState (): Record<string, any> {
@@ -40,11 +40,11 @@ class ObjectModelStateMachiene implements StateMachine<Record<string, any>, Obje
 /**
  * Object mutation model.
  */
-export class ObjectModel extends Model<ObjectMutationSet> {
+export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
-    stateMachiene: () => new ObjectModelStateMachiene(),
+    stateMachiene: () => new ObjectModelStateMachine(),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
