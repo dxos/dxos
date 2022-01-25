@@ -65,12 +65,17 @@ function equalsOrIncludes<T> (value: T, expected: T | T[]) {
  * Manages the creation and indexing of items.
  */
 export class ItemManager {
-  private readonly _itemUpdate = new Event<Entity<any>>();
+  /**
+   * Fired immediately after any update in the entities.
+   *
+   * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
+   */
+  readonly itemUpdate = new Event<Entity<any>>();
 
   /**
    * Update event.
    */
-  readonly debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
+  readonly debouncedItemUpdate = debounceEvent(this.itemUpdate.discardParameter());
 
   /**
    * Map of active items.
@@ -249,11 +254,11 @@ export class ItemManager {
     if (!(entity.model instanceof DefaultModel)) {
       // Notify Item was udpated.
       // TODO(burdon): Update the item directly?
-      this._itemUpdate.emit(entity);
+      this.itemUpdate.emit(entity);
 
       // TODO(telackey): Unsubscribe?
       entity.subscribe(() => {
-        this._itemUpdate.emit(entity);
+        this.itemUpdate.emit(entity);
       });
     }
 
@@ -440,7 +445,7 @@ export class ItemManager {
       modelSnapshot: item.model.snapshot
     }));
 
-    this._itemUpdate.emit(item);
+    this.itemUpdate.emit(item);
   }
 
   // TODO(burdon): Factor out to test queries separately?
