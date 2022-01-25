@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
+
 import { createTestInstance } from '@dxos/echo-db';
 import { Matcher, Predicate } from '@dxos/object-model';
 

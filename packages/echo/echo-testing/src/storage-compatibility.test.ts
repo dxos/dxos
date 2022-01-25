@@ -1,8 +1,14 @@
-import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+//
+// Copyright 2022 DXOS.org
+//
+
 import expect from 'expect';
 import { it as test } from 'mocha';
 import { join } from 'path';
+
+import { Item } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
+
 import { createPersistentInstance } from './persistant-instance';
 
 test('can load from saved state', async () => {
@@ -15,7 +21,7 @@ test('can load from saved state', async () => {
 
   const person: Item<ObjectModel> = echo.queryParties().first.database.select(s => s.filter({ type: 'dxos:item.person' }).items).expectOne();
 
-  expect(person.model).toBeInstanceOf(ObjectModel)
+  expect(person.model).toBeInstanceOf(ObjectModel);
   expect(person.model.toObject()).toEqual({ firstName: 'Edith', lastName: 'Smith' });
 
   expect(person.links).toHaveLength(1);
@@ -26,4 +32,4 @@ test('can load from saved state', async () => {
   expect(company.model.toObject()).toEqual({ name: 'DXOS' });
 
   await echo.close();
-})
+});

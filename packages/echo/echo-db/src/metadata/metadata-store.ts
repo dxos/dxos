@@ -12,8 +12,8 @@ import { IStorage } from '@dxos/random-access-multi-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
- * 
- * Should be incremented every time there's a breaking change to the stored data. 
+ *
+ * Should be incremented every time there's a breaking change to the stored data.
  */
 export const STORAGE_VERSION = 1;
 
@@ -24,14 +24,14 @@ export class MetadataStore {
     version: STORAGE_VERSION,
     parties: [],
     created: new Date(),
-    updated: new Date(),
+    updated: new Date()
   };
 
   constructor (
     private readonly _storage: IStorage
   ) {}
 
-  get version(): number {
+  get version (): number {
     return this._metadata.version ?? 0;
   }
 
@@ -72,7 +72,7 @@ export class MetadataStore {
       ...this._metadata,
       version: STORAGE_VERSION,
       created: this._metadata.created ?? new Date(),
-      updated: new Date(),
+      updated: new Date()
     };
 
     const file = this._storage.createOrOpen('EchoMetadata');
