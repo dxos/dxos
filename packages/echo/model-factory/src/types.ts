@@ -7,20 +7,24 @@ import assert from 'assert';
 import type { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
+import { StateMachine } from './state-machiene';
+
 //
 // Types.
 //
 
 export type ModelType = string // TODO(burdon): Replace with DXN.
 
-export type ModelMeta = {
+export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
   // TODO(burdon): Rename.
   // TODO(marik-d): Specify generic type param here to match model's expected message type.
-  mutation: Codec<any>
+  mutation: Codec<TMutation>
 
-  snapshotCodec?: Codec<any>
+  snapshotCodec?: Codec<TSnasphot>
+
+  stateMachine: () => StateMachine<TState, TMutation, TSnasphot>
 
   /**
    * A way to initialize the model upon item creation.
