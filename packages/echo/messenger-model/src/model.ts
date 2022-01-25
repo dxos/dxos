@@ -35,7 +35,7 @@ export class MessengerModel extends Model<Message[], Message> {
   static meta: ModelMeta = {
     type: 'dxos:model/messenger',
     mutation: schema.getCodecForType('dxos.model.messenger.Message'),
-    stateMachiene: () => new MessengerModelStateMachiene()
+    stateMachine: () => new MessengerModelStateMachiene()
   };
 
   get messages (): Message[] {

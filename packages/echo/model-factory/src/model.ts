@@ -58,7 +58,7 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
       await this.processMessage(meta, mutation);
     });
 
-    this._stateMachine = meta.stateMachiene();
+    this._stateMachine = meta.stateMachine();
   }
 
   protected _getState (): TState {

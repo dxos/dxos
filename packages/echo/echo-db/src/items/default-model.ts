@@ -6,7 +6,7 @@ import { NOOP_CODEC } from '@dxos/codec-protobuf';
 import { ModelMutation, MutationMeta } from '@dxos/echo-protocol';
 import { Model, ModelMeta, ModelType, StateMachine } from '@dxos/model-factory';
 
-class DefaultModelStateMachiene implements StateMachine<ModelMutation[], Uint8Array, any> {
+class DefaultModelStateMachine implements StateMachine<ModelMutation[], Uint8Array, any> {
   private readonly _state: ModelMutation[] = [];
 
   getState (): ModelMutation[] {
@@ -35,7 +35,7 @@ class DefaultModelStateMachiene implements StateMachine<ModelMutation[], Uint8Ar
 export class DefaultModel extends Model<ModelMutation[], Uint8Array> {
   static meta: ModelMeta = {
     type: 'dxos:model/default',
-    stateMachiene: () => new DefaultModelStateMachiene(),
+    stateMachine: () => new DefaultModelStateMachine(),
     mutation: NOOP_CODEC
   };
 

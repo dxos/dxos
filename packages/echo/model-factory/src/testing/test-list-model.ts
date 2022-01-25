@@ -35,7 +35,7 @@ export class TestListModel extends Model<TestListMutation[], TestListMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test-list',
     mutation: schema.getCodecForType('dxos.echo.testing.TestListMutation'),
-    stateMachiene: () => new TestListModelStateMachiene()
+    stateMachine: () => new TestListModelStateMachiene()
   };
 
   get messages () {

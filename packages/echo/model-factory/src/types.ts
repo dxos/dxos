@@ -24,7 +24,7 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
 
   snapshotCodec?: Codec<TSnasphot>
 
-  stateMachiene: () => StateMachine<TState, TMutation, TSnasphot>
+  stateMachine: () => StateMachine<TState, TMutation, TSnasphot>
 
   /**
    * A way to initialize the model upon item creation.

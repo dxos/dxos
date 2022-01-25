@@ -43,7 +43,7 @@ class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
 export class TextModel extends Model<Doc, Mutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/text',
-    stateMachiene: () => new TextModelStateMachiene(),
+    stateMachine: () => new TextModelStateMachiene(),
     mutation: schema.getCodecForType('dxos.echo.text.Mutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
   };

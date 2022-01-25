@@ -37,7 +37,7 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test',
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation'),
-    stateMachiene: () => new TestModelStateMachiene()
+    stateMachine: () => new TestModelStateMachiene()
   };
 
   get keys () {

@@ -44,7 +44,7 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
-    stateMachiene: () => new ObjectModelStateMachine(),
+    stateMachine: () => new ObjectModelStateMachine(),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
