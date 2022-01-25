@@ -4,13 +4,14 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
+import { Entity } from './entity';
 import { Item } from './item';
 import { ItemFilter, ItemManager } from './item-manager';
 import { Link } from './link';
@@ -60,8 +61,20 @@ export class Database {
     return this._backend.isReadOnly;
   }
 
-  get update () {
+  /**
+   * Fired when any item is updated.
+   */
+  get update (): Event<void> {
     return this._itemManager.debouncedItemUpdate;
+  }
+
+  /**
+   * Fired immediately after any update in the entities.
+   *
+   * If the information about which entity got updated is not required prefer using `update`.
+   */
+  get entityUpdate (): Event<Entity<any>> {
+    return this._itemManager.itemUpdate;
   }
 
   @synchronized
