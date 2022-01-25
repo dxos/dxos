@@ -74,7 +74,7 @@ export class EchoProxy {
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           partyProxy.database.entityUpdate.on(entity => {
-            if(entity.type === PARTY_ITEM_TYPE) {
+            if (entity.type === PARTY_ITEM_TYPE) {
               this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
             }
           });
