@@ -82,11 +82,11 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useSelection(party.database.select(s => s
+  const items = useSelection(party?.database.select(s => s
     .filter({ type: TASK_TYPE })
     .filter(item => !item.model.getProperty('deleted'))
     .items)
-  , [partyKey]);
+  , [party]);
 
   const [partyInvitationDialog, setPartyInvitationDialog] = useState(false);
 
@@ -99,7 +99,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
       return;
     }
 
-    await party.database.createItem({
+    await party?.database.createItem({
       type: TASK_TYPE,
       model: ObjectModel,
       props: {
@@ -170,7 +170,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
           {/* Current tasks. */}
           <div className={classes.reverseList} ref={scrollListRef}>
             {items
-              .map(item => (
+              ?.map(item => (
                 <ListItem
                   button
                   key={item.id}
