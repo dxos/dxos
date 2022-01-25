@@ -80,7 +80,7 @@ export const Canvas = ({
 
   // TODO(burdon): Multi-select.
   const handleSelect = (element: ElementData<any>, edit?: boolean) => {
-    onSelect({ element, state: edit ? ControlState.EDITING : ControlState.SELECTED });
+    onSelect?.({ element, state: edit ? ControlState.EDITING : ControlState.SELECTED });
   }
 
   //
@@ -89,8 +89,8 @@ export const Canvas = ({
   const controlsGroup = useRef<SVGSVGElement>();
   const controlManager = useMemo(() => {
     // TODO(burdon): Handle repaint via events.
-    return new ControlManager(
-      context, () => renderControls(controlsGroup.current, controlManager), handleSelect, onUpdate);
+    const handleRender = () => renderControls(controlsGroup.current, controlManager);
+    return new ControlManager(context, handleRender, handleSelect, onUpdate);
   }, []);
 
   useEffect(() => {

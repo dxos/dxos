@@ -32,7 +32,7 @@ const createRect = (scale: Scale): D3Callable => {
           .call(selection => {
             // Drag.
             // TODO(burdon): Factor out common with ellipse.
-            if (control.onUpdate) {
+            if (control.editable) {
               selection
                 .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
                   const { x: dx, y: dy } = scale.screen.toVertex(delta);
@@ -50,7 +50,7 @@ const createRect = (scale: Scale): D3Callable => {
             }
           })
       })
-      .style('cursor', control.draggable ? 'move' : undefined)
+      .style('cursor', control.editable && control.draggable ? 'move' : undefined)
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)

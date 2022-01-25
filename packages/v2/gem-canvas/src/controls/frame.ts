@@ -206,6 +206,7 @@ export const createFrame = (scale: Scale): D3Callable => {
         .attr('cx', ({ p }) => cx + p[0] * width / 2)
         .attr('cy', ({ p }) => cy - p[1] * height / 2)
         .attr('r', FrameProps.controlRadius)
+
         .call(dragHandle<Handle>(scale, (handle, delta, mod, commit) => {
           const bounds = computeBounds({ x, y, width, height }, handle, delta);
           const data = control.createFromBounds(bounds, mod, commit);

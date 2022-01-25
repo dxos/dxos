@@ -64,13 +64,13 @@ export class ControlManager implements ControlGetter {
    * @param selection
    */
   updateElements (elements: ElementData<any>[], selection?: SelectionModel) {
-    const handleUpdate = (element, commit) => {
+    const handleUpdate = !this._onUpdate ? undefined : (element, commit) => {
       if (commit) {
         this._onUpdate(element);
       } else {
         this._onRepaint();
       }
-    }
+    };
 
     this._controls = elements.map(element => {
       const control = this.getControl(element.id) ??

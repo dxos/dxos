@@ -63,7 +63,7 @@ export const Cursor = ({
         if (event.target.parentNode) {
           const control = d3.select(event.target.parentNode).datum();
           if (!control) {
-            onSelect(undefined);
+            onSelect?.(undefined);
           }
         }
       });
@@ -140,7 +140,7 @@ export const Cursor = ({
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
     d3.select(svgRef.current)
       .style('cursor', cursorRef.current ? 'crosshair' : undefined)
-      .call(dragBounds(context, handleUpdate, () => onSelect(undefined))
+      .call(dragBounds(context, handleUpdate, () => onSelect?.(undefined))
         .container(() => svgRef.current)
         .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
   }, [svgRef, cursorGroup]);

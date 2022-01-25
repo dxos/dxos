@@ -33,7 +33,7 @@ const createEllipse = (scale: Scale): D3Callable => {
           .append('ellipse')
           .call(selection => {
             // Drag.
-            if (control.onUpdate) {
+            if (control.editable) {
               selection
                 .call(dragMove((delta: Point, mod: Modifiers, commit?: boolean) => {
                   // TODO(burdon): Snap to edge unless mod (center).
@@ -50,7 +50,7 @@ const createEllipse = (scale: Scale): D3Callable => {
             }
           })
       })
-      .style('cursor', control.draggable ? 'move' : undefined)
+      .style('cursor', control.editable && control.draggable ? 'move' : undefined)
       .attr('cx', cx)
       .attr('cy', cy)
       .attr('rx', rx)
