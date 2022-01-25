@@ -244,7 +244,7 @@ export class ItemManager {
   }
 
   /**
-   * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entitiy to be constructed.
+   * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
    */
   private _addEntity (entity: Entity<any>) {
     assert(!this._entities.has(entity.id));
@@ -355,7 +355,7 @@ export class ItemManager {
   }
 
   /**
-   * Process a mesage directed to a specific model.
+   * Process a message directed to a specific model.
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
