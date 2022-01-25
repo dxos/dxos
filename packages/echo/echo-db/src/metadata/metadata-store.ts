@@ -17,7 +17,6 @@ import { IStorage } from '@dxos/random-access-multi-storage';
  */
 export const STORAGE_VERSION = 1;
 
-
 const log = debug('dxos:snapshot-store');
 
 export class MetadataStore {
