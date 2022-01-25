@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
-import { defs } from '@dxos/config';
+import { ConfigV1Object, defs } from '@dxos/config';
 
 import { Client } from './client';
 
@@ -31,11 +31,14 @@ describe('Client', () => {
 
   describe('With persistent storage', () => {
     test('persistent storage', async () => {
-      const config: defs.Config = {
-        system: {
-          storage: {
-            persistent: true,
-            path: `/tmp/dxos-${Date.now()}`
+      const config: ConfigV1Object = {
+        version: 1,
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+              path: `/tmp/dxos-${Date.now()}`
+            }
           }
         }
       };

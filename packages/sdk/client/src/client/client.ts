@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { Config, defs } from '@dxos/config';
+import { Config, ConfigObject, ConfigV1Object, defs } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
@@ -21,15 +21,21 @@ import { System } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
+import { InvalidConfigurationError } from '../interfaces/errors';
 
 const log = debug('dxos:client');
 
-export const defaultConfig: defs.Config = {};
+const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultTestingConfig: defs.Config = {
-  services: {
-    signal: {
-      server: 'ws://localhost:4000'
+export const defaultConfig: ConfigV1Object = { version: 1 };
+
+export const defaultTestingConfig: ConfigV1Object = {
+  version: 1,
+  runtime: {
+    services: {
+      signal: {
+        server: 'ws://localhost:4000'
+      }
     }
   }
 };
@@ -63,19 +69,23 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: defs.Config | Config = {}, options: ClientOptions = {}) {
+  constructor (config: ConfigV1Object | Config = { version: 1 }, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
+    if(Object.keys(this._config.values).length > 0 && this._config.values.version === EXPECTED_CONFIG_VERSION) {
+      throw new InvalidConfigurationError('Client requires config version 1.');
+    }
+
     this._options = options;
 
     // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
-    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
+    debug.enable(this._config.values.runtime?.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
-    this._mode = this._config.get('system.mode', System.Mode.AUTOMATIC)!;
+    this._mode = this._config.get('runtime.client.mode', System.Mode.AUTOMATIC)!;
     log(`mode=${System.Mode[this._mode]}`);
   }
 

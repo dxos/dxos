@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { defs } from '@dxos/config';
+import { ConfigV1Object, defs } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -276,11 +276,14 @@ describe('Client', () => {
   });
 
   test('late-register models after refresh', async () => {
-    const config: defs.Config = {
-      system: {
-        storage: {
-          persistent: true,
-          path: `/tmp/dxos-${Date.now()}`
+    const config: ConfigV1Object = {
+      version: 1,
+      runtime: {
+        client: {
+          storage: {
+            persistent: true,
+            path: `/tmp/dxos-${Date.now()}`
+          }
         }
       }
     };
