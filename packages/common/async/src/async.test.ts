@@ -22,7 +22,6 @@ const timeout = (f: Function, timeout = 0) => new Promise((resolve, reject) => {
   }, timeout);
 });
 
-
 test('sleep', async () => {
   const now = Date.now();
 

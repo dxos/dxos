@@ -44,7 +44,7 @@ export const promiseTimeout = <T = any>(promise: Promise<T>, timeout: number, er
     timeoutPromise
   ]).finally(() => {
     cancelTimeout();
-  })
+  });
 };
 
 /**
