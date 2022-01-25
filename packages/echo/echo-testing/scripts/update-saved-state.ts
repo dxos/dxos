@@ -1,10 +1,9 @@
 import { createPersistentInstance } from "../src/persistant-instance";
-import { join } from "path";
 import { rmSync } from 'fs'
 import { ObjectModel } from "@dxos/object-model";
 
 (async () => {
-  const storagePath = join(__dirname, '../saved-state');
+  const storagePath = './saved-state';
 
   try {
     rmSync(storagePath, { recursive: true, force: true });

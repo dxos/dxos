@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { join } from 'path';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -12,7 +11,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createPersistentInstance } from './persistant-instance';
 
 test('can load from saved state', async () => {
-  const storagePath = join(__dirname, '../saved-state');
+  const storagePath = './saved-state';
 
   const echo = createPersistentInstance(storagePath);
   await echo.open();
