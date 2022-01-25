@@ -47,5 +47,5 @@ export const waitForEvent = (eventEmitter, eventName, test, timeout, error) => {
     });
   });
 
-  return timeout ? promiseTimeout(promise, timeout, error).finally(off) : promise.finally(off);
+  return timeout ? promiseTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
 };
