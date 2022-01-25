@@ -5,6 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -16,7 +17,6 @@ import { DataServiceRouter } from './data-service-router';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { promiseTimeout } from '@dxos/async';
 
 describe('DataMirror', () => {
   test('basic', async () => {
