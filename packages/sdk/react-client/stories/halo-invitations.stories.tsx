@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 
 import { Invitation } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 import {
   ClientProvider,
@@ -20,7 +21,6 @@ import {
 import {
   ClientPanel, Container, PartyJoinPanel
 } from './helpers';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 export default {
   title: 'react-client/HALO Invitations'

@@ -10,6 +10,7 @@ import {
 
 import { PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 import {
   ClientProvider,
@@ -25,7 +26,6 @@ import {
   Container,
   PartyJoinPanel
 } from './helpers';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 export default {
   title: 'react-client/Party Invitations'
