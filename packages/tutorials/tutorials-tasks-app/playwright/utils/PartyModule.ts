@@ -1,4 +1,4 @@
-import { decodeInvitation } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import assert from 'assert';
 import expect from 'expect';
 
@@ -42,7 +42,7 @@ export class PartyModule extends AppSimulator {
     const invitationPromise = this.browser.getPage().waitForEvent('console', message => {
       const text = message.text();
       try {
-        const invitation = decodeInvitation(text);
+        const invitation = InvitationDescriptor.decode(text);
         if (!!invitation.hash) {
           invitationText = text;
           return true
