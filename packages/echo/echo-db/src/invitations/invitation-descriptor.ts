@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import base from 'base-x';
 import stableStringify from 'json-stable-stringify';
 
 import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
@@ -13,6 +14,9 @@ import { InvalidInvitationError } from '../errors';
 
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
+
+// Encode with only alpha-numeric characters.
+const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 // Workaround for swc not properly handling namespace re-exports.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -63,6 +67,11 @@ export class InvitationDescriptor {
       protoInvitation.identityKey ? PublicKey.from(protoInvitation.identityKey) : undefined,
       protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined
     );
+  }
+
+  static decode (code: string): InvitationDescriptor {
+    const json = base62.decode(code).toString();
+    return InvitationDescriptor.fromQueryParameters(JSON.parse(json));
   }
 
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
@@ -116,6 +125,11 @@ export class InvitationDescriptor {
       identityKey: this.identityKey?.asUint8Array(),
       secret: this.secret
     };
+  }
+
+  encode (): string {
+    const buffer = Buffer.from(JSON.stringify(this.toQueryParameters()));
+    return base62.encode(buffer);
   }
 }
 

@@ -12,7 +12,7 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
-import { encodeInvitation, InvitationRequest } from '@dxos/client';
+import { InvitationRequest } from '@dxos/client';
 import { PartyMember } from '@dxos/echo-db';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
@@ -169,7 +169,7 @@ export const SharingDialog = ({
             {invitations.map((invitation, i) => (
               <PendingInvitationView
                 key={i}
-                invitationCode={encodeInvitation(invitation.descriptor)}
+                invitationCode={invitation.descriptor.encode()}
                 pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
                 createUrl={createUrl}
                 onCancel={() => onCancelInvitation(invitation)}
