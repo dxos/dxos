@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { decodeInvitation, PartyProxy } from '@dxos/client';
+import { PartyProxy } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { useSecretProvider } from '@dxos/react-client';
@@ -87,7 +87,7 @@ export const JoinDialog = ({
     try {
       // Parse URL.
       const invitationCode = invitationCodeFromUrl(text);
-      invitation = decodeInvitation(invitationCode);
+      invitation = InvitationDescriptor.decode(invitationCode);
     } catch (err: any) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
