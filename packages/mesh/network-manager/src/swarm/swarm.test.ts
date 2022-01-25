@@ -71,8 +71,8 @@ test('connects two peers in a swarm', async () => {
   expect(swarm2.connections.length).toEqual(0);
 
   const promise = Promise.all([
-    promiseTimeout(swarm1.connected.waitForCount(1), 3000, 'Swarm1 connect timeout.'),
-    promiseTimeout(swarm2.connected.waitForCount(1), 3000, 'Swarm2 connect timeout.')
+    promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+    promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
   ]);
 
   swarm1.onPeerCandidatesChanged([peerId2]);

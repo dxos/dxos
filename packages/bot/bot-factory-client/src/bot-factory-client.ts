@@ -72,7 +72,7 @@ export class BotFactoryClient {
       });
     });
     // TODO(yivlad): convert promiseTimeout to typescript.
-    const port = (await promiseTimeout(portPromise, 10000, 'Timeout on connecting to bot factory')) as RpcPort;
+    const port = (await promiseTimeout(portPromise, 10000, new Error('Timeout on connecting to bot factory')));
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotFactoryService'),
       {
