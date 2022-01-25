@@ -86,8 +86,8 @@ export class EllipseControl extends Control<Ellipse> {
   override drawable: D3Callable = group => {
     const control = group.datum(); // TODO(burdon): Pattern.
     group.call(this._main, group.datum());
-    group.call(this._frame, group.datum(), this.selected, this.selected && this.resizable);
-    group.call(this._connectors, control, !this.draggable && !this.editing && !this.selected && this.hover);
+    group.call(this._frame, group.datum(), this.selected, this.resizable);
+    group.call(this._connectors, control, this.connections);
   };
 
   override getBounds (): ScreenBounds {

@@ -93,6 +93,10 @@ export abstract class Control<T extends ElementDataType> {
     return this._modified;
   }
 
+  get editable () {
+    return Boolean(this._onUpdate);
+  }
+
   get state () {
     return this._state;
   }
@@ -109,12 +113,12 @@ export abstract class Control<T extends ElementDataType> {
     return this._state === ControlState.EDITING;
   }
 
-  get hover () {
-    return this._hover;
+  get connections () {
+    return this._hover && !this.editing && !this.selected;
   }
 
   get resizable () {
-    return Boolean(this._element); // TODO(burdon): Read-only mode.
+    return this.selected && this.editable && this._element;
   }
 
   toString () {

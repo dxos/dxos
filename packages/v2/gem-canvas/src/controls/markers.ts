@@ -39,7 +39,7 @@ export const createMarkers = ({ arrowSize = 8 }: MarkerOptions = {}): D3Callable
         .attr('markerWidth', arrowSize * 2)
         .attr('markerUnits', 'strokeWidth')
         .attr('orient', 'auto')
-        .attr('refX', 0)
+        .attr('refX', 0.5)
         .attr('refY', 0)
         .attr('viewBox', d => d.viewbox)
         // TODO(burdon): Generalize.

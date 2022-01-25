@@ -70,7 +70,7 @@ export const renderControls = (controlsGroup, controlManager, debug = false) => 
 
       // Temporarily move to the front.
       // TODO(burdon): Move frames, etc. to different group.
-      if (control.active || control.hover) {
+      if (control.active || control.connections) {
         d3.select(nodes[i]).raise();
       }
     });

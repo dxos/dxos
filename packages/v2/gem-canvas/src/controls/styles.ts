@@ -18,7 +18,7 @@ export const elementStyles = {
       font-family: sans-serif;
     }
     line {
-      stroke-width: 2;
+      stroke: #111; // 600;
     }
   `),
 
@@ -56,9 +56,10 @@ export const elementStyles = {
 };
 
 export const canvasStyles = css`
+  // TODO(burdon): Scope by element.
   marker {
     path.arrow {
-      stroke: #666;
+      stroke: #111;
       fill: none;
     }
   }
@@ -101,7 +102,8 @@ export const canvasStyles = css`
         stroke-width: 1;
       }
       circle.target {
-        fill: limegreen;
+        fill: orange;
+        stroke: darkred;
         stroke-width: 2;
       }
     }
