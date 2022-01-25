@@ -40,7 +40,7 @@ export class ModelFactory {
     return this;
   }
 
-  createModel<T extends Model<any>> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): T {
+  createModel<T extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): T {
     assert(itemId);
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);

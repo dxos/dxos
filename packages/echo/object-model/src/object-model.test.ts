@@ -19,7 +19,7 @@ describe('TestRig', () => {
     expect(model.getProperty('foo')).toEqual('bar');
   });
 
-  it('property updates are optimistically applied', async () => {
+  it.skip('property updates are optimistically applied', async () => {
     const rig = new TestRig(ObjectModel);
     const { model } = rig.createPeer();
 

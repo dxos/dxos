@@ -76,6 +76,9 @@ export class Service {
           });
         };
       }
+
+      // Set function name so that is properly named in stack traces.
+      Object.defineProperty((this as any)[method.name], 'name', { value: method.name });
     }
   }
 }

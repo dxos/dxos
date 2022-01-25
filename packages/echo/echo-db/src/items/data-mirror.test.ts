@@ -5,6 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -42,7 +43,7 @@ describe('DataMirror', () => {
     dataMirror.open();
 
     // Create item
-    const promise = mirrorItemManager.debouncedItemUpdate.waitForCount(1);
+    const promise = promiseTimeout(mirrorItemManager.debouncedItemUpdate.waitForCount(1), 1000, new Error('timeout'));
 
     const item = await itemManager.createItem(
       ObjectModel.meta.type
@@ -58,7 +59,7 @@ describe('DataMirror', () => {
 
     // Mutate model
     await Promise.all([
-      mirroredItem!.model.update.waitForCount(1),
+      promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
       item.model.setProperty('foo', 'bar')
     ]);
 
