@@ -19,7 +19,7 @@ import { ItemManager } from './item-manager';
 import { promiseTimeout } from '@dxos/async';
 
 describe('DataMirror', () => {
-  test.only('basic', async () => {
+  test('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();
