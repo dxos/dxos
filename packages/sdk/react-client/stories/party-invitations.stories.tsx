@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { decodeInvitation, encodeInvitation, PartyInvitation } from '@dxos/client';
+import { PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 
 import {
@@ -25,6 +25,7 @@ import {
   Container,
   PartyJoinPanel
 } from './helpers';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 export default {
   title: 'react-client/Party Invitations'
@@ -69,7 +70,7 @@ const PartyInvitationContainer = () => {
         invitation.connected.on(() => setPin(invitation.secret.toString()));
       }
 
-      setInvitationCode(encodeInvitation(invitation.descriptor));
+      setInvitationCode(invitation.descriptor.encode());
     });
   };
 
@@ -144,7 +145,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(decodeInvitation(invitationCode));
+      const invitation = await client.echo.acceptInvitation(InvitationDescriptor.decode(invitationCode));
       setStatus({ invitation });
 
       const party = await invitation.getParty();

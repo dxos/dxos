@@ -4,12 +4,16 @@
 
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
+import base from 'base-x';
 
 import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import * as proto from '@dxos/echo-protocol';
 
 import { InvalidInvitationError } from '../errors';
+
+// Encode with only alpha-numeric characters.
+const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
@@ -65,6 +69,11 @@ export class InvitationDescriptor {
     );
   }
 
+  static decode (code: string): InvitationDescriptor {
+    const json = base62.decode(code).toString();
+    return InvitationDescriptor.fromQueryParameters(JSON.parse(json));
+  };
+
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
   constructor (
     public readonly type: InvitationDescriptorType,
@@ -116,6 +125,11 @@ export class InvitationDescriptor {
       identityKey: this.identityKey?.asUint8Array(),
       secret: this.secret
     };
+  }
+
+  encode (): string {
+    const buffer = Buffer.from(JSON.stringify(this.toQueryParameters()));
+    return base62.encode(buffer);
   }
 }
 

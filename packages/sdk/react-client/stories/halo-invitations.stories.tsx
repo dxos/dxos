@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { decodeInvitation, encodeInvitation, Invitation } from '@dxos/client';
+import { Invitation } from '@dxos/client';
 
 import {
   ClientProvider,
@@ -20,6 +20,7 @@ import {
 import {
   ClientPanel, Container, PartyJoinPanel
 } from './helpers';
+import { InvitationDescriptor } from '@dxos/echo-db';
 
 export default {
   title: 'react-client/HALO Invitations'
@@ -49,7 +50,7 @@ const HaloInvitationContainer = () => {
       setPin(invitation.secret.toString());
     });
 
-    setInvitationCode(encodeInvitation(invitation.descriptor));
+    setInvitationCode(invitation.descriptor.encode());
   };
 
   if (!client.halo.hasProfile()) {
@@ -106,7 +107,7 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = decodeInvitation(invitationCode);
+      const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
     } catch (err: any) {
