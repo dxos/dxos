@@ -8,6 +8,9 @@ Devtools browser extension.
 
 `<img src="./images/jobs.png" width="520px">`
 
+![alt text](https://github.com/dxos/protocols/blob/main/protocols/packages/devtools/devtools-extension/images/jobs.png?raw=true)
+
+
 `<img src="./images/artifacts.png" width="420px">`
 
 2. Unzip the downloaded file.
