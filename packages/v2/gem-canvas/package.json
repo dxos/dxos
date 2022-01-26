@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-canvas",
-  "version": "2.0.0-beta.36",
+  "version": "2.0.0-beta.37",
   "description": "Gem vector editor.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -36,8 +36,8 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/gem-core": "^2.0.0-beta.36",
-    "@material-ui/icons": "^4.11.2",
+    "@dxos/gem-core": "^2.0.0-beta.37",
+    "@mui/icons-material": "^5.3.1",
     "clsx": "^1.1.1",
     "csstype": "^3.0.10",
     "d3": "^7.2.1",
@@ -50,6 +50,7 @@
     "@dxos/eslint-plugin": "~1.0.10",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.7.1",
+    "@mui/icons-material": "^5.3.1",
     "@types/d3": "^7.1.0",
     "@types/debug": "^4.1.5",
     "@types/faker": "^5.5.9",
@@ -68,7 +69,7 @@
   "peerDependencies": {
     "@emotion/css": ">=11.0.0",
     "@emotion/react": ">=11.0.0",
-    "@material-ui/icons": "*",
+    "@mui/icons-material": "*",
     "react": "*",
     "react-dom": "*"
   },

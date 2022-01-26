@@ -10,7 +10,7 @@ import {
   Crop32 as RectIcon,
   GridOn as GridIcon,
   ZoomOutMapOutlined as ZoomOutIcon
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 import { Modifiers } from '@dxos/gem-core';
 

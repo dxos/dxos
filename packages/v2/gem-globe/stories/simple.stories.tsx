@@ -6,7 +6,6 @@ import * as d3 from 'd3';
 import React, { useRef, useEffect, useState } from 'react';
 import EventEmitter from 'events';
 import useResizeAware from 'react-resize-aware';
-import { makeStyles } from '@material-ui/core/styles';
 
 import TopologyData from '../data/110m.json';
 
@@ -15,15 +14,6 @@ import { Globe } from '../src';
 export default {
   title: 'Globe-Simple'
 };
-
-const useStyles = makeStyles(() => ({
-  root: {
-    display: 'flex',
-    overflow: 'hidden',
-    position: 'relative',
-    height: 400
-  }
-}));
 
 const globeStyles = {
   background: {
@@ -75,11 +65,15 @@ const useSpinner = (callback, delta = drift) => {
 
 export const Primary = () => {
   const canvas = useRef(null);
-  const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
 
   return (
-    <div className={classes.root}>
+    <div style={{
+      display: 'flex',
+      overflow: 'hidden',
+      position: 'relative',
+      height: 400
+    }}>
       {resizeListener}
       <Globe
         ref={canvas}
@@ -96,7 +90,6 @@ export const Primary = () => {
 
 export const Flat = () => {
   const canvas = useRef(null);
-  const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const [rotation, setRotation] = useState(startingPoint);
   const [startSpinner, stopSpinner] = useSpinner(rotation => setRotation(rotation));
@@ -131,7 +124,12 @@ export const Flat = () => {
   }, []);
 
   return (
-    <div className={classes.root}>
+    <div style={{
+      display: 'flex',
+      overflow: 'hidden',
+      position: 'relative',
+      height: 400
+    }}>
       {resizeListener}
       <Globe
         ref={canvas}

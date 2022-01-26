@@ -5,12 +5,12 @@
 import * as d3 from 'd3';
 import EventEmitter from 'events';
 import faker from 'faker';
+import update from 'immutability-helper';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { useButton, useKnobs, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
-import { FullScreen, useObjectMutator } from '@dxos/gem-core'; // TODO(burdon): Moved to spore?
+import { FullScreen, useStateRef } from '@dxos/gem-core';
 
 import CitiesData from '../data/cities.json';
 import TopologyData from '../data/110m.json';
@@ -264,17 +264,6 @@ const globeStyles = {
   },
 };
 
-const useStyles = makeStyles(() => ({
-  label: {
-    position: 'absolute',
-    padding: 8,
-    margin: 0,
-    color: 'darkgreen',
-    fontFamily: 'monospace',
-    fontSize: 14
-  }
-}));
-
 const locations = {
   LONDON: {
     lat: 51.5074, lng: 0.1278
@@ -283,8 +272,7 @@ const locations = {
 
 export const Primary = () => {
   const canvas = useRef(null);
-  const classes = useStyles();
-  const [features,, featuresRef, updateFeatures] = useObjectMutator({ points: [], lines: [] });
+  const [features, setFeatures, featuresRef] = useStateRef<{ points?: [], lines?: [] }>({});
   const [info, setInfo] = useState(null);
   const [resizeListener, { width, height }] = useResizeAware(); // TODO(burdon): Replace.
   const Knobs = useKnobs();
@@ -365,24 +353,20 @@ export const Primary = () => {
       // Add feature.
       // TODO(burdon): Pulse points.
       const maxLines = 2;
-      const { lines, points } = featuresRef();
-      updateFeatures(Object.assign({},
-        {
-          // TODO(burdon): Remove points (not part of current paths).
-          points: {
-            $push: [point]
-          }
+      const { lines, points } = featuresRef.current;
+      setFeatures(update<any>(featuresRef.current, {
+        // TODO(burdon): Remove points (not part of current paths).
+        points: {
+          $push: [point]
         },
-        points.length && {
-          lines: {
-            $splice: [ [ 0, Math.max(0, 1 + lines.length - maxLines) ] ],
-            $push: [ {
-              source: points[points.length - 1],
-              target: point
-            } ]
-          }
-        }
-      ));
+        lines: points.length ? {
+          $splice: [[0, Math.max(0, 1 + lines.length - maxLines)]],
+          $push: [{
+            source: points[points.length - 1],
+            target: point
+          }]
+        } : undefined
+      }));
 
       rotate(canvas.current, Versor.coordinatesToAngles(point, tilt), () => {
         setInfo({
@@ -408,7 +392,16 @@ export const Primary = () => {
       {resizeListener}
 
       {info && (
-        <pre className={classes.label}>{JSON.stringify(info, null, 2)}</pre>
+        <pre style={{
+          position: 'absolute',
+          padding: 8,
+          margin: 0,
+          color: 'darkgreen',
+          fontFamily: 'monospace',
+          fontSize: 14
+        }}>
+          {JSON.stringify(info, null, 2)}
+        </pre>
       )}
 
       <Globe

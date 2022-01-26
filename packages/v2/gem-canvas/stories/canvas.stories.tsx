@@ -71,7 +71,7 @@ const Container = () => {
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
-  const [showGrid, setShowGrid, showGridRef] = useStateRef(true); // TODO(burdon): Generalize to options.
+  const [showGrid, setShowGrid] = useState(true); // TODO(burdon): Generalize to view options.
   const [debug, setDebug, debugRef] = useStateRef(false);
 
   // Reset selection.
@@ -124,7 +124,7 @@ const Container = () => {
       }
 
       case ActionType.TOGGLE_GRID: {
-        setShowGrid(!showGridRef.current);
+        setShowGrid(grid => !grid);
         break;
       }
 
