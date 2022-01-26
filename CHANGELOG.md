@@ -1,5 +1,24 @@
 # Change Log
 
+## [2.23.0](https://www.github.com/dxos/protocols/compare/v2.22.0...v2.23.0) (2022-01-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* Extract state machines from models (#868)
+
+### Features
+
+* Extract state machines from models ([#868](https://www.github.com/dxos/protocols/issues/868)) ([1384081](https://www.github.com/dxos/protocols/commit/1384081e8cae2aecfb4d7496a063a384be4c75d3))
+* Party cloning ([#862](https://www.github.com/dxos/protocols/issues/862)) ([a08f5f9](https://www.github.com/dxos/protocols/commit/a08f5f91486893e6bb06d3ef19dd1b6bf33be80b))
+* Party import & export in tasks app ([#864](https://www.github.com/dxos/protocols/issues/864)) ([c40dd6a](https://www.github.com/dxos/protocols/commit/c40dd6af148aac7b0000d2356e79db0b97421e4f))
+
+
+### Bug Fixes
+
+* Botkit don't export testutils ([#878](https://www.github.com/dxos/protocols/issues/878)) ([2e81d2c](https://www.github.com/dxos/protocols/commit/2e81d2c4bdb43541cd676d4a70017f7b8f891524))
+* Emit proper events when Party items are updated ([#869](https://www.github.com/dxos/protocols/issues/869)) ([834c2f1](https://www.github.com/dxos/protocols/commit/834c2f1a3ba4f5d46b49d83ac8fbc0670fae8d65))
+
 ## [2.22.0](https://www.github.com/dxos/protocols/compare/v2.21.2...v2.22.0) (2022-01-20)
 
 
