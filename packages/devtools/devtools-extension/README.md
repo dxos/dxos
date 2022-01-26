@@ -8,7 +8,7 @@ Devtools browser extension.
 
 `<img src="./images/jobs.png" width="520px">`
 
-`<img src="images/artifacts.png" width="420px">`
+`<img src="./images/artifacts.png" width="420px">`
 
 2. Unzip the downloaded file.
 3. Go to `chrome://extensions` and enable developer mode.
