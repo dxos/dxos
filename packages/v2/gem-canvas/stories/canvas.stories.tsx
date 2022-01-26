@@ -71,7 +71,7 @@ const Container = () => {
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
-  const [showGrid, setShowGrid] = useState(true); // TODO(burdon): Generalize to view options.
+  const [grid, setGrid] = useState(false); // TODO(burdon): Generalize to view options.
   const [debug, setDebug, debugRef] = useStateRef(false);
 
   // Reset selection.
@@ -124,7 +124,7 @@ const Container = () => {
       }
 
       case ActionType.TOGGLE_GRID: {
-        setShowGrid(grid => !grid);
+        setGrid(grid => !grid);
         break;
       }
 
@@ -167,6 +167,8 @@ const Container = () => {
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
         <Toolbar
           tool={tool}
+          minimized={!grid}
+          onMinimize={grid => setGrid(!grid)}
           onAction={handleAction}
           onStyle={(style: string) => {
             if (selection) {
@@ -180,7 +182,7 @@ const Container = () => {
           ref={svgRef}
           scale={scale}
           zoom={[1/4, 8]}
-          grid={showGrid}
+          grid={grid}
         >
           <Canvas
             svgRef={svgRef}
@@ -198,12 +200,14 @@ const Container = () => {
           />
         </SvgContainer>
 
-        <StatusBar
-          data={{
-            elements: elements.length,
-            selected: selection?.element?.id
-          }}
-        />
+        {toolbar && (
+          <StatusBar
+            data={{
+              elements: elements.length,
+              selected: selection?.element?.id
+            }}
+          />
+        )}
       </div>
     </FullScreen>
   );

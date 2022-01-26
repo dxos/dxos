@@ -3,12 +3,17 @@
 //
 
 import clsx from 'clsx';
-import React from 'react';
+import React, { useState } from 'react';
 import { css } from '@emotion/css';
 
 import { canvasStyles, elementStyles, styleNames } from '../../controls';
 import { Tool } from '../../tools';
 import { Action, Binding, actions } from './actions';
+
+import {
+  Clear as HideIcon,
+  Edit as ToggleMinimizedIcon
+} from '@mui/icons-material';
 
 // TODO(burdon): Factor out.
 export interface PaletteProps {
@@ -39,36 +44,50 @@ export const Palette = ({ onSelect }: PaletteProps) => {
   );
 }
 
+const styles = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  background-color: #EEE;
+  button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    padding-top: 2px;
+    border: none;
+    outline: none;
+    background-color: #EEE;
+  }
+  button.active {
+    background-color: #CCC;
+  }
+`;
+
 export interface ToolbarProps {
   tool?: Tool
+  minimized?: boolean;
+  onMinimize?: (state: boolean) => void
   onAction?: (action: Action) => void
   onStyle: (style: string) => void
 }
 
 export const Toolbar = ({
   tool: current,
+  minimized = false,
+  onMinimize,
   onAction,
   onStyle
 }: ToolbarProps) => {
-  const styles = css`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0;
-    background-color: #EEE;
-    button {
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      padding-top: 2px;
-      border: none;
-      outline: none;
-      background-color: #EEE;
-    }
-    button.active {
-      background-color: #CCC;
-    }
-  `;
+  if (onMinimize && minimized) {
+    return (
+      <div className={styles} style={{ position: 'absolute', right: 0 }}>
+        <button onClick={() => onMinimize?.(false)}>
+          <ToggleMinimizedIcon />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={styles}>
@@ -107,6 +126,12 @@ export const Toolbar = ({
             </button>
           );
         })}
+
+        {onMinimize && (
+          <button onClick={() => onMinimize?.(true)}>
+            <HideIcon />
+          </button>
+        )}
       </div>
     </div>
   );
