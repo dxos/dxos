@@ -71,7 +71,7 @@ const Container = () => {
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
-  const [grid, setGrid] = useState(false); // TODO(burdon): Generalize to view options.
+  const [grid, setGrid] = useState(true); // TODO(burdon): Generalize to view options.
   const [debug, setDebug, debugRef] = useStateRef(false);
 
   // Reset selection.
