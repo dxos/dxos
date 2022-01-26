@@ -6,7 +6,7 @@ Devtools browser extension.
 
 1. Grab a build from the [latest build](https://github.com/dxos/protocols).
 
-<img src="https://github.com/dxos/protocols/blob/main/packages/devtools/devtools-extension/images/jobs.png?raw=true" width="520px">
+<img src="./images/jobs.png?raw=true" width="520px">
 
 ![alt text](https://github.com/dxos/protocols/blob/main/packages/devtools/devtools-extension/images/jobs.png?raw=true)
 
