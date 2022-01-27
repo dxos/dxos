@@ -4,18 +4,11 @@ Devtools browser extension.
 
 ## Installation
 
-1. Grab a build from the [latest build](https://github.com/dxos/protocols).
+1. The Devtools zip file is created during the [publshing]((https://github.com/dxos/protocols/actions/workflows/publish.yaml)) CI action.
+1. Select the latest successful run (look for the green check mark).
+1. Click on `Artifacts`, then download and uncompress the zip file.
+1. Go to `chrome://extensions` and click `Load unpacked` (make sure developer mode is enabled).
 
-<img src="./images/jobs.png?raw=true" width="520px">
-
-<img src="./images/artifacts.png" width="420px">
-
-2. Unzip the downloaded file.
-3. Go to `chrome://extensions` and enable developer mode.
-
-<img src="./images/developer-mode.png" width="220px">
-
-4. Select `Load unpacked` and select the unzipped Devtools folder.
 
 ## Extension startup sequence
 
