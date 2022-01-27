@@ -221,6 +221,10 @@ message Runtime {
       string npm_access_token = 5;
     }
 
+    message BotFactoryClient {
+      string topic = 1;
+    }
+
     Kube kube = 1;
     AppServer app = 2;
     Dxns dxns = 3;
@@ -228,6 +232,7 @@ message Runtime {
     Signal signal = 5;
     repeated Ice ice = 6;
     Machine machine = 7;
+    BotFactoryClient bot = 8;
   }
 
   Client client = 1;
