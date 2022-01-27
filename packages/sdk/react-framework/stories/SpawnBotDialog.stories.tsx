@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
-import type { ConfigV1Object, defs } from '@dxos/config';
+import type { ConfigV1Object } from '@dxos/config';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import {

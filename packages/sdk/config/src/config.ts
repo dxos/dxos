@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { sanitizeConfig } from './sanitizer';
-import { ConfigObject, ConfigV1Object, ConfigKey, DeepIndex, ParseKey } from './types';
+import { ConfigV1Object, ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
 

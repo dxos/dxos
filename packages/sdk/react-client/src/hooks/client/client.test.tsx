@@ -7,7 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { ConfigV1Object, defs } from '@dxos/config';
+import { ConfigV1Object } from '@dxos/config';
 
 import { ClientProvider } from '../../containers';
 import { useClient } from './useClient';

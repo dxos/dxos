@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { Config, ConfigObject, ConfigV1Object, defs } from '@dxos/config';
+import { Config, ConfigV1Object } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
@@ -17,11 +17,11 @@ import { RpcPort } from '@dxos/rpc';
 import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
+import { InvalidConfigurationError } from '../interfaces/errors';
 import { System } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
-import { InvalidConfigurationError } from '../interfaces/errors';
 
 const log = debug('dxos:client');
 
@@ -75,7 +75,7 @@ export class Client {
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
-    if(Object.keys(this._config.values).length > 0 && this._config.values.version === EXPECTED_CONFIG_VERSION) {
+    if (Object.keys(this._config.values).length > 0 && this._config.values.version === EXPECTED_CONFIG_VERSION) {
       throw new InvalidConfigurationError('Client requires config version 1.');
     }
 

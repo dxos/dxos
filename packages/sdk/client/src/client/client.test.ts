@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { ConfigV1Object, defs } from '@dxos/config';
+import { ConfigV1Object } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';

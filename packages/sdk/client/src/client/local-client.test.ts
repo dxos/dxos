@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
-import { ConfigV1Object, defs } from '@dxos/config';
+import { ConfigV1Object } from '@dxos/config';
 
 import { Client } from './client';
 
