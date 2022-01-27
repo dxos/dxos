@@ -75,8 +75,8 @@ export class Client {
     }
     this._config = (config instanceof Config) ? config : new Config(config);
 
-    if (Object.keys(this._config.values).length > 0 && this._config.values.version === EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigurationError('Client requires config version 1.');
+    if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
+      throw new InvalidConfigurationError(`Expected config version 1, got ${this._config.values.version}.`);
     }
 
     this._options = options;

@@ -27,7 +27,16 @@ describe('Client - persistent', () => {
     // In a browser this would be modeled as a page reload.
     // TODO(marik-d): Second client fails to initialize in firefox.
     if (browserMocha.context.browser !== 'firefox') {
-      const client2 = new Client({ runtime: { client: { storage: { persistent: true } } } });
+      const client2 = new Client({
+        version: 1,
+        runtime: {
+          client: {
+            storage: {
+              persistent: true
+            }
+          }
+        }
+      });
 
       await client2.initialize();
       await client2.halo.createProfile({

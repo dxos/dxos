@@ -16,6 +16,7 @@ export const setupBroker: () => Promise<BrokerSetup> = async () => {
   const port = randomInt(40000, 10000);
   const broker = await createTestBroker(port);
   const config = new Config<ConfigV1Object>({
+    version: 1,
     runtime: {
       services: {
         signal: {
