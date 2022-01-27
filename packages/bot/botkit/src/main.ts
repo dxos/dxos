@@ -21,7 +21,7 @@ const main = async () => {
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
 
-  const dxnsServer = config.get('services.dxns.server');
+  const dxnsServer = config.get('runtime.services.dxns.server');
   let contentResolver: ContentResolver | undefined;
   if (dxnsServer) {
     const apiPromise = await createApiPromise(dxnsServer);
