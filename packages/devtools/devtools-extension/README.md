@@ -1,6 +1,6 @@
-# DevTools browser extension
+# DXOS DevTools browser extension
 
-Devtools browser extension.
+<img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
 
 ## Installation
 
@@ -8,7 +8,6 @@ Devtools browser extension.
 1. Select the latest successful run (look for the green check mark).
 1. Click on `Artifacts`, then download and uncompress the zip file.
 1. Go to `chrome://extensions` and click `Load unpacked` (make sure developer mode is enabled).
-
 
 ## Extension startup sequence
 
