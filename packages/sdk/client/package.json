@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -34,7 +34,6 @@
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
-    "base-x": "~3.0.9",
     "debug": "^4.3.3",
     "del": "^5.1.0",
     "jsondown": "dxos/jsondown#main",

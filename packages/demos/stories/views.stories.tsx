@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { PartyProxy, decodeInvitation } from '@dxos/client';
+import { PartyProxy } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
@@ -74,7 +75,7 @@ export const Peers = () => {
 
     const handleJoinParty = async (invitationText: string) => {
       const { encodedInvitation, secret } = JSON.parse(invitationText);
-      const invitation = client.echo.acceptInvitation(decodeInvitation(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
       invitation.authenticate(Buffer.from(secret));
       const party = await invitation.getParty();
       setParty(party);

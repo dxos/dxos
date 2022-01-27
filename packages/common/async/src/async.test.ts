@@ -6,8 +6,21 @@
 
 import { expectToThrow } from '@dxos/debug';
 
-import { sleep, promiseTimeout, timeout, waitForCondition } from './async';
+import { sleep, promiseTimeout, waitForCondition } from './async';
 import { trigger } from './trigger';
+
+const timeout = (f: Function, timeout = 0) => new Promise((resolve, reject) => {
+  const handle = setTimeout(async () => {
+    try {
+      const value = await f();
+      resolve(value);
+    } catch (err) {
+      reject(err);
+    } finally {
+      clearTimeout(handle);
+    }
+  }, timeout);
+});
 
 test('sleep', async () => {
   const now = Date.now();
@@ -17,7 +30,7 @@ test('sleep', async () => {
 });
 
 test('trigger', async () => {
-  const [value, setValue] = trigger();
+  const [value, setValue] = trigger<any>();
 
   const t = setTimeout(() => setValue('test'), 10);
 
@@ -30,13 +43,13 @@ test('trigger', async () => {
 test('promiseTimeout', async () => {
   {
     const promise = timeout(() => 'test', 100);
-    const value = await promiseTimeout(promise, 200);
+    const value = await promiseTimeout(promise, 200, new Error('timeout'));
     expect(value).toBe('test');
   }
 
   {
     const promise = timeout(() => 'test', 200);
-    await expectToThrow(() => promiseTimeout(promise, 100));
+    await expectToThrow(() => promiseTimeout(promise, 100, new Error('timeout')));
   }
 });
 

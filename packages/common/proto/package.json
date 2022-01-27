@@ -1,6 +1,6 @@
 {
   "name": "@dxos/proto",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"

@@ -65,7 +65,6 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
-      base-x: ~3.0.9
       debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.11.23
@@ -84,7 +83,6 @@ importers:
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
-      base-x: 3.0.9
       debug: 4.3.3
       download: 8.0.0
       esbuild: 0.11.23
@@ -927,6 +925,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pify': ^3.0.2
+      base-x: ~3.0.9
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       expect: ~27.0.2
@@ -956,6 +955,7 @@ importers:
       '@types/json-stable-stringify': 1.0.33
       '@types/lodash': 4.14.178
       '@types/node': 14.18.0
+      base-x: 3.0.9
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
       json-stable-stringify: 1.0.1
@@ -1914,7 +1914,6 @@ importers:
       '@wirelineio/registry-client': ~1.1.0-beta.3
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
-      base-x: ~3.0.9
       debug: ^4.3.3
       del: ^5.1.0
       expect: ~27.0.2
@@ -1945,7 +1944,6 @@ importers:
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
-      base-x: 3.0.9
       debug: 4.3.3
       del: 5.1.0
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
