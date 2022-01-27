@@ -6,12 +6,13 @@ The DevTools extension provides debugging information about all aspects of the c
 
 ## Installation
 
-The Devtools zip file is created during the [Publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml) CI action.
+The Devtools zip file is created during the [Publish](https://github.com/dxos/protocols/blob/main/.github/workflows/publish.yaml) CI action.
 
 1. Go to: https://github.com/dxos/protocols/actions/workflows/publish.yaml
-1. Select the latest successful run (look for the green check mark).
+1. Click on the latest successful workflow run (look for the green check mark).
 1. Click on `Artifacts`, then download and uncompress the zip file.
-1. Go to `chrome://extensions` and click `Load unpacked` (make sure developer mode is enabled).
+1. Go to `chrome://extensions`, then click `Load unpacked` and select the folder (make sure developer mode is enabled).
+
 
 ## Extension startup sequence
 
@@ -29,6 +30,7 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/pr
     1. Client API connects to the `window.__DXOS__` hook.
     1. Client API sends "ready" message.
 1. Devtools pannel is ready.
+
 
 ## Development
 
