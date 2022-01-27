@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.23.1](https://www.github.com/dxos/protocols/compare/v2.23.0...v2.23.1) (2022-01-27)
+
+
+### Features
+
+* Playground for the wallet popup ([#872](https://www.github.com/dxos/protocols/issues/872)) ([f5b1145](https://www.github.com/dxos/protocols/commit/f5b1145e17c5458eaef8d5a4b330ccd8349bf4d3))
+
 ## [2.23.0](https://www.github.com/dxos/protocols/compare/v2.22.0...v2.23.0) (2022-01-26)
 
 
