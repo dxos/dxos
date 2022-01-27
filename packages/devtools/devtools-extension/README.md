@@ -1,5 +1,7 @@
 # DXOS DevTools browser extension
 
+The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
+
 <img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
 
 ## Installation
