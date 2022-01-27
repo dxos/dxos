@@ -93,9 +93,6 @@ jobs:
   check-sdk-health:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
