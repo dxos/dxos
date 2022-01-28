@@ -9,11 +9,6 @@ import { HumanHasher } from './human-hash';
 
 export class PublicKey {
   /**
-   * Length of a public key in bytes.
-   */
-  static LENGTH = 32;
-
-  /**
    * Creates new instance of PublicKey automatically determining the input format.
    */
   static from (source: PublicKeyLike): PublicKey {
@@ -72,9 +67,6 @@ export class PublicKey {
     if (!(_value instanceof Uint8Array)) {
       throw new TypeError(`Expected Uint8Array, got: ${_value}`);
     }
-    if (_value.length !== PublicKey.LENGTH) {
-      throw new TypeError(`Public key has invalid length. Expected: ${PublicKey.length}, got: ${_value.length}`);
-    }
   }
 
   /**
@@ -131,8 +123,11 @@ export class PublicKey {
    */
   equals (other: PublicKeyLike) {
     const otherConverted = PublicKey.from(other);
+    if (this._value.length !== otherConverted._value.length) {
+      return false;
+    }
     let equal = true;
-    for (let i = 0; i < PublicKey.LENGTH; i++) {
+    for (let i = 0; i < this._value.length; i++) {
       equal &&= this._value[i] === otherConverted._value[i];
     }
     return equal;

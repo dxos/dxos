@@ -9,7 +9,7 @@
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
 
-import { createKeyPair, KeyPair, PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { createKeyPair, KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/crypto';
 
 import { KeyChain, KeyRecord, KeyType, createDateTimeString } from '../proto';
 import { MakeOptional } from '../typedefs';
@@ -19,9 +19,12 @@ import { SecretKey } from './keytype';
  * Checks for a valid publicKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
-export function isValidPublicKey (key: PublicKeyLike): key is PublicKeyLike {
+export function isValidPublicKey (key: PublicKeyLike, keyType?: KeyType): key is PublicKeyLike {
   try {
     PublicKey.from(key);
+    if (keyType && [KeyType.PARTY, KeyType.IDENTITY, KeyType.FEED, KeyType.DEVICE].includes(keyType)) {
+      assert(PublicKey.from(key).asUint8Array().length === PUBLIC_KEY_LENGTH);
+    }
     return true;
   } catch (e: any) {
   }
@@ -32,17 +35,20 @@ export function isValidPublicKey (key: PublicKeyLike): key is PublicKeyLike {
  * Checks for a valid publicKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
-export function assertValidPublicKey (key: PublicKeyLike): asserts key is PublicKeyLike {
+export function assertValidPublicKey (key: PublicKeyLike, keyType?: KeyType): asserts key is PublicKeyLike {
   assert(key);
-  assert(isValidPublicKey(key));
+  assert(isValidPublicKey(key, keyType));
 }
 
 /**
  * Checks for a valid secretKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
-export function assertValidSecretKey (key?: SecretKey): asserts key is SecretKey {
-  assert(key && key.length === 64);
+export function assertValidSecretKey (key?: SecretKey, keyType?: KeyType): asserts key is SecretKey {
+  assert(key);
+  if (keyType && [KeyType.PARTY, KeyType.IDENTITY, KeyType.FEED, KeyType.DEVICE].includes(keyType)) {
+    assert(key.length === SECRET_KEY_LENGTH);
+  }
 }
 
 /**
@@ -50,9 +56,9 @@ export function assertValidSecretKey (key?: SecretKey): asserts key is SecretKey
  */
 // TODO(burdon): Move to dxos/crypto.
 export function assertValidKeyPair (keyRecord: any): asserts keyRecord is KeyPair {
-  const { publicKey, secretKey } = keyRecord;
-  assertValidPublicKey(publicKey);
-  assertValidSecretKey(secretKey);
+  const { publicKey, secretKey, type } = keyRecord;
+  assertValidPublicKey(publicKey, type);
+  assertValidSecretKey(secretKey, type);
 }
 
 /**

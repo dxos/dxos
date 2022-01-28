@@ -53,7 +53,7 @@ const HaloInvitationContainer = () => {
     setInvitationCode(invitation.descriptor.encode());
   };
 
-  if (!client.halo.hasProfile()) {
+  if (!client.halo.profile) {
     return null;
   }
 
