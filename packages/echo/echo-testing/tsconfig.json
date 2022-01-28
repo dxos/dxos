@@ -15,6 +15,12 @@
     },
     {
       "path": "../object-model"
+    },
+    {
+      "path": "../object-model"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
     }
   ]
 }
