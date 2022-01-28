@@ -97,7 +97,7 @@ export const Main = () => {
         <Toolbar>
           <WorkIcon className={classes.logo} />
           <Typography variant="h6" noWrap>
-            {client.config.get('app.title', 'DXOS')}
+            {client.config.get('runtime.props.title', 'DXOS')}
           </Typography>
           <div className={classes.flexGrow} />
           <Tooltip title={profile.username}>
