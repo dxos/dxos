@@ -56,9 +56,9 @@ export function assertValidSecretKey (key?: SecretKey, keyType?: KeyType): asser
  */
 // TODO(burdon): Move to dxos/crypto.
 export function assertValidKeyPair (keyRecord: any): asserts keyRecord is KeyPair {
-  const { publicKey, secretKey } = keyRecord;
-  assertValidPublicKey(publicKey);
-  assertValidSecretKey(secretKey);
+  const { publicKey, secretKey, type } = keyRecord;
+  assertValidPublicKey(publicKey, type);
+  assertValidSecretKey(secretKey, type);
 }
 
 /**

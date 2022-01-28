@@ -194,7 +194,8 @@ it('Attempt to add a badly formatted key', async () => {
   const good = createKeyPair();
   const bad = {
     publicKey: keyToString(good.publicKey),
-    secretKey: keyToString(good.secretKey)
+    secretKey: keyToString(good.secretKey),
+    type: KeyType.IDENTITY
   };
 
   await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
@@ -225,7 +226,8 @@ it('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
   const good = createKeyPair();
   const bad = {
     secretKey: good.publicKey,
-    publicKey: good.secretKey
+    publicKey: good.secretKey,
+    type: KeyType.IDENTITY
   };
 
   await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
@@ -235,7 +237,8 @@ it('Attempt to add secretKey as a publicKey', async () => {
   const { secretKey } = createKeyPair();
   const keyring = new Keyring();
   const bad = {
-    publicKey: secretKey
+    publicKey: secretKey,
+    type: KeyType.IDENTITY
   };
 
   await expect(() => keyring.addPublicKey(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
