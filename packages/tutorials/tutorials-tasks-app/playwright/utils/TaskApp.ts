@@ -93,9 +93,10 @@ export class TaskApp extends AppSimulator {
 
     expect(taskCheckbox).toBeTruthy();
 
-    const result = await taskCheckbox?.isChecked();
-
-    expectedResult ? expect(result).toBeTruthy() : expect(result).toBeFalsy();
+    await waitForExpect(async () => {
+      const result = await taskCheckbox?.isChecked();
+      expectedResult ? expect(result).toBeTruthy() : expect(result).toBeFalsy();
+    });
   }
 
   async removeTask(taskName: string) {
