@@ -19,7 +19,8 @@
     "src/**/*",
     "browser-tests",
     "tools/**/*",
-    "browser-mocha"
+    "browser-mocha",
+    "stories"
   ],
   "references": [
     {

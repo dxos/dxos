@@ -8,9 +8,6 @@ jobs:
   publish:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
@@ -20,10 +17,7 @@ jobs:
         clean: false
     - name: Check, install and build
       run: |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-
-        npm install -g @microsoft/rush pnpm
-        sudo ./common/scripts/install-dependencies.sh
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
         # Install dependencies
         echo "::group::Install"
@@ -34,15 +28,13 @@ jobs:
         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
     - name: Publish latest to NPM
       run:  |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-        npm install -g @microsoft/rush pnpm
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
         # Publish under "latest" tag
         node common/scripts/install-run-rush.js publish --publish --include-all --tag latest
     - name: Publish dev to NPM
       run:  |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-        npm install -g @microsoft/rush pnpm
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
         git config --global user.email "ci@dxos.org"
         git config --global user.name "ci"
@@ -67,19 +59,13 @@ jobs:
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       DX_PROFILE: ci
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
     - name: Check, install and build
       run: |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-
-        npm install -g @microsoft/rush pnpm
-        sudo ./common/scripts/install-dependencies.sh
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
         # Install dependencies
         echo "::group::Install"
@@ -91,15 +77,15 @@ jobs:
     - name: Initialize CLI
       run: |
         set -e
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
         npm install -g yarn
 
-         yarn global add @dxos/cli@v2.12.0
+        yarn global add @dxos/cli@v2.12.0
         yarn global add @dxos/cli-dxns@v2.12.0
         yarn global add @dxos/cli-app@v2.12.0
     - name: Publish apps
       run:  |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
         export PATH="$PATH:$(yarn global bin)"
         ./common/scripts/publish-apps.sh
   publish-extension:
@@ -116,10 +102,7 @@ jobs:
         fetch-depth: 0
     - name: Check, install and build
       run: |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-
-        npm install -g @microsoft/rush pnpm
-        sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
         # Install dependencies
         echo "::group::Install"
