@@ -5,7 +5,7 @@
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
 
@@ -43,7 +43,7 @@ export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): F
     write: async message => {
       await pify(strem.write.bind(strem))(message);
       return {
-        feedKey: PublicKey.from(Buffer.alloc(PublicKey.LENGTH)),
+        feedKey: PublicKey.from(Buffer.alloc(PUBLIC_KEY_LENGTH)),
         seq: 0
       };
     }
