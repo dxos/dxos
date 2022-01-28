@@ -383,5 +383,5 @@ it('Storing DXNS keys', async () => {
     secretKey,
     publicKey,
     type: KeyType.DXNS
-  })
-})
+  });
+});
