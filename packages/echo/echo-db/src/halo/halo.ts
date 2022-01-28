@@ -29,6 +29,11 @@ export interface HaloConfiguration {
   metadataStore: MetadataStore
 }
 
+export interface ProfileInfo {
+  publicKey: PublicKey,
+  username: string | undefined
+}
+
 /**
  * Interface to manage user's identity and devices.
  */
@@ -229,12 +234,11 @@ export class HALO {
   /**
    * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
    * If not public and secret key are provided it relies on keyring to contain an identity key.
-   * @returns {ProfileInfo} User profile info.
+   * @returns User profile info.
    */
   // TODO(burdon): Breaks if profile already exists.
-  // TODO(burdon): ProfileInfo is not imported or defined.
   @synchronized
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}) {
+  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<ProfileInfo> {
     if (this.getProfile()) {
       throw new Error('Profile already exists.');
     }
@@ -254,27 +258,16 @@ export class HALO {
   }
 
   /**
-   * @returns true if the profile exists.
-   * @deprecated Use getProfile.
+   * @returns User profile info.
    */
-  // TODO(burdon): Remove?
-  hasProfile () {
-    return this.identityKey;
-  }
-
-  /**
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Type definition.
   // TODO(burdon): Change to property (currently returns a new object each time).
-  getProfile () {
+  getProfile (): ProfileInfo | undefined {
     if (!this.identityKey) {
       return;
     }
 
     return {
       username: this.identityDisplayName,
-      // TODO(burdon): Why convert to string?
       publicKey: this.identityKey.publicKey
     };
   }
