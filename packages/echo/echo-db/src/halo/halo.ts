@@ -172,7 +172,6 @@ export class HALO {
 
   /**
    * Creates the initial HALO party.
-   * @param displayName
    */
   // TODO(burdon): Return Halo API object?
   async create (displayName?: string) {
