@@ -10,7 +10,7 @@ import { createKeyPair } from '@dxos/crypto';
 
 describe('Client - persistent', () => {
   it('reset storage', async function () {
-    const client = new Client({ system: { storage: { persistent: true } } });
+    const client = new Client();
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
       ...createKeyPair(),
@@ -27,7 +27,16 @@ describe('Client - persistent', () => {
     // In a browser this would be modeled as a page reload.
     // TODO(marik-d): Second client fails to initialize in firefox.
     if (browserMocha.context.browser !== 'firefox') {
-      const client2 = new Client({ system: { storage: { persistent: true } } });
+      const client2 = new Client({
+        version: 1,
+        runtime: {
+          client: {
+            storage: {
+              persistent: true
+            }
+          }
+        }
+      });
 
       await client2.initialize();
       await client2.halo.createProfile({

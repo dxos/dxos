@@ -72,6 +72,18 @@ message Build {
 
 message Runtime {
   message Client {
+    /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy. Defaults to AUTOMATIC.
+    enum Mode {
+      /// Connects to the browser wallet if avialable, otherwise runs services in the local mode.
+      AUTOMATIC = 0;
+
+      /// Run services in the local mode.
+      LOCAL = 1;
+
+      /// Connect to the browser wallet or to the remote services through the RPC port.
+      REMOTE = 2;
+    }
+
     message Storage {
       enum StorageDriver {
         RAM = 0;
@@ -102,8 +114,7 @@ message Runtime {
     /// Milliseconds
     int32 invitation_expiration = 5;
 
-    /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy.
-    bool remote = 6;
+    Mode mode = 6;
   }
 
   message App {
@@ -210,6 +221,10 @@ message Runtime {
       string npm_access_token = 5;
     }
 
+    message BotFactoryClient {
+      string topic = 1;
+    }
+
     Kube kube = 1;
     AppServer app = 2;
     Dxns dxns = 3;
@@ -217,6 +232,7 @@ message Runtime {
     Signal signal = 5;
     repeated Ice ice = 6;
     Machine machine = 7;
+    BotFactoryClient bot = 8;
   }
 
   Client client = 1;

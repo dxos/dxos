@@ -20,8 +20,8 @@ export class ClientServiceHost implements ClientServiceProvider {
     private readonly _config: Config
   ) {
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
-      this._config.get('system.storage', {})!,
-      this._config.get('system.enableSnapshots', false)
+      this._config.get('runtime.client.storage', {})!,
+      this._config.get('runtime.client.enableSnapshots', false)
     );
 
     this._echo = new ECHO({
@@ -30,12 +30,12 @@ export class ClientServiceHost implements ClientServiceProvider {
       snapshotStorage,
       metadataStorage,
       networkManagerOptions: {
-        signal: this._config.get('services.signal.server') ? [this._config.get('services.signal.server')!] : undefined,
-        ice: this._config.get('services.ice'),
+        signal: this._config.get('runtime.services.signal.server') ? [this._config.get('runtime.services.signal.server')!] : undefined,
+        ice: this._config.get('runtime.services.ice'),
         log: true
       },
-      snapshots: this._config.get('system.enableSnapshots', false),
-      snapshotInterval: this._config.get('system.snapshotInterval')
+      snapshots: this._config.get('runtime.client.enableSnapshots', false),
+      snapshotInterval: this._config.get('runtime.client.snapshotInterval')
     });
 
     this.services = {

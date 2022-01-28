@@ -7,7 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { ConfigObject } from '@dxos/config';
+import { ConfigV1Object } from '@dxos/config';
 
 import { ClientProvider } from '../../containers';
 import { useConfig } from './useConfig';
@@ -29,10 +29,13 @@ describe('Config hook', () => {
   });
 
   it('should return custom client config when used properly in a context', () => {
-    const config: ConfigObject = {
-      system: {
-        storage: {
-          persistent: false
+    const config: ConfigV1Object = {
+      version: 1,
+      runtime: {
+        client: {
+          storage: {
+            persistent: false
+          }
         }
       }
     };
@@ -40,6 +43,6 @@ describe('Config hook', () => {
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(result.error?.message).not.toBeDefined();
-    expect(result.current.get('system.storage')).toEqual(config.system?.storage);
+    expect(result.current.get('runtime.client.storage')).toEqual(config.runtime?.client?.storage);
   });
 });

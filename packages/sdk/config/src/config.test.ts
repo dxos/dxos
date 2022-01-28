@@ -15,7 +15,7 @@ test('Empty config', () => {
   const config = new Config({});
 
   expect(config.values).toBeTruthy();
-  expect(config.get('app.title')).toBeUndefined();
+  expect(config.get('runtime.props.title')).toBeUndefined();
 });
 
 test('Basic config', () => {
@@ -124,10 +124,13 @@ test('mapToKeyValuesping', () => {
 
 test('string values for enums are parsed', () => {
   const config = new Config({
-    system: {
-      mode: 'automatic'
+    version: 1,
+    runtime: {
+      client: {
+        mode: 'local'
+      }
     }
   });
 
-  expect(config.get('system.mode')).toEqual(System.Mode.AUTOMATIC);
+  expect(config.get('runtime.client.mode')).toEqual(System.Mode.LOCAL);
 });
