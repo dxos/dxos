@@ -373,3 +373,15 @@ it('Authenticate flow for Kube/Keyhole authentication', async () => {
   expect(Buffer.from(signedCredential.signed.nonce).toString()).toBe(Buffer.from('challenge token').toString());
   expect(kubeKeyring.verify(signedCredential)).toBe(true);
 });
+
+it('Storing DXNS keys', async () => {
+  const keyring = new Keyring();
+  const secretKey = Buffer.from('sock force bubble lock tank staff cycle extra tobacco super sniff bachelor');
+  const publicKey = PublicKey.fromHex('ba44cf74f42e924d864f0aa362f6ae3788ba8500d1245fa3c863113d2f001d37');
+
+  await keyring.addKeyRecord({
+    secretKey,
+    publicKey,
+    type: KeyType.DXNS
+  })
+})

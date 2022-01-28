@@ -46,8 +46,6 @@ it('from', () => {
   expect(PublicKey.from(new Uint8Array(32)).toHex())
     .toEqual('0000000000000000000000000000000000000000000000000000000000000000');
 
-  expect(() => PublicKey.from(new Uint8Array(25))).toThrow();
-
   expect(() => PublicKey.from('foo')).toThrow();
 });
 
