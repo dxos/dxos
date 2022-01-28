@@ -16,8 +16,8 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "test": "toolchain test",
     "lint": "toolchain lint",
+    "test": "toolchain test",
     "update:saved-state": "ts-node --transpile-only ./scripts/update-saved-state.ts"
   },
   "dependencies": {
@@ -28,23 +28,23 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
+    "@dxos/object-model": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
     "@types/lodash": "^4.14.175",
-    "expect": "~27.0.2",
     "@types/mocha": "~8.2.2",
-    "@dxos/random-access-multi-storage": "workspace:*",
-    "jsondown": "dxos/jsondown#main",
     "abstract-leveldown": "~7.0.0",
-    "@dxos/object-model": "workspace:*",
+    "expect": "~27.0.2",
+    "jsondown": "dxos/jsondown#main",
     "ts-node": "^9.1.1",
     "typescript": "^4.5.2"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

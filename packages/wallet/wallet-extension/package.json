@@ -5,13 +5,13 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
+    "book": "esbuild-server book",
     "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist",
     "build": "toolchain build && node scripts/build.js",
     "build:test": "pnpm run build && pnpm run test",
     "lint": "toolchain lint",
     "test": "pnpm run lint",
-    "test:e2e": "toolchain test",
-    "book": "esbuild-server book"
+    "test:e2e": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/mocha": "~8.2.2",
@@ -57,8 +58,7 @@
     "rmdir": "~1.2.0",
     "typescript": "^4.5.2",
     "uuid": "^8.3.2",
-    "webextension-polyfill-ts": "~0.25.0",
-    "@dxos/esbuild-server": "~1.7.4"
+    "webextension-polyfill-ts": "~0.25.0"
   },
   "toolchain": {
     "testingFramework": "mocha"
