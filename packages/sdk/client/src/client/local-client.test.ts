@@ -54,7 +54,7 @@ describe('Client', () => {
       {
         const client = new Client(config);
         await client.initialize();
-        await waitForCondition(() => client.halo.hasProfile());
+        await waitForCondition(() => !!client.halo.profile);
 
         expect(client.halo.profile).toBeDefined();
         await client.destroy();

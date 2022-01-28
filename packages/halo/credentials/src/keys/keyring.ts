@@ -353,7 +353,7 @@ export class Keyring implements Signer {
    */
   @meter
   async addPublicKey (keyRecord: Omit<KeyRecord, 'key' | 'secretKey'>) {
-    assertValidPublicKey(keyRecord.publicKey);
+    assertValidPublicKey(keyRecord.publicKey, keyRecord.type);
     assertNoSecrets(keyRecord);
 
     return this._addKeyRecord(keyRecord);
@@ -415,7 +415,7 @@ export class Keyring implements Signer {
   @meter
   async updateKey (keyRecord: KeyRecord) {
     assert(keyRecord);
-    assertValidPublicKey(keyRecord.publicKey);
+    assertValidPublicKey(keyRecord.publicKey, keyRecord.type);
 
     // Do not allow updating/changing secrets.
     const cleaned = stripSecrets(keyRecord);
@@ -439,7 +439,7 @@ export class Keyring implements Signer {
   @meter
   async deleteSecretKey (keyRecord: KeyRecord) {
     assert(keyRecord);
-    assertValidPublicKey(keyRecord.publicKey);
+    assertValidPublicKey(keyRecord.publicKey, keyRecord.type);
 
     const existing = this.getFullKey(keyRecord.publicKey);
     if (existing) {
@@ -452,17 +452,15 @@ export class Keyring implements Signer {
 
   /**
    * Returns true if the stored KeyRecord has a secretKey available.
-   * @param keyRecord
-   * @returns {boolean}
    */
   @meter
-  hasSecretKey (keyRecord: KeyRecord | KeyChain) {
+  hasSecretKey (keyRecord: KeyRecord | KeyChain): boolean {
     assert(keyRecord);
     const { publicKey } = keyRecord;
     assertValidPublicKey(publicKey);
 
     const existing = this.getFullKey(publicKey);
-    return existing && Buffer.isBuffer(existing.secretKey);
+    return existing ? Buffer.isBuffer(existing.secretKey) : false;
   }
 
   /**

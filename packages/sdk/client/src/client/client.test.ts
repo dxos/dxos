@@ -61,10 +61,10 @@ describe('Client', () => {
         afterTest(() => client.destroy());
 
         await client.halo.createProfile({ username: 'test-user' });
-        expect(client.halo.hasProfile()).toBeTruthy();
+        expect(!!client.halo.profile).toBeTruthy();
 
         await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
-        expect(client.halo.hasProfile()).toBeTruthy();
+        expect(!!client.halo.profile).toBeTruthy();
       });
 
       test('Recovers a profile with a seed phrase', async () => {
@@ -87,7 +87,7 @@ describe('Client', () => {
         afterTest(() => recoveredClient.destroy());
 
         await recoveredClient.halo.recoverProfile(seedPhrase);
-        await waitForCondition(() => !!recoveredClient.halo.hasProfile(), 2000);
+        await waitForCondition(() => !!recoveredClient.halo.profile, 2000);
 
         expect(recoveredClient.halo.profile).toBeDefined();
         expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey);
@@ -300,7 +300,7 @@ describe('Client', () => {
     {
       const client = new Client(config);
       await client.initialize();
-      await waitForCondition(() => client.halo.hasProfile());
+      await waitForCondition(() => !!client.halo.profile);
       await sleep(10); // Make sure all events were processed.
 
       client.registerModel(TestModel);

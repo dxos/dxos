@@ -39,17 +39,6 @@ export class HaloProxy extends InvitationProxy {
   }
 
   /**
-   * @deprecated Use `profile` instead.
-  */
-  getProfile (): Profile | undefined {
-    return this._profile;
-  }
-
-  hasProfile (): boolean {
-    return !!this.profile;
-  }
-
-  /**
    * Reset the identity and delete all key records.
   */
   async reset () {
@@ -65,7 +54,7 @@ export class HaloProxy extends InvitationProxy {
   /**
    * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
    * If not public and secret key are provided it relies on keyring to contain an identity key.
-   * @returns {ProfileInfo} User profile info.
+   * @returns User profile info.
    */
   async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
     this._profile = await this._serviceProvider.services.ProfileService.CreateProfile({ publicKey, secretKey, username });

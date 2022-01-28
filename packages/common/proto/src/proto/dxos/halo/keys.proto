@@ -18,6 +18,7 @@ enum KeyType {
   DEVICE = 2;
   PARTY = 3;
   FEED = 4;
+  DXNS = 5;
 }
 
 message PubKey {
