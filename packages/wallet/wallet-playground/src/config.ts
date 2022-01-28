@@ -3,8 +3,9 @@
 //
 
 import { Config, Envs, Defaults, Dynamics } from '@dxos/config';
+import { ConfigProvider } from '@dxos/react-client';
 
-export const configProvider = async () => new Config(
+export const configProvider: ConfigProvider = async () => new Config(
   await Dynamics(),
   Defaults(),
   Envs()

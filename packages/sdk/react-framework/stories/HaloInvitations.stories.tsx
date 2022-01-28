@@ -110,8 +110,11 @@ export const Primary = () => {
 
 export const Remote = () => {
   const remoteConfig: ConfigProvider = {
-    system: {
-      mode: defs.System.Mode.REMOTE
+    version: 1,
+    runtime: {
+      client: {
+        mode: defs.System.Mode.REMOTE
+      }
     }
   };
 

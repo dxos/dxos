@@ -18,7 +18,7 @@ export const useBotFactoryClient = (): BotFactoryClient | undefined => {
 
   useEffect(() => {
     const botFactoryClient = new BotFactoryClient(client.echo.networkManager);
-    const topic = config.get('services.bot.topic') ??
+    const topic = config.get('runtime.services.bot.topic') ??
       raise(new Error('Bot factory topic is not provided'));
     setImmediate(async () => {
       await botFactoryClient.start(PublicKey.from(topic));

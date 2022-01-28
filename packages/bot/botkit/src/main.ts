@@ -21,7 +21,7 @@ const main = async () => {
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
 
-  const dxnsServer = config.get('services.dxns.server');
+  const dxnsServer = config.get('runtime.services.dxns.server');
   let contentResolver: ContentResolver | undefined;
   if (dxnsServer) {
     const apiPromise = await createApiPromise(dxnsServer);
@@ -29,7 +29,7 @@ const main = async () => {
     contentResolver = new DXNSContentResolver(registry);
   }
 
-  const ipfsGateway = config.get('services.ipfs.gateway');
+  const ipfsGateway = config.get('runtime.services.ipfs.gateway');
   let contentLoader: ContentLoader | undefined;
   if (ipfsGateway) {
     contentLoader = new IPFSContentLoader(ipfsGateway);
@@ -42,12 +42,12 @@ const main = async () => {
     contentLoader
   });
 
-  const signal = config.get('services.signal.server');
+  const signal = config.get('runtime.services.signal.server');
   assert(signal, 'Signal server must be provided');
   const networkManager = new NetworkManager({
     signal: [signal]
   });
-  const topicString = config.get('services.bot.topic');
+  const topicString = config.get('runtime.services.bot.topic');
   assert(topicString, 'Topic must be provided');
 
   const topic = PublicKey.from(topicString);
