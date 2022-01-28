@@ -28,7 +28,7 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test'
     });
 
-    const profile = client.halo.getProfile();
+    const profile = client.halo.profile;
     expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
