@@ -4,7 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { RegistryTypeRecord, MemoryRegistryClient } from '@dxos/registry-client';
+import {
+  RegistryTypeRecord,
+  MemoryRegistryClient,
+} from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';
 
@@ -45,11 +48,17 @@ export const Memory = () => {
   );
 };
 
-export const DXNS = () => {
-  const registry = new MemoryRegistryClient();
+export const Testnet = () => {
+  const config = {
+    services: {
+      dxns: {
+        server: 'wss://enterprise.kube.dxos.network/dxns/ws'
+      }
+    }
+  };
 
   return (
-    <RegistryProvider registry={registry}>
+    <RegistryProvider config={config}>
       <TestApp />
     </RegistryProvider>
   );

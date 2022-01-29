@@ -39,19 +39,77 @@ import {
   UpdateResourceOptions
 } from './types';
 
+// TODO(burdon): Util.
+const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;
+
+/**
+ * NOTE: Recursive.
+ */
+// TODO(burdon): Used?
+export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {
+  if (obj instanceof protobuf.Type) {
+    return [obj.fullName];
+  }
+
+  if (obj instanceof protobuf.Namespace) {
+    const messages: string[] = [];
+    for (const nested of obj.nestedArray) {
+      messages.push(...getSchemaMessages(nested));
+    }
+    return messages;
+  }
+
+  return [];
+}
+
+/**
+ * Main API for DXNS registry.
+ */
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
 
-  private transactionsHandler: ApiTransactionHandler;
+  private _transactionsHandler: ApiTransactionHandler;
 
   constructor (
     private api: ApiPromise,
     private signer?: AddressOrPair
   ) {
-    this.transactionsHandler = new ApiTransactionHandler(api, signer);
+    this._transactionsHandler = new ApiTransactionHandler(api, signer);
   }
 
-  // TODO(burdon): Uppercase CID.
+  //
+  // Domains
+  //
+
+  // TODO(burdon): Rename getDomainKey.
+  async resolveDomainName (name: string): Promise<DomainKey> {
+    return new DomainKey((await this.api.query.registry.domainNames(name)).unwrap().toU8a());
+  }
+
+  async getDomains (): Promise<Domain[]> {
+    const domains = await this.api.query.registry.domains.entries();
+    return domains.map(domainEntry => {
+      const key = new DomainKey(domainEntry[0].args[0].toU8a());
+      const domain = domainEntry[1].unwrap();
+      return {
+        key,
+        name: domain.name.unwrapOr(undefined)?.toString(),
+        owners: domain.owners.map(owner => owner.toHuman())
+      };
+    });
+  }
+
+  async registerDomain (): Promise<DomainKey> {
+    const domainKey = DomainKey.random();
+    await this._transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value));
+    return domainKey;
+  }
+
+  //
+  // Records
+  //
+
+  // TODO(burdon): Rename getRecordCID.
   async resolveRecordCid (dxn: DXN): Promise<CID | undefined> {
     let domainKey: DomainKey | undefined;
     if (dxn.domain) {
@@ -70,78 +128,6 @@ export class RegistryClient implements IRegistryClient {
     }
 
     return new CID(multihash.toU8a());
-  }
-
-  async resolveDomainName (domainName: string): Promise<DomainKey> {
-    return new DomainKey((await this.api.query.registry.domainNames(domainName)).unwrap().toU8a());
-  }
-
-  async getDomains (): Promise<Domain[]> {
-    const domains = await this.api.query.registry.domains.entries();
-    return domains.map(domainEntry => {
-      const key = new DomainKey(domainEntry[0].args[0].toU8a());
-      const domain = domainEntry[1].unwrap();
-      return {
-        key,
-        name: domain.name.unwrapOr(undefined)?.toString(),
-        owners: domain.owners.map(owner => owner.toHuman())
-      };
-    });
-  }
-
-  private async _decodeRecord (cid: CID, record: Record<string, any>): Promise<RegistryRecord | undefined> {
-    const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
-
-    const meta: RecordMetadata = {
-      description: decoded.description,
-      created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
-    };
-
-    if (decoded.payload) {
-      assert(decoded.payload.typeRecord);
-      assert(decoded.payload.data);
-
-      const typeRecord = await this.getRecord(CID.from(decoded.payload.typeRecord));
-      assert(typeRecord, 'Dangling record type reference.');
-      assert(typeRecord.kind === RecordKind.Type, 'Invalid type record kind.');
-
-      return {
-        kind: RecordKind.Data,
-        cid,
-        meta,
-        type: CID.from(decoded.payload.typeRecord),
-        dataRaw: decoded.payload.data,
-        dataSize: decoded.payload.data.length,
-        data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ??
-          raise(new Error(`Type not found: ${cid}`)))
-      };
-    } else if (decoded.type) {
-      const typeMeta: TypeRecordMetadata = {
-        ...meta,
-        sourceIpfsCid: decoded.type.protobufIpfsCid
-      };
-      assert(decoded.type.protobufDefs);
-      assert(decoded.type.messageName);
-
-      return {
-        kind: RecordKind.Type,
-        cid,
-        meta: typeMeta,
-        protobufDefs: decodeProtobuf(decoded.type.protobufDefs),
-        messageName: decoded.type.messageName
-      };
-    } else {
-      throw new Error('Malformed record');
-    }
-  }
-
-  private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
-    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
-    if (!record) {
-      return undefined;
-    }
-
-    return this._decodeRecord(cid, record);
   }
 
   async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
@@ -203,112 +189,15 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async getTypeRecords (query?: IQuery): Promise<RegistryTypeRecord[]> {
-    // TODO(marik-d): Not optimal.
+    // TODO(marik-d): Push to server?
     const records = await this.getRecords();
-
     return records
       .filter((record): record is RegistryTypeRecord => record.kind === RecordKind.Type)
       .filter(record => Filtering.matchRecord(record, query));
   }
 
-  /**
-   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
-   */
-  private async decodeResourceBody (resource: BaseResource): Promise<Omit<Resource, 'id'>> {
-    function decodeMap (map: BTreeMap<Text, Multihash>): Record<string, CID> {
-      return Object.fromEntries(
-        Array.from(map.entries())
-          .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
-      );
-    }
-    const tags = decodeMap(resource.tags ?? new Map());
-
-    // A single record to query for the type.
-    const selectedRecord = tags.latest ?? tags[Object.keys(tags)[0]];
-    let type: CID | undefined;
-    if (selectedRecord !== undefined) {
-      try {
-        const record = await this.getRecord(selectedRecord);
-        assert(record && RegistryRecord.isDataRecord(record));
-        type = record.type;
-      } catch {
-        // TODO(marik-d): This will set type to `undefined` for both type records and when there's an error.
-        //   We should be more precise.
-      }
-    }
-
-    return {
-      tags,
-      versions: decodeMap(resource.versions ?? new Map()),
-      type
-    };
-  }
-
-  /**
-   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
-   */
-  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: Domain[]): Resource['id'] {
-    const name = resourceKeys.args[1].toString();
-    const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
-    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
-    return domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
-  }
-
-  async getResource (id: DXN): Promise<Resource | undefined> {
-    const domainKey = id.domain ? await this.resolveDomainName(id.domain) : id.key;
-    assert(domainKey);
-
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, id.resource))
-      .unwrapOr(undefined);
-    if (resource === undefined) {
-      return undefined;
-    }
-    return {
-      id,
-      ...await this.decodeResourceBody(resource)
-    };
-  }
-
-  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'):
-    Promise<ResourceRecord<R> | undefined> {
-    const resource = await this.getResource(id);
-    if (resource === undefined) {
-      return undefined;
-    }
-
-    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
-    if (cid === undefined) {
-      return undefined;
-    }
-
-    const record = await this.getRecord(cid);
-    if (record === undefined) {
-      return undefined;
-    }
-    return {
-      resource,
-      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
-      record: record as R
-    };
-  }
-
-  async queryResources (query?: IQuery): Promise<Resource[]> {
-    const [resources, domains] = await Promise.all([
-      this.api.query.registry.resources.entries<Option<BaseResource>>(),
-      this.getDomains()
-    ]);
-
-    const result = await Promise.all(resources.map(async resource => ({
-      id: this.decodeResourceId(resource[0], domains),
-      ...await this.decodeResourceBody(resource[1].unwrap())
-    })));
-
-    return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
-  }
-
   async insertRawRecord (data: Uint8Array): Promise<CID> {
-    const events = await this.transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
+    const events = await this._transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
     const event = events.map(e => e.event).find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
     return new CID(event.data[1].toU8a());
@@ -345,10 +234,117 @@ export class RegistryClient implements IRegistryClient {
     return this.insertRawRecord(encoded);
   }
 
-  async registerDomain (): Promise<DomainKey> {
-    const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value));
-    return domainKey;
+  private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
+    if (!record) {
+      return undefined;
+    }
+
+    return this._decodeRecord(cid, record);
+  }
+
+  private async _decodeRecord (cid: CID, record: Record<string, any>): Promise<RegistryRecord | undefined> {
+    const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
+
+    const meta: RecordMetadata = {
+      description: decoded.description,
+      created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
+    };
+
+    if (decoded.payload) {
+      assert(decoded.payload.typeRecord);
+      assert(decoded.payload.data);
+
+      const typeRecord = await this.getRecord(CID.from(decoded.payload.typeRecord));
+      assert(typeRecord, `Dangling record type reference: ${cid}`);
+      assert(typeRecord.kind === RecordKind.Type, `Invalid type record kind: ${cid}`);
+
+      return {
+        kind: RecordKind.Data,
+        cid,
+        meta,
+        type: CID.from(decoded.payload.typeRecord),
+        dataRaw: decoded.payload.data,
+        dataSize: decoded.payload.data.length,
+        data: await decodeExtensionPayload(decoded.payload, async cid => (
+          await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)
+        ))
+      };
+    } else if (decoded.type) {
+      const typeMeta: TypeRecordMetadata = {
+        ...meta,
+        sourceIpfsCid: decoded.type.protobufIpfsCid
+      };
+      assert(decoded.type.protobufDefs);
+      assert(decoded.type.messageName);
+
+      return {
+        kind: RecordKind.Type,
+        cid,
+        meta: typeMeta,
+        protobufDefs: decodeProtobuf(decoded.type.protobufDefs),
+        messageName: decoded.type.messageName
+      };
+    } else {
+      throw new Error(`Invalid record: ${cid}`);
+    }
+  }
+
+  //
+  // Resources
+  //
+
+  async getResource (id: DXN): Promise<Resource | undefined> {
+    const domainKey = id.domain ? await this.resolveDomainName(id.domain) : id.key;
+    assert(domainKey);
+
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, id.resource))
+      .unwrapOr(undefined);
+    if (resource === undefined) {
+      return undefined;
+    }
+    return {
+      id,
+      ...await this._decodeResourceBody(resource)
+    };
+  }
+
+  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'):
+    Promise<ResourceRecord<R> | undefined> {
+    const resource = await this.getResource(id);
+    if (resource === undefined) {
+      return undefined;
+    }
+
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
+    if (cid === undefined) {
+      return undefined;
+    }
+
+    const record = await this.getRecord(cid);
+    if (record === undefined) {
+      return undefined;
+    }
+    return {
+      resource,
+      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
+    };
+  }
+
+  async queryResources (query?: IQuery): Promise<Resource[]> {
+    const [resources, domains] = await Promise.all([
+      this.api.query.registry.resources.entries<Option<BaseResource>>(),
+      this.getDomains()
+    ]);
+
+    const result = await Promise.all(resources.map(async resource => ({
+      id: this._decodeResourceId(resource[0], domains),
+      ...await this._decodeResourceBody(resource[1].unwrap())
+    })));
+
+    return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }
 
   async updateResource (
@@ -356,7 +352,7 @@ export class RegistryClient implements IRegistryClient {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this.transactionsHandler.sendTransaction(
+    await this._transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(
         domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
@@ -365,25 +361,51 @@ export class RegistryClient implements IRegistryClient {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this.transactionsHandler.sendTransaction(
+    await this._transactionsHandler.sendTransaction(
       this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
   }
-}
 
-export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {
-  if (obj instanceof protobuf.Type) {
-    return [obj.fullName];
+  /**
+   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
+   */
+  private _decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: Domain[]): Resource['id'] {
+    const name = resourceKeys.args[1].toString();
+    const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
+    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
+    return domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
   }
 
-  if (obj instanceof protobuf.Namespace) {
-    const messages: string[] = [];
-    for (const nested of obj.nestedArray) {
-      messages.push(...getSchemaMessages(nested));
+  /**
+   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
+   */
+  private async _decodeResourceBody (resource: BaseResource): Promise<Omit<Resource, 'id'>> {
+    function decodeMap (map: BTreeMap<Text, Multihash>): Record<string, CID> {
+      return Object.fromEntries(
+        Array.from(map.entries())
+          .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
+      );
     }
-    return messages;
+
+    const tags = decodeMap(resource.tags ?? new Map());
+
+    // A single record to query for the type.
+    const selectedRecord = tags.latest ?? tags[Object.keys(tags)[0]];
+    let type: CID | undefined;
+    if (selectedRecord !== undefined) {
+      try {
+        const record = await this.getRecord(selectedRecord);
+        assert(record && RegistryRecord.isDataRecord(record));
+        type = record.type;
+      } catch {
+        // TODO(marik-d): This will set type to `undefined` for both type records and when there's an error.
+        //   We should be more precise.
+      }
+    }
+
+    return {
+      tags,
+      versions: decodeMap(resource.versions ?? new Map()),
+      type
+    };
   }
-
-  return [];
 }
-
-const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;

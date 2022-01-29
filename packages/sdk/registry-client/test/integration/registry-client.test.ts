@@ -34,8 +34,8 @@ describe('Registry Client', () => {
   beforeEach(async () => {
     const keyring = await createKeyring();
     const config = { uri: '//Alice' };
-    keypair = keyring.addFromUri(config.uri);
     apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
+    keypair = keyring.addFromUri(config.uri);
     registryApi = new RegistryClient(apiPromise, keypair);
   });
 
