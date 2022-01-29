@@ -10,16 +10,14 @@ const styles = css`
   right: 0;
 `;
 
-// TODO(burdon): Create esbuild-server lib. (@dxos/esbuild-book-knobs); create lerna project.
-
 type SelectMap = { [index: string]: any }
 
-type NumberRange = { min: number, max: number, inc?: number }
+type NumberRange = { min: number, max: number, step?: number }
 
-function* range (min: number, max: number, inc: number = 1) {
+function* range (min: number, max: number, step: number = 1) {
   yield min;
   if (min >= max) return;
-  yield* range(min + inc, max, inc);
+  yield* range(parseFloat(Number(min + step).toPrecision(10)), max, step);
 }
 
 interface Button {
@@ -30,6 +28,7 @@ interface Button {
 interface Select {
   label: string
   values: SelectMap
+  defaultValue: any
   onChange: (value: any) => void
 }
 
@@ -93,34 +92,38 @@ export const Knobs = forwardRef<HTMLDivElement, KnobsProps>(({
           }
 
           case 'select': {
-            const { label, values, onChange } = knob as Select;
+            const { label, values, defaultValue, onChange } = knob as Select;
             return (
-              <select key={i} onChange={(event) => {
-                onChange(event.target.value !== '' ? values[event.target.value] : undefined);
-              }}>
-                <option value=''>{label.toUpperCase()}</option>
-                {Object.keys(values).map(key => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
-              </select>
+              <div key={i}>
+                <label>{label.toUpperCase()}</label>
+                <select value={defaultValue} onChange={(event) => {
+                  onChange(event.target.value !== '' ? values[event.target.value] : undefined);
+                }}>
+                  {Object.keys(values).map(key => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )
           }
 
           case 'number': {
-            const { label, range: { min, max, inc = 1 }, defaultValue, onChange } = knob as Number;
+            const { label, range: { min, max, step = 1 }, defaultValue, onChange } = knob as Number;
             return (
-              <select key={i} onChange={(event) => {
-                onChange(event.target.value !== '' ? parseInt(event.target.value) : defaultValue);
-              }}>
-                <option value=''>{label.toUpperCase()}</option>
-                {[...range(min, max, inc)].map(value => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
+              <div key={i}>
+                <label>{label.toUpperCase()}</label>
+                <select value={defaultValue} onChange={(event) => {
+                  onChange(event.target.value !== '' ? parseInt(event.target.value) : defaultValue);
+                }}>
+                  {[...range(min, max, step)].map(value => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )
           }
         }
@@ -150,11 +153,11 @@ export const useButton = (label: string, onClick: () => void) => {
   }, []);
 };
 
-export const useSelect = (label: string, values: SelectMap) => {
+export const useSelect = (label: string, values: SelectMap, defaultValue = undefined) => {
   const [value, setValue] = useState(values[Object.keys(values)[0]]);
   const controller = useContext(KnobContext);
   useEffect(() => {
-    controller.addKnob('select', { label, values, onChange: value => setValue(value)} as Select)
+    controller.addKnob('select', { label, values, defaultValue, onChange: value => setValue(value)} as Select)
   }, []);
 
   return value;

@@ -278,7 +278,7 @@ export const Primary = () => {
   const Knobs = useKnobs();
 
   const styles = useSelect('style', globeStyles);
-  const tilt = useNumber('tilt', { min: -45, max: 45, inc: 5 }, 25);
+  const tilt = useNumber('tilt', { min: -45, max: 45, step: 5 }, 25);
 
   useEffect(() => {
     stopSpinner();

@@ -47,6 +47,7 @@
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
+    "@dxos/gem-core": "^2.0.0-beta.41",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.7.1",
     "@types/d3": "^7.1.0",

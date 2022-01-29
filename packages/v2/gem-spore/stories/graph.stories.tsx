@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
 import { FullScreen, Scale, SvgContainer, useStateRef } from '@dxos/gem-core';

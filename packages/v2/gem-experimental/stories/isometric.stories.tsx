@@ -6,9 +6,6 @@ import * as d3 from 'd3';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { makeStyles } from '@material-ui/core/styles';
-import grey from '@material-ui/core/colors/grey';
-
 import { FullScreen } from '@dxos/gem-core';
 
 import { Isometric, drawCube } from '../src';
@@ -17,10 +14,13 @@ export default {
   title: 'Isometric'
 };
 
-const useStyles = makeStyles({
-  root: {},
-  canvas: {}
-});
+const grey = {
+  50: '#EEE',
+  100: '#DDD',
+  200: '#CCC',
+  300: '#BBB',
+  400: '#AAA'
+};
 
 const canvasStyles = {
   cube: {
@@ -120,7 +120,6 @@ const paint = (canvas, grid, generator) => {
 };
 
 const Component = () => {
-  const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const canvas = useRef(null);
   const [grid] = useState(new Dataset());
@@ -167,9 +166,9 @@ const Component = () => {
   }, [canvas.current]);
 
   return (
-    <div className={classes.root}>
+    <div>
       {resizeListener}
-      <canvas className={classes.canvas} ref={canvas} width={width} height={height} />
+      <canvas ref={canvas} width={width} height={height} />
     </div>
   )
 };

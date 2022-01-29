@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ForceGraph3D } from 'react-force-graph';
 import faker from 'faker';
 
-import { createGraph } from '@dxos/gem-core';
+import { createGraph } from '@dxos/gem-spore';
 
 export default {
   title: 'ForceGraph'

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import * as THREE from 'three';
-
-import { makeStyles } from '@material-ui/core/styles';
 
 import { THREEx } from '../lib';
 
@@ -39,18 +38,17 @@ const config = {
   }
 };
 
-const useStyles = makeStyles({
+const styles = css`
   root: {
     display: 'flex',
     flex: 1
   }
-});
+`;
 
 // https://codepen.io/marctannous/pen/RNGjmz
 // https://threejs.org/examples/?q=ocean#webgl_shaders_ocean2
 
 export const Waves = () => {
-  const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
   const [renderer] = useState(() => new THREE.WebGLRenderer({ antialias: true }));
   const div = useRef<HTMLDivElement>();
@@ -115,7 +113,7 @@ export const Waves = () => {
   }, []);
 
   return (
-    <div ref={div} className={classes.root}>
+    <div ref={div} className={styles}>
       {resizeListener}
     </div>
   );

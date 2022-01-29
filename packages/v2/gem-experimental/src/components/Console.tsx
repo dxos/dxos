@@ -2,28 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import faker from 'faker';
 import React, { useState } from 'react';
 import ReactConsole from 'simple-react-console';
 
-import { makeStyles } from '@material-ui/core/styles';
-
 const lineHeight = 22;
 
-const useStyles = makeStyles({
-  root: {
-    '& div.container': {
-      fontFamily: 'monospace',
-      fontSize: 18,
-      lineHeight: 1,
-      height: lineHeight * 5,
-      padding: 0
-    }
+const styles = css`
+  '& div.container': {
+    fontFamily: 'monospace',
+    fontSize: 18,
+    lineHeight: 1,
+    height: lineHeight * 5,
+    padding: 0
   }
-});
+`;
 
 const Console = () => {
-  const classes = useStyles();
   const [output, setOutput] = useState('Initializing...');
 
   // TODO(burdon): Pluggable.
@@ -38,7 +34,7 @@ const Console = () => {
 
   // https://pixeledpie.com/simple-react-console/index.html
   return (
-    <div className={classes.root}>
+    <div className={styles}>
       <ReactConsole
         passive={true}
         scroll={false}

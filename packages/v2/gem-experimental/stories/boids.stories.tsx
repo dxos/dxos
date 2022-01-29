@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import debug from 'debug';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, number, select } from '@storybook/addon-knobs';
 
+import { useKnobs, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
 import { FullScreen } from '@dxos/gem-core';
 
 import { Vec2 } from './util/vec2';
@@ -19,11 +20,29 @@ debug.enable('gem:boids:*');
 // https://bl.ocks.org/veltman/995d3a677418100ac43877f3ed1cc728
 
 export default {
-  title: 'Boids',
-  decorators: [withKnobs]
+  title: 'Boids'
 };
 
-// TODO(burdon): Move to knobs
+const styles = {
+  knobs: css`
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    bottom: 0;
+    background-color: white;
+    padding: 4px;
+    > div {
+      display: flex;
+    }
+    label {
+      width: 120px;
+    }
+    select {
+      width: 120px;
+      outline: none;
+    }
+  `
+};
 
 let flockmateRadius = 60;
 let separationDistance = 30;
@@ -267,17 +286,18 @@ export const Flock = () => {
   const [boids, setBoids] = useState([]);
 
   // Knobs.
-  const num = number('Count', 100, { range: true, min: 1, max: 1000 });
-  const numObstacles = number('Obstacles', 5, { range: true, min: 1, max: 10 });
-  const startingPosition = select('Start', map(['Random', 'Circle', 'CircleRandom', 'Sine', 'Phyllotaxis']), 'Random');
-  const coloring = select('Coloring', map(['Movement', 'Grey', 'Rainbow']), 'Movement');
-  const radius = number('Size', 2, { range: true, min: 1, max: 20, step: .5 });
-  const trail = number('Trail', 10, { range: true, min: 0, max: 20 });
-  const maxVelocity = number('Velocity', 2, { range: true, min: 1, max: 5, step: .1 });
-  const alignment = number('Alignment', 3, { range: true, min: 0, max: 10, step: .1 });
-  const cohesion = number('Cohension', 3, { range: true, min: 0, max: 10, step: .1 });
-  const separation = number('Separation', 3, { range: true, min: 0, max: 10, step: .1 });
-  const avoidance = number('Avoidance', 3, { range: true, min: 0, max: 10, step: .1 });
+  const Knobs = useKnobs();
+  const num = useNumber('Count', { min: 1, max: 1000 }, 100);
+  const numObstacles = useNumber('Obstacles', { min: 1, max: 10 }, 5);
+  const startingPosition = useSelect('Start', map(['Random', 'Circle', 'CircleRandom', 'Sine', 'Phyllotaxis']));
+  const coloring = useSelect('Coloring', map(['Movement', 'Grey', 'Rainbow']));
+  const radius = useNumber('Size', { min: 1, max: 20, step: .5 }, 2);
+  const trail = useNumber('Trail', { min: 0, max: 20 }, 10);
+  const maxVelocity = useNumber('Velocity', { min: 1, max: 5, step: .1 }, 2);
+  const alignment = useNumber('Alignment', { min: 0, max: 10, step: .1 }, 3);
+  const cohesion = useNumber('Cohension', { min: 0, max: 10, step: .1 }, 3);
+  const separation = useNumber('Separation', { min: 0, max: 10, step: .1 }, 3);
+  const avoidance = useNumber('Avoidance', { min: 0, max: 10, step: .1 }, 3);
 
   useEffect(() => {
     if (width && height) {
@@ -315,6 +335,7 @@ export const Flock = () => {
       {resizeListener}
       <canvas ref={canvas} width={width} height={height} />
       <canvas ref={offscreenCanvas} width={width} height={height} style={{ display: 'none' }} />
+      <Knobs className={styles.knobs} />
     </FullScreen>
   );
 };

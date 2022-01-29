@@ -250,7 +250,7 @@ export const Kube = ({ config = {} }) => {
     kube.init(container.current).start();
     setKube(kube);
 
-    return () => kube.stop();
+    return () => void kube.stop();
   }, []);
 
   useEffect(() => {

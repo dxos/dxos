@@ -36,6 +36,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "assert": "^2.0.0",
     "csstype": "^3.0.10",
     "d3": "^7.2.1",
     "debug": "^4.1.1",
