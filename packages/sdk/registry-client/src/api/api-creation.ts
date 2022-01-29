@@ -9,12 +9,11 @@ import jsonrpc from '@polkadot/types/interfaces/jsonrpc';
 import { RegistryTypes } from '@polkadot/types/types';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 
-import * as definitions from './interfaces/definitions';
+import * as definitions from '../interfaces';
 
-const registryTypes: RegistryTypes =
-    Object
-      .values(definitions)
-      .reduce((res: any, { types }: any): object => ({ ...res, ...types }), {}) as unknown as RegistryTypes;
+const registryTypes: RegistryTypes = Object
+  .values(definitions)
+  .reduce((res: any, { types }: any): object => ({ ...res, ...types }), {}) as unknown as RegistryTypes;
 
 export async function createKeyring (options?: KeyringOptions): Promise<Keyring> {
   // The keyring need to be created AFTER api is created or we need to wait for WASM init.
@@ -24,8 +23,7 @@ export async function createKeyring (options?: KeyringOptions): Promise<Keyring>
 }
 
 /**
- * Creates an API primitive that holds connection, transaction and querying of substrate node.
- *
+ * Creates an API primitive that holds the connection, transaction and querying of substrate node.
  * @param endpoint URI of the substrate node.
  */
 export async function createApiPromise (endpoint: string) {

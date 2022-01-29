@@ -13,17 +13,19 @@ import protobuf from 'protobufjs';
 import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
-import { ApiTransactionHandler } from '../api-transaction-handler';
+import { ApiTransactionHandler } from './api';
 import {
   decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData
-} from '../encoding';
-import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
-import { CID, DomainKey, DXN } from '../models';
-import { schema as dxnsSchema } from '../proto/gen';
-import { Filtering, IQuery } from '../querying';
+} from './encoding';
+import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from './interfaces';
+import { schema as dxnsSchema } from './proto';
+import { Filtering, IQuery } from './queries';
+import { IRegistryClient } from './registry-client-types';
 import {
+  CID,
+  DomainKey,
+  DXN,
   Domain,
-  IRegistryClient,
   RecordKind,
   RecordMetadata,
   RegistryDataRecord,
@@ -35,7 +37,7 @@ import {
   SuppliedTypeRecordMetadata,
   TypeRecordMetadata,
   UpdateResourceOptions
-} from './interface';
+} from './types';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())

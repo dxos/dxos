@@ -17,6 +17,7 @@ export async function mapMessage (type: protobufjs.Type, mapper: FieldMapper, ob
     }
     res[field.name] = await mapField(field, mapper, obj[field.name]);
   }
+
   return res;
 }
 

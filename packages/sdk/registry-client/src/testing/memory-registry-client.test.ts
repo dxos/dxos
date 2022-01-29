@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { DXN } from '../models';
-import { IRegistryClient } from '../registry-client';
+import { IRegistryClient } from '../registry-client-types';
+import { DXN } from '../types';
 import { createMockTypes, createMockResourceRecord } from './fake-data-generator';
 import { MemoryRegistryClient } from './memory-registry-client';
 

@@ -8,12 +8,18 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { IRegistryClient, CID, RegistryClient } from '../../src';
-import { createApiPromise, createKeyring } from '../../src/api-creation';
-import { DomainKey, DXN } from '../../src/models';
-import { schemaJson } from '../../src/proto/gen';
-import { App } from '../../src/proto/gen/dxos/type';
-import { createCID } from '../../src/testing';
+import {
+  App,
+  IRegistryClient,
+  CID,
+  DomainKey,
+  DXN,
+  RegistryClient,
+  createCID,
+  createApiPromise,
+  createKeyring,
+  schemaJson
+} from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);

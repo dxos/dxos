@@ -8,6 +8,10 @@ import { inspect } from 'util';
 
 import { Multihash } from '../interfaces';
 
+/**
+ * Conten-addressable ID.
+ * https://docs.ipfs.io/concepts/content-addressing
+ */
 export class CID {
   static fromB58String (str: string): CID {
     return new CID(fromB58String(str));

@@ -91,4 +91,5 @@ const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProps
   );
 };
 
+// TODO(burdon): Remove default exports.
 export default RegistryInitializer;

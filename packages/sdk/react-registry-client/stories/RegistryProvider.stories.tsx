@@ -35,7 +35,17 @@ const TestApp = () => {
   );
 };
 
-export const Primary = () => {
+export const Memory = () => {
+  const registry = new MemoryRegistryClient();
+
+  return (
+    <RegistryProvider registry={registry}>
+      <TestApp />
+    </RegistryProvider>
+  );
+};
+
+export const DXNS = () => {
   const registry = new MemoryRegistryClient();
 
   return (
