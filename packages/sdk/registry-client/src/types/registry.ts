@@ -95,6 +95,9 @@ export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
 
 export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata
 
+/**
+ * Distinguish regular data records from type records, which define the data record schema.
+ */
 export enum RecordKind {
   Type = 'TYPE',
   Data = 'DATA'
