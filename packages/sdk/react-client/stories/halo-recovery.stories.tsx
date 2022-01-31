@@ -23,11 +23,6 @@ export default {
   title: 'react-client/HALO Recovery'
 };
 
-// code debug.enable('dxos:*');
-
-/**
- * Creates device invitation.
- */
 const HaloCreationContainer = () => {
   const client = useClient();
   const profile = useProfile();
