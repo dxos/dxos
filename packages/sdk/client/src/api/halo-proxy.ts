@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -117,6 +118,10 @@ export class HaloProxy extends InvitationProxy {
       waitForHalo(),
       authenticate
     );
+  }
+
+  async addKeyRecord (keyRecord: KeyRecord) {
+    await this._serviceProvider.services.HaloService.AddKeyRecord({keyRecord});
   }
 
   /**
