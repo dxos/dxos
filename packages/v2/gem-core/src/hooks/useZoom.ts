@@ -4,22 +4,27 @@
 
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
-import { useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 
 import { SvgContext } from '../context';
 
 export type ZoomExtent = [min: number, max: number];
 
+export type ZoomOptions = {
+  extent: ZoomExtent
+}
+
+const defaultOptions: ZoomOptions = {
+  extent: [1, 2]
+}
+
 /**
- *
+ * Creates a reference to a SVG Group element which can be zoomed.
  * @param context
- * @param extent
+ * @param options
  */
-export const useZoom = (
-  context: SvgContext,
-  extent: ZoomExtent = [1, 2]
-) => {
-  const ref = useRef();
+export const useZoom = (context: SvgContext, options: ZoomOptions = defaultOptions): RefObject<SVGGElement> => {
+  const ref = useRef<SVGGElement>();
 
   useEffect(() => {
     context.setTransform(d3.zoomIdentity);
@@ -31,7 +36,7 @@ export const useZoom = (
     d3.select(context.svg)
       .call(d3.zoom()
         // .filter(() => false)
-        .scaleExtent(extent)
+        .scaleExtent(options.extent)
         .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
           context.setTransform(transform);
           d3.select((ref).current)
@@ -47,7 +52,7 @@ export const useZoom = (
         // zoomCallback.transform(d3.select(svgRef.current), d3.zoomIdentity);
       }
     );
-  }, [context.size]);
+  }, [context.svg]);
 
   return ref;
 };

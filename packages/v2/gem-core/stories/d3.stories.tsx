@@ -3,20 +3,20 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { css } from '@emotion/css';
 
 import {
   Bounds,
   FractionUtil,
   FullScreen,
-  gridStyles,
-  Scale,
   SvgContainer,
-  useContext,
-  useGrid, useZoom,
   Vector,
   Vertex,
+  gridStyles,
+  useContext,
+  useGrid,
+  useZoom
 } from '../src';
 
 export default {

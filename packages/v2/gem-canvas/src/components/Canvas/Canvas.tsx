@@ -4,9 +4,9 @@
 
 import clsx from 'clsx';
 import * as d3 from 'd3';
-import React, { RefObject, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
-import { defaultScale, Scale, useDynamicRef } from '@dxos/gem-core';
+import { gridStyles, SvgContext, useDynamicRef, useGrid, useZoom } from '@dxos/gem-core';
 
 import {
   ControlContext,
@@ -23,8 +23,8 @@ import { Tool } from '../../tools';
 import { Cursor } from './Cursor';
 
 export interface CanvasProps {
-  svgRef: RefObject<SVGSVGElement>
-  scale?: Scale
+  svgContext: SvgContext
+  grid?: boolean
   tool?: Tool
   elements?: ElementData<any>[]
   selection?: SelectionModel
@@ -40,8 +40,8 @@ export interface CanvasProps {
 
 /**
  * Main canvas component.
- * @param svgRef
- * @param scale
+ * @param svgContext
+ * @param grid
  * @param tool
  * @param elements
  * @param selection
@@ -53,8 +53,8 @@ export interface CanvasProps {
  * @constructor
  */
 export const Canvas = ({
-  svgRef,
-  scale = defaultScale,
+  svgContext,
+  grid,
   tool,
   elements = [],
   selection,
@@ -64,24 +64,43 @@ export const Canvas = ({
   onDelete,
   options
 }: CanvasProps) => {
+  const gridRef = useGrid(svgContext);
+  const zoomRef = useZoom(svgContext);
+
   // Live context
   const toolRef = useDynamicRef<Tool>(() => tool, [tool]);
   const debugRef = useDynamicRef<boolean>(() => options?.debug, [options?.debug]);
   const context = useMemo<ControlContext>(() => ({
-    scale: () => scale,
+    scale: () => svgContext.scale,
     debug: () => debugRef.current,
     draggable: () => toolRef.current === undefined
-  }), [scale]);
+  }), []);
 
   // Cursor.
   useEffect(() => {
-    d3.select(svgRef.current).style('cursor', tool ? 'crosshair' : undefined);
+    d3.select(svgContext.svg).style('cursor', tool ? 'crosshair' : undefined);
   }, [tool]);
 
   // TODO(burdon): Multi-select.
   const handleSelect = (element: ElementData<any>, edit?: boolean) => {
     onSelect?.({ element, state: edit ? ControlState.EDITING : ControlState.SELECTED });
   }
+
+  //
+  // Deselect.
+  //
+  useEffect(() => {
+    d3.select(svgContext.svg)
+      .on('click', function (event) {
+        // TODO(burdon): Better way to test containing group?
+        if (event.target.parentNode) {
+          const control = d3.select(event.target.parentNode).datum();
+          if (!control) {
+            onSelect?.(undefined);
+          }
+        }
+      });
+  }, [svgContext.svg]);
 
   //
   // Controls.
@@ -119,15 +138,21 @@ export const Canvas = ({
   return (
     <g className={clsx(canvasStyles, debugRef.current && debugStyles)}>
       <g ref={markersGroup} />
-      <g ref={controlsGroup} />
-      <Cursor
-        svgRef={svgRef}
-        context={context}
-        elements={controlManager}
-        tool={tool}
-        onSelect={onSelect}
-        onCreate={onCreate}
-      />
+      <g ref={gridRef} className={gridStyles} style={{ visibility: grid ? 'visible': 'hidden' }} />
+      <g ref={zoomRef}>
+        <g ref={controlsGroup} />
+
+        {onCreate && (
+          <Cursor
+            svgContext={svgContext}
+            context={context}
+            elements={controlManager}
+            tool={tool}
+            onSelect={onSelect}
+            onCreate={onCreate}
+          />
+        )}
+      </g>
     </g>
   );
 };

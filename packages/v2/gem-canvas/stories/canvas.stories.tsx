@@ -4,9 +4,9 @@
 
 import * as d3 from 'd3';
 import debug from 'debug';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { FullScreen, SvgContainer, useScale, useStateRef } from '@dxos/gem-core';
+import { FullScreen, SvgContainer, useContext, useStateRef } from '@dxos/gem-core';
 
 import {
   Action,
@@ -62,17 +62,16 @@ export default {
 };
 
 const Container = () => {
-  const svgRef = useRef<SVGSVGElement>();
-  const scale = useScale({ gridSize: 32 });
-
-  // TODO(burdon): Factor out.
-  const [elements, model] = useMemoryElementModel(() => generator());
+  const context = useContext();
 
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
   const [grid, setGrid] = useState(true); // TODO(burdon): Generalize to view options.
   const [debug, setDebug, debugRef] = useStateRef(false);
+
+  // Elements.
+  const [elements, model] = useMemoryElementModel(() => generator());
 
   // Reset selection.
   useEffect(() => {
@@ -178,15 +177,10 @@ const Container = () => {
           }}
         />
 
-        <SvgContainer
-          ref={svgRef}
-          scale={scale}
-          zoom={[1/4, 8]}
-          grid={grid}
-        >
+        <SvgContainer context={context}>
           <Canvas
-            svgRef={svgRef}
-            scale={scale}
+            svgContext={context}
+            grid={grid}
             tool={tool}
             elements={elements}
             selection={selection}

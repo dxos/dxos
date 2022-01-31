@@ -32,7 +32,7 @@ export const Primary = () => {
 
   return (
     <FullScreen>
-      <SvgContainer grid>
+      <SvgContainer>
         <g ref={textGroup} />
       </SvgContainer>
     </FullScreen>

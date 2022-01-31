@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import { useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { SvgContext } from '../context';
@@ -23,17 +23,17 @@ export const gridStyles = css`
 `;
 
 export type GridOptions = {
-  axis: boolean
+  axis?: boolean
 }
 
-const defaultOptions = {
+const defaultOptions: GridOptions = {
   axis: true
 }
 
 /**
  * Create grid based on size and current zoom transform.
  */
-const createGrid = (context: SvgContext, options: GridOptions = defaultOptions) => {
+const createGrid = (context: SvgContext, options: GridOptions) => {
   const paths = [];
   const { width, height } = context.size;
   const { x, y, k } = context.scale.transform;
@@ -118,12 +118,12 @@ export const grid = (context: SvgContext, options: GridOptions) => (el) => {
 };
 
 /**
- * Create a grid using the
+ * Creates a reference to a SVG Group element which renders a grid.
  * @param context
  * @param options
  */
-export const useGrid = (context: SvgContext, options: GridOptions) => {
-  const ref = useRef();
+export const useGrid = (context: SvgContext, options: GridOptions = defaultOptions): RefObject<SVGGElement> => {
+  const ref = useRef<SVGGElement>();
   useEffect(() => context.resize.on(() => {
     if (!context.size) {
       return;

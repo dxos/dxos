@@ -4,13 +4,14 @@
 
 import * as d3 from 'd3';
 import clsx from 'clsx';
-import React, { RefObject, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { Modifiers, Point, useStateRef } from '@dxos/gem-core';
+import { Modifiers, Point, SvgContext, useStateRef } from '@dxos/gem-core';
 
 import { Tool } from '../../tools';
 
 import {
+  Connection,
   Control,
   ControlContext,
   ControlGetter,
@@ -18,12 +19,12 @@ import {
   SelectionModel,
   createControl,
   dragBounds,
-  elementStyles, Connection,
+  elementStyles,
 } from '../../controls';
-import { ElementDataType, ElementId, ElementType } from '../../model';
+import { ElementDataType, ElementType } from '../../model';
 
 export interface CursorProps {
-  svgRef: RefObject<SVGSVGElement>
+  svgContext: SvgContext
   context: ControlContext
   elements: ControlGetter
   tool: Tool
@@ -33,7 +34,7 @@ export interface CursorProps {
 
 /**
  * Cursor to create new elements.
- * @param svgRef
+ * @param svgContext
  * @param context
  * @param elements
  * @param tool
@@ -41,9 +42,8 @@ export interface CursorProps {
  * @param onCreate
  * @constructor
  */
-// TODO(burdon): Rename?
 export const Cursor = ({
-  svgRef,
+  svgContext,
   context,
   elements,
   tool,
@@ -52,22 +52,6 @@ export const Cursor = ({
 }: CursorProps) => {
   const cursorGroup = useRef<SVGSVGElement>();
   const [, setCursor, cursorRef] = useStateRef<Control<any>>();
-
-  //
-  // Deselect.
-  //
-  useEffect(() => {
-    d3.select(svgRef.current)
-      .on('click', function (event) {
-        // TODO(burdon): Better way to test containing group?
-        if (event.target.parentNode) {
-          const control = d3.select(event.target.parentNode).datum();
-          if (!control) {
-            onSelect?.(undefined);
-          }
-        }
-      });
-  }, []);
 
   //
   // Create cursor.
@@ -138,12 +122,13 @@ export const Cursor = ({
 
     // Drag to create new element.
     // This must only be called once to not conflict with the SVGContainer zoom dragger.
-    d3.select(svgRef.current)
+    d3.select(svgContext.svg)
       .style('cursor', cursorRef.current ? 'crosshair' : undefined)
       .call(dragBounds(context, handleUpdate, () => onSelect?.(undefined))
-        .container(() => svgRef.current)
+        .container(() => svgContext.svg)
         .filter(() => Boolean(cursorRef.current))); // Cancel if nothing selected to enable grid panning.
-  }, [svgRef, cursorGroup]);
+
+  }, [svgContext.svg, cursorGroup]);
   // eslint-enable indent
 
   return (

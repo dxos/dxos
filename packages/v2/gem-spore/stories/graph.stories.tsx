@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
-import { FullScreen, Scale, SvgContainer, useStateRef } from '@dxos/gem-core';
+import { FullScreen, SvgContainer, gridStyles, useContext, useGrid, useStateRef, useZoom } from '@dxos/gem-core';
 
 import { GraphForceProjector, GraphRenderer, Part, Surface, Scene } from '../src';
 
@@ -54,12 +54,13 @@ const styles = {
 };
 
 export const Primary = () => {
-  const svgRef = useRef<SVGSVGElement>();
-  const graphRef = useRef<SVGSVGElement>();
+  const context = useContext();
+  const gridRef = useGrid(context, { axis: false });
+  const zoomRef = useZoom(context);
+
   const statsRef = useRef<SVGSVGElement>();
   const model = useMemo(() => createModel(2), []);
   const [scene, setScene, sceneRef] = useStateRef<Scene<TestModel>>();
-  const scale = useMemo(() => new Scale(32), []);
   const Knobs = useKnobs();
 
   useButton('Test', () => {
@@ -68,15 +69,13 @@ export const Primary = () => {
   });
 
   useEffect(() => {
-    const svg = svgRef.current;
-
     const scene = new Scene<TestModel>([
       new Part<TestModel, any>(
         new GraphForceProjector(graphMapper),
-        new GraphRenderer(new Surface(svg, d3.select(graphRef.current).node()))),
+        new GraphRenderer(new Surface(context.svg, d3.select(zoomRef.current).node()))),
       new Part<TestModel, any>(
         new StatsProjector(statsMapper),
-        new StatsRenderer(new Surface(svg, d3.select(statsRef.current).node())))
+        new StatsRenderer(new Surface(context.svg, d3.select(statsRef.current).node())))
     ]);
 
     const interval = setInterval(() => {
@@ -93,20 +92,16 @@ export const Primary = () => {
       clearInterval(interval);
       scene.stop();
     }
-  }, [svgRef]);
+  }, []);
 
   return (
     <FullScreen>
-      <SvgContainer
-        ref={svgRef}
-        zoom={[1/4, 8]}
-        zoomRoot={graphRef}
-        scale={scale}
-        grid
-      >
-        <g ref={graphRef} className={styles.graph} />
+      <SvgContainer context={context}>
+        <g ref={gridRef} className={gridStyles} />
+        <g ref={zoomRef} className={styles.graph} />
         <g ref={statsRef} className={styles.stats} />
       </SvgContainer>
+
       <Knobs className={styles.knobs} />
     </FullScreen>
   );
