@@ -4,7 +4,7 @@
 
 type EventListener<T> = (value: T) => void
 
-export type EventHandle = { off: () => void }
+export type EventHandle = () => void
 
 export class EventEmitter<T> {
   private readonly _listeners = new Set<EventListener<T>>();
@@ -13,11 +13,9 @@ export class EventEmitter<T> {
     this._listeners.clear();
   }
 
-  on (cb: EventListener<T>): EventHandle {
-    this._listeners.add(cb);
-    return {
-      off: () => this._listeners.delete(cb)
-    };
+  on (onEvent: EventListener<T>): EventHandle {
+    this._listeners.add(onEvent);
+    return () => this._listeners.delete(onEvent);
   }
 
   public emit (value: T): void {

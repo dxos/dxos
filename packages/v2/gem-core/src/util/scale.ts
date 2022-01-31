@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 
 import { Fraction, FractionUtil } from './fraction';
@@ -11,6 +12,8 @@ import { Bounds, Vertex } from './vector';
 /**
  * Scale to map vector space to view (screen) space.
  */
+// TODO(burdon): Rename context?
+// TODO(burdon): https://developer.mozilla.org/en-US/docs/Web/API/Document/elementFromPoint
 export class Scale {
   private _transform: ZoomTransform;
 
@@ -23,7 +26,7 @@ export class Scale {
   }
 
   get transform () {
-    return this._transform;
+    return this._transform || d3.zoomIdentity;
   }
 
   setTransform (transform: ZoomTransform) {
@@ -54,6 +57,10 @@ export class Scale {
     snapBounds: ({ x, y, width, height }): Bounds => {
       [x, y, width, height] = this.model.snapValues([x, y, width, height]);
       return { x, y, width, height };
+    },
+
+    toValue: (value: Fraction): number => {
+      return Math.round(FractionUtil.toNumber(value) * this._gridSize);
     },
 
     toValues: (values: Fraction[]): number[] => {
@@ -90,6 +97,10 @@ export class Scale {
     snapBounds: ({ x, y, width, height }): ScreenBounds => {
       [x, y, width, height] = this.screen.snapValues([x, y, width, height]);
       return { x, y, width, height };
+    },
+
+    toValue: (value: number): Fraction => {
+      return FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]);
     },
 
     toValues: (values: number[]): Fraction[] => {

@@ -71,11 +71,9 @@ export const useMemoryElementModel = (provider?: () => ElementData<any>[]): [Ele
   const [elements, setElements] = useState<ElementData<any>[]>([]);
   useEffect(() => {
     setElements(model.elements);
-    const subscription = model.subscription.on(elements => {
+    return model.subscription.on(elements => {
       setElements(elements);
     });
-
-    return () => subscription.off();
   }, [model]);
 
   return [elements, model];

@@ -6,7 +6,18 @@ import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { Bounds, FractionUtil, FullScreen, Scale, SvgContainer, Vector, Vertex } from '../src';
+import {
+  Bounds,
+  FractionUtil,
+  FullScreen,
+  gridStyles,
+  Scale,
+  SvgContainer,
+  useContext,
+  useGrid, useZoom,
+  Vector,
+  Vertex,
+} from '../src';
 
 export default {
   title: 'gem-x/D3'
@@ -47,72 +58,69 @@ type DataItem = {
   }
 }
 
-export const Primary = () => {
-  const groupRef = useRef<SVGSVGElement>();
-  const scale = useMemo(() => new Scale(32), []);
+// TODO(burdon): To Util.
+const convertPoints = array => array.map(([x, y]) => ({
+  x: FractionUtil.toFraction(x),
+  y: FractionUtil.toFraction(y)
+}));
 
-  // TODO(burdon): Rename gen-x => gem-d3/vector (docs).
-  // TODO(burdon): Move test to canvas and declare mixin types.
-
-  // Test join updates single item.
-  // https://github.com/d3/d3-selection#selection_data
-  // https://github.com/d3/d3-selection#selection_join
-
-  const convertPoints = array => array.map(([x, y]) => ({
-    x: FractionUtil.toFraction(x),
-    y: FractionUtil.toFraction(y)
-  }));
-
-  const data: DataItem[] = [
-    {
-      type: 'circle',
-      data: {
-        pos: { x: [0, 1], y: [3, 1] },
-        r: [3, 2],
-        text: 'Circle'
-      }
-    },
-    {
-      type: 'rect',
-      data: {
-        bounds: { x: [-2, 1], y: [1, 1], width: [4, 1], height: [8, 2] }
-      }
-    },
-    {
-      type: 'text',
-      data: {
-        bounds: { x: [-2, 1], y: [5, 1], width: [4, 1], height: [1, 1] },
-        text: 'Text',
-        style: {
-          'text-anchor': 'end'
-        }
-      },
-    },
-    {
-      type: 'rect',
-      data: {
-        bounds: { x: [4, 1], y: [1, 1], width: [4, 1], height: [4, 1] },
-        class: 'style-1',
-        style: { rx: [1, 1], 'font-size': 24 },
-        text: 'Rect'
-      }
-    },
-    {
-      type: 'path',
-      data: {
-        points: convertPoints([[8, -2], [8, -6], [4, -9], [-2, -2]]),
-        curve: 'cardinal',
-        closed: true
-      }
-    },
-    {
-      type: 'path',
-      data: {
-        points: convertPoints([[-8, 1], [-4, 1], [-6, 5]]),
-        closed: true
-      }
+// TODO(burdon): Hook.
+const data: DataItem[] = [
+  {
+    type: 'circle',
+    data: {
+      pos: { x: [0, 1], y: [3, 1] },
+      r: [3, 2],
+      text: 'Circle'
     }
-  ];
+  },
+  {
+    type: 'rect',
+    data: {
+      bounds: { x: [-2, 1], y: [1, 1], width: [4, 1], height: [8, 2] }
+    }
+  },
+  {
+    type: 'text',
+    data: {
+      bounds: { x: [-2, 1], y: [5, 1], width: [4, 1], height: [1, 1] },
+      text: 'Text',
+      style: {
+        'text-anchor': 'end'
+      }
+    },
+  },
+  {
+    type: 'rect',
+    data: {
+      bounds: { x: [4, 1], y: [1, 1], width: [4, 1], height: [4, 1] },
+      class: 'style-1',
+      style: { rx: [1, 1], 'font-size': 24 },
+      text: 'Rect'
+    }
+  },
+  {
+    type: 'path',
+    data: {
+      points: convertPoints([[8, -2], [8, -6], [4, -9], [-2, -2]]),
+      curve: 'cardinal',
+      closed: true
+    }
+  },
+  {
+    type: 'path',
+    data: {
+      points: convertPoints([[-8, 1], [-4, 1], [-6, 5]]),
+      closed: true
+    }
+  }
+];
+
+export const Primary = () => {
+  const context = useContext();
+  const gridRef = useGrid(context, { axis: false });
+  const zoomRef = useZoom(context);
+  const scale = context.scale;
 
   useEffect(() => {
     const updateCircle = (el, { pos, r }) => {
@@ -187,7 +195,7 @@ export const Primary = () => {
         .attr('d', d3.line().curve(line)(p));
     };
 
-    d3.select(groupRef.current)
+    d3.select(zoomRef.current)
       .selectAll('g')
       .data(data)
       .join('g')
@@ -238,19 +246,13 @@ export const Primary = () => {
           }
         }
       });
-  }, [groupRef]);
+  }, [zoomRef]);
 
   return (
     <FullScreen>
-      <SvgContainer
-        grid
-        scale={scale}
-        zoom={[1/4, 8]}
-      >
-        <g
-          ref={groupRef}
-          className={styles}
-        />
+      <SvgContainer context={context}>
+        <g ref={gridRef} className={gridStyles} />
+        <g ref={zoomRef} className={styles} />
       </SvgContainer>
     </FullScreen>
   )

@@ -81,7 +81,7 @@ export class Part<MODEL, LAYOUT> {
   async stop () {
     await this._projector.stop();
 
-    this._updateListener?.off();
+    this._updateListener?.();
     this._updateListener = undefined;
   }
 }

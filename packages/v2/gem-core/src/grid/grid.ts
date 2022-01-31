@@ -3,30 +3,40 @@
 //
 
 import * as d3 from 'd3';
-import type { ZoomTransform } from 'd3';
+import { useEffect, useRef } from 'react';
+import { css } from '@emotion/css';
 
-import { Scale } from '../util';
-
-interface GridProps {
-  scale: Scale
-  show?: boolean
-  transform?: ZoomTransform
-  width: number
-  height: number
-}
+import { SvgContext } from '../util';
 
 const createLine = d3.line();
 
+export const gridStyles = css`
+  path.axis {
+    stroke: #C0C0C0;
+  }
+  path.major {
+    stroke: #E0E0E0;
+  }
+  path.minor {
+    stroke: #F0F0F0;
+  }
+`;
+
+export type GridOptions = {
+  axis: boolean
+}
+
+const defaultOptions = {
+  axis: true
+}
+
 /**
  * Create grid based on size and current zoom transform.
- * @param scale
- * @param width
- * @param height
  */
-const createGrid = ({ scale, width, height }: GridProps) => {
+const createGrid = (context: SvgContext, options: GridOptions = defaultOptions) => {
   const paths = [];
-  const showAxis = true;
-  const { x = 0, y = 0, k = 1 } = scale.transform || {};
+  const { width, height } = context.size;
+  const { x, y, k } = context.scale.transform;
   const s = 1 / k;
 
   // Offset.
@@ -39,7 +49,7 @@ const createGrid = ({ scale, width, height }: GridProps) => {
   //   https://github.com/d3/d3-zoom#transform_rescaleX
 
   // Axis.
-  if (showAxis) {
+  if (options.axis) {
     const axis = [
       [[0, dy], [0, dy + h]],
       [[dx, 0], [dx + w, 0]]
@@ -55,15 +65,13 @@ const createGrid = ({ scale, width, height }: GridProps) => {
   // Scale grid size.
   const mod = (n, size, delta = 0) => (Math.floor(n / size + delta) * size);
 
-  // TODO(burdon): Use d3.difference to skip existing elements.
-
   // Major grid lines.
-  const majorSize = scale.gridSize;
+  const majorSize = context.scale.gridSize;
   const xMajor = d3.range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
   const yMajor = d3.range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
   const major = [
-    ...xMajor.filter(x => !showAxis || x).map(x => [[x, dy], [x, dy + h]]),
-    ...yMajor.filter(y => !showAxis || y).map(y => [[dx, y], [dx + w, y]])
+    ...xMajor.filter(x => !options.axis || x).map(x => [[x, dy], [x, dy + h]]),
+    ...yMajor.filter(y => !options.axis || y).map(y => [[dx, y], [dx + w, y]])
   ];
 
   paths.push({
@@ -74,7 +82,7 @@ const createGrid = ({ scale, width, height }: GridProps) => {
 
   // Minor grid lines.
   // Find nearest power of 2 to gridSize.
-  const minorSize = Math.pow(2, Math.round(Math.log2(s * scale.gridSize)));
+  const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
   if (majorSize > minorSize) {
     const xMinor = d3.range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
     const yMinor = d3.range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
@@ -93,10 +101,9 @@ const createGrid = ({ scale, width, height }: GridProps) => {
   return paths;
 };
 
-export const grid = ({ scale, width, height, show = true }: GridProps) => (el) => {
-  const paths = show ? createGrid({ scale, width, height }) : [];
+export const grid = (context: SvgContext, options: GridOptions) => (el) => {
+  const paths = createGrid(context, options);
 
-  // Construct grid.
   el.selectAll('path')
     .data(paths, path => path.id)
     .join('path')
@@ -104,8 +111,27 @@ export const grid = ({ scale, width, height, show = true }: GridProps) => (el) =
     .attr('d', d => d.path)
     .attr('class', d => d.class);
 
-  if (scale.transform) {
-    el.attr('transform', scale.transform);
-    el.attr('stroke-width', 1 / scale.transform.k);
+  if (context.scale.transform) {
+    el.attr('transform', context.scale.transform);
+    el.attr('stroke-width', 1 / context.scale.transform.k);
   }
+};
+
+/**
+ * Create a grid using the
+ * @param context
+ * @param options
+ */
+export const useGrid = (context: SvgContext, options: GridOptions) => {
+  const ref = useRef();
+  useEffect(() => context.resize.on(() => {
+    if (!context.size) {
+      return;
+    }
+
+    d3.select(ref.current)
+      .call(grid(context, options));
+  }), []);
+
+  return ref;
 };
