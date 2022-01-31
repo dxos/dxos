@@ -56,7 +56,7 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
-      const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
+      const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
       assert(itemId);
 
       //
@@ -128,6 +128,19 @@ export class ItemDemuxer {
 
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
+      }
+
+      if (snapshot) {
+        if (snapshot.custom) {
+          const item = this._itemManager.getItem(itemId) as Item<Model<any>>;
+          assert(item);
+          assert(item.model.modelMeta.snapshotCodec);
+          await item.model.restoreFromSnapshot(item.model.modelMeta.snapshotCodec.decode(snapshot.custom));
+        } else if (snapshot.array) {
+          for (const message of snapshot.array.mutations ?? []) {
+            await this._itemManager.processModelMessage(itemId, message);
+          }
+        }
       }
 
       this.mutation.emit(message);

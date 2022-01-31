@@ -118,7 +118,7 @@ describe('Node container', function () {
 
     const promise = container.exited.waitForCount(1);
 
-    void handle.rpc.Command({}); // This will hang because the bot has crashed.
+    void handle.rpc.Command({}).catch(() => {}); // This will hang because the bot has crashed.
 
     const [, status] = await promise;
     expect(status.code).toBe(255);

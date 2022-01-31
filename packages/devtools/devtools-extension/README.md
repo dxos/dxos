@@ -1,25 +1,22 @@
-# DevTools browser extension
+# DXOS DevTools browser extension
 
-Devtools browser extension.
+The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
+
+<img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
 
 ## Installation
 
-1. Grab a build from the [latest build](https://github.com/dxos/protocols).
+The Devtools zip file is created during the [Publish](https://github.com/dxos/protocols/blob/main/.github/workflows/publish.yaml) CI action.
 
-`<img src="./images/jobs.png" width="520px">`
+1. Go to: https://github.com/dxos/protocols/actions/workflows/publish.yaml
+1. Click on the latest successful workflow run (look for the green check mark).
+1. Click on `Artifacts`, then download and uncompress the zip file.
+1. Go to `chrome://extensions`, then click `Load unpacked` and select the folder (make sure developer mode is enabled).
 
-`<img src="images/artifacts.png" width="420px">`
-
-2. Unzip the downloaded file.
-3. Go to `chrome://extensions` and enable developer mode.
-
-`<img src="images/developer-mode.png" width="220px">`
-
-4. Select `Load unpacked` and select the unzipped Devtools folder.
 
 ## Extension startup sequence
 
-`<img src="docs/extension.png">`
+<img src="./docs/extension.png">
 
 1. SDK sets `window.__DXOS__` hook.
 1. Content script is injected into the page automatically by chrome.
@@ -33,6 +30,7 @@ Devtools browser extension.
     1. Client API connects to the `window.__DXOS__` hook.
     1. Client API sends "ready" message.
 1. Devtools pannel is ready.
+
 
 ## Development
 

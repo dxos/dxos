@@ -59,6 +59,7 @@ export class PartyProxy extends InvitationProxy {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.init();
     }
+    await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
   }
 
   async destroy () {
@@ -92,7 +93,7 @@ export class PartyProxy extends InvitationProxy {
   /**
    * Database instance of the current party.
    */
-  get database () {
+  get database (): Database {
     if (!this._database) {
       throw Error('Party not open');
     }
@@ -162,5 +163,9 @@ export class PartyProxy extends InvitationProxy {
   private getPropertiesItem () {
     const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
     return items[0];
+  }
+
+  createSnapshot () {
+    return this._serviceProvider.services.PartyService.CreateSnapshot({ partyKey: this.key });
   }
 }

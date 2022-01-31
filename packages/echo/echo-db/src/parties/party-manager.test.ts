@@ -496,4 +496,20 @@ describe('Party manager', () => {
       }
     }
   }).timeout(10_000);
+
+  test('Clone party', async () => {
+    const { partyManager } = await setup();
+
+    const original = await partyManager.createParty();
+    const item1 = await original.database.createItem({ model: ObjectModel });
+    const item2 = await original.database.createItem({ model: ObjectModel, parent: item1.id, type: 'example' });
+    await item2.model.setProperty('foo', 'bar');
+
+    const clone = await partyManager.cloneParty(original.createSnapshot());
+    expect(clone.key.equals(original.key)).toBe(false);
+    const item = await clone.database.getItem(item2.id);
+    assert(item);
+    expect(item.model.getProperty('foo')).toBe('bar');
+    expect(item.parent).toBeDefined();
+  });
 });

@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
 import { PartyProxy } from '@dxos/client';
-import type { defs } from '@dxos/config';
+import type { ConfigV1Object } from '@dxos/config';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import {
@@ -29,13 +29,16 @@ export default {
 
 const TEST_TYPE = 'TEST_TYPE';
 
-const clientConfig: defs.Config = {
-  services: {
-    signal: {
-      server: 'ws://localhost:4000'
-    },
-    bot: {
-      topic: 'e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc'
+const clientConfig: ConfigV1Object = {
+  version: 1,
+  runtime: {
+    services: {
+      signal: {
+        server: 'ws://localhost:4000'
+      },
+      bot: {
+        topic: 'e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc'
+      }
     }
   }
 };

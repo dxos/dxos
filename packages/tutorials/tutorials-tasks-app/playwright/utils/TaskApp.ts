@@ -55,7 +55,7 @@ export class TaskApp extends AppSimulator {
   async createTask(listName: string, taskName: string) {
     await this.browser.getPage().click(`li :text("${listName}")`);
 
-    await this.browser.getPage().fill('input', taskName);
+    await this.browser.getPage().fill("//input[@type='text']", taskName);
 
     await this.browser.getPage().click('[aria-label="create"]');
 
@@ -93,9 +93,10 @@ export class TaskApp extends AppSimulator {
 
     expect(taskCheckbox).toBeTruthy();
 
-    const result = await taskCheckbox?.isChecked();
-
-    expectedResult ? expect(result).toBeTruthy() : expect(result).toBeFalsy();
+    await waitForExpect(async () => {
+      const result = await taskCheckbox?.isChecked();
+      expectedResult ? expect(result).toBeTruthy() : expect(result).toBeFalsy();
+    });
   }
 
   async removeTask(taskName: string) {

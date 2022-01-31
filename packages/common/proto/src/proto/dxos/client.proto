@@ -7,6 +7,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "config.proto";
 import "./echo/invitation.proto";
+import "./echo/snapshot.proto";
 import "./halo/keys.proto";
 
 package dxos.client;
@@ -163,6 +164,10 @@ message SubscribeMembersResponse {
   repeated PartyMember members = 1;
 }
 
+message CreateSnaspotRequest {
+  dxos.halo.keys.PubKey partyKey = 1;
+}
+
 
 service PartyService {
   // TODO(rzadp): Combine the two into one?
@@ -170,6 +175,7 @@ service PartyService {
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
+  rpc CloneParty(PartySnapshot) returns(Party);
 
   /// Open and close or activate and deactivate a party.
   rpc SetPartyState(SetPartyStateRequest) returns(Party);
@@ -181,5 +187,6 @@ service PartyService {
   // TODO(rzadp): Remove and join with Subscribing to Party.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
+  rpc CreateSnapshot(CreateSnaspotRequest) returns (PartySnapshot);
 }
 

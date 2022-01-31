@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import {
   ClientProvider,
@@ -143,7 +142,7 @@ const AutoInvitationGenerator = ({
       invitation.finished.on(() => setPin(''));
       invitation.connected.on(() => setPin(invitation.secret.toString()));
 
-      onInvite(encodeInvitation(invitation.descriptor));
+      onInvite(invitation.descriptor.encode());
     });
   }, []);
 

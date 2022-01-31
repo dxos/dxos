@@ -1,10 +1,11 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "description": "DXOS Wallet Extension",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
+    "book": "esbuild-server book",
     "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist",
     "build": "toolchain build && node scripts/build.js",
     "build:test": "pnpm run build && pnpm run test",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/mocha": "~8.2.2",

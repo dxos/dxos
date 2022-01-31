@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-testing",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "description": "ECHO testing utils.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -16,7 +16,9 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "lint": "toolchain lint"
+    "lint": "toolchain lint",
+    "test": "toolchain test",
+    "update:saved-state": "ts-node --transpile-only ./scripts/update-saved-state.ts"
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -26,12 +28,23 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
+    "@dxos/object-model": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
-    "@types/lodash": "^4.14.175"
+    "@types/lodash": "^4.14.175",
+    "@types/mocha": "~8.2.2",
+    "abstract-leveldown": "~7.0.0",
+    "expect": "~27.0.2",
+    "jsondown": "dxos/jsondown#main",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.5.2"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

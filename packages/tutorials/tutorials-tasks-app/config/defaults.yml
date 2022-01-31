@@ -1,12 +1,15 @@
-app:
-  title: "Tasks App"
+version: 1
 
-system:
-  storage:
-    persistent: true
-  #debug: dxos*
-services:
-  signal:
-    server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
-  dxns:
-    server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
+runtime:
+  props:
+    title: "Tasks App"
+
+  client:
+    storage:
+      persistent: true
+
+  services:
+    signal:
+      server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
+    dxns:
+      server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"

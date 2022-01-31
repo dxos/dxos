@@ -7,8 +7,8 @@ import assert from 'assert';
 import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
@@ -72,6 +72,13 @@ export class EchoProxy {
           await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
 
+          // TODO(dmaretskyi): Replace with selection API when it has update filtering.
+          partyProxy.database.entityUpdate.on(entity => {
+            if (entity.type === PARTY_ITEM_TYPE) {
+              this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
+            }
+          });
+
           const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
           partyStream.subscribe(async ({ party }) => {
             if (!party) {
@@ -111,6 +118,27 @@ export class EchoProxy {
     const [partyReceivedPromise, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.CreateParty();
+
+    const handler = () => {
+      if (this._parties.has(party.publicKey)) {
+        partyReceived();
+      }
+    };
+    this._partiesChanged.on(handler);
+    handler();
+    await partyReceivedPromise;
+    this._partiesChanged.off(handler);
+
+    return this._parties.get(party.publicKey)!;
+  }
+
+  /**
+   * Clones the party from a snapshot.
+   */
+  async cloneParty (snapshot: PartySnapshot): Promise<PartyProxy> {
+    const [partyReceivedPromise, partyReceived] = latch();
+
+    const party = await this._serviceProvider.services.PartyService.CloneParty(snapshot);
 
     const handler = () => {
       if (this._parties.has(party.publicKey)) {

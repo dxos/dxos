@@ -6,9 +6,6 @@ jobs:
   check:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
@@ -19,10 +16,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-          npm install -g @microsoft/rush pnpm
-          sudo ./common/scripts/install-dependencies.sh
-          npx playwright@1.11.0 install-deps
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
           # Install dependencies
           echo "::group::Install"
@@ -64,9 +58,6 @@ jobs:
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
@@ -77,9 +68,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-          npm install -g @microsoft/rush pnpm
-          sudo ./common/scripts/install-dependencies.sh
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
           # Install dependencies
           echo "::group::Install"
@@ -104,9 +93,6 @@ jobs:
   check-sdk-health:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
@@ -116,9 +102,7 @@ jobs:
           clean: false
       - name: Check, Install and Test
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-          npm install -g @microsoft/rush pnpm
-          sudo ./common/scripts/install-dependencies.sh
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
 
           echo "::group::Install"
           node common/scripts/install-run-rush.js install

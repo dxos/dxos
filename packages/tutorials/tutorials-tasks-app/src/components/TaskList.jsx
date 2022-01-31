@@ -21,12 +21,14 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 
 import { PartySharingDialog, SpawnBotDialog } from '@dxos/react-framework'
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
+import { proto } from '@dxos/client'
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -80,11 +82,11 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useSelection(party.database.select(s => s
+  const items = useSelection(party?.database.select(s => s
     .filter({ type: TASK_TYPE })
     .filter(item => !item.model.getProperty('deleted'))
     .items)
-  , [partyKey]);
+  , [party]);
 
   const [partyInvitationDialog, setPartyInvitationDialog] = useState(false);
 
@@ -97,7 +99,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
       return;
     }
 
-    await party.database.createItem({
+    await party?.database.createItem({
       type: TASK_TYPE,
       model: ObjectModel,
       props: {
@@ -117,6 +119,21 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const handleToggleComplete = item => async (event) => {
     await item.model.setProperty('complete', event.target.checked);
   };
+
+  const handleDownload = async () => {
+    if(!party) {
+      return;
+    }
+
+    const snapshot = await party.createSnapshot();
+
+    const blob = new Blob([proto.schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot)]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${party.key.toHex()}.party`;
+    a.click();
+  }
 
   if (!partyKey) {
     return null;
@@ -153,7 +170,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
           {/* Current tasks. */}
           <div className={classes.reverseList} ref={scrollListRef}>
             {items
-              .map(item => (
+              ?.map(item => (
                 <ListItem
                   button
                   key={item.id}
@@ -201,6 +218,15 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
             onClick={() => setPartyInvitationDialog(true)}
           >
             <ShareIcon />
+          </Fab>
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="download"
+            title="Download party"
+            onClick={handleDownload}
+          >
+            <DownloadIcon />
           </Fab>
         </div>
       )}

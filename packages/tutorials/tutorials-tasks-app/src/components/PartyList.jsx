@@ -23,8 +23,9 @@ import {
   Settings as SettingsIcon
 } from '@mui/icons-material';
 
-import { useParties } from '@dxos/react-client';
+import { useClient, useParties } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-framework';
+import { proto } from '@dxos/client';
 
 import { PartySettings } from './PartySettings';
 
@@ -66,6 +67,7 @@ const useStyles = makeStyles(theme => ({
  */
 // TODO(burdon): Remove hideRedeem.
 export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
+  const client = useClient();
   const classes = useStyles();
   const [partyJoinDialog, setPartyJoinDialog] = useState(false);
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
@@ -80,6 +82,21 @@ export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false 
   const handleRedeemParty = () => {
     setPartyJoinDialog(true);
   };
+
+  /**
+   * 
+   * @param {FileList} files 
+   * @returns 
+   */
+  const handlePartyImport = async (files) => {
+    if(!files) {
+      return;
+    }
+
+    const data = new Uint8Array(await files[0].arrayBuffer());
+
+    await client.echo.cloneParty(proto.schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').decode(data));
+  }
 
   // TODO(burdon): Why was party.open renamed party.activate?
   // ISSUE(rzadp): https://github.com/dxos/echo/issues/325
@@ -144,6 +161,9 @@ export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false 
         ))}
       </List>
       <div className={classes.grow} />
+      <div>
+        <input type='file' onChange={e => handlePartyImport(e.currentTarget.files)} />
+      </div>
       <div className={classes.actions}>
         <Fab
           size="small"
