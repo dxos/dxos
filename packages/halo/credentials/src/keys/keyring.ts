@@ -17,7 +17,7 @@ import {
   KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage, WithTypeUrl, createDateTimeString
 } from '../proto';
 import { RawSignature } from '../typedefs';
-import { Filter, FilterFuntion } from './filter';
+import { Filter, FilterFunction } from './filter';
 import {
   assertNoSecrets,
   assertValidKeyPair,
@@ -510,7 +510,7 @@ export class Keyring implements Signer {
   /**
    * Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
    */
-  private _findFullKeys (...filters: FilterFuntion[]): KeyRecord[] {
+  private _findFullKeys (...filters: FilterFunction[]): KeyRecord[] {
     return Filter.filter(this._keyCache.values(), Filter.and(...filters));
   }
 
@@ -521,14 +521,14 @@ export class Keyring implements Signer {
    * @returns {KeyRecord[]} KeyRecords, without secretKeys
    */
   @meter
-  findKeys (...filters: FilterFuntion[]): KeyRecord[] {
+  findKeys (...filters: FilterFunction[]): KeyRecord[] {
     return this._findFullKeys(...filters).map(stripSecrets);
   }
 
   /**
    * Find one key matching the indicated criteria: 'party', 'type', etc.
    */
-  private _findFullKey (...filters: FilterFuntion[]): KeyRecord | undefined {
+  private _findFullKey (...filters: FilterFunction[]): KeyRecord | undefined {
     const matches = this._findFullKeys(...filters);
     if (matches.length > 1) {
       throw Error(`Expected <= 1 matching keys; found ${matches.length}.`);
@@ -542,7 +542,7 @@ export class Keyring implements Signer {
    * @returns KeyRecord, without secretKey
    */
   @meter
-  findKey (...filters: FilterFuntion[]) {
+  findKey (...filters: FilterFunction[]) {
     const key = this._findFullKey(...filters);
     return key ? stripSecrets(key) : undefined;
   }
