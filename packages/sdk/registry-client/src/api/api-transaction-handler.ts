@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import { MaybePromise } from '@dxos/util';
 import { ApiPromise } from '@polkadot/api/promise';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { Event, EventRecord } from '@polkadot/types/interfaces/system';
 import { ISubmittableResult } from '@polkadot/types/types';
 
 type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
-export type SignTxFunction = (Tx) => Promise<Tx>;
+export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
 
 /**
  * TODO(burdon): Comment.
