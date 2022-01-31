@@ -26,7 +26,6 @@
     "lint": "wsrun lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
-    "publish": "lerna run npm publish",
     "sort-package-json": "lerna exec npx sort-package-json",
     "test": "lerna run test"
   },

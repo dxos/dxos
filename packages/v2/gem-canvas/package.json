@@ -1,7 +1,7 @@
 {
   "name": "@dxos/gem-canvas",
-  "version": "2.0.0-beta.39",
-  "description": "Gem vector editor.",
+  "version": "2.1.0",
+  "description": "Gem canvas editor.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
     "url": "https://github.com/dxos/gem/issues"
@@ -44,7 +44,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/esbuild-book-knobs": "^1.0.0-beta.36",
+    "@dxos/esbuild-book-knobs": "^1.0.0",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
