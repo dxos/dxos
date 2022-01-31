@@ -3,11 +3,10 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import { AddressOrPair } from '@polkadot/api/types';
-import { KeyringPair } from '@polkadot/keyring/types';
 import BigNumber from 'bn.js';
 
 import { ApiTransactionHandler } from './api';
+import { SignTxFunction } from './api/api-transaction-handler';
 import { DomainKey } from './types';
 
 /**
@@ -65,9 +64,9 @@ export interface IAuctionsClient {
    * Forces close an auction. This arbitrarily closes the ongoing auction even its time is not reached yet.
    * Note! This is reserved to sudo/admin accounts.
    * @param name An object of the auction.
-   * @param sudoer A sudo/admin account needed to execute this high-privilege operation.
+   * @param sudoSignFn A transaction signing function using a sudo/admin account with rights to to execute this high-privilege operation.
    */
-  forceCloseAuction(name: string, sudoer: KeyringPair): Promise<void>;
+  forceCloseAuction(name: string, sudoSignFn: SignTxFunction): Promise<void>;
 
   /**
    * Allows for transferring the ownership of the name to the highest bidder.
@@ -87,8 +86,8 @@ export interface IAuctionsClient {
 export class AuctionsClient implements IAuctionsClient {
   private transactionsHandler: ApiTransactionHandler;
 
-  constructor (private api: ApiPromise, private signer?: AddressOrPair) {
-    this.transactionsHandler = new ApiTransactionHandler(api, signer);
+  constructor (private api: ApiPromise, signFn: SignTxFunction = tx => tx) {
+    this.transactionsHandler = new ApiTransactionHandler(api, signFn);
   }
 
   async createAuction (name: string, startAmount: number): Promise<void> {
@@ -103,8 +102,8 @@ export class AuctionsClient implements IAuctionsClient {
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.closeAuction(name));
   }
 
-  async forceCloseAuction (name: string, sudoer: KeyringPair): Promise<void> {
-    await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoer);
+  async forceCloseAuction (name: string, sudoSignFn: SignTxFunction): Promise<void> {
+    await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoSignFn);
   }
 
   async claimAuction (domainName: string): Promise<DomainKey> {

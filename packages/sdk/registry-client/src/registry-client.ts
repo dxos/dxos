@@ -3,7 +3,6 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import { AddressOrPair } from '@polkadot/api/types';
 import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
@@ -14,6 +13,7 @@ import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
 import { ApiTransactionHandler } from './api';
+import { SignTxFunction } from './api/api-transaction-handler';
 import {
   decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData
 } from './encoding';
@@ -22,11 +22,8 @@ import { schema as dxnsSchema } from './proto';
 import { Filtering, IQuery } from './queries';
 import { IRegistryClient } from './registry-client-types';
 import {
-  CID,
-  DomainKey,
-  DXN,
-  Domain,
-  RecordKind,
+  CID, Domain, DomainKey,
+  DXN, RecordKind,
   RecordMetadata,
   RegistryDataRecord,
   RegistryRecord,
@@ -72,9 +69,9 @@ export class RegistryClient implements IRegistryClient {
 
   constructor (
     private api: ApiPromise,
-    private signer?: AddressOrPair
+    signFn: SignTxFunction = tx => tx
   ) {
-    this._transactionsHandler = new ApiTransactionHandler(api, signer);
+    this._transactionsHandler = new ApiTransactionHandler(api, signFn);
   }
 
   //

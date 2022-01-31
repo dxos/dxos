@@ -3,9 +3,12 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import { AddressOrPair, SubmittableExtrinsic } from '@polkadot/api/types';
-import { KeyringPair } from '@polkadot/keyring/types';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { Event, EventRecord } from '@polkadot/types/interfaces/system';
+import { ISubmittableResult } from '@polkadot/types/types';
+
+type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
+export type SignTxFunction = (Tx) => Promise<Tx>;
 
 /**
  * TODO(burdon): Comment.
@@ -13,34 +16,43 @@ import { Event, EventRecord } from '@polkadot/types/interfaces/system';
 export class ApiTransactionHandler {
   constructor (
     private api: ApiPromise,
-    private signer: AddressOrPair | undefined
+    private signFn: SignTxFunction = tx => tx // By in test environment, no signing is required.
   ) {}
 
-  async sendTransaction (transaction: SubmittableExtrinsic<'promise'>, signer:
-    AddressOrPair | undefined = this.signer) : Promise<EventRecord[]> {
+  async sendTransaction (
+    transaction: SubmittableExtrinsic<'promise'>,
+    signFn: SignTxFunction = this.signFn
+  ) : Promise<EventRecord[]> {
     return new Promise((resolve, reject) => {
-      if (!signer) {
+      if (!signFn) {
         throw new Error('Create or select an account first.');
       }
-      transaction.signAndSend(signer, ({ events = [], status }) => {
+      setImmediate(async () => {
         try {
-          this.ensureExtrinsicNotFailed(events);
-        } catch (err: any) {
-          reject(err);
+          const signedTransaction = await signFn(transaction);
+          signedTransaction.send(({ events = [], status }) => {
+            try {
+              this.ensureExtrinsicNotFailed(events);
+            } catch (err: any) {
+              reject(err);
+            }
+            // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
+            // https://github.com/dxos/dot/issues/167
+            if (status.isFinalized || status.isInBlock) {
+              resolve(events);
+            }
+          }).catch(reject);
+        } catch (error) {
+          reject(error);
         }
-        // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
-        // https://github.com/dxos/dot/issues/167
-        if (status.isFinalized || status.isInBlock) {
-          resolve(events);
-        }
-      }).catch(reject);
+      });
     });
   }
 
-  async sendSudoTransaction (transaction: SubmittableExtrinsic<'promise'>, sudoer: KeyringPair):
+  async sendSudoTransaction (transaction: Tx, sudoSignFn: SignTxFunction):
     Promise<EventRecord[]> {
     const sudoTx = this.api.tx.sudo.sudo(transaction);
-    return this.sendTransaction(sudoTx, sudoer);
+    return this.sendTransaction(sudoTx, sudoSignFn);
   }
 
   getErrorName (rejectionEvent: Event) : string {
