@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import {
   RegistryTypeRecord,
-  MemoryRegistryClient,
+  MemoryRegistryClient
 } from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';

@@ -7,9 +7,8 @@ import React, { useState, useEffect, ReactNode } from 'react';
 
 import { IRegistryClient } from '@dxos/registry-client';
 
-import { createRegistryClient, RegistryConfigProvider } from './config';
-
 import { RegistryContext } from '../hooks';
+import { createRegistryClient, RegistryConfigProvider } from './config';
 
 const log = debug('dxos:react-registry-client:error');
 
