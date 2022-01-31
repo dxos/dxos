@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Vector } from '../util';
 import { Scale } from './scale';
-import { Vector } from './vector';
 
 test('toVertex', () => {
   const scale = new Scale(16);

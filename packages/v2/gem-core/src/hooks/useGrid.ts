@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import { useEffect, useRef } from 'react';
 import { css } from '@emotion/css';
 
-import { SvgContext } from '../util';
+import { SvgContext } from '../context';
 
 const createLine = d3.line();
 

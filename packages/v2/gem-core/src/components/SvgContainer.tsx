@@ -7,7 +7,7 @@ import type { Property } from 'csstype';
 import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
-import { SvgContext } from '../util';
+import { SvgContext } from '../context';
 
 export interface SvgContainerProps {
   children?: ReactNode | ReactNode[]

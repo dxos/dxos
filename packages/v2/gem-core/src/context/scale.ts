@@ -5,15 +5,11 @@
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 
-import { Fraction, FractionUtil } from './fraction';
-import { ScreenBounds, Point } from './screen';
-import { Bounds, Vertex } from './vector';
+import { Bounds, Fraction, FractionUtil, ScreenBounds, Point, Vertex } from '../util';
 
 /**
  * Scale to map vector space to view (screen) space.
  */
-// TODO(burdon): Rename context?
-// TODO(burdon): https://developer.mozilla.org/en-US/docs/Web/API/Document/elementFromPoint
 export class Scale {
   private _transform: ZoomTransform;
 

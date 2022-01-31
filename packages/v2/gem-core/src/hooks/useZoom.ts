@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 import { useEffect, useRef } from 'react';
 
-import { SvgContext } from './context';
+import { SvgContext } from '../context';
 
 export type ZoomExtent = [min: number, max: number];
 

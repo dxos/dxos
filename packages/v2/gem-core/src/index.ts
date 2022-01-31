@@ -3,6 +3,6 @@
 //
 
 export * from './components';
-export * from './grid';
+export * from './context';
 export * from './hooks';
 export * from './util';

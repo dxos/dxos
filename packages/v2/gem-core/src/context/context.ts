@@ -5,9 +5,8 @@
 import type { ZoomTransform } from 'd3';
 import { useMemo } from 'react';
 
-import { EventEmitter } from './events';
+import { EventEmitter, Point } from '../util';
 import { Scale } from './scale';
-import { Point } from './screen';
 
 export const defaultScale = new Scale(32);
 
