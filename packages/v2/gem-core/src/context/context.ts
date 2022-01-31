@@ -3,7 +3,6 @@
 //
 
 import type { ZoomTransform } from 'd3';
-import { useMemo } from 'react';
 
 import { EventEmitter, Point } from '../util';
 import { Scale } from './scale';
@@ -14,9 +13,10 @@ export const defaultScale = new Scale(32);
 export type Size = { width: number, height: number }
 
 /**
- *
+ * SVG context passed to all components.
  */
 export class SvgContext {
+  readonly initialized = new EventEmitter<SvgContext>();
   readonly resize = new EventEmitter<SvgContext>();
 
   private _svg: SVGSVGElement;
@@ -52,8 +52,9 @@ export class SvgContext {
     return `${x},${y},${this._size.width},${this._size.height}`;
   }
 
-  setSvg (svg: SVGSVGElement) {
+  initialize (svg: SVGSVGElement) {
     this._svg = svg;
+    this.initialized.emit(this);
   }
 
   setSize (size: Size) {
@@ -78,8 +79,4 @@ export class SvgContext {
     const [cx, cy] = this._center;
     return document.elementFromPoint(cx + x, cy + y); // TODO(burdon): Scale?
   }
-}
-
-export const useContext = (scale: Scale = defaultScale) => {
-  return useMemo(() => new SvgContext(scale), [scale])
 }

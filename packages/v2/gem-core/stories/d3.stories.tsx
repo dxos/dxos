@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { css } from '@emotion/css';
 
 import {
@@ -14,9 +14,8 @@ import {
   Vector,
   Vertex,
   gridStyles,
-  useContext,
   useGrid,
-  useZoom
+  useZoom, SvgContext,
 } from '../src';
 
 export default {
@@ -116,85 +115,85 @@ const data: DataItem[] = [
   }
 ];
 
+const updateCircle = (el, scale, { pos, r }) => {
+  const [cx, cy] = scale.model.toPoint(pos);
+  return el
+    .attr('cx', cx)
+    .attr('cy', cy)
+    .attr('r', scale.model.toValues([r])[0]);
+};
+
+const updateText = (el, scale, { style = {}, bounds, pos, text }) => {
+  const anchor = style['text-anchor'] ?? 'middle';
+  let [x = 0, y = 0] = [];
+  if (pos) {
+    [x, y] = scale.model.toPoint(pos);
+  } else {
+    switch (anchor) {
+      case 'start': {
+        [x, y] = scale.model.toPoint(Vector.left(bounds));
+        break;
+      }
+      case 'end': {
+        [x, y] = scale.model.toPoint(Vector.right(bounds));
+        break;
+      }
+      case 'middle':
+      default: {
+        [x, y] = scale.model.toPoint(Vector.center(bounds));
+        break;
+      }
+    }
+  }
+
+  return el
+    .style('dominant-baseline', 'middle')
+    .style('text-anchor', anchor)
+    .style('font-size', style['font-size'])
+    .style('font-family', style['font-family'])
+    .attr('x', x)
+    .attr('y', y)
+    .text(text);
+};
+
+const updateRect = (el, scale, { bounds, style }) => {
+  const { x, y, width, height } = scale.model.toBounds(bounds);
+  const { rx } = style ?? {};
+  return el
+    .attr('rx', rx ? scale.model.toValues([rx])[0] : undefined)
+    .attr('x', x)
+    .attr('y', y)
+    .attr('width', width)
+    .attr('height', height);
+};
+
+const updatePath = (el, scale, { points, curve, closed }) => {
+  const p = points.map(p => scale.model.toPoint(p));
+  let line;
+  switch (curve) {
+    case 'cardinal': {
+      line = closed ? d3.curveCardinalClosed : d3.curveCardinal;
+      break;
+    }
+    case 'basis': {
+      line = closed ? d3.curveBasisClosed : d3.curveBasis;
+      break;
+    }
+    default: {
+      line = closed ? d3.curveLinearClosed : d3.curveLinear;
+    }
+  }
+  return el
+    .attr('d', d3.line().curve(line)(p));
+};
+
 export const Primary = () => {
-  const context = useContext();
-  const gridRef = useGrid(context, { axis: false });
+  const context = useMemo(() => new SvgContext(), []);
+  const gridRef = useGrid(context, { axis: true });
   const zoomRef = useZoom(context);
   const scale = context.scale;
 
   useEffect(() => {
-    const updateCircle = (el, { pos, r }) => {
-      const [cx, cy] = scale.model.toPoint(pos);
-      return el
-        .attr('cx', cx)
-        .attr('cy', cy)
-        .attr('r', scale.model.toValues([r])[0]);
-    };
-
-    const updateText = (el, { style = {}, bounds, pos, text }) => {
-      const anchor = style['text-anchor'] ?? 'middle';
-      let [x = 0, y = 0] = [];
-      if (pos) {
-        [x, y] = scale.model.toPoint(pos);
-      } else {
-        switch (anchor) {
-          case 'start': {
-            [x, y] = scale.model.toPoint(Vector.left(bounds));
-            break;
-          }
-          case 'end': {
-            [x, y] = scale.model.toPoint(Vector.right(bounds));
-            break;
-          }
-          case 'middle':
-          default: {
-            [x, y] = scale.model.toPoint(Vector.center(bounds));
-            break;
-          }
-        }
-      }
-
-      return el
-        .style('dominant-baseline', 'middle')
-        .style('text-anchor', anchor)
-        .style('font-size', style['font-size'])
-        .style('font-family', style['font-family'])
-        .attr('x', x)
-        .attr('y', y)
-        .text(text);
-    };
-
-    const updateRect = (el, { bounds, style }) => {
-      const { x, y, width, height } = scale.model.toBounds(bounds);
-      const { rx } = style ?? {};
-      return el
-        .attr('rx', rx ? scale.model.toValues([rx])[0] : undefined)
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
-    };
-
-    const updatePath = (el, { points, curve, closed }) => {
-      const p = points.map(p => scale.model.toPoint(p));
-      let line;
-      switch (curve) {
-        case 'cardinal': {
-          line = closed ? d3.curveCardinalClosed : d3.curveCardinal;
-          break;
-        }
-        case 'basis': {
-          line = closed ? d3.curveBasisClosed : d3.curveBasis;
-          break;
-        }
-        default: {
-          line = closed ? d3.curveLinearClosed : d3.curveLinear;
-        }
-      }
-      return el
-        .attr('d', d3.line().curve(line)(p));
-    };
-
     d3.select(zoomRef.current)
       .selectAll('g')
       .data(data)
@@ -207,9 +206,9 @@ export const Primary = () => {
           case 'circle': {
             const { style, pos, text } = data;
             el.selectAll('circle').data([0]).join('circle')
-              .call(updateCircle, data);
+              .call(updateCircle, scale, data);
             el.selectAll('text').data(text ? [1] : []).join('text')
-              .call(updateText, { style, pos, text });
+              .call(updateText, scale, { style, pos, text });
             break;
           }
 
@@ -217,23 +216,23 @@ export const Primary = () => {
             const { style, bounds, text } = data;
             const pos = Vector.center(bounds as Bounds);
             el.selectAll('rect').data([0]).join('rect')
-              .call(updateRect, data);
+              .call(updateRect, scale, data);
             el.selectAll('text').data(text ? [1] : []).join('text')
-              .call(updateText, { style, pos, text });
+              .call(updateText, scale, { style, pos, text });
             break;
           }
 
           case 'text': {
             const { style, bounds, text } = data;
             el.selectAll('text').data(text ? [1] : []).join('text')
-              .call(updateText, { style, bounds, text });
+              .call(updateText, scale, { style, bounds, text });
             break;
           }
 
           case 'path': {
             const { points } = data;
             el.selectAll('path').data([0]).join('path')
-              .call(updatePath, data);
+              .call(updatePath, scale, data);
             el.selectAll('circle').data(points).join('circle')
               .each((pos, i, nodes) => {
                 const [cx, cy] = scale.model.toPoint(pos);
@@ -241,7 +240,7 @@ export const Primary = () => {
                   .attr('cx', cx)
                   .attr('cy', cy)
                   .attr('r', scale.model.toValues([[1, 8]])[0]);
-              })
+              });
             break;
           }
         }
@@ -255,5 +254,5 @@ export const Primary = () => {
         <g ref={zoomRef} className={styles} />
       </SvgContainer>
     </FullScreen>
-  )
-}
+  );
+};

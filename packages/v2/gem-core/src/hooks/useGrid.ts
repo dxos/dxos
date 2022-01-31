@@ -4,23 +4,10 @@
 
 import * as d3 from 'd3';
 import { RefObject, useEffect, useRef } from 'react';
-import { css } from '@emotion/css';
 
 import { SvgContext } from '../context';
 
 const createLine = d3.line();
-
-export const gridStyles = css`
-  path.axis {
-    stroke: #C0C0C0;
-  }
-  path.major {
-    stroke: #E0E0E0;
-  }
-  path.minor {
-    stroke: #F0F0F0;
-  }
-`;
 
 export type GridOptions = {
   axis?: boolean
@@ -28,7 +15,7 @@ export type GridOptions = {
 
 const defaultOptions: GridOptions = {
   axis: true
-}
+};
 
 /**
  * Create grid based on size and current zoom transform.

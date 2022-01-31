@@ -2,10 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { css } from '@emotion/css';
 
-import { FullScreen, SvgContainer, gridStyles, useContext, useGrid, useZoom } from '../src';
+import {
+  FullScreen,
+  Grid,
+  SvgContainer,
+  SvgContent,
+  gridStyles,
+  useGrid,
+  useZoom,
+  SvgContext
+} from '../src';
 
 export default {
   title: 'gem-x/SvgContainer'
@@ -20,7 +29,7 @@ const styles = css`
 `;
 
 export const Primary = () => {
-  const context = useContext();
+  const context = useMemo(() => new SvgContext(), []);
 
   return (
     <FullScreen>
@@ -33,9 +42,10 @@ export const Primary = () => {
   );
 };
 
-export const Secondary = () => {
-  const context = useContext();
-  const gridRef = useGrid(context, { axis: false });
+// TODO(burdon): Hooks should rely on the React context.
+export const WithHooks = () => {
+  const context = useMemo(() => new SvgContext(), []);
+  const gridRef = useGrid(context, { axis: true });
   const zoomRef = useZoom(context);
 
   return (
@@ -45,6 +55,32 @@ export const Secondary = () => {
         <g ref={zoomRef} className={styles}>
           <circle cx={0} cy={0} r={context.scale.model.toValue([2, 1])} />
         </g>
+      </SvgContainer>
+    </FullScreen>
+  );
+};
+
+export const WithGrid = () => {
+  return (
+    <FullScreen>
+      <SvgContainer className={styles}>
+        <Grid axis />
+      </SvgContainer>
+    </FullScreen>
+  );
+};
+
+export const WithZoom = () => {
+  return (
+    <FullScreen>
+      <SvgContainer className={styles}>
+        <Grid axis />
+        <SvgContent
+          zoom={[1/2, 4]}
+          render={context => (
+            <circle cx={0} cy={0} r={context.scale.model.toValue([2, 1])} />
+          )}
+        />
       </SvgContainer>
     </FullScreen>
   );

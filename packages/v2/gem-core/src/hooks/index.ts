@@ -4,4 +4,5 @@
 
 export * from './useGrid';
 export * from './useStateRef';
+export * from './useSvgContext';
 export * from './useZoom';

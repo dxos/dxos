@@ -8,27 +8,28 @@ import React, { MutableRefObject, ReactNode, forwardRef, useEffect, useMemo, use
 import useResizeObserver from 'use-resize-observer';
 
 import { SvgContext } from '../context';
+import { Context } from '../hooks';
 
 export interface SvgContainerProps {
   children?: ReactNode | ReactNode[]
   className?: string
+  context?: SvgContext
   width?: number
   height?: number
-  context?: SvgContext
 }
 
 /**
- * Wraps SVG element and handles resizing and grid.
+ * Container for SVG element.
  * @constructor
  */
 export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   children,
   className,
-  width: controlledWidth,
-  height: controlledHeight,
   context: controlledContext,
+  width: controlledWidth,
+  height: controlledHeight
 }: SvgContainerProps, initialRef: MutableRefObject<SVGSVGElement>) => {
-  const context = useMemo(() => controlledContext || new SvgContext(), [controlledContext]);
+  const context = useMemo<SvgContext>(() => controlledContext || new SvgContext(), [controlledContext]);
   const svgRef = initialRef || useRef<SVGSVGElement>();
   const [visibility, setVisibility] = useState<Property.Visibility>('hidden');
   const { ref: div, width: currentWidth, height: currentHeight } = useResizeObserver<HTMLDivElement>();
@@ -37,8 +38,8 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
   const height = controlledHeight || currentHeight;
 
   useEffect(() => {
-    context.setSvg(svgRef.current);
-  }, [svgRef]);
+    context.initialize(svgRef.current);
+  }, []);
 
   useEffect(() => {
     if (width && height) {
@@ -57,7 +58,7 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
         display: 'flex',
         flex: 1,
         overflow: 'hidden',
-        width: controlledWidth, // TODO(burdon): Document geometry.
+        width: controlledWidth,
         height: controlledHeight
       }}
     >
@@ -71,7 +72,9 @@ export const SvgContainer = forwardRef<SVGElement, SvgContainerProps>(({
           visibility // Prevents objects jumping after viewbox set.
         }}
       >
-        {children}
+        <Context.Provider value={context}>
+          {children}
+        </Context.Provider>
       </svg>
     </div>
   );
