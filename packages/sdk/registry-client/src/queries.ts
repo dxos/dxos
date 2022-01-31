@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { CID, DXN } from './models';
-import { RegistryRecord, Resource } from './registry-client';
+import { CID, DXN, RegistryRecord, Resource } from './types';
 
 /**
  * Common querying request for data of the DXNS.
@@ -57,7 +56,6 @@ export const Filtering = {
 
     return textMatches && typeMatches;
   }
-
 };
 
 function matchesRecordType (record: RegistryRecord, type: CID) {

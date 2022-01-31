@@ -24,7 +24,7 @@ import {
   createSignResponse,
   createBotCommand,
   SpawnOptions
-} from '@dxos/protocol-plugin-bot-deprecated';
+} from '@dxos/protocol-plugin-bot-deprecated'; // TODO(burdon): Remove.
 import { CID, createApiPromise, DXN, IRegistryClient, RegistryClient } from '@dxos/registry-client';
 
 import { BOT_CONFIG_FILENAME } from './config';
@@ -33,12 +33,13 @@ import { NATIVE_ENV } from './env';
 import { log } from './log';
 import { BOT_PACKAGE_DOWNLOAD_DIR, SourceManager } from './source-manager';
 
+// TODO(burdon): Testing only (and use faker?)
 const chance = new Chance();
 
 const logInfo = debug('dxos:botkit');
 
 // File where information about running bots is stored.
-export const BOTS_DUMP_FILE = 'out/factory-state';
+export const BOTS_DUMP_FILE = './out/factory-state';
 
 export type BotId = string;
 
@@ -63,7 +64,7 @@ interface Options {
 }
 
 /**
- * Manages bot instances; provides bot lifecycle operations.
+ * Manages bot instances and provides bot lifecycle operations.
  */
 export class BotManager {
   private readonly _bots = new Map<string, BotInfo>();
@@ -126,10 +127,12 @@ export class BotManager {
   }
 
   async start () {
-    this._plugin = new BotPlugin(this._controlPeerKey, (protocol: any, message: any) => this._botMessageHandler(protocol, message));
+    this._plugin = new BotPlugin(this._controlPeerKey,
+      (protocol: any, message: any) => this._botMessageHandler(protocol, message));
 
     this._apiPromise = await createApiPromise(this._config.get('services.dxns.server'));
     this._registryClient = new RegistryClient(this._apiPromise);
+
     // Join control swarm.
     this._leaveControlSwarm = await this._client.echo.networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._controlTopic),
