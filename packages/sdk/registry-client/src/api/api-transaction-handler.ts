@@ -7,6 +7,9 @@ import { AddressOrPair, SubmittableExtrinsic } from '@polkadot/api/types';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { Event, EventRecord } from '@polkadot/types/interfaces/system';
 
+/**
+ * TODO(burdon): Comment.
+ */
 export class ApiTransactionHandler {
   constructor (
     private api: ApiPromise,

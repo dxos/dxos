@@ -4,9 +4,14 @@
 
 import protobuf from 'protobufjs';
 
-import { RecordExtension } from '../../encoding';
-import { CID, DomainKey, DXN } from '../../models';
+import { RecordExtension } from '../encoding';
+import { CID } from './cid';
+import { DomainKey } from './domain-key';
+import { DXN } from './dxn';
 
+/**
+ * Domains are auctioned namespaces for records.
+ */
 export interface Domain {
   key: DomainKey,
   name?: string,
@@ -90,6 +95,9 @@ export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
 
 export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata
 
+/**
+ * Distinguish regular data records from type records, which define the data record schema.
+ */
 export enum RecordKind {
   Type = 'TYPE',
   Data = 'DATA'
@@ -112,7 +120,6 @@ export interface RegistryTypeRecord extends RegistryRecordBase {
   meta: TypeRecordMetadata
   /**
    * FQN of the root message in the protobuf definitions.
-   *
    * NOTE: Should not be used to name this type.
    */
   messageName: string

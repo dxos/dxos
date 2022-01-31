@@ -3,15 +3,33 @@
 //
 
 import { expect } from 'chai';
+import * as protobuf from 'protobufjs';
 
 import { raise } from '@dxos/debug';
 
-import { decodeExtensionPayload, encodeExtensionPayload } from './encoding';
-import { createCID, createMockTypes } from './testing';
+import { schemaJson } from '../proto';
+import { createCID, createMockTypes } from '../testing';
+import {
+  convertSchemaToDescriptor,
+  decodeExtensionPayload,
+  encodeExtensionPayload,
+  loadSchemaFromDescriptor
+} from './encoding';
+
+describe('Proto utils', () => {
+  it('can convert schema to descriptor and back', () => {
+    const root = protobuf.Root.fromJSON(schemaJson);
+    const descriptor = convertSchemaToDescriptor(root);
+    const newSchema = loadSchemaFromDescriptor(descriptor);
+
+    expect(newSchema.lookupType('.dxos.registry.Record')).to.not.be.undefined;
+    expect(newSchema.lookupType('.dxos.registry.Record.Type')).to.not.be.undefined;
+    expect(newSchema.lookupType('.dxos.registry.Record.Extension')).to.not.be.undefined;
+  });
+});
 
 describe('Record encoding', () => {
   const mockTypes = createMockTypes();
-
   const serviceType = mockTypes.find(type => type.messageName === 'dxos.type.Service') ?? raise(new Error());
   const ipfsType = mockTypes.find(type => type.messageName === 'dxos.type.IPFS') ?? raise(new Error());
 
@@ -46,13 +64,12 @@ describe('Record encoding', () => {
         ]
       }
     };
-    const encoded = await encodeExtensionPayload(data, lookupType);
 
+    const encoded = await encodeExtensionPayload(data, lookupType);
     expect(encoded.typeRecord).to.deep.eq(serviceType.cid.value);
     expect(encoded.data).to.be.instanceOf(Uint8Array);
 
     const decoded = await decodeExtensionPayload(encoded, lookupType);
-
     expect(decoded).to.deep.eq(data);
   });
 });

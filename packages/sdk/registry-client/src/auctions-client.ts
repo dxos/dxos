@@ -7,8 +7,8 @@ import { AddressOrPair } from '@polkadot/api/types';
 import { KeyringPair } from '@polkadot/keyring/types';
 import BigNumber from 'bn.js';
 
-import { ApiTransactionHandler } from './api-transaction-handler';
-import { DomainKey } from './models';
+import { ApiTransactionHandler } from './api';
+import { DomainKey } from './types';
 
 /**
  * Auction allows assigning names to identities. It facilitates domain names registration and ownership.
@@ -81,6 +81,9 @@ export interface IAuctionsClient {
   listAuctions(): Promise<Auction[]>;
 }
 
+/**
+ *
+ */
 export class AuctionsClient implements IAuctionsClient {
   private transactionsHandler: ApiTransactionHandler;
 

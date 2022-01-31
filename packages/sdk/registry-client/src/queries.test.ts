@@ -4,12 +4,11 @@
 
 import { expect } from 'chai';
 
-import { DXN } from './models';
-import { Filtering } from './querying';
-import { Resource, RegistryRecord, RegistryTypeRecord, RegistryDataRecord, RecordKind } from './registry-client';
+import { Filtering } from './queries';
 import { createCID } from './testing';
+import { DXN, Resource, RegistryRecord, RegistryTypeRecord, RegistryDataRecord, RecordKind } from './types';
 
-describe('Registry API querying', () => {
+describe('Queries', () => {
   // TODO(marik-d): Fix those tests.
   describe('Resources filtering', () => {
     it('Filters by type, when equal, then filtered in', () => {
@@ -43,7 +42,7 @@ describe('Registry API querying', () => {
     });
   });
 
-  describe('records filtering', () => {
+  describe('Records filtering', () => {
     const appTypeCID = createCID();
     const botTypeCID = createCID();
     const typeRecords: RegistryTypeRecord[] = [
@@ -54,7 +53,6 @@ describe('Registry API querying', () => {
       { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
       { cid: createCID(), kind: RecordKind.Data, meta: { description: 'betaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
       { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaBotter' }, type: botTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any }
-
     ];
     const records: RegistryRecord[] = [
       ...typeRecords,

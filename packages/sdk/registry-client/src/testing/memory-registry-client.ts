@@ -4,11 +4,14 @@
 
 import { Root } from 'protobufjs';
 
-import { CID, CIDLike, DomainKey, DXN } from '../models';
-import { IQuery, Filtering } from '../querying';
+import { IQuery, Filtering } from '../queries';
+import { IRegistryClient } from '../registry-client-types';
 import {
+  CID,
+  CIDLike,
   Domain,
-  IRegistryClient,
+  DomainKey,
+  DXN,
   RecordKind,
   RecordMetadata,
   RegistryDataRecord,
@@ -16,11 +19,15 @@ import {
   RegistryTypeRecord,
   Resource,
   ResourceRecord
-} from '../registry-client';
+} from '../types';
 import { createMockTypes, createMockResourceRecords } from './fake-data-generator';
 
+/**
+ *
+ */
 export class MemoryRegistryClient implements IRegistryClient {
-  private records: RegistryRecord[]
+  private readonly records: RegistryRecord[]
+
   constructor (
     private types: RegistryTypeRecord[] = createMockTypes(),
     private resources: ResourceRecord<RegistryRecord>[] = createMockResourceRecords()
