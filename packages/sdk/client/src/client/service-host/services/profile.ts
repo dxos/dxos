@@ -122,26 +122,6 @@ export class ProfileService implements IProfileService {
     invitation.secret = request.secret;
     invitation.secretTrigger?.();
   }
-
-  SubscribeContacts (): Stream<Contacts> {
-    if (this.echo.halo.isInitialized) {
-      return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
-    } else {
-      return new Stream(({ next }) => {
-        const subGroup = new SubscriptionGroup();
-
-        setImmediate(async () => {
-          await this.echo.halo.identityReady.waitForCondition(() => this.echo.halo.isInitialized);
-
-          const resultSet = this.echo.halo.queryContacts();
-          next({ contacts: resultSet.value });
-          subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
-        });
-
-        return () => subGroup.unsubscribe();
-      });
-    }
-  }
 }
 
 export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {

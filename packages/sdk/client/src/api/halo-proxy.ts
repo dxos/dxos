@@ -132,7 +132,7 @@ export class HaloProxy extends InvitationProxy {
     }, () => {});
     this._subscriptions.push(() => profileStream.close());
 
-    const contactsStream = this._serviceProvider.services.ProfileService.SubscribeContacts();
+    const contactsStream = this._serviceProvider.services.HaloService.SubscribeContacts();
     contactsStream.subscribe(data => {
       this._contacts = data.contacts as PartyMember[];
       this._contactsChanged.emit();
