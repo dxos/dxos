@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MaybePromise } from '@dxos/util';
 import { ApiPromise } from '@polkadot/api/promise';
-import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { AddressOrPair, SubmittableExtrinsic } from '@polkadot/api/types';
 import { Event, EventRecord } from '@polkadot/types/interfaces/system';
 import { ISubmittableResult } from '@polkadot/types/types';
+
+import { MaybePromise } from '@dxos/util';
 
 type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
 export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
@@ -15,10 +16,18 @@ export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
  * TODO(burdon): Comment.
  */
 export class ApiTransactionHandler {
+  private signFn: SignTxFunction
+
   constructor (
     private api: ApiPromise,
-    private signFn: SignTxFunction = tx => tx // By in test environment, no signing is required.
-  ) {}
+    _signFn: SignTxFunction | AddressOrPair = tx => tx // By in test environment, no signing is required.
+  ) {
+    if (typeof _signFn === 'function') {
+      this.signFn = _signFn;
+    } else {
+      this.signFn = (tx: Tx) => tx.signAsync(_signFn);
+    }
+  }
 
   async sendTransaction (
     transaction: SubmittableExtrinsic<'promise'>,
@@ -50,10 +59,11 @@ export class ApiTransactionHandler {
     });
   }
 
-  async sendSudoTransaction (transaction: Tx, sudoSignFn: SignTxFunction):
+  async sendSudoTransaction (transaction: Tx, sudoSignFn: SignTxFunction | AddressOrPair):
     Promise<EventRecord[]> {
     const sudoTx = this.api.tx.sudo.sudo(transaction);
-    return this.sendTransaction(sudoTx, sudoSignFn);
+    const signFn = typeof sudoSignFn === 'function' ? sudoSignFn : (tx: Tx) => tx.signAsync(sudoSignFn);
+    return this.sendTransaction(sudoTx, signFn);
   }
 
   getErrorName (rejectionEvent: Event) : string {

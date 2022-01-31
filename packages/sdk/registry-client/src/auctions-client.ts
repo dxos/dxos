@@ -3,6 +3,7 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
+import { AddressOrPair } from '@polkadot/api/types';
 import BigNumber from 'bn.js';
 
 import { ApiTransactionHandler } from './api';
@@ -66,7 +67,7 @@ export interface IAuctionsClient {
    * @param name An object of the auction.
    * @param sudoSignFn A transaction signing function using a sudo/admin account with rights to to execute this high-privilege operation.
    */
-  forceCloseAuction(name: string, sudoSignFn: SignTxFunction): Promise<void>;
+  forceCloseAuction(name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void>;
 
   /**
    * Allows for transferring the ownership of the name to the highest bidder.
@@ -86,7 +87,7 @@ export interface IAuctionsClient {
 export class AuctionsClient implements IAuctionsClient {
   private transactionsHandler: ApiTransactionHandler;
 
-  constructor (private api: ApiPromise, signFn: SignTxFunction = tx => tx) {
+  constructor (private api: ApiPromise, signFn: SignTxFunction | AddressOrPair = tx => tx) {
     this.transactionsHandler = new ApiTransactionHandler(api, signFn);
   }
 
@@ -102,7 +103,7 @@ export class AuctionsClient implements IAuctionsClient {
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.closeAuction(name));
   }
 
-  async forceCloseAuction (name: string, sudoSignFn: SignTxFunction): Promise<void> {
+  async forceCloseAuction (name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void> {
     await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoSignFn);
   }
 

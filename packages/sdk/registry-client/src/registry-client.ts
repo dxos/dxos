@@ -3,6 +3,7 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
+import { AddressOrPair } from '@polkadot/api/types';
 import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
@@ -69,7 +70,7 @@ export class RegistryClient implements IRegistryClient {
 
   constructor (
     private api: ApiPromise,
-    signFn: SignTxFunction = tx => tx
+    signFn: SignTxFunction | AddressOrPair = tx => tx
   ) {
     this._transactionsHandler = new ApiTransactionHandler(api, signFn);
   }
