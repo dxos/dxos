@@ -8,9 +8,8 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { PartyInvitation } from '@dxos/client';
+import { PartyInvitation, InvitationDescriptor } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 import {
   ClientProvider,

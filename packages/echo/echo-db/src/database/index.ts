@@ -4,7 +4,9 @@
 
 export * from './database';
 export * from './database-backend';
+export * from './entity';
 export * from './item';
+export * from './link';
 export * from './item-demuxer';
 export * from './item-manager';
 export * from './timeframe-clock';

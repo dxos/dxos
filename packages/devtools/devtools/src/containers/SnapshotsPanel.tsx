@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@mui/material';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { PartySnapshot } from '@dxos/echo-protocol';
 import { useClient, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
@@ -15,13 +15,13 @@ import { Panel, PartySelect } from '../components';
 
 export const SnapshotsPanel = () => {
   const parties = useParties();
-  const [selectedParty, setSelectedParty] = useState<PartyProxy>();
+  const [selectedParty, setSelectedParty] = useState<Party>();
 
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const [snapshot, setSnapshot] = useState<PartySnapshot>();
 
-  const handlePartyChange = (party: PartyProxy | undefined) => {
+  const handlePartyChange = (party: Party | undefined) => {
     setSelectedParty(party);
     if (party) {
       setImmediate(async () => {

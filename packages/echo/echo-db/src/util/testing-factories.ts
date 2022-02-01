@@ -7,9 +7,9 @@ import assert from 'assert';
 import { Model } from '@dxos/model-factory';
 import { range } from '@dxos/util';
 
+import { PartyInternal } from '..';
+import { Item, ItemCreationOptions } from '../database';
 import { ECHO } from '../echo';
-import { Item, ItemCreationOptions } from '../items';
-import { Party } from '../parties';
 import { createTestInstance, inviteTestPeer } from './testing';
 
 // TODO(burdon): These are very narrow functions. Refactor into factories.
@@ -26,7 +26,7 @@ function addTestMeta<T> (obj: T, meta: TestPeer): WithTestMeta<T> {
  * Creates a number of test ECHO instances and a party that's shared between all of them.
  * @returns Party instances from each of the peers.
  */
-const createParties = async (peerCount = 2): Promise<{ peers: ECHO[], parties: WithTestMeta<Party>[] }> => {
+const createParties = async (peerCount = 2): Promise<{ peers: ECHO[], parties: WithTestMeta<PartyInternal>[] }> => {
   assert(peerCount >= 2);
 
   const peers = await Promise.all(range(peerCount).map(() => createTestInstance({ initialize: true })));

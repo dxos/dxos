@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
 export interface JoinPartyDialogProps extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
-  onJoin?: (party: PartyProxy) => Promise<void> | void
+  onJoin?: (party: Party) => Promise<void> | void
 }
 
 /**

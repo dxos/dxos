@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './party';
 export * from './party-factory';
 export * from './party-internal';
 export * from './party-manager';

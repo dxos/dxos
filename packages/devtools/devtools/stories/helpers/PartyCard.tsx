@@ -26,7 +26,7 @@ import {
   TextField
 } from '@mui/material';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { CopyText, HashIcon } from '@dxos/react-components';
 import { PartySharingDialog } from '@dxos/react-framework';
@@ -38,7 +38,7 @@ import { ModelType, modelTypes } from './models';
  * @param party
  * @constructor
  */
-export const PartyCard = ({ party }: { party: PartyProxy }) => {
+export const PartyCard = ({ party }: { party: Party }) => {
   const client = useClient();
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [partySharing, setPartySharing] = useState(false);
@@ -46,11 +46,11 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
   const [propertyKey, setPropertyKey] = useState('');
   const [propertyValue, setPropertyValue] = useState('');
 
-  const handlePartyOpenToggle = (party: PartyProxy) => {
+  const handlePartyOpenToggle = (party: Party) => {
     void party.setOpen(!party.isOpen);
   };
 
-  const handlePartyActiveToggle = (party: PartyProxy) => {
+  const handlePartyActiveToggle = (party: Party) => {
     void party.setActive(!party.isActive, { global: true });
   };
 
@@ -62,7 +62,7 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
     setPropertyValue(event.target.value);
   };
 
-  const handleSetPartyProperty = (party: PartyProxy) => {
+  const handleSetPartyProperty = (party: Party) => {
     const intValue: number = parseInt(propertyValue);
     if (!isNaN(intValue)) {
       void party.setProperty(propertyKey, intValue);
@@ -75,7 +75,7 @@ export const PartyCard = ({ party }: { party: PartyProxy }) => {
     setItemModel(event.target.value as ModelType);
   };
 
-  const handleCreateItem = (party: PartyProxy) => {
+  const handleCreateItem = (party: Party) => {
     const { model, createItem } = (itemModel && modelTypes[itemModel]) || {};
     client.registerModel(model); // TODO(burdon): Test if already registered.
     if (createItem) {
