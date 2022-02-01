@@ -16,20 +16,20 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { Invitation, InvitationProxy } from './invitations';
-import { PartyProxy } from './party-proxy';
+import { Party } from './party-proxy';
 
-export class PartyInvitation extends Invitation<PartyProxy> {
+export class PartyInvitation extends Invitation<Party> {
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
-  getParty (): Promise<PartyProxy> {
+  getParty (): Promise<Party> {
     return this.wait();
   }
 }
 
 export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
-  private _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
+  private _parties = new ComplexMap<PublicKey, Party>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
 
@@ -68,7 +68,7 @@ export class EchoProxy {
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party);
+          const partyProxy = new Party(this._serviceProvider, this._modelFactory, party);
           await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
 
@@ -114,7 +114,7 @@ export class EchoProxy {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<PartyProxy> {
+  async createParty (): Promise<Party> {
     const [partyReceivedPromise, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.CreateParty();
@@ -135,7 +135,7 @@ export class EchoProxy {
   /**
    * Clones the party from a snapshot.
    */
-  async cloneParty (snapshot: PartySnapshot): Promise<PartyProxy> {
+  async cloneParty (snapshot: PartySnapshot): Promise<Party> {
     const [partyReceivedPromise, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.CloneParty(snapshot);
@@ -156,11 +156,11 @@ export class EchoProxy {
   /**
    * Returns an individual party by its key.
    */
-  getParty (partyKey: PartyKey): PartyProxy | undefined {
+  getParty (partyKey: PartyKey): Party | undefined {
     return this._parties.get(partyKey);
   }
 
-  queryParties (): ResultSet<PartyProxy> {
+  queryParties (): ResultSet<Party> {
     return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 

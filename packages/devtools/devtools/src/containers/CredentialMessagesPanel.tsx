@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { useClient, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
@@ -12,7 +12,7 @@ import { Panel, PartySelect } from '../components';
 import { useStream } from '../hooks';
 
 export const CredentialMessagesPanel = () => {
-  const [selectedParty, setSelectedParty] = useState<PartyProxy>();
+  const [selectedParty, setSelectedParty] = useState<Party>();
   const parties = useParties();
 
   const client = useClient();

@@ -1,5 +1,27 @@
 # Change Log
 
+## [2.24.0](https://www.github.com/dxos/protocols/compare/v2.23.0...v2.24.0) (2022-01-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* Migrate to config version 1 (#879)
+* Introduce DXNS keys in HALO keychain (#886)
+* Record storage schema version in metadata and error if it doesn't match (#876)
+
+### Features
+
+* Introduce DXNS keys in HALO keychain ([#886](https://www.github.com/dxos/protocols/issues/886)) ([62d08a8](https://www.github.com/dxos/protocols/commit/62d08a8088780eb59bcbd6d536d42ae1ef8aa892))
+* Migrate to config version 1 ([#879](https://www.github.com/dxos/protocols/issues/879)) ([785a2c8](https://www.github.com/dxos/protocols/commit/785a2c834cc256eb8b2245f92d9852cce5c5922e))
+* Playground for the wallet popup ([#872](https://www.github.com/dxos/protocols/issues/872)) ([f5b1145](https://www.github.com/dxos/protocols/commit/f5b1145e17c5458eaef8d5a4b330ccd8349bf4d3))
+* Record storage schema version in metadata and error if it doesn't match ([#876](https://www.github.com/dxos/protocols/issues/876)) ([85a6cfd](https://www.github.com/dxos/protocols/commit/85a6cfdeb51893399df2e113992e75a08772d645))
+
+
+### Bug Fixes
+
+* Cover Halo recovery functionality with a Storybook ([#892](https://www.github.com/dxos/protocols/issues/892)) ([1eb0cfb](https://www.github.com/dxos/protocols/commit/1eb0cfb5f1141a4e76baee1ae8ee999f85141aa2))
+* Typo ([#889](https://www.github.com/dxos/protocols/issues/889)) ([16a90c2](https://www.github.com/dxos/protocols/commit/16a90c257b285dbb9e9a07385910288908835a56))
+
 ## [2.23.0](https://www.github.com/dxos/protocols/compare/v2.22.0...v2.23.0) (2022-01-26)
 
 
