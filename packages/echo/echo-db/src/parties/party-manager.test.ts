@@ -39,7 +39,6 @@ import { Item } from '../items';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';
-import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
@@ -338,8 +337,7 @@ describe('Party manager', () => {
     await updated;
 
     // Check Party membership and displayName.
-    for (const p of [partyA, partyB]) {
-      const party = new Party(p);
+    for (const party of [partyA, partyB]) {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
@@ -420,8 +418,7 @@ describe('Party manager', () => {
     await updated;
 
     // Check Party membership and displayName.
-    for (const _party of [partyA, partyB]) {
-      const party = new Party(_party);
+    for (const party of [partyA, partyB]) {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
@@ -480,8 +477,7 @@ describe('Party manager', () => {
     await updated;
 
     // Check Party membership and displayName.
-    for (const _party of [partyA, partyB]) {
-      const party = new Party(_party);
+    for (const party of [partyA, partyB]) {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {

@@ -23,7 +23,7 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DefaultModel } from './items';
 import { DataServiceRouter } from './items/data-service-router';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
+import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyInternal, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
@@ -311,38 +311,36 @@ export class ECHO {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<Party> {
+  async createParty (): Promise<PartyInternal> {
     await this.open();
 
-    const impl = await this._partyManager.createParty();
-    await impl.open();
+    const party = await this._partyManager.createParty();
+    await party.open();
 
-    // TODO(burdon): Don't create a new instance (maintain map).
-    return new Party(impl);
+    return party;
   }
 
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
-    const impl = await this._partyManager.cloneParty(snapshot);
-    await impl.open();
+    const party = await this._partyManager.cloneParty(snapshot);
+    await party.open();
 
-    // TODO(burdon): Don't create a new instance (maintain map).
-    return new Party(impl);
+    return party;
   }
 
   /**
    * Returns an individual party by it's key.
    * @param {PartyKey} partyKey
    */
-  getParty (partyKey: PartyKey): Party | undefined {
+  getParty (partyKey: PartyKey): PartyInternal | undefined {
     if (!this._partyManager.isOpen) {
       throw new EchoNotOpenError();
     }
 
-    const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
+    const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
-    return impl && new Party(impl);
+    return party;
   }
 
   /**
@@ -350,13 +348,14 @@ export class ECHO {
    * @param {PartyFilter} filter
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<Party> {
+  queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
     if (!this._partyManager.isOpen) {
       throw new EchoNotOpenError();
     }
 
     return new ResultSet(
-      this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
+      this._partyManager.update.discardParameter(),
+      () => this._partyManager.parties
     );
   }
 
@@ -365,20 +364,13 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  // TODO(burdon): Reconcile with `client.echo.createInvitation` on client.
   // TODO(burdon): Expose state machine for invitations.
-  //   code const invitationProcess = client.joinParty(invitation);
-  //   code invitationProcess.authenticate(code);
-  //   code const party = await invitationProcess.ready
-  //   code const { status } = useInvitationStatus(invitationProcess)
-  //   code const party = await client.joinParty(invitation)..ready;
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
     assert(this._partyManager.isOpen, new EchoNotOpenError());
 
     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
 
-    const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
-    return new Party(impl);
+    return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }
 }

@@ -12,7 +12,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
 import { ItemDemuxer, ItemManager } from '../items';
-import { PartyInternal } from '../parties';
 import { createTestInstance } from '../util';
 
 const log = debug('dxos:snapshot:test');
@@ -62,9 +61,7 @@ describe('snapshot', () => {
     const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'foo' } });
     await item.model.setProperty('foo', 'bar');
 
-    // TODO(burdon): Avoid using internals?
-    const snapshot = ((party as any)._internal as PartyInternal).createSnapshot();
-
+    const snapshot = party.createSnapshot();
     expect(snapshot.database?.items).toHaveLength(2);
     expect(snapshot.database?.items?.find(i => i.itemId === item.id)?.model?.custom).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain

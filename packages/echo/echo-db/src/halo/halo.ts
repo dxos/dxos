@@ -12,7 +12,7 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { MetadataStore } from '../metadata';
-import { PartyFactory, OpenProgress, Party, PartyManager } from '../parties';
+import { PartyFactory, OpenProgress, PartyManager } from '../parties';
 import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
@@ -196,8 +196,7 @@ export class HALO {
     assert(!this.identity.halo, 'HALO already exists.');
     assert(!this.identity.identityKey, 'Identity key already exists.');
 
-    const impl = await this._identityManager.recoverHalo(seedPhrase);
-    return new Party(impl);
+    return this._identityManager.recoverHalo(seedPhrase);
   }
 
   /**
@@ -207,8 +206,7 @@ export class HALO {
     assert(this._partyManager.isOpen, 'ECHO not open.');
     assert(!this.identity.halo, 'HALO already exists.');
 
-    const impl = await this._identityManager.joinHalo(invitationDescriptor, secretProvider);
-    return new Party(impl);
+    return this._identityManager.joinHalo(invitationDescriptor, secretProvider);
   }
 
   /**
