@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
 import { ClientServiceProvider } from '../interfaces';
-import { Party } from '../proto/gen/dxos/client';
+import { Party as PartyProto } from '../proto/gen/dxos/client';
 import { streamToResultSet } from '../util';
 import { InvitationRequest, InvitationProxy } from './invitations';
 
@@ -21,17 +21,20 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
-export class PartyProxy extends InvitationProxy {
+export class Party extends InvitationProxy {
   private readonly _database?: Database;
 
   private _key: PartyKey;
   private _isOpen: boolean;
   private _isActive: boolean;
 
+  /**
+   * @internal
+   */
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
-    _party: Party
+    _party: PartyProto
   ) {
     super();
     this._key = _party.publicKey;
@@ -72,7 +75,7 @@ export class PartyProxy extends InvitationProxy {
    * Called by EchoProxy to update this party instance.
    * @internal
    */
-  _processPartyUpdate (party: Party) {
+  _processPartyUpdate (party: PartyProto) {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;

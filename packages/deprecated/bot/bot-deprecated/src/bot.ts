@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
-import { Client, PartyProxy } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -201,7 +201,7 @@ export class Bot extends EventEmitter {
     }
   }
 
-  private _onJoin (parties: PartyProxy[] = []) {
+  private _onJoin (parties: Party[] = []) {
     parties.forEach(party => {
       const topic = party.key.toString();
       if (!this._parties.has(topic)) {

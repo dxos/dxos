@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Client, PartyProxy } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
@@ -14,7 +14,7 @@ const log = debug('dxos:bot:client-bot');
 
 export class ClientBot implements BotService {
   protected client: Client | undefined;
-  protected party: PartyProxy | undefined;
+  protected party: Party | undefined;
 
   async Initialize (request: InitializeRequest) {
     log('Client bot start initilizing');

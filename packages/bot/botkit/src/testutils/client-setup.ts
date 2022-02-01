@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, PartyProxy } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
 
 import * as proto from '../proto/gen/dxos/echo/invitation';
 
 export interface ClientSetup {
   client: Client,
-  party: PartyProxy,
+  party: Party,
   invitation: proto.InvitationDescriptor,
 }
 

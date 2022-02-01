@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
 import { Item, Selection } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -47,7 +47,7 @@ export const graphSelector = (adapter: ItemAdapter) => (selection: Selection<Ite
 };
 
 const createGraphData = (
-  id: string, partyMap?: ComplexMap<PartyKey, { party: PartyProxy, items: Item<any>[] }>
+  id: string, partyMap?: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>
 ) => {
   const rootId = `__root_${id}__`;
   const data: {nodes: Node[], links: Link[]} = {
@@ -108,7 +108,7 @@ export const useGraphData = ({ id }: {id: string}) => {
 
   // TODO(burdon): For open parties only.
   useEffect(asyncEffect(async () => {
-    const partyMap = new ComplexMap<PartyKey, { party: PartyProxy, items: Item<any>[] }>(key => key.toHex());
+    const partyMap = new ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>(key => key.toHex());
     for (const party of parties) {
       partyMap.set(party.key, { party, items: [] });
     }

@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import type { ConfigV1Object } from '@dxos/config';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -46,7 +46,7 @@ const clientConfig: ConfigV1Object = {
 const User = () => {
   const [open, setOpen] = useState(false);
   const [botRunning, setBotRunning] = useState(false);
-  const [party, setParty] = useState<PartyProxy>();
+  const [party, setParty] = useState<Party>();
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
   const client = useClient();
