@@ -6,9 +6,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Party, Item } from '@dxos/client';
 import type { ConfigV1Object } from '@dxos/config';
-import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import {
   ClientProvider,

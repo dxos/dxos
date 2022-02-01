@@ -13,9 +13,9 @@ import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
+import { Item } from './database';
 import { ECHO } from './echo';
 import { defaultInvitationAuthenticator } from './invitations';
-import { Item } from './database';
 import { inviteTestPeer } from './util';
 
 const log = debug('dxos:echo:test');

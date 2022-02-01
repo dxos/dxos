@@ -4,9 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party } from '@dxos/client';
+import { Party, Item, Selection } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
-import { Item, Selection } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import {
   OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK, LINK_EMPLOYEE, LINK_PROJECT

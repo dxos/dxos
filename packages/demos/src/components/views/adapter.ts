@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Item } from '@dxos/echo-db';
+import { Item } from '@dxos/client';
 
 /**
  * Adapts item to data structure used by views.

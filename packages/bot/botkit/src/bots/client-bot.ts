@@ -5,8 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Client, Party } from '@dxos/client';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { Client, Party, InvitationDescriptor } from '@dxos/client';
 
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
 

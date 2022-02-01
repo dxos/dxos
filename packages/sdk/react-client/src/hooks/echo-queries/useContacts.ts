@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PartyMember } from '@dxos/echo-db';
+import { PartyMember } from '@dxos/client';
 
 import { useClient } from '../client';
 

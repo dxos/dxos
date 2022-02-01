@@ -8,8 +8,8 @@ import { Model } from '@dxos/model-factory';
 import { range } from '@dxos/util';
 
 import { PartyInternal } from '..';
-import { ECHO } from '../echo';
 import { Item, ItemCreationOptions } from '../database';
+import { ECHO } from '../echo';
 import { createTestInstance, inviteTestPeer } from './testing';
 
 // TODO(burdon): These are very narrow functions. Refactor into factories.

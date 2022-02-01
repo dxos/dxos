@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import { Item } from '@dxos/echo-db';
+import { Item } from '@dxos/client';
 
 import { ItemTypeSelector } from './ItemTypeSelector';
 

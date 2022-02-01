@@ -12,10 +12,10 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { Database } from '../database';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
-import { Database } from '../database';
 import { ResultSet } from '../result';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';

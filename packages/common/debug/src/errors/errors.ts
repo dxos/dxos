@@ -17,7 +17,7 @@ export class TimeoutError extends DXOSError {
 }
 
 export class InvalidStateError extends DXOSError {
-  constructor (message: string = 'Invalid state.') {
+  constructor (message = 'Invalid state.') {
     super('DXOS_INVALID_STATE', message);
   }
 }

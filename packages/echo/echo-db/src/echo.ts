@@ -8,6 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { InvalidStateError } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -16,18 +17,17 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { DefaultModel } from './database';
+import { DataServiceRouter } from './database/data-service-router';
 import { InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
-import { DefaultModel } from './database';
-import { DataServiceRouter } from './database/data-service-router';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
 import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyInternal, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
-import { InvalidStateError } from '@dxos/debug';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');

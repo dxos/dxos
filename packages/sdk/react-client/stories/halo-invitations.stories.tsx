@@ -8,8 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { Invitation } from '@dxos/client';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { Invitation, InvitationDescriptor } from '@dxos/client';
 
 import {
   ClientProvider,

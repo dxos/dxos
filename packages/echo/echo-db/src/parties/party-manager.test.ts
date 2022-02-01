@@ -32,10 +32,10 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { Item } from '../database';
 import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
-import { Item } from '../database';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';

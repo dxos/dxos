@@ -4,8 +4,7 @@
 
 import { useState } from 'react';
 
-import { Party } from '@dxos/client';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { Party, InvitationDescriptor } from '@dxos/client';
 import { Generator } from '@dxos/echo-testing';
 import { useClient } from '@dxos/react-client';
 

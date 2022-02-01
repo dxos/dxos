@@ -7,7 +7,7 @@ import React from 'react';
 
 import { makeStyles } from '@mui/styles';
 
-import { Item } from '@dxos/echo-db';
+import { Item } from '@dxos/client';
 
 const useStyles = makeStyles(() => ({
   root: {

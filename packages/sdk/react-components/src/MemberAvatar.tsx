@@ -10,8 +10,8 @@ import {
 } from '@mui/icons-material';
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
+import { PartyMember } from '@dxos/client';
 import { PublicKeyLike, humanize } from '@dxos/crypto';
-import { PartyMember } from '@dxos/echo-db';
 
 const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;

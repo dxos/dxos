@@ -8,10 +8,9 @@ import { EventEmitter } from 'events';
 import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
-import { Client, Party } from '@dxos/client';
+import { Client, Party, InvitationDescriptor } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
-import { InvitationDescriptor } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
 import {
   COMMAND_BOT_INVITE,

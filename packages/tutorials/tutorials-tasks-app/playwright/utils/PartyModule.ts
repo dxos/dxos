@@ -1,4 +1,4 @@
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/client';
 import assert from 'assert';
 import expect from 'expect';
 

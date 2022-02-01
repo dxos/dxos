@@ -8,9 +8,8 @@ import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/ico
 import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Party, Item } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
-import { Item } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';

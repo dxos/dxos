@@ -10,7 +10,6 @@ import { Client, Party } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { Browser, ONLINE_CONFIG } from '../playwright/utils';
-import { defaultInvitationAuthenticator } from '@dxos/echo-db';
 
 const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2');
 const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMNS ?? '4');

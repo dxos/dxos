@@ -6,9 +6,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Party, InvitationDescriptor } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
-import { InvitationDescriptor } from '@dxos/echo-db';
 import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 

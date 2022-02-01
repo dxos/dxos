@@ -8,8 +8,8 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { raise } from '@dxos/debug';
-import { ECHO, EchoNotOpenError, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError } from '@dxos/echo-db';
+import { InvalidStateError, raise } from '@dxos/debug';
+import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError } from '@dxos/echo-db';
 
 import {
   InvitationState,
@@ -50,7 +50,7 @@ class PartyService implements IPartyService {
           }
         });
       } catch (error) {
-        if (error instanceof EchoNotOpenError) {
+        if (error instanceof InvalidStateError) {
           // Do nothing.
         } else {
           throw error;
