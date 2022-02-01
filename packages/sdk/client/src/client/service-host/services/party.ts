@@ -156,7 +156,7 @@ class PartyService implements IPartyService {
               next({ state: InvitationState.CONNECTED });
               return Buffer.from(secret);
             };
-            invitation = await party.createInvitation({
+            invitation = await party.invitationManager.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
             }, {
@@ -169,7 +169,7 @@ class PartyService implements IPartyService {
             assert(invitation.type === InvitationDescriptorType.INTERACTIVE);
             invitation.secret = Buffer.from(secret);
           } else {
-            invitation = await party.createOfflineInvitation(request.inviteeKey);
+            invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
           }
 
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
@@ -256,7 +256,7 @@ class PartyService implements IPartyService {
     }
   }
 
-  CreateSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async CreateSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
     assert(request.partyKey);
     const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
     return party.createSnapshot();
