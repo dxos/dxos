@@ -242,12 +242,7 @@ export class ECHO {
     await this._metadataStore.load();
 
     if (this._metadataStore.version !== STORAGE_VERSION) {
-<<<<<<< HEAD
-      // todo make error specific to it being the wrong version: InvalidStorageVersionError
-      throw new InvalidStorageVersionError(`Version missmatch: expected ${STORAGE_VERSION}; current ${this._metadataStore.version}`);
-=======
       throw new InvalidStorageVersionError(STORAGE_VERSION, this._metadataStore.version);
->>>>>>> origin/main
     }
 
     await this._keyring.load();
