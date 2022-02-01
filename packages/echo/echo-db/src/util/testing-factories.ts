@@ -9,7 +9,7 @@ import { range } from '@dxos/util';
 
 import { PartyInternal } from '..';
 import { ECHO } from '../echo';
-import { Item, ItemCreationOptions } from '../items';
+import { Item, ItemCreationOptions } from '../database';
 import { createTestInstance, inviteTestPeer } from './testing';
 
 // TODO(burdon): These are very narrow functions. Refactor into factories.

@@ -11,7 +11,7 @@ import { schema, ItemID, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
-import { ItemDemuxer, ItemManager } from '../items';
+import { ItemDemuxer, ItemManager } from '../database';
 import { createTestInstance } from '../util';
 
 const log = debug('dxos:snapshot:test');

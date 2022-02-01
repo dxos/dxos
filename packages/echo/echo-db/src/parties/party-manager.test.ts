@@ -35,7 +35,7 @@ import { afterTest } from '@dxos/testutils';
 import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
-import { Item } from '../items';
+import { Item } from '../database';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';

@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { ECHO } from './echo';
 import { defaultInvitationAuthenticator } from './invitations';
-import { Item } from './items';
+import { Item } from './database';
 import { inviteTestPeer } from './util';
 
 const log = debug('dxos:echo:test');
