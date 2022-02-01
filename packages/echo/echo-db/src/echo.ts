@@ -16,7 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { EchoNotOpenError, InvalidStoredDataError } from './errors';
+import { InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
@@ -27,6 +27,7 @@ import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyIntern
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
+import { InvalidStateError } from '@dxos/debug';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -241,7 +242,7 @@ export class ECHO {
     await this._metadataStore.load();
 
     if (this._metadataStore.version !== STORAGE_VERSION) {
-      throw new InvalidStoredDataError(`version missmatch: expected version ${STORAGE_VERSION} but the data was saved from ${this._metadataStore.version}`);
+      throw new InvalidStorageVersionError(STORAGE_VERSION, this._metadataStore.version);
     }
 
     await this._keyring.load();
@@ -335,7 +336,7 @@ export class ECHO {
    */
   getParty (partyKey: PartyKey): PartyInternal | undefined {
     if (!this._partyManager.isOpen) {
-      throw new EchoNotOpenError();
+      throw new InvalidStateError();
     }
 
     const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
@@ -350,7 +351,7 @@ export class ECHO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
     if (!this._partyManager.isOpen) {
-      throw new EchoNotOpenError();
+      throw new InvalidStateError();
     }
 
     return new ResultSet(
@@ -366,7 +367,7 @@ export class ECHO {
    */
   // TODO(burdon): Expose state machine for invitations.
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+    assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
