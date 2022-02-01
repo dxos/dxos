@@ -36,9 +36,10 @@ export class InvalidInvitationError extends DXOSError {
   }
 }
 
+// TODO(dmaretskyi): Rename to InvalidStateError.
 export class EchoNotOpenError extends DXOSError {
   constructor () {
-    super('ECHO_NOT_OPEN', 'Echo not open.');
+    super('ECHO_NOT_OPEN', 'ECHO not open.');
   }
 }
 

@@ -241,7 +241,8 @@ export class ECHO {
     await this._metadataStore.load();
 
     if (this._metadataStore.version !== STORAGE_VERSION) {
-      throw new InvalidStoredDataError(`version missmatch: expected version ${STORAGE_VERSION} but the data was saved from ${this._metadataStore.version}`);
+      // todo make error specific to it being the wrong version: InvalidStorageVersionError
+      throw new InvalidStorageVersionError(`Version missmatch: expected ${STORAGE_VERSION}; current ${this._metadataStore.version}`);
     }
 
     await this._keyring.load();
@@ -352,7 +353,8 @@ export class ECHO {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
     if (!this._partyManager.isOpen) {
-      throw new EchoNotOpenError();
+      throw new EchoNo
+      tOpenError();
     }
 
     return new ResultSet(
