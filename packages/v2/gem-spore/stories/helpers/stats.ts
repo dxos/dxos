@@ -34,6 +34,6 @@ export class StatsProjector<MODEL> extends Projector<MODEL, Stats> {
 
   onUpdate (layout: Stats) {
     this._layout = layout;
-    this.updateEvent.emit({ layout: this._layout });
+    this.updated.emit({ layout: this._layout });
   }
 }

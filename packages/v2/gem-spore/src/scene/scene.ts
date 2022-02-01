@@ -2,62 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter, EventHandle } from '@dxos/gem-core';
+import { EventHandle } from '@dxos/gem-core';
+
+import { Projector } from './projector';
+import { Renderer } from './renderer';
 
 export type ObjectId = string
 
-// TODO(burdon): Add bounds, zoom, etc.
-export class Surface {
-  constructor (
-    readonly svg: SVGSVGElement,
-    readonly root: SVGGElement
-  ) {}
-}
-
-//
-// Projector => Layout => Renderer
-//
-
-export interface RenderOptions {
-  drag?: any
-}
-
-export abstract class Renderer<LAYOUT> {
-  constructor (
-    protected readonly _surface: Surface
-  ) {}
-
-  abstract update (layout: LAYOUT, options?: RenderOptions);
-}
-
-export abstract class Projector<MODEL, LAYOUT> {
-  readonly updateEvent = new EventEmitter<{ layout: LAYOUT, options?: RenderOptions }>();
-
-  constructor (
-    private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT
-  ) {}
-
-  update (model: MODEL) {
-    this.onUpdate(this._mapper(model, this.getLayout()));
-  }
-
-  start () {
-    this.onStart();
-  }
-
-  async stop () {
-    await this.onStop();
-  }
-
-  protected abstract getLayout (): LAYOUT;
-
-  protected abstract onUpdate (layout: LAYOUT);
-
-  protected onStart () {}
-
-  protected async onStop () {}
-}
-
+/**
+ * Component wihtin a scene.
+ */
 export class Part<MODEL, LAYOUT> {
   _updateListener: EventHandle | undefined;
 
@@ -71,7 +25,8 @@ export class Part<MODEL, LAYOUT> {
   }
 
   start () {
-    this._updateListener = this._projector.updateEvent.on(({ layout, options }) => {
+    // Listen for projector updates.
+    this._updateListener = this._projector.updated.on(({ layout, options }) => {
       this._renderer.update(layout, options);
     });
 
@@ -86,6 +41,9 @@ export class Part<MODEL, LAYOUT> {
   }
 }
 
+/**
+ * Manages a collection of parts.
+ */
 export class Scene<MODEL> {
   constructor (
     private readonly _parts: Part<MODEL, any>[]

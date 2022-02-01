@@ -3,5 +3,6 @@
 //
 
 export * from './data';
+export * from './force';
 export * from './graph';
 export * from './scene';

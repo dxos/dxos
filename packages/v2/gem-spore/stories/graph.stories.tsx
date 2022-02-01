@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { css } from '@emotion/css';
 
 import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
-import { FullScreen, SvgContainer, gridStyles, useContext, useGrid, useStateRef, useZoom } from '@dxos/gem-core';
+import { FullScreen, SvgContainer, SvgContext, gridStyles, useGrid, useStateRef, useZoom } from '@dxos/gem-core';
 
 import { GraphForceProjector, GraphRenderer, Part, Surface, Scene } from '../src';
 
@@ -54,7 +54,7 @@ const styles = {
 };
 
 export const Primary = () => {
-  const context = useContext();
+  const context = useMemo(() => new SvgContext(), []);
   const gridRef = useGrid(context, { axis: false });
   const zoomRef = useZoom(context);
 
@@ -83,7 +83,7 @@ export const Primary = () => {
         updateModel(model);
         scene.update(model);
       }
-    }, 50);
+    }, 10);
 
     scene.start();
     setScene(scene);
