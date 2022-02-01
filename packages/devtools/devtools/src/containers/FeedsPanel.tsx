@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { useClient, useParties } from '@dxos/react-client';
 
@@ -14,7 +14,7 @@ import { useStream } from '../hooks';
 export const FeedsPanel = () => {
   const client = useClient();
   const parties = useParties();
-  const [selectedParty, setSelectedParty] = useState<PartyProxy>();
+  const [selectedParty, setSelectedParty] = useState<Party>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
   const { parties: remoteParties } = useStream(() => devtoolsHost.SubscribeToFeeds({})) ?? {};
   const partyFeeds = useMemo(
@@ -37,7 +37,7 @@ export const FeedsPanel = () => {
     }
   }, [blocks]);
 
-  const handlePartyChange = (party: PartyProxy | undefined) => {
+  const handlePartyChange = (party: Party | undefined) => {
     setSelectedParty(party);
     setSelectedFeed(undefined);
     setMessages([]);

@@ -13,7 +13,7 @@ import ProjectIcon from '@mui/icons-material/WorkOutline';
 import { Chip, createTheme, IconButton, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import { Database, Item } from '@dxos/echo-db';
+import { Database, Item } from '@dxos/client';
 import {
   OBJECT_ORG,
   OBJECT_PERSON,

@@ -36,14 +36,8 @@ export class InvalidInvitationError extends DXOSError {
   }
 }
 
-export class EchoNotOpenError extends DXOSError {
-  constructor () {
-    super('ECHO_NOT_OPEN', 'Echo not open.');
-  }
-}
-
-export class InvalidStoredDataError extends DXOSError {
-  constructor (message = 'unknown reason') {
-    super('INVALID_STORED_DATA', `Stored data is invalid: ${message}`);
+export class InvalidStorageVersionError extends DXOSError {
+  constructor (expected: number, actual: number) {
+    super('INVALID_STORAGE_VERSION', `Invalid storage version: Expected ${expected}, actual ${actual}.`);
   }
 }

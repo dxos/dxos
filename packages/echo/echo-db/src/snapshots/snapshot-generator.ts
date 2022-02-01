@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { TimeframeClock } from '../items';
+import { TimeframeClock } from '../database';
 import { PartyCore } from '../parties/party-core';
 import { SnapshotStore } from './snapshot-store';
 

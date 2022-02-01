@@ -9,8 +9,8 @@ import { NetworkManagerOptions } from '@dxos/network-manager';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
+import { PartyInternal } from '..';
 import { ECHO } from '../echo';
-import { Party } from '../parties';
 import { createRamStorage } from './persistant-ram-storage';
 
 const log = debug('dxos:echo:testing');
@@ -72,8 +72,8 @@ export const createTestInstance = async ({
  * Invites a test peer to the party.
  * @returns Party instance on provided test instance.
  */
-export const inviteTestPeer = async (party: Party, peer: ECHO): Promise<Party> => {
-  const invitation = await party.createInvitation({
+export const inviteTestPeer = async (party: PartyInternal, peer: ECHO): Promise<PartyInternal> => {
+  const invitation = await party.invitationManager.createInvitation({
     secretValidator: async () => true
   });
 

@@ -10,7 +10,7 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../parties';
-import { InvitationAuthenticator, InvitationOptions } from './common';
+import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 
@@ -60,7 +60,7 @@ export class InvitationManager {
   /**
    * Creates an invitation for a remote peer.
    */
-  async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
+  async createInvitation (authenticationDetails: InvitationAuthenticator = defaultInvitationAuthenticator, options: InvitationOptions = {}) {
     assert(this._networkManager);
 
     const responder = new GreetingResponder(

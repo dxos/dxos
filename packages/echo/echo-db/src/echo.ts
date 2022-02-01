@@ -8,6 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { InvalidStateError } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -16,14 +17,14 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { EchoNotOpenError, InvalidStoredDataError } from './errors';
+import { DefaultModel } from './database';
+import { DataServiceRouter } from './database/data-service-router';
+import { InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
-import { DefaultModel } from './items';
-import { DataServiceRouter } from './items/data-service-router';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
+import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyInternal, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
@@ -241,7 +242,7 @@ export class ECHO {
     await this._metadataStore.load();
 
     if (this._metadataStore.version !== STORAGE_VERSION) {
-      throw new InvalidStoredDataError(`version missmatch: expected version ${STORAGE_VERSION} but the data was saved from ${this._metadataStore.version}`);
+      throw new InvalidStorageVersionError(STORAGE_VERSION, this._metadataStore.version);
     }
 
     await this._keyring.load();
@@ -311,38 +312,36 @@ export class ECHO {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<Party> {
+  async createParty (): Promise<PartyInternal> {
     await this.open();
 
-    const impl = await this._partyManager.createParty();
-    await impl.open();
+    const party = await this._partyManager.createParty();
+    await party.open();
 
-    // TODO(burdon): Don't create a new instance (maintain map).
-    return new Party(impl);
+    return party;
   }
 
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
-    const impl = await this._partyManager.cloneParty(snapshot);
-    await impl.open();
+    const party = await this._partyManager.cloneParty(snapshot);
+    await party.open();
 
-    // TODO(burdon): Don't create a new instance (maintain map).
-    return new Party(impl);
+    return party;
   }
 
   /**
    * Returns an individual party by it's key.
    * @param {PartyKey} partyKey
    */
-  getParty (partyKey: PartyKey): Party | undefined {
+  getParty (partyKey: PartyKey): PartyInternal | undefined {
     if (!this._partyManager.isOpen) {
-      throw new EchoNotOpenError();
+      throw new InvalidStateError();
     }
 
-    const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
+    const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
     // TODO(burdon): Don't create a new instance (maintain map).
-    return impl && new Party(impl);
+    return party;
   }
 
   /**
@@ -350,13 +349,14 @@ export class ECHO {
    * @param {PartyFilter} filter
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<Party> {
+  queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
     if (!this._partyManager.isOpen) {
-      throw new EchoNotOpenError();
+      throw new InvalidStateError();
     }
 
     return new ResultSet(
-      this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
+      this._partyManager.update.discardParameter(),
+      () => this._partyManager.parties
     );
   }
 
@@ -365,20 +365,13 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  // TODO(burdon): Reconcile with `client.echo.createInvitation` on client.
   // TODO(burdon): Expose state machine for invitations.
-  //   code const invitationProcess = client.joinParty(invitation);
-  //   code invitationProcess.authenticate(code);
-  //   code const party = await invitationProcess.ready
-  //   code const { status } = useInvitationStatus(invitationProcess)
-  //   code const party = await client.joinParty(invitation)..ready;
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
-    assert(this._partyManager.isOpen, new EchoNotOpenError());
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
+    assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
 
-    const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
-    return new Party(impl);
+    return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }
 }
