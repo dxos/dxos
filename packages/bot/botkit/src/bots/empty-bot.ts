@@ -3,11 +3,20 @@
 //
 
 import { createIpcPort } from '../bot-container';
-import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
+import {
+  BotService,
+  InitializeRequest,
+  SendCommandRequest,
+  SendCommandResponse,
+  StartRequest
+} from '../proto/gen/dxos/bot';
 import { startBot } from './start-bot';
 
 export class EmptyBot implements BotService {
   async Initialize (request: InitializeRequest) {
+    await this.onInit(request);
+  }
+  async Start (request: StartRequest) {
     await this.onInit(request);
   }
 

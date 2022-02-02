@@ -11,6 +11,7 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotService } from '../proto/gen/dxos/bot';
+import { ConfigV1Object, Config } from '@dxos/config';
 
 /**
  * Represents a running bot instance in BotFactory.
@@ -18,18 +19,22 @@ import { Bot, BotService } from '../proto/gen/dxos/bot';
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
   private readonly _bot: Bot;
+  private _config: Config<ConfigV1Object>;
+  localPath: string | undefined;
 
   /**
    * @param workingDirectory Path to the directory where bot code, data and logs are stored.
    */
   constructor (
     readonly id: string,
-    readonly workingDirectory: string
+    readonly workingDirectory: string,
+    config: Config<ConfigV1Object> = new Config({})
   ) {
     this._bot = {
       id,
       status: Bot.Status.STOPPED
     };
+    this._config = config;
   }
 
   get rpc () {
@@ -41,10 +46,28 @@ export class BotHandle {
     return this._bot;
   }
 
+  get config () {
+    return this._config;
+  }
+
   async initializeDirectories () {
     await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
     await fs.mkdir(this.logsDir);
+  }
+
+  makePersistent () {
+    this._config = new Config(this._config.values, 
+    {
+      runtime: {
+        client: {
+          storage: {
+            persistent: true,
+            path: this.getStoragePath()
+          }
+        }
+      }
+    });
   }
 
   async open (port: RpcPort): Promise<void> {

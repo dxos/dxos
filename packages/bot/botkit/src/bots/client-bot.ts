@@ -7,7 +7,13 @@ import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
 
-import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
+import { 
+  BotService,
+  InitializeRequest,
+  SendCommandRequest,
+  SendCommandResponse,
+  StartRequest
+} from '../proto/gen/dxos/bot';
 
 const log = debug('dxos:bot:client-bot');
 
@@ -39,6 +45,17 @@ export class ClientBot implements BotService {
     await this.onInit(request);
   }
 
+  async Start (request: StartRequest) {
+    log('Client bot start initilizing');
+    this.client = new Client(request.config);
+
+    log('Client bot initialize');
+    await this.client.initialize();
+
+    log('Client bot onInit');
+    await this.onInit(request);
+  }
+
   async Command (request: SendCommandRequest) {
     const response = await this.onCommand(request);
     return response;
@@ -47,7 +64,7 @@ export class ClientBot implements BotService {
   async Stop () {
     await this.client?.destroy();
     await this.onStop();
-    process.exit(0);
+    process.nextTick(() => process.exit(0));
   }
 
   protected async onInit (request: InitializeRequest) {}

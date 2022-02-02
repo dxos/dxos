@@ -83,7 +83,11 @@ export class BotFactory implements BotFactoryService {
         request.package = await this._contentResolver.resolve(request.package.dxn);
       }
 
-      const handle = new BotHandle(id, join(process.cwd(), 'bots', id));
+      const handle = new BotHandle(
+        id,
+        join(process.cwd(), 'bots', id),
+        this._config
+      );
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const workingDirectory = handle.getContentPath();
@@ -96,6 +100,7 @@ export class BotFactory implements BotFactoryService {
 
       if (localPath) {
         log(`[${id}] Spawning bot ${localPath}`);
+        handle.localPath = localPath;
       }
 
       const port = await this._botContainer.spawn({
@@ -106,19 +111,8 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
       log(`[${id}] Initializing bot`);
-      const botConfig = new Config(this._config.values, 
-      {
-        runtime: {
-          client: {
-            storage: {
-              persistent: true,
-              path: handle.getStoragePath()
-            }
-          }
-        }
-      });
       await handle.rpc.Initialize({
-        config: botConfig.values,
+        config: handle.config.values,
         invitation: request.invitation
       });
       log(`[${id}] Initialization complete`);
@@ -133,6 +127,16 @@ export class BotFactory implements BotFactoryService {
   async Start (request: Bot) {
     assert(request.id);
     const bot = this._getBot(request.id);
+    const id = bot.id;
+    const port = await this._botContainer.spawn({
+      id,
+      localPath: bot.localPath,
+      logFilePath: bot.getLogFilePath(new Date())
+    });
+    log(`[${id}] Openning RPC channel`);
+    await bot.open(port);
+    log(`[${id}] Initializing bot`);
+    await bot.rpc.Start({ config: bot.config.values });
     return bot.bot;
   }
 
