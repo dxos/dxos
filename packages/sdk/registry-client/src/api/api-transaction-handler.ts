@@ -25,7 +25,7 @@ export class ApiTransactionHandler {
     if (typeof _signFn === 'function') {
       this.signFn = _signFn;
     } else {
-      this.signFn = (tx: Tx) => tx.signAsync(_signFn);
+      this.signFn = async (tx: Tx) => tx.signAsync(_signFn);
     }
   }
 
