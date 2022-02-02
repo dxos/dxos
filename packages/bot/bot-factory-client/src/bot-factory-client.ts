@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { promiseTimeout } from '@dxos/async';
-import type { PartyProxy } from '@dxos/client';
+import type { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
@@ -90,7 +90,7 @@ export class BotFactoryClient {
     }
   }
 
-  async spawn (pkg: BotPackageSpecifier, party: PartyProxy) {
+  async spawn (pkg: BotPackageSpecifier, party: Party) {
     assert(this._rpc, 'Bot factory client is not started');
     const invitation = await party.createInvitation();
     const { id } = await this._rpc.rpc.SpawnBot({

@@ -118,10 +118,9 @@ describe('Auctions Client', () => {
       await expect(winner.bidAuction(auctionName, 100002)).to.be.fulfilled;
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
-
       const domainKey = await winner.claimAuction(auctionName);
-
       const accountId = (await apiPromise.query.registry.domains(domainKey.value)).unwrapOr(undefined)?.owners?.[0];
+
       expect(accountId).not.to.be.undefined;
       expect(accountId?.toString()).to.be.equal(bob.address);
     });

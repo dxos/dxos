@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { SelectionResult } from '@dxos/echo-db';
+import { SelectionResult } from '@dxos/client';
 import { Falsy } from '@dxos/util';
 
 /**

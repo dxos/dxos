@@ -4,8 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { Party, InvitationDescriptor } from '@dxos/client';
 import { Generator } from '@dxos/echo-testing';
 import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
@@ -24,7 +23,7 @@ export const Primary = () => {
   const Story = () => {
     const client = useClient();
     const profile = useProfile();
-    const [party, setParty] = useState<PartyProxy>();
+    const [party, setParty] = useState<Party>();
 
     useEffect(() => {
       if (profile) {
@@ -59,7 +58,7 @@ export const Primary = () => {
 export const Peers = () => {
   const Root = () => {
     const client = useClient();
-    const [party, setParty] = useState<PartyProxy>();
+    const [party, setParty] = useState<Party>();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();

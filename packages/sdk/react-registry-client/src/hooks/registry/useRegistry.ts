@@ -14,8 +14,7 @@ type ContextValue = {
 export const RegistryContext = createContext<ContextValue | undefined>(undefined);
 
 /**
- * Low-level hook returning instance of DXNS registry.
- * To be used with `RegistryProvider` or `RegistryInitializer` component wrapper.
+ * Requires `RegistryProvider` component wrapper.
  */
 export const useRegistry = (): IRegistryClient => {
   const context = useContext(RegistryContext) ??

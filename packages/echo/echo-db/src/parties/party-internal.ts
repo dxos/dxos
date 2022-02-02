@@ -12,13 +12,15 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { Database } from '../database';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
-import { Database } from '../items';
+import { ResultSet } from '../result';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyFeedProvider } from './party-feed-provider';
+import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
@@ -273,5 +275,24 @@ export class PartyInternal {
         )));
       }
     };
+  }
+
+  /**
+   * Get all party members.
+   */
+  queryMembers (): ResultSet<PartyMember> {
+    assert(this.isOpen, 'Party is not open.');
+    return new ResultSet(
+      this.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter(),
+      () => this.processor.memberKeys
+        .filter(publicKey => !this.processor.partyKey.equals(publicKey))
+        .map((publicKey: PublicKey): PartyMember => {
+          const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
+          return {
+            publicKey,
+            displayName
+          };
+        })
+    );
   }
 }

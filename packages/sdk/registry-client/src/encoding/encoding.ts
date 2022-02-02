@@ -4,14 +4,11 @@
 
 import assert from 'assert';
 import * as protobuf from 'protobufjs';
-
 import 'protobufjs/ext/descriptor';
-import { CID } from './models';
-import { FieldMapper, mapMessage } from './proto-mapper';
-import { TYPES } from './proto/gen';
-import { Record } from './proto/gen/dxos/registry';
-import { FileDescriptorSet } from './proto/gen/google/protobuf';
-import { RegistryTypeRecord } from './registry-client';
+
+import { FileDescriptorSet, Record, TYPES } from '../proto';
+import { CID, RegistryTypeRecord } from '../types';
+import { FieldMapper, mapMessage } from './mapper';
 
 // TODO(marik-d): Descriptors are unused right now, either fix them or remove those methods.
 
@@ -105,6 +102,7 @@ export async function encodeExtensionPayload (data: RecordExtension<any>, resolv
       typeRecord: typeCid.value
     };
   };
+
   return mapper(data, RECORD_EXTENSION_NAME);
 }
 

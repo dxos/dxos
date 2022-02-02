@@ -6,9 +6,8 @@ import faker from 'faker';
 import * as protobuf from 'protobufjs';
 
 import { sanitizeExtensionData } from '../encoding';
-import { CID, DXN } from '../models';
-import { schemaJson } from '../proto/gen';
-import { RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord } from '../registry-client';
+import { schemaJson } from '../proto';
+import { CID, DXN, RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord } from '../types';
 
 export interface CreateMockResourceRecordOptions {
   _dxn?: DXN,
