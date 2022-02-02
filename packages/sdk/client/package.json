@@ -42,7 +42,9 @@
     "memdown": "^5.1.0",
     "readable-stream": "^3.6.0",
     "uuid": "^8.3.2",
-    "@polkadot/util-crypto": "6.11.1"
+    "@polkadot/util-crypto": "6.11.1",
+    "@polkadot/util": "6.11.1",
+    "@polkadot/keyring": "6.11.1"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",

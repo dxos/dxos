@@ -63,6 +63,25 @@ export class TxSigner implements Partial<Signer> {
   }
 }
 
+export class DxosClientSigner implements Partial<Signer> {
+  private id = 0;
+  constructor(private client: Client, private publicKey: PublicKey) { }
+
+  public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
+    const result = await this.client.halo.sign({
+      publicKey: this.publicKey,
+      payload: data
+    })
+
+    console.log({result})
+
+    return {
+      id: ++this.id,
+      signature: result.signed
+    }
+  }
+}
+
 export class PayloadSigner implements Partial<Signer> {
   private id = 0;
   constructor(private keypair: KeyringPair, private registry: Registry) { }
@@ -99,14 +118,16 @@ describe.only('Signatures', () => {
     const uri = '//Alice';
     keypair = keyring.addFromUri(uri);
 
+
     client = new Client({version: 1, runtime: {services: {dxns: {server: DEFAULT_DOT_ENDPOINT}}}})
     await client.initialize();
-    // await client.halo.createProfile();
-    // await client.halo.addKeyRecord({
-    //   publicKey: PublicKey.from(keypair.publicKey),
-    //   secretKey: Buffer.from(uri),
-    //   type: KeyType.DXNS
-    // })
+    await client.halo.createProfile();
+    await client.halo.addKeyRecord({
+      publicKey: PublicKey.from(keypair.publicKey),
+      secretKey: Buffer.from(uri),
+      type: KeyType.DXNS
+    })
+
   });
 
   afterEach(async () => {
@@ -192,11 +213,22 @@ describe.only('Signatures', () => {
   //   await auctionsApi.createAuction(auctionName, 100000)
   // });
 
-  it.only('Can send transactions with external signer', async () => {
+  it('Can send transactions with external signer', async () => {
     const auctionName = Math.random().toString(36).substring(2);
 
     const signTxFunction: SignTxFunction = async (tx) => {
       return await tx.signAsync(keypair.address, {signer: new TxSigner(keypair)})
+    }
+    const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
+
+    await auctionsApi.createAuction(auctionName, 100000)
+  });
+
+  it.only('Can send transactions with external signer from @dxos/client', async () => {
+    const auctionName = Math.random().toString(36).substring(2);
+
+    const signTxFunction: SignTxFunction = async (tx) => {
+      return await tx.signAsync(keypair.address, {signer: new DxosClientSigner(client, PublicKey.from(keypair.addressRaw))})
     }
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 
@@ -216,23 +248,23 @@ describe.only('Signatures', () => {
   });
 
 
-  it('sign', async () => {
-    const auctionName = Math.random().toString(36).substring(2);
+  // it('sign', async () => {
+  //   const auctionName = Math.random().toString(36).substring(2);
     
-    const auctionsApi = new AuctionsClient(apiPromise, tx => tx.signAsync(keypair));
+  //   const auctionsApi = new AuctionsClient(apiPromise, tx => tx.signAsync(keypair));
     
-    const tx= auctionsApi.api.tx.registry.createAuction(auctionName, 100000)
+  //   const tx= auctionsApi.api.tx.registry.createAuction(auctionName, 100000)
 
-    const signedTx = await tx.signAsync(keypair)
+  //   const signedTx = await tx.signAsync(keypair)
 
-    console.log(signedTx.signature)
-    console.log({ valid: keypair.verify(signedTx.toU8a(), signedTx.signature,signedTx.signer.toString()) })
+  //   console.log(signedTx.signature)
+  //   console.log({ valid: keypair.verify(signedTx.toU8a(), signedTx.signature,signedTx.signer.toString()) })
 
-    const tx2= auctionsApi.api.tx.registry.createAuction(auctionName, 100000)
+  //   const tx2= auctionsApi.api.tx.registry.createAuction(auctionName, 100000)
 
-    const signedTx2 = await tx2.signAsync(keypair.address, { signer: new PayloadSigner(keypair, registry) })
+  //   const signedTx2 = await tx2.signAsync(keypair.address, { signer: new PayloadSigner(keypair, registry) })
 
-    console.log(signedTx2.signature)
+  //   console.log(signedTx2.signature)
 
-  })
+  // })
 });

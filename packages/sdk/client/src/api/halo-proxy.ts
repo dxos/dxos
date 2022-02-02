@@ -8,7 +8,7 @@ import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions,
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
-import { Profile } from '../proto/gen/dxos/client';
+import { Profile, SignRequest } from '../proto/gen/dxos/client';
 import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
 
 export interface CreateInvitationOptions extends InvitationOptions {
@@ -122,6 +122,10 @@ export class HaloProxy extends InvitationProxy {
 
   async addKeyRecord (keyRecord: KeyRecord) {
     await this._serviceProvider.services.HaloService.AddKeyRecord({keyRecord});
+  }
+
+  async sign (request: SignRequest) {
+    return await this._serviceProvider.services.HaloService.Sign(request)
   }
 
   /**
