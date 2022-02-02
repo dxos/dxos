@@ -148,7 +148,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
       // Centering.
       // https://github.com/d3/d3-force#centering
       .force('center', maybe(forces?.center, () => d3.forceCenter()
-        .strength(0.7)
+        .strength(0.2)
       ))
 
       // Collision
