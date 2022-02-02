@@ -47,15 +47,15 @@ export const styles = {
       circle {
         fill: #FAFAFA;
         stroke: coral;
-        stroke-width: 2;
-        stroke-dasharray: 5,5;
-        opacity: 0.6;
+        stroke-width: 4px;
+        stroke-dasharray: 15, 5;
+        opacity: 0.2;
       }
     }
 
     circle.bullet {
       stroke: none;
-      fill: red;
+      fill: #999;
     }
 
     g.node {

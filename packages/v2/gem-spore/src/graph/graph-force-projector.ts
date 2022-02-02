@@ -7,21 +7,28 @@ import * as d3 from 'd3';
 import { GraphLayout, GraphNode } from '../graph';
 import { Projector } from '../scene';
 
-const maybe = (condition, f) => condition ? f() : undefined;
 const value = <T extends any> (v: T | boolean): T => typeof v === 'boolean' ? undefined : v;
+
+const maybe = <T extends any> (config: T | boolean, f, def = false) => {
+  if (config || (config === undefined && def)) {
+    return f(value<T>(config) ?? {});
+  }
+};
+
+type ManyBodyOptions = {
+  distanceMax?: number
+  strength?: (count: number) => number
+}
 
 type LinkOptions = {
   distance: number
 }
 
-type ChargeOptions = {
-  distanceMax?: number
-}
-
 type GraphForceProjectorOptions = {
+  guides: boolean
   forces?: {
+    manyBody?: boolean | ManyBodyOptions
     link?: boolean | LinkOptions
-    charge?: boolean | ChargeOptions
     center?: boolean
     collide?: boolean
   }
@@ -40,6 +47,8 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
   // Current layout.
   _layout: GraphLayout
 
+  numChildren = (node) => this._layout.graph.links.filter(link => link.source.id === node.id).length;
+
   protected getLayout () {
     return this._layout;
   }
@@ -48,7 +57,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
     this._layout = layout;
 
     // Guides.
-    this._layout.guides = {
+    this._layout.guides = this.options.guides ? {
       circles: [
         {
           cx: 0,
@@ -56,9 +65,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
           r: 240 // TODO(burdon): Use scale.
         }
       ]
-    };
-
-    const count = (node) => this._layout.graph.links.filter(link => link.source.id === node.id).length;
+    } : undefined;
 
     // Merge nodes.
     this._layout.graph.nodes.forEach(node => {
@@ -74,7 +81,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
         });
       }
 
-      const children = count(node);
+      const children = this.numChildren(node);
       Object.assign(node, {
         children,
         r: 5 + children * 2
@@ -91,9 +98,12 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
 
       // Links.
       // https://github.com/d3/d3-force#forceLink
-      .force('link', maybe(forces?.link !== false, () => d3.forceLink(this._layout.graph.links)
-        // .strength(link => 1 / Math.min(2, count(link.source), count(link.target)))
-        .distance(value<LinkOptions>(forces?.link)?.distance ?? 20)
+      .force('link', maybe<LinkOptions>(
+        forces?.link,
+        (config: LinkOptions) => d3.forceLink(this._layout.graph.links)
+          // .strength(link => 1 / Math.min(2, count(link.source), count(link.target)))
+          .distance(config.distance ?? 20),
+        true
       ))
 
       .alpha(0.4);
@@ -122,11 +132,17 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
 
       // Repulsion.
       // https://github.com/d3/d3-force#forceManyBody
-      .force('charge', maybe(forces?.charge !== false, () => d3.forceManyBody()
-        .distanceMax(value<ChargeOptions>(forces?.charge)?.distanceMax ?? 240)
-        .strength((d: GraphNode<any>) => {
-          return -60 - (Math.log(d.data.children.length + 1) * 3);
-        })
+      .force('charge', maybe<ManyBodyOptions>(forces?.manyBody,
+        (config: ManyBodyOptions) => {
+          const strength = config.strength ?? (count => (-60 - (Math.log(count + 1) * 10)));
+
+          return d3.forceManyBody()
+            .distanceMax(config.distanceMax ?? 240)
+            .strength((d: GraphNode<any>) => {
+              return strength(this.numChildren(d));
+            });
+        },
+        true
       ))
 
       // Centering.
@@ -169,7 +185,7 @@ export const createSimulationDrag = (simulation) => {
       event.subject.fy = event.y;
 
       if (dragging) {
-        // High alpha forces quick update.
+        // High alpha forces a quick update.
         simulation.alphaTarget(0).alpha(1).restart();
       }
 
@@ -183,10 +199,6 @@ export const createSimulationDrag = (simulation) => {
         event.subject.fx = undefined;
         event.subject.fy = undefined;
       }
-
-      // if (!dragging) {
-      //   console.log('click');
-      // }
 
       dragging = false;
     });

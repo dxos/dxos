@@ -27,7 +27,7 @@ export const trigger = (
   group: SVGGElement, nodeId: ObjectId, options: BulletOptions = {}
 ): D3Callable => {
   return (selection: D3Selection) => {
-    const { max = 32, radius = 2, delay = 50, minDuration = 100, maxDuration = 500 } = options;
+    const { max = 32, radius = 3, delay = 50, minDuration = 100, maxDuration = 500 } = options;
 
     selection
       .selectAll<SVGPathElement, GraphLink>('path')
