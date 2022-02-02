@@ -23,6 +23,6 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
       SubscribeToRpcTrace: () => {
         throw new Error('Tracing not available');
       }
-    },
+    }
   };
 };
