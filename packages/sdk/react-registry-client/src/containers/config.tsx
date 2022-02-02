@@ -29,17 +29,6 @@ export const createRegistryClient = async (configProvider: RegistryConfigProvide
     throw new Error('Config missing DXNS endpoint.');
   }
 
-  // const keyring = await createKeyring();
-  // let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
-  // if (config.services.dxns.uri) {
-  //   keypair = keyring.addFromUri(config.services.dxns.uri);
-  // }
-
   const apiPromise = await createApiPromise(config.services.dxns.server);
   return new RegistryClient(apiPromise, signFn);
 };
-
-
-// const signer = client.halo.profile.createSigner()
-
-
