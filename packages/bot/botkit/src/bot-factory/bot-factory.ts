@@ -6,7 +6,7 @@ import assert from 'assert';
 import { debug } from 'debug';
 import { join } from 'path';
 
-import { Config, ConfigV1Object } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';

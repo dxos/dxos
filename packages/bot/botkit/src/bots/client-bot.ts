@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
 
-import { 
+import {
   BotService,
   InitializeRequest,
   SendCommandRequest,

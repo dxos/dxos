@@ -16,6 +16,7 @@ export class EmptyBot implements BotService {
   async Initialize (request: InitializeRequest) {
     await this.onInit(request);
   }
+
   async Start (request: StartRequest) {
     await this.onInit(request);
   }

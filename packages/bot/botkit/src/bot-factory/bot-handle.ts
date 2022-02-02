@@ -6,12 +6,12 @@ import assert from 'assert';
 import fs from 'fs/promises';
 import { join } from 'path';
 
+import { Config } from '@dxos/config';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotService } from '../proto/gen/dxos/bot';
-import { ConfigV1Object, Config } from '@dxos/config';
 
 /**
  * Represents a running bot instance in BotFactory.
@@ -19,7 +19,7 @@ import { ConfigV1Object, Config } from '@dxos/config';
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
   private readonly _bot: Bot;
-  private _config: Config<ConfigV1Object>;
+  private _config: Config;
   localPath: string | undefined;
 
   /**
@@ -28,7 +28,7 @@ export class BotHandle {
   constructor (
     readonly id: string,
     readonly workingDirectory: string,
-    config: Config<ConfigV1Object> = new Config({})
+    config: Config = new Config({})
   ) {
     this._bot = {
       id,
@@ -57,17 +57,17 @@ export class BotHandle {
   }
 
   makePersistent () {
-    this._config = new Config(this._config.values, 
-    {
-      runtime: {
-        client: {
-          storage: {
-            persistent: true,
-            path: this.getStoragePath()
+    this._config = new Config(this._config.values,
+      {
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+              path: this.getStoragePath()
+            }
           }
         }
-      }
-    });
+      });
   }
 
   async open (port: RpcPort): Promise<void> {
@@ -138,7 +138,7 @@ export class BotHandle {
   /**
    * Returns the path to a directory that is used as a storage for bot.
    */
-   getStoragePath (): string {
+  getStoragePath (): string {
     return join(this.workingDirectory, 'storage');
   }
 }
