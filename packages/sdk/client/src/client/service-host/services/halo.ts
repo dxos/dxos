@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Stream } from '@dxos/codec-protobuf';
-import { KeyType } from '@dxos/credentials';
-import { ECHO } from '@dxos/echo-db';
-import { SubscriptionGroup } from '@dxos/util';
 import PolkadotKeyring from '@polkadot/keyring';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
+
+import { Stream } from '@dxos/codec-protobuf';
+import { KeyRecord, KeyType } from '@dxos/credentials';
+import { ECHO } from '@dxos/echo-db';
+import { SubscriptionGroup } from '@dxos/util';
+
 import { AddKeyRecordRequest, Contacts, HaloService as IHaloService, SignRequest, SignResponse } from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts } from './interfaces';
-
-
 
 export class HaloService implements IHaloService {
   constructor (private echo: ECHO) {}
@@ -45,21 +45,28 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
-  async Sign (request: SignRequest): Promise<SignResponse> {
+  protected async PolkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
     await cryptoWaitReady();
 
-    const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
-    assert(key, 'DXNS Key not found.');
-    assert(key.type === KeyType.DXNS, 'Only DXNS key signing is supported.');
     assert(key.secretKey, 'Secret key is missing.');
 
     const keyring = new PolkadotKeyring({ type: 'sr25519' });
     const keypair = keyring.addFromUri(key.secretKey.toString());
 
-    const signature = u8aToHex(keypair.sign(hexToU8a(request.payload), { withType: true }));
+    const signature = u8aToHex(keypair.sign(hexToU8a(payload), { withType: true }));
     return {
       signed: signature
     };
+  }
+
+  async Sign (request: SignRequest): Promise<SignResponse> {
+    assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
+    const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
+    assert(key, 'Key not found.');
+    if (key.type === KeyType.DXNS) {
+      return this.PolkadotSign(key, request.payload);
+    }
+    throw new Error('Only DXNS key signing is supported.');
   }
 }
 

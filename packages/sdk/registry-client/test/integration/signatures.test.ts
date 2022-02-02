@@ -74,7 +74,7 @@ export class PayloadSigner implements Partial<Signer> {
   }
 }
 
-describe.only('Signatures', () => {
+describe('Signatures', () => {
   let client: Client
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
@@ -124,7 +124,7 @@ describe.only('Signatures', () => {
     }
   });
 
-  it('Can send transactions with external signer', async () => {
+  it('Can send transactions with lower-level external signer', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
       return await tx.signAsync(keypair.address, {signer: new TxSigner(keypair)})
     }
@@ -133,18 +133,18 @@ describe.only('Signatures', () => {
     await auctionsApi.createAuction(auctionName(), 100000)
   });
 
-  it.only('Can send transactions with external signer from @dxos/client', async () => {
+  it('Can send transactions with higher-level external signer', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, {signer: new DxosClientSigner(client, PublicKey.from(keypair.addressRaw))})
+      return await tx.signAsync(keypair.address, {signer: new PayloadSigner(keypair, registry)})
     }
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 
     await auctionsApi.createAuction(auctionName(), 100000)
   });
 
-  it('Can send transactions with higher-level external signer with types', async () => {
+  it('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, {signer: new PayloadSigner(keypair, registry)})
+      return await tx.signAsync(keypair.address, {signer: new DxosClientSigner(client, PublicKey.from(keypair.addressRaw))})
     }
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 

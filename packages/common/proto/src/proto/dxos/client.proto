@@ -111,7 +111,7 @@ message SignRequest {
   /**
    * - The public key of the key that is supposed to be used for signing.
    */
-  required PubKey publicKey = 1;
+  PubKey publicKey = 1;
 
   google.protobuf.Any payload = 2;
 }

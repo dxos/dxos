@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+import { v4 } from 'uuid';
+
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
-import assert from 'assert';
-import { v4 } from 'uuid';
+
 import {
   AuthenticateInvitationRequest, CreateProfileRequest, InvitationRequest, InvitationState, Profile, ProfileService as IProfileService, RecoverProfileRequest, RedeemedInvitation, SubscribeProfileResponse
 } from '../../../proto/gen/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
-
-
 
 export class ProfileService implements IProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();
