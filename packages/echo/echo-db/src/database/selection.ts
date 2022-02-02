@@ -81,42 +81,29 @@ export class Selection<T> {
    */
   constructor(
     private readonly _run: () => T,
-    private readonly _updateFilter: (entities: Entity<any>[]) => Entity<any>[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: Database | Entity<any>,
   ) {}
 
   query(): SelectionResult<T> {
-    return new SelectionResult<T>(this._run, this._updateFilter, this._update, this._root);
+    return new SelectionResult<T>(this._run, this._update, this._root);
   }
 
-  private _derive<U>(
-    map: (arg: T) => U,
-    updateFilter: (entities: Entity<any>[]) => Entity<any>[]
-  ): Selection<U> {
-    return new Selection(() => map(this._run()), updateFilter, this._update, this._root);
+  private _derive<U>(map: (arg: T) => U): Selection<U> {
+    return new Selection(() => map(this._run()), this._update, this._root);
   }
 
   filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
   filter<U>(this: Selection<U[]>, filter: ArrayFilter<U>): Selection<U[]>
   filter<U>(this: Selection<U[]>, filter: ArrayFilter<T> | ItemFilter): Selection<U[]> {
     const predicate = filterToPredicate(filter)
-    return this._derive(
-      items => items.filter(predicate),
-      entities => this._updateFilter(entities).filter(entity => entity instanceof Item && predicate(entity))
-    );
+    return this._derive(items => items.filter(predicate));
   }
 
   children(this: Selection<Item<any>>): Selection<Item<any>[]>
   children(this: Selection<Item<any>[]>): Selection<Item<any>[]>
   children(this: Selection<Item<any> | Item<any>[]>): Selection<Item<any>[]> {
-    return this._derive(
-      item => Array.isArray(item) ? item.flatMap(item => item.children) : item.children,
-      entities => {
-        const prev = this._updateFilter(entities);
-        return entities.filter(entity => entity instanceof Item && (prev.includes(entity) || entity.parent && prev.includes(entity.parent)));
-      }
-    );
+    return this._derive(item => Array.isArray(item) ? item.flatMap(item => item.children) : item.children);
   }
 
   
@@ -130,14 +117,13 @@ export class SelectionResult<T> {
 
   constructor (
     private readonly _run: () => T,
-    private readonly _updateFilter: (entities: Entity<any>[]) => Entity<any>[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: Database | Entity<any>,
   ) {
     this.update.addEffect(() => _update.on(entities => {
-      if(this._updateFilter(entities).length > 0) {
-        this.update.emit(this._run());
-      }
+      const result = this._run();
+      const set = Array.isArray(result) ? new Set(result) : new Set([result]);
+      return entities.some(entity => set.has(entity));
     }))
   }
 
