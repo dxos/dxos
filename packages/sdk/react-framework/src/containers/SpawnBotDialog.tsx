@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 import type { BotHandle } from '@dxos/bot-factory-client';
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { useBotFactoryClient } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 import { useBots } from '@dxos/react-registry-client';
@@ -16,7 +16,7 @@ import { useBots } from '@dxos/react-registry-client';
 export interface SpawnBotDialogProps {
   open: boolean,
   onClose: () => void,
-  party: PartyProxy,
+  party: Party,
   onBotCreated: (bot: BotHandle) => void
 }
 

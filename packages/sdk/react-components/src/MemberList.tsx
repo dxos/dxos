@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AvatarGroup, Box } from '@mui/material';
 
-import { PartyMember } from '@dxos/echo-db';
+import { PartyMember } from '@dxos/client';
 
 import { MemberAvatar } from './MemberAvatar';
 

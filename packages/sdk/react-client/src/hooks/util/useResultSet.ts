@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { useSubscription } from 'use-subscription';
 
-import { ResultSet } from '@dxos/echo-db';
+import { ResultSet } from '@dxos/client';
 
 /**
  * A convenience hook used for subscribing to changing values of a result set.

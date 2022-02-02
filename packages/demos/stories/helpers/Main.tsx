@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
@@ -86,7 +86,7 @@ const VIEW_GRID = 3;
 const VIEW_GRAPH = 4;
 
 interface MainProps {
-  party: PartyProxy
+  party: Party
   showInvitation?: boolean
 }
 

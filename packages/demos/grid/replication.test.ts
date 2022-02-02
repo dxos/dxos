@@ -6,11 +6,10 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { Client, PartyProxy } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { Browser, ONLINE_CONFIG } from '../playwright/utils';
-import { defaultInvitationAuthenticator } from '@dxos/echo-db';
 
 const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2');
 const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMNS ?? '4');
@@ -28,7 +27,7 @@ describe('Replication in a grid', function () {
   const clientHeight = Math.round((screenHeight - (ROWS - 1) * marginY) / ROWS);
 
   let inviter: Client;
-  let party: PartyProxy;
+  let party: Party;
  
   const createInvitation = async () => {
     const invitation = await party.createInvitation();

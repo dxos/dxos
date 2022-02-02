@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/crypto';
 
 import { useClient } from '../client';
@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Get a specific Party.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
+export const useParty = (partyKey?: PublicKeyLike): Party | undefined => {
   const parties = useParties();
   return parties.find(party => partyKey && party.key.equals(partyKey));
 };
@@ -24,7 +24,7 @@ export const useParty = (partyKey?: PublicKeyLike): PartyProxy | undefined => {
  */
 export const useParties = () => {
   const client = useClient();
-  const [parties, setParties] = useState<PartyProxy[]>([]);
+  const [parties, setParties] = useState<Party[]>([]);
 
   useEffect(() => {
     const result = client.echo.queryParties();

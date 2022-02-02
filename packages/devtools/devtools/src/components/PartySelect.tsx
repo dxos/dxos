@@ -6,14 +6,14 @@ import React from 'react';
 
 import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
-import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
 import { HashIcon } from '@dxos/react-components';
 
 interface PartySelectProps {
-  parties: PartyProxy[] // TODO(burdon): Keys?
-  selected: PartyProxy | undefined
-  onChange: (value: PartyProxy | undefined) => void
+  parties: Party[] // TODO(burdon): Keys?
+  selected: Party | undefined
+  onChange: (value: Party | undefined) => void
 }
 
 export const PartySelect = ({ parties, selected, onChange }: PartySelectProps) => {

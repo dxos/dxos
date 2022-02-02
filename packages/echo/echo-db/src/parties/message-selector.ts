@@ -9,7 +9,7 @@ import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } f
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../items';
+import { TimeframeClock } from '../database';
 import { PartyProcessor } from './party-processor';
 
 const log = debug('dxos:echo:parties:message-selector');

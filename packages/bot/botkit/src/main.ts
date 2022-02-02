@@ -17,7 +17,6 @@ const log = debug('dxos:botkit:bot-factory:main');
 
 const main = async () => {
   const config = getConfig();
-  assert(config.get('version') === undefined, 'Only config v0 is supported');
 
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
 

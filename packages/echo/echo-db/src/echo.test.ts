@@ -13,9 +13,9 @@ import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
+import { Item } from './database';
 import { ECHO } from './echo';
 import { defaultInvitationAuthenticator } from './invitations';
-import { Item } from './items';
 import { inviteTestPeer } from './util';
 
 const log = debug('dxos:echo:test');
@@ -382,7 +382,7 @@ describe('ECHO', () => {
       const [partyUpdatedB, onPartyUpdateB] = latch();
       b2.queryParties().update.on(onPartyUpdateB);
 
-      const invitation = await partyA.createInvitation();
+      const invitation = await partyA.invitationManager.createInvitation();
       await b1.joinParty(invitation, defaultSecretProvider);
 
       await partyUpdatedB;
@@ -484,7 +484,7 @@ describe('ECHO', () => {
     const partyA = await a.createParty();
     log(`Created ${partyA.key.toHex()}`);
 
-    const invitationDescriptor = await partyA.createOfflineInvitation(b.halo.identityKey!.publicKey);
+    const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(b.halo.identityKey!.publicKey);
 
     // Redeem the invitation on B.
     const partyB = await b.joinParty(invitationDescriptor);
@@ -507,7 +507,7 @@ describe('ECHO', () => {
 
     await partyA.setTitle('A');
     expect(partyA.title).toBe('A');
-    expect(partyA.getProperty('title')).toBe('A');
+    expect((await partyA.getPropertiesItem()).model.getProperty('title')).toBe('A');
 
     await partyA.deactivate({ global: true });
     expect(partyA.isOpen).toBe(false);
@@ -519,7 +519,7 @@ describe('ECHO', () => {
     expect(partyA.isActive).toBe(true);
     expect(partyA.title).toBe('A');
 
-    await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
+    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'A', 4000);
   });
 
   test('Deactivating and activating party, setting properties after', async () => {
@@ -698,7 +698,7 @@ describe('ECHO', () => {
     const partyC = c.queryParties().value[0];
 
     // D joins as another member of the party.
-    const invitationDescriptor = await a.queryParties().value[0].createInvitation();
+    const invitationDescriptor = await a.queryParties().value[0].invitationManager.createInvitation();
     expect(d.queryParties().value).toHaveLength(0);
     const partyD = await d.joinParty(invitationDescriptor, defaultSecretProvider);
     expect(partyD).toBeDefined();
@@ -713,14 +713,14 @@ describe('ECHO', () => {
 
     await partyA.setTitle('Test');
 
-    for (const _party of [partyA, partyB, partyC]) {
-      await waitForCondition(() => _party.getProperty('title') === 'Test', 3000);
-      await waitForCondition(() => _party.title === 'Test', 3000);
-      expect(_party.title).toEqual('Test');
+    for (const party of [partyA, partyB, partyC]) {
+      await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'Test', 3000);
+      await waitForCondition(() => party.title === 'Test', 3000);
+      expect(party.title).toEqual('Test');
     }
 
     // For the other member of the party, title propagates correctly as well.
-    await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
+    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'Test', 3000);
     await waitForCondition(() => partyD.title === 'Test', 3000);
     expect(partyD.title).toEqual('Test'); // However this does not.
   }).retries(1);
@@ -733,7 +733,7 @@ describe('ECHO', () => {
 
     const membersPromise = partyA.queryMembers().waitFor(members => members.length === 2);
 
-    const invitation = await partyA.createInvitation(defaultInvitationAuthenticator);
+    const invitation = await partyA.invitationManager.createInvitation(defaultInvitationAuthenticator);
     await b.joinParty(invitation, defaultSecretProvider);
 
     const members = await membersPromise;

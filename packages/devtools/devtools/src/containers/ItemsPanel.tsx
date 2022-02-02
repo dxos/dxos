@@ -8,9 +8,8 @@ import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/ico
 import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
-import { PartyProxy } from '@dxos/client';
+import { Party, Item } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
-import { Item } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -33,7 +32,7 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
 };
 
 export const ItemsPanel = () => {
-  const [selectedParty, setSelectedParty] = useState<PartyProxy>();
+  const [selectedParty, setSelectedParty] = useState<Party>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
   const parties = useParties();
