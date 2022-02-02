@@ -45,7 +45,7 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
-  protected async PolkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
+  protected async polkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
     await cryptoWaitReady();
 
     assert(key.secretKey, 'Secret key is missing.');
@@ -64,7 +64,7 @@ export class HaloService implements IHaloService {
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');
     if (key.type === KeyType.DXNS) {
-      return this.PolkadotSign(key, request.payload);
+      return this.polkadotSign(key, request.payload);
     }
     throw new Error('Only DXNS key signing is supported.');
   }
