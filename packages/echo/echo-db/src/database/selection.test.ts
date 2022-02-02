@@ -19,8 +19,8 @@ const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
 
-const createItem = (id: ItemID, type: ItemType) =>
-  new Item(id, type, new ObjectModel(ObjectModel.meta, id));
+const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) => 
+  new Item(id, type, new ObjectModel(ObjectModel.meta, id), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
   const link = new Link(id, type, new ObjectModel(ObjectModel.meta, id), {
@@ -36,12 +36,14 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
+const org1 = createItem('item/1', OBJECT_ORG);
+const org2 = createItem('item/2', OBJECT_ORG);
 const items: Item<any>[] = [
-  createItem('item/1', OBJECT_ORG),
-  createItem('item/2', OBJECT_ORG),
-  createItem('item/3', OBJECT_PERSON),
-  createItem('item/4', OBJECT_PERSON),
-  createItem('item/5', OBJECT_PERSON)
+  org1,
+  org2,
+  createItem('item/3', OBJECT_PERSON, org1),
+  createItem('item/4', OBJECT_PERSON, org1),
+  createItem('item/5', OBJECT_PERSON, org2)
 ];
 
 const links: Link<any>[] = [
@@ -72,38 +74,72 @@ const createSelection = () => {
 // TODO(burdon): Test subscriptions/reactivity.
 
 describe.only('Selection', () => {
-  test('simple', () => {
+  test('initial', () => {
     expect(
       createSelection().selection
       .query().result
     ).toHaveLength(items.length);
   });
 
-  test('filter', () => {
-    expect(
-      createSelection().selection
-      .filter({ type: 'dxos:type/invalid' })
-      .query().result
-    ).toHaveLength(0);
+  describe('filter', () => {
+    test('invalid', () => {
+      expect(
+        createSelection().selection
+        .filter({ type: 'dxos:type/invalid' })
+        .query().result
+      ).toHaveLength(0);
+    });
 
-    expect(
-      createSelection().selection
-      .filter({ type: OBJECT_PERSON })
-      .query().result
-    ).toHaveLength(3);
+    test('single type', () => {
+      expect(
+        createSelection().selection
+        .filter({ type: OBJECT_PERSON })
+        .query().result
+      ).toHaveLength(3);
+    });
 
-    expect(
-      createSelection().selection
-      .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
-      .query().result
-    ).toHaveLength(5);
+    test('multiple types', () => {
+      expect(
+        createSelection().selection
+        .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
+        .query().result
+      ).toHaveLength(5);
+    });
 
-    expect(
-      createSelection().selection
-      .filter(item => item.type === OBJECT_ORG)
-      .query().result
-    ).toHaveLength(2);
+    test('by function', () => {
+      expect(
+        createSelection().selection
+        .filter(item => item.type === OBJECT_ORG)
+        .query().result
+      ).toHaveLength(2);
+    })
   });
+
+  describe('children', () => {
+    test('from multiple items', () => {
+      expect(
+        createSelection().selection
+        .filter({ type: OBJECT_ORG })
+        .children()
+        .query().result
+      ).toEqual([
+        items[2],
+        items[3],
+        items[4],
+      ]);
+    });
+
+    test('from single item', () => {
+      expect(
+        new Selection<Item<any>>(() => org1, entities => entities, new Event(), null as any)
+        .children()
+        .query().result
+      ).toEqual([
+        items[2],
+        items[3],
+      ]);
+    });
+  })
 
   // test('nested with duplicates', () => {
   //   let count = 0;
