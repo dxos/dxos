@@ -9,7 +9,7 @@ import { SubmittableExtrinsic } from '@polkadot/api/types';
 import Keyring from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { TypeRegistry } from '@polkadot/types';
-import { ISubmittableResult, Registry, Signer, SignerPayloadJSON, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
+import { ISubmittableResult, Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';

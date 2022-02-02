@@ -9,7 +9,6 @@ import { Registry } from '@polkadot/types/types';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { DxosClientSigner, TxSigner } from '../../src/signatures.test';
 
 import { Client } from '@dxos/client';
 import { KeyType } from '@dxos/credentials';
@@ -19,6 +18,7 @@ import {
   AuctionsClient, createApiPromise,
   createKeyring, registryTypes, SignTxFunction
 } from '../../src';
+import { DxosClientSigner, TxSigner } from '../../src/signatures.test';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
