@@ -9,12 +9,18 @@ import { RenderOptions } from './renderer';
 /**
  * Generates a layout to be rendered.
  */
-export abstract class Projector<MODEL, LAYOUT> {
+// TODO(burdon): Rename Layout?
+export abstract class Projector<MODEL, LAYOUT, OPTIONS> {
   readonly updated = new EventEmitter<{ layout: LAYOUT, options?: RenderOptions }>();
 
   constructor (
-    private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT
+    private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT,
+    private readonly _options?: OPTIONS
   ) {}
+
+  get options (): OPTIONS {
+    return this._options || {} as OPTIONS;
+  }
 
   update (model: MODEL) {
     this.onUpdate(this._mapper(model, this.getLayout()));

@@ -1,0 +1,79 @@
+//
+// Copyright 2019 DXOS.org
+//
+
+import { D3Selection } from '@dxos/gem-canvas';
+import * as d3 from 'd3';
+
+import { GraphLink } from '../graph';
+import { ObjectId } from '../scene';
+import { D3Callable } from '../util';
+
+interface BulletOptions {
+  max?: number
+  radius?: number
+  delay?: number
+  minDuration?: number
+  maxDuration?: number
+}
+
+/**
+ * Generate animated bullets that follow selected paths.
+ * @param group
+ * @param nodeId
+ * @param options
+ */
+export const trigger = (
+  group: SVGGElement, nodeId: ObjectId, options: BulletOptions = {}
+): D3Callable => {
+  return (selection: D3Selection) => {
+    const { max = 32, radius = 2, delay = 50, minDuration = 100, maxDuration = 500 } = options;
+
+    selection
+      .selectAll<SVGPathElement, GraphLink>('path')
+      .each(function (d, i, links) {
+        const { source, target } = d;
+
+        if (source.id === nodeId) {
+          const path = d3.select(links[i]);
+          let p = path.node().getPointAtLength(0);
+
+          const bullet = d3.select(group)
+            .append('circle')
+            .attr('class', 'bullet')
+            .attr('cx', p.x)
+            .attr('cy', p.y)
+            .attr('r', radius);
+
+          bullet
+            // Start animation.
+            .transition()
+            .delay(delay)
+            .duration(minDuration + Math.random() * maxDuration)
+            .ease(d3.easeLinear)
+            .tween('pathTween', function () {
+              let node = this;
+              let length = path.node().getTotalLength();
+              let r = d3.interpolate(0, length);
+
+              return (t) => {
+                let point = path.node().getPointAtLength(r(t));
+                d3.select(node)
+                .attr('cx', point.x)
+                .attr('cy', point.y);
+              };
+            })
+            // End of transition.
+            .on('end', function () {
+              d3.select(this).remove();
+
+              // Propagate with circuit breaker to prevent infinite recursion.
+              let num = d3.select(group).selectAll('circle.bullet').size();
+              if (num < max) {
+                selection.call(trigger(group, target.id));
+              }
+            });
+        }
+      });
+  }
+};

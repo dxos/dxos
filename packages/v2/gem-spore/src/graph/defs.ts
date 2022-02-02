@@ -4,22 +4,23 @@
 
 import { ObjectId } from '../scene';
 
-export type GraphNode = {
-  data?: any
+export type GraphNode<T> = {
+  data?: T
   initialized?: boolean
   id: ObjectId
   x?: number
   y?: number
   r?: number
+  children?: number
 }
 
 export type GraphLink = {
   id: string
-  source: GraphNode
-  target: GraphNode
+  source: GraphNode<any>
+  target: GraphNode<any>
 }
 
 export type Graph = {
-  nodes: GraphNode[]
+  nodes: GraphNode<any>[]
   links: GraphLink[]
 }

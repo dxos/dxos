@@ -12,12 +12,12 @@ export type ObjectId = string
 /**
  * Component wihtin a scene.
  */
-export class Part<MODEL, LAYOUT> {
+export class Part<MODEL, LAYOUT, OPTIONS> {
   _updateListener: EventHandle | undefined;
 
   constructor (
     private readonly _projector: Projector<MODEL, LAYOUT>,
-    private readonly _renderer: Renderer<LAYOUT>
+    private readonly _renderer: Renderer<LAYOUT, OPTIONS>
   ) {}
 
   update (model: MODEL) {
@@ -46,7 +46,7 @@ export class Part<MODEL, LAYOUT> {
  */
 export class Scene<MODEL> {
   constructor (
-    private readonly _parts: Part<MODEL, any>[]
+    private readonly _parts: Part<MODEL, any, any>[]
   ) {}
 
   update (model: MODEL) {

@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { D3Callable } from '../util';
+
 /**
  * SVG container.
  */
@@ -13,18 +15,25 @@ export class Surface {
   ) {}
 }
 
-// TODO(burdon): Use generics.
+/**
+ * Generic options created by projector.
+ */
 export interface RenderOptions {
-  drag?: any
+  drag?: D3Callable
 }
 
 /**
  * Base class for renderes that draw layouts.
  */
-export abstract class Renderer<LAYOUT> {
+export abstract class Renderer<LAYOUT, OPTIONS> {
   constructor (
-    protected readonly _surface: Surface
+    protected readonly _surface: Surface,
+    protected readonly _options?: OPTIONS
   ) {}
+
+  get options () {
+    return this._options || {} as OPTIONS;
+  }
 
   abstract update (layout: LAYOUT, options?: RenderOptions);
 }

@@ -6,12 +6,15 @@ import * as d3 from 'd3';
 
 import { Projector, Renderer } from '../../src';
 
+// TODO(burdon): Pass layout.
 export type Stats = {
   nodes?: number
   links?: number
 }
 
-export class StatsRenderer extends Renderer<Stats> {
+export type StatsRendererOptions = {}
+
+export class StatsRenderer extends Renderer<Stats, StatsRendererOptions> {
   update (layout: Stats) {
     const root = d3.select(this._surface.root);
 
@@ -23,7 +26,7 @@ export class StatsRenderer extends Renderer<Stats> {
   }
 }
 
-export class StatsProjector<MODEL> extends Projector<MODEL, Stats> {
+export class StatsProjector<MODEL> extends Projector<MODEL, Stats, any> {
   _layout: Stats = {
     nodes: 0
   }
