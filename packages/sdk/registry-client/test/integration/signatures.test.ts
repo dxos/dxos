@@ -9,7 +9,7 @@ import { Registry } from '@polkadot/types/types';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { DxosClientSigner, PayloadSigner, TxSigner } from '../../src/signatures.test';
+import { DxosClientSigner, TxSigner } from '../../src/signatures.test';
 
 import { Client } from '@dxos/client';
 import { KeyType } from '@dxos/credentials';
@@ -74,15 +74,6 @@ describe('Signatures', () => {
   it('Can send transactions with lower-level external signer', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
       return await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
-    };
-    const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
-
-    await auctionsApi.createAuction(auctionName(), 100000);
-  });
-
-  it('Can send transactions with higher-level external signer', async () => {
-    const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new PayloadSigner(keypair, registry) });
     };
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 

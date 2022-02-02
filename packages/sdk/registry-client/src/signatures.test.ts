@@ -59,22 +59,6 @@ export class DxosClientSigner implements Partial<Signer> {
   }
 }
 
-export class PayloadSigner implements Partial<Signer> {
-  private id = 0;
-  constructor (private keypair: KeyringPair, private registry: Registry) { }
-
-  public async signPayload (payload: SignerPayloadJSON): Promise<SignerResult> {
-    assert(payload.address === this.keypair.address, 'Signer does not have the keyringPair');
-
-    const signed = this.registry.createType('ExtrinsicPayload', payload, { version: payload.version }).sign(this.keypair);
-
-    return {
-      id: ++this.id,
-      ...signed
-    };
-  }
-}
-
 describe('Signatures', () => {
   let client: Client;
   let keypair: ReturnType<Keyring['addFromUri']>;
@@ -113,7 +97,7 @@ describe('Signatures', () => {
     await client.destroy();
   });
 
-  it('Can sign transactions with normal signer', async () => {
+  it('Can sign transactions with keypair', async () => {
     const signed = await unsignedTx.signAsync(keypair);
     expect(signed.isSigned).to.be.true;
   });
@@ -121,12 +105,6 @@ describe('Signatures', () => {
   it('Can sign transactions with lower-level external signer', async () => {
     const signer = new TxSigner(keypair);
     const signed = await await unsignedTx.signAsync(keypair.address, { signer });
-    expect(signed.isSigned).to.be.true;
-  });
-
-  it('Can sign transactions with higher-level external signer', async () => {
-    const signer = new PayloadSigner(keypair, registry);
-    const signed = await unsignedTx.signAsync(keypair.address, { signer });
     expect(signed.isSigned).to.be.true;
   });
 
