@@ -14,6 +14,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 import { Selection } from './selection';
+import { createRootSelector } from '.';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
@@ -58,33 +59,50 @@ const entities: Entity<any>[] = [
   ...links
 ];
 
-const createSelection = () => {
-  const update = new Event<Entity<any>[]>();
-
-  const selection = new Selection(
-    () => items,
-    entities => entities.filter(entity => entity instanceof Item), // We are only intereseted in updates to items.
-    update,
-    null as any,
-  );
-
-  return { selection, update }
-}
+const rootSelector = createRootSelector(() => items, new Event(), null as any);
 
 // TODO(burdon): Test subscriptions/reactivity.
 
 describe.only('Selection', () => {
-  test('initial', () => {
-    expect(
-      createSelection().selection
-      .query().result
-    ).toHaveLength(items.length);
-  });
+  describe('root', () => {
+    test('all', () => {
+      expect(
+        rootSelector()
+        .query().result
+      ).toHaveLength(items.length);
+    });
+
+    test('by id', () => {
+      expect(
+        rootSelector({ id: org1.id })
+        .query().result
+      ).toEqual(org1);
+
+      expect(
+        rootSelector({ id: org2.id })
+        .query().result
+      ).toEqual(org2);
+    });
+
+    test('single type', () => {
+      expect(
+        rootSelector({ type: OBJECT_PERSON })
+        .query().result
+      ).toHaveLength(3);
+    });
+
+    test('multiple types', () => {
+      expect(
+        rootSelector({ type: [OBJECT_ORG, OBJECT_PERSON] })
+        .query().result
+      ).toHaveLength(5);
+    });
+  })
 
   describe('filter', () => {
     test('invalid', () => {
       expect(
-        createSelection().selection
+        rootSelector()
         .filter({ type: 'dxos:type/invalid' })
         .query().result
       ).toHaveLength(0);
@@ -92,7 +110,7 @@ describe.only('Selection', () => {
 
     test('single type', () => {
       expect(
-        createSelection().selection
+        rootSelector()
         .filter({ type: OBJECT_PERSON })
         .query().result
       ).toHaveLength(3);
@@ -100,7 +118,7 @@ describe.only('Selection', () => {
 
     test('multiple types', () => {
       expect(
-        createSelection().selection
+        rootSelector()
         .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
         .query().result
       ).toHaveLength(5);
@@ -108,7 +126,7 @@ describe.only('Selection', () => {
 
     test('by function', () => {
       expect(
-        createSelection().selection
+        rootSelector()
         .filter(item => item.type === OBJECT_ORG)
         .query().result
       ).toHaveLength(2);
@@ -118,7 +136,7 @@ describe.only('Selection', () => {
   describe('children', () => {
     test('from multiple items', () => {
       expect(
-        createSelection().selection
+        rootSelector()
         .filter({ type: OBJECT_ORG })
         .children()
         .query().result
@@ -131,7 +149,7 @@ describe.only('Selection', () => {
 
     test('from single item', () => {
       expect(
-        new Selection<Item<any>>(() => org1, entities => entities, new Event(), null as any)
+        rootSelector({ id: org1.id })
         .children()
         .query().result
       ).toEqual([
