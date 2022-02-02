@@ -33,7 +33,7 @@ export class BotHandle {
   }
 
   async remove () {
-    await this._rpc.rpc.Remove({
+    await this._rpc.rpc.Kill({
       id: this._id
     });
   }

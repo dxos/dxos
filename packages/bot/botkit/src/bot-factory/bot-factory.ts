@@ -6,7 +6,7 @@ import assert from 'assert';
 import { debug } from 'debug';
 import { join } from 'path';
 
-import { Config } from '@dxos/config';
+import { Config, ConfigV1Object } from '@dxos/config';
 import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
@@ -106,8 +106,19 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
       log(`[${id}] Initializing bot`);
+      const botConfig = new Config(this._config.values, 
+      {
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+              path: handle.getStoragePath()
+            }
+          }
+        }
+      });
       await handle.rpc.Initialize({
-        config: this._config.values,
+        config: botConfig.values,
         invitation: request.invitation
       });
       log(`[${id}] Initialization complete`);
@@ -120,7 +131,9 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Start (request: Bot) {
-    return request;
+    assert(request.id);
+    const bot = this._getBot(request.id);
+    return bot.bot;
   }
 
   async Stop (request: Bot) {
@@ -130,7 +143,13 @@ export class BotFactory implements BotFactoryService {
     return bot.bot;
   }
 
-  async Remove (request: Bot) {}
+  async Kill (request: Bot) {
+    assert(request.id);
+    await this.Stop(request);
+    const bot = this._getBot(request.id);
+    this._bots.delete(request.id);
+    await bot.clearFiles();
+  }
 
   async SendCommand (request: SendCommandRequest) {
     assert(request.botId);

@@ -43,6 +43,7 @@ export class BotHandle {
 
   async initializeDirectories () {
     await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
+    await fs.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
     await fs.mkdir(this.logsDir);
   }
 
@@ -66,6 +67,10 @@ export class BotHandle {
     assert(this._rpc, 'BotHandle is not open');
     this._rpc.close();
     this._rpc = null;
+  }
+
+  async clearFiles () {
+    await fs.rm(this.workingDirectory, { recursive: true, force: true });
   }
 
   toString () {
@@ -105,5 +110,12 @@ export class BotHandle {
    */
   getContentPath (): string {
     return join(this.workingDirectory, 'content');
+  }
+
+  /**
+   * Returns the path to a directory that is used as a storage for bot.
+   */
+   getStoragePath (): string {
+    return join(this.workingDirectory, 'storage');
   }
 }

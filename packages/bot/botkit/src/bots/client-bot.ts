@@ -48,6 +48,7 @@ export class ClientBot implements BotService {
   async Stop () {
     await this.client?.destroy();
     await this.onStop();
+    process.exit(0);
   }
 
   protected async onInit (request: InitializeRequest) {}

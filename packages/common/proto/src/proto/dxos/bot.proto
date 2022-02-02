@@ -27,6 +27,7 @@ message Bot {
   int32 exit_code = 3;
   string exit_signal = 4;
   string error = 5;
+  BotPackageSpecifier spec = 6;
 }
 
 message GetBotsResponse {
@@ -60,7 +61,7 @@ service BotFactoryService {
 
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
-  rpc Remove(Bot) returns (google.protobuf.Empty);
+  rpc Kill(Bot) returns (google.protobuf.Empty);
  
   // TODO(dmaretskyi): querying metrics/state.
  
