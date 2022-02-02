@@ -13,10 +13,14 @@ import { Link } from './link';
 import { ItemID } from '@dxos/echo-protocol';
 import { Database } from '.';
 
+export type OneOrMultiple<T> = T | T[];
+
 export interface ItemFilter {
-  type?: string
+  type?: OneOrMultiple<string>;
   parent?: ItemID | Item<any>
 }
+
+export type ArrayFilter<T> = (element: T) => boolean;
 
 function coerseToId(item: Item<any> | ItemID): ItemID {
   if (typeof item === 'string') {
@@ -26,8 +30,24 @@ function coerseToId(item: Item<any> | ItemID): ItemID {
   return item.id;
 }
 
-function filterToPredicate(filter: ItemFilter): (item: Item<any>) => boolean {
-  return item => (!filter.type || item.type === filter.type) &&
+function testOneOrMultiple<T>(expected: OneOrMultiple<T>, value: T) {
+  if(Array.isArray(expected)) {
+    return expected.includes(value);
+  } else {
+    return expected === value;
+  }
+}
+
+function filterToPredicate<T>(filter: ArrayFilter<T> | ItemFilter): ArrayFilter<any> {
+  if (typeof filter === 'function') {
+    return filter;
+  }
+
+  return itemFilterToPredicate(filter);
+}
+
+function itemFilterToPredicate(filter: ItemFilter): (item: Item<any>) => boolean {
+  return item => (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
     (!filter.parent || item.parent?.id === coerseToId(filter.parent));
 }
 
@@ -77,7 +97,9 @@ export class Selection<T> {
     return new Selection(() => map(this._run()), updateFilter, this._update, this._root);
   }
 
-  filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]> {
+  filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
+  filter<U>(this: Selection<U[]>, filter: ArrayFilter<U>): Selection<U[]>
+  filter<U>(this: Selection<U[]>, filter: ArrayFilter<T> | ItemFilter): Selection<U[]> {
     const predicate = filterToPredicate(filter)
     return this._derive(
       items => items.filter(predicate),
