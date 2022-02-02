@@ -823,6 +823,16 @@
     {
       "packageName": "@dxos/wallet-playground",
       "projectFolder": "packages/wallet/wallet-playground"
+    },
+
+    //
+    // api-reference
+    // NOTE: KEEP SORTED
+    //
+
+    {
+      "packageName": "@dxos/sdk-api",
+      "projectFolder": "packages/api-reference"
     }
   ]
 }
