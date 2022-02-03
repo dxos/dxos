@@ -3,11 +3,12 @@
 //
 
 import { Event } from '@dxos/async';
+import { KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
-import { Profile } from '../proto/gen/dxos/client';
+import { Profile, SignRequest } from '../proto/gen/dxos/client';
 import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
 
 export interface CreateInvitationOptions extends InvitationOptions {
@@ -119,6 +120,14 @@ export class HaloProxy extends InvitationProxy {
     );
   }
 
+  async addKeyRecord (keyRecord: KeyRecord) {
+    await this._serviceProvider.services.HaloService.AddKeyRecord({ keyRecord });
+  }
+
+  async sign (request: SignRequest) {
+    return await this._serviceProvider.services.HaloService.Sign(request);
+  }
+
   /**
    * Allocate resources and set-up internal subscriptions.
    *
@@ -132,7 +141,7 @@ export class HaloProxy extends InvitationProxy {
     }, () => {});
     this._subscriptions.push(() => profileStream.close());
 
-    const contactsStream = this._serviceProvider.services.ProfileService.SubscribeContacts();
+    const contactsStream = this._serviceProvider.services.HaloService.SubscribeContacts();
     contactsStream.subscribe(data => {
       this._contacts = data.contacts as PartyMember[];
       this._contactsChanged.emit();
