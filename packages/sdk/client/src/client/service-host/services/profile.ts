@@ -9,22 +9,11 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
-import { SubscriptionGroup } from '@dxos/util';
 
 import {
-  InvitationState,
-  ProfileService as IProfileService,
-  AuthenticateInvitationRequest,
-  SubscribeProfileResponse,
-  InvitationRequest,
-  CreateProfileRequest,
-  Contacts,
-  RedeemedInvitation,
-  Profile
-  , RecoverProfileRequest
+  AuthenticateInvitationRequest, CreateProfileRequest, InvitationRequest, InvitationState, Profile, ProfileService as IProfileService, RecoverProfileRequest, RedeemedInvitation, SubscribeProfileResponse
 } from '../../../proto/gen/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
-import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
 
 export class ProfileService implements IProfileService {
@@ -121,26 +110,6 @@ export class ProfileService implements IProfileService {
     // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
     invitation.secret = request.secret;
     invitation.secretTrigger?.();
-  }
-
-  SubscribeContacts (): Stream<Contacts> {
-    if (this.echo.halo.isInitialized) {
-      return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
-    } else {
-      return new Stream(({ next }) => {
-        const subGroup = new SubscriptionGroup();
-
-        setImmediate(async () => {
-          await this.echo.halo.identityReady.waitForCondition(() => this.echo.halo.isInitialized);
-
-          const resultSet = this.echo.halo.queryContacts();
-          next({ contacts: resultSet.value });
-          subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
-        });
-
-        return () => subGroup.unsubscribe();
-      });
-    }
   }
 }
 

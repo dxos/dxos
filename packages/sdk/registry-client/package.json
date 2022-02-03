@@ -14,9 +14,9 @@
     "generate:types": "toolchain generate:defs && yarn generate:meta",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "test:integration": "NODE_ENV=test mocha '{src,test,integration}/**/*.test.ts'",
-    "test:integration:auctions": "NODE_ENV=test mocha '{src,test,integration}/**/auctions-api.test.ts'",
-    "test:integration:registry": "NODE_ENV=test mocha '{src,test,integration}/**/registry-client.test.ts'"
+    "test:integration": "NODE_ENV=test mocha 'test/integration/**/*.test.ts'",
+    "test:integration:auctions": "NODE_ENV=test mocha 'test/integration/**/auctions-api.test.ts'",
+    "test:integration:registry": "NODE_ENV=test mocha 'test/integration/**/registry-client.test.ts'"
   },
   "eslintConfig": {
     "ignorePatterns": [
@@ -54,7 +54,9 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "~8.4.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*"
   },
   "engines": {
     "node": ">= 14"

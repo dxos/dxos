@@ -1916,6 +1916,9 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
+      '@polkadot/keyring': 6.11.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@types/debug': ^4.1.7
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
@@ -1955,6 +1958,9 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
+      '@polkadot/keyring': 6.11.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -2322,7 +2328,9 @@ importers:
 
   ../../packages/sdk/registry-client:
     specifiers:
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -2369,6 +2377,8 @@ importers:
       multihashes: 4.0.3
       protobufjs: 6.11.2
     devDependencies:
+      '@dxos/client': link:../client
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@polkadot/typegen': 4.17.1
       '@types/chai': 4.3.0
