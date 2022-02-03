@@ -1,5 +1,7 @@
 on:
   push:
+    branches:
+      - main
 
 name: Integration tests with DXNS
 jobs:
