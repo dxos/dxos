@@ -49,13 +49,13 @@ export class ItemManager {
    *
    * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
    */
-  readonly itemUpdate = new Event<Entity<any>>();
+  readonly update = new Event<Entity<any>>();
 
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedItemUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.itemUpdate);
+  readonly debouncedUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
@@ -242,11 +242,11 @@ export class ItemManager {
     if (!(entity.model instanceof DefaultModel)) {
       // Notify Item was udpated.
       // TODO(burdon): Update the item directly?
-      this.itemUpdate.emit(entity);
+      this.update.emit(entity);
 
       // TODO(telackey): Unsubscribe?
       entity.subscribe(() => {
-        this.itemUpdate.emit(entity);
+        this.update.emit(entity);
       });
     }
 
@@ -354,7 +354,7 @@ export class ItemManager {
     const decoded = item.modelMeta.mutation.decode(message.mutation);
 
     await item.model.processMessage(message.meta, decoded);
-    this.itemUpdate.emit(item);
+    this.update.emit(item);
   }
 
   /**
@@ -421,7 +421,7 @@ export class ItemManager {
       modelSnapshot: item.model.snapshot
     }));
 
-    this.itemUpdate.emit(item);
+    this.update.emit(item);
   }
 }
 

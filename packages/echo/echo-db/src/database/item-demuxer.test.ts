@@ -46,7 +46,7 @@ describe('Item demuxer', () => {
     //
 
     const [updatedItems, onUpdateItem] = latch();
-    const unsubscribe = itemManager.itemUpdate.on(() => {
+    const unsubscribe = itemManager.update.on(() => {
       const items = Array.from(itemManager.entities.values()).filter(entity => entity instanceof Item);
       expect(items).toHaveLength(1);
       onUpdateItem();
@@ -129,7 +129,7 @@ describe('Item demuxer', () => {
     }));
 
     {
-      await itemManager.itemUpdate.waitForCount(1);
+      await itemManager.update.waitForCount(1);
       const items = itemManager.items;
       expect(items[0].model).toBeInstanceOf(DefaultModel);
       expect(items[1].model).toBeInstanceOf(ObjectModel);
@@ -138,7 +138,7 @@ describe('Item demuxer', () => {
     modelFactory.registerModel(TestModel);
 
     {
-      await itemManager.itemUpdate.waitForCount(1);
+      await itemManager.update.waitForCount(1);
       const item = itemManager.entities.get('foo');
       expect(item).toBeDefined();
       expect(item!.model).toBeInstanceOf(TestModel);

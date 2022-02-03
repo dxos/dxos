@@ -66,7 +66,7 @@ export class Database {
    * Contains a list of all entities changed from the last update.
    */
   get update (): Event<Entity<any>[]> {
-    return this._itemManager.debouncedItemUpdate;
+    return this._itemManager.debouncedUpdate;
   }
 
   /**
@@ -75,7 +75,7 @@ export class Database {
    * If the information about which entity got updated is not required prefer using `update`.
    */
   get entityUpdate (): Event<Entity<any>> {
-    return this._itemManager.itemUpdate;
+    return this._itemManager.update;
   }
 
   @synchronized
@@ -175,7 +175,7 @@ export class Database {
    */
   select = createRootSelector(
     () => this._itemManager.items,
-    () => this._itemManager.debouncedItemUpdate,
+    () => this._itemManager.debouncedUpdate,
     this,
   );
 
