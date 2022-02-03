@@ -93,11 +93,24 @@ test('complex fields round trip', () => {
   }
 
   const encoded = codec.encode(initial)
-  
   expect(encoded).toBeInstanceOf(Uint8Array);
 
   const decoded = codec.decode(encoded)
+  expect(decoded).toEqual(initial)
+})
 
+test('encodes empty repeated fields as empty arrays', () => {
+  const codec = schema.getCodecForType('dxos.test.ComplexFields');
+
+  const initial: ComplexFields = {
+    repeatedField: [],
+    requiredField: new MyKey(Buffer.from('foo')),
+  }
+
+  const encoded = codec.encode(initial)
+  expect(encoded).toBeInstanceOf(Uint8Array);
+
+  const decoded = codec.decode(encoded)
   expect(decoded).toEqual(initial)
 })
 

@@ -22,7 +22,7 @@ export function createMessageDeclaration (type: protobufjs.Type, subs: Substitut
       const signature = f.createPropertySignature(
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
-        field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
+        field.required || field.repeated ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
         getFieldType(field, subs)
       );
 
