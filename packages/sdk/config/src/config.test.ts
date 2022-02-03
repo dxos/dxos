@@ -46,14 +46,16 @@ test('Config v1', () => {
         app: {
           contentType: ['dxos:type.chess.board']
         }
-      }
+      },
+      keywords: []
     }
   }, {
     runtime: {
       services: {
         signal: {
-          server: 'ws://localhost:4000'
-        }
+          server: 'ws://localhost:4000',
+        },
+        ice: []
       }
     }
   });

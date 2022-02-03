@@ -233,7 +233,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this.services.SystemService.Reset();
+    await this.services.SystemService.reset();
     this._initialized = false;
   }
 

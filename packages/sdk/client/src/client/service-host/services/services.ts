@@ -15,10 +15,10 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
     PartyService: createPartyService(opts),
     DataService: opts.echo.dataService,
     TracingService: {
-      SetTracingOptions: () => {
+      setTracingOptions: () => {
         throw new Error('Tracing not available');
       },
-      SubscribeToRpcTrace: () => {
+      subscribeToRpcTrace: () => {
         throw new Error('Tracing not available');
       }
     }

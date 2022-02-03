@@ -89,11 +89,11 @@ describe('Protocol plugin rpc', () => {
       server = createRpcServer({
         service,
         handlers: {
-          TestCall: async (req) => {
+          testCall: async (req) => {
             expect(req.data).toEqual('requestData');
             return { data: 'responseData' };
           },
-          VoidCall: async () => {}
+          voidCall: async () => {}
         },
         port
       });
@@ -115,7 +115,7 @@ describe('Protocol plugin rpc', () => {
       client.open()
     ]);
 
-    const response = await client.rpc.TestCall({ data: 'requestData' });
+    const response = await client.rpc.testCall({ data: 'requestData' });
 
     expect(response.data).toEqual('responseData');
   });
@@ -135,11 +135,11 @@ describe('Protocol plugin rpc', () => {
       const server = createRpcServer({
         service,
         handlers: {
-          TestCall: async (req) => {
+          testCall: async (req) => {
             expect(req.data).toEqual('requestData');
             return { data: peerId };
           },
-          VoidCall: async () => {}
+          voidCall: async () => {}
         },
         port
       });
@@ -165,9 +165,9 @@ describe('Protocol plugin rpc', () => {
     assert(client2);
 
     const responses = await Promise.all([
-      client1.rpc.TestCall({ data: 'requestData' }),
-      client2.rpc.TestCall({ data: 'requestData' }),
-      client1.rpc.TestCall({ data: 'requestData' })
+      client1.rpc.testCall({ data: 'requestData' }),
+      client2.rpc.testCall({ data: 'requestData' }),
+      client1.rpc.testCall({ data: 'requestData' })
     ]);
 
     const peerIds = responses.map((response) => response.data);

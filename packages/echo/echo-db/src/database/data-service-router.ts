@@ -35,19 +35,19 @@ export class DataServiceRouter implements DataService {
     this._trackedParties.set(key, host);
   }
 
-  SubscribeEntitySet (request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
+  subscribeEntitySet (request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
     assert(request.partyKey);
     const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
     return host.subscribeEntitySet();
   }
 
-  SubscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+  subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     assert(request.partyKey);
     const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
     return host.subscribeEntityStream(request);
   }
 
-  Write (request: WriteRequest): Promise<MutationReceipt> {
+  write (request: WriteRequest): Promise<MutationReceipt> {
     assert(request.partyKey);
     assert(request.mutation);
     const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));

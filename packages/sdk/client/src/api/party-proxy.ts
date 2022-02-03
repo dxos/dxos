@@ -109,7 +109,7 @@ export class Party extends InvitationProxy {
   }
 
   async setOpen (open: boolean) {
-    await this._serviceProvider.services.PartyService.SetPartyState({
+    await this._serviceProvider.services.PartyService.setPartyState({
       partyKey: this.key,
       open
     });
@@ -118,7 +118,7 @@ export class Party extends InvitationProxy {
   async setActive (active: boolean, options: ActivationOptions) {
     const activeGlobal = options.global ? active : undefined;
     const activeDevice = options.device ? active : undefined;
-    await this._serviceProvider.services.PartyService.SetPartyState({
+    await this._serviceProvider.services.PartyService.setPartyState({
       partyKey: this.key,
       activeGlobal,
       activeDevice
@@ -136,13 +136,13 @@ export class Party extends InvitationProxy {
    * @param inviteeKey Public key of the invitee. In this case no secret exchange is required, but only the specified recipient can accept the invitation.
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.CreateInvitation({ partyKey: this.key, inviteeKey });
+    const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
     return this.createInvitationRequest({ stream });
   }
 
   queryMembers () {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.SubscribeMembers({ partyKey: this.key }),
+      this._serviceProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
       (response) => response?.members ?? []
     );
   }
@@ -169,6 +169,6 @@ export class Party extends InvitationProxy {
   }
 
   createSnapshot () {
-    return this._serviceProvider.services.PartyService.CreateSnapshot({ partyKey: this.key });
+    return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
 }

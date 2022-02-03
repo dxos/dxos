@@ -64,7 +64,7 @@ export class EchoProxy {
    * @internal
    */
   _open () {
-    const partiesStream = this._serviceProvider.services.PartyService.SubscribeParties();
+    const partiesStream = this._serviceProvider.services.PartyService.subscribeParties();
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
@@ -79,7 +79,7 @@ export class EchoProxy {
             }
           });
 
-          const partyStream = this._serviceProvider.services.PartyService.SubscribeToParty({ partyKey: party.publicKey });
+          const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ partyKey: party.publicKey });
           partyStream.subscribe(async ({ party }) => {
             if (!party) {
               return;
@@ -117,7 +117,7 @@ export class EchoProxy {
   async createParty (): Promise<Party> {
     const [partyReceivedPromise, partyReceived] = latch();
 
-    const party = await this._serviceProvider.services.PartyService.CreateParty();
+    const party = await this._serviceProvider.services.PartyService.createParty();
 
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
@@ -138,7 +138,7 @@ export class EchoProxy {
   async cloneParty (snapshot: PartySnapshot): Promise<Party> {
     const [partyReceivedPromise, partyReceived] = latch();
 
-    const party = await this._serviceProvider.services.PartyService.CloneParty(snapshot);
+    const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
 
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
@@ -170,12 +170,12 @@ export class EchoProxy {
    * To be used with `party.createInvitation` on the inviter side.
    */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation {
-    const invitationProcessStream = this._serviceProvider.services.PartyService.AcceptInvitation(invitationDescriptor.toProto());
+    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(invitationDescriptor.toProto());
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
       invitationDescriptor,
       onAuthenticate: async (request) => {
-        await this._serviceProvider.services.PartyService.AuthenticateInvitation(request);
+        await this._serviceProvider.services.PartyService.authenticateInvitation(request);
       }
     });
 

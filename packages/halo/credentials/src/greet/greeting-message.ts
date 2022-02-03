@@ -15,7 +15,8 @@ const TYPE_URL_GREETING_COMMAND = 'dxos.credentials.greet.Command';
 export const createGreetingBeginMessage = (): WithTypeUrl<Command> => {
   return {
     __type_url: TYPE_URL_GREETING_COMMAND,
-    command: Command.Type.BEGIN
+    command: Command.Type.BEGIN,
+    params: []
   };
 };
 
@@ -58,7 +59,8 @@ export const createGreetingFinishMessage = (secret: Buffer): WithTypeUrl<Command
   return {
     __type_url: TYPE_URL_GREETING_COMMAND,
     command: Command.Type.FINISH,
-    secret
+    secret,
+    params: [],
   };
 };
 
