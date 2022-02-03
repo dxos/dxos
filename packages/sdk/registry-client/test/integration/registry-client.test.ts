@@ -26,6 +26,11 @@ chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
+const randomName = () => {
+  // Must start with a letter.
+  return `r${Math.random().toString(36).substring(2)}`;
+};
+
 describe('Registry Client', () => {
   let registryApi: IRegistryClient;
   let keypair: ReturnType<Keyring['addFromUri']>;
@@ -56,11 +61,10 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves type details', async () => {
-      const name = Math.random().toString(36).substring(2);
       const domainKey = await registryApi.registerDomain();
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-      await registryApi.updateResource(DXN.fromDomainKey(domainKey, name), typeCid);
+      await registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), typeCid);
 
       const type = await registryApi.getTypeRecord(typeCid);
       expect(type?.messageName).to.equal('.dxos.type.App');
@@ -286,9 +290,7 @@ describe('Registry Client', () => {
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.App');
 
-      const name = Math.random().toString(36).substring(2);
-
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
     });
 
     it('Does allow to overwrite already registered name', async () => {
@@ -296,11 +298,9 @@ describe('Registry Client', () => {
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
-      const name = Math.random().toString(36).substring(2);
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
 
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
-
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
     });
   });
 
