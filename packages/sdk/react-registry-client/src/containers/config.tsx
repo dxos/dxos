@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createApiPromise, createKeyring, RegistryClient, SignTxFunction } from '@dxos/registry-client';
+import { createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
 
 // TODO(burdon): Move to @dxos/util.
