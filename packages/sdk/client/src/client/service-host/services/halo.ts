@@ -45,7 +45,7 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
-  protected async polkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
+  private async polkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
     await cryptoWaitReady();
 
     assert(key.secretKey, 'Secret key is missing.');
