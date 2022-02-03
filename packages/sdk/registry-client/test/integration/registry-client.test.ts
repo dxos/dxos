@@ -56,7 +56,7 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves type details', async () => {
-      const name = Math.random().toString(36).substring(2);
+      const name = `r${Math.random().toString(36).substring(2)}`; // Must start with a letter.
       const domainKey = await registryApi.registerDomain();
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
