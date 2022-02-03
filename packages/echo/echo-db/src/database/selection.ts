@@ -12,18 +12,18 @@ import { Link } from './link';
 
 export type OneOrMultiple<T> = T | T[];
 
-export interface ItemFilter {
+export type ItemFilter = {
   type?: OneOrMultiple<string>;
   parent?: ItemID | Item<any>
 }
 
-export interface LinkFilter {
+export type LinkFilter = {
   type?: OneOrMultiple<string>;
 }
 
 export type Predicate<T> = (element: T) => boolean;
 
-export interface ItemIdFilter {
+export type ItemIdFilter = {
   id: ItemID
 }
 
@@ -50,30 +50,30 @@ export enum ItemFilterDeleted {
   SHOW_DELETED_ONLY = 2
 }
 
-export interface QueryOptions {
+export type QueryOptions = {
   deleted?: ItemFilterDeleted
 }
 
 export class Selection<T> {
   /**
    *
-   * @param _run Execute the query.
+   * @param _execute Execute the query.
    * @param _updateFilter Predicate to determine if the update event should be fired based on the set of changed items.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor (
-    private readonly _run: (options: QueryOptions) => T,
+    private readonly _execute: (options: QueryOptions) => T,
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {}
 
   query (options: QueryOptions = {}): SelectionResult<T> {
-    return new SelectionResult<T>(() => this._run(options), this._update, this._root);
+    return new SelectionResult<T>( this._root, () => this._execute(options), this._update);
   }
 
   private _derive<U> (map: (arg: T, options: QueryOptions) => U): Selection<U> {
-    return new Selection(options => map(this._run(options), options), this._update, this._root);
+    return new Selection(options => map(this._execute(options), options), this._update, this._root);
   }
 
   filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
@@ -107,13 +107,13 @@ export class SelectionResult<T> {
   private _lastResult: T;
 
   constructor (
-    private readonly _run: () => T,
+    private readonly _root: SelectionRoot,
+    private readonly _execute: () => T,
     private readonly _update: Event<Entity<any>[]>,
-    private readonly _root: SelectionRoot
   ) {
-    this._lastResult = this._run();
+    this._lastResult = this._execute();
     this.update.addEffect(() => _update.on(entities => {
-      const result = this._run();
+      const result = this._execute();
       const set = new Set([
         ...(Array.isArray(result) ? result : [result]),
         ...(Array.isArray(this._lastResult) ? this._lastResult : [this._lastResult])
@@ -130,7 +130,7 @@ export class SelectionResult<T> {
    * Result of the selection.
    */
   get result (): T {
-    return this._run();
+    return this._execute();
   }
 
   /**
@@ -141,7 +141,7 @@ export class SelectionResult<T> {
   }
 }
 
-function coerseToId (item: Item<any> | ItemID): ItemID {
+function coerceToId (item: Item<any> | ItemID): ItemID {
   if (typeof item === 'string') {
     return item;
   }
@@ -169,8 +169,9 @@ function itemFilterToPredicate (filter: ItemFilter | ItemIdFilter): Predicate<It
   if ('id' in filter) {
     return item => item.id === filter.id;
   } else {
-    return item => (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-      (!filter.parent || item.parent?.id === coerseToId(filter.parent));
+    return item => 
+      (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
+      (!filter.parent || item.parent?.id === coerceToId(filter.parent));
   }
 }
 
