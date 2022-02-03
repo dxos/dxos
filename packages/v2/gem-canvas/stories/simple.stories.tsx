@@ -3,9 +3,9 @@
 //
 
 import debug from 'debug';
-import React  from 'react';
+import React, { useMemo } from 'react';
 
-import { FullScreen, SvgContainer, useContext } from '@dxos/gem-core';
+import { FullScreen, SvgContainer, SvgContext } from '@dxos/gem-core';
 
 import { Canvas, useMemoryElementModel } from '../src';
 
@@ -19,7 +19,7 @@ export default {
 };
 
 const Container = () => {
-  const context = useContext();
+  const context = useMemo(() => new SvgContext(), []);
 
   // TODO(burdon): Factor out.
   const [elements] = useMemoryElementModel(() => generator());

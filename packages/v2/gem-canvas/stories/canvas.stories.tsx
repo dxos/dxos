@@ -4,9 +4,9 @@
 
 import * as d3 from 'd3';
 import debug from 'debug';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { FullScreen, SvgContainer, useContext, useStateRef } from '@dxos/gem-core';
+import { FullScreen, SvgContainer, SvgContext, useStateRef } from '@dxos/gem-core';
 
 import {
   Action,
@@ -62,7 +62,7 @@ export default {
 };
 
 const Container = () => {
-  const context = useContext();
+  const context = useMemo(() => new SvgContext(), []);
 
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();

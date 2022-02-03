@@ -43,7 +43,7 @@ export const Primary = () => {
 
   useEffect(() => {
     const scene = new Scene<TestModel>([
-      new Part<TestModel, any, any>(
+      new Part<TestModel>(
         new GraphForceProjector(graphMapper),
         new GraphRenderer(new Surface(context.svg, d3.select(zoomRef.current).node()))
       )
@@ -94,7 +94,7 @@ export const Seconary = () => {
 
   useEffect(() => {
     const scene = new Scene<TestModel>([
-      new Part<TestModel, any, any>(
+      new Part<TestModel>(
         new GraphForceProjector(graphMapper, {
           guides: true,
           forces: {
@@ -116,7 +116,7 @@ export const Seconary = () => {
           }
         })
       ),
-      new Part<TestModel, any, any>(
+      new Part<TestModel>(
         new StatsProjector(statsMapper),
         new StatsRenderer(new Surface(context.svg, d3.select(statsRef.current).node()))
       )
