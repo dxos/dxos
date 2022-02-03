@@ -15,7 +15,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { Selection, SelectionResult, createRootSelector, RootFilter } from './selection';
+import { createRootSelector, RootFilter } from './selection';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -161,9 +161,9 @@ export class Database {
     const query = this.select(filter).query();
     await query.update.waitForCondition(() => {
       const { result } = query;
-      return Array.isArray(result) ? result.length > 0 : result !== undefined
+      return Array.isArray(result) ? result.length > 0 : result !== undefined;
     });
-    const item = Array.isArray(query.result) ? query.result[0] : query.result
+    const item = Array.isArray(query.result) ? query.result[0] : query.result;
     assert(item, 'Race condition detected');
     return item;
   }
@@ -176,7 +176,7 @@ export class Database {
   select = createRootSelector(
     () => this._itemManager.items,
     () => this._itemManager.debouncedUpdate,
-    this,
+    this
   );
 
   createSnapshot () {

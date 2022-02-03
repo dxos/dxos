@@ -13,12 +13,10 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
-import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { ItemFilterDeleted } from '.';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -428,7 +426,7 @@ export class ItemManager {
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-function debounceEntityUpdateEvent(event: Event<Entity<any>>): Event<Entity<any>[]> {
+function debounceEntityUpdateEvent (event: Event<Entity<any>>): Event<Entity<any>[]> {
   const debouncedEvent = new Event<Entity<any>[]>();
 
   let firing = false;

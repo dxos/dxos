@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';
+import { createId, PublicKey, randomBytes } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/feed-store';
@@ -20,8 +20,6 @@ import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer:test');
-
-const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('Item demuxer', () => {
   test('set-up', async () => {

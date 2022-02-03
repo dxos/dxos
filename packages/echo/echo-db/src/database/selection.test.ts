@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -10,18 +9,15 @@ import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { Selection } from './selection';
-import { createRootSelector } from '.';
-import { link } from 'fs';
+import { createRootSelector } from './selection';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
 
-const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) => 
+const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(id, type, new ObjectModel(ObjectModel.meta, id), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
@@ -55,11 +51,6 @@ const links: Link<any>[] = [
   createLink('link/4', LINK_EMPLOYEE, items[1], items[4])
 ];
 
-const entities: Entity<any>[] = [
-  ...items,
-  ...links
-];
-
 const rootSelector = createRootSelector(() => items, () => new Event(), null as any);
 
 // TODO(burdon): Test subscriptions/reactivity.
@@ -69,134 +60,134 @@ describe('Selection', () => {
     test('all', () => {
       expect(
         rootSelector()
-        .query().result
+          .query().result
       ).toHaveLength(items.length);
     });
 
     test('by id', () => {
       expect(
         rootSelector({ id: org1.id })
-        .query().result
+          .query().result
       ).toEqual([org1]);
 
       expect(
         rootSelector({ id: org2.id })
-        .query().result
+          .query().result
       ).toEqual([org2]);
     });
 
     test('single type', () => {
       expect(
         rootSelector({ type: OBJECT_PERSON })
-        .query().result
+          .query().result
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
         rootSelector({ type: [OBJECT_ORG, OBJECT_PERSON] })
-        .query().result
+          .query().result
       ).toHaveLength(5);
     });
-  })
+  });
 
   describe('filter', () => {
     test('invalid', () => {
       expect(
         rootSelector()
-        .filter({ type: 'dxos:type/invalid' })
-        .query().result
+          .filter({ type: 'dxos:type/invalid' })
+          .query().result
       ).toHaveLength(0);
     });
 
     test('single type', () => {
       expect(
         rootSelector()
-        .filter({ type: OBJECT_PERSON })
-        .query().result
+          .filter({ type: OBJECT_PERSON })
+          .query().result
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
         rootSelector()
-        .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
-        .query().result
+          .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
+          .query().result
       ).toHaveLength(5);
     });
 
     test('by function', () => {
       expect(
         rootSelector()
-        .filter(item => item.type === OBJECT_ORG)
-        .query().result
+          .filter(item => item.type === OBJECT_ORG)
+          .query().result
       ).toHaveLength(2);
-    })
+    });
   });
 
   describe('children', () => {
     test('from multiple items', () => {
       expect(
         rootSelector()
-        .filter({ type: OBJECT_ORG })
-        .children()
-        .query().result
+          .filter({ type: OBJECT_ORG })
+          .children()
+          .query().result
       ).toEqual([
         items[2],
         items[3],
-        items[4],
+        items[4]
       ]);
     });
 
     test('from single item', () => {
       expect(
         rootSelector({ id: org1.id })
-        .children()
-        .query().result
+          .children()
+          .query().result
       ).toEqual([
         items[2],
-        items[3],
+        items[3]
       ]);
     });
-  })
+  });
 
   describe('links', () => {
     test('links from single item', () => {
       expect(
         rootSelector({ id: org1.id })
-        .links()
-        .query().result
+          .links()
+          .query().result
       ).toEqual([
         links[0],
         links[1],
-        links[2],
+        links[2]
       ]);
-    })
+    });
 
     test('links from multiple items', () => {
       expect(
         rootSelector({ type: OBJECT_ORG })
-        .links()
-        .query().result
+          .links()
+          .query().result
       ).toEqual([
         links[0],
         links[1],
         links[2],
-        links[3],
+        links[3]
       ]);
-    })
+    });
 
     test('targets', () => {
       expect(
         rootSelector({ id: org1.id })
-        .links()
-        .targets()
-        .query().result
+          .links()
+          .targets()
+          .query().result
       ).toEqual([
         items[2],
         items[3],
-        items[4],
+        items[4]
       ]);
-    })
-  })
-})
+    });
+  });
+});

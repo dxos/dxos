@@ -5,15 +5,15 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
-import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
-import { promiseTimeout } from '@dxos/async';
 import { ItemFilterDeleted } from './selection';
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -207,16 +207,16 @@ describe('Database', () => {
         {
           const waiting = database.waitForItem({ type: 'dxos:example' });
           const item = await database.createItem({ model: ObjectModel, type: 'dxos:example' });
-  
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item)
+
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
         {
           const item = await database.createItem({ model: ObjectModel, type: 'dxos:example-2' });
           const waiting = database.waitForItem({ type: 'dxos:example-2' });
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item)
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
-      })
+      });
 
       test('query deleted items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
@@ -241,12 +241,12 @@ describe('Database', () => {
         }
 
         {
-          const {result: items} = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
           expect(items).toHaveLength(10);
         }
 
         {
-          const {result: items} = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(items).toHaveLength(1);
         }
       });

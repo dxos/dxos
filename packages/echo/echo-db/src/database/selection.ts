@@ -2,17 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Event } from '@dxos/async';
-import { isNotNullOrUndefined } from '@dxos/util';
+import { ItemID } from '@dxos/echo-protocol';
 
+import { Database, DefaultModel } from '.';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { ItemID } from '@dxos/echo-protocol';
-import { Database, DefaultModel } from '.';
-import { UnknownModelError } from '..';
 
 export type OneOrMultiple<T> = T | T[];
 
@@ -35,14 +31,14 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>;
 
 export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>;
 
-export function createRootSelector(getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
+export function createRootSelector (getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
   return (filter?: RootFilter): Selection<any> => {
     const predicate = filter ? filterToPredicate(filter) : () => true;
     return new Selection(options => getItems().filter(createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
-  }
+  };
 }
 
-export function createItemSelector(root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> {
+export function createItemSelector (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> {
   return new Selection(() => [root], update, root);
 }
 
@@ -60,43 +56,43 @@ export interface QueryOptions {
 
 export class Selection<T> {
   /**
-   * 
+   *
    * @param _run Execute the query.
    * @param _updateFilter Predicate to determine if the update event should be fired based on the set of changed items.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
    */
-  constructor(
+  constructor (
     private readonly _run: (options: QueryOptions) => T,
     private readonly _update: Event<Entity<any>[]>,
-    private readonly _root: SelectionRoot,
+    private readonly _root: SelectionRoot
   ) {}
 
-  query(options: QueryOptions = {}): SelectionResult<T> {
+  query (options: QueryOptions = {}): SelectionResult<T> {
     return new SelectionResult<T>(() => this._run(options), this._update, this._root);
   }
 
-  private _derive<U>(map: (arg: T, options: QueryOptions) => U): Selection<U> {
+  private _derive<U> (map: (arg: T, options: QueryOptions) => U): Selection<U> {
     return new Selection(options => map(this._run(options), options), this._update, this._root);
   }
 
   filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
   filter<U>(this: Selection<U[]>, filter: Predicate<U>): Selection<U[]>
-  filter<U>(this: Selection<U[]>, filter: Predicate<T> | ItemFilter): Selection<U[]> {
-    const predicate = filterToPredicate(filter)
+  filter<U> (this: Selection<U[]>, filter: Predicate<T> | ItemFilter): Selection<U[]> {
+    const predicate = filterToPredicate(filter);
     return this._derive(items => items.filter(predicate));
   }
 
-  children(this: Selection<Item<any>[]>): Selection<Item<any>[]> {
+  children (this: Selection<Item<any>[]>): Selection<Item<any>[]> {
     return this._derive((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
   }
 
-  links(this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
+  links (this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
     const predicate = linkFilterToPredicate(filter);
     return this._derive((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
-  targets(this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+  targets (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
     const predicate = filterToPredicate(filter);
     return this._derive((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
@@ -113,7 +109,7 @@ export class SelectionResult<T> {
   constructor (
     private readonly _run: () => T,
     private readonly _update: Event<Entity<any>[]>,
-    private readonly _root: SelectionRoot,
+    private readonly _root: SelectionRoot
   ) {
     this._lastResult = this._run();
     this.update.addEffect(() => _update.on(entities => {
@@ -123,29 +119,29 @@ export class SelectionResult<T> {
         ...(Array.isArray(this._lastResult) ? this._lastResult : [this._lastResult])
       ]);
       this._lastResult = result;
-      
-      if(entities.some(entity => set.has(entity))) {
+
+      if (entities.some(entity => set.has(entity))) {
         this.update.emit(result);
       }
-    }))
+    }));
   }
 
   /**
    * Result of the selection.
    */
-  get result(): T {
+  get result (): T {
     return this._run();
   }
 
   /**
    * The root of the selection. Must be a stable reference.
    */
-  get root(): SelectionRoot {
+  get root (): SelectionRoot {
     return this._root;
   }
 }
 
-function coerseToId(item: Item<any> | ItemID): ItemID {
+function coerseToId (item: Item<any> | ItemID): ItemID {
   if (typeof item === 'string') {
     return item;
   }
@@ -153,15 +149,15 @@ function coerseToId(item: Item<any> | ItemID): ItemID {
   return item.id;
 }
 
-function testOneOrMultiple<T>(expected: OneOrMultiple<T>, value: T) {
-  if(Array.isArray(expected)) {
+function testOneOrMultiple<T> (expected: OneOrMultiple<T>, value: T) {
+  if (Array.isArray(expected)) {
     return expected.includes(value);
   } else {
     return expected === value;
   }
 }
 
-function filterToPredicate(filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> {
+function filterToPredicate (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> {
   if (typeof filter === 'function') {
     return filter;
   }
@@ -169,8 +165,8 @@ function filterToPredicate(filter: ItemFilter | ItemIdFilter | Predicate<any>): 
   return itemFilterToPredicate(filter);
 }
 
-function itemFilterToPredicate(filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> {
-  if('id' in filter) {
+function itemFilterToPredicate (filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> {
+  if ('id' in filter) {
     return item => item.id === filter.id;
   } else {
     return item => (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
@@ -178,17 +174,17 @@ function itemFilterToPredicate(filter: ItemFilter | ItemIdFilter): Predicate<Ite
   }
 }
 
-function linkFilterToPredicate(filter: LinkFilter): Predicate<Link<any>> {
+function linkFilterToPredicate (filter: LinkFilter): Predicate<Link<any>> {
   return link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 }
 
-function createQueryOptionsFilter({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
+function createQueryOptionsFilter ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
   return entity => {
-    if(entity.model instanceof DefaultModel) {
+    if (entity.model instanceof DefaultModel) {
       return false;
     }
 
-    switch(deleted) {
+    switch (deleted) {
       case ItemFilterDeleted.IGNORE_DELETED:
         return !(entity instanceof Item) || !entity.deleted;
       case ItemFilterDeleted.SHOW_DELETED:
@@ -196,5 +192,5 @@ function createQueryOptionsFilter({ deleted = ItemFilterDeleted.IGNORE_DELETED }
       case ItemFilterDeleted.SHOW_DELETED_ONLY:
         return entity instanceof Item && entity.deleted;
     }
-  }
+  };
 }

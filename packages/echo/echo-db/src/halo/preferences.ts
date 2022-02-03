@@ -132,7 +132,7 @@ export class Preferences {
     const [partyDesc] = this._party.database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')))
-      .query().result
+      .query().result;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({

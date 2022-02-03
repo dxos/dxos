@@ -15,13 +15,13 @@ import { NetworkManager } from '@dxos/network-manager';
 import { Database } from '../database';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
+import { InvitationManager } from '../invitations';
 import { ResultSet } from '../result';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyFeedProvider } from './party-feed-provider';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
-import { InvitationManager } from '../invitations';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
