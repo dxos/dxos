@@ -69,7 +69,7 @@ export class Selection<T> {
   ) {}
 
   query (options: QueryOptions = {}): SelectionResult<T> {
-    return new SelectionResult<T>( this._root, () => this._execute(options), this._update);
+    return new SelectionResult<T>(this._root, () => this._execute(options), this._update);
   }
 
   private _derive<U> (map: (arg: T, options: QueryOptions) => U): Selection<U> {
@@ -109,7 +109,7 @@ export class SelectionResult<T> {
   constructor (
     private readonly _root: SelectionRoot,
     private readonly _execute: () => T,
-    private readonly _update: Event<Entity<any>[]>,
+    private readonly _update: Event<Entity<any>[]>
   ) {
     this._lastResult = this._execute();
     this.update.addEffect(() => _update.on(entities => {
@@ -169,7 +169,7 @@ function itemFilterToPredicate (filter: ItemFilter | ItemIdFilter): Predicate<It
   if ('id' in filter) {
     return item => item.id === filter.id;
   } else {
-    return item => 
+    return item =>
       (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
       (!filter.parent || item.parent?.id === coerceToId(filter.parent));
   }
