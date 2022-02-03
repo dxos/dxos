@@ -10,6 +10,7 @@ import { Model } from '@dxos/model-factory';
 import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection, SelectionResult } from './selection';
+import { createItemSelector } from './selection';
 
 const log = debug('dxos:echo-db:items:item');
 
@@ -96,12 +97,11 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @param [selector] {SelectFilter}
+   * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
-  select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
-    const selection = new Selection(() => [this], this._onUpdate.discardParameter());
-    return new SelectionResult(selection, selector);
+  select(): Selection<Item<any>[]> {
+    // TODO(dmaretskyi): Fix events.
+    return createItemSelector(this, this._onUpdate.discardParameter() as any);
   }
 
   /**

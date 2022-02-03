@@ -42,6 +42,10 @@ export function createRootSelector(getItems: () => Item<any>[], getUpdateEvent: 
   }
 }
 
+export function createItemSelector(root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> {
+  return new Selection(() => [root], update, root);
+}
+
 export type SelectionRoot = Database | Entity<any>;
 
 export class Selection<T> {
