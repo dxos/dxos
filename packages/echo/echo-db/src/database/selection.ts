@@ -97,7 +97,10 @@ export class SelectionResult<T> {
     this.update.addEffect(() => _update.on(entities => {
       const result = this._run();
       const set = Array.isArray(result) ? new Set(result) : new Set([result]);
-      return entities.some(entity => set.has(entity));
+      
+      if(entities.some(entity => set.has(entity))) {
+        this.update.emit(result);
+      }
     }))
   }
 

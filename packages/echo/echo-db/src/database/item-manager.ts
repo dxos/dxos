@@ -77,8 +77,9 @@ export class ItemManager {
 
   /**
    * Update event.
+   * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedItemUpdate = debounceEvent(this.itemUpdate.discardParameter());
+  readonly debouncedItemUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.itemUpdate);
 
   /**
    * Map of active items.
@@ -390,7 +391,7 @@ export class ItemManager {
    * @deprecated
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilterDeprecated = {}): ResultSet<Item<M>> {
-    return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
+    return new ResultSet(this.debouncedItemUpdate.discardParameter(), () => Array.from(this._entities.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
         // TODO(burdon): Document why skipping DefaultModel? (E.g., transient?)
@@ -482,17 +483,21 @@ export class ItemManager {
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-function debounceEvent (event: Event): Event {
-  const debouncedEvent = new Event();
+function debounceEntityUpdateEvent(event: Event<Entity<any>>): Event<Entity<any>[]> {
+  const debouncedEvent = new Event<Entity<any>[]>();
 
   let firing = false;
 
-  debouncedEvent.addEffect(() => event.on(() => {
+  const emittedSinceLastFired = new Set<Entity<any>>();
+  debouncedEvent.addEffect(() => event.on(arg => {
+    emittedSinceLastFired.add(arg);
     if (!firing) {
       firing = true;
       setTimeout(() => {
         firing = false;
-        debouncedEvent.emit();
+        const args = Array.from(emittedSinceLastFired);
+        emittedSinceLastFired.clear();
+        debouncedEvent.emit(args);
       }, 0);
     }
   }));

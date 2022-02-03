@@ -63,8 +63,9 @@ export class Database {
 
   /**
    * Fired when any item is updated.
+   * Contains a list of all entities changed from the last update.
    */
-  get update (): Event<void> {
+  get update (): Event<Entity<any>[]> {
     return this._itemManager.debouncedItemUpdate;
   }
 
@@ -174,7 +175,7 @@ export class Database {
    */
   select = createRootSelector(
     () => Array.from(this._itemManager.entities.values()).filter((entity): entity is Item<any> => entity instanceof Item),
-    () => this._itemManager.itemUpdate as any,
+    () => this._itemManager.debouncedItemUpdate,
     this,
   );
 

@@ -13,6 +13,7 @@ import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './item-manager';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
+import { promiseTimeout } from '@dxos/async';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -199,6 +200,24 @@ describe('Database', () => {
     });
 
     describe('queries', () => {
+      test('wait for item', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const database = await setupBackend(modelFactory);
+
+        {
+          const waiting = database.waitForItem({ type: 'dxos:example' });
+          const item = await database.createItem({ model: ObjectModel, type: 'dxos:example' });
+  
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item)
+        }
+
+        {
+          const item = await database.createItem({ model: ObjectModel, type: 'dxos:example-2' });
+          const waiting = database.waitForItem({ type: 'dxos:example-2' });
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item)
+        }
+      })
+
       test('query deleted items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);

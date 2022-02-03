@@ -63,7 +63,7 @@ const rootSelector = createRootSelector(() => items, () => new Event(), null as 
 
 // TODO(burdon): Test subscriptions/reactivity.
 
-describe.only('Selection', () => {
+describe('Selection', () => {
   describe('root', () => {
     test('all', () => {
       expect(
