@@ -1,0 +1,101 @@
+on:
+  push:
+
+name: Integration tests with DXNS
+jobs:
+  check-integration-dxns:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 25
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: false
+      - name:
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
+          # Install dependencies
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/registry-client
+
+          docker pull ghcr.io/dxos/substrate-node:dev
+          docker run -d --name dxns-integration-tests ghcr.io/dxos/substrate-node:dev
+      - name: Cleanup
+        if: always()
+        run: |
+          docker kill dxns-integration-tests
+
+  check-storybooks:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 25
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: false
+      - name: Check, install and build
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
+          # Install dependencies
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+
+          # Quick build
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
+
+          # Test the demos storybooks
+          cd packages/demos
+          pnpm book &
+          pnpm test:playwright
+          echo "::endgroup::"
+      - name: Cleanup
+        if: always()
+        run: |
+          kill $(lsof -t -i:9001) || true
+          kill $(lsof -t -i:8080) || true
+
+  # TODO(burdon): Run nightly.
+  check-sdk-health:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 25
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: false
+      - name: Check, Install and Test
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+
+          # Quick build
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
+
+          # Test the Tasks App
+          echo "::group::tutorials-tasks-app"
+          cd packages/tutorials/tutorials-tasks-app
+          ./scripts/start-and-wait.sh
+          pnpm test:playwright
+          echo "::endgroup::"
+      - name: Cleanup
+        if: always()
+        run: |
+          sudo apt-get install -y lsof
+          kill $(lsof -t -i:3000) || true
+          kill $(lsof -t -i:8080) || true
