@@ -2,9 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client } from '@dxos/client';
-import { KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { ApiPromise } from '@polkadot/api/promise';
 import Keyring from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -15,16 +12,20 @@ import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+
+import { Client } from '@dxos/client';
+import { KeyType } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
+
 import {
   AuctionsClient, createApiPromise, SignTxFunction,
   createKeyring, registryTypes
 } from '../../src';
-
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
-export class TxSigner implements Partial<Signer> {
+class TxSigner implements Partial<Signer> {
   private id = 0;
   constructor (private keypair: KeyringPair) { }
 
@@ -40,7 +41,7 @@ export class TxSigner implements Partial<Signer> {
   }
 }
 
-export class DxosClientSigner implements Partial<Signer> {
+class DxosClientSigner implements Partial<Signer> {
   private id = 0;
   constructor (private client: Client, private publicKey: PublicKey) { }
 
