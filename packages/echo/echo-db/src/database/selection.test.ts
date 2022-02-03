@@ -59,7 +59,7 @@ const entities: Entity<any>[] = [
   ...links
 ];
 
-const rootSelector = createRootSelector(() => items, new Event(), null as any);
+const rootSelector = createRootSelector(() => items, () => new Event(), null as any);
 
 // TODO(burdon): Test subscriptions/reactivity.
 
@@ -76,12 +76,12 @@ describe.only('Selection', () => {
       expect(
         rootSelector({ id: org1.id })
         .query().result
-      ).toEqual(org1);
+      ).toEqual([org1]);
 
       expect(
         rootSelector({ id: org2.id })
         .query().result
-      ).toEqual(org2);
+      ).toEqual([org2]);
     });
 
     test('single type', () => {

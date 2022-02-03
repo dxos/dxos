@@ -28,17 +28,13 @@ export interface ItemIdFilter {
 
 export type RootFilter = ItemIdFilter | ItemFilter | ArrayFilter<Item<any>>;
 
-export interface RootSelector {
-  (filter: ItemIdFilter): Selection<Item<any> | undefined>;
-  (filter?: ItemFilter | ArrayFilter<Item<any>>): Selection<Item<any>[]>;
-  (filter?: RootFilter): Selection<Item<any>[] | Item<any> | undefined>;
-}
+export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>;
 
 export function createRootSelector(getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
   return (filter?: RootFilter): Selection<any> => {
     const update = getUpdateEvent();
     if (filter && 'id' in filter) {
-      return new Selection(() => getItems().find(item => item.id === filter.id), update, root);
+      return new Selection(() => [getItems().find(item => item.id === filter.id)], update, root);
     } else {
       const predicate = filter ? filterToPredicate(filter) : () => true;
       return new Selection(() => getItems().filter(predicate), update, root);
@@ -78,10 +74,8 @@ export class Selection<T> {
     return this._derive(items => items.filter(predicate));
   }
 
-  children(this: Selection<Item<any> | undefined>): Selection<Item<any>[]>
-  children(this: Selection<Item<any>[]>): Selection<Item<any>[]>
-  children(this: Selection<Item<any> | undefined | Item<any>[]>): Selection<Item<any>[]> {
-    return this._derive(item => Array.isArray(item) ? item.flatMap(item => item.children) : item?.children ?? []);
+  children(this: Selection<Item<any>[]>): Selection<Item<any>[]> {
+    return this._derive(item => item.flatMap(item => item.children));
   }
 }
 
