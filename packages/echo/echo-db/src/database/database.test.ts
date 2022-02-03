@@ -80,7 +80,7 @@ describe('Database', () => {
       expect(item.id).not.toBeUndefined();
       expect(item.model).toBeInstanceOf(ObjectModel);
 
-      const items = database.select(s => s.items).getValue();
+      const { result: items } = database.select().query();
       expect(items).toHaveLength(1);
       expect(items[0] === item).toBeTruthy();
     });
@@ -112,7 +112,7 @@ describe('Database', () => {
       const parent = await database.createItem({ model: ObjectModel });
       const child = await database.createItem({ model: ObjectModel, parent: parent.id });
 
-      const items = database.select(s => s.items).getValue();
+      const { result: items } = database.select().query();
       expect(items).toHaveLength(2);
       expect(items).toEqual([parent, child]);
 
@@ -208,30 +208,32 @@ describe('Database', () => {
         ));
 
         // TODO(burdon): Trigger result on initial subscription.
-        const result = database.select(s => s.items);
-        const items = result.getValue();
+        const query = database.select().query();
+        const items = query.result;
         expect(items).toHaveLength(10);
 
-        const update = result.update.waitForCount(1);
+        const update = query.update.waitForCount(1);
         await items[0].delete();
         await update;
 
         {
-          const items = result.getValue();
+          const items = query.result;
           expect(items).toHaveLength(9);
         }
 
-        {
-          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED });
-          const items = result.getValue();
-          expect(items).toHaveLength(10);
-        }
+        // TODO(dmaretskyi): Revive.
+        throw new Error('TODO');
+        // {
+        //   const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED });
+        //   const items = result.result;
+        //   expect(items).toHaveLength(10);
+        // }
 
-        {
-          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
-          const items = result.getValue();
-          expect(items).toHaveLength(1);
-        }
+        // {
+        //   const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+        //   const items = result.getValue();
+        //   expect(items).toHaveLength(1);
+        // }
       });
     });
   });

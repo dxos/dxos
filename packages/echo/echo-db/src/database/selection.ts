@@ -31,10 +31,12 @@ export type RootFilter = ItemIdFilter | ItemFilter | ArrayFilter<Item<any>>;
 export interface RootSelector {
   (filter: ItemIdFilter): Selection<Item<any> | undefined>;
   (filter?: ItemFilter | ArrayFilter<Item<any>>): Selection<Item<any>[]>;
+  (filter?: RootFilter): Selection<Item<any>[] | Item<any> | undefined>;
 }
 
-export function createRootSelector(getItems: () => Item<any>[], update: Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
+export function createRootSelector(getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
   return (filter?: RootFilter): Selection<any> => {
+    const update = getUpdateEvent();
     if (filter && 'id' in filter) {
       return new Selection(() => getItems().find(item => item.id === filter.id), update, root);
     } else {

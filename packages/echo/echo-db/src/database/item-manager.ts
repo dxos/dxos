@@ -27,7 +27,10 @@ export enum ItemFilterDeleted {
   SHOW_DELETED_ONLY = 2
 }
 
-export interface ItemFilter {
+/**
+ * @deprecated
+ */
+export interface ItemFilterDeprecated {
   type?: ItemType | ItemType[]
   parent?: ItemID | ItemID[]
   id?: ItemID | ItemID[]
@@ -384,8 +387,9 @@ export class ItemManager {
   /**
    * Return matching items.
    * @param [filter]
+   * @deprecated
    */
-  queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
+  queryItems <M extends Model<any> = any> (filter: ItemFilterDeprecated = {}): ResultSet<Item<M>> {
     return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
@@ -450,7 +454,7 @@ export class ItemManager {
   }
 
   // TODO(burdon): Factor out to test queries separately?
-  private _matchesFilter (item: Item<any>, filter: ItemFilter) {
+  private _matchesFilter (item: Item<any>, filter: ItemFilterDeprecated) {
     if (item.deleted) {
       if (filter.deleted === undefined || filter.deleted === ItemFilterDeleted.IGNORE_DELETED) {
         return false;
