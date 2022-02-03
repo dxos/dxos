@@ -15,6 +15,7 @@ import { Item } from './item';
 import { Link } from './link';
 import { Selection } from './selection';
 import { createRootSelector } from '.';
+import { link } from 'fs';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
@@ -159,40 +160,43 @@ describe('Selection', () => {
     });
   })
 
-  // test('nested with duplicates', () => {
-  //   let count = 0;
+  describe('links', () => {
+    test('links from single item', () => {
+      expect(
+        rootSelector({ id: org1.id })
+        .links()
+        .query().result
+      ).toEqual([
+        links[0],
+        links[1],
+        links[2],
+      ]);
+    })
 
-  //   const selection = new Selection(() => items, new Event())
-  //     .filter({ type: OBJECT_ORG })
-  //     .links({ type: LINK_EMPLOYEE })
-  //     .call(selection => {
-  //       count = selection.items.length;
-  //     })
-  //     .target();
+    test('links from multiple items', () => {
+      expect(
+        rootSelector({ type: OBJECT_ORG })
+        .links()
+        .query().result
+      ).toEqual([
+        links[0],
+        links[1],
+        links[2],
+        links[3],
+      ]);
+    })
 
-  //   expect(count).toBe(4);
-  //   expect(selection.items).toHaveLength(3);
-  // });
-
-  // test('links', () => {
-  //   const count = {
-  //     org: 0,
-  //     links: 0
-  //   };
-
-  //   new Selection(() => items, new Event())
-  //     .filter({ type: OBJECT_ORG })
-  //     .each((org, selection) => {
-  //       count.org++;
-  //       selection
-  //         .links({ type: LINK_EMPLOYEE })
-  //         .each(link => {
-  //           assert(link.sourceId === org.id);
-  //           count.links++;
-  //         });
-  //     });
-
-  //   expect(count.org).toBe(2);
-  //   expect(count.links).toBe(4);
-  // });
-});
+    test('targets', () => {
+      expect(
+        rootSelector({ id: org1.id })
+        .links()
+        .targets()
+        .query().result
+      ).toEqual([
+        items[2],
+        items[3],
+        items[4],
+      ]);
+    })
+  })
+})

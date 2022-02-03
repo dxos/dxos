@@ -21,6 +21,10 @@ export interface ItemFilter {
   parent?: ItemID | Item<any>
 }
 
+export interface LinkFilter {
+  type?: OneOrMultiple<string>;
+}
+
 export type Predicate<T> = (element: T) => boolean;
 
 export interface ItemIdFilter {
@@ -85,6 +89,16 @@ export class Selection<T> {
 
   children(this: Selection<Item<any>[]>): Selection<Item<any>[]> {
     return this._derive((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
+  }
+
+  links(this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
+    const predicate = linkFilterToPredicate(filter);
+    return this._derive((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
+  }
+
+  targets(this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+    const predicate = filterToPredicate(filter);
+    return this._derive((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 }
 
@@ -164,19 +178,23 @@ function itemFilterToPredicate(filter: ItemFilter | ItemIdFilter): Predicate<Ite
   }
 }
 
+function linkFilterToPredicate(filter: LinkFilter): Predicate<Link<any>> {
+  return link => (!filter.type || testOneOrMultiple(filter.type, link.type));
+}
+
 function createQueryOptionsFilter({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
-  return item => {
-    if(item.model instanceof DefaultModel) {
+  return entity => {
+    if(entity.model instanceof DefaultModel) {
       return false;
     }
 
     switch(deleted) {
       case ItemFilterDeleted.IGNORE_DELETED:
-        return !(item instanceof Item) || !item.deleted;
+        return !(entity instanceof Item) || !entity.deleted;
       case ItemFilterDeleted.SHOW_DELETED:
         return true;
       case ItemFilterDeleted.SHOW_DELETED_ONLY:
-        return item instanceof Item && item.deleted;
+        return entity instanceof Item && entity.deleted;
     }
   }
 }
