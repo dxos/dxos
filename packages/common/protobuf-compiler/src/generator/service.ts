@@ -57,7 +57,7 @@ export function createServiceDeclaration (type: protobufjs.Service, subs: Substi
       .map(method => {
         const sig = f.createPropertySignature(
           undefined,
-          method.name,
+          mapRpcMethodName(method.name),
           undefined,
           createRpcMethodType(method, type, subs)
         );
@@ -96,4 +96,8 @@ export function createServicesDictionary (root: protobufjs.NamespaceBase) {
         getTypeReference(type)
       ))
   );
+}
+
+function mapRpcMethodName(name: string) {
+  return name[0].toLocaleLowerCase() + name.substring(1);
 }
