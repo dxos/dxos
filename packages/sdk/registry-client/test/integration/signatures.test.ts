@@ -2,26 +2,60 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ApiPromise } from '@polkadot/api/promise';
-import Keyring from '@polkadot/keyring';
-import { TypeRegistry } from '@polkadot/types';
-import { Registry } from '@polkadot/types/types';
-import { cryptoWaitReady } from '@polkadot/util-crypto';
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-
 import { Client } from '@dxos/client';
 import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-
+import { ApiPromise } from '@polkadot/api/promise';
+import Keyring from '@polkadot/keyring';
+import { KeyringPair } from '@polkadot/keyring/types';
+import { TypeRegistry } from '@polkadot/types';
+import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
+import assert from 'assert';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import {
-  AuctionsClient, createApiPromise,
-  createKeyring, registryTypes, SignTxFunction
+  AuctionsClient, createApiPromise, SignTxFunction,
+  createKeyring, registryTypes
 } from '../../src';
-import { DxosClientSigner, TxSigner } from '../../src/signatures.test';
+
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
+
+export class TxSigner implements Partial<Signer> {
+  private id = 0;
+  constructor (private keypair: KeyringPair) { }
+
+  public async signRaw ({ address, data }: SignerPayloadRaw): Promise<SignerResult> {
+    assert(address === this.keypair.address, 'Signer does not have the keyringPair');
+
+    const signature = u8aToHex(this.keypair.sign(hexToU8a(data), { withType: true }));
+
+    return {
+      id: ++this.id,
+      signature
+    };
+  }
+}
+
+export class DxosClientSigner implements Partial<Signer> {
+  private id = 0;
+  constructor (private client: Client, private publicKey: PublicKey) { }
+
+  public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
+    const result = await this.client.halo.sign({
+      publicKey: this.publicKey,
+      payload: data
+    });
+
+    return {
+      id: ++this.id,
+      signature: result.signed
+    };
+  }
+}
 
 describe('Signatures', () => {
   let client: Client;
