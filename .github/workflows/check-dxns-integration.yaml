@@ -18,6 +18,9 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
           npm install -g @microsoft/rush pnpm
 
+          sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev libpng-dev libx11-dev jq gstreamer1.0-plugins-bad libenchant1c2a gstreamer1.0-libav lsof
+          npx playwright@1.11.0 install-deps
+
           # Install dependencies
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
