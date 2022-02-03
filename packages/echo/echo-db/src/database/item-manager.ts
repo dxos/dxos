@@ -22,16 +22,6 @@ import { ItemFilterDeleted } from '.';
 
 const log = debug('dxos:echo:item-manager');
 
-/**
- * @deprecated
- */
-export interface ItemFilterDeprecated {
-  type?: ItemType | ItemType[]
-  parent?: ItemID | ItemID[]
-  id?: ItemID | ItemID[]
-  deleted?: ItemFilterDeleted
-}
-
 export interface ModelConstructionOptions {
   itemId: ItemID
   modelType: ModelType
@@ -48,15 +38,6 @@ export interface LinkConstructionOptions extends ModelConstructionOptions {
   itemType: ItemType | undefined,
   source: ItemID;
   target: ItemID;
-}
-
-// TODO(burdon): Factor out.
-function equalsOrIncludes<T> (value: T, expected: T | T[]) {
-  if (Array.isArray(expected)) {
-    return expected.includes(value);
-  } else {
-    return expected === value;
-  }
 }
 
 /**
@@ -99,6 +80,14 @@ export class ItemManager {
 
   get entities () {
     return this._entities;
+  }
+
+  get items (): Item<any>[] {
+    return Array.from(this._entities.values()).filter((entity): entity is Item<any> => entity instanceof Item);
+  }
+
+  get links (): Link<any>[] {
+    return Array.from(this._entities.values()).filter((entity): entity is Link<any> => entity instanceof Link);
   }
 
   /**
@@ -380,20 +369,6 @@ export class ItemManager {
     return entity;
   }
 
-  /**
-   * Return matching items.
-   * @param [filter]
-   * @deprecated
-   */
-  queryItems <M extends Model<any> = any> (filter: ItemFilterDeprecated = {}): ResultSet<Item<M>> {
-    return new ResultSet(this.debouncedItemUpdate.discardParameter(), () => Array.from(this._entities.values())
-      .filter((entity): entity is Item<M> => entity instanceof Item)
-      .filter(item =>
-        // TODO(burdon): Document why skipping DefaultModel? (E.g., transient?)
-        !(item.model instanceof DefaultModel) && this._matchesFilter(item, filter)
-      ));
-  }
-
   getItemsWithDefaultModels (): Entity<DefaultModel>[] {
     return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
   }
@@ -447,31 +422,6 @@ export class ItemManager {
     }));
 
     this.itemUpdate.emit(item);
-  }
-
-  // TODO(burdon): Factor out to test queries separately?
-  private _matchesFilter (item: Item<any>, filter: ItemFilterDeprecated) {
-    if (item.deleted) {
-      if (filter.deleted === undefined || filter.deleted === ItemFilterDeleted.IGNORE_DELETED) {
-        return false;
-      }
-    } else if (filter.deleted === ItemFilterDeleted.SHOW_DELETED_ONLY) {
-      return false;
-    }
-
-    if (filter.type && (!item.type || !equalsOrIncludes(item.type, filter.type))) {
-      return false;
-    }
-
-    if (filter.parent && (!item.parent || !equalsOrIncludes(item.parent.id, filter.parent))) {
-      return false;
-    }
-
-    if (filter.id && !equalsOrIncludes(item.id, filter.id)) {
-      return false;
-    }
-
-    return true;
   }
 }
 

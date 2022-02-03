@@ -11,7 +11,8 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 import { ItemID } from '@dxos/echo-protocol';
-import { Database } from '.';
+import { Database, DefaultModel } from '.';
+import { UnknownModelError } from '..';
 
 export type OneOrMultiple<T> = T | T[];
 
@@ -165,6 +166,10 @@ function itemFilterToPredicate(filter: ItemFilter | ItemIdFilter): Predicate<Ite
 
 function createQueryOptionsFilter({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
   return item => {
+    if(item.model instanceof DefaultModel) {
+      return false;
+    }
+
     switch(deleted) {
       case ItemFilterDeleted.IGNORE_DELETED:
         return !(item instanceof Item) || !item.deleted;

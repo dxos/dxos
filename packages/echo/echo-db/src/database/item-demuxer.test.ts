@@ -46,8 +46,8 @@ describe('Item demuxer', () => {
     //
 
     const [updatedItems, onUpdateItem] = latch();
-    const items = await itemManager.queryItems();
-    const unsubscribe = items.subscribe((items: Item<any>[]) => {
+    const unsubscribe = itemManager.itemUpdate.on(() => {
+      const items = Array.from(itemManager.entities.values()).filter(entity => entity instanceof Item);
       expect(items).toHaveLength(1);
       onUpdateItem();
     });
@@ -96,78 +96,6 @@ describe('Item demuxer', () => {
     unsubscribe();
   });
 
-  it('ignores unknown models', async () => {
-    const modelFactory = new ModelFactory()
-      .registerModel(TestModel)
-      .registerModel(DefaultModel);
-
-    const writeStream = createTransform<EchoEnvelope, IEchoStream>(
-      async (message: EchoEnvelope): Promise<IEchoStream> => ({
-        meta: {
-          feedKey: createPublicKey().asUint8Array(),
-          memberKey: createPublicKey().asUint8Array(),
-          seq: 0
-        },
-        data: message
-      })
-    );
-    const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
-    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
-    writeStream.pipe(itemDemuxer.open());
-
-    writeStream.write(checkType<EchoEnvelope>({
-      itemId: 'foo',
-      genesis: {
-        modelType: 'unknown model'
-      }
-    }));
-    writeStream.write(checkType<EchoEnvelope>({
-      itemId: 'bar',
-      genesis: {
-        modelType: TestModel.meta.type
-      }
-    }));
-
-    await itemManager.queryItems().update.waitForCount(1);
-    const items = itemManager.queryItems().value;
-    expect(items).toHaveLength(1);
-    expect(items[0].model).toBeInstanceOf(TestModel);
-  });
-
-  it('ignores unknown models on snapshot restore', async () => {
-    const modelFactory = new ModelFactory()
-      .registerModel(TestModel)
-      .registerModel(DefaultModel);
-
-    const itemManager = new ItemManager(modelFactory);
-    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
-
-    await itemDemuxer.restoreFromSnapshot({
-      items: [
-        {
-          itemId: 'foo',
-          modelType: 'unknown model',
-          model: {
-            array: {
-              mutations: [
-                {
-                  mutation: Buffer.from('abc'),
-                  meta: {
-                    feedKey: createPublicKey().asUint8Array(),
-                    memberKey: createPublicKey().asUint8Array(),
-                    seq: 0
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    });
-
-    expect(itemManager.queryItems().value).toHaveLength(0);
-  });
-
   it('models can be registered after item was already created', async () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel)
@@ -201,19 +129,19 @@ describe('Item demuxer', () => {
     }));
 
     {
-      await itemManager.queryItems().update.waitForCount(1);
-      const items = itemManager.queryItems().value;
-      expect(items).toHaveLength(1);
-      expect(items[0].model).toBeInstanceOf(ObjectModel);
+      await itemManager.itemUpdate.waitForCount(1);
+      const items = itemManager.items;
+      expect(items[0].model).toBeInstanceOf(DefaultModel);
+      expect(items[1].model).toBeInstanceOf(ObjectModel);
     }
 
     modelFactory.registerModel(TestModel);
 
     {
-      await itemManager.queryItems({ id: 'foo' }).update.waitForCount(1);
-      const items = itemManager.queryItems({ id: 'foo' }).value;
-      expect(items).toHaveLength(1);
-      expect(items[0].model).toBeInstanceOf(TestModel);
+      await itemManager.itemUpdate.waitForCount(1);
+      const item = itemManager.entities.get('foo');
+      expect(item).toBeDefined();
+      expect(item!.model).toBeInstanceOf(TestModel);
     }
   });
 });

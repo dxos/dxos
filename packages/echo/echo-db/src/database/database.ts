@@ -174,7 +174,7 @@ export class Database {
    * @param [filter]
    */
   select = createRootSelector(
-    () => Array.from(this._itemManager.entities.values()).filter((entity): entity is Item<any> => entity instanceof Item),
+    () => this._itemManager.items,
     () => this._itemManager.debouncedItemUpdate,
     this,
   );
