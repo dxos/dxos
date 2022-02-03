@@ -85,7 +85,7 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   get children (): Item<any>[] {
-    return Array.from(this._children.values());
+    return Array.from(this._children.values()).filter(item => !item.deleted);
   }
 
   get links (): Link<any, any, any>[] {

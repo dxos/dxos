@@ -18,14 +18,9 @@ import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
+import { ItemFilterDeleted } from '.';
 
 const log = debug('dxos:echo:item-manager');
-
-export enum ItemFilterDeleted {
-  IGNORE_DELETED = 0,
-  SHOW_DELETED = 1,
-  SHOW_DELETED_ONLY = 2
-}
 
 /**
  * @deprecated

@@ -11,9 +11,9 @@ import { afterTest } from '@dxos/testutils';
 
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
-import { ItemFilterDeleted } from './item-manager';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 import { promiseTimeout } from '@dxos/async';
+import { ItemFilterDeleted } from './selection';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -240,19 +240,15 @@ describe('Database', () => {
           expect(items).toHaveLength(9);
         }
 
-        // TODO(dmaretskyi): Revive.
-        throw new Error('TODO');
-        // {
-        //   const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED });
-        //   const items = result.result;
-        //   expect(items).toHaveLength(10);
-        // }
+        {
+          const {result: items} = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          expect(items).toHaveLength(10);
+        }
 
-        // {
-        //   const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
-        //   const items = result.getValue();
-        //   expect(items).toHaveLength(1);
-        // }
+        {
+          const {result: items} = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          expect(items).toHaveLength(1);
+        }
       });
     });
   });

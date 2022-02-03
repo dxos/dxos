@@ -20,25 +20,20 @@ export interface ItemFilter {
   parent?: ItemID | Item<any>
 }
 
-export type ArrayFilter<T> = (element: T) => boolean;
+export type Predicate<T> = (element: T) => boolean;
 
 export interface ItemIdFilter {
   id: ItemID
 }
 
-export type RootFilter = ItemIdFilter | ItemFilter | ArrayFilter<Item<any>>;
+export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>;
 
 export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>;
 
 export function createRootSelector(getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
   return (filter?: RootFilter): Selection<any> => {
-    const update = getUpdateEvent();
-    if (filter && 'id' in filter) {
-      return new Selection(() => [getItems().find(item => item.id === filter.id)], update, root);
-    } else {
-      const predicate = filter ? filterToPredicate(filter) : () => true;
-      return new Selection(() => getItems().filter(predicate), update, root);
-    }
+    const predicate = filter ? filterToPredicate(filter) : () => true;
+    return new Selection(options => getItems().filter(createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
   }
 }
 
@@ -48,8 +43,17 @@ export function createItemSelector(root: Item<any>, update: Event<Entity<any>[]>
 
 export type SelectionRoot = Database | Entity<any>;
 
-export class Selection<T> {
+export enum ItemFilterDeleted {
+  IGNORE_DELETED = 0,
+  SHOW_DELETED = 1,
+  SHOW_DELETED_ONLY = 2
+}
 
+export interface QueryOptions {
+  deleted?: ItemFilterDeleted
+}
+
+export class Selection<T> {
   /**
    * 
    * @param _run Execute the query.
@@ -58,28 +62,28 @@ export class Selection<T> {
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor(
-    private readonly _run: () => T,
+    private readonly _run: (options: QueryOptions) => T,
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot,
   ) {}
 
-  query(): SelectionResult<T> {
-    return new SelectionResult<T>(this._run, this._update, this._root);
+  query(options: QueryOptions = {}): SelectionResult<T> {
+    return new SelectionResult<T>(() => this._run(options), this._update, this._root);
   }
 
-  private _derive<U>(map: (arg: T) => U): Selection<U> {
-    return new Selection(() => map(this._run()), this._update, this._root);
+  private _derive<U>(map: (arg: T, options: QueryOptions) => U): Selection<U> {
+    return new Selection(options => map(this._run(options), options), this._update, this._root);
   }
 
   filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
-  filter<U>(this: Selection<U[]>, filter: ArrayFilter<U>): Selection<U[]>
-  filter<U>(this: Selection<U[]>, filter: ArrayFilter<T> | ItemFilter): Selection<U[]> {
+  filter<U>(this: Selection<U[]>, filter: Predicate<U>): Selection<U[]>
+  filter<U>(this: Selection<U[]>, filter: Predicate<T> | ItemFilter): Selection<U[]> {
     const predicate = filterToPredicate(filter)
     return this._derive(items => items.filter(predicate));
   }
 
   children(this: Selection<Item<any>[]>): Selection<Item<any>[]> {
-    return this._derive(item => item.flatMap(item => item.children));
+    return this._derive((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
   }
 }
 
@@ -89,14 +93,21 @@ export class SelectionResult<T> {
    */
   readonly update = new Event<T>();
 
+  private _lastResult: T;
+
   constructor (
     private readonly _run: () => T,
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot,
   ) {
+    this._lastResult = this._run();
     this.update.addEffect(() => _update.on(entities => {
       const result = this._run();
-      const set = Array.isArray(result) ? new Set(result) : new Set([result]);
+      const set = new Set([
+        ...(Array.isArray(result) ? result : [result]),
+        ...(Array.isArray(this._lastResult) ? this._lastResult : [this._lastResult])
+      ]);
+      this._lastResult = result;
       
       if(entities.some(entity => set.has(entity))) {
         this.update.emit(result);
@@ -135,7 +146,7 @@ function testOneOrMultiple<T>(expected: OneOrMultiple<T>, value: T) {
   }
 }
 
-function filterToPredicate<T>(filter: ArrayFilter<T> | ItemFilter): ArrayFilter<any> {
+function filterToPredicate(filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> {
   if (typeof filter === 'function') {
     return filter;
   }
@@ -143,51 +154,24 @@ function filterToPredicate<T>(filter: ArrayFilter<T> | ItemFilter): ArrayFilter<
   return itemFilterToPredicate(filter);
 }
 
-function itemFilterToPredicate(filter: ItemFilter): (item: Item<any>) => boolean {
-  return item => (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-    (!filter.parent || item.parent?.id === coerseToId(filter.parent));
+function itemFilterToPredicate(filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> {
+  if('id' in filter) {
+    return item => item.id === filter.id;
+  } else {
+    return item => (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
+      (!filter.parent || item.parent?.id === coerseToId(filter.parent));
+  }
 }
 
-// type Party = any;
-
-// const test = async (party: Party) => {
-//   const reusableSelection = party.select({ id: '000' }).children();
-
-//   const { items: result } = reusableSelection.query();
-//   const { links: result } = reusableSelection.links({ type: 'WORKS_FOR' }).query();
-
-//   // one off
-//   const { result: items } = party.select().query();
-
-//   // subscription
-//   const selection = party.select().query();
-//   selection.update.on(result => {
-    
-//   });
-
-//   const selection = party.select();
-//   const { result: items } = selection;
-//   {
-//     const items = selection.result; // Query again?
-//   }
-// };
-
-// void test(undefined);
-
-
-// // React
-
-// const useSeletion = <T extends any>(selection: Selection<T> | () => Selection<T>, deps: unknown[] = []): T => {
-  
-// };
-
-// const Test = ({ party }: { party: Party }) => {
-//   const { result: items } = useSelection<Item<any>>(party.select({ type: KANBAN }));
-//   return (
-//     <div>
-//       {items.map(item => (
-//         <div key={item.id}>{item.model.getProperty('title')}</div>
-//       ))}
-//     </div>
-//   );
-// }
+function createQueryOptionsFilter({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
+  return item => {
+    switch(deleted) {
+      case ItemFilterDeleted.IGNORE_DELETED:
+        return !(item instanceof Item) || !item.deleted;
+      case ItemFilterDeleted.SHOW_DELETED:
+        return true;
+      case ItemFilterDeleted.SHOW_DELETED_ONLY:
+        return item instanceof Item && item.deleted;
+    }
+  }
+}
