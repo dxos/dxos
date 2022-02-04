@@ -206,13 +206,14 @@ describe('Database', () => {
 
         {
           const waiting = database.waitForItem({ type: 'example:type.test' });
-          const item = await database.createItem({ model: ObjectModel, type: 'dxos:example' });
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test' });
+          console.log('create')
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
         {
-          const item = await database.createItem({ model: ObjectModel, type: 'dxos:example-2' });
-          const waiting = database.waitForItem({ type: 'dxos:example-2' });
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test-2' });
+          const waiting = database.waitForItem({ type: 'example:type.test-2' });
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
       });
