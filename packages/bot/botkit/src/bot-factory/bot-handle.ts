@@ -89,16 +89,14 @@ export class BotHandle {
     this._bot.error = undefined;
     this._bot.exitCode = undefined;
     this._bot.exitSignal = undefined;
-    this.update.emit()
-
+    this.update.emit();
   }
 
   async close () {
     assert(this._rpc, 'BotHandle is not open');
     this._rpc.close();
     this._rpc = null;
-    this.update.emit()
-
+    this.update.emit();
   }
 
   async clearFiles () {
@@ -116,7 +114,7 @@ export class BotHandle {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.exitCode = status.code ?? undefined;
     this.bot.exitSignal = status.signal ?? undefined;
-    this.update.emit()
+    this.update.emit();
   }
 
   /**
@@ -125,8 +123,7 @@ export class BotHandle {
   onProcessError (error: Error) {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.error = error.stack;
-    this.update.emit()
-
+    this.update.emit();
   }
 
   get logsDir () {

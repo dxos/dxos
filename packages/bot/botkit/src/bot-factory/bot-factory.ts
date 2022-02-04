@@ -6,6 +6,7 @@ import assert from 'assert';
 import { debug } from 'debug';
 import { join } from 'path';
 
+import { promiseTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { createId } from '@dxos/crypto';
 
@@ -14,7 +15,6 @@ import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
 import { ContentLoader } from './ipfs-content-loader';
-import { promiseTimeout } from '@dxos/async';
 
 const log = debug('dxos:botkit:bot-factory');
 
