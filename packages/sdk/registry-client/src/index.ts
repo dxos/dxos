@@ -12,6 +12,7 @@ export * from './encoding';
 export * from './proto';
 export * from './testing';
 export * from './types';
+export * from './util';
 
 export * from './auctions-client';
 export * from './queries';
