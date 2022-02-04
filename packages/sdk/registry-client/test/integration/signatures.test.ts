@@ -8,7 +8,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import { TypeRegistry } from '@polkadot/types';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
-import { cryptoWaitReady } from '@polkadot/util-crypto';
+import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import assert from 'assert';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -66,7 +66,7 @@ describe('Signatures', () => {
     await client.initialize();
     await client.halo.createProfile();
     await client.halo.addKeyRecord({
-      publicKey: PublicKey.from(keypair.publicKey),
+      publicKey: PublicKey.from(decodeAddress(keypair.address)),
       secretKey: Buffer.from(uri),
       type: KeyType.DXNS
     });
