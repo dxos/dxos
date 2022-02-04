@@ -205,9 +205,8 @@ describe('Database', () => {
         const database = await setupBackend(modelFactory);
 
         {
-          const waiting = database.waitForItem({ type: 'dxos:example' });
+          const waiting = database.waitForItem({ type: 'example:type.test' });
           const item = await database.createItem({ model: ObjectModel, type: 'dxos:example' });
-
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 

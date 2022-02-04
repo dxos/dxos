@@ -13,7 +13,7 @@ import { Link } from './link';
 export type OneOrMultiple<T> = T | T[];
 
 export type ItemFilter = {
-  type?: OneOrMultiple<string>;
+  type?: OneOrMultiple<string>
   parent?: ItemID | Item<any>
 }
 
@@ -27,20 +27,19 @@ export type ItemIdFilter = {
   id: ItemID
 }
 
-export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>;
+export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
 
-export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>;
+export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>
 
-export function createRootSelector (getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector {
+export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector => {
   return (filter?: RootFilter): Selection<any> => {
     const predicate = filter ? filterToPredicate(filter) : () => true;
     return new Selection(options => getItems().filter(createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
   };
 }
 
-export function createItemSelector (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> {
-  return new Selection(() => [root], update, root);
-}
+export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> =>
+  new Selection(() => [root], update, root);
 
 export type SelectionRoot = Database | Entity<any>;
 
@@ -92,7 +91,7 @@ export class Selection<T> {
     return this._derive((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
-  targets (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+  target (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
     const predicate = filterToPredicate(filter);
     return this._derive((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
@@ -141,7 +140,7 @@ export class SelectionResult<T> {
   }
 }
 
-function coerceToId (item: Item<any> | ItemID): ItemID {
+const coerceToId = (item: Item<any> | ItemID): ItemID => {
   if (typeof item === 'string') {
     return item;
   }
@@ -149,7 +148,7 @@ function coerceToId (item: Item<any> | ItemID): ItemID {
   return item.id;
 }
 
-function testOneOrMultiple<T> (expected: OneOrMultiple<T>, value: T) {
+const testOneOrMultiple = <T>(expected: OneOrMultiple<T>, value: T) => {
   if (Array.isArray(expected)) {
     return expected.includes(value);
   } else {
@@ -157,7 +156,7 @@ function testOneOrMultiple<T> (expected: OneOrMultiple<T>, value: T) {
   }
 }
 
-function filterToPredicate (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> {
+const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> => {
   if (typeof filter === 'function') {
     return filter;
   }
@@ -165,7 +164,7 @@ function filterToPredicate (filter: ItemFilter | ItemIdFilter | Predicate<any>):
   return itemFilterToPredicate(filter);
 }
 
-function itemFilterToPredicate (filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> {
+const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> => {
   if ('id' in filter) {
     return item => item.id === filter.id;
   } else {
@@ -175,11 +174,10 @@ function itemFilterToPredicate (filter: ItemFilter | ItemIdFilter): Predicate<It
   }
 }
 
-function linkFilterToPredicate (filter: LinkFilter): Predicate<Link<any>> {
-  return link => (!filter.type || testOneOrMultiple(filter.type, link.type));
-}
+const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link<any>> => 
+  link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 
-function createQueryOptionsFilter ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> {
+const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> =>{
   return entity => {
     if (entity.model instanceof DefaultModel) {
       return false;

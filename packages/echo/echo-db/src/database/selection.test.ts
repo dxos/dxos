@@ -95,7 +95,7 @@ describe('Selection', () => {
     test('invalid', () => {
       expect(
         rootSelector()
-          .filter({ type: 'dxos:type/invalid' })
+          .filter({ type: 'dxos:type.invalid' })
           .query().result
       ).toHaveLength(0);
     });
@@ -181,7 +181,7 @@ describe('Selection', () => {
       expect(
         rootSelector({ id: org1.id })
           .links()
-          .targets()
+          .target()
           .query().result
       ).toEqual([
         items[2],
