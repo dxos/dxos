@@ -25,7 +25,6 @@
   },
   "devDependencies": {
     "typedoc": "^0.22.11",
-    "typescript": "^4.5.2",
-    "@dxos/devtools": "workspace:*"
+    "typescript": "^4.5.2"
   }
 }
