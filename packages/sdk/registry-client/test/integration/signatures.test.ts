@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import {
   AuctionsClient, createApiPromise, SignTxFunction,
-  createKeyring, registryTypes
+  createKeyring, registryTypes, DxosClientSigner
 } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
@@ -37,23 +37,6 @@ class TxSigner implements Partial<Signer> {
     return {
       id: ++this.id,
       signature
-    };
-  }
-}
-
-class DxosClientSigner implements Partial<Signer> {
-  private id = 0;
-  constructor (private client: Client, private publicKey: PublicKey) { }
-
-  public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
-    const result = await this.client.halo.sign({
-      publicKey: this.publicKey,
-      payload: data
-    });
-
-    return {
-      id: ++this.id,
-      signature: result.signed
     };
   }
 }
@@ -117,7 +100,7 @@ describe('Signatures', () => {
 
   it('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, PublicKey.from(keypair.addressRaw)) });
+      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, keypair.address) });
     };
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 
