@@ -24,7 +24,7 @@ import { makeStyles } from '@mui/styles';
 import { Party } from '@dxos/client';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, searchSelector } from '@dxos/react-client';
+import { useSelection, useSearchSelection } from '@dxos/react-client';
 
 import {
   CardView,
@@ -34,7 +34,7 @@ import {
   SearchBar,
   ItemCard,
   ItemDialog,
-  graphSelector
+  useGraphSelection
 } from '../../src';
 import { createAdapter, TYPES } from './adapter';
 
@@ -95,14 +95,14 @@ export const Main = ({ party, showInvitation }: MainProps) => {
 
   const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);
-  const items: any[] = useSelection(party.database.select(searchSelector(search)), [search]);
+  const items: any[] = useSearchSelection(party, search) ?? [];
   if (adapter.sort) {
     items.sort(adapter.sort);
   }
 
   // TODO(burdon): Use subset.
   // code const data = useSelection(items && new Selection(items, new Event()), graphSelector);
-  const data = useSelection(party.database.select(graphSelector(adapter)));
+  const data = useGraphSelection(adapter, party.database);
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 

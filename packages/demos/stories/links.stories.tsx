@@ -17,7 +17,7 @@ import {
   DebugItemList,
   GraphData,
   GraphView,
-  graphSelector,
+  useGraphSelection,
   useGenerator,
   ONLINE_CONFIG
 } from '../src';
@@ -118,8 +118,8 @@ const Component = ({ generator }: {generator: Generator}) => {
   const classes = useStyles();
   const graphClasses = useGraphStyles();
 
-  const data = useSelection(generator.database.select(graphSelector(itemAdapter)));
-  const items = useSelection(generator.database.select(selection => selection.items));
+  const data = useGraphSelection(itemAdapter, generator.database);
+  const items = useSelection(generator.database.select());
 
   const handleCreate = async (data: GraphData) => {
     if (data.nodes.length) {

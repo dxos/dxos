@@ -194,7 +194,7 @@ export const createAdapter = (database: Database) => {
       const slices = [] as JSX.Element[];
       switch (item.type) {
         case OBJECT_ORG: {
-          const projects = item.select(s => s.links({ type: LINK_PROJECT }).target().items).getValue();
+          const projects = item.select().links({ type: LINK_PROJECT }).target().query().result;
           slices.push(
             <List
               type={OBJECT_PROJECT}
@@ -204,7 +204,7 @@ export const createAdapter = (database: Database) => {
             />
           );
 
-          const employees = item.select(s => s.links({ type: LINK_EMPLOYEE }).target().items).getValue();
+          const employees = item.select().links({ type: LINK_EMPLOYEE }).target().query().result;
           if (employees.length !== 0) {
             slices.push(
               <List
@@ -218,7 +218,7 @@ export const createAdapter = (database: Database) => {
         }
 
         case OBJECT_PROJECT: {
-          const tasks = item.select(s => s.children().items).getValue();
+          const tasks = item.select().children().query().result;
           if (tasks.length !== 0) {
             slices.push(
               <List

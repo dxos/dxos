@@ -82,7 +82,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useSelection(party?.database.select(s => s
+  const items = useSelection(party?.select(s => s
     .filter({ type: TASK_TYPE })
     .filter(item => !item.model.getProperty('deleted'))
     .items)

@@ -4,43 +4,39 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party, Item, Selection } from '@dxos/client';
+import { Party, Item, Selection, Database } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import {
   OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK, LINK_EMPLOYEE, LINK_PROJECT
 } from '@dxos/echo-testing';
-import { useParties } from '@dxos/react-client';
+import { useParties, useSelection } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
 import type { ItemAdapter } from '../components';
 import { GraphData, Link, Node } from '../models';
 import { asyncEffect, liftCallback } from './util';
 
-export const graphSelector = (adapter: ItemAdapter) => (selection: Selection<Item<any>>) => {
-  const nodes = [] as Node[];
-  const links = [] as Link[];
+export const useGraphSelection = (adapter: ItemAdapter, database: Database, deps: readonly any[] = []) => {
+  const orgs = database.select({ type: OBJECT_ORG });
+  
+  const projects = orgs.links({ type: LINK_PROJECT });
+  const tasks = projects.target().children();
 
-  selection
-    .filter({ type: OBJECT_ORG })
-    .each(item => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
-    .call(selection => {
-      selection.links({ type: LINK_PROJECT })
-        .each((link: any) => {
-          nodes.push({ id: link.target.id, type: OBJECT_PROJECT, title: adapter.primary(link.target) });
-          links.push({ id: link.id, source: link.source.id, target: link.target.id });
-        })
-        .target()
-        .children()
-        .each(item => {
-          nodes.push({ id: item.id, type: OBJECT_TASK, title: adapter.primary(item) });
-          links.push({ id: `${item.parent!.id}-${item.id}`, source: item.parent!.id, target: item.id });
-        });
-    })
-    .links({ type: LINK_EMPLOYEE })
-    .each(link => links.push({ id: link.id, source: link.source.id, target: link.target.id }))
-    .target()
-    .each(item => nodes.push({ id: item.id, type: OBJECT_PERSON, title: adapter.primary(item) }));
+  const employees = orgs.links({ type: LINK_EMPLOYEE });
+
+  const nodes: Node[] = [
+    ...(useSelection(orgs, deps) ?? []).map(item => ({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) })),
+    ...(useSelection(projects, deps) ?? []).map(link => ({ id: link.target.id, type: OBJECT_PROJECT, title: adapter.primary(link.target) })),
+    ...(useSelection(tasks, deps) ?? []).map(item => ({ id: item.id, type: OBJECT_TASK, title: adapter.primary(item) })),
+    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.target.id, type: OBJECT_PERSON, title: adapter.primary(link.target) })),
+  ];
+  
+  const links: Link[] = [
+    ...(useSelection(projects, deps) ?? []).map(link => ({ id: link.id, source: link.source.id, target: link.target.id })),
+    ...(useSelection(tasks, deps) ?? []).map(item => ({ id: `${item.parent!.id}-${item.id}`, source: item.parent!.id, target: item.id })),
+    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.id, source: link.source.id, target: link.target.id })),
+  ];
 
   return { nodes, links };
 };
@@ -115,12 +111,12 @@ export const useGraphData = ({ id }: {id: string}) => {
     setData(createGraphData(id, partyMap));
 
     return liftCallback(await Promise.all(parties.map(async party => {
-      const result = party.database.select(s => s.items);
+      const result = party.database.select().query();
 
-      partyMap.set(party.key, { party, items: result.getValue() });
+      partyMap.set(party.key, { party, items: result.result });
       setData(createGraphData(id, partyMap));
       return result.update.on(() => {
-        partyMap.set(party.key, { party, items: result.getValue() });
+        partyMap.set(party.key, { party, items: result.result });
         setData(createGraphData(id, partyMap));
       });
     })));

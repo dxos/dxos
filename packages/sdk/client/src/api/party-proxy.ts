@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend
+  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend, RootSelector
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -126,6 +126,13 @@ export class Party extends InvitationProxy {
   }
 
   /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get select(): RootSelector {
+    return this.database.select.bind(this.database);
+  }
+
+  /**
    * Creates an invitation to a given party.
    * The Invitation flow requires the inviter and invitee to be online at the same time.
    * If the invitee is known ahead of time, `inviteeKey` can be provide to not require the secret exchange.
@@ -164,7 +171,7 @@ export class Party extends InvitationProxy {
   }
 
   private getPropertiesItem () {
-    const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
+    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().result;
     return items[0];
   }
 

@@ -2,12 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Party } from "@dxos/client";
+import { useSelection } from ".";
+
 /**
  * A Selector used for finding items based on a search pattern.
  * @param search Searched value.
  */
 // TODO(burdon): Create index.
-export const searchSelector = (search: any) => (selection: any) => {
+// TODO(dmaretskyi): Why is this in react-client?
+export const useSearchSelection = (party: Party, search: any) => {
   const match = (pattern: any, text: any) => {
     if (!pattern) {
       return true;
@@ -21,15 +25,14 @@ export const searchSelector = (search: any) => (selection: any) => {
     return text.toLowerCase().indexOf(pattern) !== -1;
   };
 
-  // TODO(burdon): Use selection to filter.
-  return selection.items.filter((item: any) => {
+  return useSelection(party.select().filter(item => {
     // TODO(burdon): Filter types.
-    if (item.type.indexOf('example') === -1) {
+    if (item.type?.indexOf('example') === -1) {
       return false;
     }
 
     // TODO(burdon): Generalize.
     const text = item.model.getProperty('name');
     return match(search, text);
-  });
+  }), [search]);
 };
