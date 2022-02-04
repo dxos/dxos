@@ -8,7 +8,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import { TypeRegistry } from '@polkadot/types';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
-import { cryptoWaitReady } from '@polkadot/util-crypto';
+import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import assert from 'assert';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import {
   AuctionsClient, createApiPromise, SignTxFunction,
-  createKeyring, registryTypes
+  createKeyring, registryTypes, DxosClientSigner
 } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
@@ -37,23 +37,6 @@ class TxSigner implements Partial<Signer> {
     return {
       id: ++this.id,
       signature
-    };
-  }
-}
-
-class DxosClientSigner implements Partial<Signer> {
-  private id = 0;
-  constructor (private client: Client, private publicKey: PublicKey) { }
-
-  public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
-    const result = await this.client.halo.sign({
-      publicKey: this.publicKey,
-      payload: data
-    });
-
-    return {
-      id: ++this.id,
-      signature: result.signed
     };
   }
 }
@@ -83,7 +66,7 @@ describe('Signatures', () => {
     await client.initialize();
     await client.halo.createProfile();
     await client.halo.addKeyRecord({
-      publicKey: PublicKey.from(keypair.publicKey),
+      publicKey: PublicKey.from(decodeAddress(keypair.address)),
       secretKey: Buffer.from(uri),
       type: KeyType.DXNS
     });
@@ -117,7 +100,7 @@ describe('Signatures', () => {
 
   it('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, PublicKey.from(keypair.addressRaw)) });
+      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, keypair.address) });
     };
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 

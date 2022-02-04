@@ -1,5 +1,29 @@
 # Change Log
 
+## [2.25.0](https://www.github.com/dxos/protocols/compare/v2.24.0...v2.25.0) (2022-02-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Client API cleanup (#893)
+
+### Features
+
+* add api reference ([#903](https://www.github.com/dxos/protocols/issues/903)) ([fbde222](https://www.github.com/dxos/protocols/commit/fbde222a380f71623d084f4f7c01f54cd233d959))
+* Client API cleanup ([#893](https://www.github.com/dxos/protocols/issues/893)) ([063eea9](https://www.github.com/dxos/protocols/commit/063eea9aea56a2288806e31585f0743e8d590383))
+* **Client:** Introduce DXNS transaction signing ([#900](https://www.github.com/dxos/protocols/issues/900)) ([3a8cd54](https://www.github.com/dxos/protocols/commit/3a8cd54e04253ad0465bcab51ca64a3cf28f1298))
+* Export DxosClientSigner ([#909](https://www.github.com/dxos/protocols/issues/909)) ([58120bf](https://www.github.com/dxos/protocols/commit/58120bfa65df3fed6c73fc80e88e0d06d8aed464))
+* publish echo-testing ([#901](https://www.github.com/dxos/protocols/issues/901)) ([4c2329a](https://www.github.com/dxos/protocols/commit/4c2329abeb055d0577ea9fadf36389636502b1b6))
+* publish package and adjust keyword and desc ([#907](https://www.github.com/dxos/protocols/issues/907)) ([49b9f42](https://www.github.com/dxos/protocols/commit/49b9f420c1fa6ecc90ae5186def1f5d74e1dcab3))
+
+
+### Bug Fixes
+
+* add botkit Dockerfile. ([#902](https://www.github.com/dxos/protocols/issues/902)) ([394f659](https://www.github.com/dxos/protocols/commit/394f65975f3d4721f41cd427d9969b920232c7b9))
+* proper BF config env mapping. ([#897](https://www.github.com/dxos/protocols/issues/897)) ([98738ed](https://www.github.com/dxos/protocols/commit/98738ed5765890c460094a5a99fbc1a4f551e833))
+* remove devtools as dependency ([#908](https://www.github.com/dxos/protocols/issues/908)) ([5bdb00a](https://www.github.com/dxos/protocols/commit/5bdb00a0a72bdfb1bc1346d559fa52e7f65b8a16))
+* rm configv0 leftovers. ([02c9729](https://www.github.com/dxos/protocols/commit/02c9729b1aa893acaeac645203f9d1338b0ef0ba))
+
 ## [2.24.0](https://www.github.com/dxos/protocols/compare/v2.23.0...v2.24.0) (2022-01-31)
 
 
