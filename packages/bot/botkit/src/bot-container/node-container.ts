@@ -70,6 +70,7 @@ export class NodeContainer implements BotContainer {
 
   async kill (id: string) {
     const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
+    child.removeAllListeners();
 
     child.kill();
     this._processes.delete(id);
