@@ -55,6 +55,9 @@ export type QueryOptions = {
   deleted?: ItemFilterDeleted
 }
 
+/**
+ * Selection is a DSL building queries into an ECHO database.
+ */
 export class Selection<T extends Entity<any>> {
   /**
    *
@@ -69,14 +72,24 @@ export class Selection<T extends Entity<any>> {
     private readonly _root: SelectionRoot
   ) {}
 
+  /**
+   * Finish the selection and return the result.
+   */
   query (options: QueryOptions = {}): SelectionResult<T> {
     return new SelectionResult<T>(this._root, () => this._execute(options), this._update);
   }
 
+  /**
+   * Creates a derrived selection by aplying a mapping function to the result of the current selection.
+   */
   private _createSubSelection<U extends Entity<any>> (map: (arg: T[], options: QueryOptions) => U[]): Selection<U> {
     return new Selection(options => map(this._execute(options), options), this._update, this._root);
   }
 
+  /**
+   * Filter entities of this selection.
+   * @param filter A filter object or a predicate function.
+   */
   filter(this: Selection<Item<any>>, filter: ItemFilter): Selection<Item<any>>
   filter<U extends Entity<any>>(this: Selection<U>, filter: Predicate<U>): Selection<U>
   filter<U extends Entity<any>> (this: Selection<U>, filter: Predicate<T> | ItemFilter): Selection<U> {
@@ -84,31 +97,49 @@ export class Selection<T extends Entity<any>> {
     return this._createSubSelection(items => items.filter(predicate));
   }
 
+  /**
+   * Select children of the items in this selection.
+   */
   children (this: Selection<Item<any>>): Selection<Item<any>> {
     return this._createSubSelection((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
   }
 
+  /**
+   * Select links sourcing from the items in this selection.
+   */
   links (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
     return this._createSubSelection((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
+  /**
+   * Select links pointing to items in this selection.
+   */
   refs (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
     return this._createSubSelection((item, options) => item.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
+  /**
+   * Select targets of links in this selection.
+   */
   target (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 
+  /**
+   * Select sources of links in this selection.
+   */
   source (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection((links, options) => links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 }
 
+/**
+ * Represents a live-query that can notify about future updates to the relevant subset of items.
+ */
 export class SelectionResult<T extends Entity<any>> {
   /**
    * Fired when there are updates in the selection. Only update that are relevant to the selection cause the update.
@@ -135,12 +166,15 @@ export class SelectionResult<T extends Entity<any>> {
   }
 
   /**
-   * Result of the selection.
+   * Get the result of this select.
    */
   get result (): T[] {
     return dedup(this._execute());
   }
 
+  /**
+   * If the result contains exatly one entity, returns it, errors otherwise.
+   */
   expectOne (): T {
     const res = this.result;
     assert(res.length === 1, 'Expected one result, got ' + res.length);
@@ -148,7 +182,7 @@ export class SelectionResult<T extends Entity<any>> {
   }
 
   /**
-   * The root of the selection. Must be a stable reference.
+   * The root of the selection. Either a database or an item. Must be a stable reference.
    */
   get root (): SelectionRoot {
     return this._root;
