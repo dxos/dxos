@@ -484,6 +484,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/proto",
+      "projectFolder": "packages/common/proto",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/protobuf-compiler",
       "projectFolder": "packages/common/protobuf-compiler",
       "shouldPublish": true,
@@ -514,14 +520,14 @@
       "projectFolder": "packages/common/testutils"
     },
     {
-      "packageName": "@dxos/util",
-      "projectFolder": "packages/common/util",
+      "packageName": "@dxos/typedoc",
+      "projectFolder": "packages/common/typedoc",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/proto",
-      "projectFolder": "packages/common/proto",
+      "packageName": "@dxos/util",
+      "projectFolder": "packages/common/util",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -617,7 +623,9 @@
     },
     {
       "packageName": "@dxos/echo-testing",
-      "projectFolder": "packages/echo/echo-testing"
+      "projectFolder": "packages/echo/echo-testing",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/model-factory",

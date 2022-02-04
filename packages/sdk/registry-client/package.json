@@ -14,9 +14,9 @@
     "generate:types": "toolchain generate:defs && yarn generate:meta",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "test:integration": "NODE_ENV=test mocha '{src,test,integration}/**/*.test.ts'",
-    "test:integration:auctions": "NODE_ENV=test mocha '{src,test,integration}/**/auctions-api.test.ts'",
-    "test:integration:registry": "NODE_ENV=test mocha '{src,test,integration}/**/registry-client.test.ts'"
+    "test:integration": "NODE_ENV=test mocha 'test/integration/**/*.test.ts'",
+    "test:integration:auctions": "NODE_ENV=test mocha 'test/integration/**/auctions-api.test.ts'",
+    "test:integration:registry": "NODE_ENV=test mocha 'test/integration/**/registry-client.test.ts'"
   },
   "eslintConfig": {
     "ignorePatterns": [
@@ -42,6 +42,8 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",
