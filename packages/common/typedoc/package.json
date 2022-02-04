@@ -1,12 +1,10 @@
 {
   "name": "@dxos/typedoc",
   "version": "2.24.0",
-  "private": true,
-  "description": "DXOS Documentation",
+  "description": "DXOS Typedoc - API Reference.",
   "keywords": [
     "dxos",
-    "gatsby",
-    "docs"
+    "api-reference"
   ],
   "license": "AGPL-3.0",
   "author": "info@dxos.org",
@@ -27,7 +25,6 @@
   },
   "devDependencies": {
     "typedoc": "^0.22.11",
-    "typescript": "^4.5.2",
-    "@dxos/devtools": "workspace:*"
+    "typescript": "^4.5.2"
   }
 }
