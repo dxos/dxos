@@ -176,6 +176,15 @@
 
       "safeForSimultaneousRushProcesses": true,
       "shellCommand": "node common/scripts/lint-fix-all.js"
+    },
+    {
+      "commandKind": "bulk",
+      "name": "prerelease",
+      "description": "Run any scripts required before releasing packages to NPM.",
+      "summary": "Run prerelease scripts.",
+      "ignoreMissingScript": true,
+      "incremental": true,
+      "enableParallelism": true
     }
   ],
 
