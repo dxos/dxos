@@ -3,33 +3,32 @@
 //
 
 import type { ZoomTransform } from 'd3';
+import { RefObject, createRef } from 'react';
 
-import { EventEmitter, Point } from '../util';
+import { EventEmitter, Point, Size } from '../util';
 import { Scale } from './scale';
 
-export const defaultScale = new Scale(32);
-
-// TODO(burdon): Move.
-export type Size = { width: number, height: number }
-
 /**
- * SVG context passed to all components.
+ * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.
  */
 export class SvgContext {
-  readonly initialized = new EventEmitter<SvgContext>();
-  readonly resize = new EventEmitter<SvgContext>();
+  readonly resized = new EventEmitter<SvgContext>();
 
-  private _svg: SVGSVGElement;
+  private readonly _ref = createRef<SVGSVGElement>();
   private _size: Size;
   private _center: Point;
 
   constructor (
-    private readonly _scale = defaultScale,
-    private readonly _centered = true
+    private readonly _scale: Scale = new Scale(),
+    private readonly _centered: boolean = true
   ) {}
 
+  get ref (): RefObject<SVGSVGElement> {
+    return this._ref;
+  }
+
   get svg (): SVGSVGElement {
-    return this._svg;
+    return this._ref.current;
   }
 
   get scale (): Scale {
@@ -52,22 +51,17 @@ export class SvgContext {
     return `${x},${y},${this._size.width},${this._size.height}`;
   }
 
-  initialize (svg: SVGSVGElement) {
-    this._svg = svg;
-    this.initialized.emit(this);
-  }
-
   setSize (size: Size) {
     const cx = -Math.floor(size.width / 2);
     const cy = -Math.floor(size.height / 2);
     this._size = size;
     this._center = this._centered ? [cx, cy] : [0, 0];
-    this.resize.emit(this);
+    this.resized.emit(this);
   }
 
   setTransform (transform: ZoomTransform) {
     this._scale.setTransform(transform);
-    this.resize.emit(this);
+    this.resized.emit(this);
   }
 
   /**

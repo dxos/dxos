@@ -4,66 +4,105 @@
 
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect, useMemo, useRef } from 'react';
 
 import { SvgContext } from '../context';
+import { useSvgContext } from './useSvgContext';
 
 export type ZoomExtent = [min: number, max: number];
 
 export type ZoomOptions = {
-  extent: ZoomExtent
+  enabled?: boolean
+  extent?: ZoomExtent
+  onDblClick?: (zoom: Zoom) => void
 }
 
-const defaultOptions: ZoomOptions = {
-  extent: [1/2, 2]
+export const defaultOptions: ZoomOptions = {
+  enabled: true,
+  extent: [1/2, 2],
+  onDblClick: (zoom: Zoom) => zoom.reset()
 };
 
 /**
- * Creates a reference to a SVG Group element which can be zoomed.
- * @param context
+ * Zoom API.
+ */
+export class Zoom {
+  private readonly _zoom;
+  private _enabled: boolean;
+  private readonly _options: ZoomOptions;
+
+  constructor (
+    private readonly _ref: RefObject<SVGGElement>,
+    private readonly _context: SvgContext,
+    options: ZoomOptions
+  ) {
+    this._options = Object.assign({}, options, defaultOptions);
+    this._enabled = this._options.enabled ?? true;
+
+    // https://github.com/d3/d3-zoom#zoom
+    this._zoom = d3.zoom()
+      .scaleExtent(this._options.extent ?? defaultOptions.extent);
+  }
+
+  /**
+   * Gets the refence which the transform is applied to.
+   */
+  get ref () {
+    return this._ref;
+  }
+
+  get zoom () {
+    return this._zoom;
+  }
+
+  init () {
+    this.setEnabled(this._enabled);
+  }
+
+  setEnabled (enable: boolean) {
+    if (enable) {
+      d3.select(this._context.svg)
+        .call(this._zoom)
+        .on('dblclick.zoom',
+          this._options?.onDblClick ?  () => this._options.onDblClick(this) : null);
+    } else {
+      d3.select(this._context.svg)
+        .on('.zoom', null); // Unbind the internal event handler.
+    }
+
+    this._enabled = enable;
+    return this;
+  }
+
+  reset (duration = 500) {
+    d3.select(this._context.svg)
+      .transition()
+      .duration(duration)
+      .call(this._zoom.transform, d3.zoomIdentity);
+
+    return this;
+  }
+}
+
+/**
+ * Creates the zoom handler.
  * @param options
  */
-export const useZoom = (context: SvgContext, options: ZoomOptions = defaultOptions): RefObject<SVGGElement> => {
+export const useZoom = (options: ZoomOptions = defaultOptions): Zoom => {
   const ref = useRef<SVGGElement>();
+  const context = useSvgContext();
+  const zoom = useMemo(() => new Zoom(ref, context, options), []);
 
   useEffect(() => {
-    if (!options.extent) {
-      return;
-    }
+    // Transform container.
+    // TODO(burdon): Implement momentum.
+    zoom.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {
+      context.setTransform(transform); // Fires the resize event (e.g., to update grid).
+      d3.select(ref.current).attr('transform', transform as any);
+    });
 
-    const init = () => {
-      context.setTransform(d3.zoomIdentity);
+    zoom.init();
+  }, [zoom])
 
-      // d3.zoom must be called on the root svg element.
-      // https://github.com/d3/d3-zoom
-      d3.select(context.svg)
-        .call(d3.zoom()
-          // .filter(() => false)
-          .scaleExtent(options.extent)
-          .on('zoom', ({ transform }: { transform: ZoomTransform }) => {
-            context.setTransform(transform);
-            d3.select((ref).current)
-              .attr('transform', transform as any);
-          }))
-
-        // https://github.com/d3/d3-zoom#zoom_on
-        // NOTE(12/30.21): Default dblclick handler throws error.
-        .on('dblclick.zoom', function () {
-          // https://github.com/d3/d3-zoom/issues/167
-          // NOTE: Possible error if mismatched d3 versions:
-          // - Uncaught TypeError: selection5.interrupt is not a function
-          // zoomCallback.transform(d3.select(svgRef.current), d3.zoomIdentity);
-        }
-      );
-    };
-
-    // May be rendered before context is initialized (since downstream of container).
-    if (context.svg) {
-      init();
-    } else {
-      return context.initialized.on(init);
-    }
-  }, []);
-
-  return ref;
+  return zoom;
 };

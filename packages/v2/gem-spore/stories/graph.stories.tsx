@@ -5,11 +5,11 @@
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { useButton, useKnobs } from '@dxos/esbuild-book-knobs';
-import { FullScreen, SvgContainer, SvgContext, useGrid, useStateRef, useZoom } from '@dxos/gem-core';
+import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
+import { FullScreen, SvgContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
-import { GraphForceProjector, GraphRenderer, Part, Surface, Scene, GraphNode, createMarkers } from '../src';
-import { statsMapper, StatsProjector, StatsRenderer, styles, TestItem } from './helpers';
+import { GraphForceProjector, GraphNode, GraphRenderer, createMarkers } from '../src';
+import { styles, TestItem } from './helpers';
 
 import {
   TestModel,
@@ -26,125 +26,137 @@ export default {
 // TODO(burdon): Create links.
 // TODO(burdon): Delete nodes (alt-click).
 
-export const Primary = () => {
-  const context = useMemo(() => new SvgContext(), []);
-  const gridRef = useGrid(context, { axis: false });
-  const zoomRef = useZoom(context);
+interface ComponentProps {
+  model: TestModel
+}
 
-  const statsRef = useRef<SVGSVGElement>();
-  const model = useMemo(() => createModel(2), []);
-  const [scene, setScene, sceneRef] = useStateRef<Scene<TestModel>>();
-  const Knobs = useKnobs();
+const PrimaryComponent = ({ model }: ComponentProps) => {
+  const context = useSvgContext();
+  const grid = useGrid();
+  const zoom = useZoom();
 
-  useButton('Test', () => {
-    updateModel(model);
-    sceneRef.current.update(model);
-  });
+  const { projector, renderer } = useMemo(() => ({
+    projector: new GraphForceProjector(context, graphMapper),
+    renderer: new GraphRenderer(zoom.ref)
+  }), []);
 
   useEffect(() => {
-    const scene = new Scene<TestModel>([
-      new Part<TestModel>(
-        new GraphForceProjector(graphMapper),
-        new GraphRenderer(new Surface(context.svg, d3.select(zoomRef.current).node()))
-      )
-    ]);
+    projector.updated.on(({ layout, options }) => {
+      renderer.update(layout, options);
+    });
+
+    projector.update(model);
+    projector.start();
 
     const interval = setInterval(() => {
       if (model.items.length < 200) {
-        updateModel(model);
-        scene.update(model);
+        updateModel(model); // TODO(burdon): Subscription.
+        projector.update(model);
       }
     }, 10);
 
-    scene.start();
-    setScene(scene);
-
     return () => {
       clearInterval(interval);
-      scene.stop();
+      projector.stop();
     }
   }, []);
 
   return (
-    <FullScreen>
-      <SvgContainer context={context}>
-        <g ref={gridRef} className={styles.grid} />
-        <g ref={zoomRef} className={styles.graph} />
-        <g ref={statsRef} className={styles.stats} />
-      </SvgContainer>
+    <svg ref={context.ref}>
+      <g ref={grid.ref} className={defaultGridStyles} />
+      <g ref={zoom.ref} className={styles.graph} />
+    </svg>
+  );
+};
 
-      <Knobs className={styles.knobs} />
+const SecondaryComponent = ({ model }: ComponentProps) => {
+  const context = useSvgContext();
+  const grid = useGrid();
+  const zoom = useZoom({ extent: [1, 2] });
+  const markersRef = useRef<SVGGElement>();
+
+  useButton('Test', () => {
+    updateModel(model); // TODO(burdon): Subscription.
+    projector.update(model);
+  });
+
+  const { projector, renderer } = useMemo(() => ({
+    projector: new GraphForceProjector(context, graphMapper, {
+      drag: true,
+      guides: true,
+      forces: {
+        manyBody: {
+          strength: (count: number) => -100 -(count * 30)
+        },
+        center: true,
+        link: {
+          distance: 60
+        }
+      }
+    }),
+    renderer: new GraphRenderer(zoom.ref, {
+      label: node => node.id.substring(0, 4),
+      nodeClass: (n: GraphNode<TestItem>) => n.data.type === 'org' ? 'selected' : undefined,
+      bullets: true,
+      arrows: {
+        end: true
+      }
+    })
+  }), []);
+
+  useEffect(() => {
+    projector.updated.on(({ layout, options }) => {
+      renderer.update(layout, options);
+    });
+
+    projector.update(model);
+    projector.start();
+
+    return () => {
+      projector.stop();
+    }
+  }, []);
+
+  useEffect(() => {
+    projector.update(model);
+  }, [model]);
+
+  useEffect(() => {
+    d3.select(markersRef.current).call(createMarkers());
+  }, [markersRef]);
+
+  return (
+    <svg ref={context.ref}>
+      <g ref={markersRef} className={styles.markers} />
+      <g ref={grid.ref} className={defaultGridStyles} />
+      <g ref={zoom.ref} className={styles.graph} />
+    </svg>
+  );
+};
+
+export const Primary = () => {
+  const model = useMemo(() => createModel(3), []);
+
+  return (
+    <FullScreen>
+      <SvgContextProvider>
+        <PrimaryComponent model={model} />
+      </SvgContextProvider>
     </FullScreen>
   );
 }
 
-export const Seconary = () => {
-  const context = useMemo(() => new SvgContext(), []);
-  const zoomRef = useZoom(context);
-
-  const statsRef = useRef<SVGSVGElement>();
+export const Secondary = () => {
   const model = useMemo(() => createModel(3), []);
-  const [scene, setScene, sceneRef] = useStateRef<Scene<TestModel>>();
-  const Knobs = useKnobs();
-
-  useButton('Test', () => {
-    updateModel(model);
-    sceneRef.current.update(model);
-  });
-
-  useEffect(() => {
-    const scene = new Scene<TestModel>([
-      new Part<TestModel>(
-        new GraphForceProjector(graphMapper, {
-          guides: true,
-          forces: {
-            manyBody: {
-              strength: (count: number) => -100 -(count * 30)
-            },
-            center: true,
-            link: {
-              distance: 60
-            }
-          },
-        }),
-        new GraphRenderer(new Surface(context.svg, d3.select(zoomRef.current).node()), {
-          label: node => node.id.substring(0, 4),
-          nodeClass: (n: GraphNode<TestItem>) => n.data.type === 'org' ? 'selected' : undefined,
-          bullets: true,
-          arrows: {
-            end: true
-          }
-        })
-      ),
-      new Part<TestModel>(
-        new StatsProjector(statsMapper),
-        new StatsRenderer(new Surface(context.svg, d3.select(statsRef.current).node()))
-      )
-    ]);
-
-    scene.start();
-    scene.update(model);
-    setScene(scene);
-
-    return () => {
-      scene.stop();
-    }
-  }, []);
-
-  const markersGroup = useRef<SVGSVGElement>();
-  useEffect(() => {
-    d3.select(markersGroup.current).call(createMarkers());
-  }, [markersGroup]);
 
   return (
     <FullScreen>
-      <SvgContainer context={context}>
-        <g ref={markersGroup} className={styles.markers} />
-        <g ref={zoomRef} className={styles.graph} />
-        <g ref={statsRef} className={styles.stats} />
-      </SvgContainer>
-
-      <Knobs className={styles.knobs} />
+      <KnobsProvider>
+        <SvgContextProvider>
+          <SecondaryComponent model={model} />
+        </SvgContextProvider>
+        <Knobs className={styles.knobs} />
+      </KnobsProvider>
     </FullScreen>
   );
 }

@@ -5,4 +5,3 @@
 export * from './data';
 export * from './graph';
 export * from './scene';
-export * from './util';

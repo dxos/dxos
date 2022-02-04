@@ -2,9 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ScreenBounds } from '@dxos/gem-core';
-
-import { D3Callable } from '../../types';
+import { D3Callable, ScreenBounds } from '@dxos/gem-core';
 
 // TODO(burdon): Same API as createLine (i.e., update Control).
 export const createText = ({

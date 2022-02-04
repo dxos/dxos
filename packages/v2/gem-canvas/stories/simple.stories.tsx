@@ -3,9 +3,9 @@
 //
 
 import debug from 'debug';
-import React, { useMemo } from 'react';
+import React  from 'react';
 
-import { FullScreen, SvgContainer, SvgContext } from '@dxos/gem-core';
+import { FullScreen, SvgContextProvider } from '@dxos/gem-core';
 
 import { Canvas, useMemoryElementModel } from '../src';
 
@@ -19,20 +19,17 @@ export default {
 };
 
 const Container = () => {
-  const context = useMemo(() => new SvgContext(), []);
-
   // TODO(burdon): Factor out.
   const [elements] = useMemoryElementModel(() => generator());
 
   return (
     <FullScreen>
-      <SvgContainer context={context}>
+      <SvgContextProvider>
         <Canvas
-          svgContext={context}
           elements={elements}
           grid
         />
-      </SvgContainer>
+      </SvgContextProvider>
     </FullScreen>
   );
 };

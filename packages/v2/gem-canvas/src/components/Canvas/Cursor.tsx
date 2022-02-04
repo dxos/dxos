@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import clsx from 'clsx';
 import React, { useEffect, useRef } from 'react';
 
-import { Modifiers, Point, SvgContext, useStateRef } from '@dxos/gem-core';
+import { Modifiers, Point, useStateRef, useSvgContext } from '@dxos/gem-core';
 
 import { Tool } from '../../tools';
 
@@ -24,7 +24,6 @@ import {
 import { ElementDataType, ElementType } from '../../model';
 
 export interface CursorProps {
-  svgContext: SvgContext
   context: ControlContext
   elements: ControlGetter
   tool: Tool
@@ -34,7 +33,6 @@ export interface CursorProps {
 
 /**
  * Cursor to create new elements.
- * @param svgContext
  * @param context
  * @param elements
  * @param tool
@@ -43,13 +41,13 @@ export interface CursorProps {
  * @constructor
  */
 export const Cursor = ({
-  svgContext,
   context,
   elements,
   tool,
   onSelect,
   onCreate
 }: CursorProps) => {
+  const svgContext = useSvgContext();
   const cursorGroup = useRef<SVGSVGElement>();
   const [, setCursor, cursorRef] = useStateRef<Control<any>>();
 

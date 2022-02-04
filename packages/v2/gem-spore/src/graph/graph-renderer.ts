@@ -42,7 +42,7 @@ export class GraphRenderer extends Renderer<GraphLayout, GraphRendererOptions> {
     const { graph, guides } = layout || {};
     const { drag } = options;
 
-    const root = d3.select(this._surface.root);
+    const root = d3.select(this.root);
 
     //
     // Guides
@@ -64,20 +64,13 @@ export class GraphRenderer extends Renderer<GraphLayout, GraphRendererOptions> {
     // Links
     //
 
-    const links = root.selectAll('g.links')
+    const linkGroup = root.selectAll('g.links')
       .data([{ id: 'links' }])
       .join('g')
       .attr('class', 'links');
 
-    if (this.options.arrows?.start) {
-      links.attr('marker-start', () => 'url(#marker-arrow-start)');
-    }
-    if (this.options.arrows?.end) {
-      links.attr('marker-end', () => 'url(#marker-arrow-end)');
-    }
-
     // Create links.
-    links.selectAll<SVGPathElement, GraphLink>('path.link')
+    const links = linkGroup.selectAll<SVGPathElement, GraphLink>('path.link')
       .data(graph?.links || [], d => d.id)
       .join('path')
       .attr('class', d => clsx('link', this.options.linkClass?.(d)))
@@ -95,6 +88,13 @@ export class GraphRenderer extends Renderer<GraphLayout, GraphRendererOptions> {
           )
         );
       });
+
+    if (this.options.arrows?.start) {
+      links.attr('marker-start', () => 'url(#marker-arrow-start)');
+    }
+    if (this.options.arrows?.end) {
+      links.attr('marker-end', () => 'url(#marker-arrow-end)');
+    }
 
     //
     // Nodes
@@ -148,11 +148,12 @@ export class GraphRenderer extends Renderer<GraphLayout, GraphRendererOptions> {
       .attr('r', d => d.r);
 
     // Fire bullets.
+    // TODO(burdon): Factor out.
     if (this.options.bullets) {
       circles.on('click', function () {
         const node = d3.select<SVGGElement, GraphNode<any>>(this as SVGGElement);
         // TODO(burdon): Create group for bullets.
-        links.call(trigger(root.node(), node.datum().id));
+        linkGroup.call(trigger(root.node(), node.datum().id));
       });
     }
   }

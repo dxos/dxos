@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { D3Callable } from '../types';
+import { D3Callable } from '@dxos/gem-core';
+
+// TODO(burdon): Reconcile with @gem-spore.
 
 export type MarkerOptions = {
   arrowSize?: number

@@ -4,9 +4,9 @@
 
 import * as d3 from 'd3';
 import debug from 'debug';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { FullScreen, SvgContainer, SvgContext, useStateRef } from '@dxos/gem-core';
+import { FullScreen, SvgContextProvider, useStateRef } from '@dxos/gem-core';
 
 import {
   Action,
@@ -62,12 +62,11 @@ export default {
 };
 
 const Container = () => {
-  const context = useMemo(() => new SvgContext(), []);
-
   // State.
   const [selection, setSelection, selectionRef] = useStateRef<SelectionModel>();
   const [tool, setTool] = useState<Tool>();
   const [grid, setGrid] = useState(true); // TODO(burdon): Generalize to view options.
+  const [showToolbar, setShowToolbar] = useState(true);
   const [debug, setDebug, debugRef] = useStateRef(false);
 
   // Elements.
@@ -166,8 +165,8 @@ const Container = () => {
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
         <Toolbar
           tool={tool}
-          minimized={!grid}
-          onMinimize={grid => setGrid(!grid)}
+          minimized={!showToolbar}
+          onMinimize={showToolbar => setShowToolbar(!showToolbar)}
           onAction={handleAction}
           onStyle={(style: string) => {
             if (selection) {
@@ -177,22 +176,23 @@ const Container = () => {
           }}
         />
 
-        <SvgContainer context={context}>
-          <Canvas
-            svgContext={context}
-            grid={grid}
-            tool={tool}
-            elements={elements}
-            selection={selection}
-            onSelect={handleSelect}
-            onCreate={handleCreate}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            options={{
-              debug
-            }}
-          />
-        </SvgContainer>
+        <div style={{ display: 'flex', flex: 1 }}>
+          <SvgContextProvider>
+            <Canvas
+              grid={grid}
+              tool={tool}
+              elements={elements}
+              selection={selection}
+              onSelect={handleSelect}
+              onCreate={handleCreate}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              options={{
+                debug
+              }}
+            />
+          </SvgContextProvider>
+        </div>
 
         {toolbar && (
           <StatusBar

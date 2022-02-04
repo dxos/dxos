@@ -4,9 +4,9 @@
 
 import { css } from '@emotion/css';
 
-import { D3Callable } from '../util';
+import { D3Callable } from '@dxos/gem-core';
 
-export const markerStyles = css`
+export const defaultMarkerStyles = css`
   marker {
     path.arrow {
       stroke: #111;

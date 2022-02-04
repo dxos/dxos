@@ -25,6 +25,7 @@ type LinkOptions = {
 }
 
 type GraphForceProjectorOptions = {
+  drag: boolean
   guides: boolean
   forces?: {
     manyBody?: boolean | ManyBodyOptions
@@ -42,7 +43,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
   _simulation = d3.forceSimulation();
 
   // Force-specific drag handler.
-  _drag = createSimulationDrag(this._simulation);
+  _drag = this.options.drag ? createSimulationDrag(this._simulation) : undefined;
 
   // Current layout.
   _layout: GraphLayout
@@ -106,7 +107,8 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
         true
       ))
 
-      .alpha(0.4);
+      .alpha(0.4)
+      .restart();
   }
 
   onStart () {
@@ -115,6 +117,9 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
     this._simulation
       .on('tick', () => {
         this.updated.emit({ layout: this._layout, options: { drag: this._drag } });
+      })
+      .on('end', () => {
+        console.log('done');
       })
       .alpha(0.7) // Default 0.4
       .restart();

@@ -16,9 +16,9 @@ export type StatsRendererOptions = {}
 
 export class StatsRenderer extends Renderer<Stats, StatsRendererOptions> {
   update (layout: Stats) {
-    const root = d3.select(this._surface.root);
+    const root = d3.select(this.root);
 
-    const { clientWidth: width, clientHeight: height } = d3.select(this._surface.svg).node();
+    const { clientWidth: width, clientHeight: height } = d3.select(this.root).node();
     root.selectAll('text.stats').data([{ id: 'stats' }]).join('text').attr('class', 'stats')
       .attr('x', 8 - width / 2)
       .attr('y', height / 2 - 16)

@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex } from '@dxos/gem-core';
+import { D3Callable, D3Selection, Modifiers, FractionUtil, ScreenBounds, Point, Scale, Screen, Vertex } from '@dxos/gem-core';
 
-import { ElementType, Ellipse, Rect } from '../../model';
-import { D3Callable, D3Selection } from '../../types';
+import { ElementType, Ellipse } from '../../model';
 import { Control } from '../control';
 import { dragMove } from '../drag';
 import { createConectionHandles, createFrame, getConectionHandle } from '../frame';

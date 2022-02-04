@@ -4,10 +4,9 @@
 
 import * as d3 from 'd3';
 
-import { Point, Scale, FractionUtil } from '@dxos/gem-core';
+import { D3Callable, D3Selection, Point, Scale, FractionUtil } from '@dxos/gem-core';
 
 import { ElementType, Path } from '../../model';
-import { D3Callable, D3Selection } from '../../types';
 import { Control } from '../control';
 import { Connection, ControlHandle, createControlHandles } from '../frame';
 

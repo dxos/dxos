@@ -5,9 +5,8 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { Modifiers, Point } from '@dxos/gem-core';
+import { D3DragEvent, Modifiers, Point } from '@dxos/gem-core';
 
-import { D3DragEvent } from '../types';
 import { ControlContext } from './control';
 import { Connection, getConnection, ConnectionTracker } from './frame';
 

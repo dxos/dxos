@@ -14,7 +14,7 @@ export class Scale {
   private _transform: ZoomTransform;
 
   constructor (
-    private readonly _gridSize: number = 16
+    private readonly _gridSize: number = 32
   ) {}
 
   get gridSize () {

@@ -3,8 +3,9 @@
 //
 
 import { getEventMod } from '../../controls';
-import { D3Callable } from '../../types';
 import { Action, ActionType, actions } from './actions';
+
+import { D3Callable } from '@dxos/gem-core';
 
 const bindings = Object.values(actions).flatMap(value => value);
 

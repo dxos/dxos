@@ -3,24 +3,23 @@
 //
 
 import * as d3 from 'd3';
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect, useMemo, useRef } from 'react';
 
 import { SvgContext } from '../context';
+import { useSvgContext } from './useSvgContext';
 
 const createLine = d3.line();
 
-export type GridOptions = {
-  axis?: boolean
+type PathGroup = {
+  id: string
+  class: string
+  path: string
 }
-
-const defaultOptions: GridOptions = {
-  axis: true
-};
 
 /**
  * Create grid based on size and current zoom transform.
  */
-const createGrid = (context: SvgContext, options: GridOptions) => {
+const createGrid = (context: SvgContext, options: GridOptions): PathGroup[] => {
   const paths = [];
   const { width, height } = context.size;
   const { x, y, k } = context.scale.transform;
@@ -69,6 +68,7 @@ const createGrid = (context: SvgContext, options: GridOptions) => {
 
   // Minor grid lines.
   // Find nearest power of 2 to gridSize.
+  // TODO(burdon): Doesn't work is scale is not power of 2.
   const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
   if (majorSize > minorSize) {
     const xMinor = d3.range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
@@ -88,37 +88,78 @@ const createGrid = (context: SvgContext, options: GridOptions) => {
   return paths;
 };
 
-export const grid = (context: SvgContext, options: GridOptions) => (el) => {
-  const paths = createGrid(context, options);
+export type GridOptions = {
+  visible?: boolean
+  axis?: boolean
+}
 
-  el.selectAll('path')
-    .data(paths, path => path.id)
-    .join('path')
-    .style('pointer-events', 'none')
-    .attr('d', d => d.path)
-    .attr('class', d => d.class);
-
-  if (context.scale.transform) {
-    el.attr('transform', context.scale.transform);
-    el.attr('stroke-width', 1 / context.scale.transform.k);
-  }
+const defaultOptions: GridOptions = {
+  visible: true,
+  axis: true
 };
 
 /**
- * Creates a reference to a SVG Group element which renders a grid.
- * @param context
- * @param options
+ * Grid handler.
  */
-export const useGrid = (context: SvgContext, options: GridOptions = defaultOptions): RefObject<SVGGElement> => {
-  const ref = useRef<SVGGElement>();
-  useEffect(() => context.resize.on(() => {
-    if (!context.size) {
+export class Grid {
+  _visible: boolean = false;
+
+  constructor (
+    private readonly _ref: RefObject<SVGGElement>,
+    private readonly _context: SvgContext,
+    private readonly _options: GridOptions
+  ) {
+    this._visible = this._options.visible ?? true;
+  }
+
+  get ref () {
+    return this._ref;
+  }
+
+  get visible () {
+    return this._visible;
+  }
+
+  draw () {
+    if (!this._context.size) {
       return;
     }
 
-    d3.select(ref.current)
-      .call(grid(context, options));
+    const paths = this._visible ? createGrid(this._context, this._options) : [];
+    const root = d3.select(this._ref.current);
+
+    root.selectAll<SVGPathElement, PathGroup>('path')
+      .data(paths, path => path.id)
+      .join('path')
+      .style('pointer-events', 'none')
+      .attr('d', d => d.path)
+      .attr('class', d => d.class);
+
+    const transform = this._context.scale.transform;
+    if (transform) {
+      root.attr('transform', transform as any);
+      root.attr('stroke-width', 1 / transform.k);
+    }
+  }
+
+  setVisible (visible: boolean) {
+    this._visible = visible;
+    this.draw();
+    return this;
+  }
+}
+
+/**
+ * Creates a reference to a SVG Group element which renders a grid.
+ * @param options
+ */
+export const useGrid = (options: GridOptions = defaultOptions): Grid => {
+  const ref = useRef<SVGGElement>();
+  const context = useSvgContext();
+  const grid = useMemo(() => new Grid(ref, context, options), []);
+  useEffect(() => context.resized.on(() => {
+    grid.draw();
   }), []);
 
-  return ref;
+  return grid;
 };

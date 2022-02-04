@@ -5,10 +5,9 @@
 import * as d3 from 'd3';
 import type { DragBehavior } from 'd3';
 
-import { Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-core';
+import { D3Callable, D3DragEvent, D3Selection, Modifiers, Point, Scale, Screen, ScreenBounds } from '@dxos/gem-core';
 
 import { ElementId } from '../model';
-import { D3Callable, D3DragEvent, D3Selection } from '../types';
 import { Control } from './control';
 import { getEventMod } from './drag';
 

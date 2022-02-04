@@ -2,12 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import { D3Selection } from '@dxos/gem-canvas';
 import * as d3 from 'd3';
 
 import { GraphLink } from '../graph';
 import { ObjectId } from '../scene';
-import { D3Callable } from '../util';
+
+import { D3Callable, D3Selection } from '@dxos/gem-core';
 
 interface BulletOptions {
   max?: number

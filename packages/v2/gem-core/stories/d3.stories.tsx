@@ -3,19 +3,22 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { css } from '@emotion/css';
 
 import {
   Bounds,
   FractionUtil,
   FullScreen,
-  SvgContainer,
+  Scale,
+  SvgContext,
+  SvgContextProvider,
   Vector,
   Vertex,
-  gridStyles,
+  defaultGridStyles,
   useGrid,
-  useZoom, SvgContext,
+  useZoom,
+  useSvgContext
 } from '../src';
 
 export default {
@@ -187,14 +190,14 @@ const updatePath = (el, scale, { points, curve, closed }) => {
     .attr('d', d3.line().curve(line)(p));
 };
 
-export const Primary = () => {
-  const context = useMemo(() => new SvgContext(), []);
-  const gridRef = useGrid(context, { axis: true });
-  const zoomRef = useZoom(context);
-  const scale = context.scale;
+const Component = () => {
+  const context = useSvgContext();
+  const grid = useGrid();
+  const zoom = useZoom();
 
   useEffect(() => {
-    d3.select(zoomRef.current)
+    const scale = context.scale;
+    d3.select(zoom.ref.current)
       .selectAll('g')
       .data(data)
       .join('g')
@@ -245,14 +248,26 @@ export const Primary = () => {
           }
         }
       });
-  }, [zoomRef]);
+  }, [zoom]);
 
   return (
-    <FullScreen>
-      <SvgContainer context={context}>
-        <g ref={gridRef} className={gridStyles} />
-        <g ref={zoomRef} className={styles} />
-      </SvgContainer>
-    </FullScreen>
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      ref={context.ref}
+      className={styles}
+    >
+      <g ref={grid?.ref} className={defaultGridStyles} />
+      <g ref={zoom?.ref}/>
+    </svg>
   );
 };
+
+export const Primary = () => {
+  return (
+    <FullScreen>
+      <SvgContextProvider context={new SvgContext(new Scale(64))}>
+        <Component />
+      </SvgContextProvider>
+    </FullScreen>
+  );
+}

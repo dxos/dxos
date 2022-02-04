@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem-core';
-
 import { ElementData, ElementDataType, ElementId, ElementType } from '../model';
-import { D3Callable } from '../types';
 import { Connection, ControlHandle } from './frame';
+
+import { D3Callable, Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem-core';
 
 export interface ControlContext {
   scale: () => Scale

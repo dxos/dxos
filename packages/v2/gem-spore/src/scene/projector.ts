@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter } from '@dxos/gem-core';
+import { EventEmitter, SvgContext } from '@dxos/gem-core';
 
 import { RenderOptions } from './renderer';
 
@@ -11,9 +11,10 @@ import { RenderOptions } from './renderer';
  */
 // TODO(burdon): Rename Layout?
 export abstract class Projector<MODEL, LAYOUT, OPTIONS> {
-  readonly updated = new EventEmitter<{ layout: LAYOUT, options?: RenderOptions }>();
+  public readonly updated = new EventEmitter<{ layout: LAYOUT, options?: RenderOptions }>();
 
   constructor (
+    private readonly _context: SvgContext,
     private readonly _mapper: (model: MODEL, layout: LAYOUT) => LAYOUT,
     private readonly _options?: OPTIONS
   ) {}

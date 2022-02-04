@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { gridStyles, SvgContext, useDynamicRef, useGrid, useZoom } from '@dxos/gem-core';
+import { defaultGridStyles, useDynamicRef, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
 import {
   ControlContext,
@@ -23,7 +23,6 @@ import { Tool } from '../../tools';
 import { Cursor } from './Cursor';
 
 export interface CanvasProps {
-  svgContext: SvgContext
   grid?: boolean
   tool?: Tool
   elements?: ElementData<any>[]
@@ -40,7 +39,6 @@ export interface CanvasProps {
 
 /**
  * Main canvas component.
- * @param svgContext
  * @param grid
  * @param tool
  * @param elements
@@ -53,8 +51,7 @@ export interface CanvasProps {
  * @constructor
  */
 export const Canvas = ({
-  svgContext,
-  grid,
+  grid: showGrid,
   tool,
   elements = [],
   selection,
@@ -64,8 +61,9 @@ export const Canvas = ({
   onDelete,
   options
 }: CanvasProps) => {
-  const gridRef = useGrid(svgContext);
-  const zoomRef = useZoom(svgContext);
+  const svgContext = useSvgContext();
+  const grid = useGrid();
+  const zoom = useZoom();
 
   // Live context
   const toolRef = useDynamicRef<Tool>(() => tool, [tool]);
@@ -76,8 +74,13 @@ export const Canvas = ({
     draggable: () => toolRef.current === undefined
   }), []);
 
+  useEffect(() => {
+    grid.setVisible(showGrid);
+  }, [showGrid]);
+
   // Cursor.
   useEffect(() => {
+    zoom.setEnabled(!tool);
     d3.select(svgContext.svg).style('cursor', tool ? 'crosshair' : undefined);
   }, [tool]);
 
@@ -136,23 +139,24 @@ export const Canvas = ({
   }, [markersGroup]);
 
   return (
-    <g className={clsx(canvasStyles, debugRef.current && debugStyles)}>
-      <g ref={markersGroup} />
-      <g ref={gridRef} className={gridStyles} style={{ visibility: grid ? 'visible': 'hidden' }} />
-      <g ref={zoomRef}>
-        <g ref={controlsGroup} />
+    <svg ref={svgContext.ref}>
+      <g className={clsx(canvasStyles, debugRef.current && debugStyles)}>
+        <g ref={markersGroup} />
+        <g ref={grid.ref} className={defaultGridStyles} />
+        <g ref={zoom.ref}>
+          <g ref={controlsGroup} />
 
-        {onCreate && (
-          <Cursor
-            svgContext={svgContext}
-            context={context}
-            elements={controlManager}
-            tool={tool}
-            onSelect={onSelect}
-            onCreate={onCreate}
-          />
-        )}
+          {onCreate && (
+            <Cursor
+              context={context}
+              elements={controlManager}
+              tool={tool}
+              onSelect={onSelect}
+              onCreate={onCreate}
+            />
+          )}
+        </g>
       </g>
-    </g>
+    </svg>
   );
 };

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -32,11 +32,11 @@
     "extends": "plugin:@dxos/react"
   },
   "jest": {
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node",
     "moduleNameMapper": {
       "d3": "<rootDir>/../../../../node_modules/d3/dist/d3.min.js"
-    }
+    },
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
   },
   "dependencies": {
     "assert": "^2.0.0",
@@ -46,7 +46,7 @@
     "use-resize-observer": "^8.0.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-book-knobs": "^1.0.0",
+    "@dxos/esbuild-book-knobs": "^1.2.2",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",

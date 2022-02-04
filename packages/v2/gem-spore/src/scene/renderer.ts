@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { D3Callable } from '../util';
+import { RefObject } from 'react';
+
+import { D3Callable } from '@dxos/gem-core';
 
 /**
  * SVG container.
@@ -27,9 +29,13 @@ export interface RenderOptions {
  */
 export abstract class Renderer<LAYOUT, OPTIONS> {
   constructor (
-    protected readonly _surface: Surface,
+    protected readonly _ref: RefObject<SVGGElement>,
     protected readonly _options?: OPTIONS
   ) {}
+
+  get root (): SVGGElement {
+    return this._ref.current;
+  }
 
   get options () {
     return this._options || {} as OPTIONS;

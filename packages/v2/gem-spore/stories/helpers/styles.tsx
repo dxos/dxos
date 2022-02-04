@@ -20,18 +20,6 @@ export const styles = {
     }
   `,
 
-  grid: css`
-    path.axis {
-      stroke: #AAAAAA;
-    }
-    path.major {
-      stroke: #E5E5E5;
-    }
-    path.minor {
-      stroke: #F0F0F0;
-    }
-  `,
-
   markers: css`
     marker {
       path.arrow {

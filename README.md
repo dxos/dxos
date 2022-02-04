@@ -1,4 +1,4 @@
-# Graphical Elementary Modules
+# Graphical Elementary Modules (GEM)
 
 [Chromatic Storybook](https://www.chromatic.com/library?appId=6000bc9133d715002117d459)
 
@@ -28,7 +28,6 @@ yarn build
 yarn test
 yarn lerna publish prerelease --dist-tag="beta" --force-publish
 ```
-
 
 ## Related
 
