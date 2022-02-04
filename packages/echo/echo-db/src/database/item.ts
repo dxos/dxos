@@ -8,9 +8,9 @@ import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/
 import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
+import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
-import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo-db:items:item');
 

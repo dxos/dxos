@@ -198,8 +198,8 @@ describe('Selection', () => {
           .query().result
       ).toEqual([
         items[0],
-        items[1],
+        items[1]
       ]);
-    })
+    });
   });
 });

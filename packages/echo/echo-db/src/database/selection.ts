@@ -36,7 +36,7 @@ export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: 
     const predicate = filter ? filterToPredicate(filter) : () => true;
     return new Selection(options => getItems().filter(createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
   };
-}
+};
 
 export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>> =>
   new Selection(() => [root], update, root);
@@ -136,7 +136,7 @@ export class SelectionResult<T extends Entity<any>> {
    * Result of the selection.
    */
   get result (): T[] {
-    return dedup(this._execute()) 
+    return dedup(this._execute());
   }
 
   /**
@@ -153,16 +153,15 @@ const coerceToId = (item: Item<any> | ItemID): ItemID => {
   }
 
   return item.id;
-}
+};
 
 const testOneOrMultiple = <T>(expected: OneOrMultiple<T>, value: T) => {
   if (Array.isArray(expected)) {
     return expected.includes(value);
   } else {
-
     return expected === value;
   }
-}
+};
 
 const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> => {
   if (typeof filter === 'function') {
@@ -170,7 +169,7 @@ const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): 
   }
 
   return itemFilterToPredicate(filter);
-}
+};
 
 const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> => {
   if ('id' in filter) {
@@ -180,12 +179,12 @@ const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Ite
       (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
       (!filter.parent || item.parent?.id === coerceToId(filter.parent));
   }
-}
+};
 
-const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link<any>> => 
+const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link<any>> =>
   link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 
-const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> =>{
+const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> => {
   return entity => {
     if (entity.model instanceof DefaultModel) {
       return false;
@@ -200,6 +199,6 @@ const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }
         return entity instanceof Item && entity.deleted;
     }
   };
-}
+};
 
 const dedup = <T>(arr: T[]) => Array.from(new Set(arr));

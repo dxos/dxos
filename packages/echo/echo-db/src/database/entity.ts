@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
+
 import { ItemManager } from './item-manager';
 
 /**
