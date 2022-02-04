@@ -24,7 +24,7 @@ import { makeStyles } from '@mui/styles';
 import { Party } from '@dxos/client';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, useSearchSelection } from '@dxos/react-client';
+import { useSearchSelection } from '@dxos/react-client';
 
 import {
   CardView,

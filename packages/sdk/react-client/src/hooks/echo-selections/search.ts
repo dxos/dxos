@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Party } from "@dxos/client";
-import { useSelection } from ".";
+import { Party } from '@dxos/client';
+
+import { useSelection } from '.';
 
 /**
  * A Selector used for finding items based on a search pattern.

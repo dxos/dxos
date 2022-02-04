@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
-import assert from 'assert';
 
 import { Database, DefaultModel } from '.';
 import { Entity } from './entity';
@@ -140,7 +141,7 @@ export class SelectionResult<T extends Entity<any>> {
     return dedup(this._execute());
   }
 
-  expectOne(): T {
+  expectOne (): T {
     const res = this.result;
     assert(res.length === 1, 'Expected one result, got ' + res.length);
     return res[0];

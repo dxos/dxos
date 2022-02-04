@@ -128,7 +128,7 @@ export class Party extends InvitationProxy {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-  get select(): RootSelector {
+  get select (): RootSelector {
     return this.database.select.bind(this.database);
   }
 

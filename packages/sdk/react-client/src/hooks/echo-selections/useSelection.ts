@@ -40,7 +40,7 @@ export function useSelection<T extends Entity<any>> (
         setData(newData);
       });
     }
-  }, [result])
+  }, [result]);
 
   return data;
 }

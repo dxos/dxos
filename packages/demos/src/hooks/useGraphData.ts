@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party, Item, Selection, Database } from '@dxos/client';
+import { Party, Item, Database } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import {
@@ -19,7 +19,7 @@ import { asyncEffect, liftCallback } from './util';
 
 export const useGraphSelection = (adapter: ItemAdapter, database: Database, deps: readonly any[] = []) => {
   const orgs = database.select({ type: OBJECT_ORG });
-  
+
   const projects = orgs.links({ type: LINK_PROJECT });
   const tasks = projects.target().children();
 
@@ -29,13 +29,13 @@ export const useGraphSelection = (adapter: ItemAdapter, database: Database, deps
     ...(useSelection(orgs, deps) ?? []).map(item => ({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) })),
     ...(useSelection(projects, deps) ?? []).map(link => ({ id: link.target.id, type: OBJECT_PROJECT, title: adapter.primary(link.target) })),
     ...(useSelection(tasks, deps) ?? []).map(item => ({ id: item.id, type: OBJECT_TASK, title: adapter.primary(item) })),
-    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.target.id, type: OBJECT_PERSON, title: adapter.primary(link.target) })),
+    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.target.id, type: OBJECT_PERSON, title: adapter.primary(link.target) }))
   ];
-  
+
   const links: Link[] = [
     ...(useSelection(projects, deps) ?? []).map(link => ({ id: link.id, source: link.source.id, target: link.target.id })),
     ...(useSelection(tasks, deps) ?? []).map(item => ({ id: `${item.parent!.id}-${item.id}`, source: item.parent!.id, target: item.id })),
-    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.id, source: link.source.id, target: link.target.id })),
+    ...(useSelection(employees, deps) ?? []).map(link => ({ id: link.id, source: link.source.id, target: link.target.id }))
   ];
 
   return { nodes, links };
