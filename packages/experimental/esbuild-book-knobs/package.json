@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-book-knobs",
-  "version": "1.2.2",
+  "version": "2.0.0-beta.0",
   "description": "Knobs for esbuild-server book.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -35,7 +35,6 @@
     "preset": "ts-jest/presets/default",
     "testEnvironment": "node"
   },
-  "dependencies": {},
   "devDependencies": {
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",

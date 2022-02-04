@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-experimental",
-  "version": "2.1.2",
+  "version": "2.0.0-beta.0",
   "description": "GEM experimental components.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
@@ -35,7 +35,7 @@
     "three": "^0.124.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-book-knobs": "^1.2.2",
+    "@dxos/esbuild-book-knobs": "^2.0.0-beta.0",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
     "@emotion/css": "^11.7.1",
