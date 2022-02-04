@@ -8,11 +8,11 @@ import debug from 'debug';
 import { ObjectModel } from '@dxos/object-model';
 
 import { SendCommandRequest } from '../proto/gen/dxos/bot';
-import { ClientBot } from './client-bot';
+import { Bot } from './client-bot';
 
 const log = debug('dxos:bot:echo-bot');
 
-export class EchoBot extends ClientBot {
+export class EchoBot extends Bot {
   constructor (private readonly _echoType: string) {
     super();
     log('Constructing echo bot');
