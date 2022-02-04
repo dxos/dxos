@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
@@ -16,7 +17,6 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
-import { sleep } from '@dxos/async';
 
 describe('In-Memory', () => {
   describe('No client', () => {

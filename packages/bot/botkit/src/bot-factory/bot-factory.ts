@@ -139,7 +139,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Initializing bot`);
       await bot.rpc.Start({ config: bot.config.values });
       return bot.bot;
-    } catch (error: any) { 
+    } catch (error: any) {
       log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
       throw error;
     }
