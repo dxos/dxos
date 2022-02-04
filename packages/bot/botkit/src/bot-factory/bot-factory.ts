@@ -14,6 +14,7 @@ import { BotHandle } from '../bot-factory';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
 import { ContentLoader } from './ipfs-content-loader';
+import { promiseTimeout } from '@dxos/async';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -151,7 +152,11 @@ export class BotFactory implements BotFactoryService {
     try {
       const bot = this._getBot(id);
       log(`[${id}] Stopping bot`);
-      await bot.rpc.Stop();
+      try {
+        promiseTimeout(bot.rpc.Stop(), 3000, new Error('Stopping bot timed out'));
+      } catch (error: any) {
+        log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+      }
       await this._botContainer.kill(id);
       log(`[${id}] Bot stopped`);
       return bot.bot;
@@ -161,7 +166,7 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async Kill (request: Bot) {
+  async Remove (request: Bot) {
     assert(request.id);
     await this.Stop(request);
     const bot = this._getBot(request.id);
@@ -176,8 +181,8 @@ export class BotFactory implements BotFactoryService {
     return respone;
   }
 
-  async Destroy () {
-    await Promise.all(Array.from(this._bots.values()).map(bot => this.Kill(bot.bot)));
+  async RemoveAll () {
+    await Promise.all(Array.from(this._bots.values()).map(bot => this.Remove(bot.bot)));
   }
 
   private _getBot (botId: string) {

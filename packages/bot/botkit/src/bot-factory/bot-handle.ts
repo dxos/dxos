@@ -82,10 +82,10 @@ export class BotHandle {
       }
     );
     await this._rpc.open();
-    this._bot = {
-      id: this._bot.id,
-      status: Bot.Status.RUNNING
-    }; // To clear all possible error messages.
+    this._bot.status = Bot.Status.RUNNING;
+    this._bot.error = undefined;
+    this._bot.exitCode = undefined;
+    this._bot.exitSignal = undefined;
   }
 
   async close () {

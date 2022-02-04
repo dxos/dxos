@@ -60,13 +60,13 @@ service BotFactoryService {
 
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
-  rpc Kill(Bot) returns (google.protobuf.Empty);
+  rpc Remove(Bot) returns (google.protobuf.Empty);
  
   // TODO(dmaretskyi): querying metrics/state.
  
   rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
 
-  rpc Destroy(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc RemoveAll(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message InitializeRequest {

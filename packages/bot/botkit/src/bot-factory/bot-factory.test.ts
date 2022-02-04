@@ -13,7 +13,7 @@ import { BotFactory } from './bot-factory';
 
 describe('BotFactory', () => {
   describe('with NodeContainer', () => {
-    it('crashed bots get their status updated', async () => {
+    it.only('crashed bots get their status updated', async () => {
       const container = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory({
         botContainer: container,

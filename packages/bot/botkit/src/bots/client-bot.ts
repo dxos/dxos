@@ -17,7 +17,7 @@ import {
 
 const log = debug('dxos:bot:client-bot');
 
-export class ClientBot implements BotService {
+export class Bot implements BotService {
   protected client: Client | undefined;
   protected party: Party | undefined;
 
@@ -42,7 +42,7 @@ export class ClientBot implements BotService {
       }
     }
     log('Client bot onInit');
-    await this.onInit(request);
+    await this.onStart(request);
   }
 
   async Start (request: StartRequest) {
@@ -59,7 +59,7 @@ export class ClientBot implements BotService {
     this.party = parties[0];
 
     log('Client bot onInit');
-    await this.onInit(request);
+    await this.onStart(request);
   }
 
   async Command (request: SendCommandRequest) {
@@ -72,7 +72,7 @@ export class ClientBot implements BotService {
     await this.onStop();
   }
 
-  protected async onInit (request: InitializeRequest) {}
+  protected async onStart (request: InitializeRequest) {}
   protected async onCommand (request: SendCommandRequest): Promise<SendCommandResponse> {
     return {};
   }

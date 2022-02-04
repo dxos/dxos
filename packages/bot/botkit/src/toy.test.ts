@@ -198,7 +198,6 @@ describe('Node', () => {
       await testCommand();
 
       await botHandle.stop();
-      await sleep(1000);
       await botHandle.start();
 
       await testCommand();
