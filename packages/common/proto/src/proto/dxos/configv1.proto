@@ -194,6 +194,11 @@ message Runtime {
       * TODO(dmaretskyi): Deprecate this and move it to keyring.
       */
       string accountUri = 2;
+
+      /**
+       * Public address of the DXNS Account - not a secret.
+      */
+      string account = 3;
     }
 
     message Ipfs {
