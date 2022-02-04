@@ -189,5 +189,17 @@ describe('Selection', () => {
         items[4]
       ]);
     });
+
+    test('sources', () => {
+      expect(
+        rootSelector({ type: OBJECT_PERSON })
+          .refs()
+          .source()
+          .query().result
+      ).toEqual([
+        items[0],
+        items[1],
+      ]);
+    })
   });
 });

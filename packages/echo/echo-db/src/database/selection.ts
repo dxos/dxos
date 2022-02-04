@@ -91,9 +91,19 @@ export class Selection<T> {
     return this._derive((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
+  refs (this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
+    const predicate = linkFilterToPredicate(filter);
+    return this._derive((item, options) => item.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
+  }
+
   target (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
     const predicate = filterToPredicate(filter);
     return this._derive((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
+  }
+
+  source (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+    const predicate = filterToPredicate(filter);
+    return this._derive((links, options) => links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 }
 
@@ -129,7 +139,8 @@ export class SelectionResult<T> {
    * Result of the selection.
    */
   get result (): T {
-    return this._execute();
+    const res = this._execute();
+    return Array.isArray(res) ? dedup(res) : res as any;
   }
 
   /**
@@ -193,3 +204,5 @@ const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }
     }
   };
 }
+
+const dedup = <T>(arr: T[]) => Array.from(new Set(arr));
