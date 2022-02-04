@@ -18,10 +18,10 @@ const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
-  new Item(id, type, new ObjectModel(ObjectModel.meta, id), undefined, parent);
+  new Item(null as any, id, type, new ObjectModel(ObjectModel.meta, id), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(id, type, new ObjectModel(ObjectModel.meta, id), {
+  const link = new Link(null as any, id, type, new ObjectModel(ObjectModel.meta, id), {
     sourceId: source.id,
     targetId: target.id,
     source: source,

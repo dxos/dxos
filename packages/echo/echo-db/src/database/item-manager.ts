@@ -287,7 +287,7 @@ export class ItemManager {
       modelSnapshot
     });
 
-    const item = new Item(itemId, itemType, model, this._writeStream, parent);
+    const item = new Item(this, itemId, itemType, model, this._writeStream, parent);
     this._addEntity(item);
 
     return item;
@@ -321,7 +321,7 @@ export class ItemManager {
     const sourceItem = this.getItem(source);
     const targetItem = this.getItem(target);
 
-    const link = new Link(itemId, itemType, model, {
+    const link = new Link(this, itemId, itemType, model, {
       sourceId: source,
       targetId: target,
       source: sourceItem,

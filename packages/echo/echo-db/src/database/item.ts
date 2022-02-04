@@ -10,6 +10,7 @@ import { Model } from '@dxos/model-factory';
 import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
+import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo-db:items:item');
 
@@ -57,13 +58,14 @@ export class Item<M extends Model> extends Entity<M> {
    * @param {Item<any>} [parent]  - Parent Item (if not a root Item).
    */
   constructor (
+    itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemId, itemType, model);
+    super(itemManager, itemId, itemType, model);
     this._updateParent(parent);
   }
 
@@ -99,8 +101,7 @@ export class Item<M extends Model> extends Entity<M> {
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
   select (): Selection<Item<any>> {
-    // TODO(dmaretskyi): Fix events.
-    return createItemSelector(this, this._onUpdate.discardParameter() as any);
+    return createItemSelector(this, this._itemManager.debouncedUpdate);
   }
 
   /**
