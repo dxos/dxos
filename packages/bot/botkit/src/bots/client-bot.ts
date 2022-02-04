@@ -7,11 +7,17 @@ import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
 
-import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
+import {
+  BotService,
+  InitializeRequest,
+  SendCommandRequest,
+  SendCommandResponse,
+  StartRequest
+} from '../proto/gen/dxos/bot';
 
 const log = debug('dxos:bot:client-bot');
 
-export class ClientBot implements BotService {
+export class Bot implements BotService {
   protected client: Client | undefined;
   protected party: Party | undefined;
 
@@ -36,7 +42,24 @@ export class ClientBot implements BotService {
       }
     }
     log('Client bot onInit');
-    await this.onInit(request);
+    await this.onStart(request);
+  }
+
+  async Start (request: StartRequest) {
+    log('Client bot start initilizing');
+    this.client = new Client(request.config);
+
+    log('Client bot initialize');
+    await this.client.initialize();
+
+    const parties = this.client.echo.queryParties().value;
+    if (parties.length === 0) {
+      throw new Error('Bot is not in any party');
+    }
+    this.party = parties[0];
+
+    log('Client bot onInit');
+    await this.onStart(request);
   }
 
   async Command (request: SendCommandRequest) {
@@ -49,7 +72,7 @@ export class ClientBot implements BotService {
     await this.onStop();
   }
 
-  protected async onInit (request: InitializeRequest) {}
+  protected async onStart (request: InitializeRequest) {}
   protected async onCommand (request: SendCommandRequest): Promise<SendCommandResponse> {
     return {};
   }
