@@ -623,7 +623,9 @@
     },
     {
       "packageName": "@dxos/echo-testing",
-      "projectFolder": "packages/echo/echo-testing"
+      "projectFolder": "packages/echo/echo-testing",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/model-factory",

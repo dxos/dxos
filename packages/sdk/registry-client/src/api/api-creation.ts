@@ -11,7 +11,7 @@ import { cryptoWaitReady } from '@polkadot/util-crypto';
 
 import * as definitions from '../interfaces/definitions';
 
-const registryTypes: RegistryTypes = Object
+export const registryTypes: RegistryTypes = Object
   .values(definitions)
   .reduce((res: any, { types }: any): object => ({ ...res, ...types }), {}) as unknown as RegistryTypes;
 
