@@ -98,7 +98,7 @@ export class Item<M extends Model> extends Entity<M> {
   /**
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
-  select (): Selection<Item<any>[]> {
+  select (): Selection<Item<any>> {
     // TODO(dmaretskyi): Fix events.
     return createItemSelector(this, this._onUpdate.discardParameter() as any);
   }

@@ -29,7 +29,7 @@ export type ItemIdFilter = {
 
 export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
 
-export type RootSelector = (filter?: RootFilter) => Selection<Item<any>[]>
+export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
 
 export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector => {
   return (filter?: RootFilter): Selection<any> => {
@@ -38,7 +38,7 @@ export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: 
   };
 }
 
-export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>[]> =>
+export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>> =>
   new Selection(() => [root], update, root);
 
 export type SelectionRoot = Database | Entity<any>;
@@ -53,7 +53,7 @@ export type QueryOptions = {
   deleted?: ItemFilterDeleted
 }
 
-export class Selection<T> {
+export class Selection<T extends Entity<any>> {
   /**
    *
    * @param _execute Execute the query.
@@ -62,7 +62,7 @@ export class Selection<T> {
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor (
-    private readonly _execute: (options: QueryOptions) => T,
+    private readonly _execute: (options: QueryOptions) => T[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {}
@@ -71,65 +71,62 @@ export class Selection<T> {
     return new SelectionResult<T>(this._root, () => this._execute(options), this._update);
   }
 
-  private _derive<U> (map: (arg: T, options: QueryOptions) => U): Selection<U> {
+  private _createSubSelection<U extends Entity<any>> (map: (arg: T[], options: QueryOptions) => U[]): Selection<U> {
     return new Selection(options => map(this._execute(options), options), this._update, this._root);
   }
 
-  filter(this: Selection<Item<any>[]>, filter: ItemFilter): Selection<Item<any>[]>
-  filter<U>(this: Selection<U[]>, filter: Predicate<U>): Selection<U[]>
-  filter<U> (this: Selection<U[]>, filter: Predicate<T> | ItemFilter): Selection<U[]> {
+  filter(this: Selection<Item<any>>, filter: ItemFilter): Selection<Item<any>>
+  filter<U extends Entity<any>>(this: Selection<U>, filter: Predicate<U>): Selection<U>
+  filter<U extends Entity<any>> (this: Selection<U>, filter: Predicate<T> | ItemFilter): Selection<U> {
     const predicate = filterToPredicate(filter);
-    return this._derive(items => items.filter(predicate));
+    return this._createSubSelection(items => items.filter(predicate));
   }
 
-  children (this: Selection<Item<any>[]>): Selection<Item<any>[]> {
-    return this._derive((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
+  children (this: Selection<Item<any>>): Selection<Item<any>> {
+    return this._createSubSelection((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
   }
 
-  links (this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
+  links (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
-    return this._derive((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
+    return this._createSubSelection((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
-  refs (this: Selection<Item<any>[]>, filter: LinkFilter = {}): Selection<Link<any>[]> {
+  refs (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
-    return this._derive((item, options) => item.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
+    return this._createSubSelection((item, options) => item.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
-  target (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+  target (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
-    return this._derive((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
+    return this._createSubSelection((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 
-  source (this: Selection<Link<any>[]>, filter: ItemFilter = {}): Selection<Item<any>[]> {
+  source (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
-    return this._derive((links, options) => links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
+    return this._createSubSelection((links, options) => links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 }
 
-export class SelectionResult<T> {
+export class SelectionResult<T extends Entity<any>> {
   /**
    * Fired when there are updates in the selection. Only update that are relevant to the selection cause the update.
    */
-  readonly update = new Event<T>();
+  readonly update = new Event<T[]>();
 
-  private _lastResult: T;
+  private _lastResult: T[];
 
   constructor (
     private readonly _root: SelectionRoot,
-    private readonly _execute: () => T,
+    private readonly _execute: () => T[],
     private readonly _update: Event<Entity<any>[]>
   ) {
     this._lastResult = this._execute();
     this.update.addEffect(() => _update.on(entities => {
       const result = this._execute();
-      const set = new Set([
-        ...(Array.isArray(result) ? result : [result]),
-        ...(Array.isArray(this._lastResult) ? this._lastResult : [this._lastResult])
-      ]);
+      const set = new Set([...result, ...this._lastResult]);
       this._lastResult = result;
 
-      if (entities.some(entity => set.has(entity))) {
+      if (entities.some(entity => set.has(entity as any))) {
         this.update.emit(result);
       }
     }));
@@ -138,9 +135,8 @@ export class SelectionResult<T> {
   /**
    * Result of the selection.
    */
-  get result (): T {
-    const res = this._execute();
-    return Array.isArray(res) ? dedup(res) : res as any;
+  get result (): T[] {
+    return dedup(this._execute()) 
   }
 
   /**
@@ -163,6 +159,7 @@ const testOneOrMultiple = <T>(expected: OneOrMultiple<T>, value: T) => {
   if (Array.isArray(expected)) {
     return expected.includes(value);
   } else {
+
     return expected === value;
   }
 }
