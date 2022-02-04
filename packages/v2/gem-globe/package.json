@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "2.2.0-beta.0",
+  "version": "2.2.1-beta.0",
   "description": "Gem Globe.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
@@ -21,7 +21,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "^2.2.0-beta.0",
+    "@dxos/gem-core": "^2.2.1-beta.0",
     "clsx": "^1.1.0",
     "d3": "^7.2.1",
     "d3-geo-projection": "^4.0.0",
@@ -37,7 +37,7 @@
     "topojson": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/esbuild-book-knobs": "^2.2.0-beta.0",
+    "@dxos/esbuild-book-knobs": "^2.2.1-beta.0",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
