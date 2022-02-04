@@ -56,7 +56,7 @@ describe('In-Memory', () => {
       expect(response.response).toBeDefined();
       expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
-      await botFactoryClient.botFactory.Destroy();
+      await botFactoryClient.botFactory.RemoveAll();
       await botFactoryClient.stop();
     });
   });
@@ -105,7 +105,7 @@ describe('In-Memory', () => {
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-      await botFactoryClient.botFactory.Destroy();
+      await botFactoryClient.botFactory.RemoveAll();
       await botFactoryClient.stop();
     });
   });
@@ -202,7 +202,7 @@ describe('Node', () => {
 
       await testCommand();
 
-      await botFactoryClient.botFactory.Destroy();
+      await botFactoryClient.botFactory.RemoveAll();
       await botFactoryClient.stop();
       botContainer.killAll();
     });
