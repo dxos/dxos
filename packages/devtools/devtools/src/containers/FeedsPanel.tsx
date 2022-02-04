@@ -16,7 +16,7 @@ export const FeedsPanel = () => {
   const parties = useParties();
   const [selectedParty, setSelectedParty] = useState<Party>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
-  const { parties: remoteParties } = useStream(() => devtoolsHost.SubscribeToFeeds({})) ?? {};
+  const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToFeeds({})) ?? {};
   const partyFeeds = useMemo(
     () => remoteParties?.find(({ key }) => selectedParty?.key && key?.equals(selectedParty.key))?.feeds ?? [],
     [remoteParties, selectedParty]
@@ -27,7 +27,7 @@ export const FeedsPanel = () => {
   // TODO(wittjosiah): EchoFeedBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.SubscribeToFeed({ partyKey: selectedParty?.key, feedKey: selectedFeed }),
+    () => devtoolsHost.subscribeToFeed({ partyKey: selectedParty?.key, feedKey: selectedFeed }),
     [selectedParty?.key, selectedFeed]
   ) ?? {};
 

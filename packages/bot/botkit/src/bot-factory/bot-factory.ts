@@ -68,13 +68,13 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
-  async GetBots () {
+  async getBots () {
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
     };
   }
 
-  async SpawnBot (request: SpawnBotRequest) {
+  async spawnBot (request: SpawnBotRequest) {
     const id = createId();
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
@@ -119,27 +119,27 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async Start (request: Bot) {
+  async start (request: Bot) {
     return request;
   }
 
-  async Stop (request: Bot) {
+  async stop (request: Bot) {
     assert(request.id);
     const bot = this._getBot(request.id);
     await bot.rpc.Stop();
     return bot.bot;
   }
 
-  async Remove (request: Bot) {}
+  async remove (request: Bot) {}
 
-  async SendCommand (request: SendCommandRequest) {
+  async sendCommand (request: SendCommandRequest) {
     assert(request.botId);
     const bot = this._getBot(request.botId);
     const respone = await bot.rpc.Command(request);
     return respone;
   }
 
-  async Destroy () {
+  async destroy () {
     await Promise.all(Array.from(this._bots.values()).map(bot => bot.rpc.Stop()));
   }
 

@@ -10,16 +10,16 @@ import { startBot } from './start-bot';
  * Bot that crashes the whole process on command.
  */
 class FailingBot implements BotService {
-  async Initialize (request: InitializeRequest) {
+  async initialize (request: InitializeRequest) {
   }
 
-  async Command (request: SendCommandRequest) {
+  async command (request: SendCommandRequest) {
     process.exit(255);
 
     return {};
   }
 
-  async Stop () {
+  async stop () {
   }
 }
 

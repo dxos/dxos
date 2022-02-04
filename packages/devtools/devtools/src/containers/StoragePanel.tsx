@@ -14,7 +14,7 @@ export const StoragePanel = () => {
 
   async function handleReset () {
     if (window.confirm('RESET ALL DATA (CANNOT BE UNDONE)?')) {
-      await devtoolsHost.ResetStorage({});
+      await devtoolsHost.resetStorage({});
     }
   }
 
