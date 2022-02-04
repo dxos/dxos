@@ -170,7 +170,6 @@ describe('Node', () => {
 
       const testCommand = async () => {
         const command = PublicKey.random().asUint8Array();
-        await botHandle.sendCommand(command);
 
         let unsub: (() => void) | undefined;
         const waitForNewItem = new Promise<boolean>(resolve => {
@@ -186,6 +185,7 @@ describe('Node', () => {
               }
             });
         });
+        await botHandle.sendCommand(command);
         const timeout = async () => {
           await sleep(5000);
           return false;
