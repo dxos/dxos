@@ -52,6 +52,12 @@ export class ClientBot implements BotService {
     log('Client bot initialize');
     await this.client.initialize();
 
+    const parties = this.client.echo.queryParties().value;
+    if (parties.length === 0) {
+      throw new Error('Bot is not in any party');
+    }
+    this.party = parties[0];
+
     log('Client bot onInit');
     await this.onInit(request);
   }
@@ -64,7 +70,6 @@ export class ClientBot implements BotService {
   async Stop () {
     await this.client?.destroy();
     await this.onStop();
-    process.nextTick(() => process.exit(0));
   }
 
   protected async onInit (request: InitializeRequest) {}

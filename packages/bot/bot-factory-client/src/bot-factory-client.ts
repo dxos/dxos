@@ -101,4 +101,10 @@ export class BotFactoryClient {
     const handle = new BotHandle(id, this._rpc);
     return handle;
   }
+
+  async list () {
+    assert(this._rpc, 'Bot factory client is not started');
+    const { bots } = await this._rpc.rpc.GetBots();
+    return bots || [];
+  }
 }

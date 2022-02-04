@@ -16,6 +16,7 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
+import { sleep } from '@dxos/async';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -136,7 +137,7 @@ describe('Node', () => {
       await clientSetup.client.destroy();
     });
 
-    it('Spawns an echo-bot', async () => {
+    it('Spawns and restarts echo-bot', async () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
@@ -167,12 +168,40 @@ describe('Node', () => {
         party
       );
 
-      const command = PublicKey.random().asUint8Array();
-      await botHandle.sendCommand(command);
+      const testCommand = async () => {
+        const command = PublicKey.random().asUint8Array();
+        await botHandle.sendCommand(command);
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
-      const payload = item.model.getProperty('payload');
-      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
+        let unsub: (() => void) | undefined;
+        const waitForNewItem = new Promise<boolean>(resolve => {
+          unsub = party
+            .database
+            .select(s => s.filter({ type: TEST_ECHO_TYPE }).items)
+            .update.on(async (items) => {
+              for (const item of items) {
+                const payload = item.model.getProperty('payload');
+                if (PublicKey.from(payload).toString() === PublicKey.from(command).toString()) {
+                  resolve(true);
+                }
+              }
+            });
+        });
+        const timeout = async () => {
+          await sleep(5000);
+          return false;
+        };
+        const found = await Promise.race([waitForNewItem, timeout()]);
+        expect(found).toBe(true);
+        unsub?.();
+      };
+
+      await testCommand();
+
+      await botHandle.stop();
+      await sleep(1000);
+      await botHandle.start();
+
+      await testCommand();
 
       await botFactoryClient.botFactory.Destroy();
       await botFactoryClient.stop();

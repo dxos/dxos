@@ -18,7 +18,7 @@ import { Bot, BotService } from '../proto/gen/dxos/bot';
  */
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
-  private readonly _bot: Bot;
+  private _bot: Bot;
   private _config: Config;
   localPath: string | undefined;
 
@@ -54,11 +54,9 @@ export class BotHandle {
     await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
     await fs.mkdir(this.logsDir);
-  }
-
-  makePersistent () {
     this._config = new Config(this._config.values,
       {
+        version: 1,
         runtime: {
           client: {
             storage: {
@@ -67,7 +65,8 @@ export class BotHandle {
             }
           }
         }
-      });
+      }
+    );
   }
 
   async open (port: RpcPort): Promise<void> {
@@ -83,7 +82,10 @@ export class BotHandle {
       }
     );
     await this._rpc.open();
-    this._bot.status = Bot.Status.RUNNING;
+    this._bot = { 
+      id: this._bot.id,
+      status: Bot.Status.RUNNING
+    }; // To clear all possible error messages.
   }
 
   async close () {

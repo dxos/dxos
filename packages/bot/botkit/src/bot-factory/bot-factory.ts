@@ -126,25 +126,39 @@ export class BotFactory implements BotFactoryService {
 
   async Start (request: Bot) {
     assert(request.id);
-    const bot = this._getBot(request.id);
-    const id = bot.id;
-    const port = await this._botContainer.spawn({
-      id,
-      localPath: bot.localPath,
-      logFilePath: bot.getLogFilePath(new Date())
-    });
-    log(`[${id}] Openning RPC channel`);
-    await bot.open(port);
-    log(`[${id}] Initializing bot`);
-    await bot.rpc.Start({ config: bot.config.values });
-    return bot.bot;
+    const id = request.id;
+    try {
+      const bot = this._getBot(request.id);
+      const port = await this._botContainer.spawn({
+        id,
+        localPath: bot.localPath,
+        logFilePath: bot.getLogFilePath(new Date())
+      });
+      log(`[${id}] Openning RPC channel`);
+      await bot.open(port);
+      log(`[${id}] Initializing bot`);
+      await bot.rpc.Start({ config: bot.config.values });
+      return bot.bot;
+    } catch (error: any) { 
+      log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
+      throw error;
+    }
   }
 
   async Stop (request: Bot) {
     assert(request.id);
-    const bot = this._getBot(request.id);
-    await bot.rpc.Stop();
-    return bot.bot;
+    const id = request.id;
+    try {
+      const bot = this._getBot(id);
+      log(`[${id}] Stopping bot`);
+      await bot.rpc.Stop();
+      await this._botContainer.kill(id);
+      log(`[${id}] Bot stopped`);
+      return bot.bot;
+    } catch (error: any) {
+      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+      throw error;
+    }
   }
 
   async Kill (request: Bot) {
@@ -163,7 +177,7 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Destroy () {
-    await Promise.all(Array.from(this._bots.values()).map(bot => bot.rpc.Stop()));
+    await Promise.all(Array.from(this._bots.values()).map(bot => this.Kill(bot.bot)));
   }
 
   private _getBot (botId: string) {
