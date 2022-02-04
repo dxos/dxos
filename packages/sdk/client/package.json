@@ -31,6 +31,9 @@
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@polkadot/keyring": "6.11.1",
+    "@polkadot/util": "6.11.1",
+    "@polkadot/util-crypto": "6.11.1",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
@@ -41,10 +44,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "memdown": "^5.1.0",
     "readable-stream": "^3.6.0",
-    "uuid": "^8.3.2",
-    "@polkadot/util-crypto": "6.11.1",
-    "@polkadot/util": "6.11.1",
-    "@polkadot/keyring": "6.11.1"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
