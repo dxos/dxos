@@ -30,6 +30,9 @@ export class NodeContainer implements BotContainer {
 
   async spawn ({ localPath, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
     assert(localPath, 'Node container only supports "localPath" package specifiers.');
+    if (this._processes.has(id)) {
+      throw new Error(`Bot ${id} already exists.`);
+    }
     log(`[${id}] Spawning ${localPath}`);
     const child = fork(localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
@@ -70,10 +73,8 @@ export class NodeContainer implements BotContainer {
 
   async kill (id: string) {
     const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
-    child.removeAllListeners();
-
+  
     child.kill();
-    this._processes.delete(id);
   }
 
   killAll () {

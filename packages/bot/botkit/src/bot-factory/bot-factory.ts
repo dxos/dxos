@@ -139,6 +139,8 @@ export class BotFactory implements BotFactoryService {
       await bot.open(port);
       log(`[${id}] Initializing bot`);
       await bot.rpc.Start({ config: bot.config.values });
+      await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.RUNNING);
+      log(`[${id}] Initialization complete`);
       return bot.bot;
     } catch (error: any) {
       log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
@@ -153,11 +155,12 @@ export class BotFactory implements BotFactoryService {
       const bot = this._getBot(id);
       log(`[${id}] Stopping bot`);
       try {
-        promiseTimeout(bot.rpc.Stop(), 3000, new Error('Stopping bot timed out'));
+        await promiseTimeout(bot.rpc.Stop(), 3000, new Error('Stopping bot timed out'));
       } catch (error: any) {
-        log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+        log(`[${id}] Failed to stop bot: ${error}`);
       }
       await this._botContainer.kill(id);
+      await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.STOPPED);
       log(`[${id}] Bot stopped`);
       return bot.bot;
     } catch (error: any) {
@@ -168,8 +171,10 @@ export class BotFactory implements BotFactoryService {
 
   async Remove (request: Bot) {
     assert(request.id);
-    await this.Stop(request);
     const bot = this._getBot(request.id);
+    if (bot.bot.status === Bot.Status.RUNNING) {
+      await this.Stop(bot.bot);
+    }
     this._bots.delete(request.id);
     await bot.clearFiles();
   }

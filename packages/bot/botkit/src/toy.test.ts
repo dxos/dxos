@@ -204,7 +204,6 @@ describe('Node', () => {
 
       await botFactoryClient.botFactory.RemoveAll();
       await botFactoryClient.stop();
-      botContainer.killAll();
     });
   });
 });
