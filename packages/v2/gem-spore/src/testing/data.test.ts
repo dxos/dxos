@@ -6,5 +6,5 @@ import { convertTreeToGraph, createTree } from './data';
 
 test('Create data', () => {
   const data = convertTreeToGraph(createTree());
-  expect(data).toBeTruthy();
+  expect(data).toBeTruthy(); // TODO(burdon): Test lengths.
 });

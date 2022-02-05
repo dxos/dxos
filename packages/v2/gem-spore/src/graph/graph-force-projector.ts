@@ -3,9 +3,13 @@
 //
 
 import * as d3 from 'd3';
+import debug from 'debug';
 
-import { GraphLayout, GraphNode } from '../graph';
 import { Projector } from '../scene';
+import { GraphLayout } from './graph-renderer';
+import { emptyGraph, GraphData, GraphLink, GraphNode } from './types';
+
+const log = debug('gem:graph-force-projector');
 
 const value = <T extends any> (v: T | boolean): T => typeof v === 'boolean' ? undefined : v;
 
@@ -25,7 +29,6 @@ type LinkOptions = {
 }
 
 type GraphForceProjectorOptions = {
-  drag: boolean
   guides: boolean
   forces?: {
     manyBody?: boolean | ManyBodyOptions
@@ -38,24 +41,52 @@ type GraphForceProjectorOptions = {
 /**
  * D3 force layout.
  */
-export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, GraphForceProjectorOptions> {
+export class GraphForceProjector<T> extends Projector<GraphData<T>, GraphLayout<T>, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
-  _simulation = d3.forceSimulation();
-
-  // Force-specific drag handler.
-  _drag = this.options.drag ? createSimulationDrag(this._simulation) : undefined;
+  _simulation = d3.forceSimulation<GraphNode<T>, GraphLink<T>>();
 
   // Current layout.
-  _layout: GraphLayout
+  _layout: GraphLayout<T> = {
+    graph: {
+      nodes: [],
+      links: []
+    }
+  };
 
-  numChildren = (node) => this._layout.graph.links.filter(link => link.source.id === node.id).length;
+  numChildren = (node) => this._layout.graph.links
+    .filter(link => link.source.id === node.id).length;
 
-  protected getLayout () {
-    return this._layout;
+  get simulation () {
+    return this._simulation;
   }
 
-  onUpdate (layout: GraphLayout) {
-    this._layout = layout;
+  mergeData (graph: GraphData<T> = emptyGraph) {
+    const nodes = graph.nodes.map(node => {
+      const existing = this._layout.graph.nodes.find(n => n.id === node.id);
+      if (existing) {
+        existing.data = node.data;
+        return existing;
+      }
+
+      return node;
+    });
+
+    const links = graph.links.map(link => ({
+      id: link.id,
+      source: nodes.find(n => n.id === link.source.id),
+      target: nodes.find(n => n.id === link.target.id),
+    }));
+
+    this._layout = {
+      graph: {
+        nodes,
+        links
+      }
+    };
+  }
+
+  onUpdate (data: GraphData<T>) {
+    this.mergeData(data);
 
     // Guides.
     this._layout.guides = this.options.guides ? {
@@ -63,7 +94,7 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
         {
           cx: 0,
           cy: 0,
-          r: 240 // TODO(burdon): Use scale.
+          r: this.context.scale.model.toValue([10, 1])
         }
       ]
     } : undefined;
@@ -71,14 +102,15 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
     // Merge nodes.
     this._layout.graph.nodes.forEach(node => {
       if (!node.initialized) {
-        const parent = this._layout.graph.nodes.find(n => n.id === node?.data.parent);
+        // Get starting point from linked element.
+        const link = this._layout.graph.links.find(link => link.target.id === node.id);
 
         // Iniital positions.
         Object.assign(node, {
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
-          x: (parent?.x || 0) + (Math.random() - 0.5) * 30,
-          y: (parent?.y || 0) + (Math.random() - 0.5) * 30
+          x: (link?.source?.x || 0) + (Math.random() - 0.5) * 30,
+          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30
         });
       }
 
@@ -111,15 +143,15 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
       .restart();
   }
 
-  onStart () {
+  async onStart () {
     this.updateForces();
 
     this._simulation
       .on('tick', () => {
-        this.updated.emit({ layout: this._layout, options: { drag: this._drag } });
+        this.updated.emit({ layout: this._layout });
       })
       .on('end', () => {
-        console.log('done');
+        log('done');
       })
       .alpha(0.7) // Default 0.4
       .restart();
@@ -173,38 +205,3 @@ export class GraphForceProjector<MODEL> extends Projector<MODEL, GraphLayout, Gr
       .restart();
   }
 }
-
-/**
- * @param simulation
- */
-export const createSimulationDrag = (simulation) => {
-  let dragging = false;
-
-  return d3.drag()
-    .on('start', function () {
-      dragging = false;
-    })
-
-    .on('drag', function (event) {
-      event.subject.fx = event.x;
-      event.subject.fy = event.y;
-
-      if (dragging) {
-        // High alpha forces a quick update.
-        simulation.alphaTarget(0).alpha(1).restart();
-      }
-
-      dragging = true;
-    })
-
-    .on('end', function (event) {
-      const { sourceEvent: { shiftKey } } = event;
-
-      if (!shiftKey) {
-        event.subject.fx = undefined;
-        event.subject.fy = undefined;
-      }
-
-      dragging = false;
-    });
-};

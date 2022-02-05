@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import { RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { SvgContext } from '../context';
+import { SVGContext } from '../context';
 import { useSvgContext } from './useSvgContext';
 
 const createLine = d3.line();
@@ -19,7 +19,7 @@ type PathGroup = {
 /**
  * Create grid based on size and current zoom transform.
  */
-const createGrid = (context: SvgContext, options: GridOptions): PathGroup[] => {
+const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
   const paths = [];
   const { width, height } = context.size;
   const { x, y, k } = context.scale.transform;
@@ -101,12 +101,12 @@ const defaultOptions: GridOptions = {
 /**
  * Grid handler.
  */
-export class Grid {
+export class GridController {
   _visible: boolean = false;
 
   constructor (
     private readonly _ref: RefObject<SVGGElement>,
-    private readonly _context: SvgContext,
+    private readonly _context: SVGContext,
     private readonly _options: GridOptions
   ) {
     this._visible = this._options.visible ?? true;
@@ -153,10 +153,10 @@ export class Grid {
  * Creates a reference to a SVG Group element which renders a grid.
  * @param options
  */
-export const useGrid = (options: GridOptions = defaultOptions): Grid => {
+export const useGrid = (options: GridOptions = defaultOptions): GridController => {
   const ref = useRef<SVGGElement>();
   const context = useSvgContext();
-  const grid = useMemo(() => new Grid(ref, context, options), []);
+  const grid = useMemo(() => new GridController(ref, context, options), []);
   useEffect(() => context.resized.on(() => {
     grid.draw();
   }), []);

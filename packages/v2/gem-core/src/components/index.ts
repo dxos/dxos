@@ -3,4 +3,7 @@
 //
 
 export * from './FullScreen';
-export * from './SvgContextProvider';
+export * from './Grid';
+export * from './SVG';
+export * from './SVGContextProvider';
+export * from './Zoom';

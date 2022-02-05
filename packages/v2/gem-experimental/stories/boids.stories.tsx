@@ -8,7 +8,7 @@ import debug from 'debug';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { useKnobs, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
+import { Knobs, KnobsProvider, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
 import { FullScreen } from '@dxos/gem-core';
 
 import { Vec2 } from './util/vec2';
@@ -278,7 +278,7 @@ function generateBoids({ width, height }, config) {
 
 const map = array => array.reduce((map, value) => { map[value] = value; return map; }, {});
 
-export const Flock = () => {
+const Flock = () => {
   const canvas = useRef(null);
   const offscreenCanvas = useRef(null);
   const [resizeListener, { width, height }] = useResizeAware();
@@ -286,8 +286,7 @@ export const Flock = () => {
   const [boids, setBoids] = useState([]);
 
   // Knobs.
-  const Knobs = useKnobs();
-  const num = useNumber('Count', { min: 1, max: 1000 }, 100);
+  const num = useNumber('Count', { min: 10, max: 1000, step: 10 }, 100);
   const numObstacles = useNumber('Obstacles', { min: 1, max: 10 }, 5);
   const startingPosition = useSelect('Start', map(['Random', 'Circle', 'CircleRandom', 'Sine', 'Phyllotaxis']));
   const coloring = useSelect('Coloring', map(['Movement', 'Grey', 'Rainbow']));
@@ -331,11 +330,19 @@ export const Flock = () => {
   }, [boids, radius, coloring, trail, maxVelocity, alignment, cohesion, separation, avoidance]);
 
   return (
-    <FullScreen>
+    <div>
       {resizeListener}
       <canvas ref={canvas} width={width} height={height} />
       <canvas ref={offscreenCanvas} width={width} height={height} style={{ display: 'none' }} />
-      <Knobs className={styles.knobs} />
-    </FullScreen>
+    </div>
   );
 };
+
+export const Primary = () => (
+  <FullScreen>
+    <KnobsProvider>
+      <Flock />
+      <Knobs className={styles.knobs} />
+    </KnobsProvider>
+  </FullScreen>
+);

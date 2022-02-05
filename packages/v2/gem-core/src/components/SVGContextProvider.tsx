@@ -6,11 +6,11 @@ import * as d3 from 'd3';
 import React, { ReactNode, useEffect, useMemo } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
-import { SvgContext } from '../context';
-import { SvgContextDef } from '../hooks';
+import { SVGContext } from '../context';
+import { SVGContextDef } from '../hooks';
 
 export interface SVGCOntextProviderProps {
-  context?: SvgContext
+  context?: SVGContext
   children?: ReactNode
 }
 
@@ -21,9 +21,9 @@ export interface SVGCOntextProviderProps {
  * @param children
  * @constructor
  */
-export const SvgContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
+export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
   const { ref, width, height } = useResizeObserver<HTMLDivElement>();
-  const context = useMemo<SvgContext>(() => provided || new SvgContext(), []);
+  const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
   useEffect(() => {
     if (width && height) {
@@ -40,11 +40,11 @@ export const SvgContextProvider = ({ context: provided, children }: SVGCOntextPr
   }, [width, height])
 
   return (
-    <SvgContextDef.Provider value={context}>
+    <SVGContextDef.Provider value={context}>
       {/* Flex is imporant otherwise div has extra padding.  */}
       <div ref={ref} style={{ display: 'flex', width: '100%' }}>
         {children}
       </div>
-    </SvgContextDef.Provider>
+    </SVGContextDef.Provider>
   );
 };

@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 import { RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { SvgContext } from '../context';
+import { SVGContext } from '../context';
 import { useSvgContext } from './useSvgContext';
 
 export type ZoomExtent = [min: number, max: number];
@@ -14,26 +14,26 @@ export type ZoomExtent = [min: number, max: number];
 export type ZoomOptions = {
   enabled?: boolean
   extent?: ZoomExtent
-  onDblClick?: (zoom: Zoom) => void
+  onDblClick?: (zoom: ZoomHandler) => void
 }
 
 export const defaultOptions: ZoomOptions = {
   enabled: true,
   extent: [1/2, 2],
-  onDblClick: (zoom: Zoom) => zoom.reset()
+  onDblClick: (zoom: ZoomHandler) => zoom.reset()
 };
 
 /**
  * Zoom API.
  */
-export class Zoom {
+export class ZoomHandler {
   private readonly _zoom;
   private _enabled: boolean;
   private readonly _options: ZoomOptions;
 
   constructor (
     private readonly _ref: RefObject<SVGGElement>,
-    private readonly _context: SvgContext,
+    private readonly _context: SVGContext,
     options: ZoomOptions
   ) {
     this._options = Object.assign({}, options, defaultOptions);
@@ -88,10 +88,10 @@ export class Zoom {
  * Creates the zoom handler.
  * @param options
  */
-export const useZoom = (options: ZoomOptions = defaultOptions): Zoom => {
+export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
   const ref = useRef<SVGGElement>();
   const context = useSvgContext();
-  const zoom = useMemo(() => new Zoom(ref, context, options), []);
+  const zoom = useMemo(() => new ZoomHandler(ref, context, options), []);
 
   useEffect(() => {
     // Transform container.

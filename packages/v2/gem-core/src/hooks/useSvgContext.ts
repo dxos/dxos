@@ -4,13 +4,13 @@
 
 import { createContext, useContext } from 'react';
 
-import { SvgContext } from '../context';
+import { SVGContext } from '../context';
 
-export const SvgContextDef = createContext<SvgContext>(undefined);
+export const SVGContextDef = createContext<SVGContext>(undefined);
 
 /**
  * Get SVG context from the React context.
  */
-export const useSvgContext = (): SvgContext => {
-  return useContext<SvgContext>(SvgContextDef);
+export const useSvgContext = (): SVGContext => {
+  return useContext<SVGContext>(SVGContextDef);
 }

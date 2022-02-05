@@ -11,8 +11,8 @@ import {
   FractionUtil,
   FullScreen,
   Scale,
-  SvgContext,
-  SvgContextProvider,
+  SVGContext,
+  SVGContextProvider,
   Vector,
   Vertex,
   defaultGridStyles,
@@ -265,9 +265,9 @@ const Component = () => {
 export const Primary = () => {
   return (
     <FullScreen>
-      <SvgContextProvider context={new SvgContext(new Scale(64))}>
+      <SVGContextProvider context={new SVGContext(new Scale(64))}>
         <Component />
-      </SvgContextProvider>
+      </SVGContextProvider>
     </FullScreen>
   );
 }

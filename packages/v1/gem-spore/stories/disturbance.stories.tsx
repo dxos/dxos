@@ -11,7 +11,8 @@ import {
   useGrid,
   FullScreen,
   Grid,
-  SVG, Point
+  SVG,
+  Point
 } from '@dxos/gem-core';
 
 export default {

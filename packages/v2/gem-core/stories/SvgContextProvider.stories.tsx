@@ -5,7 +5,7 @@
 import React  from 'react';
 import { css } from '@emotion/css';
 
-import { FullScreen, SvgContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '../src';
+import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '../src';
 
 // Pros
 // - Natural layout and control of DOM (incl. SVG element).
@@ -60,9 +60,9 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
 export const Primary = () => {
   return (
     <FullScreen>
-      <SvgContextProvider>
+      <SVGContextProvider>
         <Component />
-      </SvgContextProvider>
+      </SVGContextProvider>
     </FullScreen>
   );
 }

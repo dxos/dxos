@@ -3,5 +3,6 @@
 //
 
 export * from './data';
+export * from './hooks';
+export * from './model';
 export * from './types';
-export * from './useObjectMutator';

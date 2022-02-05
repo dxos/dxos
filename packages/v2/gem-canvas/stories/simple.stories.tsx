@@ -5,7 +5,7 @@
 import debug from 'debug';
 import React  from 'react';
 
-import { FullScreen, SvgContextProvider } from '@dxos/gem-core';
+import { FullScreen, SVGContextProvider } from '@dxos/gem-core';
 
 import { Canvas, useMemoryElementModel } from '../src';
 
@@ -24,12 +24,12 @@ const Container = () => {
 
   return (
     <FullScreen>
-      <SvgContextProvider>
+      <SVGContextProvider>
         <Canvas
           elements={elements}
           grid
         />
-      </SvgContextProvider>
+      </SVGContextProvider>
     </FullScreen>
   );
 };

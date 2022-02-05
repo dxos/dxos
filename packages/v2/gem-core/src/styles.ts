@@ -6,12 +6,12 @@ import { css } from '@emotion/css';
 
 export const defaultGridStyles = css`
   path.axis {
-    stroke: #AAAAAA;
+    stroke: #CCCCCC;
   }
   path.major {
-    stroke: #E0E0E0;
+    stroke: #F0F0F0;
   }
   path.minor {
-    stroke: #F0F0F0;
+    stroke: #F5F5F5;
   }
 `;

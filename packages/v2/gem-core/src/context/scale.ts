@@ -29,6 +29,10 @@ export class Scale {
     this._transform = transform;
   }
 
+  /**
+   * Translate a screen point to a logical point.
+   * @param point
+   */
   translate (point: Point): Point {
     const { x, y, k } = this._transform ?? { x: 0, y: 0, k: 1 };
     return [

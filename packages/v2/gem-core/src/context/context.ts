@@ -11,8 +11,8 @@ import { Scale } from './scale';
 /**
  * Contains a reference to the root SVG element and objects and configuraiton required by child nodes.
  */
-export class SvgContext {
-  readonly resized = new EventEmitter<SvgContext>();
+export class SVGContext {
+  readonly resized = new EventEmitter<SVGContext>();
 
   private readonly _ref = createRef<SVGSVGElement>();
   private _size: Size;

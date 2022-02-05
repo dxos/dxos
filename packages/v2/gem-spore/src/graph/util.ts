@@ -24,12 +24,12 @@ export const getCircumferencePoints = (
 
   return [
     [
-      x1 + r1 *  Math.sin(theta),
-      y1 - r1 * -Math.cos(theta)
+      x1 + (r1 === 0 ? 0 : r1 *  Math.sin(theta)),
+      y1 - (r1 === 0 ? 0 : r1 * -Math.cos(theta))
     ],
     [
-      x2 + r2 * -Math.cos(Math.PI / 2 - theta),
-      y2 - r2 *  Math.sin(Math.PI / 2 - theta)
+      x2 + (r2 === 0 ? 0 : r2 * -Math.cos(Math.PI / 2 - theta)),
+      y2 - (r2 === 0 ? 0 : r2 *  Math.sin(Math.PI / 2 - theta))
     ]
   ];
 };

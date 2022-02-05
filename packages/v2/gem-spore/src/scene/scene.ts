@@ -7,8 +7,6 @@ import { EventHandle } from '@dxos/gem-core';
 import { Projector } from './projector';
 import { Renderer } from './renderer';
 
-export type ObjectId = string
-
 /**
  * Component wihtin a scene.
  */
@@ -26,8 +24,8 @@ export class Part<MODEL> {
 
   start () {
     // Listen for projector updates.
-    this._updateListener = this._projector.updated.on(({ layout, options }) => {
-      this._renderer.update(layout, options);
+    this._updateListener = this._projector.updated.on(({ layout }) => {
+      this._renderer.update(layout);
     });
 
     this._projector.start();

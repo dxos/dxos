@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 
-import { FullScreen, SvgContextProvider, useStateRef } from '@dxos/gem-core';
+import { FullScreen, SVGContextProvider, useStateRef } from '@dxos/gem-core';
 
 import {
   Action,
@@ -177,7 +177,7 @@ const Container = () => {
         />
 
         <div style={{ display: 'flex', flex: 1 }}>
-          <SvgContextProvider>
+          <SVGContextProvider>
             <Canvas
               grid={grid}
               tool={tool}
@@ -191,7 +191,7 @@ const Container = () => {
                 debug
               }}
             />
-          </SvgContextProvider>
+          </SVGContextProvider>
         </div>
 
         {toolbar && (

@@ -8,7 +8,7 @@ import type { DragBehavior } from 'd3';
 import { D3DragEvent, Modifiers, Point } from '@dxos/gem-core';
 
 import { ControlContext } from './control';
-import { Connection, getConnection, ConnectionTracker } from './frame';
+import { Connection, ConnectionTracker } from './frame';
 
 // TODO(burdon): Factor out events util.
 // https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
