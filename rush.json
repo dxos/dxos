@@ -549,6 +549,10 @@
       "packageName": "@dxos/devtools-mesh",
       "projectFolder": "packages/devtools/devtools-mesh"
     },
+    {
+      "packageName": "@dxos/devtools-editor",
+      "projectFolder": "packages/devtools/devtools-editor"
+    },
 
     //
     // sdk

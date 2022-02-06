@@ -23,13 +23,13 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../client"
-    },
-    {
       "path": "../../echo/echo-db"
     },
     {
       "path": "../react-client"
+    },
+    {
+      "path": "../client"
     }
   ]
 }
