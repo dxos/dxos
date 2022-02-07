@@ -95,7 +95,7 @@ export interface Scalars {
     bytesField?: Uint8Array;
 }
 export interface ComplexFields {
-    repeatedField: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>[];
+    repeatedField?: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>[];
     requiredField: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
     mappedField?: Partial<Record<string, ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>>>;
     inner?: ComplexFields.Inner;
@@ -151,7 +151,7 @@ export interface Task {
     googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
 }
 export interface TaskList {
-    tasks: Task[];
+    tasks?: Task[];
 }
 export interface SubstitutedByInterface {
     foo?: string;
@@ -166,18 +166,18 @@ export interface TestService {
     /**
      * Count the tasks in the task list.
      */
-    CountTasks: (request: TaskList) => Promise<TaskCount>;
+    countTasks: (request: TaskList) => Promise<TaskCount>;
     /**
      * Subscribe to task list updates.
      */
-    SubscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
+    subscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
 export interface WithEmptyField {
     emptyField?: void;
 }
 export interface ServiceWithEmpty {
-    EmptyRpc: (request: void) => Promise<void>;
-    EmptyStreamRpc: (request: void) => Stream<void>;
+    emptyRpc: (request: void) => Promise<void>;
+    emptyStreamRpc: (request: void) => Stream<void>;
 }
 
 google/protobuf.ts:
@@ -199,41 +199,41 @@ export interface Timestamp {
 export interface Empty {
 }
 export interface FileDescriptorSet {
-    file: FileDescriptorProto[];
+    file?: FileDescriptorProto[];
 }
 export interface FileDescriptorProto {
     name?: string;
     package?: string;
-    dependency: string[];
+    dependency?: string[];
     /**
      * Options:
      *   - packed = false
      */
-    publicDependency: number[];
+    publicDependency?: number[];
     /**
      * Options:
      *   - packed = false
      */
-    weakDependency: number[];
-    messageType: DescriptorProto[];
-    enumType: EnumDescriptorProto[];
-    service: ServiceDescriptorProto[];
-    extension: FieldDescriptorProto[];
+    weakDependency?: number[];
+    messageType?: DescriptorProto[];
+    enumType?: EnumDescriptorProto[];
+    service?: ServiceDescriptorProto[];
+    extension?: FieldDescriptorProto[];
     options?: FileOptions;
     sourceCodeInfo?: SourceCodeInfo;
     syntax?: string;
 }
 export interface DescriptorProto {
     name?: string;
-    field: FieldDescriptorProto[];
-    extension: FieldDescriptorProto[];
-    nestedType: DescriptorProto[];
-    enumType: EnumDescriptorProto[];
-    extensionRange: DescriptorProto.ExtensionRange[];
-    oneofDecl: OneofDescriptorProto[];
+    field?: FieldDescriptorProto[];
+    extension?: FieldDescriptorProto[];
+    nestedType?: DescriptorProto[];
+    enumType?: EnumDescriptorProto[];
+    extensionRange?: DescriptorProto.ExtensionRange[];
+    oneofDecl?: OneofDescriptorProto[];
     options?: MessageOptions;
-    reservedRange: DescriptorProto.ReservedRange[];
-    reservedName: string[];
+    reservedRange?: DescriptorProto.ReservedRange[];
+    reservedName?: string[];
 }
 export namespace DescriptorProto {
     export interface ExtensionRange {
@@ -290,7 +290,7 @@ export interface OneofDescriptorProto {
 }
 export interface EnumDescriptorProto {
     name?: string;
-    value: EnumValueDescriptorProto[];
+    value?: EnumValueDescriptorProto[];
     options?: EnumOptions;
 }
 export interface EnumValueDescriptorProto {
@@ -300,7 +300,7 @@ export interface EnumValueDescriptorProto {
 }
 export interface ServiceDescriptorProto {
     name?: string;
-    method: MethodDescriptorProto[];
+    method?: MethodDescriptorProto[];
     options?: ServiceOptions;
 }
 export interface MethodDescriptorProto {
@@ -334,7 +334,7 @@ export interface FileOptions {
     ccEnableArenas?: boolean;
     objcClassPrefix?: string;
     csharpNamespace?: string;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export namespace FileOptions {
     export enum OptimizeMode {
@@ -348,7 +348,7 @@ export interface MessageOptions {
     noStandardDescriptorAccessor?: boolean;
     deprecated?: boolean;
     mapEntry?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface FieldOptions {
     /**
@@ -365,7 +365,7 @@ export interface FieldOptions {
     lazy?: boolean;
     deprecated?: boolean;
     weak?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
     \\".dxos.test.extensions.defaultValue\\"?: string;
     \\".dxos.test.extensions.optionsObj\\"?: dxos_test_extensions.OptionsObject;
 }
@@ -382,27 +382,27 @@ export namespace FieldOptions {
     }
 }
 export interface OneofOptions {
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface EnumOptions {
     allowAlias?: boolean;
     deprecated?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface EnumValueOptions {
     deprecated?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface ServiceOptions {
     deprecated?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface MethodOptions {
     deprecated?: boolean;
-    uninterpretedOption: UninterpretedOption[];
+    uninterpretedOption?: UninterpretedOption[];
 }
 export interface UninterpretedOption {
-    name: UninterpretedOption.NamePart[];
+    name?: UninterpretedOption.NamePart[];
     identifierValue?: string;
     positiveIntValue?: string;
     negativeIntValue?: string;
@@ -417,23 +417,23 @@ export namespace UninterpretedOption {
     }
 }
 export interface SourceCodeInfo {
-    location: SourceCodeInfo.Location[];
+    location?: SourceCodeInfo.Location[];
 }
 export namespace SourceCodeInfo {
     export interface Location {
-        path: number[];
-        span: number[];
+        path?: number[];
+        span?: number[];
         leadingComments?: string;
         trailingComments?: string;
-        leadingDetachedComments: string[];
+        leadingDetachedComments?: string[];
     }
 }
 export interface GeneratedCodeInfo {
-    annotation: GeneratedCodeInfo.Annotation[];
+    annotation?: GeneratedCodeInfo.Annotation[];
 }
 export namespace GeneratedCodeInfo {
     export interface Annotation {
-        path: number[];
+        path?: number[];
         sourceFile?: string;
         begin?: number;
         end?: number;
