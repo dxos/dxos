@@ -98,6 +98,6 @@ export function createServicesDictionary (root: protobufjs.NamespaceBase) {
   );
 }
 
-function mapRpcMethodName(name: string) {
+function mapRpcMethodName (name: string) {
   return name[0].toLocaleLowerCase() + name.substring(1);
 }

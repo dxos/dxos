@@ -53,7 +53,7 @@ test('Config v1', () => {
     runtime: {
       services: {
         signal: {
-          server: 'ws://localhost:4000',
+          server: 'ws://localhost:4000'
         },
         ice: []
       }

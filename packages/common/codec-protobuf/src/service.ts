@@ -146,6 +146,6 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   }
 }
 
-function mapRpcMethodName(name: string) {
+function mapRpcMethodName (name: string) {
   return name[0].toLocaleLowerCase() + name.substring(1);
 }

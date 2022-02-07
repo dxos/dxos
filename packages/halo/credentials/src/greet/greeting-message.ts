@@ -60,7 +60,7 @@ export const createGreetingFinishMessage = (secret: Buffer): WithTypeUrl<Command
     __type_url: TYPE_URL_GREETING_COMMAND,
     command: Command.Type.FINISH,
     secret,
-    params: [],
+    params: []
   };
 };
 
