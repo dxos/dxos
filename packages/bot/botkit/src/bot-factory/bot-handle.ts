@@ -6,6 +6,8 @@ import assert from 'assert';
 import fs from 'fs/promises';
 import { join } from 'path';
 
+import { Event } from '@dxos/async';
+import { Config } from '@dxos/config';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
@@ -17,19 +19,25 @@ import { Bot, BotService } from '../proto/gen/dxos/bot';
  */
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
-  private readonly _bot: Bot;
+  private _bot: Bot;
+  private _config: Config;
+  localPath: string | undefined;
+
+  readonly update = new Event();
 
   /**
    * @param workingDirectory Path to the directory where bot code, data and logs are stored.
    */
   constructor (
     readonly id: string,
-    readonly workingDirectory: string
+    readonly workingDirectory: string,
+    config: Config = new Config({})
   ) {
     this._bot = {
       id,
       status: Bot.Status.STOPPED
     };
+    this._config = config;
   }
 
   get rpc () {
@@ -41,9 +49,27 @@ export class BotHandle {
     return this._bot;
   }
 
+  get config () {
+    return this._config;
+  }
+
   async initializeDirectories () {
     await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
+    await fs.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
     await fs.mkdir(this.logsDir);
+    this._config = new Config(this._config.values,
+      {
+        version: 1,
+        runtime: {
+          client: {
+            storage: {
+              persistent: true,
+              path: this.getStoragePath()
+            }
+          }
+        }
+      }
+    );
   }
 
   async open (port: RpcPort): Promise<void> {
@@ -60,12 +86,21 @@ export class BotHandle {
     );
     await this._rpc.open();
     this._bot.status = Bot.Status.RUNNING;
+    this._bot.error = undefined;
+    this._bot.exitCode = undefined;
+    this._bot.exitSignal = undefined;
+    this.update.emit();
   }
 
   async close () {
     assert(this._rpc, 'BotHandle is not open');
     this._rpc.close();
     this._rpc = null;
+    this.update.emit();
+  }
+
+  async clearFiles () {
+    await fs.rm(this.workingDirectory, { recursive: true, force: true });
   }
 
   toString () {
@@ -79,6 +114,7 @@ export class BotHandle {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.exitCode = status.code ?? undefined;
     this.bot.exitSignal = status.signal ?? undefined;
+    this.update.emit();
   }
 
   /**
@@ -87,6 +123,7 @@ export class BotHandle {
   onProcessError (error: Error) {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.error = error.stack;
+    this.update.emit();
   }
 
   get logsDir () {
@@ -105,5 +142,12 @@ export class BotHandle {
    */
   getContentPath (): string {
     return join(this.workingDirectory, 'content');
+  }
+
+  /**
+   * Returns the path to a directory that is used as a storage for bot.
+   */
+  getStoragePath (): string {
+    return join(this.workingDirectory, 'storage');
   }
 }

@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
@@ -55,7 +56,7 @@ describe('In-Memory', () => {
       expect(response.response).toBeDefined();
       expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
-      await botFactoryClient.botFactory.destroy();
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
     });
   });
@@ -104,7 +105,7 @@ describe('In-Memory', () => {
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-      await botFactoryClient.botFactory.destroy();
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
     });
   });
@@ -136,7 +137,7 @@ describe('Node', () => {
       await clientSetup.client.destroy();
     });
 
-    it('Spawns an echo-bot', async () => {
+    it('Spawns and restarts echo-bot', async () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
@@ -167,16 +168,42 @@ describe('Node', () => {
         party
       );
 
-      const command = PublicKey.random().asUint8Array();
-      await botHandle.sendCommand(command);
+      const testCommand = async () => {
+        const command = PublicKey.random().asUint8Array();
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
-      const payload = item.model.getProperty('payload');
-      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
+        let unsub: (() => void) | undefined;
+        const waitForNewItem = new Promise<boolean>(resolve => {
+          unsub = party
+            .database
+            .select(s => s.filter({ type: TEST_ECHO_TYPE }).items)
+            .update.on(async (items) => {
+              for (const item of items) {
+                const payload = item.model.getProperty('payload');
+                if (PublicKey.from(payload).toString() === PublicKey.from(command).toString()) {
+                  resolve(true);
+                }
+              }
+            });
+        });
+        await botHandle.sendCommand(command);
+        const timeout = async () => {
+          await sleep(5000);
+          return false;
+        };
+        const found = await Promise.race([waitForNewItem, timeout()]);
+        expect(found).toBe(true);
+        unsub?.();
+      };
 
-      await botFactoryClient.botFactory.destroy();
+      await testCommand();
+
+      await botHandle.stop();
+      await botHandle.start();
+
+      await testCommand();
+
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
-      botContainer.killAll();
     });
   });
 });

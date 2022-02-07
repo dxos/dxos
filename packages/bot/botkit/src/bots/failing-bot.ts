@@ -3,7 +3,7 @@
 //
 
 import { createIpcPort } from '../bot-container';
-import { BotService, InitializeRequest, SendCommandRequest } from '../proto/gen/dxos/bot';
+import { BotService, InitializeRequest, SendCommandRequest, StartRequest } from '../proto/gen/dxos/bot';
 import { startBot } from './start-bot';
 
 /**
@@ -11,6 +11,9 @@ import { startBot } from './start-bot';
  */
 class FailingBot implements BotService {
   async initialize (request: InitializeRequest) {
+  }
+
+  async start (request: StartRequest) {
   }
 
   async command (request: SendCommandRequest) {

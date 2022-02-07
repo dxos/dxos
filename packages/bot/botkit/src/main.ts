@@ -18,6 +18,7 @@ const log = debug('dxos:botkit:bot-factory:main');
 const main = async () => {
   const config = getConfig();
 
+  // TODO(yivlad): ts-node -> swc
   const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
 
   const dxnsServer = config.get('runtime.services.dxns.server');

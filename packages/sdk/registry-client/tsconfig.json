@@ -35,6 +35,12 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../halo/credentials"
     }
   ]
 }
