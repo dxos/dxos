@@ -121,11 +121,11 @@ export class HaloProxy extends InvitationProxy {
   }
 
   async addKeyRecord (keyRecord: KeyRecord) {
-    await this._serviceProvider.services.HaloService.AddKeyRecord({ keyRecord });
+    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
 
   async sign (request: SignRequest) {
-    return await this._serviceProvider.services.HaloService.Sign(request);
+    return await this._serviceProvider.services.HaloService.sign(request);
   }
 
   /**

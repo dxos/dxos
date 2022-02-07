@@ -21,11 +21,11 @@ const App = () => {
   const [remoteConfig, setRemoteConfig] = useState<string>('');
 
   useEffect(() => {
-    client.services.SystemService.GetConfig().then(remote => setRemoteConfig(JSON.stringify(remote))).catch(setError);
+    client.services.SystemService.getConfig().then(remote => setRemoteConfig(JSON.stringify(remote))).catch(setError);
   }, []);
 
   useEffect(() => {
-    const partyStream = client.services.PartyService.SubscribeParties();
+    const partyStream = client.services.PartyService.subscribeParties();
     partyStream.subscribe(response => setParties(response.parties ?? []), error => setError(error));
     return () => partyStream.close();
   }, []);
@@ -59,7 +59,7 @@ const App = () => {
   const handleCreateParty = async () => {
     setInProgress(true);
     try {
-      await client.services.PartyService.CreateParty();
+      await client.services.PartyService.createParty();
     } catch (e: any) {
       console.error(e);
       setError(e);

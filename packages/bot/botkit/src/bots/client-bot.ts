@@ -45,7 +45,7 @@ export class Bot implements BotService {
     await this.onStart(request);
   }
 
-  async Start (request: StartRequest) {
+  async start (request: StartRequest) {
     log('Client bot start initilizing');
     this.client = new Client(request.config);
 

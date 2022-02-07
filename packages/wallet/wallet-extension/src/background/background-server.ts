@@ -43,17 +43,17 @@ export class BackgroundServer {
       ...this._client.services,
       SystemService: {
         ...this._client.services.SystemService,
-        Reset: async () => {
-          await this._client.services.SystemService.Reset();
+        reset: async () => {
+          await this._client.services.SystemService.reset();
           // Override the Rest handler with a reload - Client does not recover properly after reset.
           window.location.reload();
         }
       },
       TracingService: {
-        SetTracingOptions: async ({ enable }) => {
+        setTracingOptions: async ({ enable }) => {
           collector.setEnabled(enable ?? false);
         },
-        SubscribeToRpcTrace: () => collector.getMessageStream()
+        subscribeToRpcTrace: () => collector.getMessageStream()
       }
     };
 

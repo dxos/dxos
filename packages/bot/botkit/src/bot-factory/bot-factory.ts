@@ -112,7 +112,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
       log(`[${id}] Initializing bot`);
-      await handle.rpc.Initialize({
+      await handle.rpc.initialize({
         config: handle.config.values,
         invitation: request.invitation
       });
@@ -138,7 +138,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await bot.open(port);
       log(`[${id}] Initializing bot`);
-      await bot.rpc.Start({ config: bot.config.values });
+      await bot.rpc.start({ config: bot.config.values });
       await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.RUNNING);
       log(`[${id}] Initialization complete`);
       return bot.bot;
@@ -155,7 +155,7 @@ export class BotFactory implements BotFactoryService {
       const bot = this._getBot(id);
       log(`[${id}] Stopping bot`);
       try {
-        await promiseTimeout(bot.rpc.Stop(), 3000, new Error('Stopping bot timed out'));
+        await promiseTimeout(bot.rpc.stop(), 3000, new Error('Stopping bot timed out'));
       } catch (error: any) {
         log(`[${id}] Failed to stop bot: ${error}`);
       }
@@ -182,7 +182,7 @@ export class BotFactory implements BotFactoryService {
   async sendCommand (request: SendCommandRequest) {
     assert(request.botId);
     const bot = this._getBot(request.botId);
-    const respone = await bot.rpc.Command(request);
+    const respone = await bot.rpc.command(request);
     return respone;
   }
 

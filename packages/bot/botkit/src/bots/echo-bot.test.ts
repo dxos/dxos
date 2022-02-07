@@ -14,18 +14,18 @@ describe('Echo Bot', () => {
     const { client, party, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
-    await bot.Initialize({
+    await bot.initialize({
       invitation
     });
 
     const command = PublicKey.random().asUint8Array();
-    await bot.Command({ command: command });
+    await bot.command({ command: command });
 
     const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
     const payload = item.model.getProperty('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-    await bot.Stop();
+    await bot.stop();
     await client.destroy();
   });
 });

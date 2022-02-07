@@ -104,7 +104,7 @@ export class BotFactoryClient {
 
   async list () {
     assert(this._rpc, 'Bot factory client is not started');
-    const { bots } = await this._rpc.rpc.GetBots();
+    const { bots } = await this._rpc.rpc.getBots();
     return bots || [];
   }
 }
