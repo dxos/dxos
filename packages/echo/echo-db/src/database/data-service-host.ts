@@ -88,7 +88,7 @@ export class DataServiceHost {
       };
 
       update();
-      return this._itemManager.debouncedItemUpdate.on(update);
+      return this._itemManager.debouncedUpdate.on(update);
     });
   }
 

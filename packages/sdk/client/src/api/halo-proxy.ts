@@ -133,7 +133,10 @@ export class HaloProxy extends InvitationProxy {
    *
    * @internal
    */
-  _open () {
+  async _open () {
+    const gotProfile = this._profileChanged.waitForCount(1);
+    const gotContacts = this._contactsChanged.waitForCount(1);
+
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data.profile;
@@ -147,6 +150,8 @@ export class HaloProxy extends InvitationProxy {
       this._contactsChanged.emit();
     }, () => {});
     this._subscriptions.push(() => contactsStream.close());
+
+    await Promise.all([gotProfile, gotContacts]);
   }
 
   /**

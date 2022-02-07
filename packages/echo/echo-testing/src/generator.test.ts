@@ -18,10 +18,10 @@ test('generator', async () => {
     numPeople: 3
   });
 
-  const result = party.database.select(s => s.filter({ type: OBJECT_PERSON }).items);
-  expect(result.getValue()).toHaveLength(3);
+  const query = party.database.select({ type: OBJECT_PERSON }).query();
+  expect(query.result).toHaveLength(3);
 
-  const names = result.getValue().map(item => item.model.getProperty('name'));
+  const names = query.result.map(item => item.model.getProperty('name'));
   expect(names).toHaveLength(3);
 
   await echo.close();
@@ -45,8 +45,8 @@ test('filter', async () => {
     }
   };
   const matcher = new Matcher({ getter: (item: any, key: string) => item.model.getProperty(key) });
-  const result = party.database.select(s => s.filter({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).items);
-  expect(result.getValue()).toHaveLength(1);
+  const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).query();
+  expect(queryResult.result).toHaveLength(1);
 
   await echo.close();
 });

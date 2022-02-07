@@ -150,7 +150,7 @@ export class ItemDemuxer {
   createSnapshot (): DatabaseSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.queryItems().value.map(item => this.createEntitySnapshot(item))
+      items: Array.from(this._itemManager.entities.values()).map(entity => this.createEntitySnapshot(entity))
     };
   }
 

@@ -9,6 +9,7 @@ import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import { Item } from './item';
+import { ItemManager } from './item-manager';
 
 export interface LinkData {
   sourceId: ItemID
@@ -27,12 +28,14 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
   _link: LinkData;
 
   constructor (
+    itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined,
     model: M,
     link: LinkData
   ) {
     super(
+      itemManager,
       itemId,
       itemType,
       model

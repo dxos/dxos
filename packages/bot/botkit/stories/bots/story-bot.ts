@@ -30,7 +30,7 @@ export class StoryBot extends Bot {
     });
 
     // Subscribe to updates in ECHO and keep counter of occurrences of word DXOS.
-    this.party.database.select(s => s.filter({ type: 'TEST_TYPE' }).items).update.on(async (data) => {
+    this.party.database.select({ type: 'TEST_TYPE' }).query().update.on(async (data) => {
       log('onUpdate triggered');
       let counter = 0;
       data.forEach(item => {

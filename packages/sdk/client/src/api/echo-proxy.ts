@@ -63,7 +63,9 @@ export class EchoProxy {
   /**
    * @internal
    */
-  _open () {
+  async _open () {
+    const gotParties = this._partiesChanged.waitForCount(1);
+
     const partiesStream = this._serviceProvider.services.PartyService.subscribeParties();
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
@@ -94,6 +96,8 @@ export class EchoProxy {
       this._partiesChanged.emit();
     }, () => {});
     this._subscriptions.push(() => partiesStream.close());
+
+    await gotParties;
   }
 
   /**

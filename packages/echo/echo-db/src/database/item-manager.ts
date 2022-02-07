@@ -13,26 +13,12 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
-import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
 const log = debug('dxos:echo:item-manager');
-
-export enum ItemFilterDeleted {
-  IGNORE_DELETED = 0,
-  SHOW_DELETED = 1,
-  SHOW_DELETED_ONLY = 2
-}
-
-export interface ItemFilter {
-  type?: ItemType | ItemType[]
-  parent?: ItemID | ItemID[]
-  id?: ItemID | ItemID[]
-  deleted?: ItemFilterDeleted
-}
 
 export interface ModelConstructionOptions {
   itemId: ItemID
@@ -52,15 +38,6 @@ export interface LinkConstructionOptions extends ModelConstructionOptions {
   target: ItemID;
 }
 
-// TODO(burdon): Factor out.
-function equalsOrIncludes<T> (value: T, expected: T | T[]) {
-  if (Array.isArray(expected)) {
-    return expected.includes(value);
-  } else {
-    return expected === value;
-  }
-}
-
 /**
  * Manages the creation and indexing of items.
  */
@@ -70,12 +47,13 @@ export class ItemManager {
    *
    * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
    */
-  readonly itemUpdate = new Event<Entity<any>>();
+  readonly update = new Event<Entity<any>>();
 
   /**
    * Update event.
+   * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedItemUpdate = debounceEvent(this.itemUpdate.discardParameter());
+  readonly debouncedUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
@@ -100,6 +78,14 @@ export class ItemManager {
 
   get entities () {
     return this._entities;
+  }
+
+  get items (): Item<any>[] {
+    return Array.from(this._entities.values()).filter((entity): entity is Item<any> => entity instanceof Item);
+  }
+
+  get links (): Link<any>[] {
+    return Array.from(this._entities.values()).filter((entity): entity is Link<any> => entity instanceof Link);
   }
 
   /**
@@ -254,11 +240,11 @@ export class ItemManager {
     if (!(entity.model instanceof DefaultModel)) {
       // Notify Item was udpated.
       // TODO(burdon): Update the item directly?
-      this.itemUpdate.emit(entity);
+      this.update.emit(entity);
 
       // TODO(telackey): Unsubscribe?
       entity.subscribe(() => {
-        this.itemUpdate.emit(entity);
+        this.update.emit(entity);
       });
     }
 
@@ -301,7 +287,7 @@ export class ItemManager {
       modelSnapshot
     });
 
-    const item = new Item(itemId, itemType, model, this._writeStream, parent);
+    const item = new Item(this, itemId, itemType, model, this._writeStream, parent);
     this._addEntity(item);
 
     return item;
@@ -335,7 +321,7 @@ export class ItemManager {
     const sourceItem = this.getItem(source);
     const targetItem = this.getItem(target);
 
-    const link = new Link(itemId, itemType, model, {
+    const link = new Link(this, itemId, itemType, model, {
       sourceId: source,
       targetId: target,
       source: sourceItem,
@@ -366,7 +352,7 @@ export class ItemManager {
     const decoded = item.modelMeta.mutation.decode(message.mutation);
 
     await item.model.processMessage(message.meta, decoded);
-    this.itemUpdate.emit(item);
+    this.update.emit(item);
   }
 
   /**
@@ -379,19 +365,6 @@ export class ItemManager {
       assert(entity instanceof Item);
     }
     return entity;
-  }
-
-  /**
-   * Return matching items.
-   * @param [filter]
-   */
-  queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
-    return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
-      .filter((entity): entity is Item<M> => entity instanceof Item)
-      .filter(item =>
-        // TODO(burdon): Document why skipping DefaultModel? (E.g., transient?)
-        !(item.model instanceof DefaultModel) && this._matchesFilter(item, filter)
-      ));
   }
 
   getItemsWithDefaultModels (): Entity<DefaultModel>[] {
@@ -446,49 +419,28 @@ export class ItemManager {
       modelSnapshot: item.model.snapshot
     }));
 
-    this.itemUpdate.emit(item);
-  }
-
-  // TODO(burdon): Factor out to test queries separately?
-  private _matchesFilter (item: Item<any>, filter: ItemFilter) {
-    if (item.deleted) {
-      if (filter.deleted === undefined || filter.deleted === ItemFilterDeleted.IGNORE_DELETED) {
-        return false;
-      }
-    } else if (filter.deleted === ItemFilterDeleted.SHOW_DELETED_ONLY) {
-      return false;
-    }
-
-    if (filter.type && (!item.type || !equalsOrIncludes(item.type, filter.type))) {
-      return false;
-    }
-
-    if (filter.parent && (!item.parent || !equalsOrIncludes(item.parent.id, filter.parent))) {
-      return false;
-    }
-
-    if (filter.id && !equalsOrIncludes(item.id, filter.id)) {
-      return false;
-    }
-
-    return true;
+    this.update.emit(item);
   }
 }
 
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-function debounceEvent (event: Event): Event {
-  const debouncedEvent = new Event();
+function debounceEntityUpdateEvent (event: Event<Entity<any>>): Event<Entity<any>[]> {
+  const debouncedEvent = new Event<Entity<any>[]>();
 
   let firing = false;
 
-  debouncedEvent.addEffect(() => event.on(() => {
+  const emittedSinceLastFired = new Set<Entity<any>>();
+  debouncedEvent.addEffect(() => event.on(arg => {
+    emittedSinceLastFired.add(arg);
     if (!firing) {
       firing = true;
       setTimeout(() => {
         firing = false;
-        debouncedEvent.emit();
+        const args = Array.from(emittedSinceLastFired);
+        emittedSinceLastFired.clear();
+        debouncedEvent.emit(args);
       }, 0);
     }
   }));
