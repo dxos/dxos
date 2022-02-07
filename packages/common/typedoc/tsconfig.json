@@ -6,5 +6,6 @@
   "include": [
     "src",
     "src/api/*.json"
-  ]
+  ],
+  "references": []
 }
