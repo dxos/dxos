@@ -175,7 +175,7 @@ describe('Node', () => {
         const waitForNewItem = new Promise<boolean>(resolve => {
           unsub = party
             .database
-            .select(s => s.filter({ type: TEST_ECHO_TYPE }).items)
+            .select({ type: TEST_ECHO_TYPE }).query()
             .update.on(async (items) => {
               for (const item of items) {
                 const payload = item.model.getProperty('payload');

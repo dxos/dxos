@@ -7,6 +7,8 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { ItemManager } from './item-manager';
+
 /**
  * Base class for all ECHO entitities.
  *
@@ -19,6 +21,7 @@ export class Entity<M extends Model> {
   private readonly _subscriptions = new SubscriptionGroup();
 
   constructor (
+    protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
     private _model: M

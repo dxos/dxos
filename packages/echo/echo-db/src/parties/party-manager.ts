@@ -244,7 +244,7 @@ export class PartyManager {
     const attachUpdateListeners = () => {
       const debouncedContacts = party.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter();
       debouncedContacts.on(updateContact);
-      party.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).update.on(updateTitle);
+      party.database.select({ type: PARTY_ITEM_TYPE }).query().update.on(updateTitle);
     };
 
     if (party.isOpen) {

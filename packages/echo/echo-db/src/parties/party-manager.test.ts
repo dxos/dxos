@@ -263,7 +263,7 @@ describe('Party manager', () => {
     expect(partyB).toBeDefined();
 
     const [updated, onUpdate] = latch();
-    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
+    partyB.database.select({ type: 'example:item/test' }).query()
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -318,7 +318,7 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
-    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
+    partyB.database.select({ type: 'example:item/test' }).query()
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -399,7 +399,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
+    partyB.database.select({ type: 'example:item/test' }).query()
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;
@@ -458,7 +458,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select(s => s.filter({ type: 'example:item/test' }).items)
+    partyB.database.select({ type: 'example:item/test' }).query()
       .update.on((items) => {
         if (items.length) {
           const [itemB] = items;

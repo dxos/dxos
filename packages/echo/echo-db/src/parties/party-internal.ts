@@ -134,7 +134,7 @@ export class PartyInternal {
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
-      properties: this.isOpen ? this.getPropertiesSet().getValue()[0]?.model.toObject() : undefined
+      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
     };
   }
 
@@ -178,7 +178,7 @@ export class PartyInternal {
     await this._protocol.start();
 
     // Issue an 'update' whenever the properties change.
-    this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).update.on(() => this.update.emit());
+    this.database.select({ type: PARTY_ITEM_TYPE }).query().update.on(() => this.update.emit());
 
     this.update.emit();
     return this;
@@ -238,17 +238,17 @@ export class PartyInternal {
     assert(this.isOpen, 'Party not open.');
 
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
+    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().result;
     assert(items.length === 1, 'Party properties missing.');
     return items[0];
   }
 
   /**
-   * Get the ResultSet for the Properties Item query.
+   * Get the SelectionResult for the Properties Item query.
    */
   getPropertiesSet () {
     assert(this.isOpen, 'Party not open.');
-    return this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items);
+    return this.database.select({ type: PARTY_ITEM_TYPE }).query();
   }
 
   /**

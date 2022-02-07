@@ -82,11 +82,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useSelection(party?.database.select(s => s
-    .filter({ type: TASK_TYPE })
-    .filter(item => !item.model.getProperty('deleted'))
-    .items)
-  , [party]);
+  const items = useSelection(party?.select({ type: TASK_TYPE }));
 
   const [partyInvitationDialog, setPartyInvitationDialog] = useState(false);
 
@@ -111,9 +107,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   };
 
   const handleDeleteTask = item => async () => {
-    // TODO(burdon): ECHO system property for soft-deletes (with query param to filter).
-    // ISSUE(rzadp): https://github.com/dxos/echo/issues/313
-    await item.model.setProperty('deleted', true);
+    await item.delete();
   };
 
   const handleToggleComplete = item => async (event) => {

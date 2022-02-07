@@ -24,6 +24,11 @@ export class HaloService implements IHaloService {
       return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
     } else {
       return new Stream(({ next }) => {
+        // If profile does not exist, send an empty array.
+        if (!this.echo.halo.isInitialized) {
+          next({ contacts: [] });
+        }
+
         const subGroup = new SubscriptionGroup();
 
         setImmediate(async () => {

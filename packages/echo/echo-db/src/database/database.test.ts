@@ -5,13 +5,14 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
-import { ItemFilterDeleted } from './item-manager';
+import { ItemFilterDeleted } from './selection';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
@@ -80,7 +81,7 @@ describe('Database', () => {
       expect(item.id).not.toBeUndefined();
       expect(item.model).toBeInstanceOf(ObjectModel);
 
-      const items = database.select(s => s.items).getValue();
+      const { result: items } = database.select().query();
       expect(items).toHaveLength(1);
       expect(items[0] === item).toBeTruthy();
     });
@@ -112,7 +113,7 @@ describe('Database', () => {
       const parent = await database.createItem({ model: ObjectModel });
       const child = await database.createItem({ model: ObjectModel, parent: parent.id });
 
-      const items = database.select(s => s.items).getValue();
+      const { result: items } = database.select().query();
       expect(items).toHaveLength(2);
       expect(items).toEqual([parent, child]);
 
@@ -199,6 +200,23 @@ describe('Database', () => {
     });
 
     describe('queries', () => {
+      test('wait for item', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const database = await setupBackend(modelFactory);
+
+        {
+          const waiting = database.waitForItem({ type: 'example:type.test' });
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test' });
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+        }
+
+        {
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test-2' });
+          const waiting = database.waitForItem({ type: 'example:type.test-2' });
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+        }
+      });
+
       test('query deleted items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
@@ -208,28 +226,26 @@ describe('Database', () => {
         ));
 
         // TODO(burdon): Trigger result on initial subscription.
-        const result = database.select(s => s.items);
-        const items = result.getValue();
+        const query = database.select().query();
+        const items = query.result;
         expect(items).toHaveLength(10);
 
-        const update = result.update.waitForCount(1);
+        const update = query.update.waitForCount(1);
         await items[0].delete();
         await update;
 
         {
-          const items = result.getValue();
+          const items = query.result;
           expect(items).toHaveLength(9);
         }
 
         {
-          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED });
-          const items = result.getValue();
+          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
           expect(items).toHaveLength(10);
         }
 
         {
-          const result = database.select(s => s.items, { deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
-          const items = result.getValue();
+          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(items).toHaveLength(1);
         }
       });

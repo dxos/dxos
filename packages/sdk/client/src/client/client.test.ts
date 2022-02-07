@@ -309,8 +309,8 @@ describe('Client', () => {
       client.registerModel(TestModel);
 
       const party = client.echo.queryParties().first;
-      const selection = party.database.select(s => s.filter({ type: 'test' }).items);
-      await selection.update.waitForCondition(() => selection.getValue().length > 0);
+      const selection = party.database.select({ type: 'test' }).query();
+      await selection.update.waitForCondition(() => selection.result.length > 0);
 
       const item = selection.expectOne();
 
