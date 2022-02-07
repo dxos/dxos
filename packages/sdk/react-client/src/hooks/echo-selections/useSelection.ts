@@ -31,7 +31,7 @@ export function useSelection<T extends Entity<any>> (
     const newData = newResult ? newResult.result : undefined;
     setResult(newResult);
     setData(newData);
-  }, [...deps, result?.root]);
+  }, [...deps, result?.root, !!selection]);
 
   // Update data when database updates.
   useEffect(() => {
