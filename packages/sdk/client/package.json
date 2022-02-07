@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.24.0",
+  "version": "2.25.0",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -31,6 +31,9 @@
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@polkadot/keyring": "6.11.1",
+    "@polkadot/util": "6.11.1",
+    "@polkadot/util-crypto": "6.11.1",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",

@@ -7,17 +7,17 @@ import debug from 'debug';
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { ClientBot } from '../../src';
+import { Bot } from '../../src';
 
 const log = debug('dxos:bot:story-bot');
 
-export class StoryBot extends ClientBot {
+export class StoryBot extends Bot {
   constructor () {
     super();
     log('constructing story bot');
   }
 
-  override async onInit () {
+  override async onStart () {
     log('onInit');
     assert(this.party);
     const COUNTER_TYPE = 'DXOS_COUNTER';

@@ -3,6 +3,7 @@
 //
 
 import { ClientServices } from '../../../interfaces';
+import { createHaloService } from './halo';
 import { CreateServicesOpts } from './interfaces';
 import { createPartyService } from './party';
 import { createProfileService } from './profile';
@@ -12,6 +13,7 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
   return {
     SystemService: createSystemService(opts),
     ProfileService: createProfileService(opts),
+    HaloService: createHaloService(opts),
     PartyService: createPartyService(opts),
     DataService: opts.echo.dataService,
     TracingService: {
