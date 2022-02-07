@@ -1,5 +1,19 @@
 # Change Log
 
+## [2.26.0](https://www.github.com/dxos/protocols/compare/v2.25.0...v2.26.0) (2022-02-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Lowercase names for protobuf methods (#906)
+* New selection API (#898)
+
+### Features
+
+* Bot lifecycle - restart ([#899](https://www.github.com/dxos/protocols/issues/899)) ([0b5c394](https://www.github.com/dxos/protocols/commit/0b5c394a7240034437311e83f6ab16cbf9b67974))
+* Lowercase names for protobuf methods ([#906](https://www.github.com/dxos/protocols/issues/906)) ([3e7251f](https://www.github.com/dxos/protocols/commit/3e7251f963838267f55da365ae7079f74a685e24))
+* New selection API ([#898](https://www.github.com/dxos/protocols/issues/898)) ([0ff9b5c](https://www.github.com/dxos/protocols/commit/0ff9b5c9b11bb93f7831773d764978b30119cc06))
+
 ## [2.25.0](https://www.github.com/dxos/protocols/compare/v2.24.0...v2.25.0) (2022-02-04)
 
 
