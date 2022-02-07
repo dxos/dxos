@@ -43,15 +43,33 @@ export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: 
 export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>> =>
   new Selection(() => [root], update, root);
 
+/**
+ * Represents where the selection has started.
+ */
 export type SelectionRoot = Database | Entity<any>;
 
+/**
+ * Controls how deleted items are filtered.
+ */
 export enum ItemFilterDeleted {
+  /**
+   * Do not return deleted items. Default behaviour.
+   */
   HIDE_DELETED = 0,
+  /**
+   * Return deleted and regular items.
+   */
   SHOW_DELETED = 1,
+  /**
+   * Return only deleted items.
+   */
   SHOW_DELETED_ONLY = 2
 }
 
 export type QueryOptions = {
+  /**
+   * Controls how deleted items are filtered.
+   */
   deleted?: ItemFilterDeleted
 }
 
