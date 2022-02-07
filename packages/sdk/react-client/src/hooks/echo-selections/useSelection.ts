@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { SelectionResult } from '@dxos/client';
+import { Entity, Selection } from '@dxos/client';
 import { Falsy } from '@dxos/util';
 
 /**
@@ -15,27 +15,32 @@ import { Falsy } from '@dxos/util';
  * apart from changes in ECHO database itself, must be passed to deps array
  * for updates to work correctly.
  *
- * @param selectionResult Selection from which to query data. Can be falsy - in that case the hook will return undefined.
+ * @param selection Selection from which to query data. Can be falsy - in that case the hook will return undefined.
  * @param deps Array of values that trigger the selector when changed.
  */
-export function useSelection<T> (
-  selectionResult: SelectionResult<T> | Falsy,
+export function useSelection<T extends Entity<any>> (
+  selection: Selection<T> | Falsy,
   deps: readonly any[] = []
-): T | undefined {
-  const [data, setData] = useState(() => selectionResult ? selectionResult.getValue() : undefined);
+): T[] | undefined {
+  const [result, setResult] = useState(() => selection ? selection.query() : undefined);
+  const [data, setData] = useState(() => result ? result.result : undefined);
 
-  // Update data when deps change.
+  // Update selection when the query or customs deps change.
   useEffect(() => {
-    if (selectionResult) {
-      const unsub = selectionResult.update.on(() => {
-        setData(selectionResult.getValue());
+    const newResult = selection ? selection.query() : undefined;
+    const newData = newResult ? newResult.result : undefined;
+    setResult(newResult);
+    setData(newData);
+  }, [!!selection, !!selection && selection.root, ...deps]);
+
+  // Update data when database updates.
+  useEffect(() => {
+    if (result) {
+      return result.update.on(newData => {
+        setData(newData);
       });
-      setData(selectionResult.getValue());
-      return unsub;
-    } else {
-      setData(undefined);
     }
-  }, deps);
+  }, [result]);
 
   return data;
 }

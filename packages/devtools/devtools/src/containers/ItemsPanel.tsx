@@ -20,7 +20,7 @@ import { TextModel } from '@dxos/text-model';
 import { Panel, PartySelect } from '../components';
 
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
-  const children = useSelection(item.select(selection => selection.children().items as Item<any>[]), [item]) ?? [];
+  const children = useSelection(item.select().children()) ?? [];
 
   return (
     <TreeItem nodeId={item.id} label={item.type} onClick={() => onSelect(item)}>
@@ -37,9 +37,8 @@ export const ItemsPanel = () => {
 
   const parties = useParties();
   const items = useSelection(
-    selectedParty?.database.select(s => s
-      .filter(item => !item.parent)
-      .items as Item<any>[]),
+    selectedParty?.select()
+      .filter(item => !item.parent),
     [selectedParty]
   ) ?? [];
 

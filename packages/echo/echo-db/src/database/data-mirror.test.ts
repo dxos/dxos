@@ -43,7 +43,7 @@ describe('DataMirror', () => {
     dataMirror.open();
 
     // Create item
-    const promise = promiseTimeout(mirrorItemManager.debouncedItemUpdate.waitForCount(1), 1000, new Error('timeout'));
+    const promise = promiseTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
     const item = await itemManager.createItem(
       ObjectModel.meta.type
