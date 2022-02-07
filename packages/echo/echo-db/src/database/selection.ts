@@ -46,7 +46,7 @@ export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>
 export type SelectionRoot = Database | Entity<any>;
 
 export enum ItemFilterDeleted {
-  IGNORE_DELETED = 0,
+  HIDE_DELETED = 0,
   SHOW_DELETED = 1,
   SHOW_DELETED_ONLY = 2
 }
@@ -226,14 +226,14 @@ const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Ite
 const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link<any>> =>
   link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 
-const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.IGNORE_DELETED }: QueryOptions): Predicate<Entity<any>> => {
+const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity<any>> => {
   return entity => {
     if (entity.model instanceof DefaultModel) {
       return false;
     }
 
     switch (deleted) {
-      case ItemFilterDeleted.IGNORE_DELETED:
+      case ItemFilterDeleted.HIDE_DELETED:
         return !(entity instanceof Item) || !entity.deleted;
       case ItemFilterDeleted.SHOW_DELETED:
         return true;
