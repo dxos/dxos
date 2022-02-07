@@ -207,7 +207,6 @@ describe('Database', () => {
         {
           const waiting = database.waitForItem({ type: 'example:type.test' });
           const item = await database.createItem({ model: ObjectModel, type: 'example:type.test' });
-          console.log('create');
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
