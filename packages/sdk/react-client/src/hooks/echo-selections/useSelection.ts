@@ -25,13 +25,13 @@ export function useSelection<T extends Entity<any>> (
   const [result, setResult] = useState(() => selection ? selection.query() : undefined);
   const [data, setData] = useState(() => result ? result.result : undefined);
 
-  // Update selection when deps change.
+  // Update selection when the query or customs deps change.
   useEffect(() => {
     const newResult = selection ? selection.query() : undefined;
     const newData = newResult ? newResult.result : undefined;
     setResult(newResult);
     setData(newData);
-  }, [...deps, result?.root, !!selection]);
+  }, [!!selection, !!selection && selection.root, ...deps]);
 
   // Update data when database updates.
   useEffect(() => {
