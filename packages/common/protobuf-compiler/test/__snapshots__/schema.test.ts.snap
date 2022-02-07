@@ -166,18 +166,18 @@ export interface TestService {
     /**
      * Count the tasks in the task list.
      */
-    CountTasks: (request: TaskList) => Promise<TaskCount>;
+    countTasks: (request: TaskList) => Promise<TaskCount>;
     /**
      * Subscribe to task list updates.
      */
-    SubscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
+    subscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
 export interface WithEmptyField {
     emptyField?: void;
 }
 export interface ServiceWithEmpty {
-    EmptyRpc: (request: void) => Promise<void>;
-    EmptyStreamRpc: (request: void) => Stream<void>;
+    emptyRpc: (request: void) => Promise<void>;
+    emptyStreamRpc: (request: void) => Stream<void>;
 }
 
 google/protobuf.ts:

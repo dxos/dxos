@@ -20,11 +20,11 @@ describe('BotFactory', () => {
         config: new Config({})
       });
 
-      const bot = await botFactory.SpawnBot({
+      const bot = await botFactory.spawnBot({
         package: { localPath: require.resolve('../bots/failing-bot') }
       });
 
-      void botFactory.SendCommand({
+      void botFactory.sendCommand({
         botId: bot.id,
         command: new Uint8Array()
       }); // Do not wait because the bot process will crash.
@@ -32,7 +32,7 @@ describe('BotFactory', () => {
       // TODO(dmaretskyi): Replace with waiting for update from bot-factory.
       await sleep(100);
 
-      const { bots } = await botFactory.GetBots();
+      const { bots } = await botFactory.getBots();
       expect(bots[0].status).toEqual(Bot.Status.STOPPED);
       expect(bots[0].exitCode).toEqual(255);
     });

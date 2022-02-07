@@ -37,7 +37,7 @@ class PartyService implements IPartyService {
 
   constructor (private echo: ECHO) {}
 
-  SubscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
+  subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
     const update = (next: (message: SubscribePartyResponse) => void) => {
       try {
         const party = this.echo.getParty(request.partyKey);
@@ -83,7 +83,7 @@ class PartyService implements IPartyService {
     }
   }
 
-  SubscribeParties () {
+  subscribeParties () {
     return resultSetToStream(this.echo.queryParties(), (parties): SubscribePartiesResponse => {
       return ({
         parties: parties.map(party => ({
@@ -96,7 +96,7 @@ class PartyService implements IPartyService {
     });
   }
 
-  async CreateParty () {
+  async createParty () {
     const party = await this.echo.createParty();
     return {
       publicKey: party.key,
@@ -105,7 +105,7 @@ class PartyService implements IPartyService {
     };
   }
 
-  async CloneParty (snapshot: PartySnapshot): Promise<Party> {
+  async cloneParty (snapshot: PartySnapshot): Promise<Party> {
     const party = await this.echo.cloneParty(snapshot);
     return {
       publicKey: party.key,
@@ -114,7 +114,7 @@ class PartyService implements IPartyService {
     };
   }
 
-  async SetPartyState (request: SetPartyStateRequest) {
+  async setPartyState (request: SetPartyStateRequest) {
     const party = this.echo.getParty(request.partyKey);
     if (!party) {
       throw new Error('Party not found');
@@ -144,7 +144,7 @@ class PartyService implements IPartyService {
     };
   }
 
-  CreateInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
+  createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
       setImmediate(async () => {
@@ -185,7 +185,7 @@ class PartyService implements IPartyService {
     });
   }
 
-  AcceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
@@ -221,7 +221,7 @@ class PartyService implements IPartyService {
     });
   }
 
-  async AuthenticateInvitation (request: AuthenticateInvitationRequest) {
+  async authenticateInvitation (request: AuthenticateInvitationRequest) {
     assert(request.processId, 'Process ID is missing.');
     const invitation = this.inviteeInvitations.get(request.processId);
     assert(invitation, 'Invitation not found.');
@@ -232,7 +232,7 @@ class PartyService implements IPartyService {
     invitation.secretTrigger?.();
   }
 
-  SubscribeMembers (request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
+  subscribeMembers (request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
     const party = this.echo.getParty(request.partyKey);
     if (party) {
       return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
@@ -256,7 +256,7 @@ class PartyService implements IPartyService {
     }
   }
 
-  async CreateSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
     assert(request.partyKey);
     const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
     return party.createSnapshot();

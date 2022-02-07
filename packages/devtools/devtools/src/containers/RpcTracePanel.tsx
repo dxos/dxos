@@ -15,7 +15,7 @@ export const RpcTracePanel = () => {
   const [messages, setMessages] = useState<RpcMessage[]>([]);
 
   useEffect(() => {
-    const stream = client.services.TracingService.SubscribeToRpcTrace();
+    const stream = client.services.TracingService.subscribeToRpcTrace();
     stream.subscribe(msg => setMessages(messages => [...messages, msg]), () => {});
 
     return () => stream.close();

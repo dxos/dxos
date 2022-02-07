@@ -31,24 +31,24 @@ describe('Client Services', () => {
       const invitee = await setup();
       afterTest(() => invitee.client.destroy());
 
-      await inviter.services.ProfileService.CreateProfile({ username: 'test-user' });
+      await inviter.services.ProfileService.createProfile({ username: 'test-user' });
 
       const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
-        inviter.services.ProfileService.CreateInvitation().subscribe(resolve, reject);
+        inviter.services.ProfileService.createInvitation().subscribe(resolve, reject);
       });
       assert(invitation.descriptor);
 
       const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
-        invitee.services.ProfileService.AcceptInvitation(invitation.descriptor!).subscribe(resolve, reject);
+        invitee.services.ProfileService.acceptInvitation(invitation.descriptor!).subscribe(resolve, reject);
       });
 
-      await invitee.services.ProfileService.AuthenticateInvitation({
+      await invitee.services.ProfileService.authenticateInvitation({
         processId: redeemedInvitation.id,
         secret: invitation.descriptor.secret
       });
 
       const [inviteeProfileLatch, inviteeProfileTrigger] = latch();
-      invitee.services.ProfileService.SubscribeProfile().subscribe(inviteeProfile => {
+      invitee.services.ProfileService.subscribeProfile().subscribe(inviteeProfile => {
         if (inviteeProfile.profile?.username === 'test-user') {
           inviteeProfileTrigger();
         }

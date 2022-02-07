@@ -43,7 +43,7 @@ export class HaloProxy extends InvitationProxy {
    * Reset the identity and delete all key records.
   */
   async reset () {
-    await this._serviceProvider.services.SystemService.Reset();
+    await this._serviceProvider.services.SystemService.reset();
     this._profileChanged.emit();
   }
 
@@ -58,7 +58,7 @@ export class HaloProxy extends InvitationProxy {
    * @returns User profile info.
    */
   async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
-    this._profile = await this._serviceProvider.services.ProfileService.CreateProfile({ publicKey, secretKey, username });
+    this._profile = await this._serviceProvider.services.ProfileService.createProfile({ publicKey, secretKey, username });
     return this._profile;
   }
 
@@ -73,7 +73,7 @@ export class HaloProxy extends InvitationProxy {
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile (seedPhrase: string) {
-    this._profile = await this._serviceProvider.services.ProfileService.RecoverProfile({ seedPhrase });
+    this._profile = await this._serviceProvider.services.ProfileService.recoverProfile({ seedPhrase });
     return this._profile;
   }
 
@@ -86,7 +86,7 @@ export class HaloProxy extends InvitationProxy {
    * To be used with `client.halo.joinHaloInvitation` on the invitee side.
    */
   async createInvitation (): Promise<InvitationRequest> {
-    const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
+    const stream = await this._serviceProvider.services.ProfileService.createInvitation();
     return this.createInvitationRequest({ stream });
   }
 
@@ -99,12 +99,12 @@ export class HaloProxy extends InvitationProxy {
    * To be used with `client.halo.createHaloInvitation` on the inviter side.
   */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
-    const invitationProcessStream = this._serviceProvider.services.ProfileService.AcceptInvitation(invitationDescriptor.toProto());
+    const invitationProcessStream = this._serviceProvider.services.ProfileService.acceptInvitation(invitationDescriptor.toProto());
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
       invitationDescriptor,
       onAuthenticate: async (request) => {
-        await this._serviceProvider.services.ProfileService.AuthenticateInvitation(request);
+        await this._serviceProvider.services.ProfileService.authenticateInvitation(request);
       }
     });
 
@@ -121,11 +121,11 @@ export class HaloProxy extends InvitationProxy {
   }
 
   async addKeyRecord (keyRecord: KeyRecord) {
-    await this._serviceProvider.services.HaloService.AddKeyRecord({ keyRecord });
+    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
 
   async sign (request: SignRequest) {
-    return await this._serviceProvider.services.HaloService.Sign(request);
+    return await this._serviceProvider.services.HaloService.sign(request);
   }
 
   /**
@@ -137,14 +137,14 @@ export class HaloProxy extends InvitationProxy {
     const gotProfile = this._profileChanged.waitForCount(1);
     const gotContacts = this._contactsChanged.waitForCount(1);
 
-    const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();
+    const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data.profile;
       this._profileChanged.emit();
     }, () => {});
     this._subscriptions.push(() => profileStream.close());
 
-    const contactsStream = this._serviceProvider.services.HaloService.SubscribeContacts();
+    const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     contactsStream.subscribe(data => {
       this._contacts = data.contacts as PartyMember[];
       this._contactsChanged.emit();

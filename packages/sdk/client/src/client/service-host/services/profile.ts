@@ -21,7 +21,7 @@ export class ProfileService implements IProfileService {
 
   constructor (private echo: ECHO) {}
 
-  SubscribeProfile (): Stream<SubscribeProfileResponse> {
+  subscribeProfile (): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
       const emitNext = () => next({
         profile: this.echo.halo.isInitialized ? this.echo.halo.getProfile() : undefined
@@ -32,11 +32,11 @@ export class ProfileService implements IProfileService {
     });
   }
 
-  async CreateProfile (request: CreateProfileRequest) {
+  async createProfile (request: CreateProfileRequest) {
     return this.echo.halo.createProfile(request);
   }
 
-  async RecoverProfile (request: RecoverProfileRequest): Promise<Profile> {
+  async recoverProfile (request: RecoverProfileRequest): Promise<Profile> {
     if (!request.seedPhrase) {
       throw new Error('Recovery SeedPhrase not provided.');
     }
@@ -47,7 +47,7 @@ export class ProfileService implements IProfileService {
     return profile;
   }
 
-  CreateInvitation (): Stream<InvitationRequest> {
+  createInvitation (): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
@@ -71,7 +71,7 @@ export class ProfileService implements IProfileService {
     });
   }
 
-  AcceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
@@ -101,7 +101,7 @@ export class ProfileService implements IProfileService {
     });
   }
 
-  async AuthenticateInvitation (request: AuthenticateInvitationRequest) {
+  async authenticateInvitation (request: AuthenticateInvitationRequest) {
     assert(request.processId, 'Process ID is missing.');
     const invitation = this.inviteeInvitations.get(request.processId);
     assert(invitation, 'Invitation not found.');

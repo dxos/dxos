@@ -69,13 +69,13 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
-  async GetBots () {
+  async getBots () {
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
     };
   }
 
-  async SpawnBot (request: SpawnBotRequest) {
+  async spawnBot (request: SpawnBotRequest) {
     const id = createId();
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
@@ -112,7 +112,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
       log(`[${id}] Initializing bot`);
-      await handle.rpc.Initialize({
+      await handle.rpc.initialize({
         config: handle.config.values,
         invitation: request.invitation
       });
@@ -125,7 +125,7 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async Start (request: Bot) {
+  async start (request: Bot) {
     assert(request.id);
     const id = request.id;
     try {
@@ -138,7 +138,7 @@ export class BotFactory implements BotFactoryService {
       log(`[${id}] Openning RPC channel`);
       await bot.open(port);
       log(`[${id}] Initializing bot`);
-      await bot.rpc.Start({ config: bot.config.values });
+      await bot.rpc.start({ config: bot.config.values });
       await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.RUNNING);
       log(`[${id}] Initialization complete`);
       return bot.bot;
@@ -148,14 +148,14 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async Stop (request: Bot) {
+  async stop (request: Bot) {
     assert(request.id);
     const id = request.id;
     try {
       const bot = this._getBot(id);
       log(`[${id}] Stopping bot`);
       try {
-        await promiseTimeout(bot.rpc.Stop(), 3000, new Error('Stopping bot timed out'));
+        await promiseTimeout(bot.rpc.stop(), 3000, new Error('Stopping bot timed out'));
       } catch (error: any) {
         log(`[${id}] Failed to stop bot: ${error}`);
       }
@@ -169,25 +169,25 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async Remove (request: Bot) {
+  async remove (request: Bot) {
     assert(request.id);
     const bot = this._getBot(request.id);
     if (bot.bot.status === Bot.Status.RUNNING) {
-      await this.Stop(bot.bot);
+      await this.stop(bot.bot);
     }
     this._bots.delete(request.id);
     await bot.clearFiles();
   }
 
-  async SendCommand (request: SendCommandRequest) {
+  async sendCommand (request: SendCommandRequest) {
     assert(request.botId);
     const bot = this._getBot(request.botId);
-    const respone = await bot.rpc.Command(request);
+    const respone = await bot.rpc.command(request);
     return respone;
   }
 
-  async RemoveAll () {
-    await Promise.all(Array.from(this._bots.values()).map(bot => this.Remove(bot.bot)));
+  async removeAll () {
+    await Promise.all(Array.from(this._bots.values()).map(bot => this.remove(bot.bot)));
   }
 
   private _getBot (botId: string) {

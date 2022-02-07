@@ -21,25 +21,25 @@ export class BotHandle {
   ) {}
 
   async start () {
-    await this._rpc.rpc.Start({
+    await this._rpc.rpc.start({
       id: this._id
     });
   }
 
   async stop () {
-    await this._rpc.rpc.Stop({
+    await this._rpc.rpc.stop({
       id: this._id
     });
   }
 
   async remove () {
-    await this._rpc.rpc.Remove({
+    await this._rpc.rpc.remove({
       id: this._id
     });
   }
 
   async sendCommand (command: Uint8Array) {
-    const { response } = await this._rpc.rpc.SendCommand({
+    const { response } = await this._rpc.rpc.sendCommand({
       botId: this._id,
       command
     });
@@ -93,7 +93,7 @@ export class BotFactoryClient {
   async spawn (pkg: BotPackageSpecifier, party: Party) {
     assert(this._rpc, 'Bot factory client is not started');
     const invitation = await party.createInvitation();
-    const { id } = await this._rpc.rpc.SpawnBot({
+    const { id } = await this._rpc.rpc.spawnBot({
       package: pkg,
       invitation: invitation.descriptor.toProto()
     });
@@ -104,7 +104,7 @@ export class BotFactoryClient {
 
   async list () {
     assert(this._rpc, 'Bot factory client is not started');
-    const { bots } = await this._rpc.rpc.GetBots();
+    const { bots } = await this._rpc.rpc.getBots();
     return bots || [];
   }
 }

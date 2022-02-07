@@ -18,7 +18,7 @@ export const CredentialMessagesPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
   const { messages } = useStream(
-    () => devtoolsHost.SubscribeToCredentialMessages({ partyKey: selectedParty?.key }), [selectedParty?.key]
+    () => devtoolsHost.subscribeToCredentialMessages({ partyKey: selectedParty?.key }), [selectedParty?.key]
   ) ?? {};
 
   return (
