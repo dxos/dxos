@@ -7,15 +7,15 @@ import { css } from '@emotion/css';
 export const defaultMarkerStyles = css`
   marker {
     &.arrow path {
-      stroke: orange;
-      stroke-width: 1px;
       fill: none;
+      stroke: #333;
+      stroke-width: 1px;
     }
 
     &.dot circle {
-      stroke: orange;
-      stroke-width: 1px;
       fill: none;
+      stroke: #333;
+      stroke-width: 1px;
     }
   }
 `;
@@ -32,21 +32,27 @@ export const defaultGraphStyles = css`
   }
 
   circle.bullet {
-    stroke: none;
     fill: #999;
+    stroke: none;
   }
 
   g.node {
     &.selected {
       circle {
-        stroke: darkblue;
         fill: cornflowerblue;
+        stroke: #333;
+        stroke-width: 2px;
       }
     }
 
     circle {
-      stroke: seagreen;
-      fill: #F5F5F5;
+      fill: #cfd8dc;
+      stroke: #333;
+    }
+    circle.highlight {
+      fill: #607d8b;
+      stroke: #333;
+      stroke-width: 2px;
     }
     text {
       fill: #666;
@@ -56,13 +62,13 @@ export const defaultGraphStyles = css`
 
   g.link {
     path {
-      stroke: orange;
-      stroke-width: 1;
       fill: none;
+      stroke: #333;
+      stroke-width: 1px;
     }
     path.click {
       stroke: transparent;
-      stroke-width: 16;
+      stroke-width: 16px;
       opacity: 0.2;
     }
 `;

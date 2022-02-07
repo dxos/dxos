@@ -198,6 +198,19 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
       .attr('cy', d => d.y)
       .attr('r', d => d.r);
 
+    // Highlight.
+    circles
+      .on('mouseenter', function (event: MouseEvent) {
+        // console.log(d3.select(this).datum());
+        d3.select(this).classed('highlight', true);
+      })
+      .on('mouseleave', function (event: MouseEvent) {
+        // console.log(d3.select(this).datum());
+        d3.select(this).transition().duration(100).on('end', () => {
+          d3.select(this).classed('highlight', false);
+        });
+      });
+
     // Events.
     if (this.options.onNodeClick) {
       circles.on('click', (event: MouseEvent) => {
