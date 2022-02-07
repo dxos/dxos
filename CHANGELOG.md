@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.25.1](https://www.github.com/dxos/protocols/compare/v2.25.0...v2.25.1) (2022-02-07)
+
+
+### Features
+
+* Bot lifecycle - restart ([#899](https://www.github.com/dxos/protocols/issues/899)) ([0b5c394](https://www.github.com/dxos/protocols/commit/0b5c394a7240034437311e83f6ab16cbf9b67974))
+
 ## [2.25.0](https://www.github.com/dxos/protocols/compare/v2.24.0...v2.25.0) (2022-02-04)
 
 
