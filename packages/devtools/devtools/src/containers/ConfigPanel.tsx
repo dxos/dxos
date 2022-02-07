@@ -14,7 +14,7 @@ export const ConfigPanel = () => {
 
   useEffect(() => {
     void (async () => {
-      const config = await devtoolsHost.GetConfig();
+      const config = await devtoolsHost.getConfig();
       config.config && setConfig(JSON.parse(config.config));
     })();
   }, []);

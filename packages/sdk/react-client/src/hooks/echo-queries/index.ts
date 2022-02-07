@@ -5,4 +5,3 @@
 export * from './useContacts';
 export * from './useMembers';
 export * from './useParties';
-export * from './useRemoteParties';

@@ -13,7 +13,7 @@ export const KeyringPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
 
-  const { keys } = useStream(() => devtoolsHost.SubscribeToKeyringKeys({})) ?? {};
+  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({})) ?? {};
   if (keys === undefined) {
     return null;
   }

@@ -34,9 +34,9 @@ export const App = () => {
   }, [client]);
 
   useEffect(() => {
-    void client.services.TracingService.SetTracingOptions({ enable: true });
+    void client.services.TracingService.setTracingOptions({ enable: true });
     return () => {
-      void client.services.TracingService.SetTracingOptions({ enable: false });
+      void client.services.TracingService.setTracingOptions({ enable: false });
     };
   }, [client]);
 

@@ -33,9 +33,9 @@ describe('Node container', function () {
     });
 
     await handle.open(port);
-    await handle.rpc.Initialize({});
+    await handle.rpc.initialize({});
     const command = PublicKey.random();
-    const { response } = await handle.rpc.Command({ command: command.asUint8Array() });
+    const { response } = await handle.rpc.command({ command: command.asUint8Array() });
     assert(response);
     expect(PublicKey.from(response).toString()).toBe(command.toString());
 
@@ -65,12 +65,12 @@ describe('Node container', function () {
       });
 
       await handle.open(port);
-      await handle.rpc.Initialize({
+      await handle.rpc.initialize({
         config: config.values,
         invitation
       });
 
-      await handle.rpc.Stop();
+      await handle.rpc.stop();
       await handle.close();
       container.killAll();
       await client.destroy();
@@ -88,18 +88,18 @@ describe('Node container', function () {
       });
 
       await handle.open(port);
-      await handle.rpc.Initialize({
+      await handle.rpc.initialize({
         config: config.values,
         invitation
       });
       const command = PublicKey.random().asUint8Array();
-      await handle.rpc.Command({ command: command });
+      await handle.rpc.command({ command: command });
 
       const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-      await handle.rpc.Stop();
+      await handle.rpc.stop();
       container.killAll();
       await client.destroy();
     });
@@ -114,11 +114,11 @@ describe('Node container', function () {
       localPath: require.resolve('../bots/failing-bot')
     });
     await handle.open(port);
-    await handle.rpc.Initialize({});
+    await handle.rpc.initialize({});
 
     const promise = container.exited.waitForCount(1);
 
-    void handle.rpc.Command({}).catch(() => {}); // This will hang because the bot has crashed.
+    void handle.rpc.command({}).catch(() => {}); // This will hang because the bot has crashed.
 
     const [, status] = await promise;
     expect(status.code).toBe(255);
@@ -148,7 +148,7 @@ describe('Node container', function () {
         await rpc.open();
 
         const command = PublicKey.random().asUint8Array();
-        const { response } = await rpc.rpc.Command({ command });
+        const { response } = await rpc.rpc.command({ command });
         assert(response);
         expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
 
