@@ -20,7 +20,7 @@ import {
 } from '../src';
 
 export default {
-  title: 'gem-x/Graph'
+  title: 'gem-spore/Graph'
 };
 
 export const Primary = () => {

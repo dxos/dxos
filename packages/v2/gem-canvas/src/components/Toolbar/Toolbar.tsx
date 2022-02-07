@@ -3,7 +3,7 @@
 //
 
 import clsx from 'clsx';
-import React, { useState } from 'react';
+import React from 'react';
 import { css } from '@emotion/css';
 
 import { canvasStyles, elementStyles, styleNames } from '../../controls';

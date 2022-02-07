@@ -25,15 +25,7 @@ export type GraphData<T> = {
   links: GraphLink<T>[]
 }
 
-/**
- * Graph accessor.
- */
-export interface GraphModel<T> {
-  get graph (): GraphData<T>
-  subscribe? (callback: (graph: GraphData<T>) => void): () => void
-}
-
-export const emptyGraph = {
+export const emptyGraph: GraphData<any> = {
   nodes: [],
   links: []
 };

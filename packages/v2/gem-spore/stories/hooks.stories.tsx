@@ -35,7 +35,7 @@ import {
 import { styles } from './helpers';
 
 export default {
-  title: 'gem-x/hooks'
+  title: 'gem-spore/hooks'
 };
 
 // TODO(burdon): Dynamic classname for nodes (e.g., based on selection).
