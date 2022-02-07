@@ -96,13 +96,13 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
+    const mappedMethodName = mapRpcMethodName(methodName);
+  
+    const handler = this._handlers[mappedMethodName as keyof S];
+    assert(handler, `Handler is missing: ${mappedMethodName}`);
+    
     const requestDecoded = requestCodec.decode(request.value!);
-
-    const handler = this._handlers[methodName as keyof S];
-    assert(handler, `Handler is missing: ${methodName}`);
-
     const response = await (handler as any).bind(this._handlers)(requestDecoded);
-
     const responseEncoded = responseCodec.encode(response);
 
     return {
@@ -116,11 +116,12 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
+    const mappedMethodName = mapRpcMethodName(methodName);
+    
+    const handler = this._handlers[mappedMethodName as keyof S];
+    assert(handler, `Handler is missing: ${mappedMethodName}`);
+    
     const requestDecoded = requestCodec.decode(request.value!);
-
-    const handler = this._handlers[methodName as keyof S];
-    assert(handler, `Handler is missing: ${methodName}`);
-
     const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
     return new Stream<Any>(({ next, close }) => {
       responseStream.subscribe(data => next({
