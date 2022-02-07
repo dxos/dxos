@@ -82,11 +82,10 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useSelection(party?.select(s => s
-    .filter({ type: TASK_TYPE })
-    .filter(item => !item.model.getProperty('deleted'))
-    .items)
-  , [party]);
+  const items = useSelection(
+    party?.select({ type: TASK_TYPE })
+      .filter(item => !item.model.getProperty('deleted'))
+  );
 
   const [partyInvitationDialog, setPartyInvitationDialog] = useState(false);
 
