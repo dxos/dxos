@@ -15,11 +15,15 @@ import { getConfig } from './config';
 
 const log = debug('dxos:botkit:bot-factory:main');
 
+/**
+ * Main script that starts the bot factory.
+ * You can pass optional modules for node container via command line arguments.
+ * Example: node bin/main.js ts-node/register/transpile-only
+ */
 const main = async () => {
   const config = getConfig();
 
-  // TODO(yivlad): ts-node -> swc
-  const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
+  const botContainer = new NodeContainer(process.argv.slice(2));
 
   const dxnsServer = config.get('runtime.services.dxns.server');
   let contentResolver: ContentResolver | undefined;

@@ -107,4 +107,14 @@ export class BotFactoryClient {
     const { bots } = await this._rpc.rpc.getBots();
     return bots || [];
   }
+
+  async get (id: string) {
+    assert(this._rpc, 'Bot factory client is not started');
+    const bots = await this.list();
+    const bot = bots.find((bot) => bot.id === id);
+    if (!bot?.id) {
+      throw new Error(`Bot ${id} not found`);
+    }
+    return new BotHandle(bot.id, this._rpc);
+  }
 }
