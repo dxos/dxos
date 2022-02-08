@@ -43,13 +43,9 @@ export class ModelFactory {
 
   createModel<M extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
     assert(itemId);
-    if (!this._models.has(modelType)) {
-      throw new Error(`Invalid model type: ${modelType}`);
-    }
+    const constructor = this._models.get(modelType)?.constructor;
 
-    const { meta, constructor } = this._models.get(modelType)!;
-
-    return new StateManager(meta, constructor, itemId, writeStream ?? null);
+    return new StateManager(modelType, constructor, itemId, writeStream ?? null);
   }
 
   getModelMeta (modelType: ModelType): ModelMeta {

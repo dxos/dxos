@@ -1,48 +1,71 @@
 import { FeedWriter, ItemID, ModelSnapshot, MutationMeta } from "@dxos/echo-protocol";
-import { ModelConstructor, ModelMessage, ModelMeta, MutationOf, MutationWriteReceipt, StateOf } from "./types";
+import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from "./types";
 import { Model } from "./model";
 import { StateMachine } from "./state-machine";
 import { Event } from "@dxos/async";
 import assert from "assert";
 
+/**
+ * Binds the model to the state machine. Manages the state machine lifecycle.
+ */
 export class StateManager<M extends Model> {
-  private readonly _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown>;
+  private _modelMeta: ModelMeta | null = null;
+  
+  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
-  private readonly _model: M;
+  private _model: M | null = null;
 
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   private _mutations: ModelMessage<MutationOf<M>>[] = [];
 
+  /**
+   * @param _modelType 
+   * @param modelConstructor Model's constructor, can be undefined if the registry currently doesn't have this model.
+   * @param _itemId 
+   * @param _writeStream 
+   */
   constructor(
-    private readonly _modelMeta: ModelMeta,
-    modelConstructor: ModelConstructor<M>,
+    private readonly _modelType: ModelType,
+    modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
     private readonly _writeStream: FeedWriter<Uint8Array> | null,
   ) {
-    this._stateMachine = _modelMeta.stateMachine();
+    if(modelConstructor) {
+      this._modelMeta = modelConstructor.meta;
 
-    this._model = new modelConstructor(
-      this._modelMeta,
-      _itemId,
-      () => this._stateMachine.getState(),
-      _writeStream ? mutation => this.write(mutation) : undefined,
-    );
+      this._stateMachine = this._modelMeta.stateMachine();
+
+      this._model = new modelConstructor(
+        this._modelMeta,
+        _itemId,
+        () => this._stateMachine!.getState(),
+        _writeStream ? mutation => this._write(mutation) : undefined,
+      );
+    }
+  }
+
+  get modelType(): ModelType {
+    return this._modelType;
   }
 
   get modelMeta(): ModelMeta {
+    assert(this._modelMeta, 'Model not initialized.');
     return this._modelMeta;
   }
 
-  get stateMachine(): StateMachine<StateOf<M>, MutationOf<Model>, unknown> {
-    return this._stateMachine;
-  }
 
-  get model() {
+  get model(): M {
+    assert(this._model, 'Model not initialized.');
     return this._model;
   }
 
+  /**
+   * Process mutation from the inbound stream.
+   */
   async processMessage(meta: MutationMeta, mutationEncoded: Uint8Array): Promise<void> {
+    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
+
     const mutation = this.modelMeta.mutation.decode(mutationEncoded);
 
     this._mutations.push({ meta, mutation });
@@ -54,7 +77,12 @@ export class StateManager<M extends Model> {
     this._mutationProcessed.emit(meta);
   }
 
+  /**
+   * Create a snapshot of the current state.
+   */
   createSnapshot(): ModelSnapshot {
+    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
+
     if (this.modelMeta.snapshotCodec) {
       return {
         custom: this.modelMeta.snapshotCodec.encode(this._stateMachine.snapshot())
@@ -71,7 +99,12 @@ export class StateManager<M extends Model> {
     }
   }
 
-  restoreFromSnapshot(snapshot: ModelSnapshot) {
+  /**
+   * Reset the state to existing snapshot.
+   */
+  resetToSnapshot(snapshot: ModelSnapshot) {
+    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
+
     if(snapshot.custom) {
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(snapshot.custom);
@@ -97,9 +130,9 @@ export class StateManager<M extends Model> {
   }
 
   /**
-   * Writes the raw mutation to the output stream.
+   * Writes the mutation to the output stream.
    */
-  protected async write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }

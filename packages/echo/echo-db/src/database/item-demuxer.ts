@@ -110,7 +110,7 @@ export class ItemDemuxer {
       
       if (snapshot) {
         const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
-        entity._stateManager.restoreFromSnapshot(snapshot)
+        entity._stateManager.resetToSnapshot(snapshot)
       }
 
       this.mutation.emit(message);

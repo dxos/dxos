@@ -79,7 +79,7 @@ export class DataMirror {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
           assert(update.snapshot.model);
-          entity._stateManager.restoreFromSnapshot(update.snapshot.model);
+          entity._stateManager.resetToSnapshot(update.snapshot.model);
         } else if (update.mutation) {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);
