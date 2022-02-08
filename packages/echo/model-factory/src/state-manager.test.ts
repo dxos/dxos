@@ -5,6 +5,7 @@ import { TestListModel, TestModel } from './testing'
 import { createId, PublicKey } from "@dxos/crypto"
 import { it as test } from 'mocha';
 import expect from 'expect';
+import { MockFeedWriter } from "@dxos/echo-protocol"
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
@@ -49,6 +50,20 @@ describe('StateManager', () => {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
     })
   });
+
+  test('write loop', async () => {
+    const feedWriter = new MockFeedWriter<Uint8Array>();
+    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), feedWriter);
+    feedWriter.written.on(([message, meta]) => stateManager.processMessage({
+      feedKey: meta.feedKey.asUint8Array(),
+      memberKey: PublicKey.random().asUint8Array(),
+      seq: meta.seq,
+    }, message));
+
+    await stateManager.model.setProperty('testKey', 'testValue');
+
+    expect(stateManager.model.properties).toEqual({ testKey: 'testValue' });
+  })
 })
 
 const createMeta = (seq: number) => ({
