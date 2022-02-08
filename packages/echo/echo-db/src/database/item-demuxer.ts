@@ -107,18 +107,10 @@ export class ItemDemuxer {
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
       }
-
+      
       if (snapshot) {
-        if (snapshot.custom) {
-          const item = this._itemManager.getItem(itemId) as Item<Model<any>>;
-          assert(item);
-          assert(item.model.modelMeta.snapshotCodec);
-          await item._stateManager.restoreFromSnapshot(item.model.modelMeta.snapshotCodec.decode(snapshot.custom));
-        } else if (snapshot.array) {
-          for (const message of snapshot.array.mutations ?? []) {
-            await this._itemManager.processModelMessage(itemId, message);
-          }
-        }
+        const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
+        entity._stateManager.restoreFromSnapshot(snapshot)
       }
 
       this.mutation.emit(message);

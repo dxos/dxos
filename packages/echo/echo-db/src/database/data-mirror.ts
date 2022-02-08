@@ -79,15 +79,7 @@ export class DataMirror {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
           assert(update.snapshot.model);
-          if (update.snapshot.model.custom) {
-            assert(entity.modelMeta.snapshotCodec);
-            await entity._stateManager.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
-          } else {
-            assert(update.snapshot.model.array);
-            for (const message of update.snapshot.model.array.mutations ?? []) {
-              await entity._stateManager.processMessage(message.meta, message.mutation);
-            }
-          }
+          await entity._stateManager.restoreFromSnapshot(update.snapshot.model);
         } else if (update.mutation) {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);

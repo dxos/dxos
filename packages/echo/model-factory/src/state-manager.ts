@@ -3,6 +3,7 @@ import { ModelConstructor, ModelMessage, ModelMeta, MutationOf, MutationWriteRec
 import { Model } from "./model";
 import { StateMachine } from "./state-machine";
 import { Event } from "@dxos/async";
+import assert from "assert";
 
 export class StateManager<M extends Model> {
   private readonly _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown>;
@@ -70,9 +71,29 @@ export class StateManager<M extends Model> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot(snapshot: any): Promise<void> {
-    this._stateMachine.reset(snapshot);
+  async restoreFromSnapshot(snapshot: ModelSnapshot): Promise<void> {
+    if(snapshot.custom) {
+      assert(this._modelMeta.snapshotCodec);
+      const decoded = this._modelMeta.snapshotCodec.decode(snapshot.custom);
+      this._stateMachine.reset(decoded);
+
+      this._mutations = [];
+    } else if(snapshot.array) {
+      this._mutations = [];
+
+      for(const mutation of snapshot.array.mutations ?? []) {
+        const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
+        this._mutations.push({
+          meta: mutation.meta,
+          mutation: mutationDecoded
+        });
+        this._stateMachine.process(mutationDecoded, mutation.meta);
+      }
+    } else {
+      throw new Error('Invalid snapshot');
+    }
+
+    this._model.update.emit(this._model);
   }
 
   /**
@@ -90,7 +111,7 @@ export class StateManager<M extends Model> {
 
     const mutationEncoded = this.modelMeta.mutation.encode(mutation);
     const receipt = await this._writeStream.write(mutationEncoded);
-    
+
     return {
       ...receipt,
       waitToBeProcessed: async () => {
