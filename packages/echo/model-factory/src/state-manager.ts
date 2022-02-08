@@ -1,13 +1,32 @@
-import { MutationMeta } from "@dxos/echo-protocol";
-import { MutationOf, StateOf } from ".";
+import { FeedWriter, ItemID, MutationMeta } from "@dxos/echo-protocol";
+import { ModelConstructor, ModelMeta, MutationOf, StateOf } from "./types";
 import { Model } from "./model";
 import { StateMachine } from "./state-machine";
 
 export class StateManager<M extends Model> {
+  private readonly _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown>;
+
+  private readonly _model: M;
+
   constructor(
-    private readonly _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown>,
-    private readonly _model: M,
-  ) {}
+    private readonly _modelMeta: ModelMeta,
+    modelConstructor: ModelConstructor<M>,
+    itemId: ItemID,
+    writeStream?: FeedWriter<MutationOf<M>>,
+  ) {
+    this._stateMachine = _modelMeta.stateMachine();
+
+    this._model = new modelConstructor(
+      this._modelMeta,
+      itemId,
+      () => this._stateMachine.getState(),
+      writeStream,
+    );
+  }
+
+  get modelMeta(): ModelMeta {
+    return this._modelMeta;
+  }
 
   get stateMachine(): StateMachine<StateOf<M>, MutationOf<Model>, unknown>{
     return this._stateMachine;

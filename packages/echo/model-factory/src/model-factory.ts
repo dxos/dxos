@@ -49,12 +49,7 @@ export class ModelFactory {
 
     const { meta, constructor } = this._models.get(modelType)!;
 
-    const stateMachine = meta.stateMachine();
-
-    // eslint-disable-next-line new-cap
-    const model = new constructor(meta, itemId, () => stateMachine.getState(), writeStream);
-
-    return new StateManager(stateMachine, model);
+    return new StateManager(meta, constructor, itemId, writeStream);
   }
 
   getModelMeta (modelType: ModelType): ModelMeta {
