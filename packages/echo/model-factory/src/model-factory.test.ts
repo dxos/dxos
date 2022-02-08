@@ -18,7 +18,7 @@ describe('model factory', () => {
     expect(stateManager.model).toBeTruthy();
   });
 
-  test('model mutation processing', async () => {
+  test.skip('model mutation processing', async () => {
     const itemId = createId();
 
     // Create model.

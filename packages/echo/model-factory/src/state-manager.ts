@@ -111,7 +111,7 @@ export class StateManager<M extends Model> {
   /**
    * Process mutation from the inbound stream.
    */
-  async processMessage(meta: MutationMeta, mutationEncoded: Uint8Array): Promise<void> {
+  processMessage(meta: MutationMeta, mutationEncoded: Uint8Array) {
     assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
 
     const mutation = this.modelMeta.mutation.decode(mutationEncoded);
