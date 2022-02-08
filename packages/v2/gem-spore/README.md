@@ -1,19 +1,25 @@
-# GEM X
+# GEM Spore
+
+A small, usually single-celled reproductive body that is resistant to adverse environmental conditions 
+and is capable of growing into a new organism, produced especially by certain fungi, algae, protozoans, 
+and nonseedbearing plants such as mosses and ferns.
 
 ```tsx
 export const Primary = () => {
-  const gridRef = useRef<SVGSVGElement>();
-
-  const handleResize = (({ width, height }) => {
-    d3.select(gridRef.current).call(grid({ width, height }));
-  });
-
-  return (
-    <div>
-      <SvgContainer onResize={handleResize}>
-        <g className='grid' ref={gridRef} />
-      </SvgContainer>
-    </div>
-  );
-}
+  const model = useMemo(() => new GraphBuilder(), []);
+  
+  <FullScreen>
+    <SVGContextProvider>
+      <SVG>
+        <Markers />
+        <Grid axis />
+        <Zoom extent={[1/2, 2]}>
+          <Graph
+            model={model.graph}
+          />
+        </Zoom>
+      </SVG>
+    </SVGContextProvider>
+  </FullScreen>
+};
 ```
