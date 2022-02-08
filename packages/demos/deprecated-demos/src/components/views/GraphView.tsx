@@ -8,14 +8,9 @@ import useResizeAware from 'react-resize-aware';
 
 import { makeStyles } from '@mui/styles';
 
-import { SVG, useGrid } from '@dxos/gem-core';
+import { SVGContextProvider } from '@dxos/gem-core';
 import {
-  createSimulationDrag,
   Graph,
-  GraphLinker,
-  ForceLayout,
-  LinkProjector,
-  NodeProjector,
   Markers
 } from '@dxos/gem-spore';
 
@@ -45,21 +40,32 @@ export const GraphView = ({
   onCreate = () => {},
   propertyAdapter = () => ({})
 }: GraphViewProps) => {
-  const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): Merge().
-  const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-  const [nodeProjector] = useState(() => new NodeProjector({ node: { showLabels: true, propertyAdapter } }));
-  const [linkProjector] = useState(() => new LinkProjector({ nodeRadius: 8, showArrows: true }));
-  const [layout] = useState(() => new ForceLayout());
-  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey' }));
+  // const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): Merge()
 
-  useEffect(() => {
-    const handler = ({ source }: any) => onSelect(source.id);
-    drag.on('click', handler);
-    return () => drag.off('click', handler);
-  }, [drag]);
+  // const [resizeListener, size] = useResizeAware();
+  // const { width, height } = size;
 
+  // const grid = useGrid({ width, height });
+  // const [nodeProjector] = useState(() => new NodeProjector({ node: { showLabels: true, propertyAdapter } }));
+  // const [linkProjector] = useState(() => new LinkProjector({ nodeRadius: 8, showArrows: true }));
+  // const [layout] = useState(() => new ForceLayout());
+  // const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey' }));
+
+  // useEffect(() => {
+  //   const handler = ({ source }: any) => onSelect(source.id);
+  //   drag.on('click', handler);
+  //   return () => drag.off('click', handler);
+  // }, [drag]);
+
+  return (
+    <SVGContextProvider>
+      <svg>
+
+      </svg>
+    </SVGContextProvider>
+  )
+
+  /*
   return (
     <div className={clazzes.root}>
       {resizeListener}
@@ -84,4 +90,5 @@ export const GraphView = ({
       </SVG>
     </div>
   );
+  */
 };

@@ -9,7 +9,7 @@ import { MemoryRouter, NavLink, Switch, Route } from 'react-router-dom';
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
-import { FullScreen } from '@dxos/gem-core';
+import { FullScreen } from '@dxos/react-components';
 import {
   FullyConnectedTopology,
   Swarm,

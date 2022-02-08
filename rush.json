@@ -797,6 +797,10 @@
       "projectFolder": "packages/demos/deprecated-demos"
     },
     {
+      "packageName": "@dxos/kitchen-sink",
+      "projectFolder": "packages/demos/kitchen-sink"
+    },
+    {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/tutorials/tutorials-tasks-app"
     },
