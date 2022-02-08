@@ -202,9 +202,9 @@ export class ItemManager {
     //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
-    const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
+    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({
       itemId,
-      mutation: modelMeta.mutation.encode(mutation)
+      mutation,
     }), this._writeStream);
 
     // Create the model with the outbound stream.
@@ -223,7 +223,7 @@ export class ItemManager {
     // Process initial mutations.
     if (initialMutations) {
       for (const mutation of initialMutations) {
-        await stateManager.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
+        await stateManager.processMessage(mutation.meta, mutation.mutation);
       }
     }
 
@@ -350,9 +350,7 @@ export class ItemManager {
     const item = this._entities.get(itemId);
     assert(item);
 
-    const decoded = item.modelMeta.mutation.decode(message.mutation);
-
-    await item._stateManager.processMessage(message.meta, decoded);
+    await item._stateManager.processMessage(message.meta, message.mutation);
     this.update.emit(item);
   }
 

@@ -17,7 +17,7 @@ export class StateManager<M extends Model> {
     private readonly _modelMeta: ModelMeta,
     modelConstructor: ModelConstructor<M>,
     private readonly _itemId: ItemID,
-    private readonly _writeStream: FeedWriter<MutationOf<M>> | null,
+    private readonly _writeStream: FeedWriter<Uint8Array> | null,
   ) {
     this._stateMachine = _modelMeta.stateMachine();
 
@@ -41,7 +41,9 @@ export class StateManager<M extends Model> {
     return this._model;
   }
 
-  async processMessage(meta: MutationMeta, mutation: MutationOf<M>): Promise<void> {
+  async processMessage(meta: MutationMeta, mutationEncoded: Uint8Array): Promise<void> {
+    const mutation = this.modelMeta.mutation.decode(mutationEncoded);
+
     this._mutations.push({ meta, mutation });
 
     this._stateMachine.process(mutation, meta);
@@ -86,7 +88,9 @@ export class StateManager<M extends Model> {
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
     );
 
-    const receipt = await this._writeStream.write(mutation);
+    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const receipt = await this._writeStream.write(mutationEncoded);
+    
     return {
       ...receipt,
       waitToBeProcessed: async () => {

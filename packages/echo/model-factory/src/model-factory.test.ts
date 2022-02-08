@@ -23,7 +23,7 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
-    const feedWriter = new MockFeedWriter<TestItemMutation>();
+    const feedWriter = new MockFeedWriter<Uint8Array>();
     const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, feedWriter as any);
     expect(stateManager.model).toBeTruthy();
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({

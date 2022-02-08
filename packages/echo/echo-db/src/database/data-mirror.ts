@@ -85,7 +85,7 @@ export class DataMirror {
           } else {
             assert(update.snapshot.model.array);
             for (const message of update.snapshot.model.array.mutations ?? []) {
-              await entity._stateManager.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
+              await entity._stateManager.processMessage(message.meta, message.mutation);
             }
           }
         } else if (update.mutation) {
@@ -95,7 +95,7 @@ export class DataMirror {
               feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
               memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
               seq: update.mutation.meta.seq ?? failUndefined()
-            }, entity.modelMeta.mutation.decode(update.mutation.data.mutation ?? failUndefined()));
+            }, update.mutation.data.mutation ?? failUndefined());
           }
         }
       },

@@ -41,7 +41,7 @@ export class ModelFactory {
     return this;
   }
 
-  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): StateManager<M> {
+  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
     assert(itemId);
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
