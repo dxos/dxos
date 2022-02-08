@@ -17,7 +17,7 @@ export class StateManager<M extends Model> {
 
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
-  private _mutations: ModelMessage<MutationOf<M>>[] = [];
+  private _mutations: ModelMessage<Uint8Array>[] = [];
 
   /**
    * @param _modelType 
@@ -100,6 +100,10 @@ export class StateManager<M extends Model> {
 
     this._stateMachine = this._modelMeta.stateMachine();
 
+    for(const mutation of this._mutations) {
+      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
+    }
+
     this._model = new modelConstructor(
       this._modelMeta,
       this._itemId,
@@ -111,18 +115,15 @@ export class StateManager<M extends Model> {
   /**
    * Process mutation from the inbound stream.
    */
-  processMessage(meta: MutationMeta, mutationEncoded: Uint8Array) {
-    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
-
-    const mutation = this.modelMeta.mutation.decode(mutationEncoded);
-
+  processMessage(meta: MutationMeta, mutation: Uint8Array) {
     this._mutations.push({ meta, mutation });
+    if(this.initialized) {
+      const mutationDecoded = this.modelMeta.mutation.decode(mutation);
+      this._stateMachine!.process(mutationDecoded, meta);
 
-    this._stateMachine.process(mutation, meta);
-
-    this._model.update.emit(this._model);
-    
-    this._mutationProcessed.emit(meta);
+      this._model!.update.emit(this._model!);
+      this._mutationProcessed.emit(meta);
+    }
   }
 
   /**
@@ -138,10 +139,7 @@ export class StateManager<M extends Model> {
     } else {
       return {
         array: {
-          mutations: this._mutations.map(message => ({
-            mutation: this.modelMeta.mutation.encode(message.mutation),
-            meta: message.meta,
-          }))
+          mutations: this._mutations.slice(),
         }
       };
     }

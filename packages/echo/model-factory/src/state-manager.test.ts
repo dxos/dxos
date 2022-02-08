@@ -63,6 +63,21 @@ describe('StateManager', () => {
     await stateManager.model.setProperty('testKey', 'testValue');
 
     expect(stateManager.model.properties).toEqual({ testKey: 'testValue' });
+  });
+
+  test('late initalization', () => {
+    const stateManager = new StateManager<TestModel>(TestModel.meta.type, undefined, createId(), null);
+    expect(stateManager.initialized).toBe(false);
+    expect(stateManager.modelType).toEqual(TestModel.meta.type);
+
+    stateManager.processMessage(createMeta(0), TestModel.meta.mutation.encode({ key: 'testKey', value: 'testValue' }));
+    stateManager.initialize(TestModel);
+    expect(stateManager.initialized).toBe(true);
+    expect(stateManager.model).toBeInstanceOf(TestModel);
+    expect(stateManager.model.properties).toEqual({ testKey: 'testValue' });
+
+    stateManager.processMessage(createMeta(1), TestModel.meta.mutation.encode({ key: 'key2', value: 'testValue2' }));
+    expect(stateManager.model.properties).toEqual({ testKey: 'testValue', key2: 'testValue2' });
   })
 })
 
