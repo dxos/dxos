@@ -6,10 +6,10 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createModelTestBench } from '@dxos/echo-db';
+import { MockFeedWriter } from '@dxos/echo-protocol';
+import { ModelFactory } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
-import { ModelFactory } from '@dxos/model-factory';
-import { MockFeedWriter } from '@dxos/echo-protocol';
 
 describe('TextModel', () => {
   test('insert', async () => {
@@ -35,14 +35,14 @@ describe('TextModel', () => {
 
   test('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
-    const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, new MockFeedWriter())
+    const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, new MockFeedWriter());
 
     model1.model.insert(0, 'Hello World!');
 
     const snapshot = model1.createSnapshot();
 
     const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, new MockFeedWriter());
-    
+
     expect(model2.model.textContent).toBe('Hello World!');
   });
 

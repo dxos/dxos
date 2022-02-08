@@ -4,19 +4,18 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
+import { StateManager } from '@dxos/model-factory/src/state-manager';
 
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { StateManager } from '@dxos/model-factory/src/state-manager';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -234,7 +233,7 @@ export class ItemManager {
     modelType,
     itemType,
     parentId,
-    snapshot,
+    snapshot
   }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
@@ -248,7 +247,7 @@ export class ItemManager {
     const modelStateManager = await this._constructModel({
       itemId,
       modelType,
-      snapshot,
+      snapshot
     });
 
     const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
@@ -277,7 +276,7 @@ export class ItemManager {
     const model = await this._constructModel({
       itemId,
       modelType,
-      snapshot,
+      snapshot
     });
 
     const sourceItem = this.getItem(source);

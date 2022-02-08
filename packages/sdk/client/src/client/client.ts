@@ -8,7 +8,7 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { Config, ConfigV1Object } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
+import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 

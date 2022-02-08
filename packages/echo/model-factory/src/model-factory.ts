@@ -8,8 +8,8 @@ import { Event } from '@dxos/async';
 import { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
 
 import { Model } from './model';
-import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
 import { StateManager } from './state-manager';
+import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -47,7 +47,7 @@ export class ModelFactory {
    * @param itemId Id of the item holding the model.
    * @param snapshot Snapshot defining the intial state. `{}` can be provided for empty state.
    * @param writeStream Stream for outbound messages.
-   * @returns 
+   * @returns
    */
   createModel<M extends Model> (modelType: ModelType, itemId: ItemID, snapshot: ModelSnapshot, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
     assert(itemId);

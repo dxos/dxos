@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createId, zeroKey } from '@dxos/crypto';
-import { MockFeedWriter, TestItemMutation } from '@dxos/echo-protocol';
-import { it as test } from 'mocha';
 import expect from 'expect';
+import { it as test } from 'mocha';
+
+import { createId, zeroKey } from '@dxos/crypto';
+import { MockFeedWriter } from '@dxos/echo-protocol';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';

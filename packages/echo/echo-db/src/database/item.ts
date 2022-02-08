@@ -5,13 +5,12 @@
 import debug from 'debug';
 
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
-import { Model } from '@dxos/model-factory';
+import { Model, StateManager } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
-import { StateManager } from '@dxos/model-factory';
 
 const log = debug('dxos:echo-db:items:item');
 

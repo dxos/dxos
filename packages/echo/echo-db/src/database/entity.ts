@@ -30,11 +30,11 @@ export class Entity<M extends Model> {
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
-    stateManager: StateManager<M>,
+    stateManager: StateManager<M>
   ) {
     this._stateManager = stateManager;
 
-    if(this._stateManager.initialized) {
+    if (this._stateManager.initialized) {
       this._subscriptions.push(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
     }
   }
@@ -52,7 +52,7 @@ export class Entity<M extends Model> {
   }
 
   get model (): M {
-    if(!this._stateManager.initialized) {
+    if (!this._stateManager.initialized) {
       return null as any;
     }
 

@@ -23,8 +23,8 @@ class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMuta
 
   snapshot (): TestItemSnapshot {
     return {
-      keys: Array.from(this._state.entries()).map(([key, value]) => ({ key, value })),
-    }
+      keys: Array.from(this._state.entries()).map(([key, value]) => ({ key, value }))
+    };
   }
 
   reset (snapshot: TestItemSnapshot): void {

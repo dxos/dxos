@@ -191,5 +191,5 @@ const defaultOpts = () => ({
   itemId: createId(),
   modelType: ObjectModel.meta.type,
   itemType: undefined,
-  snapshot: {},
+  snapshot: {}
 });

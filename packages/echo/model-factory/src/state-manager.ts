@@ -1,9 +1,15 @@
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta } from "@dxos/echo-protocol";
-import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from "./types";
-import { Model } from "./model";
-import { StateMachine } from "./state-machine";
-import { Event } from "@dxos/async";
-import assert from "assert";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
+import { Event } from '@dxos/async';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta } from '@dxos/echo-protocol';
+
+import { Model } from './model';
+import { StateMachine } from './state-machine';
+import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
 
 /**
  * Binds the model to the state machine. Manages the state machine lifecycle.
@@ -15,46 +21,45 @@ export class StateManager<M extends Model> {
   private _mutations: ModelMessage<Uint8Array>[] = [];
 
   private _modelMeta: ModelMeta | null = null;
-  
+
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   private _model: M | null = null;
-  
+
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   /**
-   * @param _modelType 
+   * @param _modelType
    * @param modelConstructor Model's constructor, can be undefined if the registry currently doesn't have this model.
-   * @param _itemId 
-   * @param _writeStream 
+   * @param _itemId
+   * @param _writeStream
    */
-  constructor(
+  constructor (
     private readonly _modelType: ModelType,
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
     private _snapshot: ModelSnapshot,
-    private readonly _writeStream: FeedWriter<Uint8Array> | null,
+    private readonly _writeStream: FeedWriter<Uint8Array> | null
   ) {
-    if(modelConstructor) {
+    if (modelConstructor) {
       this.initialize(modelConstructor);
     }
   }
 
-  get initialized(): boolean {
+  get initialized (): boolean {
     return !!this._modelMeta;
   }
 
-  get modelType(): ModelType {
+  get modelType (): ModelType {
     return this._modelType;
   }
 
-  get modelMeta(): ModelMeta {
+  get modelMeta (): ModelMeta {
     assert(this._modelMeta, 'Model not initialized.');
     return this._modelMeta;
   }
 
-
-  get model(): M {
+  get model (): M {
     assert(this._model, 'Model not initialized.');
     return this._model;
   }
@@ -62,7 +67,7 @@ export class StateManager<M extends Model> {
   /**
    * Writes the mutation to the output stream.
    */
-   private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+  private async _write (mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
@@ -83,53 +88,54 @@ export class StateManager<M extends Model> {
     };
   }
 
-  private _resetStateMachine() {
+  private _resetStateMachine () {
     assert(this._modelMeta, 'Model not initialized.');
 
     this._stateMachine = this._modelMeta.stateMachine();
 
-    if(this._snapshot.snapshot) {
+    if (this._snapshot.snapshot) {
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._snapshot.snapshot);
       this._stateMachine.reset(decoded);
     }
 
-    for(const mutaton of this._snapshot.mutations ?? []) {
+    for (const mutaton of this._snapshot.mutations ?? []) {
       const mutationDecoded = this.modelMeta.mutation.decode(mutaton.mutation);
       this._stateMachine.process(mutationDecoded, mutaton.meta);
     }
 
-    for(const mutation of this._mutations) {
+    for (const mutation of this._mutations) {
       this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
     }
   }
 
   /**
    * Perform late intitalization.
-   * 
+   *
    * Only possible if the modelContructor wasn't passed during StateManager's creation.
    */
-  initialize(modelConstructor: ModelConstructor<M>) {
+  initialize (modelConstructor: ModelConstructor<M>) {
     assert(!this._modelMeta, 'Already iniitalized.');
 
     this._modelMeta = modelConstructor.meta;
 
     this._resetStateMachine();
 
+    // eslint-disable-next-line new-cap
     this._model = new modelConstructor(
       this._modelMeta,
       this._itemId,
       () => this._stateMachine!.getState(),
-      this._writeStream ? mutation => this._write(mutation) : undefined,
+      this._writeStream ? mutation => this._write(mutation) : undefined
     );
   }
 
   /**
    * Process mutation from the inbound stream.
    */
-  processMessage(meta: MutationMeta, mutation: Uint8Array) {
+  processMessage (meta: MutationMeta, mutation: Uint8Array) {
     this._mutations.push({ meta, mutation });
-    if(this.initialized) {
+    if (this.initialized) {
       const mutationDecoded = this.modelMeta.mutation.decode(mutation);
       this._stateMachine!.process(mutationDecoded, meta);
 
@@ -141,8 +147,8 @@ export class StateManager<M extends Model> {
   /**
    * Create a snapshot of the current state.
    */
-  createSnapshot(): ModelSnapshot {
-    if(this.initialized && this.modelMeta.snapshotCodec) {
+  createSnapshot (): ModelSnapshot {
+    if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
         snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
@@ -153,19 +159,19 @@ export class StateManager<M extends Model> {
       snapshot: this._snapshot.snapshot,
       mutations: [
         ...(this._snapshot.mutations ?? []),
-        ...this._mutations,
-      ],
+        ...this._mutations
+      ]
     };
   }
 
   /**
    * Reset the state to existing snapshot.
    */
-  resetToSnapshot(snapshot: ModelSnapshot) {
+  resetToSnapshot (snapshot: ModelSnapshot) {
     this._snapshot = snapshot;
     this._mutations = [];
 
-    if(this.initialized) {
+    if (this.initialized) {
       this._resetStateMachine();
       this._model!.update.emit(this._model!);
     }

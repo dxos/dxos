@@ -7,12 +7,12 @@ import { it as test } from 'mocha';
 
 import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
+import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
-import { ModelFactory, StateManager } from '@dxos/model-factory';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';

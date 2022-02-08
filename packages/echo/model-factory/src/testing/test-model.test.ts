@@ -2,13 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { latch } from '@dxos/async';
-import { createId, createKeyPair, zeroKey } from '@dxos/crypto';
-import { MockFeedWriter, TestItemMutation } from '@dxos/echo-protocol';
 import { it as test } from 'mocha';
-import expect from 'expect';
-
-import { TestModel } from './test-model';
 
 describe('test model', () => {
   test.skip('basic mutations', async () => {

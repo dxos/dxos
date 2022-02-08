@@ -5,8 +5,7 @@
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
 
-import { ModelMeta, MutationWriteReceipt } from './types';
-import { MutationWriter } from './types';
+import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
 
 /**
  * Abstract base class for Models.

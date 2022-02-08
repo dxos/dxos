@@ -2,18 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import debug from 'debug';
-
 import { Event } from '@dxos/async';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
-  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot
 } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
-import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
+import { Model, ModelFactory } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
-
+import assert from 'assert';
+import debug from 'debug';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
@@ -105,10 +103,10 @@ export class ItemDemuxer {
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
       }
-      
+
       if (snapshot) {
         const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
-        entity._stateManager.resetToSnapshot(snapshot)
+        entity._stateManager.resetToSnapshot(snapshot);
       }
 
       this.mutation.emit(message);

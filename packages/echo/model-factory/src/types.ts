@@ -2,17 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import type { Codec } from '@dxos/codec-protobuf';
-import { MutationMeta, ItemID, FeedWriter, WriteReceipt } from '@dxos/echo-protocol';
-
-import { StateMachine } from './state-machine';
+import { ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
+import assert from 'assert';
 import { Model } from './model';
-
-//
-// Types.
-//
+import { StateMachine } from './state-machine';
 
 export type ModelType = string // TODO(burdon): Replace with DXN.
 

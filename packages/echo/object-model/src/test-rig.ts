@@ -23,6 +23,7 @@ export class TestRig<M extends Model<any>> {
   createPeer (): TestPeer<M> {
     const key = PublicKey.random();
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const writer: FeedWriter<ModelMessageOf<M>> = {
       write: async (mutation) => {
         return this._writeMessage(key, mutation);
