@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 (() => {
   const port = browser.runtime.connect();

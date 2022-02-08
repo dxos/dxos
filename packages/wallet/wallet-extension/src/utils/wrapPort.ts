@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Runtime } from 'webextension-polyfill-ts';
+import { Runtime } from 'webextension-polyfill';
 
 import { RpcPort } from '@dxos/rpc';
 

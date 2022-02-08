@@ -24,7 +24,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/expect": "~24.3.0",
+
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "expect": "~27.0.2",

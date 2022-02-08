@@ -3,7 +3,7 @@
 //
 
 import { useMemo } from 'react';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 import { wrapPort } from '../../utils/wrapPort';
 
