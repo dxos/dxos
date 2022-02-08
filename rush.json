@@ -793,8 +793,8 @@
     //
 
     {
-      "packageName": "@dxos/demos",
-      "projectFolder": "packages/demos"
+      "packageName": "@dxos/deprecated-demos",
+      "projectFolder": "packages/demos/deprecated-demos"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",

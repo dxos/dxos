@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/demos",
+  "name": "@dxos/deprecated-demos",
   "version": "2.26.1",
   "private": true,
   "description": "SDK demos and storybooks.",
