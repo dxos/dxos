@@ -52,14 +52,16 @@ export class DataMirror {
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
               source: addedEntity.genesis.link.source,
-              target: addedEntity.genesis.link.target
+              target: addedEntity.genesis.link.target,
+              snapshot: {}
             });
           } else {
             entity = await this._itemManager.constructItem({
               itemId: addedEntity.itemId,
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
-              parentId: addedEntity.itemMutation?.parentId
+              parentId: addedEntity.itemMutation?.parentId,
+              snapshot: {}
             });
           }
 

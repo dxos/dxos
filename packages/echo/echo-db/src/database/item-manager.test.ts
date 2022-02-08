@@ -23,7 +23,8 @@ describe('ItemManager', () => {
       const item = await itemManager.constructItem({
         itemId,
         modelType: ObjectModel.meta.type,
-        itemType: undefined
+        itemType: undefined,
+        snapshot: {}
       });
       expect(item.id).toEqual(itemId);
       expect(item.model).toBeInstanceOf(ObjectModel);
@@ -172,7 +173,8 @@ describe('ItemManager', () => {
       const item = await itemManager.constructItem({
         itemId: createId(),
         modelType: DefaultModel.meta.type,
-        itemType: undefined
+        itemType: undefined,
+        snapshot: {}
       });
       item.model.originalModelType = ObjectModel.meta.type;
 
@@ -192,5 +194,6 @@ describe('ItemManager', () => {
 const defaultOpts = () => ({
   itemId: createId(),
   modelType: ObjectModel.meta.type,
-  itemType: undefined
+  itemType: undefined,
+  snapshot: {},
 });

@@ -9,7 +9,7 @@ import pify from 'pify';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
+import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
@@ -24,8 +24,7 @@ const log = debug('dxos:echo:item-manager');
 export interface ModelConstructionOptions {
   itemId: ItemID
   modelType: ModelType
-  initialMutations?: ModelMessage<Uint8Array>[],
-  modelSnapshot?: Uint8Array,
+  snapshot: ModelSnapshot
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
@@ -190,44 +189,13 @@ export class ItemManager {
   }
 
   private async _constructModel ({
-    modelType, itemId, modelSnapshot, initialMutations
+    modelType, itemId, snapshot
   }: ModelConstructionOptions): Promise<StateManager<Model>> {
-    // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    const modelMeta = this._modelFactory.getModelMeta(modelType);
-
-    //
     // Convert model-specific outbound mutation to outbound envelope message.
-    //
-    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({
-      itemId,
-      mutation,
-    }), this._writeStream);
+    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
-    const stateManager: StateManager<Model> = this._modelFactory.createModel(modelType, itemId, {}, outboundTransform);
-    assert(stateManager.model, `Invalid model: ${modelType}`);
-
-    if (modelSnapshot) {
-      if (stateManager.model instanceof DefaultModel) {
-        stateManager.model.snapshot = modelSnapshot;
-      } else {
-        assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-        stateManager.resetToSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
-      }
-    }
-
-    // Process initial mutations.
-    if (initialMutations) {
-      for (const mutation of initialMutations) {
-        await stateManager.processMessage(mutation.meta, mutation.mutation);
-      }
-    }
-
-    return stateManager;
+    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, outboundTransform);
   }
 
   /**
@@ -269,8 +237,7 @@ export class ItemManager {
     modelType,
     itemType,
     parentId,
-    initialMutations,
-    modelSnapshot
+    snapshot,
   }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
@@ -284,8 +251,7 @@ export class ItemManager {
     const modelStateManager = await this._constructModel({
       itemId,
       modelType,
-      initialMutations,
-      modelSnapshot
+      snapshot,
     });
 
     const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
@@ -304,8 +270,7 @@ export class ItemManager {
     itemId,
     modelType,
     itemType,
-    initialMutations,
-    modelSnapshot,
+    snapshot,
     source,
     target
   }: LinkConstructionOptions): Promise<Link<any>> {
@@ -315,8 +280,7 @@ export class ItemManager {
     const model = await this._constructModel({
       itemId,
       modelType,
-      initialMutations,
-      modelSnapshot
+      snapshot,
     });
 
     const sourceItem = this.getItem(source);
@@ -411,8 +375,10 @@ export class ItemManager {
     item._setModel(await this._constructModel({
       itemId,
       modelType: item.model.originalModelType,
-      initialMutations: item.model.mutations,
-      modelSnapshot: item.model.snapshot
+      snapshot: {
+        snapshot: item.model.snapshot,
+        mutations: item.model.mutations,
+      }
     }));
 
     this.update.emit(item);

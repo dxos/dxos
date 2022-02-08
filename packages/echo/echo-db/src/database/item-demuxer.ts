@@ -63,7 +63,9 @@ export class ItemDemuxer {
         const modelOpts: ModelConstructionOptions = {
           itemId,
           modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-          initialMutations: mutation ? [{ mutation, meta }] : undefined
+          snapshot: {
+            mutations: mutation ? [{ mutation, meta }] : undefined
+          }
         };
 
         let entity: Entity<any>;
@@ -150,8 +152,7 @@ export class ItemDemuxer {
         modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
         itemType: item.itemType,
         parentId: item.parentId,
-        initialMutations: item.model.mutations,
-        modelSnapshot: item.model.snapshot,
+        snapshot: item.model
       });
 
       if (newItem.model instanceof DefaultModel) {
