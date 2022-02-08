@@ -124,10 +124,6 @@ message Runtime {
     string publicUrl = 4 [(env) = "PUBLIC_URL"];
   }
 
-  message Bot {
-    string uid = 1;
-  }
-
   // CLI configuration
   message CLI {
     message AppServe {
@@ -226,7 +222,7 @@ message Runtime {
       string npm_access_token = 5;
     }
 
-    message BotFactoryClient {
+    message BotFactory {
       string topic = 1;
     }
 
@@ -237,14 +233,13 @@ message Runtime {
     Signal signal = 5;
     repeated Ice ice = 6;
     Machine machine = 7;
-    BotFactoryClient bot = 8;
+    BotFactory bot = 8;
   }
 
   Client client = 1;
   App app = 2;
-  Bot bot = 3;
-  CLI cli = 4;
-  Props props = 5;
-  Services services = 6;
-  System system = 7;
+  CLI cli = 3;
+  Props props = 4;
+  Services services = 5;
+  System system = 6;
 }
