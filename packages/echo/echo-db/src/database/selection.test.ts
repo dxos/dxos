@@ -12,16 +12,19 @@ import { ObjectModel } from '@dxos/object-model';
 import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
+import { ModelFactory, StateManager } from '@dxos/model-factory';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
 
+const modelFactory = new ModelFactory().registerModel(ObjectModel);
+
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
-  new Item(null as any, id, type, null as any, undefined, parent);
+  new Item(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(null as any, id, type, null as any, {
+  const link = new Link(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id), {
     sourceId: source.id,
     targetId: target.id,
     source: source,

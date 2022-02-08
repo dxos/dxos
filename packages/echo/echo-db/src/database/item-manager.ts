@@ -48,25 +48,25 @@ export class ItemManager {
    *
    * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
    */
-  readonly update = new Event<Entity<any>>();
+  readonly update = new Event<Entity<Model>>();
 
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.update);
+  readonly debouncedUpdate: Event<Entity<Model>[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
    * @private
    */
-  private readonly _entities = new Map<ItemID, Entity<any>>();
+  private readonly _entities = new Map<ItemID, Entity<Model>>();
 
   /**
    * Map of item promises (waiting for item construction after genesis message has been written).
    * @private
    */
-  private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
    * @param _modelFactory
@@ -82,11 +82,11 @@ export class ItemManager {
   }
 
   get items (): Item<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Item<any> => entity instanceof Item);
+    return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
   }
 
   get links (): Link<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Link<any> => entity instanceof Link);
+    return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
   /**
@@ -165,7 +165,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Entity<any>>();
+    const [waitForCreation, callback] = trigger<Entity<Model>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -352,7 +352,7 @@ export class ItemManager {
 
     const decoded = item.modelMeta.mutation.decode(message.mutation);
 
-    await item.model.processMessage(message.meta, decoded);
+    await item._stateManager.processMessage(message.meta, decoded);
     this.update.emit(item);
   }
 
@@ -369,7 +369,7 @@ export class ItemManager {
   }
 
   getItemsWithDefaultModels (): Entity<DefaultModel>[] {
-    return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
+    return Array.from(this._entities.values()).filter((item): item is Item<DefaultModel> => item.model instanceof DefaultModel);
   }
 
   /**
