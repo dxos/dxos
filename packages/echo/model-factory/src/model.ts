@@ -2,17 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/feed-store';
+import { ItemID } from '@dxos/echo-protocol';
 
-import { StateMachine } from './state-machine';
-import { ModelMessage, ModelMeta, MutationWriteReceipt } from './types';
+import { ModelMeta, MutationWriteReceipt } from './types';
 import { MutationWriter } from './types';
-
-
 
 /**
  * Abstract base class for Models.
