@@ -10,11 +10,11 @@ describe('Client Bot', () => {
     const { client, invitation } = await setupClient();
     const bot = new Bot();
 
-    await bot.Initialize({
+    await bot.initialize({
       invitation
     });
 
-    await bot.Stop();
+    await bot.stop();
     await client.destroy();
   });
 
@@ -23,13 +23,13 @@ describe('Client Bot', () => {
     const { client, invitation } = await setupClient(config);
     const bot = new Bot();
 
-    await bot.Initialize({
+    await bot.initialize({
       config: config.values,
       invitation
     });
 
     await broker.stop();
-    await bot.Stop();
+    await bot.stop();
     await client.destroy();
   });
 });

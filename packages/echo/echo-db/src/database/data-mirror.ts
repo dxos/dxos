@@ -32,7 +32,7 @@ export class DataMirror {
   ) {}
 
   open () {
-    const entities = this._dataService.SubscribeEntitySet({ partyKey: this._partyKey });
+    const entities = this._dataService.subscribeEntitySet({ partyKey: this._partyKey });
     entities.subscribe(
       async diff => {
         for (const addedEntity of diff.added ?? []) {
@@ -73,7 +73,7 @@ export class DataMirror {
   }
 
   private _subscribeToUpdates (entity: Entity<Model<any>>) {
-    const stream = this._dataService.SubscribeEntityStream({ partyKey: this._partyKey, itemId: entity.id });
+    const stream = this._dataService.subscribeEntityStream({ partyKey: this._partyKey, itemId: entity.id });
     stream.subscribe(
       async update => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);

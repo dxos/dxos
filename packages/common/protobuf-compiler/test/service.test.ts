@@ -7,19 +7,19 @@ test('services', async () => {
   const service = schema.getService('dxos.test.TestService');
 
   const server = service.createServer({
-    async CountTasks(tasks) {
+    async countTasks(tasks) {
       return {
         count: tasks.tasks?.length ?? 0,
       }
     },
-    SubscribeTasks() {
+    subscribeTasks() {
       return new Stream(() => {})
     }
   })
 
   const client = service.createClient(server)
 
-  const response = await client.CountTasks({
+  const response = await client.countTasks({
     tasks: [{
       key: new MyKey(new Uint8Array([1, 2, 3])),
       type: TaskType.COMPLETED

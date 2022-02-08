@@ -8,8 +8,9 @@ import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/
 import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
+import { ItemManager } from './item-manager';
 import type { Link } from './link';
-import { Selection, SelectionResult } from './selection';
+import { Selection, createItemSelector } from './selection';
 
 const log = debug('dxos:echo-db:items:item');
 
@@ -57,13 +58,14 @@ export class Item<M extends Model> extends Entity<M> {
    * @param {Item<any>} [parent]  - Parent Item (if not a root Item).
    */
   constructor (
+    itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemId, itemType, model);
+    super(itemManager, itemId, itemType, model);
     this._updateParent(parent);
   }
 
@@ -84,7 +86,7 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   get children (): Item<any>[] {
-    return Array.from(this._children.values());
+    return Array.from(this._children.values()).filter(item => !item.deleted);
   }
 
   get links (): Link<any, any, any>[] {
@@ -96,12 +98,10 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   * @param [selector] {SelectFilter}
+   * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
-  select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
-    const selection = new Selection(() => [this], this._onUpdate.discardParameter());
-    return new SelectionResult(selection, selector);
+  select (): Selection<Item<any>> {
+    return createItemSelector(this, this._itemManager.debouncedUpdate);
   }
 
   /**

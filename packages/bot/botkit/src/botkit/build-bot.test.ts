@@ -54,13 +54,13 @@ describe('Build bot', () => {
       botContainer,
       config
     });
-    const botHandle = await botFactory.SpawnBot({
+    const botHandle = await botFactory.spawnBot({
       package: { localPath: outfile },
       invitation
     });
 
     const command = PublicKey.random().asUint8Array();
-    await botFactory.SendCommand({
+    await botFactory.sendCommand({
       botId: botHandle.id,
       command
     });

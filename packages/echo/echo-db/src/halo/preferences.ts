@@ -41,8 +41,8 @@ export class Preferences {
   }
 
   subscribeToPreferences (callback: (preferences: any) => void) {
-    const globalResults = this._party.database.select(s => s.filter({ type: HALO_PARTY_PREFERENCES_TYPE }).items);
-    const deviceResults = this._party.database.select(s => s.filter({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).items);
+    const globalResults = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query();
+    const deviceResults = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query();
 
     const event = new Event<any>();
 
@@ -76,7 +76,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const [globalItem] = this._party.database.select(s => s.filter({ type: HALO_PARTY_PREFERENCES_TYPE }).items).getValue();
+    const [globalItem] = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query().result;
     return globalItem;
   }
 
@@ -84,7 +84,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const deviceItems = this._party.database.select(s => s.filter({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).items).getValue();
+    const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query().result;
     return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 
@@ -129,11 +129,10 @@ export class Preferences {
   }
 
   async recordPartyJoining (joinedParty: JoinedParty) {
-    const knownParties = this._party.database
-      .select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items)
-      .getValue();
-    const partyDesc = knownParties.find(
-      partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
+    const [partyDesc] = this._party.database
+      .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
+      .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')))
+      .query().result;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({
@@ -159,13 +158,13 @@ export class Preferences {
       };
     };
 
-    const query = this._party.database.select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items);
+    const query = this._party.database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).query();
 
     // Wrap the query event so we can have manual control.
     const event = new Event();
     query.update.on(() => event.emit());
 
-    const result = new ResultSet<JoinedParty>(event, () => query.getValue().map(converter));
+    const result = new ResultSet<JoinedParty>(event, () => query.result.map(converter));
     const unsubscribe = result.subscribe(callback);
     if (result.value.length) {
       event.emit();

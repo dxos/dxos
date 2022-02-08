@@ -24,11 +24,11 @@ describe('Protobuf service', () => {
     const server: RpcPeer = createRpcServer({
       service,
       handlers: {
-        TestCall: async (req) => {
+        testCall: async (req) => {
           expect(req.data).toEqual('requestData');
           return { data: 'responseData' };
         },
-        VoidCall: async () => {}
+        voidCall: async () => {}
       },
       port: alicePort
     });
@@ -42,7 +42,7 @@ describe('Protobuf service', () => {
       client.open()
     ]);
 
-    const response = await client.rpc.TestCall({ data: 'requestData' });
+    const response = await client.rpc.testCall({ data: 'requestData' });
 
     expect(response.data).toEqual('responseData');
   });
@@ -55,7 +55,7 @@ describe('Protobuf service', () => {
     const server: RpcPeer = createRpcServer({
       service,
       handlers: {
-        TestCall: async (req) => {
+        testCall: async (req) => {
           async function handlerFn (): Promise<never> {
             await sleep(5);
             throw new Error('TestError');
@@ -63,7 +63,7 @@ describe('Protobuf service', () => {
 
           return await handlerFn();
         },
-        VoidCall: async () => {}
+        voidCall: async () => {}
       },
       port: alicePort
     });
@@ -79,7 +79,7 @@ describe('Protobuf service', () => {
 
     let error!: Error;
     try {
-      await client.rpc.TestCall({ data: 'requestData' });
+      await client.rpc.testCall({ data: 'requestData' });
     } catch (err: any) {
       error = err;
     }
@@ -101,7 +101,7 @@ describe('Protobuf service', () => {
       server = createRpcServer({
         service,
         handlers: {
-          TestCall: (req) => {
+          testCall: (req) => {
             expect(req.data).toEqual('requestData');
 
             return new Stream(({ next, close }) => {
@@ -136,11 +136,11 @@ describe('Protobuf service', () => {
       const server: RpcPeer = createRpcServer({
         service,
         handlers: {
-          TestCall: async (req) => {
+          testCall: async (req) => {
             expect(req.data).toEqual('requestData');
             return { data: 'responseData' };
           },
-          VoidCall: async () => {}
+          voidCall: async () => {}
         },
         port: alicePort
       });
@@ -154,11 +154,11 @@ describe('Protobuf service', () => {
         client.open()
       ]);
 
-      await client.rpc.VoidCall();
+      await client.rpc.voidCall();
     });
 
     test('consumed stream', async () => {
-      const stream = client.rpc.TestCall({ data: 'requestData' });
+      const stream = client.rpc.testCall({ data: 'requestData' });
 
       expect(await Stream.consume(stream)).toEqual([
         { data: { data: 'foo' } },
@@ -169,7 +169,7 @@ describe('Protobuf service', () => {
     });
 
     test('subscribed stream', async () => {
-      const stream = client.rpc.TestCall({ data: 'requestData' });
+      const stream = client.rpc.testCall({ data: 'requestData' });
 
       let lastData: string | undefined;
       const [closedPromise, closedLatch] = latch();
@@ -198,14 +198,14 @@ describe('Protobuf service', () => {
         services,
         handlers: {
           TestService: {
-            TestCall: async (req) => {
+            testCall: async (req) => {
               expect(req.data).toEqual('requestData');
               return { data: 'responseData' };
             },
-            VoidCall: async () => {}
+            voidCall: async () => {}
           },
           PingService: {
-            Ping: async (req) => ({ nonce: req.nonce })
+            ping: async (req) => ({ nonce: req.nonce })
           }
         },
         port: alicePort
@@ -220,10 +220,10 @@ describe('Protobuf service', () => {
         client.open()
       ]);
 
-      const response = await client.rpc.TestService.TestCall({ data: 'requestData' });
+      const response = await client.rpc.TestService.testCall({ data: 'requestData' });
       expect(response.data).toEqual('responseData');
 
-      const ping = await client.rpc.PingService.Ping({ nonce: 5 });
+      const ping = await client.rpc.PingService.ping({ nonce: 5 });
       expect(ping.nonce).toEqual(5);
     });
   });

@@ -42,21 +42,21 @@ describe('In-Memory', () => {
       const botFactoryClient = new BotFactoryClient(nm2);
       await botFactoryClient.start(topic);
 
-      const { id: botId } = await botFactoryClient.botFactory.SpawnBot({});
+      const { id: botId } = await botFactoryClient.botFactory.spawnBot({});
       expect(botId).toBeDefined();
 
-      const { bots } = await botFactoryClient.botFactory.GetBots();
+      const { bots } = await botFactoryClient.botFactory.getBots();
       expect(bots).toHaveLength(1);
       expect(bots![0].status).toBe(Bot.Status.RUNNING);
       expect(botInitialized).toBe(true);
 
       const command = PublicKey.random().asUint8Array();
-      const response = await botFactoryClient.botFactory.SendCommand({ botId, command });
+      const response = await botFactoryClient.botFactory.sendCommand({ botId, command });
 
       expect(response.response).toBeDefined();
       expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
-      await botFactoryClient.botFactory.RemoveAll();
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
     });
   });
@@ -105,7 +105,7 @@ describe('In-Memory', () => {
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-      await botFactoryClient.botFactory.RemoveAll();
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
     });
   });
@@ -175,7 +175,7 @@ describe('Node', () => {
         const waitForNewItem = new Promise<boolean>(resolve => {
           unsub = party
             .database
-            .select(s => s.filter({ type: TEST_ECHO_TYPE }).items)
+            .select({ type: TEST_ECHO_TYPE }).query()
             .update.on(async (items) => {
               for (const item of items) {
                 const payload = item.model.getProperty('payload');
@@ -202,7 +202,7 @@ describe('Node', () => {
 
       await testCommand();
 
-      await botFactoryClient.botFactory.RemoveAll();
+      await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
     });
   });

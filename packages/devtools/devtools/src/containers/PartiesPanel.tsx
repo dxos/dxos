@@ -12,7 +12,7 @@ import { useStream } from '../hooks';
 export const PartiesPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
-  const { parties } = useStream(() => devtoolsHost.SubscribeToParties({})) ?? {};
+  const { parties } = useStream(() => devtoolsHost.subscribeToParties({})) ?? {};
   if (parties === undefined) {
     return null;
   }

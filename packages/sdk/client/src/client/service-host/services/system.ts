@@ -7,7 +7,7 @@ import { CreateServicesOpts } from './interfaces';
 
 export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => {
   return {
-    GetConfig: async () => {
+    getConfig: async () => {
       return {
         ...config.values,
         build: {
@@ -16,7 +16,7 @@ export const createSystemService = ({ config, echo }: CreateServicesOpts): Syste
         }
       };
     },
-    Reset: async () => {
+    reset: async () => {
       await echo.reset();
     }
   };

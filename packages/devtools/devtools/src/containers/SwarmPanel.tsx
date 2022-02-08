@@ -13,7 +13,7 @@ import { useStream } from '../hooks';
 export const SwarmPanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
-  const { data } = useStream(() => devtoolsHost.SubscribeToSwarmInfo({})) ?? {};
+  const { data } = useStream(() => devtoolsHost.subscribeToSwarmInfo({})) ?? {};
   if (!data?.length) {
     return null;
   }

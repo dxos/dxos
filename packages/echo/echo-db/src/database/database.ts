@@ -13,9 +13,9 @@ import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
 import { Item } from './item';
-import { ItemFilter, ItemManager } from './item-manager';
+import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { SelectFilter, Selection, SelectionResult } from './selection';
+import { createRootSelector, RootFilter } from './selection';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -63,9 +63,10 @@ export class Database {
 
   /**
    * Fired when any item is updated.
+   * Contains a list of all entities changed from the last update.
    */
-  get update (): Event<void> {
-    return this._itemManager.debouncedItemUpdate;
+  get update (): Event<Entity<any>[]> {
+    return this._itemManager.debouncedUpdate;
   }
 
   /**
@@ -74,7 +75,7 @@ export class Database {
    * If the information about which entity got updated is not required prefer using `update`.
    */
   get entityUpdate (): Event<Entity<any>> {
-    return this._itemManager.itemUpdate;
+    return this._itemManager.update;
   }
 
   @synchronized
@@ -156,14 +157,15 @@ export class Database {
   /**
    * Waits for item matching the filter to be present and returns it.
    */
-  async waitForItem<T extends Model<any> = any> (filter: SelectFilter<Item<T>>): Promise<Item<T>> {
-    const query = this.select(s => s.filter(filter).items);
-    if (query.getValue().length > 0) {
-      return query.getValue()[0];
-    } else {
-      const [item] = await query.update.waitFor(items => items.length > 0);
-      return item;
-    }
+  async waitForItem<T extends Model<any> = any> (filter: RootFilter): Promise<Item<T>> {
+    const query = this.select(filter).query();
+    await query.update.waitForCondition(() => {
+      const { result } = query;
+      return Array.isArray(result) ? result.length > 0 : result !== undefined;
+    });
+    const item = Array.isArray(query.result) ? query.result[0] : query.result;
+    assert(item, 'Race condition detected');
+    return item;
   }
 
   /**
@@ -171,11 +173,11 @@ export class Database {
    * @param selector {SelectFilter}
    * @param [filter]
    */
-  select<T> (selector: (selection: Selection<Item<any>>) => T, filter: ItemFilter = {}): SelectionResult<T> {
-    const result = this._itemManager.queryItems(filter);
-    const selection = new Selection(() => result.value, result.update.discardParameter());
-    return new SelectionResult(selection, selector);
-  }
+  select = createRootSelector(
+    () => this._itemManager.items,
+    () => this._itemManager.debouncedUpdate,
+    this
+  );
 
   createSnapshot () {
     this._assertInitialized();

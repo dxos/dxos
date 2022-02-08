@@ -122,7 +122,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     return {
       write: async (mutation) => {
         log('write', mutation);
-        const { feedKey, seq } = await this._service.Write({ mutation, partyKey: this._partyKey });
+        const { feedKey, seq } = await this._service.write({ mutation, partyKey: this._partyKey });
         assert(feedKey);
         assert(seq !== undefined);
         return {

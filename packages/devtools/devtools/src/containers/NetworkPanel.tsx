@@ -33,7 +33,7 @@ export const NetworkPanel = () => {
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  const { topics } = useStream(() => devtoolsHost.SubscribeToNetworkTopics()) ?? {};
+  const { topics } = useStream(() => devtoolsHost.subscribeToNetworkTopics()) ?? {};
 
   useAsyncEffect(async () => {
     if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {
@@ -42,7 +42,7 @@ export const NetworkPanel = () => {
     }
 
     const updatePeers = async () => {
-      const { peers } = await devtoolsHost.GetNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
+      const { peers } = await devtoolsHost.getNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
       peers && setPeers(peers.map((peer: any) => ({
         ...peer,
         id: PublicKey.from(peer.id),

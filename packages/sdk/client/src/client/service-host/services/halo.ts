@@ -19,11 +19,16 @@ import { CreateServicesOpts } from './interfaces';
 export class HaloService implements IHaloService {
   constructor (private echo: ECHO) {}
 
-  SubscribeContacts (): Stream<Contacts> {
+  subscribeContacts (): Stream<Contacts> {
     if (this.echo.halo.isInitialized) {
       return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
     } else {
       return new Stream(({ next }) => {
+        // If profile does not exist, send an empty array.
+        if (!this.echo.halo.isInitialized) {
+          next({ contacts: [] });
+        }
+
         const subGroup = new SubscriptionGroup();
 
         setImmediate(async () => {
@@ -39,7 +44,7 @@ export class HaloService implements IHaloService {
     }
   }
 
-  async AddKeyRecord (request: AddKeyRecordRequest): Promise<void> {
+  async addKeyRecord (request: AddKeyRecordRequest): Promise<void> {
     assert(request.keyRecord && request.keyRecord.publicKey, 'Missing key record.');
     await this.echo.halo.keyring.addKeyRecord(request.keyRecord);
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
@@ -59,7 +64,7 @@ export class HaloService implements IHaloService {
     };
   }
 
-  async Sign (request: SignRequest): Promise<SignResponse> {
+  async sign (request: SignRequest): Promise<SignResponse> {
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');

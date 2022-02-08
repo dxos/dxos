@@ -20,8 +20,8 @@ export const LoggingPanel = () => {
      * so we need to then call enable() in order to restore the existing config.
      */
     const fetchNamespaces = async () => {
-      const namespacesFetched = await devtoolsHost.DisableDebugLogging({});
-      await devtoolsHost.EnableDebugLogging({ namespaces: namespacesFetched?.enabledNamespaces });
+      const namespacesFetched = await devtoolsHost.disableDebugLogging({});
+      await devtoolsHost.enableDebugLogging({ namespaces: namespacesFetched?.enabledNamespaces });
       if (namespacesFetched?.enabledNamespaces) {
         setNamespaces(namespacesFetched.enabledNamespaces);
       }
@@ -34,10 +34,10 @@ export const LoggingPanel = () => {
     setImmediate(async () => {
       if (enabled) {
         // Disable first otherwise the new namespaces are added to the existing enabled set.
-        await devtoolsHost.DisableDebugLogging({});
-        await devtoolsHost.EnableDebugLogging({ namespaces: namespaces || '*' });
+        await devtoolsHost.disableDebugLogging({});
+        await devtoolsHost.enableDebugLogging({ namespaces: namespaces || '*' });
       } else {
-        await devtoolsHost.DisableDebugLogging({});
+        await devtoolsHost.disableDebugLogging({});
       }
     });
   };

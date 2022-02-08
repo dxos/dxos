@@ -49,10 +49,7 @@ const User = () => {
   const [testText, setTestText] = useState('');
   const [textItem, setTextItem] = useState<Item<ObjectModel>>();
   const client = useClient();
-  const counterItems = useSelection(party?.database.select(s => s
-    .filter({ type: 'DXOS_COUNTER' })
-    .items)
-  , [party?.key]);
+  const counterItems = useSelection(party?.select({ type: 'DXOS_COUNTER' }));
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();

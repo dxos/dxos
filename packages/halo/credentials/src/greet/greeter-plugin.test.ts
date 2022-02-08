@@ -175,7 +175,8 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   await plugin.send(rendezvousKey, {
     __type_url: 'dxos.credentials.greet.Command',
     command: Command.Type.FINISH,
-    secret: await secretProvider()
+    secret: await secretProvider(),
+    params: []
   },
   oneway);
 });

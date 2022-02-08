@@ -18,7 +18,7 @@ export const Main = () => {
   const [inProgress, setInProgress] = useState(false);
 
   useEffect(() => {
-    const partyStream = client.services.PartyService.SubscribeParties();
+    const partyStream = client.services.PartyService.subscribeParties();
     partyStream.subscribe(response => setParties(response.parties ?? []), error => setError(error));
     return () => partyStream.close();
   }, []);
@@ -52,7 +52,7 @@ export const Main = () => {
   const handleCreateParty = async () => {
     setInProgress(true);
     try {
-      await client.services.PartyService.CreateParty();
+      await client.services.PartyService.createParty();
     } catch (e: any) {
       console.error(e);
       setError(e);

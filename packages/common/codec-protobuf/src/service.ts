@@ -52,9 +52,10 @@ export class Service {
       // TODO(marik-d): What about primitive types.
       const requestCodec = schema.tryGetCodecForType(method.resolvedRequestType.fullName);
       const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName);
+      const methodName = mapRpcMethodName(method.name);
 
       if (!method.responseStream) {
-        (this as any)[method.name] = async (request: unknown) => {
+        (this as any)[methodName] = async (request: unknown) => {
           const encoded = requestCodec.encode(request);
           const response = await backend.call(method.name, {
             value: encoded,
@@ -63,7 +64,7 @@ export class Service {
           return responseCodec.decode(response.value!);
         };
       } else {
-        (this as any)[method.name] = (request: unknown) => {
+        (this as any)[methodName] = (request: unknown) => {
           const encoded = requestCodec.encode(request);
           return new Stream(({ next, close }) => {
             const stream = backend.callStream(method.name, {
@@ -78,7 +79,7 @@ export class Service {
       }
 
       // Set function name so that is properly named in stack traces.
-      Object.defineProperty((this as any)[method.name], 'name', { value: method.name });
+      Object.defineProperty((this as any)[methodName], 'name', { value: methodName });
     }
   }
 }
@@ -95,13 +96,13 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
+    const mappedMethodName = mapRpcMethodName(methodName);
+
+    const handler = this._handlers[mappedMethodName as keyof S];
+    assert(handler, `Handler is missing: ${mappedMethodName}`);
+
     const requestDecoded = requestCodec.decode(request.value!);
-
-    const handler = this._handlers[methodName as keyof S];
-    assert(handler, `Handler is missing: ${methodName}`);
-
     const response = await (handler as any).bind(this._handlers)(requestDecoded);
-
     const responseEncoded = responseCodec.encode(response);
 
     return {
@@ -115,11 +116,12 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
+    const mappedMethodName = mapRpcMethodName(methodName);
+
+    const handler = this._handlers[mappedMethodName as keyof S];
+    assert(handler, `Handler is missing: ${mappedMethodName}`);
+
     const requestDecoded = requestCodec.decode(request.value!);
-
-    const handler = this._handlers[methodName as keyof S];
-    assert(handler, `Handler is missing: ${methodName}`);
-
     const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
     return new Stream<Any>(({ next, close }) => {
       responseStream.subscribe(data => next({
@@ -143,4 +145,8 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     return { method, requestCodec, responseCodec };
   }
+}
+
+function mapRpcMethodName (name: string) {
+  return name[0].toLocaleLowerCase() + name.substring(1);
 }

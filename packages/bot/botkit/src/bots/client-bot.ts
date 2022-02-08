@@ -21,7 +21,7 @@ export class Bot implements BotService {
   protected client: Client | undefined;
   protected party: Party | undefined;
 
-  async Initialize (request: InitializeRequest) {
+  async initialize (request: InitializeRequest) {
     log('Client bot start initilizing');
     this.client = new Client(request.config);
 
@@ -45,7 +45,7 @@ export class Bot implements BotService {
     await this.onStart(request);
   }
 
-  async Start (request: StartRequest) {
+  async start (request: StartRequest) {
     log('Client bot start initilizing');
     this.client = new Client(request.config);
 
@@ -62,12 +62,12 @@ export class Bot implements BotService {
     await this.onStart(request);
   }
 
-  async Command (request: SendCommandRequest) {
+  async command (request: SendCommandRequest) {
     const response = await this.onCommand(request);
     return response;
   }
 
-  async Stop () {
+  async stop () {
     await this.client?.destroy();
     await this.onStop();
   }

@@ -13,20 +13,20 @@ import {
 import { startBot } from './start-bot';
 
 export class EmptyBot implements BotService {
-  async Initialize (request: InitializeRequest) {
+  async initialize (request: InitializeRequest) {
     await this.onInit(request);
   }
 
-  async Start (request: StartRequest) {
+  async start (request: StartRequest) {
     await this.onInit(request);
   }
 
-  async Command (request: SendCommandRequest) {
+  async command (request: SendCommandRequest) {
     const response = await this.onCommand(request);
     return response;
   }
 
-  async Stop () {
+  async stop () {
     await this.onStop();
   }
 

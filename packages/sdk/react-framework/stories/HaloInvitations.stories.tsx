@@ -8,7 +8,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { defs } from '@dxos/config';
 import {
-  ClientProvider, ConfigProvider, ProfileInitializer, useParties, useRemoteParties, useProfile
+  ClientProvider, ConfigProvider, ProfileInitializer, useParties, useProfile
 } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
@@ -20,7 +20,7 @@ export default {
 };
 
 const RemoteParties = () => {
-  const parties = useRemoteParties();
+  const parties = useParties();
 
   return (
     <Box>
