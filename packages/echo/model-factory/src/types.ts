@@ -7,7 +7,8 @@ import assert from 'assert';
 import type { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
-import { StateMachine } from './state-machiene';
+import { StateMachine } from './state-machine';
+import { Model } from './model';
 
 //
 // Types.
@@ -39,7 +40,12 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   getInitMutation? (props: any): Promise<any | null>
 }
 
-export type ModelConstructor<T> = (new (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<any>) => T) &
+export type ModelConstructor<M extends Model> = (new (
+  meta: ModelMeta,
+  itemId: ItemID,
+  getState: () => StateOf<M>,
+  writeStream?: FeedWriter<MutationOf<M>>,
+) => M) &
   { meta: ModelMeta };
 
 export type ModelMessage<T> = {
@@ -60,3 +66,7 @@ export function validateModelClass (model: any): asserts model is ModelConstruct
     throw new TypeError('Invalid model: missing mutation codec.');
   }
 }
+
+export type MutationOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TMutation : any;
+
+export type StateOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TState : any;

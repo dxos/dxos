@@ -9,6 +9,7 @@ import { FeedWriter, ItemID } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
+import { StateManager } from './state-manager';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -40,7 +41,7 @@ export class ModelFactory {
     return this;
   }
 
-  createModel<T extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): T {
+  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): StateManager<M> {
     assert(itemId);
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
@@ -48,8 +49,12 @@ export class ModelFactory {
 
     const { meta, constructor } = this._models.get(modelType)!;
 
+    const stateMachine = meta.stateMachine();
+
     // eslint-disable-next-line new-cap
-    return new constructor(meta, itemId, writeStream);
+    const model = new constructor(meta, itemId, () => stateMachine.getState(), writeStream);
+
+    return new StateManager(stateMachine, model);
   }
 
   getModelMeta (modelType: ModelType): ModelMeta {

@@ -14,8 +14,8 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
-    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId);
-    expect(model).toBeTruthy();
+    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId);
+    expect(stateManager.model).toBeTruthy();
   });
 
   test('model mutation processing', async () => {
@@ -24,16 +24,16 @@ describe('model factory', () => {
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
     const feedWriter = new MockFeedWriter<TestItemMutation>();
-    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, feedWriter as any);
-    expect(model).toBeTruthy();
-    feedWriter.written.on(([message, meta]) => model.processMessage({
+    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, feedWriter as any);
+    expect(stateManager.model).toBeTruthy();
+    feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: zeroKey(),
       seq: meta.seq
     }, message));
 
     // Update model.
-    await model.setProperty('title', 'Hello');
+    await stateManager.model.setProperty('title', 'Hello');
     expect(feedWriter.messages).toHaveLength(1);
     expect(feedWriter.messages[0]).toEqual({
       key: 'title',
@@ -42,6 +42,6 @@ describe('model factory', () => {
 
     // Expect model has not been updated (mutation has not been processed).
     // Expect model to have been updated.
-    expect(model.getProperty('title')).toEqual('Hello');
+    expect(stateManager.model.getProperty('title')).toEqual('Hello');
   });
 });

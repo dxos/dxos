@@ -6,7 +6,7 @@ import { checkType } from '@dxos/debug';
 import { TestItemMutation, schema, MutationMeta } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
-import { StateMachine } from '../state-machiene';
+import { StateMachine } from '../state-machine';
 import { ModelMeta } from '../types';
 
 class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMutation, any> {

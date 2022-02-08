@@ -8,69 +8,48 @@ import { Event } from '@dxos/async';
 import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 
-import { StateMachine } from './state-machiene';
+import { StateMachine } from './state-machine';
 import { ModelMessage, ModelMeta } from './types';
 
 export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
 }
 
-// TODO(burdon): Enable transition to new adapter.
-export interface IModel<T> {
-  processMessage: (meta: MutationMeta, message: T) => Promise<void>
-}
-
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
-export abstract class Model<TState = any, TMutation = any> implements IModel<TMutation> {
+export abstract class Model<TState = any, TMutation = any> {
   public readonly update = new Event<Model<TState, TMutation>>();
-
-  private readonly _processor: NodeJS.WritableStream;
 
   private readonly _meta: ModelMeta;
   private readonly _itemId: ItemID;
   private readonly _writeStream?: FeedWriter<TMutation>;
 
-  private readonly _messageProcessed = new Event<MutationMeta>();
+  /**
+   * @intertal
+   */
+  public readonly _messageProcessed = new Event<MutationMeta>();
 
-  private readonly _stateMachine: StateMachine<TState, TMutation, any>;
+  protected readonly _getState: () => TState;
 
   /**
    * @param meta
    * @param itemId Parent item.
    * @param writeStream Output mutation stream (unless read-only).
    */
-  constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<TMutation>) {
+  constructor (
+    meta: ModelMeta,
+    itemId: ItemID,
+    getState: () => TState,
+    writeStream?: FeedWriter<TMutation>,
+  ) {
     assert(meta);
     assert(itemId);
     this._meta = meta;
     this._itemId = itemId;
     this._writeStream = writeStream;
-
-    // Create the input mutation stream.
-    this._processor = createWritable<ModelMessage<TMutation>>(async message => {
-      const { meta, mutation } = message;
-      assert(meta);
-      assert(mutation);
-
-      await this.processMessage(meta, mutation);
-    });
-
-    this._stateMachine = meta.stateMachine();
-  }
-
-  protected _getState (): TState {
-    return this._stateMachine.getState();
-  }
-
-  /**
-   * @deprecated Use processMessage.
-   */
-  // TODO(burdon): Remove.
-  get processor (): NodeJS.WritableStream {
-    return this._processor;
+    this._getState = getState;
   }
 
   //
@@ -124,22 +103,5 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
         await processed;
       }
     };
-  }
-
-  async processMessage (meta: MutationMeta, message: TMutation): Promise<void> {
-    this._stateMachine.process(message, meta);
-
-    this.update.emit(this);
-
-    this._messageProcessed.emit(meta);
-  }
-
-  createSnapshot (): any {
-    return this._stateMachine.snapshot();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot (snapshot: any): Promise<void> {
-    this._stateMachine.reset(snapshot);
   }
 }
