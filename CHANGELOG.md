@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.26.1](https://www.github.com/dxos/protocols/compare/v2.26.0...v2.26.1) (2022-02-08)
+
+
+### Features
+
+* Bot factory client add get method ([#915](https://www.github.com/dxos/protocols/issues/915)) ([544435d](https://www.github.com/dxos/protocols/commit/544435db34fbca6dc8ce760660f56a613098c8c7))
+
 ## [2.26.0](https://www.github.com/dxos/protocols/compare/v2.25.0...v2.26.0) (2022-02-07)
 
 
