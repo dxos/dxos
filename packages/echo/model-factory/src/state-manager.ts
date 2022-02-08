@@ -1,5 +1,5 @@
-import { FeedWriter, ItemID, MutationMeta } from "@dxos/echo-protocol";
-import { ModelConstructor, ModelMeta, MutationOf, MutationWriteReceipt, StateOf } from "./types";
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta } from "@dxos/echo-protocol";
+import { ModelConstructor, ModelMessage, ModelMeta, MutationOf, MutationWriteReceipt, StateOf } from "./types";
 import { Model } from "./model";
 import { StateMachine } from "./state-machine";
 import { Event } from "@dxos/async";
@@ -9,13 +9,15 @@ export class StateManager<M extends Model> {
 
   private readonly _model: M;
 
-  private readonly _messageProcessed = new Event<MutationMeta>();
+  private readonly _mutationProcessed = new Event<MutationMeta>();
+
+  private _mutations: ModelMessage<MutationOf<M>>[] = [];
 
   constructor(
     private readonly _modelMeta: ModelMeta,
     modelConstructor: ModelConstructor<M>,
     private readonly _itemId: ItemID,
-    private readonly _writeStream?: FeedWriter<MutationOf<M>>,
+    private readonly _writeStream: FeedWriter<MutationOf<M>> | null,
   ) {
     this._stateMachine = _modelMeta.stateMachine();
 
@@ -39,16 +41,31 @@ export class StateManager<M extends Model> {
     return this._model;
   }
 
-  async processMessage(meta: MutationMeta, message: MutationOf<M>): Promise<void> {
-    this._stateMachine.process(message, meta);
+  async processMessage(meta: MutationMeta, mutation: MutationOf<M>): Promise<void> {
+    this._mutations.push({ meta, mutation });
+
+    this._stateMachine.process(mutation, meta);
 
     this._model.update.emit(this._model);
     
-    this._messageProcessed.emit(meta);
+    this._mutationProcessed.emit(meta);
   }
 
-  createSnapshot(): any {
-    return this._stateMachine.snapshot();
+  createSnapshot(): ModelSnapshot {
+    if (this.modelMeta.snapshotCodec) {
+      return {
+        custom: this.modelMeta.snapshotCodec.encode(this._stateMachine.snapshot())
+      };
+    } else {
+      return {
+        array: {
+          mutations: this._mutations.map(message => ({
+            mutation: this.modelMeta.mutation.encode(message.mutation),
+            meta: message.meta,
+          }))
+        }
+      };
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,7 +82,7 @@ export class StateManager<M extends Model> {
     }
 
     // Promise that resolves when this mutation has been processed.
-    const processed = this._messageProcessed.waitFor(meta =>
+    const processed = this._mutationProcessed.waitFor(meta =>
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
     );
 

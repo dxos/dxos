@@ -49,7 +49,7 @@ export class ModelFactory {
 
     const { meta, constructor } = this._models.get(modelType)!;
 
-    return new StateManager(meta, constructor, itemId, writeStream);
+    return new StateManager(meta, constructor, itemId, writeStream ?? null);
   }
 
   getModelMeta (modelType: ModelType): ModelMeta {

@@ -30,12 +30,6 @@ export interface ItemDemuxerOptions {
  * @param itemManager
  */
 export class ItemDemuxer {
-  /**
-   * Records model mutations for snapshots.
-   * This array is only there if model doesn't have its own snapshot implementation.
-   */
-  private readonly _modelMutations = new Map<ItemID, ModelMutation[]>();
-
   readonly mutation = new Event<IEchoStream>();
 
   constructor (
@@ -91,18 +85,6 @@ export class ItemDemuxer {
           entity.model.originalModelType = modelType;
         }
         assert(entity.id === itemId);
-
-        if (this._options.snapshots) {
-          if (!entity.modelMeta.snapshotCodec) {
-            // If the model doesn't support mutations natively we save & replay it's mutations.
-            this._beginRecordingItemModelMutations(itemId);
-          }
-
-          // Record initial mutation (if it exists).
-          if (mutation) {
-            this._recordModelMutation(itemId, { meta: message.meta, mutation });
-          }
-        }
       }
 
       //
@@ -121,10 +103,6 @@ export class ItemDemuxer {
       if (mutation && !genesis) {
         assert(message.data.mutation);
         const mutation = { meta: message.meta, mutation: message.data.mutation };
-
-        if (this._options.snapshots) {
-          this._recordModelMutation(itemId, mutation);
-        }
 
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
@@ -155,19 +133,7 @@ export class ItemDemuxer {
   }
 
   createEntitySnapshot (entity: Entity<Model<any>>): ItemSnapshot {
-    let model: ModelSnapshot;
-    if (entity.modelMeta.snapshotCodec) {
-      model = {
-        custom: entity.modelMeta.snapshotCodec.encode(entity._stateManager.createSnapshot())
-      };
-    } else {
-      model = {
-        array: {
-          mutations: this._modelMutations.get(entity.id) ??
-            raise(new Error('Model does not support mutations natively and it\'s weren\'t tracked by the system.'))
-        }
-      };
-    }
+    const model = entity._stateManager.createSnapshot();
 
     return {
       itemId: entity.id,
@@ -187,11 +153,6 @@ export class ItemDemuxer {
       assert(item.modelType);
       assert(item.model);
 
-      if (this._options.snapshots && item.model?.array) {
-        // TODO(marik-d): Check if model supports snapshots natively.
-        this._modelMutations.set(item.itemId, item.model.array.mutations ?? []);
-      }
-
       const newItem = await this._itemManager.constructItem({
         itemId: item.itemId,
         modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
@@ -204,18 +165,6 @@ export class ItemDemuxer {
       if (newItem.model instanceof DefaultModel) {
         newItem.model.originalModelType = item.modelType;
       }
-    }
-  }
-
-  private _beginRecordingItemModelMutations (itemId: ItemID) {
-    assert(!this._modelMutations.has(itemId), `Already recording model mutations for item ${itemId}`);
-    this._modelMutations.set(itemId, []);
-  }
-
-  private _recordModelMutation (itemId: ItemID, mutation: ModelMessage<Uint8Array>) {
-    const list = this._modelMutations.get(itemId);
-    if (list) {
-      list.push(mutation);
     }
   }
 }
