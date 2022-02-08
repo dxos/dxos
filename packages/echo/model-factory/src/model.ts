@@ -9,11 +9,10 @@ import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-proto
 import { createWritable } from '@dxos/feed-store';
 
 import { StateMachine } from './state-machine';
-import { ModelMessage, ModelMeta } from './types';
+import { ModelMessage, ModelMeta, MutationWriteReceipt } from './types';
+import { MutationWriter } from './types';
 
-export interface MutationWriteReceipt extends WriteReceipt {
-  waitToBeProcessed(): Promise<void>
-}
+
 
 /**
  * Abstract base class for Models.
@@ -22,39 +21,17 @@ export interface MutationWriteReceipt extends WriteReceipt {
 export abstract class Model<TState = any, TMutation = any> {
   public readonly update = new Event<Model<TState, TMutation>>();
 
-  private readonly _meta: ModelMeta;
-  private readonly _itemId: ItemID;
-  private readonly _writeStream?: FeedWriter<TMutation>;
-
-  /**
-   * @intertal
-   */
-  public readonly _messageProcessed = new Event<MutationMeta>();
-
-  protected readonly _getState: () => TState;
-
   /**
    * @param meta
    * @param itemId Parent item.
    * @param writeStream Output mutation stream (unless read-only).
    */
   constructor (
-    meta: ModelMeta,
-    itemId: ItemID,
-    getState: () => TState,
-    writeStream?: FeedWriter<TMutation>,
-  ) {
-    assert(meta);
-    assert(itemId);
-    this._meta = meta;
-    this._itemId = itemId;
-    this._writeStream = writeStream;
-    this._getState = getState;
-  }
-
-  //
-  // Model
-  //
+    private readonly _meta: ModelMeta,
+    private readonly _itemId: ItemID,
+    protected readonly _getState: () => TState,
+    private readonly _mutationWriter?: MutationWriter<TMutation>
+  ) {}
 
   toString () {
     return `Model(${JSON.stringify(this.toJSON())})`;
@@ -76,7 +53,7 @@ export abstract class Model<TState = any, TMutation = any> {
   }
 
   get readOnly (): boolean {
-    return this._writeStream === undefined;
+    return this._mutationWriter === undefined;
   }
 
   subscribe (listener: (result: this) => void) {
@@ -87,21 +64,9 @@ export abstract class Model<TState = any, TMutation = any> {
    * Writes the raw mutation to the output stream.
    */
   protected async write (mutation: TMutation): Promise<MutationWriteReceipt> {
-    if (!this._writeStream) {
+    if (!this._mutationWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
-
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._messageProcessed.waitFor(meta =>
-      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
-
-    const receipt = await this._writeStream.write(mutation);
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
+    return this._mutationWriter(mutation);
   }
 }

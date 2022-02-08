@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
-import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
+import { MutationMeta, ItemID, FeedWriter, WriteReceipt } from '@dxos/echo-protocol';
 
 import { StateMachine } from './state-machine';
 import { Model } from './model';
@@ -44,7 +44,7 @@ export type ModelConstructor<M extends Model> = (new (
   meta: ModelMeta,
   itemId: ItemID,
   getState: () => StateOf<M>,
-  writeStream?: FeedWriter<MutationOf<M>>,
+  MutationWriter?: MutationWriter<MutationOf<M>>,
 ) => M) &
   { meta: ModelMeta };
 
@@ -70,3 +70,9 @@ export function validateModelClass (model: any): asserts model is ModelConstruct
 export type MutationOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TMutation : any;
 
 export type StateOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TState : any;
+
+export interface MutationWriteReceipt extends WriteReceipt {
+  waitToBeProcessed(): Promise<void>
+}
+
+export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>
