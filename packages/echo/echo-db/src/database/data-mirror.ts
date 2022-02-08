@@ -81,17 +81,17 @@ export class DataMirror {
           assert(update.snapshot.model);
           if (update.snapshot.model.custom) {
             assert(entity.modelMeta.snapshotCodec);
-            await entity.model.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
+            await entity._stateManager.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
           } else {
             assert(update.snapshot.model.array);
             for (const message of update.snapshot.model.array.mutations ?? []) {
-              await entity.model.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
+              await entity._stateManager.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
             }
           }
         } else if (update.mutation) {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);
-            await entity.model.processMessage({
+            await entity._stateManager.processMessage({
               feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
               memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
               seq: update.mutation.meta.seq ?? failUndefined()

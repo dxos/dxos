@@ -135,7 +135,7 @@ export class ItemDemuxer {
           const item = this._itemManager.getItem(itemId) as Item<Model<any>>;
           assert(item);
           assert(item.model.modelMeta.snapshotCodec);
-          await item.model.restoreFromSnapshot(item.model.modelMeta.snapshotCodec.decode(snapshot.custom));
+          await item._stateManager.restoreFromSnapshot(item.model.modelMeta.snapshotCodec.decode(snapshot.custom));
         } else if (snapshot.array) {
           for (const message of snapshot.array.mutations ?? []) {
             await this._itemManager.processModelMessage(itemId, message);
@@ -158,7 +158,7 @@ export class ItemDemuxer {
     let model: ModelSnapshot;
     if (entity.modelMeta.snapshotCodec) {
       model = {
-        custom: entity.modelMeta.snapshotCodec.encode(entity.model.createSnapshot())
+        custom: entity.modelMeta.snapshotCodec.encode(entity._stateManager.createSnapshot())
       };
     } else {
       model = {

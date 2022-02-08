@@ -17,6 +17,7 @@ import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
+import { StateManager } from '@dxos/model-factory/src/state-manager';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -190,7 +191,7 @@ export class ItemManager {
 
   private async _constructModel ({
     modelType, itemId, modelSnapshot, initialMutations
-  }: ModelConstructionOptions): Promise<Model<any>> {
+  }: ModelConstructionOptions): Promise<StateManager<Model>> {
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
       throw new UnknownModelError(modelType);
@@ -207,26 +208,26 @@ export class ItemManager {
     }), this._writeStream);
 
     // Create the model with the outbound stream.
-    const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
-    assert(model, `Invalid model: ${modelType}`);
+    const stateManager: StateManager<Model> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
+    assert(stateManager.model, `Invalid model: ${modelType}`);
 
     if (modelSnapshot) {
-      if (model instanceof DefaultModel) {
-        model.snapshot = modelSnapshot;
+      if (stateManager.model instanceof DefaultModel) {
+        stateManager.model.snapshot = modelSnapshot;
       } else {
         assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-        await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
+        await stateManager.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
       }
     }
 
     // Process initial mutations.
     if (initialMutations) {
       for (const mutation of initialMutations) {
-        await model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
+        await stateManager.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
       }
     }
 
-    return model;
+    return stateManager;
   }
 
   /**
@@ -280,14 +281,14 @@ export class ItemManager {
     }
     assert(!parent || parent instanceof Item);
 
-    const model = await this._constructModel({
+    const modelStateManager = await this._constructModel({
       itemId,
       modelType,
       initialMutations,
       modelSnapshot
     });
 
-    const item = new Item(this, itemId, itemType, model, this._writeStream, parent);
+    const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
     this._addEntity(item);
 
     return item;
@@ -408,9 +409,6 @@ export class ItemManager {
     const item = this._entities.get(itemId);
     assert(item);
     assert(item.model instanceof DefaultModel);
-
-    // Disconnect the stream.
-    await pify(item.model.processor.end.bind(item.model.processor))();
 
     item._setModel(await this._constructModel({
       itemId,

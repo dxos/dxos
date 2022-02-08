@@ -11,6 +11,7 @@ import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
+import { StateManager } from '@dxos/model-factory';
 
 const log = debug('dxos:echo-db:items:item');
 
@@ -61,11 +62,11 @@ export class Item<M extends Model> extends Entity<M> {
     itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
-    model: M,
+    stateManager: StateManager<M>,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemManager, itemId, itemType, model);
+    super(itemManager, itemId, itemType, stateManager);
     this._updateParent(parent);
   }
 
