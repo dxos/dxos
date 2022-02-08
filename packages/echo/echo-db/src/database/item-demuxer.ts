@@ -14,7 +14,6 @@ import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
-import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
@@ -40,9 +39,9 @@ export class ItemDemuxer {
 
   open (): NodeJS.WritableStream {
     this._modelFactory.registered.on(async model => {
-      for (const item of this._itemManager.getItemsWithDefaultModels()) {
-        if (item.model.originalModelType === model.meta.type) {
-          await this._itemManager.reconstructItemWithDefaultModel(item.id);
+      for (const item of this._itemManager.getUninitializedEntities()) {
+        if (item._stateManager.modelType === model.meta.type) {
+          await this._itemManager.initializeModel(item.id);
         }
       }
     });
@@ -62,7 +61,7 @@ export class ItemDemuxer {
 
         const modelOpts: ModelConstructionOptions = {
           itemId,
-          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+          modelType: modelType,
           snapshot: {
             mutations: mutation ? [{ mutation, meta }] : undefined
           }
@@ -83,9 +82,6 @@ export class ItemDemuxer {
           });
         }
 
-        if (entity.model instanceof DefaultModel) {
-          entity.model.originalModelType = modelType;
-        }
         assert(entity.id === itemId);
       }
 
@@ -149,15 +145,11 @@ export class ItemDemuxer {
 
       const newItem = await this._itemManager.constructItem({
         itemId: item.itemId,
-        modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
+        modelType: item.modelType,
         itemType: item.itemType,
         parentId: item.parentId,
         snapshot: item.model
       });
-
-      if (newItem.model instanceof DefaultModel) {
-        newItem.model.originalModelType = item.modelType;
-      }
     }
   }
 }

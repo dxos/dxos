@@ -32,8 +32,11 @@ export class Entity<M extends Model> {
     private readonly _type: ItemType | undefined,
     stateManager: StateManager<M>,
   ) {
-    // Model updates mean Item updates, so make sure we are subscribed as well.
-    this._setModel(stateManager);
+    this._stateManager = stateManager;
+
+    if(this._stateManager.initialized) {
+      this._subscriptions.push(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
+    }
   }
 
   get id (): ItemID {
@@ -49,6 +52,10 @@ export class Entity<M extends Model> {
   }
 
   get model (): M {
+    if(!this._stateManager.initialized) {
+      return null as any;
+    }
+
     return this._stateManager.model;
   }
 
@@ -58,15 +65,5 @@ export class Entity<M extends Model> {
    */
   subscribe (listener: (entity: this) => void) {
     return this._onUpdate.on(listener as any);
-  }
-
-  /**
-   * @internal
-   */
-  _setModel (stateManager: StateManager<M>) {
-    this._stateManager = stateManager;
-
-    this._subscriptions.unsubscribe();
-    this._subscriptions.push(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
   }
 }

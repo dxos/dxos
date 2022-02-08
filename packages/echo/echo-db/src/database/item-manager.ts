@@ -13,7 +13,6 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapsho
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
-import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
@@ -206,16 +205,14 @@ export class ItemManager {
     this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
 
-    if (!(entity.model instanceof DefaultModel)) {
-      // Notify Item was udpated.
-      // TODO(burdon): Update the item directly?
-      this.update.emit(entity);
+    // Notify Item was udpated.
+    // TODO(burdon): Update the item directly?
+    this.update.emit(entity);
 
-      // TODO(telackey): Unsubscribe?
-      entity.subscribe(() => {
-        this.update.emit(entity);
-      });
-    }
+    // TODO(telackey): Unsubscribe?
+    entity.subscribe(() => {
+      this.update.emit(entity);
+    });
 
     // Notify pending creates.
     this._pendingItems.get(entity.id)?.(entity);
@@ -330,8 +327,8 @@ export class ItemManager {
     return entity;
   }
 
-  getItemsWithDefaultModels (): Entity<DefaultModel>[] {
-    return Array.from(this._entities.values()).filter((item): item is Item<DefaultModel> => item.model instanceof DefaultModel);
+  getUninitializedEntities (): Entity<Model>[] {
+    return Array.from(this._entities.values()).filter(entity => !entity._stateManager.initialized);
   }
 
   /**
@@ -367,19 +364,14 @@ export class ItemManager {
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async reconstructItemWithDefaultModel (itemId: ItemID) {
+  async initializeModel (itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
-    assert(item.model instanceof DefaultModel);
 
-    item._setModel(await this._constructModel({
-      itemId,
-      modelType: item.model.originalModelType,
-      snapshot: {
-        snapshot: item.model.snapshot,
-        mutations: item.model.mutations,
-      }
-    }));
+    const model = this._modelFactory.getModel(item._stateManager.modelType);
+    assert(model, 'Model not registered');
+
+    item._stateManager.initialize(model.constructor);
 
     this.update.emit(item);
   }

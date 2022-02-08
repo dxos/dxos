@@ -10,7 +10,6 @@ import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { DefaultModel } from './default-model';
 import { ItemManager } from './item-manager';
 
 describe('ItemManager', () => {
@@ -165,29 +164,26 @@ describe('ItemManager', () => {
     });
   });
 
-  describe('DefaultModel', () => {
-    test('item can be created and the model registered later', async () => {
-      const modelFactory = new ModelFactory().registerModel(DefaultModel);
-      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+  test('item can be created and the model registered later', async () => {
+    const modelFactory = new ModelFactory();
+    const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const item = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: DefaultModel.meta.type,
-        itemType: undefined,
-        snapshot: {}
-      });
-      item.model.originalModelType = ObjectModel.meta.type;
-
-      expect(item.model).toBeInstanceOf(DefaultModel);
-
-      modelFactory.registerModel(ObjectModel);
-      await itemManager.reconstructItemWithDefaultModel(item.id);
-
-      const reconstructedItem = itemManager.entities.get(item.id)!;
-      expect(reconstructedItem.model).toBeInstanceOf(ObjectModel);
-
-      expect(reconstructedItem.modelMeta.type).toEqual(ObjectModel.meta.type);
+    const item = await itemManager.constructItem({
+      itemId: createId(),
+      modelType: ObjectModel.meta.type,
+      itemType: undefined,
+      snapshot: {}
     });
+
+    expect(item.model).toBe(null);
+
+    modelFactory.registerModel(ObjectModel);
+    await itemManager.initializeModel(item.id);
+
+    const reconstructedItem = itemManager.entities.get(item.id)!;
+    expect(reconstructedItem.model).toBeInstanceOf(ObjectModel);
+
+    expect(reconstructedItem.modelMeta.type).toEqual(ObjectModel.meta.type);
   });
 });
 
