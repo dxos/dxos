@@ -680,6 +680,17 @@
     eslint-plugin-promise "^5.1.0"
     eslint-plugin-standard "^5.0.0"
 
+"@dxos/gem-core@^2.1.0":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@dxos/gem-core/-/gem-core-2.1.1.tgz#55845414585ec1ac7995bc98a95fa99951404eaa"
+  integrity sha512-wy7TFZMZeNIbPXMYmlP2qX8NNcbgmfFYt+jgfmmPO3dKeY/lwPSvXrBQtZFF1bakNnIbJaIPHi880zrXjRn4+Q==
+  dependencies:
+    assert "^2.0.0"
+    csstype "^3.0.10"
+    d3 "^7.2.1"
+    debug "^4.1.1"
+    use-resize-observer "^8.0.0"
+
 "@dxos/version-check@^0.1.16":
   version "0.1.16"
   resolved "https://registry.yarnpkg.com/@dxos/version-check/-/version-check-0.1.16.tgz#a6aa7a547395d0fb7a3c5f60448a4b1623b4f77c"
