@@ -45,6 +45,10 @@ export class StateManager<M extends Model> {
     }
   }
 
+  get initialized(): boolean {
+    return !!this._modelMeta;
+  }
+
   get modelType(): ModelType {
     return this._modelType;
   }
@@ -58,6 +62,50 @@ export class StateManager<M extends Model> {
   get model(): M {
     assert(this._model, 'Model not initialized.');
     return this._model;
+  }
+
+  /**
+   * Writes the mutation to the output stream.
+   */
+   private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+    if (!this._writeStream) {
+      throw new Error(`Read-only model: ${this._itemId}`);
+    }
+
+    // Promise that resolves when this mutation has been processed.
+    const processed = this._mutationProcessed.waitFor(meta =>
+      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+    );
+
+    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const receipt = await this._writeStream.write(mutationEncoded);
+
+    return {
+      ...receipt,
+      waitToBeProcessed: async () => {
+        await processed;
+      }
+    };
+  }
+
+  /**
+   * Perform late intitalization.
+   * 
+   * Only possible if the modelContructor wasn't passed during StateManager's creation.
+   */
+  initialize(modelConstructor: ModelConstructor<M>) {
+    assert(!this._modelMeta, 'Already iniitalized.');
+
+    this._modelMeta = modelConstructor.meta;
+
+    this._stateMachine = this._modelMeta.stateMachine();
+
+    this._model = new modelConstructor(
+      this._modelMeta,
+      this._itemId,
+      () => this._stateMachine!.getState(),
+      this._writeStream ? mutation => this._write(mutation) : undefined,
+    );
   }
 
   /**
@@ -127,29 +175,5 @@ export class StateManager<M extends Model> {
     }
 
     this._model.update.emit(this._model);
-  }
-
-  /**
-   * Writes the mutation to the output stream.
-   */
-  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    if (!this._writeStream) {
-      throw new Error(`Read-only model: ${this._itemId}`);
-    }
-
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._mutationProcessed.waitFor(meta =>
-      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
-
-    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
-    const receipt = await this._writeStream.write(mutationEncoded);
-
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
   }
 }
