@@ -21,10 +21,10 @@ const LINK_EMPLOYEE = 'dxos:link/employee';
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
-  new Item(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id), undefined, parent);
+  new Item(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id, {}), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id), {
+  const link = new Link(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id, {}), {
     sourceId: source.id,
     targetId: target.id,
     source: source,

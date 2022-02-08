@@ -9,7 +9,7 @@ import { MockFeedWriter } from "@dxos/echo-protocol"
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
-    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), null);
+    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, null);
     
     expect(stateManager.model).toBeInstanceOf(TestModel);
     expect(stateManager.model).toBeInstanceOf(Model);
@@ -25,7 +25,7 @@ describe('StateManager', () => {
 
   describe('snapshot and restore', () => {
     test('with model snapshots - TestModel', () => {
-      const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), null);
+      const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, null);
 
       stateManager.processMessage(createMeta(0), TestModel.meta.mutation.encode({ key: 'testKey', value: 'testValue' }));
       const snapshot = stateManager.createSnapshot();
@@ -38,7 +38,7 @@ describe('StateManager', () => {
     });
     
     test('with framework snapshots - TestListModel', () => {
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), null);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
 
       stateManager.processMessage(createMeta(0), TestListModel.meta.mutation.encode({ data: 'message1' }));
       const snapshot = stateManager.createSnapshot();
@@ -53,7 +53,7 @@ describe('StateManager', () => {
 
   test('write loop', async () => {
     const feedWriter = new MockFeedWriter<Uint8Array>();
-    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), feedWriter);
+    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, feedWriter);
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: PublicKey.random().asUint8Array(),
@@ -66,7 +66,7 @@ describe('StateManager', () => {
   });
 
   test('late initalization', () => {
-    const stateManager = new StateManager<TestModel>(TestModel.meta.type, undefined, createId(), null);
+    const stateManager = new StateManager<TestModel>(TestModel.meta.type, undefined, createId(), {}, null);
     expect(stateManager.initialized).toBe(false);
     expect(stateManager.modelType).toEqual(TestModel.meta.type);
 

@@ -208,7 +208,7 @@ export class ItemManager {
     }), this._writeStream);
 
     // Create the model with the outbound stream.
-    const stateManager: StateManager<Model> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
+    const stateManager: StateManager<Model> = this._modelFactory.createModel(modelType, itemId, {}, outboundTransform);
     assert(stateManager.model, `Invalid model: ${modelType}`);
 
     if (modelSnapshot) {

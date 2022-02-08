@@ -16,7 +16,7 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
-    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId);
+    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, {});
     expect(stateManager.model).toBeTruthy();
   });
 
@@ -26,7 +26,7 @@ describe('model factory', () => {
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
     const feedWriter = new MockFeedWriter<Uint8Array>();
-    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, feedWriter as any);
+    const stateManager = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, {}, feedWriter);
     expect(stateManager.model).toBeTruthy();
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),

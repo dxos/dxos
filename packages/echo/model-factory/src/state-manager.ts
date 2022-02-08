@@ -9,15 +9,18 @@ import assert from "assert";
  * Binds the model to the state machine. Manages the state machine lifecycle.
  */
 export class StateManager<M extends Model> {
+  /**
+   * Mutations that were applied on top of the _snapshot.
+   */
+  private _mutations: ModelMessage<Uint8Array>[] = [];
+
   private _modelMeta: ModelMeta | null = null;
   
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   private _model: M | null = null;
-
+  
   private readonly _mutationProcessed = new Event<MutationMeta>();
-
-  private _mutations: ModelMessage<Uint8Array>[] = [];
 
   /**
    * @param _modelType 
@@ -29,19 +32,11 @@ export class StateManager<M extends Model> {
     private readonly _modelType: ModelType,
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
+    private _snapshot: ModelSnapshot,
     private readonly _writeStream: FeedWriter<Uint8Array> | null,
   ) {
     if(modelConstructor) {
-      this._modelMeta = modelConstructor.meta;
-
-      this._stateMachine = this._modelMeta.stateMachine();
-
-      this._model = new modelConstructor(
-        this._modelMeta,
-        _itemId,
-        () => this._stateMachine!.getState(),
-        _writeStream ? mutation => this._write(mutation) : undefined,
-      );
+      this.initialize(modelConstructor);
     }
   }
 
@@ -88,6 +83,27 @@ export class StateManager<M extends Model> {
     };
   }
 
+  private _resetStateMachine() {
+    assert(this._modelMeta, 'Model not initialized.');
+
+    this._stateMachine = this._modelMeta.stateMachine();
+
+    if(this._snapshot.snapshot) {
+      assert(this._modelMeta.snapshotCodec);
+      const decoded = this._modelMeta.snapshotCodec.decode(this._snapshot.snapshot);
+      this._stateMachine.reset(decoded);
+    }
+
+    for(const mutaton of this._snapshot.mutations ?? []) {
+      const mutationDecoded = this.modelMeta.mutation.decode(mutaton.mutation);
+      this._stateMachine.process(mutationDecoded, mutaton.meta);
+    }
+
+    for(const mutation of this._mutations) {
+      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
+    }
+  }
+
   /**
    * Perform late intitalization.
    * 
@@ -98,11 +114,7 @@ export class StateManager<M extends Model> {
 
     this._modelMeta = modelConstructor.meta;
 
-    this._stateMachine = this._modelMeta.stateMachine();
-
-    for(const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
-    }
+    this._resetStateMachine();
 
     this._model = new modelConstructor(
       this._modelMeta,
@@ -130,44 +142,32 @@ export class StateManager<M extends Model> {
    * Create a snapshot of the current state.
    */
   createSnapshot(): ModelSnapshot {
-    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
-
-    if (this.modelMeta.snapshotCodec) {
+    if(this.initialized && this.modelMeta.snapshotCodec) {
+      // Returned reduced snapshot if possible.
       return {
-        snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine.snapshot())
-      };
-    } else {
-      return {
-        mutations: this._mutations.slice(),
+        snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
       };
     }
+
+    return {
+      snapshot: this._snapshot.snapshot,
+      mutations: [
+        ...(this._snapshot.mutations ?? []),
+        ...this._mutations,
+      ],
+    };
   }
 
   /**
    * Reset the state to existing snapshot.
    */
   resetToSnapshot(snapshot: ModelSnapshot) {
-    assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
-
-    if(snapshot.snapshot) {
-      assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(snapshot.snapshot);
-      this._stateMachine.reset(decoded);
-    } else {
-      this._stateMachine = this._modelMeta.stateMachine();
-    }
-
+    this._snapshot = snapshot;
     this._mutations = [];
 
-    for(const mutation of snapshot.mutations ?? []) {
-      const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
-      this._mutations.push({
-        meta: mutation.meta,
-        mutation: mutationDecoded
-      });
-      this._stateMachine.process(mutationDecoded, mutation.meta);
+    if(this.initialized) {
+      this._resetStateMachine();
+      this._model!.update.emit(this._model!);
     }
-
-    this._model.update.emit(this._model);
   }
 }
