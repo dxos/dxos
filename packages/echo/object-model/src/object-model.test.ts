@@ -9,7 +9,7 @@ import expect from 'expect';
 import { ObjectModel } from './object-model';
 import { TestRig } from './test-rig';
 
-describe('TestRig', () => {
+describe.skip('TestRig', () => {
   it('can set a property', async () => {
     const rig = new TestRig(ObjectModel);
     const { model } = rig.createPeer();
