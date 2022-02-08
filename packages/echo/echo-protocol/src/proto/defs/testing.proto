@@ -14,3 +14,7 @@ message TestItemMutation {
 message TestListMutation {
   string data = 1;
 }
+
+message TestItemSnapshot {
+  repeated TestItemMutation keys = 1;
+}

@@ -160,7 +160,9 @@ export class StateManager<M extends Model> {
 
       this._mutations = [];
     } else if(snapshot.array) {
+      // Clear current state.
       this._mutations = [];
+      this._stateMachine = this._modelMeta.stateMachine();
 
       for(const mutation of snapshot.array.mutations ?? []) {
         const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
