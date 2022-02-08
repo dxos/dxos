@@ -8,6 +8,8 @@ import { it as test } from 'mocha';
 import { createModelTestBench } from '@dxos/echo-db';
 
 import { TextModel } from './text-model';
+import { ModelFactory } from '@dxos/model-factory';
+import { MockFeedWriter } from '@dxos/echo-protocol';
 
 describe('TextModel', () => {
   test('insert', async () => {
@@ -32,18 +34,16 @@ describe('TextModel', () => {
   });
 
   test('snapshot', async () => {
-    const { peers, items: [item1, item2] } = await createModelTestBench({ model: TextModel });
-    after(async () => Promise.all(peers.map(peer => peer.close())));
+    const modelFactory = new ModelFactory().registerModel(TextModel);
+    const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, new MockFeedWriter())
 
-    item1.model.insert(0, 'Hello World!');
+    model1.model.insert(0, 'Hello World!');
 
-    const snapshot = item2.modelMeta.snapshotCodec!.encode(item1.model.createSnapshot());
-    await item2.model.restoreFromSnapshot(item2.modelMeta.snapshotCodec!.decode(snapshot));
-    expect(item2.model.textContent).toBe('Hello World!');
+    const snapshot = model1.createSnapshot();
 
-    for await (const peer of peers) {
-      await peer.close();
-    }
+    const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, new MockFeedWriter());
+    
+    expect(model2.model.textContent).toBe('Hello World!');
   });
 
   test('conflict', async () => {
