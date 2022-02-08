@@ -70,6 +70,7 @@ export class BotFactory implements BotFactoryService {
   }
 
   async GetBots () {
+    log('List bots request');
     return {
       bots: Array.from(this._bots.values()).map(handle => handle.bot)
     };
