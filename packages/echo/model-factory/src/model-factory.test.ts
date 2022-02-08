@@ -4,6 +4,8 @@
 
 import { createId, zeroKey } from '@dxos/crypto';
 import { MockFeedWriter, TestItemMutation } from '@dxos/echo-protocol';
+import { it as test } from 'mocha';
+import expect from 'expect';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';

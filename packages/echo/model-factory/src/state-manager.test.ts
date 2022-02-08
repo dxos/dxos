@@ -3,9 +3,11 @@ import { Model } from "./model"
 import { StateManager } from "."
 import { TestModel } from './testing'
 import { createId, PublicKey } from "@dxos/crypto"
+import { it as test } from 'mocha';
+import expect from 'expect';
 
 describe('StateManager', () => {
-  it('construct readonly and apply mutations', () => {
+  test('construct readonly and apply mutations', () => {
     const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), null);
     
     expect(stateManager.model).toBeInstanceOf(TestModel);
@@ -20,7 +22,7 @@ describe('StateManager', () => {
     expect(stateManager.model.properties).toEqual({ testKey: 'testValue', key2: 'testValue2' });
   })
 
-  it('snapshot and restore', () => {
+  test('snapshot and restore', () => {
     const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), null);
 
     stateManager.processMessage(createMeta(0), TestModel.meta.mutation.encode({ key: 'testKey', value: 'testValue' }));

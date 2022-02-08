@@ -1157,8 +1157,10 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.3.3
+      expect: ~27.0.2
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -1172,6 +1174,8 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.24
+      '@types/mocha': 8.2.3
+      expect: 27.0.6
 
   ../../packages/echo/object-model:
     specifiers:
