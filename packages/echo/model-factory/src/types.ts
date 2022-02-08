@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import type { Codec } from '@dxos/codec-protobuf';
 import { ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
-import assert from 'assert';
+
 import { Model } from './model';
 import { StateMachine } from './state-machine';
 
@@ -61,9 +63,9 @@ export function validateModelClass (model: any): asserts model is ModelConstruct
   }
 }
 
-export type MutationOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TMutation : any;
+export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any;
 
-export type StateOf<M extends Model> = M extends Model<infer TState, infer TMutation> ? TState : any;
+export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any;
 
 export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>

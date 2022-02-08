@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+import debug from 'debug';
+
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import {
@@ -10,8 +13,7 @@ import {
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
-import assert from 'assert';
-import debug from 'debug';
+
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
@@ -141,7 +143,7 @@ export class ItemDemuxer {
       assert(item.modelType);
       assert(item.model);
 
-      const newItem = await this._itemManager.constructItem({
+      await this._itemManager.constructItem({
         itemId: item.itemId,
         modelType: item.modelType,
         itemType: item.itemType,
