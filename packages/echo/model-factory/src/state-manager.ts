@@ -71,7 +71,7 @@ export class StateManager<M extends Model> {
     }
   }
 
-  async restoreFromSnapshot(snapshot: ModelSnapshot): Promise<void> {
+  restoreFromSnapshot(snapshot: ModelSnapshot) {
     if(snapshot.custom) {
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(snapshot.custom);

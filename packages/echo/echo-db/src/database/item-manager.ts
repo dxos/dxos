@@ -216,7 +216,7 @@ export class ItemManager {
         stateManager.model.snapshot = modelSnapshot;
       } else {
         assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-        await stateManager.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
+        stateManager.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
       }
     }
 
