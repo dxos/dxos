@@ -150,8 +150,8 @@ export class ItemDemuxer {
         modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
         itemType: item.itemType,
         parentId: item.parentId,
-        initialMutations: item.model.array ? item.model.array.mutations : undefined,
-        modelSnapshot: item.model.custom ? item.model.custom : undefined
+        initialMutations: item.model.mutations,
+        modelSnapshot: item.model.snapshot,
       });
 
       if (newItem.model instanceof DefaultModel) {

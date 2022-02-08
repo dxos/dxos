@@ -134,13 +134,11 @@ export class StateManager<M extends Model> {
 
     if (this.modelMeta.snapshotCodec) {
       return {
-        custom: this.modelMeta.snapshotCodec.encode(this._stateMachine.snapshot())
+        snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine.snapshot())
       };
     } else {
       return {
-        array: {
-          mutations: this._mutations.slice(),
-        }
+        mutations: this._mutations.slice(),
       };
     }
   }
@@ -151,27 +149,23 @@ export class StateManager<M extends Model> {
   resetToSnapshot(snapshot: ModelSnapshot) {
     assert(this._modelMeta && this._model && this._stateMachine, 'Model not initialized.');
 
-    if(snapshot.custom) {
+    if(snapshot.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(snapshot.custom);
+      const decoded = this._modelMeta.snapshotCodec.decode(snapshot.snapshot);
       this._stateMachine.reset(decoded);
-
-      this._mutations = [];
-    } else if(snapshot.array) {
-      // Clear current state.
-      this._mutations = [];
-      this._stateMachine = this._modelMeta.stateMachine();
-
-      for(const mutation of snapshot.array.mutations ?? []) {
-        const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
-        this._mutations.push({
-          meta: mutation.meta,
-          mutation: mutationDecoded
-        });
-        this._stateMachine.process(mutationDecoded, mutation.meta);
-      }
     } else {
-      throw new Error('Invalid snapshot');
+      this._stateMachine = this._modelMeta.stateMachine();
+    }
+
+    this._mutations = [];
+
+    for(const mutation of snapshot.mutations ?? []) {
+      const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
+      this._mutations.push({
+        meta: mutation.meta,
+        mutation: mutationDecoded
+      });
+      this._stateMachine.process(mutationDecoded, mutation.meta);
     }
 
     this._model.update.emit(this._model);
