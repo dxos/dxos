@@ -1,0 +1,48 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import faker from 'faker';
+import fs from 'fs';
+import uniq from 'uniq';
+import yaml from 'js-yaml';
+
+faker.seed(0xdeadbeef)
+
+const clean = (array: string[]) => {
+  const unique = uniq(array).map(word => word.toLowerCase());
+  unique.sort();
+  return unique;
+}
+
+const select = (array: string[], n: number) => {
+  const unique = faker.random.arrayElements(array, n);
+  unique.sort();
+  return unique;
+}
+
+const parse = (source: string, target: string) => {
+  const content = yaml.load(String(fs.readFileSync(source)));
+  const { animals, adjectives } = content;
+
+  const cleaned = {
+    animals: clean(animals),
+    adjectives: clean(adjectives)
+  }
+
+  const selected = {
+    animals: select(cleaned.animals, 256),
+    adjectives: select(cleaned.adjectives, 256)
+  }
+
+  console.log(JSON.stringify({
+    animals: selected.animals.length,
+    adjectives: selected.adjectives.length
+  }))
+
+  fs.writeFileSync(source, JSON.stringify(cleaned, undefined, 2));
+  fs.writeFileSync(target, JSON.stringify(selected, undefined, 2));
+}
+
+parse('./data/raw.json', './data/words.json');
+

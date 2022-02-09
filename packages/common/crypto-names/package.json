@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/crypto-names",
+  "version": "2.26.1",
+  "description": "Basic crypto key utils",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "binary-parser": "^2.0.2",
+    "crypto-js": "^3.1.9-1",
+    "hypercore-crypto": "^2.3.0"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/binary-parser": "^1.5.1",
+    "@types/crypto-js": "~4.0.2",
+    "@types/jest": "^26.0.7",
+    "@types/js-yaml": "^3.12.5",
+    "@types/faker": "^5.5.1",
+    "@types/node": "^14.0.9",
+    "@types/uniq": "^0.0.27",
+    "faker": "^5.1.0",
+    "js-yaml": "^3.13.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.5.2",
+    "uniq": "^1.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
