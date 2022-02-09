@@ -25,6 +25,27 @@ type Num = [min: number, max: number] | number
 
 const num = (n: Num) => typeof n === 'number' ? n : faker.datatype.number({ min: n[0], max: n[1] });
 
+const schemas = {
+  types: [
+    {
+      type: TestType.Org,
+      children: {
+        type: TestType.Project
+      }
+    },
+    {
+      type: TestType.Project,
+      children: {
+        type: TestType.Task
+      }
+    },
+    {
+      type: TestType.Task,
+    }
+  ]
+};
+
+
 export class ProjectBuilder {
   constructor (
     private readonly _generator: Generator,
@@ -74,6 +95,7 @@ export class OrgBuilder {
 /**
  * Party item generator.
  */
+// TODO(burdon): Configure generator to treat all references as links (e.g., for table).
 export class Generator {
   constructor (
     private readonly _party: Party
