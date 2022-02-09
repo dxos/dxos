@@ -92,6 +92,7 @@ declare module '@polkadot/api/types/storage' {
       [key: string]: QueryableStorageEntry<ApiType>;
     };
     registry: {
+      accounts: AugmentedQuery<ApiType, (arg: AccountId | string | Uint8Array) => Observable<Option<Account>>, [AccountId]> & QueryableStorageEntry<ApiType, [AccountId]>;
       auctions: AugmentedQuery<ApiType, (arg: Bytes | string | Uint8Array) => Observable<Option<Auction>>, [Bytes]> & QueryableStorageEntry<ApiType, [Bytes]>;
       domainNames: AugmentedQuery<ApiType, (arg: Text | string) => Observable<Option<DomainKey>>, [Text]> & QueryableStorageEntry<ApiType, [Text]>;
       domains: AugmentedQuery<ApiType, (arg: DomainKey | string | Uint8Array) => Observable<Option<Domain>>, [DomainKey]> & QueryableStorageEntry<ApiType, [DomainKey]>;

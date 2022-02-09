@@ -5,7 +5,7 @@ import type { Bytes, Compact, Option, Text, Vec, bool, u128, u32, u64 } from '@p
 import type { AnyNumber } from '@polkadot/types/types';
 import type { Extrinsic } from '@polkadot/types/interfaces/extrinsics';
 import type { GrandpaEquivocationProof, KeyOwnerProof } from '@polkadot/types/interfaces/grandpa';
-import type { Balance, BlockNumber, Call, ChangesTrieConfiguration, KeyValue, LookupSource, Moment, Perbill, Weight } from '@polkadot/types/interfaces/runtime';
+import type { AccountId, Balance, BlockNumber, Call, ChangesTrieConfiguration, KeyValue, LookupSource, Moment, Perbill, Weight } from '@polkadot/types/interfaces/runtime';
 import type { Key } from '@polkadot/types/interfaces/system';
 import type { DomainKey, Multihash } from 'sample-polkadotjs-typegen/interfaces/registry';
 import type { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types';
@@ -149,14 +149,16 @@ declare module '@polkadot/api/types/submittable' {
       [key: string]: SubmittableExtrinsicFunction<ApiType>;
     };
     registry: {
+      addDevice: AugmentedSubmittable<(accountId: AccountId | string | Uint8Array, deviceId: AccountId | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [AccountId, AccountId]>;
       addRecord: AugmentedSubmittable<(data: Bytes | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes]>;
       bidAuction: AugmentedSubmittable<(name: Bytes | string | Uint8Array, amount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes, u128]>;
-      claimAuction: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, domainName: Text | string) => SubmittableExtrinsic<ApiType>, [DomainKey, Text]>;
+      claimAuction: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, domainName: Text | string, account: Option<AccountId> | null | object | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [DomainKey, Text, Option<AccountId>]>;
       closeAuction: AugmentedSubmittable<(name: Bytes | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes]>;
+      createAccount: AugmentedSubmittable<() => SubmittableExtrinsic<ApiType>, []>;
       createAuction: AugmentedSubmittable<(name: Text | string, startAmount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [Text, u128]>;
       deleteResource: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, name: Text | string) => SubmittableExtrinsic<ApiType>, [DomainKey, Text]>;
       forceCloseAuction: AugmentedSubmittable<(name: Bytes | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes]>;
-      registerDomain: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [DomainKey]>;
+      registerDomain: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, account: Option<AccountId> | null | object | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [DomainKey, Option<AccountId>]>;
       updateResource: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, name: Text | string, recordHash: Multihash | string | Uint8Array, version: Option<Text> | null | object | string | Uint8Array, tags: Vec<Text> | (Text | string)[]) => SubmittableExtrinsic<ApiType>, [DomainKey, Text, Multihash, Option<Text>, Vec<Text>]>;
       /**
        * Generic tx
