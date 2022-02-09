@@ -15,11 +15,13 @@ import words from '../data/words.json';
 // TODO(burdon): Store hash of words and check consistent in code.
 const data: { [key: string ]: string[] } = words;
 
-// 256 ^ 3 = 2M (pad 3 8-bit words).
+// 256 ^ 3 ~= 16M.
+const bits = 8; // Bits per section.
+const length = Math.pow(2, bits);
+
 const parts: string[] = ['a', 'b', 'c'];
 const parser = new Parser().bit8('a').bit8('b').bit8('c');
 const types = ['adjectives', 'adjectives', 'animals'];
-const length = 256;
 
 const range = types.reduce((result, _, i) => result * data[types[i]].length, 1);
 const bitlength = Math.log2(range);
@@ -29,8 +31,12 @@ export const generateKey = () => {
   return crypto.randomBytes(bytelength);
 };
 
-// TODO(burdon): Regenerate if repeated words?
-export const generateName = (key: Buffer) => {
+/**
+ * Generate 3-work phrase.
+ * NOTE: Collision rate requires uniquenss checking.
+ * @param key
+ */
+export const generateName = (key: Buffer): string => {
   const value = parser.parse(key);
   const words = parts.map((part, i) => {
     const list = data[types[i]];
@@ -40,13 +46,19 @@ export const generateName = (key: Buffer) => {
 
     return list[value[part]];
   });
+
   return words.join('-');
 };
 
+/**
+ * Parses the 3-word phrase.
+ * @param name
+ */
 export const parseName = (name: string): Buffer => {
   const binary = name.split('-').map((word, i) => {
     const list = data[types[i]];
     return list.indexOf(word);
-  }).map(n => n.toString(2).padStart(8, '0')).join('');
-  return Buffer.from(parseInt(binary, 2).toString(16).padStart(types.length * 2, '0'), 'hex');
+  }).map(n => n.toString(2).padStart(bits, '0')).join('');
+
+  return Buffer.from(parseInt(binary, 2).toString(16).padStart(2 * types.length * bits / 8, '0'), 'hex');
 };
