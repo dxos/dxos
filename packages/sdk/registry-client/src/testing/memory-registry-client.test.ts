@@ -43,12 +43,12 @@ describe('Registry API mock', () => {
     const typeNames = types.map(type => type.messageName).sort();
 
     expect(typeNames).to.be.deep.equal([
-      'app',
-      'bot',
-      'dxos.type.IPFS',
-      'dxos.type.KUBE',
-      'dxos.type.Service',
-      'file'
+      '.dxos.type.App',
+      '.dxos.type.Bot',
+      '.dxos.type.File',
+      '.dxos.type.IPFS',
+      '.dxos.type.KUBE',
+      '.dxos.type.Service'
     ]);
   });
 });
