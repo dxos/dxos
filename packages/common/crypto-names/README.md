@@ -1,6 +1,6 @@
 # Crypto Names
 
-Generates lossless 3-word names using 24-bit (3 byte) entropy (~=2MM variations).
+Generates lossless human readable 3-words names (24-bit entropy ~= 16M combinations).
 
 ## Parser
 
