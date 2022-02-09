@@ -13,26 +13,26 @@ WARNING: Do not change word list once deployed.
 `rushx test`
 
 ```json
-[
-  {
-    "key": "510976",
-    "name": "faster-amicable-jackal"
-  },
-  {
-    "key": "7cfd24",
-    "name": "intimate-willing-cattle"
-  },
-  {
-    "key": "368f2f",
-    "name": "desirable-modest-clam"
-  },
-  {
-    "key": "818874",
-    "name": "jolly-lively-impala"
-  },
-  {
-    "key": "8879b8",
-    "name": "lively-integral-prawn"
-  }
-]
+  [
+    {
+      "key": "8b03f3",
+      "name": "momentous-advantageous-wildebeest"
+    },
+    {
+      "key": "f205a4",
+      "name": "useful-affordable-oyster"
+    },
+    {
+      "key": "f733ca",
+      "name": "visionary-delicious-sheepdog"
+    },
+    {
+      "key": "3c568a",
+      "name": "durable-flatter-manatee"
+    },
+    {
+      "key": "c81576",
+      "name": "smartest-benevolent-kangaroo"
+    }
+  ]
 ```

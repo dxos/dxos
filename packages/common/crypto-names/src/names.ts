@@ -37,6 +37,7 @@ export const generateKey = () => {
  * @param key
  */
 export const generateName = (key: Buffer): string => {
+  // TODO(burdon): Regenerate until total length is below threshold?
   const value = parser.parse(key);
   const words = parts.map((part, i) => {
     const list = data[types[i]];
