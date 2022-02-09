@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2"
   },
