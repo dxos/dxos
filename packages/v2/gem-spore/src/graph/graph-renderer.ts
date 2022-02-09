@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as d3 from 'd3';
 import clsx from 'clsx';
+import * as d3 from 'd3';
 
 import { D3Callable, Point } from '@dxos/gem-core';
 
@@ -31,9 +31,9 @@ export type GraphRendererOptions<T> = {
     start?: boolean
     end?: boolean
   }
-  label?: (node: GraphNode<T>) => string
-  nodeClass?: (node: GraphNode<T>) => string
-  linkClass?: (link: GraphLink<T>) => string
+  label?: (node: GraphNode<T>) => string | undefined
+  nodeClass?: (node: GraphNode<T>) => string | undefined
+  linkClass?: (link: GraphLink<T>) => string | undefined
   onNodeClick?: (node: GraphNode<T>, event: MouseEvent) => void
   onLinkClick?: (node: GraphLink<T>, event: MouseEvent) => void
 }
@@ -61,7 +61,7 @@ export const linkerRenderer = (
     .data(source ? [{ id: 'link' }] : [])
     .join('path')
     .attr('marker-end', () => target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)')
-    .attr('d', d => {
+    .attr('d', () => {
       return line(
         getCircumferencePoints(
           [source.x, source.y],
@@ -91,11 +91,11 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
       .attr('class', 'guides')
 
       .selectAll<SVGCircleElement, { cx: number, cy: number, r: number }>('circle')
-        .data(guides?.circles || [])
-        .join('circle')
-        .attr('cx', d => d.cx)
-        .attr('cy', d => d.cy)
-        .attr('r', d => d.r);
+      .data(guides?.circles || [])
+      .join('circle')
+      .attr('cx', d => d.cx)
+      .attr('cy', d => d.cy)
+      .attr('r', d => d.r);
 
     //
     // Links
@@ -200,11 +200,11 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
 
     // Highlight.
     circles
-      .on('mouseenter', function (event: MouseEvent) {
+      .on('mouseenter', function () {
         // console.log(d3.select(this).datum());
         d3.select(this).classed('highlight', true);
       })
-      .on('mouseleave', function (event: MouseEvent) {
+      .on('mouseleave', function () {
         // console.log(d3.select(this).datum());
         d3.select(this).transition().duration(100).on('end', () => {
           d3.select(this).classed('highlight', false);

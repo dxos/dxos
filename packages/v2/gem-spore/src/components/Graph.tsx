@@ -51,7 +51,7 @@ export const Graph = ({
       },
       label,
       nodeClass,
-      onNodeClick: (node: GraphNode<any>) => onSelect(node)
+      onNodeClick: onSelect ? (node: GraphNode<any>) => onSelect(node) : undefined
     });
 
     return {
@@ -65,7 +65,7 @@ export const Graph = ({
       renderer.update(layout);
     });
 
-    projector.update(model.graph);
+    projector.update(model?.graph);
     return model?.subscribe(graph => {
       projector.update(graph);
     })

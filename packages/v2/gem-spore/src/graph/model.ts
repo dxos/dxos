@@ -63,6 +63,7 @@ export class GraphBuilder<T> implements GraphModel<T> {
   }
 
   // TODO(burdon): Implement batch mode.
+  // TODO(burdon): Upsert nodes.
 
   addNode (node: GraphNode<T>) {
     this._graph.nodes.push(node);

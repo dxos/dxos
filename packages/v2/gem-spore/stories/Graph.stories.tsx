@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
 import React, { useMemo } from 'react';
 
 import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
@@ -10,7 +9,6 @@ import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core'
 import {
   convertTreeToGraph,
   createTree,
-  defaultGraphStyles,
   Graph,
   GraphNode,
   Markers,
@@ -29,8 +27,6 @@ export const Primary = () => {
     () => new TestGraphModelAdapter(new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })))),
   []);
 
-  // TODO(burdon): Hover/show label.
-  // TODO(burdon): HOCs for Grid, Zoom, etc.
   return (
     <FullScreen>
       <SVGContextProvider>
@@ -39,9 +35,8 @@ export const Primary = () => {
           <Grid axis />
           <Zoom extent={[1/2, 2]}>
             <Graph
-              className={clsx(defaultGraphStyles)}
-              drag
               arrows
+              drag
               model={adapter}
               label={(node: GraphNode<TestNode>) => selected.has(node.id) ? node.data.label : undefined}
               nodeClass={(node: GraphNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined}
