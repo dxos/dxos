@@ -5,13 +5,13 @@
 import { Parser } from 'binary-parser';
 import crypto from 'hypercore-crypto';
 
+// Data sources
 // https://github.com/skjorrface/animals.txt/blob/master/animals.txt (500 animals)
 // https://gist.github.com/Xeoncross/5381806b18de1f395187 (900 positive adjectives)
 
-// https://github.com/taikuukaits/SimpleWordlists
-
 import words from '../data/words.json';
 
+// TODO(burdon): Make exensible without breaking existing words (e.g., add byte and word).
 // TODO(burdon): Store hash of words and check consistent in code.
 const data: { [key: string ]: string[] } = words;
 

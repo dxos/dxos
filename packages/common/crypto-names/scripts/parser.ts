@@ -9,8 +9,10 @@ import yaml from 'js-yaml';
 
 faker.seed(0xdeadbeef)
 
+const maxWordLength = 12;
+
 const clean = (array: string[]) => {
-  const unique = uniq(array).map(word => word.toLowerCase());
+  const unique = uniq(array).filter(word => word.length <= maxWordLength).map(word => word.toLowerCase());
   unique.sort();
   return unique;
 }

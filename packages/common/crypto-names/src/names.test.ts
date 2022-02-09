@@ -13,11 +13,15 @@ const t = () => {
 }
 
 test('exampe', () => {
-  const { key, name } = t();
-  console.log(JSON.stringify({
-    key: key.toString('hex'),
-    name
-  }));
+  const examples = Array.from({ length: 5 }).map(() => {
+    const { key, name } = t();
+    return {
+      key: key.toString('hex'),
+      name
+    };
+  });
+
+  console.log(JSON.stringify(examples, undefined, 2));
 });
 
 test('name to be unique', () => {

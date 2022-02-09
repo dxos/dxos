@@ -1,29 +1,38 @@
-# Crypto
+# Crypto Names
 
-[![Build Status](https://travis-ci.com/dxos/crypto.svg?branch=master)](https://travis-ci.com/dxos/crypto)
-[![Coverage Status](https://coveralls.io/repos/github/dxos/crypto/badge.svg?branch=master)](https://coveralls.io/github/dxos/crypto?branch=master)
-[![Greenkeeper badge](https://badges.greenkeeper.io/dxos/crypto.svg)](https://greenkeeper.io/)
-[![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/standard/semistandard)
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+Generates lossless 3-word names using 24-bit (3 byte) entropy (~=2MM variations).
 
-## Install
+## Parser
 
+WARNING: Do not change word list once deployed.
+
+`yarn ts-node ./scripts/parser`
+
+## Examples
+
+`rushx test`
+
+```json
+[
+  {
+    "key": "510976",
+    "name": "faster-amicable-jackal"
+  },
+  {
+    "key": "7cfd24",
+    "name": "intimate-willing-cattle"
+  },
+  {
+    "key": "368f2f",
+    "name": "desirable-modest-clam"
+  },
+  {
+    "key": "818874",
+    "name": "jolly-lively-impala"
+  },
+  {
+    "key": "8879b8",
+    "name": "lively-integral-prawn"
+  }
+]
 ```
-$ npm install @dxos/crypto
-```
-
-## Usage
-
-```
-import { createKeyPair } from '@dxos/crypto';
-
-const { publicKey, secretKey } = createKeyPair();
-```
-
-## Contributing
-
-PRs accepted.
-
-## License
-
-GPL-3.0 © dxos
