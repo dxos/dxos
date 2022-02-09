@@ -36,6 +36,7 @@ import {
   TypeRecordMetadata,
   UpdateResourceOptions
 } from './types';
+import { BaseClient } from './base-client';
 
 // TODO(burdon): Util.
 const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;
@@ -63,17 +64,8 @@ export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {
 /**
  * Main API for DXNS registry.
  */
-export class RegistryClient implements IRegistryClient {
+export class RegistryClient extends BaseClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
-
-  private _transactionsHandler: ApiTransactionHandler;
-
-  constructor (
-    private api: ApiPromise,
-    signFn: SignTxFunction | AddressOrPair = tx => tx
-  ) {
-    this._transactionsHandler = new ApiTransactionHandler(api, signFn);
-  }
 
   //
   // Domains
@@ -99,7 +91,7 @@ export class RegistryClient implements IRegistryClient {
 
   async registerDomain (): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this._transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value));
     return domainKey;
   }
 
@@ -195,7 +187,7 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async insertRawRecord (data: Uint8Array): Promise<CID> {
-    const events = await this._transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
+    const events = await this.transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
     const event = events.map(e => e.event).find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
     return new CID(event.data[1].toU8a());
@@ -350,7 +342,7 @@ export class RegistryClient implements IRegistryClient {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this._transactionsHandler.sendTransaction(
+    await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(
         domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
@@ -359,7 +351,7 @@ export class RegistryClient implements IRegistryClient {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this._transactionsHandler.sendTransaction(
+    await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
   }
 

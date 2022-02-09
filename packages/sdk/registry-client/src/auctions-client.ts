@@ -8,6 +8,7 @@ import BigNumber from 'bn.js';
 
 import { ApiTransactionHandler } from './api';
 import { SignTxFunction } from './api/api-transaction-handler';
+import { BaseClient } from './base-client';
 import { DomainKey } from './types';
 
 /**
@@ -84,13 +85,7 @@ export interface IAuctionsClient {
 /**
  *
  */
-export class AuctionsClient implements IAuctionsClient {
-  private transactionsHandler: ApiTransactionHandler;
-
-  constructor (private api: ApiPromise, signFn: SignTxFunction | AddressOrPair = tx => tx) {
-    this.transactionsHandler = new ApiTransactionHandler(api, signFn);
-  }
-
+export class AuctionsClient extends BaseClient implements IAuctionsClient  {
   async createAuction (name: string, startAmount: number): Promise<void> {
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.createAuction(name, startAmount));
   }
