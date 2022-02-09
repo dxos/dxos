@@ -2,30 +2,64 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
-
 import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { Graph, GraphBuilder, GraphNode } from '@dxos/gem-spore';
+import { defaultGraphStyles, Graph, GraphBuilder, GraphNode, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
-import { ClientProvider, ProfileInitializer, useClient, useParty, useSelection } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
+import { css } from '@emotion/css';
+import clsx from 'clsx';
+import React, { useEffect, useMemo, useState } from 'react';
+
+// Testing.
+// import { TestGraphModelAdapter, TestGraphModel, convertTreeToGraph, createTree } from '@dxos/gem-spore';
+import { enumFromString, OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
 
 export default {
   title: 'demos/Graph'
 };
 
+const styles = css`
+  g.node {
+    &.example_type_org {
+      circle {
+        fill: orange;
+      }
+    }
+    &.example_type_person {
+      circle {
+        fill: green;
+      }
+    }
+    &.example_type_project {
+      circle {
+        fill: cornflowerblue;
+      }
+    }
+    &.example_type_task {
+    }
+  }
+`;
+
 // TODO(burdon): Generator (org, projects, etc.)
 // TODO(burdon): Devtools mesh.
 // TODO(burdon): createItem defaults.
 // TODO(burdon): useSelection ?? [] (create default).
+// TODO(burdon): Force properties.
 
 const useGraphModel = (party?: Party) => {
   const model = useMemo(() => new GraphBuilder<Item<ObjectModel>>(), []);
   const items = useSelection(party?.select().filter((item) => {
-    return item.type === 'example:type.org' || item.type === 'example:type.project';
+    // TODO(burdon): Naturally exclude party item.
+    return enumFromString(TestType, item.type!) !== undefined;
   }), [party]);
   useEffect(() => {
+    // TODO(burdon): Error if add multiple nodes with same ID.
+    if (model.graph.nodes.length >= 4) {
+      return;
+    }
+
     // TODO(burdon): Batch mode.
     items?.forEach(item => model.addNode({
       id: item.id,
@@ -44,60 +78,57 @@ const useGraphModel = (party?: Party) => {
 };
 
 const App = () => {
+  /*
+  const model = useMemo(
+    () => new TestGraphModelAdapter(new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })))),
+  []);
+  */
+
   const client = useClient();
   const [party, setParty] = useState<Party>();
+  const generator = useGenerator(party);
   const model = useGraphModel(party);
+
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
-      const item1 = await party.database.createItem({
-        model: ObjectModel, // TODO(burdon): Default.
-        type: 'example:type.org',
-        props: { // TODO(burdon): Properties.
-          title: 'DXOS'
-        }
-      });
-      const item2 = await party.database.createItem({
-        model: ObjectModel,
-        type: 'example:type.project',
-        parent: item1.id,
-        props: {
-          title: 'ECHO'
-        }
-      });
-      const item3 = await party.database.createItem({
-        model: ObjectModel,
-        type: 'example:type.project',
-        parent: item1.id,
-        props: {
-          title: 'HALO'
-        }
-      });
-      const item4 = await party.database.createItem({
-        model: ObjectModel,
-        type: 'example:type.project',
-        parent: item1.id,
-        props: {
-          title: 'MESH'
-        }
-      });
-
       setParty(party);
     });
   }, []);
 
-  // TODO(burdon): Drag bug.
+  useEffect(() => {
+    if (generator) {
+      setImmediate(async () => {
+        // TODO(burdon): Adapter to create graph.
+        await generator.createOrgs([2, 3], async (orgBuilder: OrgBuilder) => {
+          await orgBuilder.createPeople([2, 5]);
+          await orgBuilder.createProjects([2, 4], async (projectBuilder: ProjectBuilder) => {
+            const { result: people } = await orgBuilder.org
+              .select()
+              .children()
+              .filter({ type: TestType.Person })
+              .query();
+
+            await projectBuilder.createTasks([2, 5], people);
+          });
+        });
+      }, []);
+    }
+  }, [generator]);
 
   return (
     <FullScreen>
       <SVGContextProvider>
         <SVG>
+          <Markers />
           <Grid axis />
           <Zoom>
             <Graph
+              className={clsx(defaultGraphStyles, styles)}
               arrows
               drag
-              label={(node: GraphNode<Item<ObjectModel>>) => node.data?.model.getProperty('title')}
+              nodeClass={(node: GraphNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')}
+              label={(node: GraphNode<Item<ObjectModel>>) => node.data!.model.getProperty('title')}
               model={model}
             />
           </Zoom>
