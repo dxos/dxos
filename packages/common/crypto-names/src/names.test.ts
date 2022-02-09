@@ -12,7 +12,7 @@ const t = () => {
   return { key, name };
 }
 
-test('exampe', () => {
+test('example', () => {
   const examples = Array.from({ length: 5 }).map(() => {
     const { key, name } = t();
     return {
