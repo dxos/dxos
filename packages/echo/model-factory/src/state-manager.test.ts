@@ -5,13 +5,13 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { createId, PublicKey } from '@dxos/crypto';
 import { MockFeedWriter, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
 
 import { StateManager } from '.';
 import { Model } from './model';
 import { TestListModel, TestModel } from './testing';
-import { promiseTimeout } from '@dxos/async';
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
