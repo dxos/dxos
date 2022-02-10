@@ -52,18 +52,15 @@ message ItemSnapshot {
 }
 
 message ModelSnapshot {
-  oneof snapshot {
-    // Encoding is defined by model.
-    bytes custom = 1;
+  /**
+   * Encoded model snapshot. Encoding is defined by model's codec.
+   *
+   * Can be missing. In that case the state machine is to be initialized in it's default state.
+   */
+  optional bytes snapshot = 1;
 
-    // Fallback to storing array of mutations.
-    // TODO(dmaretskyi): Rename to "mutations".
-    ModelMutationArray array = 2;
-  }
-}
-
-message ModelMutationArray {
-  repeated ModelMutation mutations = 1;
+  /// Mutations to be applied on top of the snapshotted state, or on top of initial state if the snapshot is missing.
+  repeated ModelMutation mutations = 2;
 }
 
 message ModelMutation {
