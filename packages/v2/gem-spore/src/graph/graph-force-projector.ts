@@ -11,32 +11,36 @@ import { emptyGraph, GraphData, GraphLink, GraphNode } from './types';
 
 const log = debug('gem:graph-force-projector');
 
-const value = <T extends any> (v: T | boolean): T => typeof v === 'boolean' ? undefined : v;
+const value = <T> (v: T | boolean): T => typeof v === 'boolean' ? undefined : v;
 
-const maybe = <T extends any> (config: T | boolean, f, def = false) => {
+const maybe = <T> (config: T | boolean, f, def = false) => {
   if (config || (config === undefined && def)) {
     return f(value<T>(config) ?? {});
   }
 };
 
-type ManyBodyOptions = {
+export type ManyBodyOptions = {
   distanceMax?: number
   strength?: (count: number) => number
 }
 
-type LinkOptions = {
+export type LinkOptions = {
   distance: number
 }
 
-type GraphForceProjectorOptions = {
-  guides: boolean
-  forces?: {
-    manyBody?: boolean | ManyBodyOptions
-    link?: boolean | LinkOptions
-    center?: boolean
-    collide?: boolean
-  }
+export type ForceOptions = {
+  manyBody?: boolean | ManyBodyOptions
+  link?: boolean | LinkOptions
+  center?: boolean
+  collide?: boolean
 }
+
+export type GraphForceProjectorOptions = {
+  guides?: boolean
+  forces?: ForceOptions
+}
+
+export const defaultForceOptions: ForceOptions = {};
 
 /**
  * D3 force layout.
@@ -74,7 +78,7 @@ export class GraphForceProjector<T> extends Projector<GraphData<T>, GraphLayout<
     const links = graph.links.map(link => ({
       id: link.id,
       source: nodes.find(n => n.id === link.source.id),
-      target: nodes.find(n => n.id === link.target.id),
+      target: nodes.find(n => n.id === link.target.id)
     }));
 
     this._layout = {
@@ -194,13 +198,13 @@ export class GraphForceProjector<T> extends Projector<GraphData<T>, GraphLayout<
         .strength(0.5)
       ))
 
-      // Radial
-      // https://github.com/d3/d3-force#forceRadial
-      // .force('radial', d3.forceRadial(240).strength(0.1))
+    // Radial
+    // https://github.com/d3/d3-force#forceRadial
+    // .force('radial', d3.forceRadial(240).strength(0.1))
 
-      // Positioning
-      // https://github.com/d3/d3-force#positioning
-      // .force('y', d3.forceY(0).strength(0.01))
+    // Positioning
+    // https://github.com/d3/d3-force#positioning
+    // .force('y', d3.forceY(0).strength(0.01))
 
       .restart();
   }

@@ -32,20 +32,19 @@ enum Mode {
  * @param simulation
  * @param options
  */
-export const createSimulationDrag = <T extends any>(
+export const createSimulationDrag = <T>(
   context: SVGContext,
   simulation: Simulation<GraphNode<T>, GraphLink<T>>,
   options: DragOptions<T> = defaultOptions
 ) => {
-  let mode: Mode = undefined;
-  let started = false;
-  let source: GraphNode<T> = undefined;
-  let target: GraphNode<T> = undefined;
+  let mode: Mode;
+  let source: GraphNode<T>;
+  let target: GraphNode<T>;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
     const modKey = options?.[key] ?? defaultOptions[key];
     return modKey === undefined || event[modKey];
-  }
+  };
 
   return d3.drag()
     .filter(function (event: MouseEvent) {
@@ -62,8 +61,7 @@ export const createSimulationDrag = <T extends any>(
     })
 
     .on('drag', function (event: D3DragEvent) {
-      started = true;
-
+      // d3.select(this).style('pointer-events', 'none');
       switch (mode) {
         case Mode.MOVE: {
           d3.select(context.svg).attr('cursor', 'grabbing');
@@ -93,6 +91,8 @@ export const createSimulationDrag = <T extends any>(
     })
 
     .on('end', function (event: D3DragEvent) {
+      // d3.select(this).style('pointer-events', undefined);
+
       switch (mode) {
         case Mode.LINK: {
           options?.onDrop?.(source, target);
@@ -107,7 +107,6 @@ export const createSimulationDrag = <T extends any>(
       }
 
       mode = undefined;
-      started = false;
       source = undefined;
       d3.select(context.svg).attr('cursor', undefined);
     });

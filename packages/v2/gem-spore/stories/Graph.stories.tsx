@@ -36,10 +36,20 @@ export const Primary = () => {
           <Zoom extent={[1/2, 2]}>
             <Graph
               arrows
+              forces={{
+                manyBody: {
+                  distanceMax: 400
+                }
+              }}
               drag
               model={adapter}
-              label={(node: GraphNode<TestNode>) => selected.has(node.id) ? node.data.label : undefined}
-              nodeClass={(node: GraphNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined}
+              labels={{
+                text: (node: GraphNode<TestNode>, highlight: boolean) =>
+                  highlight || selected.has(node.id) ? node.data.label : undefined
+              }}
+              classes={{
+                node: (node: GraphNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined
+              }}
               onSelect={(node: GraphNode<TestNode>) => {
                 if (selected.has(node.id)) {
                   selected.delete(node.id);

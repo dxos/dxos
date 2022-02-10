@@ -25,15 +25,23 @@ export type GraphLayout<T> = {
   }
 }
 
+export type LabelOptions<T> = {
+  text: (node: GraphNode<T>, highlight?: boolean) => string | undefined
+}
+
+export type ClassesOptions<T> = {
+  node?: (node: GraphNode<T>) => string | undefined
+  link?: (link: GraphLink<T>) => string | undefined
+}
+
 export type GraphRendererOptions<T> = {
   drag?: D3Callable
   arrows?: {
     start?: boolean
     end?: boolean
   }
-  label?: (node: GraphNode<T>) => string | undefined
-  nodeClass?: (node: GraphNode<T>) => string | undefined
-  linkClass?: (link: GraphLink<T>) => string | undefined
+  labels?: LabelOptions<T>
+  classes?: ClassesOptions<T>
   onNodeClick?: (node: GraphNode<T>, event: MouseEvent) => void
   onLinkClick?: (node: GraphLink<T>, event: MouseEvent) => void
 }
@@ -80,6 +88,7 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
   update (layout: GraphLayout<T>) {
     const { graph, guides } = layout || {};
     const root = d3.select(this.root);
+    const options = this.options;
 
     //
     // Guides
@@ -111,22 +120,22 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
       .data(graph?.links || [], d => d.id)
       .join(enter => {
         const g = enter.append('g')
-          .attr('class', d => clsx('link', this.options.linkClass?.(d)));
+          .attr('class', d => clsx('link', options.classes?.link?.(d)));
 
-        if (this.options.onLinkClick) {
+        if (options.onLinkClick) {
           g.append('path')
             .attr('class', 'click')
             .on('click', (event: MouseEvent) => {
               const link = d3.select<SVGLineElement, GraphLink<T>>(event.target as SVGLineElement).datum();
-              this.options.onLinkClick(link, event);
+              options.onLinkClick(link, event);
             });
         }
 
         g.append('path')
           .attr('class', 'link')
           .attr('pointer-events', 'none')
-          .attr('marker-start', () => this.options.arrows?.start ? 'url(#marker-arrow-start)' : undefined)
-          .attr('marker-end', () => this.options.arrows?.end ? 'url(#marker-arrow-end)' : undefined);
+          .attr('marker-start', () => options.arrows?.start ? 'url(#marker-arrow-start)' : undefined)
+          .attr('marker-end', () => options.arrows?.end ? 'url(#marker-arrow-end)' : undefined);
 
         return g;
       });
@@ -164,12 +173,13 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
         enter => {
           const g = enter.append('g');
           const circle = g.append('circle');
-          if (this.options.drag) {
-            circle.call(this.options.drag);
+          if (options.drag) {
+            circle.call(options.drag);
           }
 
-          if (this.options.label) {
-            g.append('text');
+          if (options.labels) {
+            g.append('text')
+              .text(d => options.labels.text(d));
           }
 
           return g;
@@ -179,17 +189,16 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
           exit.remove();
         }
       )
-      .attr('class', d => clsx('node', this.options.nodeClass?.(d)));
+      .attr('class', d => clsx('node', options.classes?.node?.(d)));
 
     // Update labels.
-    if (this.options.label) {
+    if (options.labels) {
       nodeGroups.selectAll<SVGTextElement, GraphNode<any>>('text')
         .attr('x', d => d.x)
         .attr('y', d => d.y)
         .style('text-anchor', d => (d.x >= 0) ? 'start' : 'end')
-        .style('dominant-baseline', 'central')
-        .attr('dx', d => (d.r + 6) * (d.x >= 0 ? 1 : -1))
-        .text(d => this.options.label(d));
+        .style('dominant-baseline', 'middle')
+        .attr('dx', d => (d.r + 6) * (d.x >= 0 ? 1 : -1));
     }
 
     // Update circles.
@@ -200,22 +209,31 @@ export class GraphRenderer<T> extends Renderer<GraphLayout<T>, GraphRendererOpti
 
     // Highlight.
     circles
-      .on('mouseenter', function () {
+      .on('mouseover', function () {
         // console.log(d3.select(this).datum());
         d3.select(this).classed('highlight', true);
+        if (options.labels) {
+          d3.select<SVGGElement, GraphNode<T>>(this.closest('g'))
+            .raise()
+            .select('text')
+            .text(d => options.labels.text(d, true));
+        }
       })
-      .on('mouseleave', function () {
+      .on('mouseout', function () {
         // console.log(d3.select(this).datum());
-        d3.select(this).transition().duration(100).on('end', () => {
-          d3.select(this).classed('highlight', false);
-        });
+        d3.select(this).classed('highlight', false);
+        if (options.labels) {
+          d3.select<SVGGElement, GraphNode<T>>(this.closest('g'))
+            .select('text')
+            .text(d => options.labels.text(d));
+        }
       });
 
     // Events.
-    if (this.options.onNodeClick) {
+    if (options.onNodeClick) {
       circles.on('click', (event: MouseEvent) => {
         const node = d3.select<SVGElement, GraphNode<T>>(event.target as SVGGElement).datum();
-        this.options.onNodeClick(node, event);
+        options.onNodeClick(node, event);
       });
     }
   }

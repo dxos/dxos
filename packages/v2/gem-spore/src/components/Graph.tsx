@@ -4,53 +4,68 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { createSimulationDrag, GraphForceProjector, GraphModel, GraphNode, GraphRenderer } from '../graph';
+import {
+  createSimulationDrag,
+  ClassesOptions,
+  ForceOptions,
+  GraphForceProjector,
+  GraphModel,
+  GraphNode,
+  GraphRenderer,
+  LabelOptions,
+} from '../graph';
 import { defaultGraphStyles } from './styles';
 
 import { useSvgContext } from '@dxos/gem-core';
 
 export interface GraphProps {
-  model?: GraphModel<any>
   className?: string
-  drag?: boolean
   arrows?: boolean
-  label?: (node: GraphNode<any>) => string
-  nodeClass?: (node: GraphNode<any>) => string
+  forces?: ForceOptions
+  drag?: boolean
+  model?: GraphModel<any>
+  labels?: LabelOptions<any>
+  classes?: ClassesOptions<any>
   onSelect?: (node: any) => void
 }
 
 /**
  * SVG Graph controller.
- * @param model
  * @param className
- * @param drag
  * @param arrows
- * @param label
- * @param nodeClass
+ * @param forces
+ * @param drag
+ * @param model
+ * @param labels
+ * @param classes
  * @param onSelect
  * @constructor
  */
 export const Graph = ({
-  model,
   className = defaultGraphStyles,
-  drag,
   arrows,
-  label,
-  nodeClass,
+  forces,
+  drag,
+  model,
+  labels,
+  classes,
   onSelect
 }: GraphProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector(context);
+    const projector = new GraphForceProjector(context, {
+      forces
+    });
+
     const renderer = new GraphRenderer(context, graphRef, {
       drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {
         end: arrows
       },
-      label,
-      nodeClass,
+      labels,
+      classes,
       onNodeClick: onSelect ? (node: GraphNode<any>) => onSelect(node) : undefined
     });
 

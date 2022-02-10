@@ -142,8 +142,12 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 
     const renderer = new GraphRenderer<TestNode>(context, zoom.ref, {
       drag,
-      label: (node: GraphNode<TestNode>) => node.id.substring(0, 4),
-      nodeClass: (node: GraphNode<TestNode>) => node.data.type === 'org' ? 'selected' : undefined,
+      labels: {
+        text: (node: GraphNode<TestNode>) => node.id.substring(0, 4)
+      },
+      classes: {
+        node: (node: GraphNode<TestNode>) => node.data.type === 'org' ? 'selected' : undefined
+      },
       onNodeClick: (node: GraphNode<TestNode>, event: MouseEvent) => {
         renderer.fireBullet(node);
       },

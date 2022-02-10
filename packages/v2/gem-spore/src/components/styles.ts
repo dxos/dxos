@@ -55,7 +55,7 @@ export const defaultGraphStyles = css`
       stroke-width: 2px;
     }
     text {
-      fill: #666;
+      fill: #333;
       font-family: sans-serif;
     }
   }
