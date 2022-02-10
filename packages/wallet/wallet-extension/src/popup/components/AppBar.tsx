@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
 import { AppBar as MuiAppBar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
