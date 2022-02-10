@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "book": "esbuild-server book",
-    "build": "toolchain build",
+    "build": "tsc --noEmit && npm run book -- --build",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",
     "lint": "toolchain lint",

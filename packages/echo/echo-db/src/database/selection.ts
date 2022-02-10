@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
 
-import { Database, DefaultModel } from '.';
+import { Database } from './database';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
@@ -245,7 +245,7 @@ const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link<any>> =>
 
 const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity<any>> => {
   return entity => {
-    if (entity.model instanceof DefaultModel) {
+    if (entity.model === null) {
       return false;
     }
 

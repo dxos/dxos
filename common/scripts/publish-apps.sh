@@ -3,9 +3,19 @@
 set -euo pipefail
 
 [[ -e ~/.dx/profile/default ]] || dx profile init --name $DX_PROFILE --template-url "$DX_PROFILE_URL"
+[[ -e ~/.dx/storage ]] || dx halo init --name $DX_PROFILE
 DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
 
-for APP_PATH in "packages/demos" "packages/tutorials/tutorials-tasks-app"
+for APP_PATH in \
+  "packages/demos" \
+  "packages/devtools/devtools" \
+  "packages/devtools/devtools-mesh" \
+  "packages/sdk/react-client" \
+  "packages/sdk/react-components" \
+  "packages/sdk/react-framework" \
+  "packages/sdk/react-registry-client" \
+  "packages/tutorials/tutorials-tasks-app" \
+  "packages/wallet/wallet-playground"
 do
   cd $APP_PATH
 
@@ -15,10 +25,10 @@ do
   echo "::group::Publishing $PKG_NAME"
   
   # Canary deployment
-  dx app --verbose deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag dev --version=false
+  dx dxns --verbose deploy --tag dev --version=false
 
   # Latest version deployment
-  dx app --verbose deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag latest --skipExisting
+  dx dxns --verbose deploy --tag latest --skipExisting
 
   cd -
   echo "::endgroup::"

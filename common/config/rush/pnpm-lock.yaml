@@ -61,7 +61,6 @@ importers:
       '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
@@ -97,7 +96,6 @@ importers:
       '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       assert: 2.0.0
@@ -258,7 +256,6 @@ importers:
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pify': ^3.0.2
@@ -281,7 +278,6 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/pify': 3.0.2
@@ -1155,10 +1151,13 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.3.3
+      expect: ~27.0.2
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -1166,12 +1165,15 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': link:../feed-store
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.7
       '@types/node': 14.18.0
       debug: 4.3.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.24
+      '@types/mocha': 8.2.3
+      expect: 27.0.6
 
   ../../packages/echo/object-model:
     specifiers:
@@ -1392,7 +1394,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
-      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/levelup': ^4.3.0
@@ -1447,7 +1448,6 @@ importers:
       '@types/debug': 4.1.7
       '@types/encoding-down': 5.0.0
       '@types/end-of-stream': 1.4.1
-      '@types/expect': 24.3.0
       '@types/jest': 26.0.24
       '@types/json-stable-stringify': 1.0.33
       '@types/levelup': 4.3.3
@@ -1468,7 +1468,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       expect: ~27.0.2
     dependencies:
@@ -1478,7 +1477,6 @@ importers:
       '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       expect: 27.0.6
 
@@ -1779,7 +1777,6 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       expect: ~27.0.2
@@ -1795,7 +1792,6 @@ importers:
       '@dxos/network-manager': link:../network-manager
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       expect: 27.0.6
@@ -1928,7 +1924,6 @@ importers:
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
       '@types/debug': ^4.1.7
-      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -1985,7 +1980,6 @@ importers:
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.7
-      '@types/expect': 24.3.0
       '@types/jest': 26.0.24
       '@types/level-js': 4.0.2
       '@types/lodash.defaultsdeep': 4.6.6
@@ -2499,6 +2493,7 @@ importers:
       '@types/react-dom': ^17.0.9
       '@types/react-router-dom': ~5.1.7
       '@types/uuid': ~8.3.3
+      '@types/webextension-polyfill': ^0.8.0
       '@types/webpack-env': ^1.16.0
       chalk: ^4.1.0
       copy: ~0.3.2
@@ -2514,7 +2509,7 @@ importers:
       rmdir: ~1.2.0
       typescript: ^4.5.2
       uuid: ^8.3.2
-      webextension-polyfill-ts: ~0.25.0
+      webextension-polyfill: ^0.8.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2536,6 +2531,7 @@ importers:
       react-copy-to-clipboard: 5.0.4_react@17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 5.3.0_react@17.0.2
+      webextension-polyfill: 0.8.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
@@ -2549,6 +2545,7 @@ importers:
       '@types/react-dom': 17.0.11
       '@types/react-router-dom': 5.1.9
       '@types/uuid': 8.3.3
+      '@types/webextension-polyfill': 0.8.2
       '@types/webpack-env': 1.16.3
       chalk: 4.1.2
       copy: 0.3.2
@@ -2559,7 +2556,6 @@ importers:
       rmdir: 1.2.0
       typescript: 4.5.3
       uuid: 8.3.2
-      webextension-polyfill-ts: 0.25.0
 
   ../../packages/wallet/wallet-playground:
     specifiers:
@@ -7929,13 +7925,6 @@ packages:
 
   /@types/estree/0.0.50:
     resolution: {integrity: sha512-C6N5s2ZFtuZRj54k2/zyRhNDjJwwcViAM3Nbm8zjBpbqAdZ00mr0CFxvSKeO8Y/e03WVFLpQMdHYVfUd6SB+Hw==}
-
-  /@types/expect/24.3.0:
-    resolution: {integrity: sha512-aq5Z+YFBz5o2b6Sp1jigx5nsmoZMK5Ceurjwy6PZmRv7dEi1jLtkARfvB1ME+OXJUG+7TZUDcv3WoCr/aor6dQ==}
-    deprecated: This is a stub types definition. expect provides its own type definitions, so you do not need this installed.
-    dependencies:
-      expect: 27.0.6
-    dev: true
 
   /@types/faker/5.5.9:
     resolution: {integrity: sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==}
@@ -24752,17 +24741,6 @@ packages:
       - safe-compare
       - supports-color
       - utf-8-validate
-    dev: true
-
-  /webextension-polyfill-ts/0.25.0:
-    resolution: {integrity: sha512-ikQhwwHYkpBu00pFaUzIKY26I6L87DeRI+Q6jBT1daZUNuu8dSrg5U9l/ZbqdaQ1M/TTSPKeAa3kolP5liuedw==}
-    deprecated: This project has moved to @types/webextension-polyfill
-    dependencies:
-      webextension-polyfill: 0.7.0
-    dev: true
-
-  /webextension-polyfill/0.7.0:
-    resolution: {integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==}
     dev: true
 
   /webextension-polyfill/0.8.0:

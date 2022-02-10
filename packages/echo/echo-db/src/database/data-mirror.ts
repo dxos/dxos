@@ -52,14 +52,16 @@ export class DataMirror {
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
               source: addedEntity.genesis.link.source,
-              target: addedEntity.genesis.link.target
+              target: addedEntity.genesis.link.target,
+              snapshot: {}
             });
           } else {
             entity = await this._itemManager.constructItem({
               itemId: addedEntity.itemId,
               itemType: addedEntity.genesis.itemType,
               modelType: addedEntity.genesis.modelType,
-              parentId: addedEntity.itemMutation?.parentId
+              parentId: addedEntity.itemMutation?.parentId,
+              snapshot: {}
             });
           }
 
@@ -79,23 +81,15 @@ export class DataMirror {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
           assert(update.snapshot.model);
-          if (update.snapshot.model.custom) {
-            assert(entity.modelMeta.snapshotCodec);
-            await entity.model.restoreFromSnapshot(entity.modelMeta.snapshotCodec.decode(update.snapshot.model?.custom));
-          } else {
-            assert(update.snapshot.model.array);
-            for (const message of update.snapshot.model.array.mutations ?? []) {
-              await entity.model.processMessage(message.meta, entity.modelMeta.mutation.decode(message.mutation));
-            }
-          }
+          entity._stateManager.resetToSnapshot(update.snapshot.model);
         } else if (update.mutation) {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);
-            await entity.model.processMessage({
+            await entity._stateManager.processMessage({
               feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
               memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
               seq: update.mutation.meta.seq ?? failUndefined()
-            }, entity.modelMeta.mutation.decode(update.mutation.data.mutation ?? failUndefined()));
+            }, update.mutation.data.mutation ?? failUndefined());
           }
         }
       },

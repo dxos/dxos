@@ -17,7 +17,6 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { DefaultModel } from './database';
 import { DataServiceRouter } from './database/data-service-router';
 import { InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
@@ -120,8 +119,7 @@ export class ECHO {
     writeLogger
   }: EchoCreationOptions = {}) {
     this._modelFactory = new ModelFactory()
-      .registerModel(ObjectModel)
-      .registerModel(DefaultModel);
+      .registerModel(ObjectModel);
 
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);

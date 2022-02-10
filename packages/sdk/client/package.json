@@ -51,7 +51,6 @@
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/expect": "~24.3.0",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
