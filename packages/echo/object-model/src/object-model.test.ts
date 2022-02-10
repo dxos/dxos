@@ -44,12 +44,12 @@ describe('ObjectModel', () => {
 
   it('two peers', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const a = rig.createPeer();
-    const b = rig.createPeer();
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
-    await a.model.setProperty('foo', 'bar');
+    await peer1.model.setProperty('foo', 'bar');
 
-    expect(b.model.getProperty('foo')).toEqual('bar');
+    expect(peer2.model.getProperty('foo')).toEqual('bar');
   });
 
   it.skip('consistency', async () => {
