@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createId, zeroKey } from '@dxos/crypto';
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';
@@ -32,7 +32,8 @@ describe('model factory', () => {
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: zeroKey(),
-      seq: meta.seq
+      seq: meta.seq,
+      timeframe: new Timeframe(),
     }, message));
 
     // Update model.

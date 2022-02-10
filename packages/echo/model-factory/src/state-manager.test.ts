@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createId, PublicKey } from '@dxos/crypto';
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
 
 import { StateManager } from '.';
 import { Model } from './model';
@@ -62,7 +62,8 @@ describe('StateManager', () => {
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: PublicKey.random().asUint8Array(),
-      seq: meta.seq
+      seq: meta.seq,
+      timeframe: new Timeframe(),
     }, message));
 
     await stateManager.model.setProperty('testKey', 'testValue');
@@ -86,8 +87,11 @@ describe('StateManager', () => {
   });
 });
 
-const createMeta = (seq: number) => ({
-  feedKey: PublicKey.random().asUint8Array(),
-  memberKey: PublicKey.random().asUint8Array(),
-  seq
+const feedKey = PublicKey.random().asUint8Array();
+
+const createMeta = (seq: number): MutationMetaWithTimeframe => ({
+  feedKey,
+  memberKey: feedKey,
+  seq,
+  timeframe: new Timeframe(),
 });

@@ -11,7 +11,7 @@ import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot
 } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
-import { Model, ModelFactory } from '@dxos/model-factory';
+import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
 import { Entity } from './entity';
@@ -49,7 +49,7 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
-      const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
+      const { data: { itemId, genesis, itemMutation, mutation, snapshot, timeframe }, meta } = message;
       assert(itemId);
 
       //
@@ -100,10 +100,10 @@ export class ItemDemuxer {
       //
       if (mutation && !genesis) {
         assert(message.data.mutation);
-        const mutation = { meta: message.meta, mutation: message.data.mutation };
+        const modelMessage: ModelMessage<Uint8Array> = { meta, mutation };
 
         // Forward mutations to the item's stream.
-        await this._itemManager.processModelMessage(itemId, mutation);
+        await this._itemManager.processModelMessage(itemId, modelMessage);
       }
 
       if (snapshot) {

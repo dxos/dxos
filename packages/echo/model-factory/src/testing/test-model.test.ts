@@ -32,7 +32,7 @@ describe('test model', () => {
     expect(peer2.model.getProperty('title')).toBe('Braneframe');
   });
 
-  test('concurrency - states diverge', async () => {
+  test('concurrency - states converge', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -40,11 +40,13 @@ describe('test model', () => {
     rig.configureReplication(false);
     await peer1.model.setProperty('title', 'DXOS');
     await peer2.model.setProperty('title', 'Braneframe');
+    expect(peer1.model.getProperty('title')).toBe('DXOS');
+    expect(peer2.model.getProperty('title')).toBe('Braneframe');
+
     rig.configureReplication(true);
     await rig.waitForReplication();
 
-    // Peer states have diverged.
-    expect(peer1.model.getProperty('title')).toBe('Braneframe');
-    expect(peer2.model.getProperty('title')).toBe('DXOS');
+    // Peer states have converged.
+    expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'));
   });
 });

@@ -6,10 +6,10 @@ import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
 import { createId, PublicKey } from '@dxos/crypto';
-import { FeedWriter, Timeframe, WriteReceipt, MutationMeta } from '@dxos/echo-protocol';
+import { FeedWriter, Timeframe, WriteReceipt, MutationMeta, MutationMetaWithTimeframe, ModelMutation } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { StateManager } from '..';
+import { ModelMessage, StateManager } from '..';
 import { Model } from '../model';
 import { ModelFactory } from '../model-factory';
 import { ModelConstructor } from '../types';
@@ -65,16 +65,22 @@ export class TestRig<M extends Model<any>> {
   private _writeMessage (peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
     const peer = this._peers.get(peerKey)!;
     const seq = peer.mutations.length;
+    const timeframe = peer.timeframe;
 
     log(`Write ${peerKey}:${seq}`);
-    peer.mutations.push(mutation);
+    const message: ModelMessage<Uint8Array> = {
+      meta: {
+        feedKey: peerKey.asUint8Array(),
+        memberKey: peerKey.asUint8Array(),
+        seq,
+        timeframe,
+      },
+      mutation,
+    };
+    peer.mutations.push(message);
 
     // Process this mutation locally immediately.
-    setImmediate(() => peer.processMutation({
-      feedKey: peerKey.asUint8Array(),
-      memberKey: peerKey.asUint8Array(),
-      seq
-    }, mutation));
+    setImmediate(() => peer.processMutation(message));
 
     // Process the message later, after resolving mutation-write promise. Doing otherwise breaks the model.
     if (this._replicating) {
@@ -102,13 +108,8 @@ export class TestRig<M extends Model<any>> {
         log(`Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`);
 
         for (let i = startingIndex; i < mutations.length; i++) {
-          const meta: MutationMeta = {
-            feedKey: feed.asUint8Array(),
-            memberKey: feed.asUint8Array(),
-            seq: i
-          };
           log(`Process ${feed}:${i} -> ${peer.key}`);
-          peer.processMutation(meta, mutations[i]);
+          peer.processMutation(mutations[i]);
         }
       }
     }
@@ -121,7 +122,7 @@ export class TestRig<M extends Model<any>> {
 export class TestPeer<M extends Model> {
   public timeframe = new Timeframe()
 
-  public mutations: Uint8Array[] = [];
+  public mutations: ModelMessage<Uint8Array>[] = [];
 
   constructor (
     public readonly stateManager: StateManager<M>,
@@ -132,9 +133,9 @@ export class TestPeer<M extends Model> {
     return this.stateManager.model;
   }
 
-  processMutation (meta: MutationMeta, mutation: Uint8Array) {
-    this.stateManager.processMessage(meta, mutation);
+  processMutation (message: ModelMessage<Uint8Array>) {
+    this.stateManager.processMessage(message.meta, message.mutation);
 
-    this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[PublicKey.from(meta.feedKey), meta.seq]]));
+    this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]]));
   }
 }
