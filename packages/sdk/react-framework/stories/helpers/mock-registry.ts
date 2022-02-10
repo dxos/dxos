@@ -4,10 +4,9 @@
 
 import {
   MemoryRegistryClient,
-  createMockTypes,
   createMockResourceRecords
 } from '@dxos/registry-client';
 
 export const createMockRegistry = () => {
-  return new MemoryRegistryClient(createMockTypes(), createMockResourceRecords());
+  return new MemoryRegistryClient(createMockResourceRecords());
 };
