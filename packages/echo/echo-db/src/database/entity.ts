@@ -15,7 +15,7 @@ import { ItemManager } from './item-manager';
  *
  * Subclassed by Item and Link.
  */
-export class Entity<M extends Model> {
+export class Entity<M extends Model | null = Model | null> {
   // Called whenever item processes mutation.
   protected readonly _onUpdate = new Event<Entity<any>>();
 
@@ -24,13 +24,13 @@ export class Entity<M extends Model> {
   /**
    * @internal
    */
-  public _stateManager!: StateManager<M>
+  public _stateManager!: StateManager<NonNullable<M>>
 
   constructor (
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
-    stateManager: StateManager<M>
+    stateManager: StateManager<NonNullable<M>>
   ) {
     this._stateManager = stateManager;
 

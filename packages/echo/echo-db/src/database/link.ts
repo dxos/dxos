@@ -21,7 +21,7 @@ export interface LinkData {
 /**
  * Link variant of an item. Link two objects together. Can hold a custom model.
  */
-export class Link<M extends Model<any>, L extends Model<any> = any, R extends Model<any> = any> extends Entity<M> {
+export class Link<M extends Model | null = Model | null, L extends Model<any> = any, R extends Model<any> = any> extends Entity<M> {
   /**
    * @internal
    */
@@ -31,7 +31,7 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
     itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined,
-    stateManager: StateManager<M>,
+    stateManager: StateManager<NonNullable<M>>,
     link: LinkData
   ) {
     super(
