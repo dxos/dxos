@@ -11,6 +11,7 @@ import { MockFeedWriter, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo
 import { StateManager } from '.';
 import { Model } from './model';
 import { TestListModel, TestModel } from './testing';
+import { promiseTimeout } from '@dxos/async';
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
@@ -84,6 +85,15 @@ describe('StateManager', () => {
 
     stateManager.processMessage(createMeta(1), TestModel.meta.mutation.encode({ key: 'key2', value: 'testValue2' }));
     expect(stateManager.model.properties).toEqual({ testKey: 'testValue', key2: 'testValue2' });
+  });
+
+  test('upate event gets triggered', async () => {
+    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, null);
+
+    const gotUpdate = stateManager.model.update.waitForCount(1);
+    stateManager.processMessage(createMeta(0), TestModel.meta.mutation.encode({ key: 'testKey', value: 'testValue' }));
+
+    await promiseTimeout(gotUpdate, 100, new Error('timeout'));
   });
 });
 
