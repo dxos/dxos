@@ -2,80 +2,29 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/feed-store';
+import { ItemID } from '@dxos/echo-protocol';
 
-import { StateMachine } from './state-machiene';
-import { ModelMessage, ModelMeta } from './types';
-
-export interface MutationWriteReceipt extends WriteReceipt {
-  waitToBeProcessed(): Promise<void>
-}
-
-// TODO(burdon): Enable transition to new adapter.
-export interface IModel<T> {
-  processMessage: (meta: MutationMeta, message: T) => Promise<void>
-}
+import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
 
 /**
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the parent Item's message envelope.
  */
-export abstract class Model<TState = any, TMutation = any> implements IModel<TMutation> {
+export abstract class Model<TState = any, TMutation = any> {
   public readonly update = new Event<Model<TState, TMutation>>();
-
-  private readonly _processor: NodeJS.WritableStream;
-
-  private readonly _meta: ModelMeta;
-  private readonly _itemId: ItemID;
-  private readonly _writeStream?: FeedWriter<TMutation>;
-
-  private readonly _messageProcessed = new Event<MutationMeta>();
-
-  private readonly _stateMachine: StateMachine<TState, TMutation, any>;
 
   /**
    * @param meta
    * @param itemId Parent item.
    * @param writeStream Output mutation stream (unless read-only).
    */
-  constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<TMutation>) {
-    assert(meta);
-    assert(itemId);
-    this._meta = meta;
-    this._itemId = itemId;
-    this._writeStream = writeStream;
-
-    // Create the input mutation stream.
-    this._processor = createWritable<ModelMessage<TMutation>>(async message => {
-      const { meta, mutation } = message;
-      assert(meta);
-      assert(mutation);
-
-      await this.processMessage(meta, mutation);
-    });
-
-    this._stateMachine = meta.stateMachine();
-  }
-
-  protected _getState (): TState {
-    return this._stateMachine.getState();
-  }
-
-  /**
-   * @deprecated Use processMessage.
-   */
-  // TODO(burdon): Remove.
-  get processor (): NodeJS.WritableStream {
-    return this._processor;
-  }
-
-  //
-  // Model
-  //
+  constructor (
+    private readonly _meta: ModelMeta,
+    private readonly _itemId: ItemID,
+    protected readonly _getState: () => TState,
+    private readonly _mutationWriter?: MutationWriter<TMutation>
+  ) {}
 
   toString () {
     return `Model(${JSON.stringify(this.toJSON())})`;
@@ -97,7 +46,7 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
   }
 
   get readOnly (): boolean {
-    return this._writeStream === undefined;
+    return this._mutationWriter === undefined;
   }
 
   subscribe (listener: (result: this) => void) {
@@ -108,38 +57,9 @@ export abstract class Model<TState = any, TMutation = any> implements IModel<TMu
    * Writes the raw mutation to the output stream.
    */
   protected async write (mutation: TMutation): Promise<MutationWriteReceipt> {
-    if (!this._writeStream) {
+    if (!this._mutationWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
-
-    // Promise that resolves when this mutation has been processed.
-    const processed = this._messageProcessed.waitFor(meta =>
-      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    );
-
-    const receipt = await this._writeStream.write(mutation);
-    return {
-      ...receipt,
-      waitToBeProcessed: async () => {
-        await processed;
-      }
-    };
-  }
-
-  async processMessage (meta: MutationMeta, message: TMutation): Promise<void> {
-    this._stateMachine.process(message, meta);
-
-    this.update.emit(this);
-
-    this._messageProcessed.emit(meta);
-  }
-
-  createSnapshot (): any {
-    return this._stateMachine.snapshot();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot (snapshot: any): Promise<void> {
-    this._stateMachine.reset(snapshot);
+    return this._mutationWriter(mutation);
   }
 }
