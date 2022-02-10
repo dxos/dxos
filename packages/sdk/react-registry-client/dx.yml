@@ -5,4 +5,4 @@ module:
   name: dxos:esbook.react-registry-client
 
 build:
-  command: npm run build
+  command: npm run build:book

@@ -67,6 +67,7 @@ common/autoinstallers/*/.npmrc
 
 # Build outputs
 dist
+out
 lib
 build
 out

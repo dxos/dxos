@@ -5,4 +5,4 @@ module:
   name: example:app.wallet-playground
 
 build:
-  command: npm run build
+  command: npm run build:bundle
