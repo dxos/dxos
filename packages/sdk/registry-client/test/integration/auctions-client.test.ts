@@ -7,7 +7,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { IAuctionsClient, AuctionsClient, createApiPromise, createKeyring } from '../../src';
+import { AuctionsClient, createApiPromise, createKeyring, IAuctionsClient } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
@@ -18,8 +18,9 @@ describe('Auctions Client', () => {
   let sudoer: KeyringPair;
   let alice: KeyringPair;
   let bob: KeyringPair;
+  let account: string;
 
-  beforeEach(async () => {
+  before(async () => {
     const keyring = await createKeyring();
     const config = { uri: '//Alice' };
     const keypair = keyring.addFromUri(config.uri);
@@ -27,9 +28,10 @@ describe('Auctions Client', () => {
     sudoer = alice = keyring.addFromUri('//Alice');
     bob = keyring.addFromUri('//Bob');
     auctionsApi = new AuctionsClient(apiPromise, keypair);
+    account = alice.address;
   });
 
-  afterEach(async () => {
+  after(async () => {
     await apiPromise.disconnect();
   });
 
@@ -82,7 +84,7 @@ describe('Auctions Client', () => {
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
 
       await expect(auctionsApi.closeAuction(auctionName)).to.be.eventually.rejected;
-      await expect(auctionsApi.claimAuction(auctionName)).to.be.eventually.rejected;
+      await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.rejected;
     });
 
     it('Can claim an auction (after force-closing it)', async () => {
@@ -92,7 +94,7 @@ describe('Auctions Client', () => {
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
 
-      await expect(auctionsApi.claimAuction(auctionName)).to.be.eventually.fulfilled;
+      await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
     it('Only the winner can claim an auction', async () => {
@@ -106,8 +108,8 @@ describe('Auctions Client', () => {
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
 
-      await expect(loser.claimAuction(auctionName)).to.be.eventually.rejected;
-      await expect(winner.claimAuction(auctionName)).to.be.eventually.fulfilled;
+      await expect(loser.claimAuction(auctionName, account)).to.be.eventually.rejected;
+      await expect(winner.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
     it('Auction winnner has a domain registered', async () => {
@@ -118,11 +120,11 @@ describe('Auctions Client', () => {
       await expect(winner.bidAuction(auctionName, 100002)).to.be.fulfilled;
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
-      const domainKey = await winner.claimAuction(auctionName);
-      const accountId = (await apiPromise.query.registry.domains(domainKey.value)).unwrapOr(undefined)?.owners?.[0];
+      const domainKey = await winner.claimAuction(auctionName, account);
+      const accountId = (await apiPromise.query.registry.domains(domainKey.value)).unwrapOr(undefined)?.owner;
 
       expect(accountId).not.to.be.undefined;
-      expect(accountId?.toString()).to.be.equal(bob.address);
+      expect(accountId?.toString()).to.be.equal(account);
     });
   });
 });

@@ -70,7 +70,7 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDomains (): Promise<Domain[]> {
-    return [{ key: DomainKey.random(), owners: [], name: 'dxos' }];
+    return [{ key: DomainKey.random(), owner: '0x', name: 'dxos' }];
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

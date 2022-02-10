@@ -124,8 +124,9 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
 
   /**
    * Creates a new domain in the system under a generated name.
+   * @param account DXNS account that will own the domain.
    */
-  registerDomain (): Promise<DomainKey>
+  registerDomain (account: string): Promise<DomainKey>
 
   /**
    * Registers or updates a resource in the system.

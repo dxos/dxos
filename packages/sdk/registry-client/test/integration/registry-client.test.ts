@@ -9,16 +9,8 @@ import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
 import {
-  App,
-  IRegistryClient,
-  CID,
-  DomainKey,
-  DXN,
-  RegistryClient,
-  createCID,
-  createApiPromise,
-  createKeyring,
-  schemaJson
+  App, CID, createApiPromise, createCID, createKeyring, DomainKey,
+  DXN, IRegistryClient, RegistryClient, schemaJson
 } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
@@ -35,6 +27,7 @@ describe('Registry Client', () => {
   let registryApi: IRegistryClient;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
+  let account: string;
 
   beforeEach(async () => {
     const keyring = await createKeyring();
@@ -42,6 +35,7 @@ describe('Registry Client', () => {
     apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
     keypair = keyring.addFromUri(config.uri);
     registryApi = new RegistryClient(apiPromise, keypair);
+    account = keypair.address;
   });
 
   afterEach(async () => {
@@ -61,7 +55,7 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves type details', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
       await registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), typeCid);
@@ -94,7 +88,7 @@ describe('Registry Client', () => {
         hasSso: false
       }, appTypeCid);
 
-      domainKey = await registryApi.registerDomain();
+      domainKey = await registryApi.registerDomain(account);
       await registryApi.updateResource(DXN.fromDomainKey(domainKey, appResourceName), contentCid);
     });
 
@@ -286,7 +280,7 @@ describe('Registry Client', () => {
 
   describe('Register name', () => {
     it('Assigns a name to a type', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.App');
 
@@ -294,7 +288,7 @@ describe('Registry Client', () => {
     });
 
     it('Does allow to overwrite already registered name', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
@@ -306,7 +300,7 @@ describe('Registry Client', () => {
 
   describe('Register domain', () => {
     it('Allows to register a free domain without a vanity name', async () => {
-      await expect(registryApi.registerDomain()).to.be.fulfilled;
+      await expect(registryApi.registerDomain(account)).to.be.fulfilled;
     });
   });
 });

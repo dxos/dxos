@@ -2,40 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ApiPromise } from '@polkadot/api/promise';
-import { AddressOrPair } from '@polkadot/api/types';
-import { BTreeMap, StorageKey, Text } from '@polkadot/types';
-import { Option } from '@polkadot/types/codec/Option';
-import { compactAddLength } from '@polkadot/util';
 import assert from 'assert';
-import protobuf from 'protobufjs';
 
-import { raise } from '@dxos/debug';
-import { ComplexMap } from '@dxos/util';
-
-import { ApiTransactionHandler } from './api';
-import { SignTxFunction } from './api/api-transaction-handler';
-import {
-  decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData
-} from './encoding';
-import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from './interfaces';
-import { schema as dxnsSchema } from './proto';
-import { Filtering, IQuery } from './queries';
-import { IRegistryClient } from './registry-client-types';
-import {
-  CID, Domain, DomainKey,
-  DXN, RecordKind,
-  RecordMetadata,
-  RegistryDataRecord,
-  RegistryRecord,
-  RegistryTypeRecord,
-  Resource,
-  ResourceRecord,
-  SuppliedRecordMetadata,
-  SuppliedTypeRecordMetadata,
-  TypeRecordMetadata,
-  UpdateResourceOptions
-} from './types';
+import { DxnsAccount } from '.';
 import { BaseClient } from './base-client';
 
 /**
@@ -46,13 +15,37 @@ export class AccountClient extends BaseClient {
    * Creates a DXNS account on the blockchain.
    */
   async createAccount (): Promise<string> {
-    
+    const tx = this.api.tx.registry.createAccount();
+    const { events } = await this.transactionsHandler.sendTransaction(tx);
+    const event = events.map(e => e.event).find(this.api.events.registry.AccountCreated.is);
+    assert(event && this.api.events.registry.AccountCreated.is(event));
+    return event.data[0].toString();
   }
-  
+
+  async getAccount (account: string): Promise<DxnsAccount | undefined> {
+    const accountRecord = (await this.api.query.registry.accounts(account)).unwrapOr(undefined);
+    if (!accountRecord) {
+      return undefined;
+    }
+    return {
+      devices: accountRecord.devices.map(device => device.toString()),
+      id: accountRecord.id.toString()
+    };
+  }
+
   /**
    * Add a new device to an existing DXNS account.
    */
   async addDeviceToAccount (account: string, device: string): Promise<void> {
+    const tx = this.api.tx.registry.addDevice(account, device);
+    await this.transactionsHandler.sendTransaction(tx);
+  }
 
+  /**
+   * Is the given device a listed device of this DXNS account?
+   */
+  async isDeviceOfAccount (account: string, device: string): Promise<boolean> {
+    const accountRecord = (await this.api.query.registry.accounts(account)).unwrap();
+    return accountRecord.devices.includes(device);
   }
 }

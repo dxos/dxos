@@ -2,11 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair } from '@polkadot/api/types';
 import BigNumber from 'bn.js';
 
-import { ApiTransactionHandler } from './api';
 import { SignTxFunction } from './api/api-transaction-handler';
 import { BaseClient } from './base-client';
 import { DomainKey } from './types';
@@ -74,7 +72,7 @@ export interface IAuctionsClient {
    * Allows for transferring the ownership of the name to the highest bidder.
    * @param name An object of the auction.
    */
-  claimAuction(name: string): Promise<DomainKey>;
+  claimAuction(name: string, dxnsAccount: string): Promise<DomainKey>;
 
   /**
    * Returns a collection of all auctions (ongoing and closed) in DXOS.
@@ -85,7 +83,7 @@ export interface IAuctionsClient {
 /**
  *
  */
-export class AuctionsClient extends BaseClient implements IAuctionsClient  {
+export class AuctionsClient extends BaseClient implements IAuctionsClient {
   async createAuction (name: string, startAmount: number): Promise<void> {
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.createAuction(name, startAmount));
   }
@@ -102,9 +100,9 @@ export class AuctionsClient extends BaseClient implements IAuctionsClient  {
     await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoSignFn);
   }
 
-  async claimAuction (domainName: string): Promise<DomainKey> {
+  async claimAuction (domainName: string, dxnsAccount: string): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.claimAuction(domainKey.value, domainName));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.claimAuction(domainKey.value, domainName, dxnsAccount));
     return domainKey;
   }
 

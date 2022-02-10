@@ -58,7 +58,7 @@ import type { ClassDetails, ClassId, ClassMetadata, DepositBalance, DepositBalan
 import type { Multisig, Timepoint } from '@polkadot/types/interfaces/utility';
 import type { VestingInfo } from '@polkadot/types/interfaces/vesting';
 import type { AccountId32Junction, AccountIndex64Junction, AccountKey20Junction, AssetInstance, BodyId, BodyPart, BodyPartAtLeastProportion, BodyPartFraction, BodyPartMoreThanProportion, DoubleEncodedCall, InboundStatus, Junction, MultiAsset, MultiAssetAbstractFungible, MultiAssetAbstractNonFungible, MultiAssetConcreteFungible, MultiAssetConcreteNonFungible, MultiLocation, NetworkId, OutboundStatus, Outcome, PluralityJunction, QueueConfigData, VersionedMultiAsset, VersionedMultiLocation, VersionedXcm, Xcm, XcmAssetEffects, XcmError, XcmHrmpChannelAccepted, XcmHrmpChannelClosing, XcmHrmpNewChannelOpenRequest, XcmOrder, XcmOrderBuyExecution, XcmOrderDepositAsset, XcmOrderDepositReserveAsset, XcmOrderExchangeAsset, XcmOrderInitiateReserveWithdraw, XcmOrderInitiateTeleport, XcmOrderQueryHolding, XcmOrigin, XcmOriginKind, XcmQueryResponse, XcmRelayedFrom, XcmReserveAssetDeposit, XcmResponse, XcmTeleportAsset, XcmTransact, XcmTransferAsset, XcmTransferReserveAsset, XcmWithdrawAsset, XcmpMessageFormat } from '@polkadot/types/interfaces/xcm';
-import type { Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { Account, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
 
 declare module '@polkadot/types/types/registry' {
   export interface InterfaceTypes {
@@ -159,6 +159,7 @@ declare module '@polkadot/types/types/registry' {
     'Option<AbridgedCandidateReceipt>': Option<AbridgedCandidateReceipt>;
     'Option<AbridgedHostConfiguration>': Option<AbridgedHostConfiguration>;
     'Option<AbridgedHrmpChannel>': Option<AbridgedHrmpChannel>;
+    'Option<Account>': Option<Account>;
     'Option<AccountData>': Option<AccountData>;
     'Option<AccountId>': Option<AccountId>;
     'Option<AccountId32Junction>': Option<AccountId32Junction>;
@@ -1045,6 +1046,7 @@ declare module '@polkadot/types/types/registry' {
     'Vec<AbridgedCandidateReceipt>': Vec<AbridgedCandidateReceipt>;
     'Vec<AbridgedHostConfiguration>': Vec<AbridgedHostConfiguration>;
     'Vec<AbridgedHrmpChannel>': Vec<AbridgedHrmpChannel>;
+    'Vec<Account>': Vec<Account>;
     'Vec<AccountData>': Vec<AccountData>;
     'Vec<AccountId>': Vec<AccountId>;
     'Vec<AccountId32Junction>': Vec<AccountId32Junction>;
@@ -1931,6 +1933,7 @@ declare module '@polkadot/types/types/registry' {
     AbridgedCandidateReceipt: AbridgedCandidateReceipt;
     AbridgedHostConfiguration: AbridgedHostConfiguration;
     AbridgedHrmpChannel: AbridgedHrmpChannel;
+    Account: Account;
     AccountData: AccountData;
     AccountId: AccountId;
     AccountId32Junction: AccountId32Junction;

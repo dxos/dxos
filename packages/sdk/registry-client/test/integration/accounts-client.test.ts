@@ -4,33 +4,17 @@
 
 import { ApiPromise } from '@polkadot/api/promise';
 import Keyring from '@polkadot/keyring';
+import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import protobuf from 'protobufjs';
-import { AccountClient } from 'sample-polkadotjs-typegen/accounts-client';
 
 import {
-  App,
-  IRegistryClient,
-  CID,
-  DomainKey,
-  DXN,
-  RegistryClient,
-  createCID,
-  createApiPromise,
-  createKeyring,
-  schemaJson
+  AccountClient, createApiPromise,
+  createKeyring
 } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
-
-const protoSchema = protobuf.Root.fromJSON(schemaJson);
-
-const randomName = () => {
-  // Must start with a letter.
-  return `r${Math.random().toString(36).substring(2)}`;
-};
 
 describe('Accounts Client', () => {
   let accountsApi: AccountClient;
@@ -49,10 +33,33 @@ describe('Accounts Client', () => {
     await apiPromise.disconnect();
   });
 
-  describe('', () => {
-    it('Accounts and devices', async () => {
+  describe('Creating accounts', () => {
+    it('Can create a DXNS account', async () => {
       const account = await accountsApi.createAccount();
-      console.log({account})
+      expect(account).to.be.a('string');
+      expect(account).to.eq(keypair.address);
+
+      const accountRecord = await accountsApi.getAccount(account);
+      expect(accountRecord).to.not.be.undefined;
+      expect(accountRecord?.id).to.eq(account);
+      expect(accountRecord?.devices).to.deep.eq([account]);
+    });
+  });
+
+  describe('Adding devices', () => {
+    let bob: KeyringPair;
+    before(async () => {
+      const bobKeyring = await createKeyring();
+      bob = bobKeyring.addFromUri('//Bob');
+    });
+
+    it('Can add a second device', async () => {
+      const account = keypair.address;
+      expect(await accountsApi.isDeviceOfAccount(account, account)).to.be.true;
+      expect(await accountsApi.isDeviceOfAccount(account, bob.address)).to.be.false;
+
+      await accountsApi.addDeviceToAccount(account, bob.address);
+      expect(await accountsApi.isDeviceOfAccount(account, bob.address)).to.be.true;
     });
   });
 });

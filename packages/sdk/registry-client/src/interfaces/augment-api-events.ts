@@ -71,6 +71,7 @@ declare module '@polkadot/api/types/events' {
       [key: string]: AugmentedEvent<ApiType>;
     };
     registry: {
+      AccountCreated: AugmentedEvent<ApiType, [AccountId]>;
       DomainRegistered: AugmentedEvent<ApiType, [Domain]>;
       RecordAdded: AugmentedEvent<ApiType, [AccountId, Multihash]>;
       ResourceRegistered: AugmentedEvent<ApiType, [DomainKey, Text, Multihash]>;
