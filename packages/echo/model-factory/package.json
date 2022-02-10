@@ -28,7 +28,8 @@
     "@dxos/feed-store": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^14.0.9",
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

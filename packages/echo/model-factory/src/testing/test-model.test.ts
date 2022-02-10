@@ -2,49 +2,49 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { ModelFactory } from '../model-factory';
+import { TestModel } from './test-model';
+import { TestRig } from './test-rig';
+
 describe('test model', () => {
-  test.skip('basic mutations', async () => {
-    // const itemId = createId();
-    // const model = new TestModel(TestModel.meta, itemId, () => new Map());
+  test('basic mutations', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const peer = rig.createPeer();
 
-    // // Model.
-    // expect(model.itemId).toBe(itemId);
-    // expect(model.readOnly).toBeTruthy();
-
-    // // TestModel.
-    // expect(model.keys).toHaveLength(0);
-
-    // // Set mutation.
-    // const { publicKey: feedKey } = createKeyPair();
-
-    // await model.processMessage({ feedKey, seq: 1, memberKey: feedKey }, { key: 'title', value: 'DXOS' });
-    // expect(model.getProperty('title')).toBe('DXOS');
-    // expect(model.keys).toHaveLength(1);
+    await peer.model.setProperty('title', 'DXOS');
+    expect(peer.model.getProperty('title')).toBe('DXOS');
+    expect(peer.model.keys).toHaveLength(1);
   });
 
-  test.skip('mutations feedback loop', async () => {
-    // const itemId = createId();
-    // const feedWriter = new MockFeedWriter<TestItemMutation>();
+  test('multiple peers', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
-    // const model = new TestModel(TestModel.meta, itemId, feedWriter);
+    await peer1.model.setProperty('title', 'DXOS');
+    await peer2.model.setProperty('title', 'Braneframe');
+    await rig.waitForReplication();
 
-    // feedWriter.written.on(([message, meta]) => model.processMessage({
-    //   feedKey: meta.feedKey.asUint8Array(),
-    //   memberKey: zeroKey(),
-    //   seq: meta.seq
-    // }, message));
+    expect(peer1.model.getProperty('title')).toBe('Braneframe');
+    expect(peer2.model.getProperty('title')).toBe('Braneframe');
+  });
 
-    // const [counter, updateCounter] = latch();
-    // const unsubscribe = model.subscribe(model => {
-    //   expect((model as TestModel).getProperty('title')).toBe('DXOS');
-    //   updateCounter();
-    // });
+  test('concurrency - states diverge', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
-    // await model.setProperty('title', 'DXOS');
+    rig.configureReplication(false);
+    await peer1.model.setProperty('title', 'DXOS');
+    await peer2.model.setProperty('title', 'Braneframe');
+    rig.configureReplication(true);
+    await rig.waitForReplication();
 
-    // await counter;
-    // unsubscribe();
+    // Peer states have diverged.
+    expect(peer1.model.getProperty('title')).toBe('Braneframe');
+    expect(peer2.model.getProperty('title')).toBe('DXOS');
   });
 });
