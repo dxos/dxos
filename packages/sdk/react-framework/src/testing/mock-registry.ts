@@ -20,8 +20,8 @@ export const createMockRegistryWithBots = () => {
   assert(botTypeRecord, 'Bot type not found: bot');
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
-    _typeCID: botTypeRecord.cid,
-    _data: {
+    type: '.dxos.type.Bot',
+    data: {
       localPath: './stories/bots/start-story-bot'
     }
   });
@@ -35,9 +35,10 @@ export const createMockRegistryWithBots = () => {
     },
     record: botTypeRecord
   };
-  const memoryRegistryClient = new MemoryRegistryClient(
-    types,
-    [...records, botRecord, botTypeResourceRecord]
-  );
+  const memoryRegistryClient = new MemoryRegistryClient([
+    ...records,
+    botRecord,
+    botTypeResourceRecord
+  ]);
   return memoryRegistryClient;
 };
