@@ -1,0 +1,8 @@
+version: 1
+
+module:
+  type: dxos:type.app
+  name: example:app.wallet-playground
+
+build:
+  command: npm run build

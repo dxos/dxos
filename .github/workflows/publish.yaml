@@ -84,9 +84,8 @@ jobs:
         \. "$NVM_DIR/nvm.sh" && nvm use 16.0
         npm install -g yarn
 
-        yarn global add @dxos/cli@v2.12.0
-        yarn global add @dxos/cli-dxns@v2.12.0
-        yarn global add @dxos/cli-app@v2.12.0
+        yarn global add @dxos/cli@v2.13.2
+        yarn global add @dxos/cli-dxns@v2.13.2
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use 16.0

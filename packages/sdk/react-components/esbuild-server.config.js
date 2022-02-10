@@ -15,6 +15,7 @@ module.exports = {
     FixMemdownPlugin(),
     NodeModulesPlugin()
   ],
+  outdir: 'out',
   overrides: {
     sourcemap: 'inline',
   }
