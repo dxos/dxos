@@ -6,8 +6,9 @@
 
 import expect from 'expect';
 
-import { ObjectModel } from './object-model';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
+
+import { ObjectModel } from './object-model';
 
 describe('ObjectModel', () => {
   it('can set a property', async () => {
@@ -63,6 +64,6 @@ describe('ObjectModel', () => {
     await rig.waitForReplication();
 
     // Peer states have converged to a single value.
-    expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'))
+    expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'));
   });
 });
