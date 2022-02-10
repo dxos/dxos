@@ -108,6 +108,13 @@ async function execBook () {
   await execTool('esbuild-server', ['book']);
 }
 
+/**
+ * Runs a dev server for the current package.
+ */
+async function execStart () {
+  await execTool('esbuild-server', ['dev']);
+}
+
 function setPackageTimeout () {
   const id = setTimeout(() => {
     process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
@@ -193,6 +200,15 @@ yargs(process.argv.slice(2))
       .strict(),
     async () => {
       await execBook();
+    }
+  )
+  .command(
+    'start',
+    'Run a dev server for the package.',
+    yargs => yargs
+      .strict(),
+    async () => {
+      await execStart();
     }
   )
   .command(

@@ -14,7 +14,7 @@
     "build:bundle": "toolchain build:bundle",
     "build:test": "pnpm run build && pnpm run test",
     "lint": "toolchain lint",
-    "start": "esbuild-server dev",
+    "start": "toolchain start",
     "test": "pnpm run lint"
   },
   "dependencies": {
@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
