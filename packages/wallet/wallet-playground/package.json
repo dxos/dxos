@@ -10,7 +10,8 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --noEmit && esbuild-server build",
+    "build": "toolchain build",
+    "build:bundle": "toolchain build:bundle",
     "build:test": "pnpm run build && pnpm run test",
     "lint": "toolchain lint",
     "start": "esbuild-server dev",

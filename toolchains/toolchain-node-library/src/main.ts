@@ -85,6 +85,29 @@ async function execTest (userArgs?: string[]) {
   }
 }
 
+/**
+ * Creates a bundled build of the current package.
+ */
+async function execBuildBundle () {
+  await execTool('tsc', ['--noEmit']);
+  await execTool('esbuild-server', ['build']);
+}
+
+/**
+ * Creates a static build of the storybook for the current package.
+ */
+async function execBuildBook () {
+  await execTool('tsc', ['--noEmit']);
+  await execTool('esbuild-server', ['book', '--build']);
+}
+
+/**
+ * Runs the storybook for the current package.
+ */
+async function execBook () {
+  await execTool('esbuild-server', ['book']);
+}
+
 function setPackageTimeout () {
   const id = setTimeout(() => {
     process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
@@ -139,6 +162,37 @@ yargs(process.argv.slice(2))
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
       clear();
+    }
+  )
+  .command(
+    'build:bundle',
+    'Build a bundle for the package.',
+    yargs => yargs
+      .strict(),
+    async () => {
+      const before = Date.now();
+      await execBuildBundle();
+      console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
+    }
+  )
+  .command(
+    'build:book',
+    'Build the storybook for the package.',
+    yargs => yargs
+      .strict(),
+    async () => {
+      const before = Date.now();
+      await execBuildBook();
+      console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
+    }
+  )
+  .command(
+    'book',
+    'Run the storybook for the package.',
+    yargs => yargs
+      .strict(),
+    async () => {
+      await execBook();
     }
   )
   .command(

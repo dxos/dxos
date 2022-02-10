@@ -14,8 +14,9 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
-    "book": "esbuild-server book",
-    "build": "tsc --noEmit && npm run book -- --build",
+    "book": "toolchain book",
+    "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "demo:grid": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",

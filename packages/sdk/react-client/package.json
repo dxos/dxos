@@ -8,8 +8,9 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
-    "build": "tsc --noEmit && npm run book -- --build",
+    "book": "toolchain book",
+    "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
