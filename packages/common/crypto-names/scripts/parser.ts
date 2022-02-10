@@ -7,7 +7,7 @@ import fs from 'fs';
 import uniq from 'uniq';
 import yaml from 'js-yaml';
 
-faker.seed(0xdeadbeef)
+faker.seed(0xdeadbeef);
 
 const maxWordLength = 12;
 
@@ -46,5 +46,5 @@ const parse = (source: string, target: string) => {
   fs.writeFileSync(target, JSON.stringify(selected, undefined, 2));
 }
 
-parse('./data/raw.json', './data/words.json');
+parse('./scripts/raw.json', './data/words.json');
 
