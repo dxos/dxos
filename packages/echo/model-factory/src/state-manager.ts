@@ -5,12 +5,12 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
 
 import { Model } from './model';
+import { getInsertionIndex } from './ordering';
 import { StateMachine } from './state-machine';
 import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
-import { getInsertionIndex } from './ordering';
 
 /**
  * Binds the model to the state machine. Manages the state machine lifecycle.
@@ -136,12 +136,12 @@ export class StateManager<M extends Model> {
    */
   processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
     const insertionIndex = getInsertionIndex(this._mutations, { meta, mutation });
-    if(insertionIndex !== this._mutations.length) {
+    if (insertionIndex !== this._mutations.length) {
       // Order will be broken, reset the state machine and re-apply all mutations.
       this._mutations = [
         ...this._mutations.slice(0, insertionIndex - 1),
         { meta, mutation },
-        ...this._mutations.slice(insertionIndex),
+        ...this._mutations.slice(insertionIndex)
       ];
       this._resetStateMachine();
     } else {
@@ -150,7 +150,7 @@ export class StateManager<M extends Model> {
       if (this.initialized) {
         const mutationDecoded = this.modelMeta.mutation.decode(mutation);
         this._stateMachine!.process(mutationDecoded, meta);
-  
+
         this._model!.update.emit(this._model!);
         this._mutationProcessed.emit(meta);
       }

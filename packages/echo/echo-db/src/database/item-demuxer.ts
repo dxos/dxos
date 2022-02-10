@@ -49,7 +49,7 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
-      const { data: { itemId, genesis, itemMutation, mutation, snapshot, timeframe }, meta } = message;
+      const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
       assert(itemId);
 
       //

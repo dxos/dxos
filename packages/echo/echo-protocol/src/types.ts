@@ -4,9 +4,9 @@
 
 import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { Timeframe } from './spacetime/timeframe';
 
 import { EchoEnvelope, FeedMessage } from './proto';
+import { Timeframe } from './spacetime/timeframe';
 
 //
 // Keys.

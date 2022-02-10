@@ -31,7 +31,7 @@ export class PublicKey {
    * Creates new instance of PublicKey from hex string.
    */
   static fromHex (hex: string) {
-    if(hex.startsWith('0x')) {
+    if (hex.startsWith('0x')) {
       hex = hex.slice(2);
     }
 

@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
-import { ItemID, MutationMeta, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { StateMachine } from './state-machine';

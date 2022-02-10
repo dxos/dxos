@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
 import { createId, PublicKey } from '@dxos/crypto';
-import { FeedWriter, Timeframe, WriteReceipt, MutationMeta, MutationMetaWithTimeframe, ModelMutation } from '@dxos/echo-protocol';
+import { FeedWriter, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { ModelMessage, StateManager } from '..';
@@ -73,9 +73,9 @@ export class TestRig<M extends Model<any>> {
         feedKey: peerKey.asUint8Array(),
         memberKey: peerKey.asUint8Array(),
         seq,
-        timeframe,
+        timeframe
       },
-      mutation,
+      mutation
     };
     peer.mutations.push(message);
 

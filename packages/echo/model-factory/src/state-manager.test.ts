@@ -63,7 +63,7 @@ describe('StateManager', () => {
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: PublicKey.random().asUint8Array(),
       seq: meta.seq,
-      timeframe: new Timeframe(),
+      timeframe: new Timeframe()
     }, message));
 
     await stateManager.model.setProperty('testKey', 'testValue');
@@ -93,5 +93,5 @@ const createMeta = (seq: number): MutationMetaWithTimeframe => ({
   feedKey,
   memberKey: feedKey,
   seq,
-  timeframe: new Timeframe(),
+  timeframe: new Timeframe()
 });
