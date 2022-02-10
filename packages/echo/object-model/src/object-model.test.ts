@@ -46,18 +46,21 @@ describe('ObjectModel', () => {
     const peer2 = rig.createPeer();
 
     await peer1.model.setProperty('foo', 'bar');
+    await rig.waitForReplication();
 
     expect(peer2.model.getProperty('foo')).toEqual('bar');
   });
 
-  it.skip('consistency', async () => {
+  it('consistency', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
     rig.configureReplication(false);
+
     await peer1.model.setProperty('title', 'DXOS');
     await peer2.model.setProperty('title', 'Braneframe');
+
     rig.configureReplication(true);
     await rig.waitForReplication();
 

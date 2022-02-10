@@ -48,5 +48,10 @@ describe('test model', () => {
 
     // Peer states have converged.
     expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'));
+
+    // Peer with lower feed key wins (mutation goes first).
+    const expectedTitle = peer1.key.toHex() > peer2.key.toHex() ? 'DXOS' : 'Braneframe';
+    expect(peer1.model.getProperty('title')).toBe(expectedTitle);
+    expect(peer2.model.getProperty('title')).toBe(expectedTitle);
   });
 });
