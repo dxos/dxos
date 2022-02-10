@@ -17,14 +17,14 @@ import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { createRootSelector, RootFilter } from './selection';
 
-export interface ItemCreationOptions<M> {
+export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
   type?: ItemType
   parent?: ItemID
   props?: any // TODO(marik-d): Type this better.
 }
 
-export interface LinkCreationOptions<M, L extends Model<any>, R extends Model<any>> {
+export interface LinkCreationOptions<M extends Model, L extends Model, R extends Model> {
   model?: ModelConstructor<M>
   type?: ItemType
   source: Item<L>

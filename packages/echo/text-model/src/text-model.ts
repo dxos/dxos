@@ -5,8 +5,8 @@
 import assert from 'assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
-import { FeedWriter, ItemID, MutationMeta } from '@dxos/echo-protocol';
-import { Model, ModelMeta, StateMachine } from '@dxos/model-factory';
+import { ItemID, MutationMeta } from '@dxos/echo-protocol';
+import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 
 import { schema } from './proto/gen';
 import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
@@ -48,8 +48,8 @@ export class TextModel extends Model<Doc, Mutation> {
     snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
   };
 
-  constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<Mutation>) {
-    super(meta, itemId, writeStream);
+  constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
+    super(meta, itemId, getState, writeStream);
 
     this._getState().on('update', this._handleDocUpdated.bind(this));
   }

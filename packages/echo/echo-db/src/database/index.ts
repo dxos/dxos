@@ -10,6 +10,5 @@ export * from './link';
 export * from './item-demuxer';
 export * from './item-manager';
 export * from './timeframe-clock';
-export * from './default-model';
 export * from './selection';
 export * from './testing';
