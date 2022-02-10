@@ -4,7 +4,7 @@
 
 import { convertTreeToGraph, createTree } from './data';
 
-test('Create data', () => {
+test('createTree', () => {
   const data = convertTreeToGraph(createTree());
   expect(data).toBeTruthy(); // TODO(burdon): Test lengths.
 });

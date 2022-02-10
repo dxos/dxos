@@ -51,10 +51,10 @@ export class GraphBuilder<T> implements GraphModel<T> {
    */
   getLinks (id: string, source = true, target = false): GraphLink<T>[] {
     return this._graph.links.filter(link => {
-      if (source && link.target.id === id) {
+      if (source && link.source.id === id) {
         return true;
       }
-      if (target && link.source.id === id) {
+      if (target && link.target.id === id) {
         return true;
       }
 
@@ -62,31 +62,30 @@ export class GraphBuilder<T> implements GraphModel<T> {
     });
   }
 
-  // TODO(burdon): Implement batch mode.
-  // TODO(burdon): Upsert nodes.
+  // TODO(burdon): Batch mode.
 
-  addNode (node: GraphNode<T>) {
+  addNode (node: GraphNode<T>, update = true) {
     this._graph.nodes.push(node);
 
-    this.update();
+    update && this.update();
     return this;
   }
 
-  addLink (link: GraphLink<T>) {
+  addLink (link: GraphLink<T>, update = true) {
     this._graph.links.push(link);
 
-    this.update();
+    update && this.update();
     return this;
   }
 
-  createLink (source: GraphNode<T>, target: GraphNode<T>) {
+  createLink (source: GraphNode<T>, target: GraphNode<T>, update = true) {
     this._graph.links.push({
       id: `${source.id}-${target.id}`,
       source,
       target
     });
 
-    this.update();
+    update && this.update();
     return this;
   }
 }

@@ -33,7 +33,10 @@
   },
   "jest": {
     "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "d3": "<rootDir>/../../../../node_modules/d3/dist/d3.min.js"
+    }
   },
   "dependencies": {
     "@dxos/gem-core": "^2.2.1-beta.2",
@@ -48,7 +51,7 @@
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
-    "@dxos/gem-core": "^2.1.0",
+    "@dxos/gem-core": "^2.2.1-beta.2",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.7.1",
     "@types/d3": "^7.1.0",
