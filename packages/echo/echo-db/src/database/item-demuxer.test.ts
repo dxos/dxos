@@ -102,7 +102,7 @@ describe('Item demuxer', () => {
           feedKey: randomBytes(),
           memberKey: randomBytes(),
           seq: 0,
-          timeframe: new Timeframe(),
+          timeframe: new Timeframe()
         },
         data: message
       })

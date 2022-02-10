@@ -120,7 +120,7 @@ export class DataServiceHost {
               feedKey: PublicKey.from(mutation.meta.feedKey),
               memberKey: PublicKey.from(mutation.meta.memberKey),
               seq: mutation.meta.seq,
-              timeframe: mutation.meta.timeframe,
+              timeframe: mutation.meta.timeframe
             }
           }
         });
