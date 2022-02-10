@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-// This file is not compiled or run because it introduces a circular dependency on echo-db.
-
 import expect from 'expect';
 
 import { ModelFactory, TestRig } from '@dxos/model-factory';
