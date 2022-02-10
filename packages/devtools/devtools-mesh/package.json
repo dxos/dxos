@@ -13,8 +13,8 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/gem-core": "~2.2.1-beta.2",
-    "@dxos/gem-spore": "~2.2.1-beta.2",
+    "@dxos/gem-core": "~2.2.1-beta.3",
+    "@dxos/gem-spore": "~2.2.1-beta.3",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-components": "workspace:*",
