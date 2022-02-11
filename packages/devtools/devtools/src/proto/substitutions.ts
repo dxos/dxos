@@ -4,22 +4,13 @@
 
 import { Any, Schema, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { PublicKey, publicKeySubstitutions } from '@dxos/crypto';
-import { Timeframe } from '@dxos/echo-protocol';
+import { Timeframe, timeframeSubstitutions } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
 export default {
   ...timestampSubstitutions,
   ...publicKeySubstitutions,
-  'dxos.echo.feed.TimeframeVector': {
-    encode: (timeframe: Timeframe) => ({
-      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
-    }),
-    decode: (vector: any) => new Timeframe(
-      (vector.frames ?? [])
-        .filter((frame: any) => frame.feedKey != null && frame.seq != null)
-        .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq])
-    )
-  },
+  ...timeframeSubstitutions,
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
     encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),
     decode: (value: any) => JSON.parse(value.data) as ConnectionEvent
