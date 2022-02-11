@@ -82,14 +82,12 @@ jobs:
       run: |
         set -e
         \. "$NVM_DIR/nvm.sh" && nvm use
-        npm install -g yarn
 
         yarn global add @dxos/cli@v2.13.2
         yarn global add @dxos/cli-dxns@v2.13.2
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use
-        export PATH="$PATH:$(yarn global bin)"
         ./common/scripts/publish-apps.sh
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
