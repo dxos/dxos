@@ -75,4 +75,37 @@ In a separate file, you have to create an instance of the bot. This will the ent
   }
 ```
 
-This will enable RPC communication between bot handle and bot.
+This will enable RPC communication between the bot handle and the bot.
+
+Next you have to start a local signal server so later bot factory and bot factory client are visible to each other. Please run the following command in a separate termnial:
+```bash
+npx @dxos/signal
+```
+
+To run the bot you'll need to start a bot factory. Please run the following commands in a separate terminal:
+```bash
+npm install -g @dxos/cli
+dx bot factory install
+dx bot factory setup
+DEBUG=dxos:bot* dx bot factory start
+```
+This will start a bot factory with enabled logging to the default output. The topic that the bot factory listens on will be printed in logs.
+
+To spawn a bot in a local development mode you need to create a party and open first:
+```bash
+dx party create
+dx party open
+```
+
+This will enter the the interactive mode in the cli. From now on all commands will be executed in context of the party. For instance bot spawned will be automatically invited to the party:
+```bash
+bot spawn --localPath /path/to/custom-bot/entrypoint
+```
+
+The bot should be up and running after this step - the effects of the code in methods `onStart`, `onCommand` and `onStop` should be visible. You should also be able access the bot via lifecycle methods:
+```bash
+bot list
+bot stop [botId]
+bot start [botId]
+bot remove [botId]
+```
