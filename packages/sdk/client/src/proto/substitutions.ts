@@ -2,15 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Any, Schema } from '@dxos/codec-protobuf';
+import { Any, Schema, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { codec, Message } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { Timeframe } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
-// TODO(burdon): How to standardize?
-
 export default {
+  ...timestampSubstitutions,
   'dxos.echo.feed.CredentialsMessage': {
     encode: (msg: Message) => ({ data: codec.encode(msg) }),
     decode: (msg: any): Message => codec.decode(msg.data)
@@ -32,16 +31,6 @@ export default {
   'dxos.halo.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
     decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
-  },
-  'google.protobuf.Timestamp': {
-    encode: (value: Date): any => {
-      const unixMilliseconds = value.getTime();
-      return {
-        seconds: Math.floor((unixMilliseconds / 1000)).toString(),
-        nanos: (unixMilliseconds % 1000) * 1e6
-      };
-    },
-    decode: (value: any): Date => new Date(parseInt(value.seconds ?? '0') * 1000 + (value.nanos ?? 0) / 1e6)
   },
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
     encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),

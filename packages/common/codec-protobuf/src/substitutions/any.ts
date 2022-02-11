@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Schema } from './schema';
+import type { Schema } from '../schema';
 
 // eslint-disable-next-line camelcase
 export type WithTypeUrl<T extends {}> = T & { __type_url: string };
