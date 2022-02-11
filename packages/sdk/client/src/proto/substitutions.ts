@@ -22,5 +22,5 @@ export default {
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
     encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),
     decode: (value: any) => JSON.parse(value.data) as ConnectionEvent
-  },
+  }
 };

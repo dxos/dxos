@@ -160,5 +160,5 @@ export const publicKeySubstitutions = {
   'dxos.halo.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
     decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
-  },
-}
+  }
+};

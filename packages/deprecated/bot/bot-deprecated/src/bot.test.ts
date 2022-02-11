@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { Config } from '@dxos/config';
-import { createId, PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import { NetworkManager, StarTopology, transportProtocolProvider } from '@dxos/network-manager';
 import { BotPlugin } from '@dxos/protocol-plugin-bot-deprecated';
 
@@ -32,8 +32,8 @@ test.skip('start a bot', async () => {
           server: undefined
         },
         ice: undefined
-      },
-    },
+      }
+    }
   }));
 
   await bot.start();

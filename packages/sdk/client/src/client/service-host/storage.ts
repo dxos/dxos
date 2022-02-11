@@ -11,11 +11,10 @@ import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { InvalidConfigurationError } from '../../interfaces';
 import { isNode } from '../../util';
+import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
-
-import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapshotsEnabled = false) => {

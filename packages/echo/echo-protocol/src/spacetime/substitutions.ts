@@ -1,5 +1,10 @@
-import { PublicKey } from "@dxos/crypto";
-import { Timeframe } from "./timeframe";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { PublicKey } from '@dxos/crypto';
+
+import { Timeframe } from './timeframe';
 
 export const timeframeSubstitutions = {
   'dxos.echo.feed.TimeframeVector': {
@@ -12,4 +17,4 @@ export const timeframeSubstitutions = {
         .map((frame: any) => [PublicKey.from(new Uint8Array(frame.feedKey)), frame.seq])
     )
   }
-}
+};

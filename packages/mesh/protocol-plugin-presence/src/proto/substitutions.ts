@@ -5,5 +5,5 @@
 import { anySubstitutions } from '@dxos/codec-protobuf';
 
 export default {
-  ...anySubstitutions,
+  ...anySubstitutions
 };

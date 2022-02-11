@@ -8,5 +8,5 @@ import { publicKeySubstitutions } from '@dxos/crypto';
 export default {
   ...timestampSubstitutions,
   ...publicKeySubstitutions,
-  ...newAnySubstitutions,
+  ...newAnySubstitutions
 };

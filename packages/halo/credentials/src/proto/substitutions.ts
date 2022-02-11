@@ -7,5 +7,5 @@ import { publicKeySubstitutions } from '@dxos/crypto';
 
 export default {
   ...anySubstitutions,
-  ...publicKeySubstitutions,
+  ...publicKeySubstitutions
 };

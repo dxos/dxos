@@ -16,5 +16,5 @@ export default {
   'dxos.echo.feed.CredentialsMessage': {
     encode: (msg: Message) => ({ data: codec.encode(msg) }),
     decode: (msg: any): Message => codec.decode(msg.data)
-  },
+  }
 };
