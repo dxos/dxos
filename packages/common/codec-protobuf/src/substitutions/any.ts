@@ -31,3 +31,30 @@ export const anySubstitutions = {
     }
   }
 };
+
+export const newAnySubstitutions = {
+  'google.protobuf.Any': {
+    encode: (value: any, schema: Schema<any>): any => {
+      if (typeof value['@type'] !== 'string') {
+        throw new Error('Cannot encode google.protobuf.Any without proper "@type" field set');
+      }
+
+      const codec = schema.tryGetCodecForType(value['@type']);
+      const data = codec.encode(value);
+      return {
+        type_url: value['@type'],
+        value: data
+      };
+    },
+    decode: (value: any, schema: Schema<any>): any => {
+      console.log('decode any', value);
+
+      const codec = schema.tryGetCodecForType(value.type_url!);
+      const data = codec.decode(value.value!);
+      return {
+        '@type': value.type_url,
+        ...data
+      };
+    }
+  }
+}
