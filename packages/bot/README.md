@@ -162,6 +162,6 @@ After this, bot resource will be available under DXN BOT_DOMAIN:BOT_NAME. It sho
 ---
 **NOTE**
 
-In order to register a bot, you have to own a domain BOT_DOMAIN and enough funds on your DXNS balance.
+In order to register a bot, you have to own a domain BOT_DOMAIN and enough funds on your DXNS account.
 
 ---
