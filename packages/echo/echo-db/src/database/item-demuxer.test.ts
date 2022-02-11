@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import { createId, PublicKey, randomBytes } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter } from '@dxos/echo-protocol';
+import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/feed-store';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -101,7 +101,8 @@ describe('Item demuxer', () => {
         meta: {
           feedKey: randomBytes(),
           memberKey: randomBytes(),
-          seq: 0
+          seq: 0,
+          timeframe: new Timeframe()
         },
         data: message
       })

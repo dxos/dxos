@@ -6,6 +6,7 @@ import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import { EchoEnvelope, FeedMessage } from './proto';
+import { Timeframe } from './spacetime/timeframe';
 
 //
 // Keys.
@@ -31,6 +32,10 @@ export type FeedMeta = {
 
 export interface MutationMeta extends FeedMeta {
   memberKey: Uint8Array
+}
+
+export interface MutationMetaWithTimeframe extends MutationMeta {
+  timeframe: Timeframe
 }
 
 /**
@@ -64,7 +69,7 @@ export interface IHaloStream {
 }
 
 export interface IEchoStream {
-  meta: MutationMeta;
+  meta: MutationMetaWithTimeframe;
   data: EchoEnvelope;
 }
 
