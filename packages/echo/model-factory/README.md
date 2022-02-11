@@ -7,4 +7,4 @@
  - Optimistic mutations.
  - Late-registration of models.
 
-![](../../../docs/design/diagrams/model-state.drawio.svg)
+![](../../../docs/assets/diagrams/model-state.drawio.svg)
