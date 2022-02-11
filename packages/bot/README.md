@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Bots framework allows you to create a custom DXOS bot and run it on a KUBE, or use and run an already existent one. Bots are human-like peers that can participate in parties, and are generally used to provide some kind of automated service.
+Bots framework allows you to create a custom DXOS bot and run it on a KUBE, or use and run an already existing one. Bots are human-like peers that can participate in parties, and are generally used to provide some kind of automated service.
 
 ## Core concepts
 
