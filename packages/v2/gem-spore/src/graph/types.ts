@@ -4,6 +4,7 @@
 
 // Types used with D3 force.
 
+// TODO(burdon): Differentiate external GraphNode and LayoutGraphNode (and links>)
 export type GraphNode<T> = {
   id: string
   data?: T

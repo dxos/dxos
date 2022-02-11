@@ -28,6 +28,12 @@ export class GraphBuilder<T> implements GraphModel<T> {
     return this._graph;
   }
 
+  clear () {
+    this._graph.nodes = [];
+    this._graph.links = [];
+    this.update();
+  }
+
   subscribe (callback: (graph: GraphData<T>) => void): () => void {
     return this.updated.on(callback);
   }

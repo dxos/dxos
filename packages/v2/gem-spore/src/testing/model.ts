@@ -45,6 +45,12 @@ export class TestGraphModel  {
     return this._graph;
   }
 
+  clear () {
+    this._graph.nodes = [];
+    this._graph.links = [];
+    this.update();
+  }
+
   getNode (id: string) {
     return this._graph.nodes.find(item => item.id === id);
   }
@@ -57,27 +63,29 @@ export class TestGraphModel  {
     this.updated.emit(this._graph);
   }
 
-  createNodes (node: TestNode = undefined, n: number = 1) {
+  createNodes (node: TestNode = undefined, n: number = 1, update = true) {
     Array.from({ length: n }).map(() => {
       const child = createNode();
       const parent = node || faker.random.arrayElement(this._graph.nodes);
-      const link = createLink(parent, child);
       this._graph.nodes.push(child);
-      this._graph.links.push(link);
+      if (parent) {
+        const link = createLink(parent, child);
+        this._graph.links.push(link);
+      }
     });
 
-    this.update();
+    update && this.update();
   }
 
-  createLink (source: TestNode, target: TestNode) {
+  createLink (source: TestNode, target: TestNode, update = true) {
     this._graph.links.push(createLink(source, target));
 
-    this.update();
+    update && this.update();
   }
 
-  deleteLink (link: GraphLink<TestNode>) {
+  deleteLink (link: GraphLink<TestNode>, update = true) {
     this._graph.links = this._graph.links.filter(({ id }) => id !== link.id);
 
-    this.update();
+    update && this.update();
   }
 }

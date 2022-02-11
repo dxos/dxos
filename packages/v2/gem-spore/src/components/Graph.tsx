@@ -55,10 +55,7 @@ export const Graph = ({
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector(context, {
-      forces
-    });
-
+    const projector = new GraphForceProjector(context, { forces });
     const renderer = new GraphRenderer(context, graphRef, {
       drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {

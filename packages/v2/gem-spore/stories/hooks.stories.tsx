@@ -3,6 +3,7 @@
 //
 
 import clsx from 'clsx';
+import debug from 'debug';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
@@ -33,6 +34,8 @@ import {
   linkerRenderer,
 } from '../src';
 import { styles } from './helpers';
+
+debug.enable('gem:*');
 
 export default {
   title: 'gem-spore/hooks'
@@ -104,23 +107,28 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   const zoom = useZoom({ extent: [1, 2] });
   const markersRef = useRef<SVGGElement>();
 
-  useButton('Test', () => {
-    model.createNodes();
+  useButton('Clear', () => {
+    model.clear();
+  });
+  useButton('Reset', () => {
+    const nodes = model.graph.nodes;
+    const links = model.graph.links;
+    model.clear();
+
+    // TODO(burdon): !!!
+    // TODO(burdon): Same data but different instances.
+    model.graph.nodes = [...nodes];
+    model.graph.links = [...links];
+    // model.update();
+
+    model.createNodes(undefined, 1);
+  });
+  useButton('Create', () => {
+    model.createNodes(undefined, 1);
   });
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector<TestNode>(context, {
-      guides: true,
-      forces: {
-        manyBody: {
-          strength: (count: number) => -100 -(count * 30)
-        },
-        center: true,
-        link: {
-          distance: 60
-        }
-      }
-    });
+    const projector = new GraphForceProjector<TestNode>(context, { guides: true });
 
     // TODO(burdon): Create class?
     const drag = createSimulationDrag(context, projector._simulation, {

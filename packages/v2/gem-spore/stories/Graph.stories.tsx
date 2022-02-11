@@ -8,6 +8,7 @@ import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core'
 
 import {
   convertTreeToGraph,
+  createGraph,
   createTree,
   Graph,
   GraphNode,
@@ -21,11 +22,13 @@ export default {
   title: 'gem-spore/Graph'
 };
 
-export const Primary = () => {
+export const Primary = ({ graph = false }) => {
   const selected = useMemo(() => new Set(), []);
-  const adapter = useMemo(
-    () => new TestGraphModelAdapter(new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })))),
-  []);
+  const model = useMemo(() => {
+    return graph ?
+      new TestGraphModelAdapter(new TestGraphModel(createGraph(30, 20))) :
+      new TestGraphModelAdapter(new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))))
+  }, []);
 
   return (
     <FullScreen>
@@ -38,11 +41,12 @@ export const Primary = () => {
               arrows
               forces={{
                 manyBody: {
-                  distanceMax: 400
+                  distanceMax: 300,
+                  strength: () => -150
                 }
               }}
               drag
-              model={adapter}
+              model={model}
               labels={{
                 text: (node: GraphNode<TestNode>, highlight: boolean) =>
                   highlight || selected.has(node.id) ? node.data.label : undefined
@@ -57,7 +61,7 @@ export const Primary = () => {
                   selected.add(node.id);
                 }
 
-                adapter.model.update();
+                model.model.update();
               }}
             />
           </Zoom>

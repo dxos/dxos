@@ -19,7 +19,7 @@ export const convertToGraphData = (graph: TestGraph): GraphData<TestNode> => {
   const links = graph.links.map(link => ({
     id: `${link.source}-${link.target}`,
     source: nodes.find(node => node.id === link.source),
-    target: nodes.find(node => node.id === link.target),
+    target: nodes.find(node => node.id === link.target)
   }));
 
   return {
@@ -73,8 +73,9 @@ export const createTree = ({ depth = 2, chidren = 3 } = {}): TestNode => {
  */
 export const convertTreeToGraph = (root: TestNode) => {
   const traverse = (node: TestNode, graph: TestGraph) => {
-    graph.nodes.push(node);
-    node.children?.forEach(child => {
+    const { children, ...rest } = node;
+    graph.nodes.push(rest);
+    children?.forEach(child => {
       graph.links.push(createLink(node, child));
       traverse(child, graph);
     });
