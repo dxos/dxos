@@ -39,3 +39,40 @@ After a bot is spawned, there are two entities that represent it:
 * Bot process is a seperate OS process where the bot's code is executed. 
 * Bot handle is an object that represents a bot process in the bot factory.
 They communicate using custom [RPC](../common/rpc/). The communication implements [BotService](../common/proto/src/proto/dxos/bot.proto).
+
+## Local development
+
+To create a custom DXOS bot, extend Bot class and override necessary methods.
+```typescript
+  import { Bot } from '@dxos/botkit';
+
+  const log = debug('dxos:bot:echo-bot');
+
+  export class CustomBot extends Bot {
+    override async onStart () {
+      // ...your code that will be executed when bot starts
+    }
+
+    override async onCommand () {
+      // ...your code that will be executed when bot receives a command
+    }
+
+    override async onStop () {
+      // ...your code that will be executed when bot stops
+    }
+  }
+```
+
+In a separate file, you have to create an instance of the bot. This will the entrypoint of your bot. Please use this template:
+```typescript
+  import { createIpcPort, startBot } from '@dxos/botkit';
+
+  import { CustomBot } from './custom-bot';
+
+  if (typeof require !== 'undefined' && require.main === module) {
+    const port = createIpcPort(process);
+    void startBot(new CustomBot(), port);
+  }
+```
+
+This will enable RPC communication between bot handle and bot.
