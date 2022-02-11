@@ -25,7 +25,7 @@ BotController is what exposes BotFactory service to the outer world. You can use
   const botFactoryClient = new BotFactoryClient(client.echo.networkManager);
   await botFactoryClient.start(PublicKey.from(topic));
 ```
-This will take topic from your client config and try to establish connection to a bot factory specified by this topic. The topic can be found at KUBE's services endpoint (e.g. [https://experimental.kube.dxos.network/kube/services](https://experimental.kube.dxos.network/kube/services)) under bot-factory name of service. Bot factory client and bot factory will be able to connect if they're connected to the same signal server.
+This will take topic from your client config and try to establish connection to a bot factory specified by this topic. The topic can be found at KUBE's services endpoint (e.g. [https://experimental.kube.dxos.network/kube/services](https://experimental.kube.dxos.network/kube/services)) under bot-factory name of service. Bot factory client and bot factory will be able to connect if they're connected to the same signal server. They communicate using custom [RPC](../common/rpc/). The communication implements [BotFactoryService](../common/proto/src/proto/dxos/bot.proto).
 After connection is established, bot factory client will be able to:
 * Spawn a new bot. Bot can be defined in 3 ways:
   * DXN - resource identifier in DXNS. Bot factory will automatically fetch the record from DXNS using ContentResolver and get the IPFS CID of the bot bundled file. Next steps are similar as in case of IPFS CID.
@@ -34,3 +34,8 @@ After connection is established, bot factory client will be able to:
 * Invoke lifecycle methods on a given bot. Available methods are: start, stop, remove. 
 
 Ultimately bot factory will able to spawn bots using different containers, but for now the only available container is Node container. Node container will run a javascript file using the `node` command.
+
+After a bot is spawned, there are two entities that represent it:
+* Bot process is a seperate OS process where the bot's code is executed. 
+* Bot handle is an object that represents a bot process in the bot factory.
+They communicate using custom [RPC](../common/rpc/). The communication implements [BotService](../common/proto/src/proto/dxos/bot.proto).
