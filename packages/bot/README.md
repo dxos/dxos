@@ -15,7 +15,7 @@ Bots framework allows you to create a custom DXOS bot and run it on a KUBE, or u
 
 General bots framework architecture is presented on a diagram below.
 
-<img src="bot.drawio.svg" />
+<img src="../../docs/assets/diagrams/bot.drawio.svg" />
 
 BotController is what exposes BotFactory service to the outer world. You can use [BotFactoryClient](bot-factory-client) to connect to and use BotFactory service in your code. To create a BotFactory client in your code you can do:
 ```typescript
