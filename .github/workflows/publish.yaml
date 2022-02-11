@@ -17,6 +17,8 @@ jobs:
         clean: false
     - name: Check, install and build
       run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
         # Install dependencies
         echo "::group::Install"
         node common/scripts/install-run-rush.js install
@@ -26,13 +28,18 @@ jobs:
         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
     - name: Run prerelease scripts
       run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
         node common/scripts/install-run-rush.js prerelease
     - name: Publish latest to NPM
       run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
         # Publish under "latest" tag
         node common/scripts/install-run-rush.js publish --publish --include-all --tag latest
     - name: Publish dev to NPM
       run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
         git config --global user.email "ci@dxos.org"
         git config --global user.name "ci"
 
@@ -62,6 +69,8 @@ jobs:
         fetch-depth: 0
     - name: Check, install and build
       run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
         # Install dependencies
         echo "::group::Install"
         node common/scripts/install-run-rush.js install
@@ -72,10 +81,15 @@ jobs:
     - name: Initialize CLI
       run: |
         set -e
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+        npm install -g yarn
+
         yarn global add @dxos/cli@v2.13.2
         yarn global add @dxos/cli-dxns@v2.13.2
     - name: Publish apps
       run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+        export PATH="$PATH:$(yarn global bin)"
         ./common/scripts/publish-apps.sh
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
@@ -91,6 +105,8 @@ jobs:
         fetch-depth: 0
     - name: Check, install and build
       run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+
         # Install dependencies
         echo "::group::Install"
         node common/scripts/install-run-rush.js install
