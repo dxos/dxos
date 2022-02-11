@@ -1,10 +1,14 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { useEffect, useState } from 'react';
 
 import { Client, Party } from '@dxos/client';
 
 /**
  * Hook which returns a set of peers joined in a shared party.
- * 
+ *
  * Useful for setting up examples or tests which display multiple peers in a single view.
  */
 export const useTestPartyBootstrap = (peerCount = 2) => {
@@ -15,7 +19,7 @@ export const useTestPartyBootstrap = (peerCount = 2) => {
       const peers = [];
       const inviter = new Client();
       await inviter.initialize();
-      await inviter.halo.createProfile({ username: `peer-${0}` });
+      await inviter.halo.createProfile({ username: 'peer-0' });
       const inviterParty = await inviter.echo.createParty();
       peers.push({ client: inviter, party: inviterParty });
 
