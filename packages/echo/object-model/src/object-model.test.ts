@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-// This file is not compiled or run because it introduces a circular dependency on echo-db.
-
 import expect from 'expect';
 
 import { ModelFactory, TestRig } from '@dxos/model-factory';
@@ -44,22 +42,25 @@ describe('ObjectModel', () => {
 
   it('two peers', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
-    const a = rig.createPeer();
-    const b = rig.createPeer();
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
-    await a.model.setProperty('foo', 'bar');
+    await peer1.model.setProperty('foo', 'bar');
+    await rig.waitForReplication();
 
-    expect(b.model.getProperty('foo')).toEqual('bar');
+    expect(peer2.model.getProperty('foo')).toEqual('bar');
   });
 
-  it.skip('consistency', async () => {
+  it('consistency', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
     rig.configureReplication(false);
+
     await peer1.model.setProperty('title', 'DXOS');
     await peer2.model.setProperty('title', 'Braneframe');
+
     rig.configureReplication(true);
     await rig.waitForReplication();
 
