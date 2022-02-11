@@ -165,3 +165,7 @@ After this, bot resource will be available under DXN BOT_DOMAIN:BOT_NAME. It sho
 In order to register a bot, you have to own a domain BOT_DOMAIN and enough funds on your DXNS account.
 
 ---
+
+# Demos
+
+[Chess demo](https://www.dropbox.com/s/gc76cu3z5xcexnf/Vlad-demo-chess-bot-1080p.mov?dl=0)
