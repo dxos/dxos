@@ -87,9 +87,22 @@ To run the bot you'll need to start a bot factory. Please run the following comm
 npm install -g @dxos/cli
 dx bot factory install
 dx bot factory setup
-DEBUG=dxos:bot* dx bot factory start
+DEBUG=dxos:bot* dx bot factory start --dev
 ```
-This will start a bot factory with enabled logging to the default output. The topic that the bot factory listens on will be printed in logs.
+This will start a bot factory with enabled logging to the default output. The topic that the bot factory listens on will be printed in logs. In the code snippet above we start a bot factory with a `--dev` flag. It forces node container to require `@swc-node/register` module, which should be installed and accessible globally. You can achieve this in the following way:
+1. Run `npm install -g @swc-node/register`.
+2. Grab a path to global `@swc-node/register`. You can achieve this by running `npm list -g` in a terminal, get the appropriate path and add `/node_modules` to the end.
+3. Add the path from the previous step to the `NODE_PATH` variable and export it as an environment variable.
+
+Example:
+```bash
+➜ npm list -g
+/Users/username/.nodenv/versions/16.1.0/lib
+├── @swc-node/register@1.4.2
+├── node-pre-gyp@0.17.0
+├── npm@7.11.2
+➜ export NODE_PATH=/Users/username/.nodenv/versions/16.1.0/lib/node_modules
+```
 
 To spawn a bot in a local development mode you need to create a party and open first:
 ```bash
