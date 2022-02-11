@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import { createId, PublicKey } from '@dxos/crypto';
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
 
 import { StateManager } from '.';
 import { Model } from './model';
@@ -62,7 +63,8 @@ describe('StateManager', () => {
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: PublicKey.random().asUint8Array(),
-      seq: meta.seq
+      seq: meta.seq,
+      timeframe: new Timeframe()
     }, message));
 
     await stateManager.model.setProperty('testKey', 'testValue');
@@ -84,10 +86,22 @@ describe('StateManager', () => {
     stateManager.processMessage(createMeta(1), TestModel.meta.mutation.encode({ key: 'key2', value: 'testValue2' }));
     expect(stateManager.model.properties).toEqual({ testKey: 'testValue', key2: 'testValue2' });
   });
+
+  test('upate event gets triggered', async () => {
+    const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, null);
+
+    const gotUpdate = stateManager.model.update.waitForCount(1);
+    stateManager.processMessage(createMeta(0), TestModel.meta.mutation.encode({ key: 'testKey', value: 'testValue' }));
+
+    await promiseTimeout(gotUpdate, 100, new Error('timeout'));
+  });
 });
 
-const createMeta = (seq: number) => ({
-  feedKey: PublicKey.random().asUint8Array(),
-  memberKey: PublicKey.random().asUint8Array(),
-  seq
+const feedKey = PublicKey.random().asUint8Array();
+
+const createMeta = (seq: number): MutationMetaWithTimeframe => ({
+  feedKey,
+  memberKey: feedKey,
+  seq,
+  timeframe: new Timeframe()
 });

@@ -88,7 +88,8 @@ export class DataMirror {
             await entity._stateManager.processMessage({
               feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
               memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
-              seq: update.mutation.meta.seq ?? failUndefined()
+              seq: update.mutation.meta.seq ?? failUndefined(),
+              timeframe: update.mutation.meta.timeframe ?? failUndefined()
             }, update.mutation.data.mutation ?? failUndefined());
           }
         }
