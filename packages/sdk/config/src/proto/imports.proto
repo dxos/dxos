@@ -1,2 +1,1 @@
 import "@dxos/proto/src/proto/dxos/config.proto";
-import "@dxos/proto/src/proto/dxos/configv1.proto";
