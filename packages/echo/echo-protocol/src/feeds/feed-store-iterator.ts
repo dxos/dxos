@@ -110,7 +110,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    */
   // TODO(burdon): Comment.
   private async _reevaluateFeeds () {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line unused-imports/no-unused-vars
     for (const [keyHex, feed] of this._openFeeds) {
       if (!this._feedSelector(feed.descriptor)) {
         feed.frozen = true;
@@ -183,7 +183,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    */
   // TODO(burdon): Comment.
   private _pollFeeds () {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line unused-imports/no-unused-vars
     for (const [_, feed] of this._openFeeds) {
       if (feed.sendQueue.length === 0) {
         // TODO(burdon): Then/catch?

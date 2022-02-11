@@ -22,9 +22,6 @@ import { codecLoop, KeyType } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { PartyAuthenticator } from './authenticator';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const log = debug('dxos:creds:auth:test');
-
 const createPartyKeyrings = async () => {
   // This Keyring has the full key pairs, which is the case when creating a new Party.
   const keyring = new Keyring();
@@ -54,7 +51,7 @@ const createPartyKeyrings = async () => {
   };
 };
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-vars */
 const chainToString = (chain, depth = 0) => {
   let ret = chain.publicKey.toHex() + '\n';
   if (chain.parents.length) {
