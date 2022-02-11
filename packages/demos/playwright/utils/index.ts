@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ConfigV1Object } from '@dxos/config';
+import { ConfigObject } from '@dxos/config';
 
 export * from './Browser';
 
-export const ONLINE_CONFIG: ConfigV1Object = {
+export const ONLINE_CONFIG: ConfigObject = {
   version: 1,
   runtime: {
     services: {
