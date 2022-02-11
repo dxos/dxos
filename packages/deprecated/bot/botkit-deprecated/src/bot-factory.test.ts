@@ -25,7 +25,7 @@ describe('BotFactory', () => {
           server: 'wss://enterprise.kube.dxos.network/dxns/ws'
         }
       }
-    }), {});
+    } as any), {});
 
     await botFactory.start();
 

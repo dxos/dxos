@@ -26,18 +26,14 @@ test.skip('start a bot', async () => {
   });
 
   const bot = new Bot(new Config({
-    bot: {
-      uid: createId(),
-      cwd: process.cwd(),
-      name: 'TestBot',
-      controlTopic: controlTopic.toHex()
-    },
-    services: {
-      signal: {
-        server: undefined
+    runtime: {
+      services: {
+        signal: {
+          server: undefined
+        },
+        ice: undefined
       },
-      ice: undefined
-    }
+    },
   }));
 
   await bot.start();
