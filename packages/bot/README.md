@@ -31,4 +31,6 @@ After connection is established, bot factory client will be able to:
   * DXN - resource identifier in DXNS. Bot factory will automatically fetch the record from DXNS using ContentResolver and get the IPFS CID of the bot bundled file. Next steps are similar as in case of IPFS CID.
   * IPFS CID - hash of the bot bundled file stored in IPFS. Bot factory will automatically download the file to the bot directory created by bot factory.
   * Local path - path to a bot that is stored on the same machine where bot factory is running. Useful in local development.
+* Invoke lifecycle methods on a given bot. Available methods are: start, stop, remove. 
+
 Ultimately bot factory will able to spawn bots using different containers, but for now the only available container is Node container. Node container will run a javascript file using the `node` command.
