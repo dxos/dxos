@@ -34,8 +34,14 @@ export default {
     decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
   },
   'google.protobuf.Timestamp': {
-    encode: (value: number) => ({ seconds: value / 1000 }),
-    decode: (value: any) => +(value.seconds + '000')
+    encode: (value: Date): any => {
+      const unixMilliseconds = value.getTime();
+      return {
+        seconds: Math.floor((unixMilliseconds / 1000)).toString(),
+        nanos: (unixMilliseconds % 1000) * 1e6
+      };
+    },
+    decode: (value: any): Date => new Date(parseInt(value.seconds ?? '0') * 1000 + (value.nanos ?? 0) / 1e6)
   },
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
     encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),
