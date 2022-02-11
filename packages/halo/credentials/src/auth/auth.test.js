@@ -4,7 +4,6 @@
 
 // DXOS testing browser.
 
-import debug from 'debug';
 import expect from 'expect';
 import moment from 'moment';
 
