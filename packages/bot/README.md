@@ -122,3 +122,46 @@ bot stop [botId]
 bot start [botId]
 bot remove [botId]
 ```
+
+## Deploy
+
+When your bot is ready, you can deploy it to DXNS to make it acccessible for bot factories on the KUBEs. You can do it in three steps:
+1. Build.
+2. Publish.
+3. Register.
+
+### Build
+
+In a terminal, run
+```bash
+dx bot build --entryPoint /path/to/custom-bot/entrypoint --outfile /path/to/outfile
+```
+This should create a file `/path/to/outfile`, which contains a bundled bot.
+
+### Publish
+
+In this step we'll publish file created in a previous step to IPFS. To do this, go to the directory where the file is placed. Here create a file named `bot.yml` using this template:
+```yaml
+name: Bot
+description: Bot description
+version: 1.0.0
+```
+Replace default name, description and version with relevant info. Next in the same directory run:
+```bash
+bot publish --buildPath /path/to/outfile
+```
+
+### Register
+
+In this step we'll register the bot in DXNS. In the same directory as in previous step, run:
+```
+bot register --name BOT_NAME --domain BOT_DOMAIN
+```
+After this, bot resource will be available under DXN BOT_DOMAIN:BOT_NAME. It should also be accessible for bot factories.
+
+---
+**NOTE**
+
+In order to register a bot, you have to own a domain BOT_DOMAIN and enough funds on your DXNS balance.
+
+---
