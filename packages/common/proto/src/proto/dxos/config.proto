@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.configv1;
+package dxos.config;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";

@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { sanitizeConfig } from './sanitizer';
-import { ConfigV1Object, ConfigKey, DeepIndex, ParseKey } from './types';
+import { ConfigObject, ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
 
@@ -87,7 +87,7 @@ export function mapToKeyValues (spec: MappingSpec, values: any) {
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
-export class Config<T = ConfigV1Object> {
+export class Config {
   private readonly _config: any;
 
   /**
@@ -95,14 +95,14 @@ export class Config<T = ConfigV1Object> {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [T, ...T[]]) {
-    this._config = sanitizeConfig(defaultsDeep(...objects));
+  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
+    this._config = sanitizeConfig(defaultsDeep(...objects, { version: 1 }));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): T {
+  get values (): ConfigObject {
     return this._config;
   }
 
@@ -113,7 +113,7 @@ export class Config<T = ConfigV1Object> {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<T, ParseKey<K>>): DeepIndex<T, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -131,7 +131,7 @@ export class Config<T = ConfigV1Object> {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<T, ParseKey<K>>, undefined> {
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
     const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
