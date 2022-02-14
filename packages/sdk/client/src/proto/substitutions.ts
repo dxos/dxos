@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Any, newAnySubstitutions, Schema, timestampSubstitutions } from '@dxos/codec-protobuf';
+import { newAnySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { codec, Message } from '@dxos/credentials';
-import { PublicKey, publicKeySubstitutions } from '@dxos/crypto';
-import { Timeframe, timeframeSubstitutions } from '@dxos/echo-protocol';
+import { publicKeySubstitutions } from '@dxos/crypto';
+import { timeframeSubstitutions } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
 
 export default {

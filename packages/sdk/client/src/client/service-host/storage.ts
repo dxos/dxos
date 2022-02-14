@@ -9,9 +9,9 @@ import memdown from 'memdown';
 import { defs } from '@dxos/config';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
+import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 import { InvalidConfigurationError } from '../../interfaces';
 import { isNode } from '../../util';
-import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';

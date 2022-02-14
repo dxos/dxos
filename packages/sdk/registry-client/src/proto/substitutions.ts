@@ -5,5 +5,5 @@
 import { timestampSubstitutions } from '@dxos/codec-protobuf';
 
 export default {
-  ...timestampSubstitutions,
+  ...timestampSubstitutions
 };
