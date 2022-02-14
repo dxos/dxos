@@ -10,10 +10,10 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Entity } from '.';
 import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
-import { Entity } from '.';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
@@ -214,25 +214,25 @@ describe('Selection', () => {
 
       const query = select({ type: OBJECT_ORG })
         .children()
-        .query()
+        .query();
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([items[2]]);
-        await promiseTimeout(promise, 10, new Error('timeout'))
+        await promiseTimeout(promise, 10, new Error('timeout'));
       }
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([]);
-        expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([items[0]]);
-        expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
-    })
-  })
+    });
+  });
 });
