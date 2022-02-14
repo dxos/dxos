@@ -19,7 +19,7 @@ export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 // Workaround for swc not properly handling namespace re-exports.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line unused-imports/no-unused-vars
 const ___WORKAROUND = proto;
 
 /**

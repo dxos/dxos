@@ -6,19 +6,17 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { Config, ConfigV1Object } from '@dxos/config';
+import { Config, ConfigObject } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
-import { DatabaseSnapshot } from '@dxos/echo-protocol';
+import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
-import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
 import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { InvalidConfigurationError } from '../interfaces/errors';
-import { System } from '../proto/gen/dxos/config';
+import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
@@ -27,9 +25,9 @@ const log = debug('dxos:client');
 
 const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultConfig: ConfigV1Object = { version: 1 };
+export const defaultConfig: ConfigObject = { version: 1 };
 
-export const defaultTestingConfig: ConfigV1Object = {
+export const defaultTestingConfig: ConfigObject = {
   version: 1,
   runtime: {
     services: {
@@ -57,7 +55,7 @@ export class Client {
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;
-  private readonly _mode: System.Mode;
+  private readonly _mode: Runtime.Client.Mode;
   private _serviceProvider!: ClientServiceProvider;
 
   private _halo!: HaloProxy;
@@ -69,7 +67,7 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: ConfigV1Object | Config = { version: 1 }, options: ClientOptions = {}) {
+  constructor (config: ConfigObject | Config = { version: 1 }, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -85,8 +83,8 @@ export class Client {
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
     debug.enable(this._config.values.runtime?.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
-    this._mode = this._config.get('runtime.client.mode', System.Mode.AUTOMATIC)!;
-    log(`mode=${System.Mode[this._mode]}`);
+    this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
+    log(`mode=${Runtime.Client.Mode[this._mode]}`);
   }
 
   toString () {
@@ -158,9 +156,9 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    if (this._mode === System.Mode.REMOTE) {
+    if (this._mode === Runtime.Client.Mode.REMOTE) {
       await this.initializeRemote(onProgressCallback);
-    } else if (this._mode === System.Mode.LOCAL) {
+    } else if (this._mode === Runtime.Client.Mode.LOCAL) {
       await this.initializeLocal(onProgressCallback);
     } else {
       await this.initializeAuto(onProgressCallback);
@@ -238,114 +236,23 @@ export class Client {
   }
 
   /**
-   * This is a minimal solution for party restoration functionality.
-   * It has limitations and hacks:
-   * - We have to treat some models in a special way, this is not a generic solution
-   * - We have to recreate relationship between old IDs in newly created IDs
-   * - This won't work when identities are required, e.g. in chess.
-   * This solution is appropriate only for short term, expected to work only in Teamwork
-   */
-  @synchronized
-  async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
-    const party = await this.echo.createParty();
-    const items = snapshot.items ?? [];
-
-    // We have a brand new item ids after creation, which breaks the old structure of id-parentId mapping.
-    // That's why we have a mapping of old ids to new ids, to be able to recover the child-parent relations.
-    const oldToNewIdMap = new Map<string, string>();
-
-    for (const item of sortItemsTopologically(items)) {
-      assert(item.itemId);
-      assert(item.modelType);
-      assert(item.model);
-
-      const model = this.echo.modelFactory.getModel(item.modelType);
-      if (!model) {
-        console.warn('No model found in model factory (could need registering first): ', item.modelType);
-        continue;
-      }
-
-      let parentId: string | undefined;
-      if (item.parentId) {
-        parentId = oldToNewIdMap.get(item.parentId);
-        assert(parentId, 'Unable to recreate child-parent relationship - missing map record');
-        const parentItem = await party.database.getItem(parentId);
-        assert(parentItem, 'Unable to recreate child-parent relationship - parent not created');
-      }
-
-      const createdItem = await party.database.createItem({
-        model: model.constructor,
-        type: item.itemType,
-        parent: parentId
-      });
-
-      oldToNewIdMap.set(item.itemId, createdItem.id);
-
-      if (item.model.array) {
-        for (const mutation of item.model.array.mutations || []) {
-          const decodedMutation = model.meta.mutation.decode(mutation.mutation);
-          await (createdItem.model as any).write(decodedMutation);
-        }
-      } else if (item.modelType === 'dxos:model/object') {
-        assert(item?.model?.custom);
-        assert(model.meta.snapshotCodec);
-        assert(createdItem?.model);
-
-        const decodedItemSnapshot = model.meta.snapshotCodec.decode(item.model.custom);
-        const obj: any = {};
-        assert(decodedItemSnapshot.root);
-        ValueUtil.applyValue(obj, 'root', decodedItemSnapshot.root);
-
-        // The planner board models have a structure in the object model, which needs to be recreated on new ids.
-        if (item.itemType === 'dxos.org/type/planner/card' && obj.root.listId) {
-          obj.root.listId = oldToNewIdMap.get(obj.root.listId);
-          assert(obj.root.listId, 'Failed to recreate child-parent structure of a planner card');
-        }
-
-        await createdItem.model.setProperties(obj.root);
-      } else if (item.modelType === 'dxos:model/text') {
-        assert(item?.model?.custom);
-        assert(model.meta.snapshotCodec);
-        assert(createdItem?.model);
-
-        const decodedItemSnapshot = model.meta.snapshotCodec.decode(item.model.custom);
-
-        await createdItem.model.restoreFromSnapshot(decodedItemSnapshot);
-      } else {
-        throw new InvalidParameterError(`Unhandled model type: ${item.modelType}`);
-      }
-    }
-
-    return party;
-  }
-
-  //
-  // ECHO.
-  //
-
-  /**
    * Registers a new ECHO model.
    */
-  // TODO(burdon): Expose echo directly?
   registerModel (constructor: ModelConstructor<any>): this {
     this.echo.modelFactory.registerModel(constructor);
     return this;
   }
 
-  //
-  // Deprecated.
-  // TODO(burdon): Separate wrapper for devtools?
-  //
-
   /**
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    *
-   * @deprecated Service host implements the devtools service itself. This is left for legacy devtools versions.
+   * This is what gets assigned to `window.__DXOS__` global.
    */
   getDevtoolsContext (): DevtoolsHook {
     const devtoolsContext: DevtoolsHook = {
       client: this,
+      // TODO(dmaretskyi): Is serviceHost needed?
       serviceHost: this._serviceProvider
     };
 

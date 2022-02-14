@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.26.1",
+  "version": "2.27.0",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -12,8 +12,9 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
+    "book": "toolchain book",
     "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",
     "lint": "toolchain lint",
@@ -42,7 +43,6 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",

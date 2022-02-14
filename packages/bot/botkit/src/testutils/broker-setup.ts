@@ -3,7 +3,7 @@
 //
 
 import { Awaited } from '@dxos/async';
-import { Config, ConfigV1Object } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
@@ -15,7 +15,7 @@ export interface BrokerSetup {
 export const setupBroker: () => Promise<BrokerSetup> = async () => {
   const port = randomInt(40000, 10000);
   const broker = await createTestBroker(port);
-  const config = new Config<ConfigV1Object>({
+  const config = new Config({
     version: 1,
     runtime: {
       services: {

@@ -32,7 +32,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const fileName = randomText();
       const file = storage.createOrOpen(fileName);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line unused-imports/no-unused-vars
       for (const _ of Array.from(Array(5))) {
         const offset = Math.round(Math.random() * 1000);
         const buffer = Buffer.from(randomText());

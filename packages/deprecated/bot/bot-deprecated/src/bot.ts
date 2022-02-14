@@ -91,10 +91,12 @@ export class Bot extends EventEmitter {
 
     log('Starting.');
     this._client = new Client(new Config(this._config.values, {
-      system: {
-        storage: {
-          persistent: this._persistent,
-          path: join(this._cwd, BOT_STORAGE)
+      runtime: {
+        client: {
+          storage: {
+            persistent: this._persistent,
+            path: join(this._cwd, BOT_STORAGE)
+          }
         }
       }
     }));
@@ -130,7 +132,7 @@ export class Bot extends EventEmitter {
     await this.client?.destroy();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async botCommandHandler (command: any): Promise<any | void> {
 
   }

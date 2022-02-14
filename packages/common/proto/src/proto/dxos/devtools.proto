@@ -223,8 +223,9 @@ message SubscribeToSignalStatusResponse {
     // TODO(dmaretskyi): Represent as absolute timestamp.
     int32 reconnectIn = 4;
 
-    google.protobuf.Timestamp connectionStarted = 5;
-    google.protobuf.Timestamp lastStateChange = 6;
+    // TODO(dmaretskyi): Change to timestamp.
+    int32 connectionStarted = 5;
+    int32 lastStateChange = 6;
   }
 
   repeated SignalServer servers = 1;

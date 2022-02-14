@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "2.26.1",
+  "version": "2.27.0",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -39,12 +39,12 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.21",
+    "@dxos/eslint-plugin": "~1.0.24",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "^2.0.0",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
-    "eslint": "^7.7.0",
+    "eslint": "^7.12.1",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",
     "ts-node": "^9.1.1",

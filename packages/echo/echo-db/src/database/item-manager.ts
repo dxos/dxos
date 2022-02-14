@@ -4,16 +4,14 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
-import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
+import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
+import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
-import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
@@ -23,8 +21,7 @@ const log = debug('dxos:echo:item-manager');
 export interface ModelConstructionOptions {
   itemId: ItemID
   modelType: ModelType
-  initialMutations?: ModelMessage<Uint8Array>[],
-  modelSnapshot?: Uint8Array,
+  snapshot: ModelSnapshot
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
@@ -47,25 +44,25 @@ export class ItemManager {
    *
    * If the information about which entity got updated is not required prefer using `debouncedItemUpdate`.
    */
-  readonly update = new Event<Entity<any>>();
+  readonly update = new Event<Entity<Model>>();
 
   /**
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedUpdate: Event<Entity<any>[]> = debounceEntityUpdateEvent(this.update);
+  readonly debouncedUpdate: Event<Entity<Model>[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
    * @private
    */
-  private readonly _entities = new Map<ItemID, Entity<any>>();
+  private readonly _entities = new Map<ItemID, Entity<Model>>();
 
   /**
    * Map of item promises (waiting for item construction after genesis message has been written).
    * @private
    */
-  private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
    * @param _modelFactory
@@ -81,11 +78,11 @@ export class ItemManager {
   }
 
   get items (): Item<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Item<any> => entity instanceof Item);
+    return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
   }
 
   get links (): Link<any>[] {
-    return Array.from(this._entities.values()).filter((entity): entity is Link<any> => entity instanceof Link);
+    return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
   /**
@@ -164,7 +161,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Entity<any>>();
+    const [waitForCreation, callback] = trigger<Entity<Model>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -189,44 +186,13 @@ export class ItemManager {
   }
 
   private async _constructModel ({
-    modelType, itemId, modelSnapshot, initialMutations
-  }: ModelConstructionOptions): Promise<Model<any>> {
-    // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-
-    const modelMeta = this._modelFactory.getModelMeta(modelType);
-
-    //
+    modelType, itemId, snapshot
+  }: ModelConstructionOptions): Promise<StateManager<Model>> {
     // Convert model-specific outbound mutation to outbound envelope message.
-    //
-    const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
-      itemId,
-      mutation: modelMeta.mutation.encode(mutation)
-    }), this._writeStream);
+    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
-    const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
-    assert(model, `Invalid model: ${modelType}`);
-
-    if (modelSnapshot) {
-      if (model instanceof DefaultModel) {
-        model.snapshot = modelSnapshot;
-      } else {
-        assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-        await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
-      }
-    }
-
-    // Process initial mutations.
-    if (initialMutations) {
-      for (const mutation of initialMutations) {
-        await model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
-      }
-    }
-
-    return model;
+    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, outboundTransform);
   }
 
   /**
@@ -237,16 +203,14 @@ export class ItemManager {
     this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
 
-    if (!(entity.model instanceof DefaultModel)) {
-      // Notify Item was udpated.
-      // TODO(burdon): Update the item directly?
-      this.update.emit(entity);
+    // Notify Item was udpated.
+    // TODO(burdon): Update the item directly?
+    this.update.emit(entity);
 
-      // TODO(telackey): Unsubscribe?
-      entity.subscribe(() => {
-        this.update.emit(entity);
-      });
-    }
+    // TODO(telackey): Unsubscribe?
+    entity.subscribe(() => {
+      this.update.emit(entity);
+    });
 
     // Notify pending creates.
     this._pendingItems.get(entity.id)?.(entity);
@@ -268,8 +232,7 @@ export class ItemManager {
     modelType,
     itemType,
     parentId,
-    initialMutations,
-    modelSnapshot
+    snapshot
   }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
@@ -280,14 +243,13 @@ export class ItemManager {
     }
     assert(!parent || parent instanceof Item);
 
-    const model = await this._constructModel({
+    const modelStateManager = await this._constructModel({
       itemId,
       modelType,
-      initialMutations,
-      modelSnapshot
+      snapshot
     });
 
-    const item = new Item(this, itemId, itemType, model, this._writeStream, parent);
+    const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
     this._addEntity(item);
 
     return item;
@@ -303,8 +265,7 @@ export class ItemManager {
     itemId,
     modelType,
     itemType,
-    initialMutations,
-    modelSnapshot,
+    snapshot,
     source,
     target
   }: LinkConstructionOptions): Promise<Link<any>> {
@@ -314,8 +275,7 @@ export class ItemManager {
     const model = await this._constructModel({
       itemId,
       modelType,
-      initialMutations,
-      modelSnapshot
+      snapshot
     });
 
     const sourceItem = this.getItem(source);
@@ -349,9 +309,7 @@ export class ItemManager {
     const item = this._entities.get(itemId);
     assert(item);
 
-    const decoded = item.modelMeta.mutation.decode(message.mutation);
-
-    await item.model.processMessage(message.meta, decoded);
+    await item._stateManager.processMessage(message.meta, message.mutation);
     this.update.emit(item);
   }
 
@@ -367,8 +325,8 @@ export class ItemManager {
     return entity;
   }
 
-  getItemsWithDefaultModels (): Entity<DefaultModel>[] {
-    return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
+  getUninitializedEntities (): Entity<Model>[] {
+    return Array.from(this._entities.values()).filter(entity => !entity._stateManager.initialized);
   }
 
   /**
@@ -404,20 +362,14 @@ export class ItemManager {
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async reconstructItemWithDefaultModel (itemId: ItemID) {
+  async initializeModel (itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
-    assert(item.model instanceof DefaultModel);
 
-    // Disconnect the stream.
-    await pify(item.model.processor.end.bind(item.model.processor))();
+    const model = this._modelFactory.getModel(item._stateManager.modelType);
+    assert(model, 'Model not registered');
 
-    item._setModel(await this._constructModel({
-      itemId,
-      modelType: item.model.originalModelType,
-      initialMutations: item.model.mutations,
-      modelSnapshot: item.model.snapshot
-    }));
+    item._stateManager.initialize(model.constructor);
 
     this.update.emit(item);
   }

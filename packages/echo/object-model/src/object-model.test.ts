@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-// This file is not compiled or run because it introduces a circular dependency on echo-db.
-
 import expect from 'expect';
 
-import { ObjectModel } from './object-model';
-import { TestRig } from './test-rig';
+import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-describe('TestRig', () => {
+import { ObjectModel } from './object-model';
+
+describe('ObjectModel', () => {
   it('can set a property', async () => {
-    const rig = new TestRig(ObjectModel);
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     await model.setProperty('foo', 'bar');
@@ -20,7 +19,7 @@ describe('TestRig', () => {
   });
 
   it.skip('property updates are optimistically applied', async () => {
-    const rig = new TestRig(ObjectModel);
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     const promise = model.setProperty('foo', 'bar');
@@ -31,7 +30,7 @@ describe('TestRig', () => {
   });
 
   it('timeframe is updated after a mutation', async () => {
-    const rig = new TestRig(ObjectModel);
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer = rig.createPeer();
 
     expect(peer.timeframe.get(peer.key)).toEqual(undefined);
@@ -42,12 +41,30 @@ describe('TestRig', () => {
   });
 
   it('two peers', async () => {
-    const rig = new TestRig(ObjectModel);
-    const a = rig.createPeer();
-    const b = rig.createPeer();
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
 
-    await a.model.setProperty('foo', 'bar');
+    await peer1.model.setProperty('foo', 'bar');
+    await rig.waitForReplication();
 
-    expect(b.model.getProperty('foo')).toEqual('bar');
+    expect(peer2.model.getProperty('foo')).toEqual('bar');
+  });
+
+  it('consistency', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const peer1 = rig.createPeer();
+    const peer2 = rig.createPeer();
+
+    rig.configureReplication(false);
+
+    await peer1.model.setProperty('title', 'DXOS');
+    await peer2.model.setProperty('title', 'Braneframe');
+
+    rig.configureReplication(true);
+    await rig.waitForReplication();
+
+    // Peer states have converged to a single value.
+    expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'));
   });
 });

@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { ConfigV1Object } from '@dxos/config';
+import { ConfigObject } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -276,7 +276,7 @@ describe('Client', () => {
   });
 
   test('late-register models after refresh', async () => {
-    const config: ConfigV1Object = {
+    const config: ConfigObject = {
       version: 1,
       runtime: {
         client: {
