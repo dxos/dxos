@@ -9,8 +9,7 @@ import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
-import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
-import { StateManager } from '@dxos/model-factory/src/state-manager';
+import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';

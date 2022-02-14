@@ -113,7 +113,7 @@ export const Remote = () => {
     version: 1,
     runtime: {
       client: {
-        mode: defs.System.Mode.REMOTE
+        mode: defs.Runtime.Client.Mode.REMOTE
       }
     }
   };

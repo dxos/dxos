@@ -4,5 +4,5 @@
 
 export * from './config';
 export * from './loaders/index';
-export { ConfigObject, ConfigV1Object } from './sanitizer';
+export { ConfigObject } from './types';
 export * as defs from './proto/gen/dxos/config'; // TODO(burdon): Rename config?
