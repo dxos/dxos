@@ -87,7 +87,7 @@ describe('StateManager', () => {
     expect(stateManager.model.properties).toEqual({ testKey: 'testValue', key2: 'testValue2' });
   });
 
-  test('upate event gets triggered', async () => {
+  test.only('upate event gets triggered', async () => {
     const stateManager = new StateManager(TestModel.meta.type, TestModel, createId(), {}, null);
 
     const gotUpdate = stateManager.model.update.waitForCount(1);

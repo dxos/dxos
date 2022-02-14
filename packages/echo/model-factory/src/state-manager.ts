@@ -5,21 +5,45 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
 import { StateMachine } from './state-machine';
 import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
+import { PublicKey } from '@dxos/crypto';
+import debug from 'debug'
+
+const log = debug('dxos:model-factory:state-manager');
+
+type OptimisticMutation = ModelMessage<Uint8Array> & {
+  /**
+   * Whether this mutation has been written to the feed store.
+   * 
+   * This also confirms that the feedKey and seq number are correct.
+   */
+  confirmed: boolean
+}
 
 /**
  * Binds the model to the state machine. Manages the state machine lifecycle.
+ * 
+ * The state of the model is formed from the following components (in order):
+ * - The custom snapshot: `_snapshot.snapshot`
+ * - The snapshot mutations: `_snapshot.mutations`
+ * - The mutatation queue: `_mutations`
+ * - Optimistic mutations: `_optimisticMutations`
  */
 export class StateManager<M extends Model> {
   /**
    * Mutations that were applied on top of the _snapshot.
    */
   private _mutations: ModelMessage<Uint8Array>[] = [];
+
+  /**
+   * Mutations that were optimistically applied and haven't yet passed through the feed store.
+   */
+  private _optimisticMutations: OptimisticMutation[] = [];
 
   private _modelMeta: ModelMeta | null = null;
 
@@ -73,13 +97,38 @@ export class StateManager<M extends Model> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
+    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const optimisticMutation: OptimisticMutation = {
+      mutation: mutationEncoded,
+      confirmed: false,
+      meta: { // TODO(dmaretskyi): Put meaningfull data in here.
+        feedKey: new Uint8Array(),
+        seq: 0,
+        memberKey:  new Uint8Array(),
+        timeframe: new Timeframe(),
+      }
+    }
+    this._optimisticMutations.push(optimisticMutation);
+
     // Promise that resolves when this mutation has been processed.
     const processed = this._mutationProcessed.waitFor(meta =>
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
     );
 
-    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
     const receipt = await this._writeStream.write(mutationEncoded);
+    if(!receipt.feedKey.equals(optimisticMutation.meta.feedKey) || receipt.seq !== optimisticMutation.meta.seq) {
+      log(`Mutation came back from the feed store with a different feed key or seq number: optimistic=${PublicKey.from(optimisticMutation.meta.feedKey)}/${optimisticMutation.meta.seq} vs actual=${receipt.feedKey}/${receipt.seq}`);
+    }
+    optimisticMutation.meta.feedKey = receipt.feedKey.asUint8Array();
+    optimisticMutation.meta.seq = receipt.seq;
+    optimisticMutation.confirmed = true;
+
+    if(this.initialized) {
+      this._stateMachine!.process(mutation, optimisticMutation.meta);
+
+      this._model!.update.emit(this._model!);
+      this._mutationProcessed.emit(optimisticMutation.meta);
+    }
 
     return {
       ...receipt,
@@ -136,18 +185,22 @@ export class StateManager<M extends Model> {
    */
   processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
     const insertionIndex = getInsertionIndex(this._mutations, { meta, mutation });
-    if (insertionIndex !== this._mutations.length) {
-      // Order will be broken, reset the state machine and re-apply all mutations.
-      this._mutations = [
-        ...this._mutations.slice(0, insertionIndex - 1),
-        { meta, mutation },
-        ...this._mutations.slice(insertionIndex)
-      ];
-      this._resetStateMachine();
-    } else {
-      // Mutation can safely be append at the end preserving order.
-      this._mutations.push({ meta, mutation });
-      if (this.initialized) {
+    const optimisticIndex = this._optimisticMutations.findIndex(m => m.confirmed && PublicKey.equals(m.meta.feedKey, meta.feedKey) && m.meta.seq === meta.seq);
+
+    // Remove optimistic mutation from the queue.
+    if (optimisticIndex !== -1) {
+      this._optimisticMutations.splice(optimisticIndex, 1);
+    }
+    this._mutations.splice(insertionIndex, 0, { meta, mutation });
+
+    // Perform state updates.
+    if(this.initialized) {
+      // Reset the state machine if processing this mutation would break the order.
+      if (insertionIndex !== this._mutations.length || optimisticIndex > 0) {
+        // Order will be broken, reset the state machine and re-apply all mutations.
+        this._resetStateMachine();
+      } else if(optimisticIndex === -1) {
+        // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this.modelMeta.mutation.decode(mutation);
         this._stateMachine!.process(mutationDecoded, meta);
 
