@@ -346,7 +346,7 @@ export class ECHO {
    * Queries for a set of Parties matching the optional filter.
    * @param {PartyFilter} filter
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();

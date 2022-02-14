@@ -132,7 +132,7 @@ export class Bot extends EventEmitter {
     await this.client?.destroy();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async botCommandHandler (command: any): Promise<any | void> {
 
   }

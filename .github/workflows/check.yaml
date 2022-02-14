@@ -16,7 +16,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+          \. "$NVM_DIR/nvm.sh" && nvm use
 
           # Install dependencies
           echo "::group::Install"
@@ -68,7 +68,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+          \. "$NVM_DIR/nvm.sh" && nvm use
 
           # Install dependencies
           echo "::group::Install"
@@ -102,7 +102,7 @@ jobs:
           clean: false
       - name: Check, Install and Test
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use 16.0
+          \. "$NVM_DIR/nvm.sh" && nvm use
 
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
