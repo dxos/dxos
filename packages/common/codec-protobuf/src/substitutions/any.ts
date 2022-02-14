@@ -47,8 +47,6 @@ export const newAnySubstitutions = {
       };
     },
     decode: (value: any, schema: Schema<any>): any => {
-      console.log('decode any', value);
-
       const codec = schema.tryGetCodecForType(value.type_url!);
       const data = codec.decode(value.value!);
       return {
