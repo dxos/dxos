@@ -115,9 +115,19 @@ export class StateManager<M extends Model> {
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
     );
 
+    // Sanity checks.
+    void processed.then(() => {
+      if(!optimisticMutation.confirmed) {
+        console.error(`Optimistic mutation ${this._itemId}/${mutation.type} was processed without being confirmed.`);
+      }
+      if(this._optimisticMutations.includes(optimisticMutation)) {
+        console.error(`Optimistic mutation ${this._itemId}/${mutation.type} was processed without being removed from the optimistic queue.`);
+      }
+    });
+
     const receipt = await this._writeStream.write(mutationEncoded);
     if(!receipt.feedKey.equals(optimisticMutation.meta.feedKey) || receipt.seq !== optimisticMutation.meta.seq) {
-      log(`Mutation came back from the feed store with a different feed key or seq number: optimistic=${PublicKey.from(optimisticMutation.meta.feedKey)}/${optimisticMutation.meta.seq} vs actual=${receipt.feedKey}/${receipt.seq}`);
+      log(`error: Mutation came back from the feed store with a different feed key or seq number: optimistic=${PublicKey.from(optimisticMutation.meta.feedKey)}/${optimisticMutation.meta.seq} vs actual=${receipt.feedKey}/${receipt.seq}`);
     }
     optimisticMutation.meta.feedKey = receipt.feedKey.asUint8Array();
     optimisticMutation.meta.seq = receipt.seq;
