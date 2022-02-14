@@ -1,5 +1,22 @@
 # Change Log
 
+## [2.27.0](https://www.github.com/dxos/protocols/compare/v2.26.1...v2.27.0) (2022-02-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove config version 0 (#938)
+* Extract model and S/M integration into StateManager class (#916)
+
+### Features
+
+* Add useTestPartyBootstrap ([#937](https://www.github.com/dxos/protocols/issues/937)) ([c47c594](https://www.github.com/dxos/protocols/commit/c47c5946940cec76524515e5e4bff1beed2635fd))
+* Extract model and S/M integration into StateManager class ([#916](https://www.github.com/dxos/protocols/issues/916)) ([c8f77fb](https://www.github.com/dxos/protocols/commit/c8f77fb6bf1d90b6d331450fa9bafa3cf826bda5))
+* Initial bot docs ([#933](https://www.github.com/dxos/protocols/issues/933)) ([bdb8134](https://www.github.com/dxos/protocols/commit/bdb8134b39fa119ba736e8babe57131730258839))
+* Remove config version 0 ([#938](https://www.github.com/dxos/protocols/issues/938)) ([45070a8](https://www.github.com/dxos/protocols/commit/45070a812fd9d1624ab0aa5a8f8d29828c77c69a))
+* Strong ordering for models ([#927](https://www.github.com/dxos/protocols/issues/927)) ([de5c183](https://www.github.com/dxos/protocols/commit/de5c18322078e00dff1337e4c5978d137f987988))
+* **toolchain-node-library:** Add commands for running esbuild-server ([#926](https://www.github.com/dxos/protocols/issues/926)) ([2f77453](https://www.github.com/dxos/protocols/commit/2f7745338707a3cae66794fee652dc9958a9ba52))
+
 ### [2.26.1](https://www.github.com/dxos/protocols/compare/v2.26.0...v2.26.1) (2022-02-08)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler-browser-test",
-  "version": "2.26.1",
+  "version": "2.27.0",
   "private": true,
   "license": "AGPL-3.0",
   "author": "DXOS.org",
