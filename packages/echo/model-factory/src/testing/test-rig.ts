@@ -47,7 +47,7 @@ export class TestRig<M extends Model<any>> {
   createPeer (): TestPeer<M> {
     const key = PublicKey.random();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line unused-imports/no-unused-vars
     const writer: FeedWriter<Uint8Array> = {
       write: async (mutation) => {
         return this._writeMessage(key, mutation);

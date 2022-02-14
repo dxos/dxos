@@ -43,6 +43,8 @@ function readPackage(packageJson, context) {
     // - https://github.com/reach/router/pull/43
     packageJson.peerDependencies['react'] = '>=15.0.0'
     packageJson.peerDependencies['react-dom'] = '>=15.0.0'
+  } else if(packageJson.name === 'eslint-plugin-unused-imports') {
+    packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^4.14.2 || ^5.0.0'
   }
 
   return packageJson;
