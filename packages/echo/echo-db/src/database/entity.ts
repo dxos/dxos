@@ -4,8 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model, ModelMeta } from '@dxos/model-factory';
-import { StateManager } from '@dxos/model-factory/src/state-manager';
+import { Model, ModelMeta, StateManager } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ItemManager } from './item-manager';
