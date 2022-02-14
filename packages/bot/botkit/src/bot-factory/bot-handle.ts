@@ -3,16 +3,18 @@
 //
 
 import assert from 'assert';
-import fs from 'fs/promises';
+import fs from 'fs';
 import { join } from 'path';
+import { Tail } from 'tail';
 
 import { Event } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
-import { Bot, BotService } from '../proto/gen/dxos/bot';
+import { Bot, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
 
 /**
  * Represents a running bot instance in BotFactory.
@@ -21,6 +23,7 @@ export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
   private _bot: Bot;
   private _config: Config;
+  private _startTimestamps: Date[] = [];
   localPath: string | undefined;
 
   readonly update = new Event();
@@ -53,10 +56,22 @@ export class BotHandle {
     return this._config;
   }
 
+  get logsDir () {
+    return join(this.workingDirectory, 'logs');
+  }
+
+  get startTimestamp () {
+    return this._startTimestamps[this._startTimestamps.length - 1];
+  }
+
+  set startTimestamp (startTimestamp: Date) {
+    this._startTimestamps.push(startTimestamp);
+  }
+
   async initializeDirectories () {
-    await fs.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
-    await fs.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
-    await fs.mkdir(this.logsDir);
+    await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
+    await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
+    await fs.promises.mkdir(this.logsDir);
     this._config = new Config(this._config.values,
       {
         version: 1,
@@ -100,7 +115,7 @@ export class BotHandle {
   }
 
   async clearFiles () {
-    await fs.rm(this.workingDirectory, { recursive: true, force: true });
+    await fs.promises.rm(this.workingDirectory, { recursive: true, force: true });
   }
 
   toString () {
@@ -126,10 +141,6 @@ export class BotHandle {
     this.update.emit();
   }
 
-  get logsDir () {
-    return join(this.workingDirectory, 'logs');
-  }
-
   /**
    * Returns the name of the log file for the specified timestamp.
    */
@@ -149,5 +160,35 @@ export class BotHandle {
    */
   getStoragePath (): string {
     return join(this.workingDirectory, 'storage');
+  }
+
+  /**
+   * Returns a stream with all the logs associted with given bot and then watches for new logs.
+   */
+  getLogsStream (): Stream<GetLogsResponse> {
+    return new Stream<GetLogsResponse>(({ next, close }) => {
+      for (const startTimestamps of this._startTimestamps) {
+        const logFilePath = this.getLogFilePath(startTimestamps);
+        const logs = fs.readFileSync(logFilePath);
+        next({ logs });
+      }
+      const currentLogFile = this.getLogFilePath(this.startTimestamp);
+      const tail = new Tail(currentLogFile);
+      tail.on('line', (line) => {
+        next({ logs: Buffer.from(line) });
+      });
+      tail.on('error', (error) => {
+        close(error);
+      });
+      this.update.on(() => {
+        if (this.bot.status === Bot.Status.STOPPED) {
+          tail.unwatch();
+          close();
+        }
+      })
+      return () => {
+        tail.unwatch();
+      }
+    });
   }
 }

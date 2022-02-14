@@ -50,6 +50,10 @@ message SendCommandResponse {
   bytes response = 1;
 }
 
+message GetLogsResponse {
+  bytes logs = 1;
+}
+
 /// Service that is used by clients to communicate with bot factory.
 service BotFactoryService {
   rpc GetBots(google.protobuf.Empty) returns (GetBotsResponse);
@@ -61,6 +65,7 @@ service BotFactoryService {
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
   rpc Remove(Bot) returns (google.protobuf.Empty);
+  rpc GetLogs(Bot) returns (stream GetLogsResponse);
  
   // TODO(dmaretskyi): querying metrics/state.
  

@@ -105,10 +105,12 @@ export class BotFactory implements BotFactoryService {
         handle.localPath = localPath;
       }
 
+      handle.startTimestamp = new Date();
+
       const port = await this._botContainer.spawn({
         id,
         localPath,
-        logFilePath: handle.getLogFilePath(new Date())
+        logFilePath: handle.getLogFilePath(handle.startTimestamp)
       });
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
@@ -131,10 +133,13 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(request.id);
+
+      bot.startTimestamp = new Date();
+
       const port = await this._botContainer.spawn({
         id,
         localPath: bot.localPath,
-        logFilePath: bot.getLogFilePath(new Date())
+        logFilePath: bot.getLogFilePath(bot.startTimestamp)
       });
       log(`[${id}] Openning RPC channel`);
       await bot.open(port);
@@ -190,6 +195,12 @@ export class BotFactory implements BotFactoryService {
   async removeAll () {
     await Promise.all(Array.from(this._bots.values()).map(bot => this.remove(bot.bot)));
   }
+
+  getLogs (request: Bot) {
+    assert(request.id);
+    const bot = this._getBot(request.id);
+    return bot.getLogsStream();
+  };
 
   private _getBot (botId: string) {
     const bot = this._bots.get(botId);
