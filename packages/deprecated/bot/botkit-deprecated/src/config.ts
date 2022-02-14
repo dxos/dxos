@@ -20,14 +20,14 @@ export const getConfig = () => {
 
   const config = new Config(
     mapFromKeyValues(envmap, process.env),
-    defaults,
+    defaults as any,
     {
       bot: {
         peerId: createId(),
         topic: keyToString(keyPair.publicKey),
         secretKey: keyToString(keyPair.secretKey)
       }
-    }
+    } as any
   );
 
   return config;

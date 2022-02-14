@@ -4,7 +4,12 @@ module.exports = {
     'plugin:@dxos/recomended'
   ],
   rules: {
-  
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: ['**/dist', '**/src/**', '!./**', '!../**']
+      }
+    ],
   },
   ignorePatterns: [
     'src/proto/gen/*'

@@ -4,28 +4,30 @@
 
 import { Enum, Type } from 'protobufjs';
 
+import { InvalidConfigError } from './errors';
 import { schema } from './proto/gen';
 import { Config as ConfigObject } from './proto/gen/dxos/config';
-import { Config as ConfigV1Object } from './proto/gen/dxos/configv1';
-
-export type { ConfigObject, ConfigV1Object };
 
 const configRootType = schema.getCodecForType('dxos.config.Config');
-const configV1RootType = schema.getCodecForType('dxos.configv1.Config');
 
-export function sanitizeConfig (value: any): ConfigObject | ConfigV1Object {
-  // TODO(egorgripasov): Clean once old config deprecated.
-  const confRootType = value?.version === 1 ? configV1RootType : configRootType;
-
-  const ctx: Context = { errors: [] };
-  visitMessage(confRootType.protoType, value, '', ctx);
-  if (ctx.errors.length > 0) {
-    console.warn(`Invalid config:\n${ctx.errors.join('\n')}`);
+export function sanitizeConfig (value: any): ConfigObject {
+  if (!('version' in value)) {
+    throw new InvalidConfigError('Version not specified');
+  }
+  if (value?.version !== 1) {
+    throw new InvalidConfigError(`Invalid config version: ${value.version}`);
   }
 
-  const error = confRootType.protoType.verify(value);
+  // TODO(egorgripasov): Clean once old config deprecated.
+  const ctx: Context = { errors: [] };
+  visitMessage(configRootType.protoType, value, '', ctx);
+  if (ctx.errors.length > 0) {
+    throw new InvalidConfigError(ctx.errors.join('\n'));
+  }
+
+  const error = configRootType.protoType.verify(value);
   if (error) {
-    console.warn(`Invalid config: ${error}`);
+    throw new InvalidConfigError(error);
   }
 
   return value;

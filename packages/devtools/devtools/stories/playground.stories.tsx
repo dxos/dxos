@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { defs } from '@dxos/config';
+import { ConfigObject, defs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { RpcPort, createLinkedPorts } from '@dxos/rpc';
@@ -25,8 +25,10 @@ const DevTools = ({ port }: { port: RpcPort }) => {
         <CssBaseline />
         <ClientProvider
           config={{
-            system: {
-              mode: defs.System.Mode.REMOTE
+            runtime: {
+              client: {
+                mode: defs.Runtime.Client.Mode.REMOTE
+              }
             }
           }}
           options={{
@@ -53,12 +55,14 @@ export const Primary = () => {
 
 export const Secondary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
-  const config = {
-    services: {
-      signal: {
-        // TODO(burdon): Fallback.
-        server: 'wss://enterprise.kube.dxos.network/dxos/signal'
-        // server: 'ws://localhost:4000'
+  const config: ConfigObject = {
+    runtime: {
+      services: {
+        signal: {
+          // TODO(burdon): Fallback.
+          server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+          // server: 'ws://localhost:4000'
+        }
       }
     }
   };

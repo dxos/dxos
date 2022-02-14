@@ -16,7 +16,7 @@ export const Root = () => {
 
   return (
     <ClientProvider
-      config={{ runtime: { client: { mode: defs.System.Mode.REMOTE } } }}
+      config={{ runtime: { client: { mode: defs.Runtime.Client.Mode.REMOTE } } }}
       options={{ rpcPort }}
     >
       <WithSnackbarContext>
