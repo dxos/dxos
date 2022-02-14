@@ -137,7 +137,7 @@ describe('Node', () => {
       await clientSetup.client.destroy();
     });
 
-    it.only('Spawns and restarts echo-bot', async () => {
+    it('Spawns and restarts echo-bot', async () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
@@ -199,7 +199,7 @@ describe('Node', () => {
 
       await testCommand();
       await new Promise<void>(resolve => {
-        logsStream.subscribe(msg => { 
+        logsStream.subscribe(msg => {
           if (msg.logs?.toString().includes('onCommand')) {
             resolve();
           }

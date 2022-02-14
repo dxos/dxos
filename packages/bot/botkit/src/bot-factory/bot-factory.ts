@@ -200,7 +200,7 @@ export class BotFactory implements BotFactoryService {
     assert(request.id);
     const bot = this._getBot(request.id);
     return bot.getLogsStream();
-  };
+  }
 
   private _getBot (botId: string) {
     const bot = this._bots.get(botId);

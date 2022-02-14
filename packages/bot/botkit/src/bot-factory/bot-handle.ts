@@ -185,10 +185,10 @@ export class BotHandle {
           tail.unwatch();
           close();
         }
-      })
+      });
       return () => {
         tail.unwatch();
-      }
+      };
     });
   }
 }
