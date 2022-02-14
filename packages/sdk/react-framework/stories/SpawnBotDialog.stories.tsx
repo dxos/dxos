@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
 import { Party, Item } from '@dxos/client';
-import type { ConfigV1Object } from '@dxos/config';
+import type { ConfigObject } from '@dxos/config';
 import { ObjectModel } from '@dxos/object-model';
 import {
   ClientProvider,
@@ -28,7 +28,7 @@ export default {
 
 const TEST_TYPE = 'TEST_TYPE';
 
-const clientConfig: ConfigV1Object = {
+const clientConfig: ConfigObject = {
   version: 1,
   runtime: {
     services: {

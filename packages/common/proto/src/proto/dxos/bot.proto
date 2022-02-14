@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "./client.proto";
-import "./configv1.proto";
+import "./config.proto";
 import "./echo/invitation.proto";
 
 package dxos.bot;
@@ -71,7 +71,7 @@ service BotFactoryService {
 
 message InitializeRequest {
   /// Bot runtime configuration.
-  dxos.configv1.Config config = 1;
+  dxos.config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
   dxos.echo.InvitationDescriptor invitation = 2;
@@ -79,7 +79,7 @@ message InitializeRequest {
 
 message StartRequest {
   /// Bot runtime configuration.
-  dxos.configv1.Config config = 1;
+  dxos.config.Config config = 1;
 }
 
 /// Service that is used by bots communicating with bot factory.

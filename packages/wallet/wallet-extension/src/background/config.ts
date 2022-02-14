@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ConfigV1Object, defs } from '@dxos/config';
+import { ConfigObject, defs } from '@dxos/config';
 
-export const config: ConfigV1Object = {
+export const config: ConfigObject = {
   runtime: {
     client: {
       storage: {
         persistent: true,
-        storageType: defs.System.Storage.StorageDriver.IDB,
+        storageType: defs.Runtime.Client.Storage.StorageDriver.IDB,
         path: '/tmp/dxos'
       }
     },

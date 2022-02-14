@@ -7,7 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { ConfigV1Object } from '@dxos/config';
+import { ConfigObject } from '@dxos/config';
 
 import { ClientProvider } from '../../containers';
 import { useClient } from './useClient';
@@ -21,7 +21,7 @@ describe('Client hook', () => {
   });
 
   it('should return client when used properly in a context', () => {
-    const config: ConfigV1Object = {
+    const config: ConfigObject = {
       version: 1,
       runtime: {
         client: {
