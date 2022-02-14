@@ -40,6 +40,7 @@ export class NodeContainer implements BotContainer {
       stdio: logFilePath ? 'pipe' : 'inherit',
       env: {
         ...process.env,
+        DEBUG: [process.env['DEBUG'], 'dxos:bot*'].join(','),
         NODE_NO_WARNINGS: '1'
       }
     });

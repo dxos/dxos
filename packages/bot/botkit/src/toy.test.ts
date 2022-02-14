@@ -137,7 +137,7 @@ describe('Node', () => {
       await clientSetup.client.destroy();
     });
 
-    it('Spawns and restarts echo-bot', async () => {
+    it.only('Spawns and restarts echo-bot', async () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
@@ -195,7 +195,16 @@ describe('Node', () => {
         unsub?.();
       };
 
+      const logsStream = botHandle.logsStream();
+
       await testCommand();
+      await new Promise<void>(resolve => {
+        logsStream.subscribe(msg => { 
+          if (msg.logs?.toString().includes('onCommand')) {
+            resolve();
+          }
+        }, () => {});
+      });
 
       await botHandle.stop();
       await botHandle.start();
