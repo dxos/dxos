@@ -37,7 +37,7 @@ export class MemoryRegistryClient implements IRegistryClient {
     this.records = this.resources.map(resource => resource.record);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async addRecord (data: unknown, schemaId: CIDLike, messageFqn: string): Promise<CID> {
     return undefined as unknown as CID;
   }
@@ -76,7 +76,7 @@ export class MemoryRegistryClient implements IRegistryClient {
     return this.records.find(record => record.cid.equals(cidLike)) as R;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async getRecords<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<R[]> {
     return this.records as R[];
   }
@@ -99,12 +99,12 @@ export class MemoryRegistryClient implements IRegistryClient {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async resolveRecordCid (id: DXN): Promise<CID | undefined> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async resolveDomainName (domainName: string): Promise<DomainKey> {
     return undefined as unknown as DomainKey;
   }
@@ -113,27 +113,27 @@ export class MemoryRegistryClient implements IRegistryClient {
     return this.types.filter(type => Filtering.matchRecord(type, query));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async insertDataRecord (data: unknown, typeId: CIDLike, meta?: RecordMetadata): Promise<CID> {
     return undefined as unknown as CID;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async insertRawRecord (data: Uint8Array): Promise<CID> {
     return undefined as unknown as CID;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async insertTypeRecord (schema: Root, messageName: string, meta?: RecordMetadata): Promise<CID> {
     return undefined as unknown as CID;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async getDataRecord<T = any> (cid: CIDLike): Promise<RegistryDataRecord<T> | undefined> {
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line unused-imports/no-unused-vars
   async getTypeRecord (cid: CIDLike): Promise<RegistryTypeRecord | undefined> {
     return undefined;
   }

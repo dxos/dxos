@@ -19,7 +19,7 @@ import {
 } from './party-credential';
 import { PartyState } from './party-state';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line unused-imports/no-unused-vars
 const log = debug('dxos:creds:party:test');
 
 const createPartyKeyrings = async () => {

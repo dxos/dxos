@@ -179,7 +179,7 @@ export class BotFactoryClient extends EventEmitter {
       const status = await this._botPlugin.sendCommand(this._botFactoryTopic, createStatusCommand());
       // TODO(egorgripasov): Use dxos/codec function.
       assert(status?.message);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line unused-imports/no-unused-vars
       const { message: { __type_url, ...data } } = status; // eslint-disable-line camelcase
       return { started: true, ...data };
     } catch (err: any) {
