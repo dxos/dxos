@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { Config, ConfigV1Object } from '@dxos/config';
+import { Config, ConfigObject } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -16,7 +16,7 @@ import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { InvalidConfigurationError } from '../interfaces/errors';
-import { System } from '../proto/gen/dxos/config';
+import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
@@ -25,9 +25,9 @@ const log = debug('dxos:client');
 
 const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultConfig: ConfigV1Object = { version: 1 };
+export const defaultConfig: ConfigObject = { version: 1 };
 
-export const defaultTestingConfig: ConfigV1Object = {
+export const defaultTestingConfig: ConfigObject = {
   version: 1,
   runtime: {
     services: {
@@ -55,7 +55,7 @@ export class Client {
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;
-  private readonly _mode: System.Mode;
+  private readonly _mode: Runtime.Client.Mode;
   private _serviceProvider!: ClientServiceProvider;
 
   private _halo!: HaloProxy;
@@ -67,7 +67,7 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: ConfigV1Object | Config = { version: 1 }, options: ClientOptions = {}) {
+  constructor (config: ConfigObject | Config = { version: 1 }, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -83,8 +83,8 @@ export class Client {
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
     debug.enable(this._config.values.runtime?.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
-    this._mode = this._config.get('runtime.client.mode', System.Mode.AUTOMATIC)!;
-    log(`mode=${System.Mode[this._mode]}`);
+    this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
+    log(`mode=${Runtime.Client.Mode[this._mode]}`);
   }
 
   toString () {
@@ -156,9 +156,9 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    if (this._mode === System.Mode.REMOTE) {
+    if (this._mode === Runtime.Client.Mode.REMOTE) {
       await this.initializeRemote(onProgressCallback);
-    } else if (this._mode === System.Mode.LOCAL) {
+    } else if (this._mode === Runtime.Client.Mode.LOCAL) {
       await this.initializeLocal(onProgressCallback);
     } else {
       await this.initializeAuto(onProgressCallback);

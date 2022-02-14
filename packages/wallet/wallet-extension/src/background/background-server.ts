@@ -6,12 +6,12 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
-import { schema } from '@dxos/client/src/proto/gen';
-import { RpcMessage } from '@dxos/client/src/proto/gen/dxos/rpc';
 import { Stream } from '@dxos/codec-protobuf';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { schema } from '../proto/gen';
+import { RpcMessage } from '../proto/gen/dxos/rpc';
 import { config } from './config';
 
 export class BackgroundServer {
