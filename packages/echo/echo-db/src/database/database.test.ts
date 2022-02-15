@@ -249,6 +249,30 @@ describe('Database', () => {
           expect(items).toHaveLength(1);
         }
       });
+
+      test('updates between linked items', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const database = await setupBackend(modelFactory);
+
+        const item1 = await database.createItem({ model: ObjectModel });
+        const item2 = await database.createItem({ model: ObjectModel });
+
+        // 1. Create a query
+        const query = database.select().query();
+        const update = query.update.waitForCount(1);
+
+        // 2. Create a link
+        await database.createLink({
+          model: ObjectModel,
+          source: item1,
+          target: item2
+        });
+        expect(item1.links.length).toEqual(1);
+        expect(item2.refs.length).toEqual(1);
+
+        // 3. Expect an update
+        await promiseTimeout(update, 100, new Error('timeout'));
+      });
     });
   });
 });
