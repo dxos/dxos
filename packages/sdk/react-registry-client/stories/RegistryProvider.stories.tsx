@@ -29,11 +29,14 @@ const TestApp = () => {
   return (
     <div style={{ padding: 16 }}>
       <div style={{ marginBottom: 8 }}>Domains</div>
-      {types.map(({ messageName }) => (
+      {types.length > 0 && types.map(({ messageName }) => (
         <div key={messageName}>
           {messageName}
         </div>
       ))}
+      {types.length === 0 && (
+        <div>Loading...</div>
+      )}
     </div>
   );
 };
@@ -52,7 +55,7 @@ export const Testnet = () => {
   const config = {
     services: {
       dxns: {
-        server: 'wss://enterprise.kube.dxos.network/dxns/ws'
+        server: 'wss://dxns1.kube.dxos.network/dxns/ws'
       }
     }
   };
