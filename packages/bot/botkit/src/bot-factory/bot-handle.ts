@@ -173,6 +173,9 @@ export class BotHandle {
         const logs = fs.readFileSync(logFilePath);
         next({ chunk: logs });
       }
+      if (this._bot.status === Bot.Status.STOPPED) {
+        close();
+      }
       const currentLogFile = this.getLogFilePath(this.startTimestamp);
       const tail = new Tail(currentLogFile);
       tail.on('line', (line) => {
