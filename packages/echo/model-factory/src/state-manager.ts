@@ -215,7 +215,7 @@ export class StateManager<M extends Model> {
     // Perform state updates.
     if (this.initialized) {
       // Reset the state machine if processing this mutation would break the order.
-      if (insertionIndex !== lengthBefore || optimisticIndex > 0 || optimisticIndex === -1 && this._optimisticMutations.length > 0) {
+      if (insertionIndex !== lengthBefore || optimisticIndex > 0 || (optimisticIndex === -1 && this._optimisticMutations.length > 0)) {
         // Order will be broken, reset the state machine and re-apply all mutations.
         log('Reset due to order change');
         this._resetStateMachine();
