@@ -34,13 +34,13 @@ export class BotHandle {
   constructor (
     readonly id: string,
     readonly workingDirectory: string,
-    config: Config = new Config({})
+    config: Config = new Config({ version: 1 })
   ) {
     this._bot = {
       id,
       status: Bot.Status.STOPPED
     };
-    this._config = config;
+    this._config = new Config(config.values);
   }
 
   get rpc () {
@@ -72,7 +72,7 @@ export class BotHandle {
     await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
     await fs.promises.mkdir(this.logsDir);
-    this._config = new Config(this._config.values,
+    this._config = new Config(
       {
         version: 1,
         runtime: {
@@ -83,7 +83,8 @@ export class BotHandle {
             }
           }
         }
-      }
+      },
+      this._config.values
     );
   }
 

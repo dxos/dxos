@@ -92,10 +92,10 @@ export class BotFactory implements BotFactoryService {
       );
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
-      const workingDirectory = handle.getContentPath();
+      const contentDirectory = handle.getContentPath();
 
       if (this._contentLoader && request.package?.ipfsCid) {
-        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, workingDirectory);
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, contentDirectory);
       }
 
       const localPath = request.package?.localPath;
@@ -104,6 +104,8 @@ export class BotFactory implements BotFactoryService {
         log(`[${id}] Spawning bot ${localPath}`);
         handle.localPath = localPath;
       }
+
+      this._bots.set(id, handle);
 
       handle.startTimestamp = new Date();
 
@@ -120,7 +122,6 @@ export class BotFactory implements BotFactoryService {
         invitation: request.invitation
       });
       log(`[${id}] Initialization complete`);
-      this._bots.set(id, handle);
       return handle.bot;
     } catch (error: any) {
       log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
