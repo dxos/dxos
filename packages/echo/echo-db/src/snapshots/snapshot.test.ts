@@ -13,6 +13,7 @@ import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
 import { ItemDemuxer, ItemManager } from '../database';
 import { createTestInstance } from '../util';
+import { PublicKey } from '@dxos/crypto';
 
 const log = debug('dxos:snapshot:test');
 
@@ -79,7 +80,7 @@ describe('snapshot', () => {
 
   test('restore from empty snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const itemManager = new ItemManager(modelFactory);
+    const itemManager = new ItemManager(modelFactory, PublicKey.random());
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     // TODO(burdon): Test.

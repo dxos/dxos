@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, trigger } from '@dxos/async';
-import { createId } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
@@ -70,6 +70,7 @@ export class ItemManager {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
+    private readonly _memberKey: PublicKey,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
@@ -192,7 +193,7 @@ export class ItemManager {
     const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
-    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, outboundTransform);
+    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
   }
 
   /**

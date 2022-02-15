@@ -16,6 +16,7 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { createRootSelector, RootFilter } from './selection';
+import { PublicKey } from '@dxos/crypto';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -52,9 +53,10 @@ export class Database {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _backend: DatabaseBackend
+    private readonly _backend: DatabaseBackend,
+    memberKey: PublicKey,
   ) {
-    this._itemManager = new ItemManager(this._modelFactory, this._backend.getWriteStream());
+    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
   }
 
   get isReadOnly () {

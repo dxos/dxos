@@ -18,6 +18,7 @@ import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
 import { PartyFeedProvider } from './party-feed-provider';
+import { PublicKey } from '@dxos/crypto';
 
 describe('PartyCore', () => {
   const setup = async () => {
@@ -40,7 +41,8 @@ describe('PartyCore', () => {
       partyKey.publicKey,
       partyFeedProvider,
       modelFactory,
-      snapshotStore
+      snapshotStore,
+      PublicKey.random(),
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
