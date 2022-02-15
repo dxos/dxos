@@ -290,9 +290,11 @@ export class ItemManager {
 
     if (sourceItem) {
       sourceItem._links.add(link);
+      this.update.emit(sourceItem);
     }
     if (targetItem) {
       targetItem._refs.add(link);
+      this.update.emit(targetItem);
     }
 
     this._addEntity(link);
