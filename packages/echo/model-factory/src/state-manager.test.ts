@@ -95,6 +95,27 @@ describe('StateManager', () => {
 
     await promiseTimeout(gotUpdate, 100, new Error('timeout'));
   });
+
+  describe('optimistic mutations', () => {
+    test('single mutation gets applied synchronously', async () => {
+      const feedWriter = new MockFeedWriter<Uint8Array>();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
+        feedKey: meta.feedKey.asUint8Array(),
+        memberKey: PublicKey.random().asUint8Array(),
+        seq: meta.seq,
+        timeframe: new Timeframe()
+      }, message));
+  
+      const promise = stateManager.model.sendMessage('message1');
+  
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
+  
+      await promise;
+  
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
+    })
+  })
 });
 
 const feedKey = PublicKey.random().asUint8Array();

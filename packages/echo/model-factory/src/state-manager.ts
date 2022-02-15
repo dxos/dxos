@@ -111,6 +111,13 @@ export class StateManager<M extends Model> {
     }
     this._optimisticMutations.push(optimisticMutation);
 
+    if(this.initialized) {
+      log(`Optimistic apply ${JSON.stringify(mutation)}`);
+      this._stateMachine!.process(mutation, optimisticMutation.meta);
+
+      this._model!.update.emit(this._model!);
+    }
+
     // Promise that resolves when this mutation has been processed.
     const processed = this._mutationProcessed.waitFor(meta =>
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
@@ -133,14 +140,6 @@ export class StateManager<M extends Model> {
     optimisticMutation.meta.feedKey = receipt.feedKey.asUint8Array();
     optimisticMutation.meta.seq = receipt.seq;
     optimisticMutation.confirmed = true;
-
-    if(this.initialized) {
-      log(`Optimistic apply ${JSON.stringify(mutation)}`);
-      this._stateMachine!.process(mutation, optimisticMutation.meta);
-
-      this._model!.update.emit(this._model!);
-      this._mutationProcessed.emit(optimisticMutation.meta);
-    }
 
     return {
       ...receipt,
@@ -223,9 +222,9 @@ export class StateManager<M extends Model> {
         this._stateMachine!.process(mutationDecoded, meta);
 
         this._model!.update.emit(this._model!);
-        this._mutationProcessed.emit(meta);
       }
     }
+    this._mutationProcessed.emit(meta);
   }
 
   /**
