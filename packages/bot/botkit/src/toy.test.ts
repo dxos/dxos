@@ -195,7 +195,16 @@ describe('Node', () => {
         unsub?.();
       };
 
+      const logsStream = botHandle.logsStream();
+
       await testCommand();
+      await new Promise<void>(resolve => {
+        logsStream.subscribe(msg => {
+          if (msg.chunk?.toString().includes('onCommand')) {
+            resolve();
+          }
+        }, () => {});
+      });
 
       await botHandle.stop();
       await botHandle.start();

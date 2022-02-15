@@ -45,6 +45,12 @@ export class BotHandle {
     });
     return response;
   }
+
+  logsStream () {
+    return this._rpc.rpc.getLogs({
+      botId: this._id
+    });
+  }
 }
 
 export class BotFactoryClient {
