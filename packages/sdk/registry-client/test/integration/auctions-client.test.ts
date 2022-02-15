@@ -7,7 +7,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { AuctionsClient, createApiPromise, createKeyring, IAuctionsClient } from '../../src';
+import { AccountClient, AccountKey, AuctionsClient, createApiPromise, createKeyring, IAuctionsClient } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
@@ -18,7 +18,7 @@ describe('Auctions Client', () => {
   let sudoer: KeyringPair;
   let alice: KeyringPair;
   let bob: KeyringPair;
-  let account: string;
+  let account: AccountKey;
 
   before(async () => {
     const keyring = await createKeyring();
@@ -28,7 +28,9 @@ describe('Auctions Client', () => {
     sudoer = alice = keyring.addFromUri('//Alice');
     bob = keyring.addFromUri('//Bob');
     auctionsApi = new AuctionsClient(apiPromise, keypair);
-    account = alice.address;
+    
+    const accountsApi = new AccountClient(apiPromise, keypair);
+    account = await accountsApi.createAccount();
   });
 
   after(async () => {

@@ -36,12 +36,11 @@ describe('Accounts Client', () => {
   describe('Creating accounts', () => {
     it('Can create a DXNS account', async () => {
       const account = await accountsApi.createAccount();
-      expect(account.toHex()).to.eq(keypair.address);
 
       const accountRecord = await accountsApi.getAccount(account);
       expect(accountRecord).to.not.be.undefined;
-      expect(accountRecord?.id).to.eq(account);
-      expect(accountRecord?.devices).to.deep.eq([account]);
+      expect(accountRecord?.id).to.eq(account.toHex());
+      expect(accountRecord?.devices).to.deep.eq([keypair.address]);
     });
   });
 
@@ -53,8 +52,8 @@ describe('Accounts Client', () => {
     });
 
     it('Can add a second device', async () => {
-      const account = keypair.address;
-      expect(await accountsApi.isDeviceOfAccount(account, account)).to.be.true;
+      const account = await accountsApi.createAccount();
+      expect(await accountsApi.isDeviceOfAccount(account, keypair.address)).to.be.true;
       expect(await accountsApi.isDeviceOfAccount(account, bob.address)).to.be.false;
 
       await accountsApi.addDeviceToAccount(account, bob.address);

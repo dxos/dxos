@@ -7,7 +7,7 @@ import BigNumber from 'bn.js';
 
 import { SignTxFunction } from './api/api-transaction-handler';
 import { BaseClient } from './base-client';
-import { DomainKey } from './types';
+import { DomainKey, AccountKey } from './types';
 
 /**
  * Auction allows assigning names to identities. It facilitates domain names registration and ownership.
@@ -71,8 +71,9 @@ export interface IAuctionsClient {
   /**
    * Allows for transferring the ownership of the name to the highest bidder.
    * @param name An object of the auction.
+   * @param account The DXNS Account that will claim the ownership of the domain.
    */
-  claimAuction(name: string, dxnsAccount: string): Promise<DomainKey>;
+  claimAuction(name: string, account: AccountKey): Promise<DomainKey>;
 
   /**
    * Returns a collection of all auctions (ongoing and closed) in DXOS.
@@ -100,9 +101,9 @@ export class AuctionsClient extends BaseClient implements IAuctionsClient {
     await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoSignFn);
   }
 
-  async claimAuction (domainName: string, dxnsAccount: string): Promise<DomainKey> {
+  async claimAuction (domainName: string, account: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.claimAuction(domainKey.value, domainName, dxnsAccount));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.claimAuction(domainKey.value, domainName, account.value));
     return domainKey;
   }
 

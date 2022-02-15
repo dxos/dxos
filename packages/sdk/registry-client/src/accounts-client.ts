@@ -37,16 +37,16 @@ export class AccountClient extends BaseClient {
   /**
    * Add a new device to an existing DXNS account.
    */
-  async addDeviceToAccount (account: string, device: string): Promise<void> {
-    const tx = this.api.tx.registry.addDevice(account, device);
+  async addDeviceToAccount (account: AccountKey, device: string): Promise<void> {
+    const tx = this.api.tx.registry.addDevice(account.value, device);
     await this.transactionsHandler.sendTransaction(tx);
   }
 
   /**
    * Is the given device a listed device of this DXNS account?
    */
-  async isDeviceOfAccount (account: string, device: string): Promise<boolean> {
-    const accountRecord = (await this.api.query.registry.accounts(account)).unwrap();
+  async isDeviceOfAccount (account: AccountKey, device: string): Promise<boolean> {
+    const accountRecord = (await this.api.query.registry.accounts(account.value)).unwrap();
     return accountRecord.devices.includes(device);
   }
 }
