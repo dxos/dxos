@@ -17,17 +17,28 @@ export interface WriteReceipt {
 }
 
 export interface FeedWriter<T> {
+  /**
+   * Returns the expected position of the next message to be written.
+   *
+   * NOTE: Immediatelly calling write afterwards is not guaranteed to return the same receipt.
+   */
+  getExpectedPosition(): WriteReceipt
   write: (message: T) => Promise<WriteReceipt>
 }
 
 export function mapFeedWriter<T, U> (map: (arg: T) => MaybePromise<U>, writer: FeedWriter<U>): FeedWriter<T> {
   return {
+    getExpectedPosition: () => writer.getExpectedPosition(),
     write: async message => writer.write(await map(message))
   };
 }
 
 export function createFeedWriter<T> (feed: HypercoreFeed): FeedWriter<T> {
   return {
+    getExpectedPosition: () => ({
+      feedKey: PublicKey.from(feed.key),
+      seq: feed.length
+    }),
     write: async message => {
       const seq = await pify(feed.append.bind(feed))(message);
       return {
@@ -40,6 +51,12 @@ export function createFeedWriter<T> (feed: HypercoreFeed): FeedWriter<T> {
 
 export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): FeedWriter<any> {
   return {
+    getExpectedPosition: () => {
+      return {
+        feedKey: PublicKey.from(Buffer.alloc(PUBLIC_KEY_LENGTH)),
+        seq: 0
+      };
+    },
     write: async message => {
       await pify(strem.write.bind(strem))(message);
       return {
@@ -58,6 +75,13 @@ export class MockFeedWriter<T> implements FeedWriter<T> {
   constructor (
     readonly feedKey = PublicKey.random()
   ) {}
+
+  getExpectedPosition (): WriteReceipt {
+    return {
+      feedKey: this.feedKey,
+      seq: this.messages.length
+    };
+  }
 
   async write (message: T): Promise<WriteReceipt> {
     this.messages.push(message);

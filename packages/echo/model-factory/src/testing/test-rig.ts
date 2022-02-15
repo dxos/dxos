@@ -49,6 +49,10 @@ export class TestRig<M extends Model<any>> {
 
     // eslint-disable-next-line unused-imports/no-unused-vars
     const writer: FeedWriter<Uint8Array> = {
+      getExpectedPosition: () => ({
+        feedKey: key,
+        seq: peer.mutations.length,
+      }),
       write: async (mutation) => {
         return this._writeMessage(key, mutation);
       }

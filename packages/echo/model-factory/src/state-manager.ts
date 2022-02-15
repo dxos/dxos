@@ -99,12 +99,15 @@ export class StateManager<M extends Model> {
     }
 
     const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const expectedPosition = this._writeStream.getExpectedPosition();
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
       confirmed: false,
-      meta: { // TODO(dmaretskyi): Put meaningfull data in here.
-        feedKey: new Uint8Array(),
-        seq: 0,
+      meta: { 
+        feedKey: expectedPosition.feedKey.asUint8Array(),
+        seq: expectedPosition.seq,
+
+        // TODO(dmaretskyi): Put meaningfull data in here.
         memberKey: new Uint8Array(),
         timeframe: new Timeframe()
       }
