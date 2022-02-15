@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { randomBytes } from '@dxos/crypto';
 
-export const ACCOUNT_KEY_LENGTH = 256;
+export const ACCOUNT_KEY_LENGTH = 32;
 
 /**
  * Represents an account key.

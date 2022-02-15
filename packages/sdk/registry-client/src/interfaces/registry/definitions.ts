@@ -20,7 +20,7 @@ export default {
     },
     Multihash: '[u8; 34]',
     DomainKey: '[u8; 32]',
-    AccountKey: '[u8; 256]',
+    AccountKey: '[u8; 32]',
     Resource: {
       versions: 'BTreeMap<Text, Multihash>',
       tags: 'BTreeMap<Text, Multihash>'
