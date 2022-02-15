@@ -174,6 +174,43 @@ importers:
       '@types/jest': 26.0.24
       '@types/node': 14.18.0
 
+  ../../packages/common/crypto-names:
+    specifiers:
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/binary-parser': ^1.5.1
+      '@types/crypto-js': ~4.0.2
+      '@types/faker': ^5.5.1
+      '@types/jest': ^26.0.7
+      '@types/js-yaml': ^3.12.5
+      '@types/node': ^14.0.9
+      '@types/uniq': ^0.0.27
+      binary-parser: ^2.0.2
+      crypto-js: ^3.1.9-1
+      faker: ^5.1.0
+      hypercore-crypto: ^2.3.0
+      js-yaml: ^3.13.1
+      ts-node: ^9.1.1
+      typescript: ^4.5.2
+      uniq: ^1.0.1
+    dependencies:
+      binary-parser: 2.0.2
+      crypto-js: 3.3.0
+      hypercore-crypto: 2.3.2
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/binary-parser': 1.5.1
+      '@types/crypto-js': 4.0.2
+      '@types/faker': 5.5.9
+      '@types/jest': 26.0.24
+      '@types/js-yaml': 3.12.7
+      '@types/node': 14.18.0
+      '@types/uniq': 0.0.27
+      faker: 5.5.3
+      js-yaml: 3.14.1
+      ts-node: 9.1.1_typescript@4.5.3
+      typescript: 4.5.3
+      uniq: 1.0.1
+
   ../../packages/common/debug:
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
@@ -7597,6 +7634,12 @@ packages:
     dependencies:
       '@babel/types': 7.16.0
 
+  /@types/binary-parser/1.5.1:
+    resolution: {integrity: sha512-wxSg5YQFVYsyGwuCSTdBu+cUIYCD9eX0pq3CsJbP4DLeLExbwEPqci9JgjCNHv1ZfLO/QzVtGlasec5xSUcCVA==}
+    dependencies:
+      '@types/node': 14.18.0
+    dev: true
+
   /@types/bn.js/4.11.6:
     resolution: {integrity: sha512-pqr857jrp2kPuO9uRjZ3PwnJTjoQy+fcdxvBTvHm6dkmEL9q+hDD/2j/0ELOBPtPnS8LjCX0gI9nbl8lVkadpg==}
     dependencies:
@@ -8444,6 +8487,10 @@ packages:
     resolution: {integrity: sha512-O3MmRAk6ZuAKa9CHgg0Pr0+lUOqoMLpc9AS4R8ano2auvsg7IE8syF3Xh/NPr26TWklxYcqoEEFdzLLs1fV9PQ==}
     dependencies:
       source-map: 0.6.1
+
+  /@types/uniq/0.0.27:
+    resolution: {integrity: sha1-sQYKclbxPY3ILJWR5XMqYkWRLqI=}
+    dev: true
 
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
@@ -9969,6 +10016,11 @@ packages:
   /binary-extensions/2.2.0:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
+
+  /binary-parser/2.0.2:
+    resolution: {integrity: sha512-F2JeaLmExQ0vOEbS5ERzkxePKWTPqJPV6Z04/owaXMQLlW1Kt9v2gUz3SocR40JQGtrUeZu3j6prZDeuEG8Dng==}
+    engines: {node: '>=12'}
+    dev: false
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
@@ -24256,7 +24308,6 @@ packages:
 
   /uniq/1.0.1:
     resolution: {integrity: sha1-sxxa6CVIRKOoKBVBzisEuGWnNP8=}
-    dev: false
 
   /uniqs/2.0.0:
     resolution: {integrity: sha1-/+3ks2slKQaW5uFl1KWe25mOawI=}
