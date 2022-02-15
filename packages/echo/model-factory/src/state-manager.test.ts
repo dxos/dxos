@@ -13,7 +13,13 @@ import { StateManager } from './state-manager';
 import { Model } from './model';
 import { TestListModel } from './testing';
 
+// feedA < feedB
+const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
+const feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
+const randomFeedKey = PublicKey.random()
+
 describe('StateManager', () => {
+
   test('construct readonly and apply mutations', () => {
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
 
@@ -108,21 +114,59 @@ describe('StateManager', () => {
       }, message));
   
       const promise = stateManager.model.sendMessage('message1');
-  
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
   
       await promise;
-  
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
+    });
+
+    test('2 optimistic mutations queued together', async () => {
+      const feedWriter = new MockFeedWriter<Uint8Array>();
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
+        feedKey: meta.feedKey.asUint8Array(),
+        memberKey: PublicKey.random().asUint8Array(),
+        seq: meta.seq,
+        timeframe: new Timeframe()
+      }, message));
+  
+      const promise1 = stateManager.model.sendMessage('message1');
+      const promise2 = stateManager.model.sendMessage('message2');
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
+  
+      await promise1;
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
+
+      await promise2;
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
+    })
+
+    test('with reordering', async () => {
+      const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
+        feedKey: meta.feedKey.asUint8Array(),
+        memberKey: PublicKey.random().asUint8Array(),
+        seq: meta.seq,
+        timeframe: new Timeframe()
+      }, message));
+  
+      const promise = stateManager.model.sendMessage('message1');
+      expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
+ 
+      // Send a message that will be ordered first.
+      stateManager.processMessage(createMeta(0, feedA), TestListModel.meta.mutation.encode({ data: 'message2' }));
+      expect(stateManager.model.messages).toEqual([{ data: 'message2' }, { data: 'message1' }]);
+
+      await promise;
+      expect(stateManager.model.messages).toEqual([{ data: 'message2' }, { data: 'message1' }]);
     })
   })
 });
 
-const feedKey = PublicKey.random().asUint8Array();
-
-const createMeta = (seq: number): MutationMetaWithTimeframe => ({
-  feedKey,
-  memberKey: feedKey,
+const createMeta = (seq: number, feedKey: PublicKey = randomFeedKey): MutationMetaWithTimeframe => ({
+  feedKey: feedKey.asUint8Array(),
+  memberKey: feedKey.asUint8Array(),
   seq,
   timeframe: new Timeframe()
 });
