@@ -6,9 +6,11 @@ import type { AccountId, BlockNumber } from '@polkadot/types/interfaces/runtime'
 
 /** @name Account */
 export interface Account extends Struct {
-  readonly id: AccountId;
   readonly devices: Vec<AccountId>;
 }
+
+/** @name AccountKey */
+export interface AccountKey extends U8aFixed {}
 
 /** @name Auction */
 export interface Auction extends Struct {
@@ -22,7 +24,7 @@ export interface Auction extends Struct {
 /** @name Domain */
 export interface Domain extends Struct {
   readonly name: Option<Text>;
-  readonly owner: AccountId;
+  readonly owner: AccountKey;
 }
 
 /** @name DomainKey */

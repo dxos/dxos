@@ -58,7 +58,7 @@ import type { ClassDetails, ClassId, ClassMetadata, DepositBalance, DepositBalan
 import type { Multisig, Timepoint } from '@polkadot/types/interfaces/utility';
 import type { VestingInfo } from '@polkadot/types/interfaces/vesting';
 import type { AccountId32Junction, AccountIndex64Junction, AccountKey20Junction, AssetInstance, BodyId, BodyPart, BodyPartAtLeastProportion, BodyPartFraction, BodyPartMoreThanProportion, DoubleEncodedCall, InboundStatus, Junction, MultiAsset, MultiAssetAbstractFungible, MultiAssetAbstractNonFungible, MultiAssetConcreteFungible, MultiAssetConcreteNonFungible, MultiLocation, NetworkId, OutboundStatus, Outcome, PluralityJunction, QueueConfigData, VersionedMultiAsset, VersionedMultiLocation, VersionedXcm, Xcm, XcmAssetEffects, XcmError, XcmHrmpChannelAccepted, XcmHrmpChannelClosing, XcmHrmpNewChannelOpenRequest, XcmOrder, XcmOrderBuyExecution, XcmOrderDepositAsset, XcmOrderDepositReserveAsset, XcmOrderExchangeAsset, XcmOrderInitiateReserveWithdraw, XcmOrderInitiateTeleport, XcmOrderQueryHolding, XcmOrigin, XcmOriginKind, XcmQueryResponse, XcmRelayedFrom, XcmReserveAssetDeposit, XcmResponse, XcmTeleportAsset, XcmTransact, XcmTransferAsset, XcmTransferReserveAsset, XcmWithdrawAsset, XcmpMessageFormat } from '@polkadot/types/interfaces/xcm';
-import type { Account, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { Account, AccountKey, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
 
 declare module '@polkadot/types/types/registry' {
   export interface InterfaceTypes {
@@ -172,6 +172,7 @@ declare module '@polkadot/types/types/registry' {
     'Option<AccountInfoWithRefCount>': Option<AccountInfoWithRefCount>;
     'Option<AccountInfoWithRefCountU8>': Option<AccountInfoWithRefCountU8>;
     'Option<AccountInfoWithTripleRefCount>': Option<AccountInfoWithTripleRefCount>;
+    'Option<AccountKey>': Option<AccountKey>;
     'Option<AccountKey20Junction>': Option<AccountKey20Junction>;
     'Option<AccountStatus>': Option<AccountStatus>;
     'Option<AccountValidity>': Option<AccountValidity>;
@@ -1059,6 +1060,7 @@ declare module '@polkadot/types/types/registry' {
     'Vec<AccountInfoWithRefCount>': Vec<AccountInfoWithRefCount>;
     'Vec<AccountInfoWithRefCountU8>': Vec<AccountInfoWithRefCountU8>;
     'Vec<AccountInfoWithTripleRefCount>': Vec<AccountInfoWithTripleRefCount>;
+    'Vec<AccountKey>': Vec<AccountKey>;
     'Vec<AccountKey20Junction>': Vec<AccountKey20Junction>;
     'Vec<AccountStatus>': Vec<AccountStatus>;
     'Vec<AccountValidity>': Vec<AccountValidity>;
@@ -1946,6 +1948,7 @@ declare module '@polkadot/types/types/registry' {
     AccountInfoWithRefCount: AccountInfoWithRefCount;
     AccountInfoWithRefCountU8: AccountInfoWithRefCountU8;
     AccountInfoWithTripleRefCount: AccountInfoWithTripleRefCount;
+    AccountKey: AccountKey;
     AccountKey20Junction: AccountKey20Junction;
     AccountStatus: AccountStatus;
     AccountValidity: AccountValidity;

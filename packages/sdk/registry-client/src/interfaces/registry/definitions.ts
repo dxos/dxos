@@ -6,7 +6,7 @@ export default {
   types: {
     Domain: {
       name: 'Option<Text>',
-      owner: 'AccountId'
+      owner: 'AccountKey'
     },
     Auction: {
       name: 'Vec<u8>',
@@ -20,12 +20,12 @@ export default {
     },
     Multihash: '[u8; 34]',
     DomainKey: '[u8; 32]',
+    AccountKey: '[u8; 256]',
     Resource: {
       versions: 'BTreeMap<Text, Multihash>',
       tags: 'BTreeMap<Text, Multihash>'
     },
     Account: {
-      id: 'AccountId',
       devices: 'Vec<AccountId>'
     }
   }

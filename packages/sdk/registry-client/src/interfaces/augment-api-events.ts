@@ -6,7 +6,7 @@ import type { BalanceStatus } from '@polkadot/types/interfaces/balances';
 import type { AuthorityList } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, Hash } from '@polkadot/types/interfaces/runtime';
 import type { DispatchError, DispatchInfo, DispatchResult } from '@polkadot/types/interfaces/system';
-import type { Domain, DomainKey, Multihash } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { AccountKey, Domain, DomainKey, Multihash } from 'sample-polkadotjs-typegen/interfaces/registry';
 import type { ApiTypes } from '@polkadot/api/types';
 
 declare module '@polkadot/api/types/events' {
@@ -71,7 +71,7 @@ declare module '@polkadot/api/types/events' {
       [key: string]: AugmentedEvent<ApiType>;
     };
     registry: {
-      AccountCreated: AugmentedEvent<ApiType, [AccountId]>;
+      AccountCreated: AugmentedEvent<ApiType, [AccountKey]>;
       DomainRegistered: AugmentedEvent<ApiType, [Domain]>;
       RecordAdded: AugmentedEvent<ApiType, [AccountId, Multihash]>;
       ResourceRegistered: AugmentedEvent<ApiType, [DomainKey, Text, Multihash]>;
