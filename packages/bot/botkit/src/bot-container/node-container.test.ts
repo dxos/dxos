@@ -59,9 +59,11 @@ describe('Node container', function () {
 
       const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
+      const logFilePath = join('/tmp', `${handle.id}.log`);
       const port = await container.spawn({
         id: handle.id,
-        localPath: require.resolve('../bots/start-client-bot')
+        localPath: require.resolve('../bots/start-client-bot'),
+        logFilePath
       });
 
       await handle.open(port);
@@ -82,9 +84,11 @@ describe('Node container', function () {
 
       const container = new NodeContainer(['@swc-node/register']);
       const handle = createHandle();
+      const logFilePath = join('/tmp', `${handle.id}.log`);
       const port = await container.spawn({
         id: handle.id,
-        localPath: require.resolve('../bots/start-echo-bot')
+        localPath: require.resolve('../bots/start-echo-bot'),
+        logFilePath
       });
 
       await handle.open(port);
