@@ -47,7 +47,9 @@ export class BotHandle {
   }
 
   logsStream () {
-    return this._rpc.rpc.getLogs({ id: this._id });
+    return this._rpc.rpc.getLogs({
+      botId: this._id
+    });
   }
 }
 

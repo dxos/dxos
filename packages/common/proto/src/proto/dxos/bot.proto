@@ -51,8 +51,13 @@ message SendCommandResponse {
 }
 
 message GetLogsResponse {
-  bytes logs = 1;
+  bytes chunk = 1;
 }
+
+message GetLogsRequest {
+  string bot_id = 1;
+}
+
 
 /// Service that is used by clients to communicate with bot factory.
 service BotFactoryService {
@@ -65,7 +70,7 @@ service BotFactoryService {
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
   rpc Remove(Bot) returns (google.protobuf.Empty);
-  rpc GetLogs(Bot) returns (stream GetLogsResponse);
+  rpc GetLogs(GetLogsRequest) returns (stream GetLogsResponse);
  
   // TODO(dmaretskyi): querying metrics/state.
  

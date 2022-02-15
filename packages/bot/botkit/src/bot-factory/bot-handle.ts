@@ -171,12 +171,12 @@ export class BotHandle {
       for (const startTimestamps of this._startTimestamps) {
         const logFilePath = this.getLogFilePath(startTimestamps);
         const logs = fs.readFileSync(logFilePath);
-        next({ logs });
+        next({ chunk: logs });
       }
       const currentLogFile = this.getLogFilePath(this.startTimestamp);
       const tail = new Tail(currentLogFile);
       tail.on('line', (line) => {
-        next({ logs: Buffer.from(line) });
+        next({ chunk: Buffer.from(line) });
       });
       tail.on('error', (error) => {
         close(error);

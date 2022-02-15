@@ -12,9 +12,9 @@ import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
-import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
-import { ContentLoader } from './ipfs-content-loader';
+import type { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -197,9 +197,9 @@ export class BotFactory implements BotFactoryService {
     await Promise.all(Array.from(this._bots.values()).map(bot => this.remove(bot.bot)));
   }
 
-  getLogs (request: Bot) {
-    assert(request.id);
-    const bot = this._getBot(request.id);
+  getLogs (request: GetLogsRequest) {
+    assert(request.botId);
+    const bot = this._getBot(request.botId);
     return bot.getLogsStream();
   }
 

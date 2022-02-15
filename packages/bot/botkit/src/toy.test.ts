@@ -200,7 +200,7 @@ describe('Node', () => {
       await testCommand();
       await new Promise<void>(resolve => {
         logsStream.subscribe(msg => {
-          if (msg.logs?.toString().includes('onCommand')) {
+          if (msg.chunk?.toString().includes('onCommand')) {
             resolve();
           }
         }, () => {});
