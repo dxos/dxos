@@ -137,6 +137,7 @@ export class StateManager<M extends Model> {
     if(!receipt.feedKey.equals(optimisticMutation.meta.feedKey) || receipt.seq !== optimisticMutation.meta.seq) {
       log(`error: Mutation came back from the feed store with a different feed key or seq number: optimistic=${PublicKey.from(optimisticMutation.meta.feedKey)}/${optimisticMutation.meta.seq} vs actual=${receipt.feedKey}/${receipt.seq}`);
     }
+    log(`Confirm ${JSON.stringify(mutation)}`);
     optimisticMutation.meta.feedKey = receipt.feedKey.asUint8Array();
     optimisticMutation.meta.seq = receipt.seq;
     optimisticMutation.confirmed = true;
