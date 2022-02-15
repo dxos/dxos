@@ -19,6 +19,7 @@ describe('Auctions Client', () => {
   let alice: KeyringPair;
   let bob: KeyringPair;
   let account: AccountKey;
+  let accountApi: AccountClient
 
   before(async () => {
     const keyring = await createKeyring();
@@ -29,8 +30,8 @@ describe('Auctions Client', () => {
     bob = keyring.addFromUri('//Bob');
     auctionsApi = new AuctionsClient(apiPromise, keypair);
     
-    const accountsApi = new AccountClient(apiPromise, keypair);
-    account = await accountsApi.createAccount();
+    accountApi = new AccountClient(apiPromise, keypair);
+    account = await accountApi.createAccount();
   });
 
   after(async () => {
@@ -102,6 +103,7 @@ describe('Auctions Client', () => {
     it('Only the winner can claim an auction', async () => {
       const winner = new AuctionsClient(apiPromise, bob);
       const loser = new AuctionsClient(apiPromise, alice);
+      await accountApi.addDeviceToAccount(account, bob.address);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -114,8 +116,9 @@ describe('Auctions Client', () => {
       await expect(winner.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
-    it('Auction winnner has a domain registered', async () => {
+    it('Auction winner has a domain registered', async () => {
       const winner = new AuctionsClient(apiPromise, bob);
+      await accountApi.addDeviceToAccount(account, bob.address);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -123,10 +126,11 @@ describe('Auctions Client', () => {
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
       const domainKey = await winner.claimAuction(auctionName, account);
-      const accountId = (await apiPromise.query.registry.domains(domainKey.value)).unwrapOr(undefined)?.owner;
+      const nativeAccountKey = (await apiPromise.query.registry.domains(domainKey.value)).unwrapOr(undefined)?.owner;
 
-      expect(accountId).not.to.be.undefined;
-      expect(accountId?.toString()).to.be.equal(account);
+      expect(nativeAccountKey).not.to.be.undefined;
+      const accountKey = new AccountKey(nativeAccountKey!);
+      expect(accountKey?.toHex()).to.be.equal(account.toHex());
     });
   });
 });
