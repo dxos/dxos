@@ -6,7 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
-import { createId } from '@dxos/crypto';
 
 import {
   BotService,
