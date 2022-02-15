@@ -21,6 +21,7 @@ import { Filtering, IQuery } from './queries';
 import { IRegistryClient } from './registry-client-types';
 import {
   CID, Domain, DomainKey,
+  AccountKey,
   DXN, RecordKind,
   RecordMetadata,
   RegistryDataRecord,
@@ -80,14 +81,14 @@ export class RegistryClient extends BaseClient implements IRegistryClient {
       return {
         key,
         name: domain.name.unwrapOr(undefined)?.toString(),
-        owner: domain.owner.toHuman()
+        owner: domain.owner.toHex()
       };
     });
   }
 
-  async registerDomain (account: string): Promise<DomainKey> {
+  async registerDomain (account: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, account));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, account.value));
     return domainKey;
   }
 
@@ -334,21 +335,37 @@ export class RegistryClient extends BaseClient implements IRegistryClient {
   }
 
   async updateResource (
-    resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+    resource: DXN,
+    account: AccountKey,
+    contentCid: CID,
+    opts: UpdateResourceOptions = { tags: ['latest'] }
+  ): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
     await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(
-        domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
+        domainKey.value,
+        account.value,
+        resource.resource,
+        contentCid.value,
+        opts.version ?? null,
+        opts.tags ?? []
+      )
+    );
   }
 
-  async deleteResource (resource: DXN): Promise<void> {
+  async deleteResource (resource: DXN, account: AccountKey): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
+      this.api.tx.registry.deleteResource(
+        domainKey.value,
+        account.value,
+        resource.resource
+      )
+    );
   }
 
   /**

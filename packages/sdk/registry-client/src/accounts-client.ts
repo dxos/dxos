@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { DxnsAccount } from '.';
+import { DxnsAccount, AccountKey } from './types';
 import { BaseClient } from './base-client';
 
 /**
@@ -14,22 +14,23 @@ export class AccountClient extends BaseClient {
   /**
    * Creates a DXNS account on the blockchain.
    */
-  async createAccount (): Promise<string> {
-    const tx = this.api.tx.registry.createAccount();
+  async createAccount (): Promise<AccountKey> {
+    const accountKey = AccountKey.random();
+    const tx = this.api.tx.registry.createAccount(accountKey.value);
     const { events } = await this.transactionsHandler.sendTransaction(tx);
     const event = events.map(e => e.event).find(this.api.events.registry.AccountCreated.is);
     assert(event && this.api.events.registry.AccountCreated.is(event));
-    return event.data[0].toString();
+    return accountKey;
   }
 
-  async getAccount (account: string): Promise<DxnsAccount | undefined> {
-    const accountRecord = (await this.api.query.registry.accounts(account)).unwrapOr(undefined);
+  async getAccount (account: AccountKey): Promise<DxnsAccount | undefined> {
+    const accountRecord = (await this.api.query.registry.accounts(account.value)).unwrapOr(undefined);
     if (!accountRecord) {
       return undefined;
     }
     return {
       devices: accountRecord.devices.map(device => device.toString()),
-      id: accountRecord.id.toString()
+      id: account.toHex()
     };
   }
 

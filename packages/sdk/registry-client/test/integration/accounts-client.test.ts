@@ -36,8 +36,7 @@ describe('Accounts Client', () => {
   describe('Creating accounts', () => {
     it('Can create a DXNS account', async () => {
       const account = await accountsApi.createAccount();
-      expect(account).to.be.a('string');
-      expect(account).to.eq(keypair.address);
+      expect(account.toHex()).to.eq(keypair.address);
 
       const accountRecord = await accountsApi.getAccount(account);
       expect(accountRecord).to.not.be.undefined;
