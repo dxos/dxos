@@ -93,6 +93,7 @@ export class StateManager<M extends Model> {
    * Writes the mutation to the output stream.
    */
   private async _write (mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+    log(`Write ${JSON.stringify(mutation)}`);
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
@@ -134,6 +135,7 @@ export class StateManager<M extends Model> {
     optimisticMutation.confirmed = true;
 
     if(this.initialized) {
+      log(`Optimistic apply ${JSON.stringify(mutation)}`);
       this._stateMachine!.process(mutation, optimisticMutation.meta);
 
       this._model!.update.emit(this._model!);
@@ -150,6 +152,7 @@ export class StateManager<M extends Model> {
 
   private _resetStateMachine () {
     assert(this._modelMeta, 'Model not initialized.');
+    log(`Construct state machine`)
 
     this._stateMachine = this._modelMeta.stateMachine();
 
@@ -194,8 +197,11 @@ export class StateManager<M extends Model> {
    * Process mutation from the inbound stream.
    */
   processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
+    log(`Process ${JSON.stringify(meta)}`);
+
     const insertionIndex = getInsertionIndex(this._mutations, { meta, mutation });
     const optimisticIndex = this._optimisticMutations.findIndex(m => m.confirmed && PublicKey.equals(m.meta.feedKey, meta.feedKey) && m.meta.seq === meta.seq);
+    const lengthBefore = this._mutations.length;
 
     // Remove optimistic mutation from the queue.
     if (optimisticIndex !== -1) {
@@ -206,10 +212,12 @@ export class StateManager<M extends Model> {
     // Perform state updates.
     if(this.initialized) {
       // Reset the state machine if processing this mutation would break the order.
-      if (insertionIndex !== this._mutations.length || optimisticIndex > 0) {
+      if (insertionIndex !== lengthBefore || optimisticIndex > 0) {
         // Order will be broken, reset the state machine and re-apply all mutations.
+        log(`Reset due to order change`);
         this._resetStateMachine();
       } else if(optimisticIndex === -1) {
+        log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this.modelMeta.mutation.decode(mutation);
         this._stateMachine!.process(mutationDecoded, meta);
