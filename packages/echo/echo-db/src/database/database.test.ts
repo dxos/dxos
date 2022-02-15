@@ -250,7 +250,7 @@ describe('Database', () => {
         }
       });
 
-      test('updates between linked items', async () => {
+      test('link between items generates updates to items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
