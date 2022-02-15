@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
@@ -16,7 +16,11 @@ import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, Mutat
 
 const log = debug('dxos:model-factory:state-manager');
 
-type OptimisticMutation = ModelMessage<Uint8Array> & {
+type OptimisticMutation = {
+  mutation: Uint8Array
+
+  meta: MutationMeta
+
   /**
    * Whether this mutation has been written to the feed store.
    *
@@ -64,6 +68,7 @@ export class StateManager<M extends Model> {
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
     private _snapshot: ModelSnapshot,
+    private readonly _memberKey: PublicKey,
     private readonly _writeStream: FeedWriter<Uint8Array> | null
   ) {
     if (modelConstructor) {
@@ -103,13 +108,10 @@ export class StateManager<M extends Model> {
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
       confirmed: false,
-      meta: { 
+      meta: {
         feedKey: expectedPosition.feedKey.asUint8Array(),
         seq: expectedPosition.seq,
-
-        // TODO(dmaretskyi): Put meaningfull data in here.
-        memberKey: new Uint8Array(),
-        timeframe: new Timeframe()
+        memberKey: this._memberKey.asUint8Array()
       }
     };
     this._optimisticMutations.push(optimisticMutation);

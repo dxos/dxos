@@ -51,14 +51,14 @@ export class TestRig<M extends Model<any>> {
     const writer: FeedWriter<Uint8Array> = {
       getExpectedPosition: () => ({
         feedKey: key,
-        seq: peer.mutations.length,
+        seq: peer.mutations.length
       }),
       write: async (mutation) => {
         return this._writeMessage(key, mutation);
       }
     };
 
-    const stateMnager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, writer);
+    const stateMnager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, key, writer);
 
     const peer = new TestPeer(stateMnager, key);
     this._peers.set(key, peer);

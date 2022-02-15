@@ -20,7 +20,7 @@ const randomFeedKey = PublicKey.random();
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
+    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, null);
 
     expect(stateManager.model).toBeInstanceOf(TestListModel);
     expect(stateManager.model).toBeInstanceOf(Model);
@@ -36,7 +36,7 @@ describe('StateManager', () => {
 
   describe('snapshot and restore', () => {
     test('with model snapshots - TestListModel', () => {
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, null);
 
       stateManager.processMessage(createMeta(0), TestListModel.meta.mutation.encode({ data: 'message1' }));
       const snapshot = stateManager.createSnapshot();
@@ -49,7 +49,7 @@ describe('StateManager', () => {
     });
 
     test('with framework snapshots - TestListModel', () => {
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, null);
 
       stateManager.processMessage(createMeta(0), TestListModel.meta.mutation.encode({ data: 'message1' }));
       const snapshot = stateManager.createSnapshot();
@@ -64,7 +64,7 @@ describe('StateManager', () => {
 
   test('write loop', async () => {
     const feedWriter = new MockFeedWriter<Uint8Array>();
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, feedWriter);
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
       feedKey: meta.feedKey.asUint8Array(),
       memberKey: PublicKey.random().asUint8Array(),
@@ -78,7 +78,7 @@ describe('StateManager', () => {
   });
 
   test('late initalization', () => {
-    const stateManager = new StateManager<TestListModel>(TestListModel.meta.type, undefined, createId(), {}, null);
+    const stateManager = new StateManager<TestListModel>(TestListModel.meta.type, undefined, createId(), {}, randomFeedKey, null);
     expect(stateManager.initialized).toBe(false);
     expect(stateManager.modelType).toEqual(TestListModel.meta.type);
 
@@ -93,7 +93,7 @@ describe('StateManager', () => {
   });
 
   test('upate event gets triggered', async () => {
-    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, null);
+    const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, null);
 
     const gotUpdate = stateManager.model.update.waitForCount(1);
     stateManager.processMessage(createMeta(0), TestListModel.meta.mutation.encode({ data: 'message1' }));
@@ -104,7 +104,7 @@ describe('StateManager', () => {
   describe('optimistic mutations', () => {
     test('single mutation gets applied synchronously', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
         feedKey: meta.feedKey.asUint8Array(),
         memberKey: PublicKey.random().asUint8Array(),
@@ -121,7 +121,7 @@ describe('StateManager', () => {
 
     test('2 optimistic mutations queued together', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
         feedKey: meta.feedKey.asUint8Array(),
         memberKey: PublicKey.random().asUint8Array(),
@@ -142,7 +142,7 @@ describe('StateManager', () => {
 
     test('with reordering', async () => {
       const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
-      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedWriter);
+      const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, randomFeedKey, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
         feedKey: meta.feedKey.asUint8Array(),
         memberKey: PublicKey.random().asUint8Array(),
