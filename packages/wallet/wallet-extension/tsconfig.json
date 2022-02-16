@@ -42,6 +42,9 @@
       "path": "../../echo/echo-db"
     },
     {
+      "path": "../../common/proto"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {

@@ -15,12 +15,6 @@
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../echo-db"
-    },
-    {
-      "path": "../object-model"
     }
   ]
 }
