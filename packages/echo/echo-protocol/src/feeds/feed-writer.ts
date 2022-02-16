@@ -19,7 +19,6 @@ export interface WriteReceipt {
 export interface FeedWriter<T> {
   /**
    * Returns the expected position of the next message to be written.
-   *
    * NOTE: Immediatelly calling write afterwards is not guaranteed to return the same receipt.
    */
   getExpectedPosition(): WriteReceipt
