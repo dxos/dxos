@@ -6,43 +6,26 @@ import faker from 'faker';
 
 import { EventEmitter } from '@dxos/gem-core';
 
-import { GraphData, GraphLink, GraphModel } from '../graph';
-import { convertToGraphData, createLink, createNode } from './data';
-import { emptyTestGraph, TestGraph, TestNode } from './types';
-
-/**
- * Adapter to convers TestGraphModel to GraphModel used by Graph compoent.
- */
-export class TestGraphModelAdapter implements GraphModel<TestNode> {
-  constructor (
-    private readonly _model: TestGraphModel
-  ) {}
-
-  get model () {
-    return this._model;
-  }
-
-  get graph (): GraphData<TestNode> {
-    return convertToGraphData(this._model.graph);
-  }
-
-  subscribe (callback: (graph: GraphData<TestNode>) => void): () => void {
-    return this._model.updated.on(graph => callback(convertToGraphData(graph)));
-  }
-}
+import { emptyGraph, GraphData, GraphLayoutLink, GraphModel } from '../graph';
+import { createLink, createNode } from './data';
+import { TestNode } from './types';
 
 /**
  * Test graph.
  */
-export class TestGraphModel  {
-  public readonly updated = new EventEmitter<TestGraph>();
+export class TestGraphModel implements GraphModel<TestNode> {
+  public readonly updated = new EventEmitter<GraphData<TestNode>>();
 
   constructor (
-    private readonly _graph: TestGraph = emptyTestGraph
+    private readonly _graph: GraphData<TestNode> = emptyGraph
   ) {}
 
   get graph () {
     return this._graph;
+  }
+
+  subscribe (callback: (graph: GraphData<TestNode>) => void) {
+    return this.updated.on(callback);
   }
 
   clear () {
@@ -83,7 +66,7 @@ export class TestGraphModel  {
     update && this.update();
   }
 
-  deleteLink (link: GraphLink<TestNode>, update = true) {
+  deleteLink (link: GraphLayoutLink<TestNode>, update = true) {
     this._graph.links = this._graph.links.filter(({ id }) => id !== link.id);
 
     update && this.update();

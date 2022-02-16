@@ -10,9 +10,9 @@ import {
   ForceOptions,
   GraphForceProjector,
   GraphModel,
-  GraphNode,
+  GraphLayoutNode,
   GraphRenderer,
-  LabelOptions,
+  LabelOptions, defaultForceOptions,
 } from '../graph';
 import { defaultGraphStyles } from './styles';
 
@@ -44,7 +44,7 @@ export interface GraphProps {
 export const Graph = ({
   className = defaultGraphStyles,
   arrows,
-  forces,
+  forces = defaultForceOptions,
   drag,
   model,
   labels,
@@ -63,7 +63,7 @@ export const Graph = ({
       },
       labels,
       classes,
-      onNodeClick: onSelect ? (node: GraphNode<any>) => onSelect(node) : undefined
+      onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined
     });
 
     return {

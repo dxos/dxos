@@ -20,11 +20,10 @@ import {
 import {
   GraphForceProjector,
   TestGraphModel,
-  GraphLink,
-  GraphNode,
+  GraphLayoutLink,
+  GraphLayoutNode,
   GraphRenderer,
   TestNode,
-  convertToGraphData,
   convertTreeToGraph,
   createMarkers,
   createSimulationDrag,
@@ -35,7 +34,8 @@ import {
 } from '../src';
 import { styles } from './helpers';
 
-debug.enable('gem:*');
+debug.enable('');
+// debug.enable('gem:*');
 
 export default {
   title: 'gem-spore/hooks'
@@ -56,13 +56,23 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   const zoom = useZoom();
 
   const { projector, renderer } = useMemo(() => ({
-    projector: new GraphForceProjector(context),
+    projector: new GraphForceProjector(context, {
+      forces: {
+        link: {
+          distance: 20,
+          iterations: 3
+        },
+        manyBody: {
+          strength: -10
+        }
+      }
+    }),
     renderer: new GraphRenderer(context, graphRef)
   }), []);
 
   useEffect(() => {
     const unsubscribe = model.updated.on(graph => {
-      projector.update(convertToGraphData(graph));
+      projector.update(graph);
     });
 
     projector.updated.on(({ layout }) => {
@@ -111,17 +121,8 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
     model.clear();
   });
   useButton('Reset', () => {
-    const nodes = model.graph.nodes;
-    const links = model.graph.links;
     model.clear();
-
-    // TODO(burdon): !!!
-    // TODO(burdon): Same data but different instances.
-    model.graph.nodes = [...nodes];
-    model.graph.links = [...links];
-    // model.update();
-
-    model.createNodes(undefined, 1);
+    model.createNodes(undefined, 12);
   });
   useButton('Create', () => {
     model.createNodes(undefined, 1);
@@ -151,15 +152,15 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
     const renderer = new GraphRenderer<TestNode>(context, zoom.ref, {
       drag,
       labels: {
-        text: (node: GraphNode<TestNode>) => node.id.substring(0, 4)
+        text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4)
       },
       classes: {
-        node: (node: GraphNode<TestNode>) => node.data.type === 'org' ? 'selected' : undefined
+        node: (node: GraphLayoutNode<TestNode>) => node.data.type === 'org' ? 'selected' : undefined
       },
-      onNodeClick: (node: GraphNode<TestNode>, event: MouseEvent) => {
+      onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
         renderer.fireBullet(node);
       },
-      onLinkClick: (link: GraphLink<TestNode>, event: MouseEvent) => {
+      onLinkClick: (link: GraphLayoutLink<TestNode>, event: MouseEvent) => {
         if (event.metaKey) {
           model.deleteLink(link);
         }
@@ -177,7 +178,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 
   useEffect(() => {
     const unsubscribe = model.updated.on(graph => {
-      projector.update(convertToGraphData(graph));
+      projector.update(graph);
     });
 
     projector.updated.on(({ layout }) => {

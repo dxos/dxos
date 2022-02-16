@@ -11,10 +11,9 @@ import {
   createGraph,
   createTree,
   Graph,
-  GraphNode,
+  GraphLayoutNode,
   Markers,
   TestGraphModel,
-  TestGraphModelAdapter,
   TestNode,
 } from '../src';
 
@@ -22,12 +21,34 @@ export default {
   title: 'gem-spore/Graph'
 };
 
-export const Primary = ({ graph = false }) => {
+export const Primary = () => {
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+
+  return (
+    <FullScreen>
+      <SVGContextProvider>
+        <SVG>
+          <Markers />
+          <Grid axis />
+          <Zoom extent={[1/2, 2]}>
+            <Graph
+              arrows
+              drag
+              model={model}
+            />
+          </Zoom>
+        </SVG>
+      </SVGContextProvider>
+    </FullScreen>
+  );
+};
+
+export const Secondary = ({ graph = true }) => {
   const selected = useMemo(() => new Set(), []);
   const model = useMemo(() => {
     return graph ?
-      new TestGraphModelAdapter(new TestGraphModel(createGraph(30, 20))) :
-      new TestGraphModelAdapter(new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))))
+      new TestGraphModel(createGraph(30, 20)) :
+      new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })))
   }, []);
 
   return (
@@ -40,28 +61,31 @@ export const Primary = ({ graph = false }) => {
             <Graph
               arrows
               forces={{
-                manyBody: {
-                  distanceMax: 300,
-                  strength: () => -150
+                link: {
+                  distance: 30,
+                  iterations: 3
+                },
+                radial: {
+                  strength: 0.01
                 }
               }}
               drag
               model={model}
               labels={{
-                text: (node: GraphNode<TestNode>, highlight: boolean) =>
+                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) =>
                   highlight || selected.has(node.id) ? node.data.label : undefined
               }}
               classes={{
-                node: (node: GraphNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined
+                node: (node: GraphLayoutNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined
               }}
-              onSelect={(node: GraphNode<TestNode>) => {
+              onSelect={(node: GraphLayoutNode<TestNode>) => {
                 if (selected.has(node.id)) {
                   selected.delete(node.id);
                 } else {
                   selected.add(node.id);
                 }
 
-                model.model.update();
+                model.update();
               }}
             />
           </Zoom>

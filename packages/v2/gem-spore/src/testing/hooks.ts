@@ -7,8 +7,9 @@ import faker from 'faker';
 
 import { useStateRef } from '@dxos/gem-core';
 
+import { GraphData } from '../graph';
 import { createNode, createLink } from './data';
-import { TestGraph, TestNode } from './types';
+import { TestNode } from './types';
 
 export type ObjectMutator<T> = [
   T,                      // Current value.
@@ -45,7 +46,7 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
 /**
  * Test data set generator and mutator.
  */
-export const useGraphGenerator = (options: { data?: TestGraph } = {}) => {
+export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
   const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], links: [] });
 
   let interval;

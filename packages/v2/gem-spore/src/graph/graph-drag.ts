@@ -7,14 +7,14 @@ import { Simulation } from 'd3-force';
 
 import { D3DragEvent, Point, SVGContext } from '@dxos/gem-core';
 
-import { GraphLink, GraphNode } from './types';
+import { GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
 
-export interface DragOptions<T> {
+export interface DragOptions<N extends GraphNode> {
   dragMod?: string
   linkMod?: string
   freezeMod?: string
-  onDrag?: (source?: GraphNode<T>, target?: GraphNode<T>, point?: Point) => void
-  onDrop?: (source: GraphNode<T>, target?: GraphNode<T>) => void
+  onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void
+  onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void
 }
 
 export const defaultOptions: DragOptions<any> = {
@@ -32,14 +32,14 @@ enum Mode {
  * @param simulation
  * @param options
  */
-export const createSimulationDrag = <T>(
+export const createSimulationDrag = <N extends GraphNode>(
   context: SVGContext,
-  simulation: Simulation<GraphNode<T>, GraphLink<T>>,
-  options: DragOptions<T> = defaultOptions
+  simulation: Simulation<GraphLayoutNode<N>, GraphLayoutLink<N>>,
+  options: DragOptions<N> = defaultOptions
 ) => {
   let mode: Mode;
-  let source: GraphNode<T>;
-  let target: GraphNode<T>;
+  let source: GraphLayoutNode<N>;
+  let target: GraphLayoutNode<N>;
 
   const keyMod = (event: MouseEvent, key: string): boolean => {
     const modKey = options?.[key] ?? defaultOptions[key];
@@ -69,7 +69,10 @@ export const createSimulationDrag = <T>(
           // Freeze node while dragging.
           event.subject.fx = event.x;
           event.subject.fy = event.y;
-          simulation.alphaTarget(0).alpha(1).restart();
+          simulation
+            .alphaTarget(0)
+            .alpha(1)
+            .restart();
           break;
         }
 

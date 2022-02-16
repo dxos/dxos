@@ -2,12 +2,40 @@
 // Copyright 2021 DXOS.org
 //
 
-// Types used with D3 force.
+//
+// Data
+// Generic graph data type.
+//
 
-// TODO(burdon): Differentiate external GraphNode and LayoutGraphNode (and links>)
-export type GraphNode<T> = {
+export interface GraphNode {
   id: string
-  data?: T
+}
+
+export interface GraphLink {
+  id: string
+  source: string
+  target: string
+}
+
+export type GraphData<T extends GraphNode> = {
+  nodes: T[]
+  links: GraphLink[]
+}
+
+export const emptyGraph: GraphData<any> = {
+  nodes: [],
+  links: []
+};
+
+
+//
+// Layout
+// Graph layout used by graph renderers.
+//
+
+export type GraphLayoutNode<N extends GraphNode> = {
+  id: string
+  data?: N
   x?: number
   y?: number
   r?: number
@@ -15,18 +43,22 @@ export type GraphNode<T> = {
   initialized?: boolean
 }
 
-export type GraphLink<T> = {
+export type GraphLayoutLink<N extends GraphNode> = {
   id: string
-  source: GraphNode<T>
-  target: GraphNode<T>
+  source: GraphLayoutNode<N>
+  target: GraphLayoutNode<N>
 }
 
-export type GraphData<T> = {
-  nodes: GraphNode<T>[]
-  links: GraphLink<T>[]
-}
+export type GraphLayout<N extends GraphNode> = {
+  graph: {
+    nodes: GraphLayoutNode<N>[]
+    links: GraphLayoutLink<N>[]
+  }
 
-export const emptyGraph: GraphData<any> = {
-  nodes: [],
-  links: []
-};
+  guides?: {
+    type: 'circle', // TODO(burdon): Create typed guides.
+    cx: number
+    cy: number
+    r: number
+  }[]
+}

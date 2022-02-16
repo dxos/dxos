@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 
 import { Point } from '@dxos/gem-core';
 
-import { GraphNode } from './types';
+import { GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
 const line = d3.line();
@@ -18,11 +18,11 @@ const line = d3.line();
  * @param target
  * @param point
  */
-// TODO(burdon): Create class.
+// TODO(burdon): Create generic class.
 export const linkerRenderer = (
   root: SVGGElement,
-  source?: GraphNode<any>,
-  target?: GraphNode<any>,
+  source?: GraphLayoutNode<any>,
+  target?: GraphLayoutNode<any>,
   point?: Point
 ) => {
   d3.select(root).selectAll('g.linker')

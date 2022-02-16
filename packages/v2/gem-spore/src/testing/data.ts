@@ -4,29 +4,11 @@
 
 import faker from 'faker';
 
-import { GraphData } from '../graph';
-import { TestGraph, LinkType, TestNode } from './types';
+import { GraphData, GraphLink } from '../graph';
+import { TestNode } from './types';
 
 // https://www.npmjs.com/package/faker#setting-a-randomness-seed
 export const seed = (seed: number) => faker.seed(seed);
-
-/**
- * Convert test data to graph layout.
- * @param graph
- */
-export const convertToGraphData = (graph: TestGraph): GraphData<TestNode> => {
-  const nodes = graph.nodes.map(node => ({ id: node.id, data: node }));
-  const links = graph.links.map(link => ({
-    id: `${link.source}-${link.target}`,
-    source: nodes.find(node => node.id === link.source),
-    target: nodes.find(node => node.id === link.target)
-  }));
-
-  return {
-    nodes,
-    links
-  };
-};
 
 //
 // Create data.
@@ -40,7 +22,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 
 export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(createNode);
 
-export const createLink = (source: TestNode, target: TestNode): LinkType => ({
+export const createLink = (source: TestNode, target: TestNode): GraphLink => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id
@@ -72,7 +54,7 @@ export const createTree = ({ depth = 2, chidren = 3 } = {}): TestNode => {
  * @param root
  */
 export const convertTreeToGraph = (root: TestNode) => {
-  const traverse = (node: TestNode, graph: TestGraph) => {
+  const traverse = (node: TestNode, graph: GraphData<TestNode>) => {
     const { children, ...rest } = node;
     graph.nodes.push(rest);
     children?.forEach(child => {
@@ -121,7 +103,7 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
 /**
  * Delete nodes and related links.
  */
-export const deleteNodes = (graph: TestGraph, ids: string[]) => {
+export const deleteNodes = (graph: GraphData<TestNode>, ids: string[]) => {
   graph.nodes = graph.nodes
     .filter(({ id }) => ids.indexOf(id) === -1);
 

@@ -4,20 +4,20 @@
 
 import { EventEmitter } from '@dxos/gem-core';
 
-import { GraphData, GraphNode, GraphLink, emptyGraph } from './types';
+import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
 
 /**
  * Graph accessor.
  */
-export interface GraphModel<T> {
+export interface GraphModel<T extends GraphNode> {
   get graph (): GraphData<T>
-  subscribe? (callback: (graph: GraphData<T>) => void): () => void
+  subscribe (callback: (graph: GraphData<T>) => void): () => void
 }
 
 /**
  * Utility to build GraphModel, which can be passed into the Graph component.
  */
-export class GraphBuilder<T> implements GraphModel<T> {
+export class GraphBuilder<T extends GraphNode> {
   readonly updated = new EventEmitter<GraphData<T>>();
 
   constructor (
@@ -45,7 +45,7 @@ export class GraphBuilder<T> implements GraphModel<T> {
     this.updated.emit(this._graph);
   }
 
-  getNode (id: string): GraphNode<T> | undefined {
+  getNode (id: string): GraphNode | undefined {
     return this._graph.nodes.find(node => node.id === id);
   }
 
@@ -55,12 +55,12 @@ export class GraphBuilder<T> implements GraphModel<T> {
    * @param source
    * @param target
    */
-  getLinks (id: string, source = true, target = false): GraphLink<T>[] {
+  getLinks (id: string, source = true, target = false): GraphLink[] {
     return this._graph.links.filter(link => {
-      if (source && link.source.id === id) {
+      if (source && link.source === id) {
         return true;
       }
-      if (target && link.target.id === id) {
+      if (target && link.target === id) {
         return true;
       }
 
@@ -70,25 +70,25 @@ export class GraphBuilder<T> implements GraphModel<T> {
 
   // TODO(burdon): Batch mode.
 
-  addNode (node: GraphNode<T>, update = true) {
+  addNode (node: GraphNode, update = true) {
     this._graph.nodes.push(node);
 
     update && this.update();
     return this;
   }
 
-  addLink (link: GraphLink<T>, update = true) {
+  addLink (link: GraphLink, update = true) {
     this._graph.links.push(link);
 
     update && this.update();
     return this;
   }
 
-  createLink (source: GraphNode<T>, target: GraphNode<T>, update = true) {
+  createLink (source: GraphNode, target: GraphNode, update = true) {
     this._graph.links.push({
       id: `${source.id}-${target.id}`,
-      source,
-      target
+      source: source.id,
+      target: target.id
     });
 
     update && this.update();
