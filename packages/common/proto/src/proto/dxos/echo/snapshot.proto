@@ -51,15 +51,19 @@ message ItemSnapshot {
   ModelSnapshot model = 6;
 }
 
+/**
+ * Represents the reified state of a state machine.
+ */
 message ModelSnapshot {
   /**
-   * Encoded model snapshot. Encoding is defined by model's codec.
-   *
-   * Can be missing. In that case the state machine is to be initialized in it's default state.
+   * Encoded model snapshot (defined by the model's codec).
+   * If undefined the state machine will be initialized with it's default state.
    */
   optional bytes snapshot = 1;
 
-  /// Mutations to be applied on top of the snapshotted state, or on top of initial state if the snapshot is missing.
+  /**
+   * Mutations to be applied on top of the snapshot, or on top of initial state if the snapshot is undefined.
+   */
   repeated ModelMutation mutations = 2;
 }
 
