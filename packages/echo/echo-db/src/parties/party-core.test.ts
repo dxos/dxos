@@ -6,6 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -18,7 +19,6 @@ import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
 import { PartyFeedProvider } from './party-feed-provider';
-import { PublicKey } from '@dxos/crypto';
 
 describe('PartyCore', () => {
   const setup = async () => {
@@ -42,7 +42,7 @@ describe('PartyCore', () => {
       partyFeedProvider,
       modelFactory,
       snapshotStore,
-      PublicKey.random(),
+      PublicKey.random()
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();

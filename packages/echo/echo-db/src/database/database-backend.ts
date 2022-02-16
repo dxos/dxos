@@ -5,6 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 import { DatabaseSnapshot, DataService, EchoEnvelope, FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -12,7 +13,6 @@ import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 
 const log = debug('dxos:echo-db:database-backend');
 
@@ -126,7 +126,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
           // TODO(dmaretskyi): Can we provide meaningfull data in here?
           feedKey: PublicKey.from(Buffer.alloc(PUBLIC_KEY_LENGTH)),
           seq: 0
-        }
+        };
       },
       write: async (mutation) => {
         log('write', mutation);

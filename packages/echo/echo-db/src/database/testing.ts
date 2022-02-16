@@ -21,7 +21,7 @@ export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const database = new Database(
     modelFactory,
     new FeedDatabaseBackend(inboundStream, feed, undefined, { snapshots: true }),
-    PublicKey.random(),
+    PublicKey.random()
   );
 
   await database.init();
@@ -39,7 +39,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const frontend = new Database(
     modelFactory,
     new RemoteDatabaseBackend(dataServiceRouter, partyKey),
-    PublicKey.random(),
+    PublicKey.random()
   );
   await frontend.init();
   return frontend;

@@ -6,6 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -13,7 +14,6 @@ import { ObjectModel } from '@dxos/object-model';
 import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
-import { PublicKey } from '@dxos/crypto';
 
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
@@ -21,7 +21,7 @@ const LINK_EMPLOYEE = 'dxos:link/employee';
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
-const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random())
+const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(null as any, id, type, createModel(id), undefined, parent);

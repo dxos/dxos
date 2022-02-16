@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -16,7 +17,6 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { createRootSelector, RootFilter } from './selection';
-import { PublicKey } from '@dxos/crypto';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -54,7 +54,7 @@ export class Database {
   constructor (
     private readonly _modelFactory: ModelFactory,
     private readonly _backend: DatabaseBackend,
-    memberKey: PublicKey,
+    memberKey: PublicKey
   ) {
     this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
   }
