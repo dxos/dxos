@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-book-knobs",
-  "version": "2.2.1-beta.5",
+  "version": "2.2.1-beta.6",
   "description": "Knobs for esbuild-server book.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
