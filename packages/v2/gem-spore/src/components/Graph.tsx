@@ -6,13 +6,14 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import {
   createSimulationDrag,
-  ClassesOptions,
+  defaultForceOptions,
+  AttributesOptions,
   ForceOptions,
   GraphForceProjector,
   GraphModel,
   GraphLayoutNode,
   GraphRenderer,
-  LabelOptions, defaultForceOptions,
+  LabelOptions,
 } from '../graph';
 import { defaultGraphStyles } from './styles';
 
@@ -20,35 +21,35 @@ import { useSvgContext } from '@dxos/gem-core';
 
 export interface GraphProps {
   className?: string
-  arrows?: boolean
   forces?: ForceOptions
+  arrows?: boolean
   drag?: boolean
   model?: GraphModel<any>
   labels?: LabelOptions<any>
-  classes?: ClassesOptions<any>
-  onSelect?: (node: any) => void
+  attributes?: AttributesOptions<any>
+  onSelect?: (node: GraphLayoutNode<any>) => void
 }
 
 /**
  * SVG Graph controller.
  * @param className
- * @param arrows
  * @param forces
+ * @param arrows
  * @param drag
  * @param model
  * @param labels
- * @param classes
+ * @param attributes
  * @param onSelect
  * @constructor
  */
 export const Graph = ({
   className = defaultGraphStyles,
-  arrows,
   forces = defaultForceOptions,
+  arrows,
   drag,
   model,
   labels,
-  classes,
+  attributes,
   onSelect
 }: GraphProps) => {
   const context = useSvgContext();
@@ -62,7 +63,7 @@ export const Graph = ({
         end: arrows
       },
       labels,
-      classes,
+      attributes,
       onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined
     });
 

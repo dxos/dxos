@@ -77,7 +77,7 @@ export type ForceOptions = {
   manyBody?: boolean | ForceManyBodyOptions
   center?: boolean | ForcesCenterOptions
   collide?: boolean | ForceCollideOptions
-  radial?: ForceRadialOptions
+  radial?: boolean | ForceRadialOptions
   x?: ForcePositioningOptions
   y?: ForcePositioningOptions
 }
@@ -90,6 +90,9 @@ export const defaultForceOptions: ForceOptions = {
 export type GraphForceProjectorOptions = {
   guides?: boolean
   forces?: ForceOptions
+  attributes?: {
+    radius: (node: GraphLayoutNode<any>, children: number) => number
+  }
 }
 
 /**
@@ -110,8 +113,7 @@ export class GraphForceProjector<N extends GraphNode>
     guides: []
   };
 
-  numChildren = (node) => this._layout.graph.links
-    .filter(link => link.source === node.id).length;
+  numChildren = (node) => this._layout.graph.links.filter(link => link.source.id === node.id).length;
 
   get simulation () {
     return this._simulation;
@@ -176,14 +178,14 @@ export class GraphForceProjector<N extends GraphNode>
           initialized: true,
           // Position around center or parent; must have delta to avoid spike.
           x: (link?.source?.x || 0) + (Math.random() - 0.5) * 30,
-          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30
+          y: (link?.source?.y || 0) + (Math.random() - 0.5) * 30,
         });
       }
 
       const children = this.numChildren(node);
+      const radius = this.options?.attributes?.radius ?? (() => 6 + children * 2);
       Object.assign(node, {
-        children,
-        r: 5 + children * 2 // TODO(burdon): Options.
+        r: radius(node, children)
       });
     });
 

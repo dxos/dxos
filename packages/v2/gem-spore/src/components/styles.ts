@@ -21,7 +21,7 @@ export const defaultMarkerStyles = css`
 `;
 
 export const defaultGraphStyles = css`
-  .guides {
+  g.guides {
     circle {
       fill: #FAFAFA;
       stroke: coral;
@@ -31,13 +31,8 @@ export const defaultGraphStyles = css`
     }
   }
 
-  circle.bullet {
-    fill: #999;
-    stroke: none;
-  }
-
-  g.node {
-    &.selected {
+  g.nodes {
+    .selected {
       circle {
         fill: cornflowerblue;
         stroke: #333;
@@ -60,7 +55,7 @@ export const defaultGraphStyles = css`
     }
   }
 
-  g.link {
+  g.links {
     path {
       fill: none;
       stroke: #333;
@@ -71,4 +66,10 @@ export const defaultGraphStyles = css`
       stroke-width: 16px;
       opacity: 0.2;
     }
+  }
+
+  circle.bullet {
+    fill: #999;
+    stroke: none;
+  }
 `;

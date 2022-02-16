@@ -71,19 +71,14 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   }), []);
 
   useEffect(() => {
-    const unsubscribe = model.updated.on(graph => {
-      projector.update(graph);
-    });
-
-    projector.updated.on(({ layout }) => {
-      renderer.update(layout);
-    });
-
+    const unsubscribeModel = model.updated.on(graph => projector.update(graph));
+    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     projector.start();
     model.update();
 
     return () => {
-      unsubscribe();
+      unsubscribeModel();
+      unsubscribeProjector();
       projector.stop();
     }
   }, []);
@@ -129,7 +124,17 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   });
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector<TestNode>(context, { guides: true });
+    const projector = new GraphForceProjector<TestNode>(context, {
+      guides: true,
+      forces: {
+        link: {
+          distance: 40
+        },
+        manyBody: {
+          strength: -80
+        }
+      }
+    });
 
     // TODO(burdon): Create class?
     const drag = createSimulationDrag(context, projector._simulation, {
@@ -154,9 +159,6 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       labels: {
         text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4)
       },
-      classes: {
-        node: (node: GraphLayoutNode<TestNode>) => node.data.type === 'org' ? 'selected' : undefined
-      },
       onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
         renderer.fireBullet(node);
       },
@@ -177,21 +179,16 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = model.updated.on(graph => {
-      projector.update(graph);
-    });
-
-    projector.updated.on(({ layout }) => {
-      renderer.update(layout);
-    });
-
+    const unsubscribeModel = model.updated.on(graph => projector.update(graph));
+    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     projector.start();
     model.update();
 
     return () => {
-      unsubscribe();
+      unsubscribeModel();
+      unsubscribeProjector();
       projector.stop();
-    }
+    };
   }, []);
 
   useEffect(() => {

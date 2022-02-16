@@ -75,8 +75,11 @@ export const Secondary = ({ graph = true }) => {
                 text: (node: GraphLayoutNode<TestNode>, highlight: boolean) =>
                   highlight || selected.has(node.id) ? node.data.label : undefined
               }}
-              classes={{
-                node: (node: GraphLayoutNode<TestNode>) => selected.has(node.id) ? 'selected' : undefined
+              attributes={{
+                node: (node: GraphLayoutNode<TestNode>) => ({
+                  class: selected.has(node.id) ? 'selected' : undefined,
+                  // radius: 8 // TODO(burdon): Apply to projector (not renderer).
+                })
               }}
               onSelect={(node: GraphLayoutNode<TestNode>) => {
                 if (selected.has(node.id)) {

@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import clsx from 'clsx';
 import * as d3 from 'd3';
 
 import { D3Callable, D3Selection } from '@dxos/gem-core';
@@ -18,9 +17,14 @@ export type LabelOptions<N extends GraphNode> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined
 }
 
-export type ClassesOptions<N extends GraphNode> = {
-  node?: (node: GraphLayoutNode<N>) => string | undefined
-  link?: (link: GraphLayoutLink<N>) => string | undefined
+export type AttributesOptions<N extends GraphNode> = {
+  node?: (node: GraphLayoutNode<N>) => {
+    class?: string
+  }
+
+  link?: (link: GraphLayoutLink<N>) => {
+    class?: string
+  }
 }
 
 export type GraphRendererOptions<N extends GraphNode> = {
@@ -31,7 +35,7 @@ export type GraphRendererOptions<N extends GraphNode> = {
   }
   highlight?: boolean
   labels?: LabelOptions<N>
-  classes?: ClassesOptions<N> // TODO(burdon): Rpleace with getAttribues method (class, size, etc.)
+  attributes?: AttributesOptions<N>
   onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void
   onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void
 }
@@ -104,6 +108,14 @@ const updateNode: D3Callable = <N extends GraphNode> (
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
+  // Custom attributes.
+  if (options.attributes?.node) {
+    group.each((d, i, nodes) => {
+      const { class: className } = options.attributes?.node(d);
+      d3.select(nodes[i]).attr('class', className);
+    });
+  }
+
   // Update circles.
   group.select<SVGCircleElement>('circle')
     .attr('cx', d => d.x)
@@ -150,23 +162,22 @@ const createLink: D3Callable = <N extends GraphNode> (
  * Update link elements.
  * @param group
  * @param options
- * @param nodes
  */
 const updateLink: D3Callable = <N extends GraphNode> (
   group: D3Selection,
-  options: GraphRendererOptions<N>,
-  nodes // TODO(burdon): Remove.
+  options: GraphRendererOptions<N>
 ) => {
+  // Custom attributes.
+  if (options.attributes?.link) {
+    group.each((d, i, nodes) => {
+      const { class: className } = options.attributes?.link(d);
+      d3.select(nodes[i]).attr('class', className);
+    });
+  }
+
   group.selectAll<SVGPathElement, GraphLayoutLink<N>>('path')
-
     .attr('d', d => {
-      // const { source, target } = d;
-      const { source: s, target: t } = d;
-      // TODO(burdon): Old links have zombie node references (but force links are up-to-date).
-      const source = nodes.find(n => n.id === s.id);
-      const target = nodes.find(n => n.id === t.id);
-      // console.log(s === source);
-
+      const { source, target } = d;
       if (!source.initialized || !target.initialized) {
         return;
       }
@@ -208,13 +219,12 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .data([{ id: 'links' }])
       .join('g')
       .attr('class', 'links')
-      .selectAll<SVGPathElement, GraphLayoutLink<N>>('g.link')
+      .selectAll<SVGPathElement, GraphLayoutLink<N>>('g')
         .data(layout.graph?.links ?? [], d => d.id)
         .join(
           enter => enter.append('g').call(createLink, this.options)
         )
-        .call(updateLink, this.options, layout.graph.nodes)
-        .attr('class', d => clsx('link', this.options.classes?.link?.(d)));
+        .call(updateLink, this.options, layout.graph.nodes);
 
     //
     // Nodes
@@ -224,13 +234,13 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .data([{ id: 'nodes' }])
       .join('g')
       .attr('class', 'nodes')
-      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g.node')
+      .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g')
         .data(layout.graph?.nodes ?? [], d => d.id)
         .join(
           enter => enter.append('g').call(createNode, this.options)
         )
         .call(updateNode, this.options)
-        .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
+        // .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
   }
 
   /**
