@@ -109,7 +109,7 @@ export class NetworkManager {
 
     swarm.errors.handle(error => {
       log(`Swarm error: ${error}`);
-    })
+    });
 
     this._swarms.set(topic, swarm);
     this._signal.join(topic, peerId);
