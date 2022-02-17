@@ -47,7 +47,7 @@ const schemas = {
 
 export class ProjectBuilder {
   constructor (
-    private readonly _generator: Generator,
+    private readonly _builder: PartyBuilder,
     private readonly _org: Item<ObjectModel>,
     private readonly _project: Item<ObjectModel>
   ) {}
@@ -58,9 +58,9 @@ export class ProjectBuilder {
 
   async createTasks (n: Num = 1, people?: Item<ObjectModel>[]) {
     return await Promise.all(Array.from({ length: num(n) }).map(async () => {
-      const task = await this._generator.createTask(this._project);
+      const task = await this._builder.createTask(this._project);
       if (people) {
-        await this._generator.createLink(task, faker.random.arrayElement(people));
+        await this._builder.createLink(task, faker.random.arrayElement(people));
       }
     }));
   }
@@ -68,7 +68,7 @@ export class ProjectBuilder {
 
 export class OrgBuilder {
   constructor (
-    private readonly _generator: Generator,
+    private readonly _builder: PartyBuilder,
     private readonly _org: Item<ObjectModel>
   ) {}
 
@@ -78,24 +78,24 @@ export class OrgBuilder {
 
   async createPeople (n: Num = 1) {
     return await Promise.all(Array.from({ length: num(n) }).map(async () => {
-      return await this._generator.createPerson(this._org);
+      return await this._builder.createPerson(this._org);
     }));
   }
 
   async createProjects (n: Num = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
     return await Promise.all(Array.from({ length: num(n) }).map(async () => {
-      const project = await this._generator.createProject(this._org);
-      await callback?.(new ProjectBuilder(this._generator, this._org, project));
+      const project = await this._builder.createProject(this._org);
+      await callback?.(new ProjectBuilder(this._builder, this._org, project));
       return project;
     }));
   }
 }
 
 /**
- * Party item generator.
+ * Party builder.
  */
 // TODO(burdon): Configure generator to treat all references as links (e.g., for table).
-export class Generator {
+export class PartyBuilder {
   constructor (
     private readonly _party: Party
   ) {}
@@ -163,6 +163,6 @@ export class Generator {
 /**
  * @param party
  */
-export const useGenerator = (party?: Party) => {
-  return useMemo(() => party ? new Generator(party) : undefined, [party?.key]);
+export const usePartyBuilder = (party?: Party) => {
+  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key]);
 };

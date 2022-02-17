@@ -6,7 +6,7 @@ import React from 'react';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoTable, Layout } from '../src';
+import { EchoGraph, EchoTable, Layout } from '../src';
 
 export default {
   title: 'KitchenSink/Layout'
@@ -15,8 +15,10 @@ export default {
 export const Primary = () => {
   return (
     <FullScreen>
-      <Layout>
-        <EchoTable />
+      <Layout
+        sidebar={<EchoTable />}
+      >
+        <EchoGraph />
       </Layout>
     </FullScreen>
   );

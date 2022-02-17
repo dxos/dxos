@@ -8,7 +8,7 @@ import { css } from '@emotion/css';
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
 
-import { EchoTable, OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
+import { EchoTable, OrgBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../src';
 
 export default {
   title: 'KitchenSink/EchoTable'
@@ -26,13 +26,10 @@ const styles = css`
 
 // TODO(burdon): Factor out.
 
-const App = () => {
+const useTestParty = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-
-  // TODO(burdon): Skip party's item.
-  const items = useSelection(party?.select()) ?? [];
-  const generator = useGenerator(party);
+  const builder = usePartyBuilder(party);
 
   useEffect(() => {
     setImmediate(async () => {
@@ -42,9 +39,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (generator) {
+    if (builder) {
       setImmediate(async () => {
-        await generator.createOrgs([2, 3], async (orgBuilder: OrgBuilder) => {
+        await builder.createOrgs([2, 3], async (orgBuilder: OrgBuilder) => {
           await orgBuilder.createPeople([2, 5]);
           await orgBuilder.createProjects([2, 4], async (projectBuilder: ProjectBuilder) => {
             const { result: people } = await orgBuilder.org
@@ -58,7 +55,14 @@ const App = () => {
         });
       }, []);
     }
-  }, [generator]);
+  }, [builder]);
+
+  return party;
+}
+
+const App = () => {
+  const party = useTestParty();
+  const items = useSelection(party?.select()) ?? [];
 
   return (
     <div className={styles}>
