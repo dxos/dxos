@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto-names",
-  "version": "2.26.1",
+  "version": "2.27.2",
   "description": "Basic crypto key utils",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -26,9 +26,9 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/binary-parser": "^1.5.1",
     "@types/crypto-js": "~4.0.2",
+    "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
     "@types/js-yaml": "^3.12.5",
-    "@types/faker": "^5.5.1",
     "@types/node": "^14.0.9",
     "@types/uniq": "^0.0.27",
     "faker": "^5.1.0",

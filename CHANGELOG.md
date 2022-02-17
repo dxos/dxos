@@ -1,5 +1,26 @@
 # Change Log
 
+### [2.27.2](https://www.github.com/dxos/protocols/compare/v2.27.1...v2.27.2) (2022-02-17)
+
+
+### Bug Fixes
+
+* add missing conf to proto. ([#949](https://www.github.com/dxos/protocols/issues/949)) ([ab03c76](https://www.github.com/dxos/protocols/commit/ab03c765b7f94925a4a66506dddbddfa2f9cde92))
+* **selection-api:** When creating a link, source and target items are updated ([#945](https://www.github.com/dxos/protocols/issues/945)) ([131e7b1](https://www.github.com/dxos/protocols/commit/131e7b144614a9757cfbda164a57eaeec9c450fc))
+
+### [2.27.1](https://www.github.com/dxos/protocols/compare/v2.27.0...v2.27.1) (2022-02-15)
+
+
+### Features
+
+* Bot logs stream ([#939](https://www.github.com/dxos/protocols/issues/939)) ([0c1c38c](https://www.github.com/dxos/protocols/commit/0c1c38c3073c5db219a2a33de0a56e4bc2bd8794))
+* word generator demo. ([#921](https://www.github.com/dxos/protocols/issues/921)) ([e3de338](https://www.github.com/dxos/protocols/commit/e3de3381f0425b9f9dfdf9d5cb92821567be280d))
+
+
+### Bug Fixes
+
+* adjust  react-registry-client storybook ([#943](https://www.github.com/dxos/protocols/issues/943)) ([39fac7d](https://www.github.com/dxos/protocols/commit/39fac7d9777143902b60ae8319c55efa7ad8288d))
+
 ## [2.27.0](https://www.github.com/dxos/protocols/compare/v2.26.1...v2.27.0) (2022-02-14)
 
 

@@ -8,5 +8,6 @@
     "data/**/*.json",
     "src",
     "scripts"
-  ]
+  ],
+  "references": []
 }
