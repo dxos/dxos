@@ -140,6 +140,7 @@ message Runtime {
       string package = 1;
       string channel = 2;
       string bin = 3;
+      string config = 4;
     }
 
     string node_path = 1;
