@@ -51,6 +51,10 @@ export const CustomTextField = ({
     setEditing(editOnly);
   }, [editOnly]);
 
+  useEffect(() => {
+    setText(value ?? '');
+  }, [value]);
+
   const handleUpdate = () => {
     !editOnly && setEditing(false);
     if (text !== value) {
