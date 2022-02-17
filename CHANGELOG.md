@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.27.3](https://www.github.com/dxos/protocols/compare/v2.27.2...v2.27.3) (2022-02-17)
+
+
+### Bug Fixes
+
+* Allow querying for deleted items in useSelection hook ([#950](https://www.github.com/dxos/protocols/issues/950)) ([db3c1c1](https://www.github.com/dxos/protocols/commit/db3c1c1983365384dc54b8cb69f4e81d458f5bb5))
+* **CustomTextField:** updating on peer change ([#942](https://www.github.com/dxos/protocols/issues/942)) ([c3308dd](https://www.github.com/dxos/protocols/commit/c3308ddd3464f92c4c874e3307b76c11fb54f85b))
+
 ### [2.27.2](https://www.github.com/dxos/protocols/compare/v2.27.1...v2.27.2) (2022-02-17)
 
 
