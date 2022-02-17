@@ -53,8 +53,10 @@ export const EchoGraph = ({
               arrows
               drag
               model={model}
-              classes={{
-                node: (node: GraphLayoutNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')
+              attributes={{
+                node: (node: GraphLayoutNode<Item<ObjectModel>>) => ({
+                  class: node.data!.type!.replaceAll(/\W/g, '_')
+                })
               }}
               labels={{
                 text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
