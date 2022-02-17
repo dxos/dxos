@@ -9,7 +9,7 @@ import faker from 'faker';
 import { createGraph } from '@dxos/gem-spore';
 
 export default {
-  title: 'ForceGraph'
+  title: 'experimental/force-graph'
 };
 
 /**

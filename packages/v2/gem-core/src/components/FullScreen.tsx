@@ -7,17 +7,24 @@ import React, { ReactNode } from 'react';
 /**
  * Fullscreen container.
  */
-export const FullScreen = ({ children, style }: { children: ReactNode | ReactNode[], style?: any }) => {
+export const FullScreen = ({
+  children,
+  style,
+  className
+}: { children: ReactNode | ReactNode[], style?: any, className?: string }) => {
   return (
-    <div style={{
-      display: 'flex',
-      position: 'fixed',
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      ...style
-    }}>
+    <div
+      className={className}
+      style={{
+        display: 'flex',
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        ...style
+      }}
+    >
       {children}
     </div>
   );

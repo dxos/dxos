@@ -12,7 +12,7 @@ import TopologyData from '../data/110m.json';
 import { Globe } from '../src';
 
 export default {
-  title: 'Globe-Simple'
+  title: 'Globe/Simple'
 };
 
 const globeStyles = {

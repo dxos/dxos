@@ -7,7 +7,7 @@ import React from 'react';
 import { Waves } from '../src';
 
 export default {
-  title: 'Waves'
+  title: 'experimental/waves'
 };
 
 export const Primary = () => {

@@ -7,7 +7,7 @@ import React from 'react';
 import { Kube } from '../src';
 
 export default {
-  title: 'Kube'
+  title: 'experimental/kube'
 };
 
 export const Primary = () => {

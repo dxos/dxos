@@ -20,7 +20,7 @@ debug.enable('gem:boids:*');
 // https://bl.ocks.org/veltman/995d3a677418100ac43877f3ed1cc728
 
 export default {
-  title: 'Boids'
+  title: 'experimental/boids'
 };
 
 const styles = {

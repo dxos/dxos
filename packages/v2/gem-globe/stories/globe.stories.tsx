@@ -18,7 +18,7 @@ import TopologyData from '../data/110m.json';
 import { Globe, Versor } from '../src';
 
 export default {
-  title: 'Globe'
+  title: 'Globe/Custom'
 };
 
 // TODO(burdon): Deprecate Globe2.

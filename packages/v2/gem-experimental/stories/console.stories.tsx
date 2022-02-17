@@ -4,14 +4,20 @@
 
 import React from 'react';
 
+import { FullScreen } from '@dxos/gem-core';
+
 import { Console } from '../src';
 
 export default {
-  title: 'Console'
+  title: 'experimental/console'
 };
 
 export const Primary = () => {
   return (
-    <Console />
+    <FullScreen style={{
+      backgroundColor: '#000'
+    }}>
+      <Console />
+    </FullScreen>
   );
 };

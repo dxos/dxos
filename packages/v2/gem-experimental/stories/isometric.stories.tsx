@@ -11,7 +11,7 @@ import { FullScreen } from '@dxos/gem-core';
 import { Isometric, drawCube } from '../src';
 
 export default {
-  title: 'Isometric'
+  title: 'experimental/isometric'
 };
 
 const grey = {
