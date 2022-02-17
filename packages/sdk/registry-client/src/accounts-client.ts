@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { DxnsAccount, AccountKey } from './types';
 import { BaseClient } from './base-client';
+import { DxnsAccount, AccountKey } from './types';
 
 /**
  * Main API for DXNS account and devices management.

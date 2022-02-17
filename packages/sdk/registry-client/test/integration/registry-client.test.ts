@@ -3,16 +3,13 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import Keyring from '@polkadot/keyring';
+import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import {
-  App, CID, createApiPromise, createCID, createKeyring, DomainKey, AccountKey,
-  DXN, IRegistryClient, RegistryClient, schemaJson, AccountClient
-} from '../../src';
-import { DEFAULT_DOT_ENDPOINT } from './test-config';
+import { AccountKey, App, CID, createCID, DomainKey, DXN, IRegistryClient, schemaJson } from '../../src';
+import { setup } from './utils';
 
 chai.use(chaiAsPromised);
 
@@ -25,19 +22,14 @@ const randomName = () => {
 
 describe('Registry Client', () => {
   let registryApi: IRegistryClient;
-  let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
   let account: AccountKey;
 
   beforeEach(async () => {
-    const keyring = await createKeyring();
-    const config = { uri: '//Alice' };
-    apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
-    keypair = keyring.addFromUri(config.uri);
-    registryApi = new RegistryClient(apiPromise, keypair);
-
-    const accountsApi = new AccountClient(apiPromise, keypair);
-    account = await accountsApi.createAccount();
+    const setupResult = await setup();
+    apiPromise = setupResult.apiPromise;
+    registryApi = setupResult.registryApi;
+    account = await setupResult.accountsApi.createAccount();
   });
 
   afterEach(async () => {
