@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-physik",
-  "version": "2.2.1-beta.6",
+  "version": "2.2.1-beta.7",
   "description": "Gem Physik.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
-    "@dxos/esbuild-book-knobs": "^2.2.1-beta.6",
+    "@dxos/esbuild-book-knobs": "^2.2.1-beta.7",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",

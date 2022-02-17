@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-canvas",
-  "version": "2.2.1-beta.6",
+  "version": "2.2.1-beta.7",
   "description": "Gem canvas editor.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -36,7 +36,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/gem-core": "^2.2.1-beta.6",
+    "@dxos/gem-core": "^2.2.1-beta.7",
     "@mui/icons-material": "^5.3.1",
     "clsx": "^1.1.1",
     "csstype": "^3.0.10",
@@ -44,7 +44,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/esbuild-book-knobs": "^2.2.1-beta.6",
+    "@dxos/esbuild-book-knobs": "^2.2.1-beta.7",
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^1.7.2",
     "@dxos/eslint-plugin": "~1.0.10",
