@@ -64,15 +64,15 @@ export const Graph = ({
   }, []);
 
   useEffect(() => {
-    projector.updated.on(({ layout }) => {
-      renderer.update(layout);
-    });
-
+    const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
+    const subscribeModel = model?.subscribe(graph => projector.update(graph));
     projector.update(model?.graph);
-    return model?.subscribe(graph => {
-      projector.update(graph);
-    })
-  }, []);
+
+    return () => {
+      subscribeProjector();
+      subscribeModel?.();
+    };
+  }, [model]);
 
   useEffect(() => {
     void projector.start();

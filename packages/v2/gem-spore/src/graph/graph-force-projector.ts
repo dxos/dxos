@@ -162,8 +162,8 @@ export class GraphForceProjector<N extends GraphNode>
     };
   }
 
-  onUpdate (data: GraphData<N>) {
-    log('onUpdate', JSON.stringify({ nodes: data.nodes.length, links: data.links.length }));
+  onUpdate (data?: GraphData<N>) {
+    log('onUpdate', JSON.stringify({ nodes: data?.nodes.length, links: data?.links.length }));
     this.mergeData(data);
     this.updateForces();
 

@@ -23,7 +23,7 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS> {
     return this._options || {} as OPTIONS;
   }
 
-  update (data: DATA) {
+  update (data?: DATA) {
     this.onUpdate(data);
   }
 
@@ -35,7 +35,7 @@ export abstract class Projector<DATA, LAYOUT, OPTIONS> {
     await this.onStop();
   }
 
-  protected abstract onUpdate (data: DATA);
+  protected abstract onUpdate (data?: DATA);
 
   protected async onStart () {}
 
