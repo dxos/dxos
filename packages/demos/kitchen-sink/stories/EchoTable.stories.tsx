@@ -2,74 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-import { css } from '@emotion/css';
+import faker from 'faker';
+import React from 'react';
 
-import { Party } from '@dxos/client';
-import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
+import { FullScreen } from '@dxos/react-components';
 
-import { EchoTable, OrgBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../src';
+import { EchoTable } from '../src';
+import { useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoTable'
 };
 
-// TODO(burdon): Devtools mesh.
-// TODO(burdon): createItem defaults.
-// TODO(burdon): useSelection ?? [] (create default).
-// TODO(burdon): dxos:item/party (replace or change slash).
-
-const styles = css`
-  height: 100vh;
-  overflow: scroll;
-`;
-
-// TODO(burdon): Factor out.
-
-const useTestParty = () => {
-  const client = useClient();
-  const [party, setParty] = useState<Party>();
-  const builder = usePartyBuilder(party);
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const party = await client.echo.createParty();
-      setParty(party);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (builder) {
-      setImmediate(async () => {
-        await builder.createOrgs([2, 3], async (orgBuilder: OrgBuilder) => {
-          await orgBuilder.createPeople([2, 5]);
-          await orgBuilder.createProjects([2, 4], async (projectBuilder: ProjectBuilder) => {
-            const { result: people } = await orgBuilder.org
-              .select()
-              .children()
-              .filter({ type: TestType.Person })
-              .query();
-
-            await projectBuilder.createTasks([2, 5], people);
-          });
-        });
-      }, []);
-    }
-  }, [builder]);
-
-  return party;
-}
+faker.seed(100);
 
 const App = () => {
   const party = useTestParty();
   const items = useSelection(party?.select()) ?? [];
 
   return (
-    <div className={styles}>
+    <FullScreen>
       <EchoTable
         items={items}
       />
-    </div>
+    </FullScreen>
   );
 };
 

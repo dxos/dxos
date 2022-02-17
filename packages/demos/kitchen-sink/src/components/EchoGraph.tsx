@@ -3,46 +3,41 @@
 //
 
 import clsx from 'clsx';
-import React from 'react';
-import { css } from '@emotion/css';
+import React, { useMemo } from 'react';
 import { Box } from '@mui/material';
 
-import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
-import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { defaultGraphStyles, Graph, GraphData, GraphLayoutNode, GraphModel, Markers } from '@dxos/gem-spore';
+import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
+import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
-const styles = css``;
-
-// TODO(burdon): Factor out.
-class EchoGraphModel implements GraphModel<Item<any>> {
-  readonly updated = new Event<GraphData<Item<any>>>();
-
-  get graph () {
-    return {
-      nodes: [],
-      links: []
-    }
-  }
-
-  subscribe (callback: (graph: GraphData<Item<any>>) => void) {
-    return this.updated.on(callback);
-  }
-}
+import { EchoGraphModel } from './model';
+import { styles } from './styles';
 
 export interface EchoGraphProps {
   model?: EchoGraphModel
 }
 
 export const EchoGraph = ({
-  model = new EchoGraphModel()
+  model
 }: EchoGraphProps) => {
+  const context = useSvgContext();
+  const projector = useMemo(() => new GraphForceProjector(context, {
+    forces: {
+      radial: {
+        strength: 0.02
+      }
+    }
+  }), []);
+
   return (
-    <Box sx={{
-      display: 'flex',
-      flex: 1
-    }}>
+    <Box
+      className={styles}
+      sx={{
+        display: 'flex',
+        flex: 1
+      }}
+    >
       <SVGContextProvider>
         <SVG>
           <Markers />
@@ -53,6 +48,7 @@ export const EchoGraph = ({
               arrows
               drag
               model={model}
+              projector={projector}
               attributes={{
                 node: (node: GraphLayoutNode<Item<ObjectModel>>) => ({
                   class: node.data!.type!.replaceAll(/\W/g, '_')

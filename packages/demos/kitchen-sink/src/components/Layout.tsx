@@ -10,14 +10,15 @@ import { Box } from '@mui/material';
 export interface LayoutProps {
   children?: ReactNode | ReactNode[]
   sidebar?: ReactNode
+  width?: number
 }
 
 export const Layout = ({
   children,
-  sidebar
+  sidebar,
+  width = 500
 }: LayoutProps) => {
   const [open, setOpen] = useState(true);
-  const width = 400;
 
   return (
     <Box sx={{
