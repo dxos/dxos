@@ -127,7 +127,9 @@ export class RpcPeer {
       const req = decoded.request;
       if (req.stream) {
         this._callStreamHandler(req, response => {
-          void this._sendMessage({ response });
+            void this._sendMessage({ response }).catch(error => {
+              log(`Unhandled error during stream close: ${error}`);
+            });
         });
       } else {
         const response = await this._callHandler(req);

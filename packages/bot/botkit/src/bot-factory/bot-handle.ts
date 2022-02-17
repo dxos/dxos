@@ -175,6 +175,7 @@ export class BotHandle {
       }
       if (this._bot.status === Bot.Status.STOPPED) {
         close();
+        return;
       }
       const currentLogFile = this.getLogFilePath(this.startTimestamp);
       const tail = new Tail(currentLogFile);
