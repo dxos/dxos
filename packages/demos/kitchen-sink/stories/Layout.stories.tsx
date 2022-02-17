@@ -9,7 +9,7 @@ import { FullScreen } from '@dxos/react-components';
 import { EchoGraph, Layout } from '../src';
 
 export default {
-  title: 'demos/Layout'
+  title: 'KitchenSink/Layout'
 };
 
 export const Primary = () => {

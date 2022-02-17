@@ -18,7 +18,7 @@ import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dx
 import { enumFromString, OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
 
 export default {
-  title: 'demos/stories'
+  title: 'KitchenSink/selection'
 };
 
 const styles = css`

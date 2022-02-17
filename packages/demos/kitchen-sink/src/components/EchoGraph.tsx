@@ -7,37 +7,35 @@ import React from 'react';
 import { css } from '@emotion/css';
 import { Box } from '@mui/material';
 
+import { Event } from '@dxos/async';
 import { Item } from '@dxos/echo-db';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { defaultGraphStyles, Graph, GraphNode, Markers } from '@dxos/gem-spore';
+import { defaultGraphStyles, Graph, GraphData, GraphModel, GraphNode, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
-const styles = css`
-  g.node {
-    &.example_type_org {
-      circle {
-        fill: orange;
-      }
-    }
-    &.example_type_person {
-      circle {
-        fill: green;
-      }
-    }
-    &.example_type_project {
-      circle {
-        fill: cornflowerblue;
-      }
-    }
-    &.example_type_task {
+const styles = css``;
+
+class EchoGraphModel implements GraphModel<Item<any>> {
+  readonly updated = new Event<GraphData<Item<any>>>();
+
+  get graph () {
+    return {
+      nodes: [],
+      links: []
     }
   }
-`;
+
+  subscribe (callback: (graph: GraphData<Item<any>>) => void) {
+    return this.updated.on(callback);
+  }
+}
 
 export interface EchoGraphProps {
+  model?: EchoGraphModel
 }
 
 export const EchoGraph = ({
+  model = new EchoGraphModel()
 }: EchoGraphProps) => {
   return (
     <Box sx={{
@@ -53,21 +51,7 @@ export const EchoGraph = ({
               className={clsx(defaultGraphStyles, styles)}
               arrows
               drag
-              // model={model}
-              forces={{
-                manyBody: {
-                  distanceMax: 300
-                },
-                center: {
-                  strength: 0.1
-                },
-                // x: {
-                //   strength: 0.05
-                // },
-                // y: {
-                //   strength: 0.05
-                // }
-              }}
+              model={model}
               classes={{
                 node: (node: GraphNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')
               }}
