@@ -198,7 +198,7 @@ export class ItemManager {
   /**
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
    */
-  private _addEntity (entity: Entity<any>) {
+  private _addEntity (entity: Entity<any>, parent?: Item<any> | null) {
     assert(!this._entities.has(entity.id));
     this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
@@ -206,6 +206,9 @@ export class ItemManager {
     // Notify Item was udpated.
     // TODO(burdon): Update the item directly?
     this.update.emit(entity);
+    if (parent) {
+      this.update.emit(parent);
+    }
 
     // TODO(telackey): Unsubscribe?
     entity.subscribe(() => {
@@ -250,7 +253,7 @@ export class ItemManager {
     });
 
     const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
-    this._addEntity(item);
+    this._addEntity(item, parent);
 
     return item;
   }
