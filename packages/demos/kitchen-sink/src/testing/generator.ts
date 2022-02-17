@@ -45,7 +45,6 @@ const schemas = {
   ]
 };
 
-
 export class ProjectBuilder {
   constructor (
     private readonly _generator: Generator,

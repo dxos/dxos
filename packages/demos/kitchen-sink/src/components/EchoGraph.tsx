@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
-import { defaultGraphStyles, Graph, GraphNode, Markers } from '@dxos/gem-spore';
+import { defaultGraphStyles, Graph, GraphLayoutNode, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
 const styles = css`
@@ -53,26 +53,13 @@ export const EchoGraph = ({
               className={clsx(defaultGraphStyles, styles)}
               arrows
               drag
-              // model={model}
-              forces={{
-                manyBody: {
-                  distanceMax: 300
-                },
-                center: {
-                  strength: 0.1
-                },
-                // x: {
-                //   strength: 0.05
-                // },
-                // y: {
-                //   strength: 0.05
-                // }
-              }}
-              classes={{
-                node: (node: GraphNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')
+              attributes={{
+                node: (node: GraphLayoutNode<Item<ObjectModel>>) => ({
+                  class: node.data!.type!.replaceAll(/\W/g, '_')
+                })
               }}
               labels={{
-                text: (node: GraphNode<Item<ObjectModel>>, highlight) =>
+                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
                   highlight ? node.data!.model.getProperty('title') : undefined
               }}
             />
