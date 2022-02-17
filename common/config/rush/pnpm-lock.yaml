@@ -358,8 +358,8 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.5
-      '@dxos/gem-spore': ~2.2.1-beta.5
+      '@dxos/gem-core': ~2.2.1-beta.7
+      '@dxos/gem-spore': ~2.2.1-beta.7
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -412,8 +412,8 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -481,8 +481,8 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.5
-      '@dxos/gem-spore': ~2.2.1-beta.5
+      '@dxos/gem-core': ~2.2.1-beta.7
+      '@dxos/gem-spore': ~2.2.1-beta.7
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -533,8 +533,8 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -955,8 +955,8 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.5
-      '@dxos/gem-spore': ~2.2.1-beta.5
+      '@dxos/gem-core': ~2.2.1-beta.7
+      '@dxos/gem-spore': ~2.2.1-beta.7
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/react-components': workspace:*
@@ -987,8 +987,8 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
@@ -5350,8 +5350,8 @@ packages:
       - eslint
       - supports-color
 
-  /@dxos/gem-core/2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-kUCKvgysc76rHNZ9Xinq2aLX4HrXP1iKmIPQpjGBsC6TXHKhZEO5ZU3yFwhAEL/21YX/4q0RkkYu+eoy0wwLfQ==}
+  /@dxos/gem-core/2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-mOMdX9yfXphu+GtClC2Cxu1TnkoYVp8Zj4zK5AdGTTIP6q2+mY4m1QN28spktAuHLjFXowovsggKWGLELSAutQ==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -5371,15 +5371,15 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/gem-spore/2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-5JKcH0laq8myEuuTuiY8Xof0DiTkHdt1IyIc4zmtVAPfv36qI0PfrJa1U55Ylkg5J82NHz7azVlJzGr/Pa4kyw==}
+  /@dxos/gem-spore/2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-CyE8f/EiPaH+FOnfjI1CX50G+cTB91yySMFgDFc1t/walkTfn6iR33Py8NJWSroTeXrdV1zDcHSfJ3dvWuHPAA==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
       react: '*'
       react-dom: '*'
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.7_3f3895dcf7ed96cd12c4ac345221265f
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       csstype: 3.0.10

@@ -8,8 +8,8 @@ import { colors } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 import { PublicKey } from '@dxos/crypto';
-import { SVG, useGrid, Grid } from '@dxos/gem-core';
-import { createSimulationDrag, ForceLayout, Graph, NodeProjector } from '@dxos/gem-spore';
+import { SVG, SVGContextProvider } from '@dxos/gem-core';
+import { Graph } from '@dxos/gem-spore';
 import { PeerInfo } from '@dxos/network-manager';
 
 const classMap: Record<string, string> = {
@@ -20,6 +20,7 @@ const classMap: Record<string, string> = {
 };
 
 const nodeColors: (keyof typeof colors)[] = ['red', 'green', 'blue', 'yellow', 'orange', 'grey'];
+
 const useCustomStyles = makeStyles(() => ({
   nodes: nodeColors.reduce((map: any, color: string) => {
     map[`& g.node.${color} circle`] = {
@@ -44,23 +45,6 @@ export interface PeerGraphProps {
 }
 
 export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
-  const grid = useGrid(size);
-
-  const [layout] = useState(() => new ForceLayout());
-  const [drag] = useState(() => createSimulationDrag(layout.simulation));
-  const [{ nodeProjector }] = useState({
-    nodeProjector: new NodeProjector({
-      node: {
-        showLabels: true,
-        propertyAdapter: (node: any) => {
-          return {
-            class: classMap[node.state] ?? 'grey'
-          };
-        }
-      }
-    })
-  });
-
   const [data, setData] = useState<any>({ nodes: [], links: [] });
 
   function buildGraph (peers: PeerInfo[]) {
@@ -92,27 +76,16 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
         onClick!(PublicKey.from(source.id));
       };
 
-      drag.on('click', handle);
-      return () => drag.off('click', handle);
+      // drag.on('click', handle);
+      // return () => drag.off('click', handle);
     }
   }, [onClick]);
 
-  const classes = useCustomStyles();
-
   return (
-    <SVG width={size.width || 0} height={size.height || 0}>
-      <Grid grid={grid} />
-
-      <Graph
-        grid={grid}
-        data={data}
-        layout={layout}
-        nodeProjector={nodeProjector}
-        drag={drag}
-        classes={{
-          nodes: classes.nodes
-        }}
-      />
-    </SVG>
+    <SVGContextProvider>
+      <SVG>
+        <Graph />
+      </SVG>
+    </SVGContextProvider>
   );
 };

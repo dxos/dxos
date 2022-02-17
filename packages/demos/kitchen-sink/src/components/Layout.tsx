@@ -7,15 +7,14 @@ import React, { useState, ReactNode } from 'react';
 
 import { Box } from '@mui/material';
 
-import { EchoGraph } from './EchoGraph';
-import { EchoTable } from './EchoTable';
-
 export interface LayoutProps {
-  children?: ReactNode | ReactNode[];
+  children?: ReactNode | ReactNode[]
+  sidebar?: ReactNode
 }
 
 export const Layout = ({
   children,
+  sidebar
 }: LayoutProps) => {
   const [open, setOpen] = useState(true);
   const width = 400;
@@ -49,7 +48,7 @@ export const Layout = ({
         drawerWidth={width}
       >
         <Toolbar variant='dense' />
-        <EchoGraph />
+        {children}
       </SlidingContent>
 
       {/* Sidebar. */}
@@ -70,7 +69,7 @@ export const Layout = ({
             onClose={() => setOpen(false)}
           />
         </Toolbar>
-        <EchoTable />
+        {sidebar}
       </SlidingDrawer>
     </Box>
   );
