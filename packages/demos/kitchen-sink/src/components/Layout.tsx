@@ -1,0 +1,77 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar } from '@dxos/react-components';
+import React, { useState, ReactNode } from 'react';
+
+import { Box } from '@mui/material';
+
+import { EchoGraph } from './EchoGraph';
+import { EchoTable } from './EchoTable';
+
+export interface LayoutProps {
+  children?: ReactNode | ReactNode[];
+}
+
+export const Layout = ({
+  children,
+}: LayoutProps) => {
+  const [open, setOpen] = useState(true);
+  const width = 400;
+
+  return (
+    <Box sx={{
+      display: 'flex',
+      flex: 1
+    }}>
+      <SlidingAppBar
+        direction='left'
+        drawerOpen={open}
+        drawerWidth={width}
+      >
+        <Toolbar
+          disableGutters
+          variant='dense'
+          sx={{ marginLeft: 1, marginRight: 1 }}
+        >
+          {!open && (
+            <OpenButton onOpen={() => setOpen(true)} />
+          )}
+          <div>ECHO</div>
+        </Toolbar>
+      </SlidingAppBar>
+
+      {/* Main content. */}
+      <SlidingContent
+        direction='left'
+        drawerOpen={open}
+        drawerWidth={width}
+      >
+        <Toolbar variant='dense' />
+        <EchoGraph />
+      </SlidingContent>
+
+      {/* Sidebar. */}
+      <SlidingDrawer
+        variant='persistent'
+        direction='left'
+        anchor='left'
+        open={open}
+        drawerWidth={width}
+      >
+        <Toolbar
+          disableGutters
+          variant='dense'
+          sx={{ marginLeft: 2, marginRight: 1 }}
+        >
+          <CloseButton
+            direction='left'
+            onClose={() => setOpen(false)}
+          />
+        </Toolbar>
+        <EchoTable />
+      </SlidingDrawer>
+    </Box>
+  );
+};

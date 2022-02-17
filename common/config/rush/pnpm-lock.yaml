@@ -61,7 +61,6 @@ importers:
       '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
@@ -97,7 +96,6 @@ importers:
       '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       assert: 2.0.0
@@ -258,7 +256,6 @@ importers:
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pify': ^3.0.2
@@ -281,7 +278,6 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/pify': 3.0.2
@@ -362,8 +358,8 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.3
-      '@dxos/gem-spore': ~2.2.1-beta.3
+      '@dxos/gem-core': ~2.2.1-beta.5
+      '@dxos/gem-spore': ~2.2.1-beta.5
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -416,8 +412,8 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -485,8 +481,8 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.3
-      '@dxos/gem-spore': ~2.2.1-beta.3
+      '@dxos/gem-core': ~2.2.1-beta.5
+      '@dxos/gem-spore': ~2.2.1-beta.5
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -496,7 +492,6 @@ importers:
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
-      '@material-ui/core': ^4.12.3
       '@mui/icons-material': ^5.0.1
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
@@ -538,8 +533,8 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -548,7 +543,6 @@ importers:
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
-      '@material-ui/core': 4.12.3_5539cae010396b202b015f3568914e95
       '@mui/icons-material': 5.2.1_5ba8d2bfb1b4f0e067f3951fb85359cb
       '@mui/lab': 5.0.0-alpha.59_3515c9f8dbb6f60dc5ee9e238c9647ae
       '@mui/material': 5.2.3_fa2645acd9a035406d0184711710de51
@@ -961,8 +955,8 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.7.4
-      '@dxos/gem-core': ~2.2.1-beta.3
-      '@dxos/gem-spore': ~2.2.1-beta.3
+      '@dxos/gem-core': ~2.2.1-beta.5
+      '@dxos/gem-spore': ~2.2.1-beta.5
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/react-components': workspace:*
@@ -993,8 +987,8 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
@@ -1515,7 +1509,6 @@ importers:
       '@types/debug': ^4.1.7
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
-      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/levelup': ^4.3.0
@@ -1570,7 +1563,6 @@ importers:
       '@types/debug': 4.1.7
       '@types/encoding-down': 5.0.0
       '@types/end-of-stream': 1.4.1
-      '@types/expect': 24.3.0
       '@types/jest': 26.0.24
       '@types/json-stable-stringify': 1.0.33
       '@types/levelup': 4.3.3
@@ -1591,7 +1583,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       expect: ~27.0.2
     dependencies:
@@ -1601,7 +1592,6 @@ importers:
       '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       expect: 27.0.6
 
@@ -1902,7 +1892,6 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       expect: ~27.0.2
@@ -1918,7 +1907,6 @@ importers:
       '@dxos/network-manager': link:../network-manager
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/expect': 24.3.0
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       expect: 27.0.6
@@ -2051,7 +2039,6 @@ importers:
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
       '@types/debug': ^4.1.7
-      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -2108,7 +2095,6 @@ importers:
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.7
-      '@types/expect': 24.3.0
       '@types/jest': 26.0.24
       '@types/level-js': 4.0.2
       '@types/lodash.defaultsdeep': 4.6.6
@@ -2622,6 +2608,7 @@ importers:
       '@types/react-dom': ^17.0.9
       '@types/react-router-dom': ~5.1.7
       '@types/uuid': ~8.3.3
+      '@types/webextension-polyfill': ^0.8.0
       '@types/webpack-env': ^1.16.0
       chalk: ^4.1.0
       copy: ~0.3.2
@@ -2637,7 +2624,7 @@ importers:
       rmdir: ~1.2.0
       typescript: ^4.5.2
       uuid: ^8.3.2
-      webextension-polyfill-ts: ~0.25.0
+      webextension-polyfill: ^0.8.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2659,6 +2646,7 @@ importers:
       react-copy-to-clipboard: 5.0.4_react@17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 5.3.0_react@17.0.2
+      webextension-polyfill: 0.8.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
@@ -2672,6 +2660,7 @@ importers:
       '@types/react-dom': 17.0.11
       '@types/react-router-dom': 5.1.9
       '@types/uuid': 8.3.3
+      '@types/webextension-polyfill': 0.8.2
       '@types/webpack-env': 1.16.3
       chalk: 4.1.2
       copy: 0.3.2
@@ -2682,7 +2671,6 @@ importers:
       rmdir: 1.2.0
       typescript: 4.5.3
       uuid: 8.3.2
-      webextension-polyfill-ts: 0.25.0
 
   ../../packages/wallet/wallet-playground:
     specifiers:
@@ -5362,8 +5350,8 @@ packages:
       - eslint
       - supports-color
 
-  /@dxos/gem-core/2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-T3P5dI2HizcE/v5y+CSDDghV979F693bxeuWB8rJZYoyHS07L7ur6sKlgKTYhhbPpODKh62rEiDzC/qXpG42yw==}
+  /@dxos/gem-core/2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-kUCKvgysc76rHNZ9Xinq2aLX4HrXP1iKmIPQpjGBsC6TXHKhZEO5ZU3yFwhAEL/21YX/4q0RkkYu+eoy0wwLfQ==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -5383,15 +5371,15 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/gem-spore/2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-I98GUcw9EMKfEH32aBkICQ+kAEckJuFSM2ONwIFWP8MC/gwaJiOc2nUyyzQrs+rqOI0f0wWLL3juqfPZCCU+9g==}
+  /@dxos/gem-spore/2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-5JKcH0laq8myEuuTuiY8Xof0DiTkHdt1IyIc4zmtVAPfv36qI0PfrJa1U55Ylkg5J82NHz7azVlJzGr/Pa4kyw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
       react: '*'
       react-dom: '*'
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.3_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.5_3f3895dcf7ed96cd12c4ac345221265f
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       csstype: 3.0.10
@@ -7889,13 +7877,6 @@ packages:
 
   /@types/estree/0.0.50:
     resolution: {integrity: sha512-C6N5s2ZFtuZRj54k2/zyRhNDjJwwcViAM3Nbm8zjBpbqAdZ00mr0CFxvSKeO8Y/e03WVFLpQMdHYVfUd6SB+Hw==}
-
-  /@types/expect/24.3.0:
-    resolution: {integrity: sha512-aq5Z+YFBz5o2b6Sp1jigx5nsmoZMK5Ceurjwy6PZmRv7dEi1jLtkARfvB1ME+OXJUG+7TZUDcv3WoCr/aor6dQ==}
-    deprecated: This is a stub types definition. expect provides its own type definitions, so you do not need this installed.
-    dependencies:
-      expect: 27.0.6
-    dev: true
 
   /@types/faker/5.5.9:
     resolution: {integrity: sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==}
@@ -10531,7 +10512,7 @@ packages:
 
   /chokidar/2.1.8:
     resolution: {integrity: sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg==}
-    deprecated: Chokidar 2 does not receive security updates since 2019. Upgrade to chokidar 3 with 15x fewer dependencies
+    deprecated: Chokidar 2 will break on node v14+. Upgrade to chokidar 3 with 15x less dependencies.
     dependencies:
       anymatch: 2.0.0
       async-each: 1.0.3
@@ -24532,17 +24513,6 @@ packages:
       - safe-compare
       - supports-color
       - utf-8-validate
-    dev: true
-
-  /webextension-polyfill-ts/0.25.0:
-    resolution: {integrity: sha512-ikQhwwHYkpBu00pFaUzIKY26I6L87DeRI+Q6jBT1daZUNuu8dSrg5U9l/ZbqdaQ1M/TTSPKeAa3kolP5liuedw==}
-    deprecated: This project has moved to @types/webextension-polyfill
-    dependencies:
-      webextension-polyfill: 0.7.0
-    dev: true
-
-  /webextension-polyfill/0.7.0:
-    resolution: {integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==}
     dev: true
 
   /webextension-polyfill/0.8.0:

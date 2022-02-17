@@ -2,22 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import clsx from 'clsx';
+import React, { useEffect, useMemo, useState } from 'react';
+import { css } from '@emotion/css';
+
 import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { defaultGraphStyles, Graph, GraphBuilder, GraphNode, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
-import { css } from '@emotion/css';
-import clsx from 'clsx';
-import React, { useEffect, useMemo, useState } from 'react';
 
 // Testing.
 // import { TestGraphModelAdapter, TestGraphModel, convertTreeToGraph, createTree } from '@dxos/gem-spore';
 import { enumFromString, OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
 
 export default {
-  title: 'demos/Graph'
+  title: 'demos/stories'
 };
 
 const styles = css`
@@ -42,11 +43,9 @@ const styles = css`
   }
 `;
 
-// TODO(burdon): Generator (org, projects, etc.)
 // TODO(burdon): Devtools mesh.
 // TODO(burdon): createItem defaults.
 // TODO(burdon): useSelection ?? [] (create default).
-// TODO(burdon): Force properties.
 
 const useGraphModel = (party?: Party) => {
   const model = useMemo(() => new GraphBuilder<Item<ObjectModel>>(), []);
@@ -54,11 +53,16 @@ const useGraphModel = (party?: Party) => {
     // TODO(burdon): Naturally exclude party item.
     return enumFromString(TestType, item.type!) !== undefined;
   }), [party]);
+
   useEffect(() => {
-    // TODO(burdon): Error if add multiple nodes with same ID.
-    if (model.graph.nodes.length >= 4) {
-      return;
-    }
+    console.log('UPDATE');
+    model._graph.nodes = [];
+    model._graph.links = [];
+
+    // TODO(burdon): Reset and rebuild.
+    // if (model.graph.nodes.length >= 4) {
+    //   return;
+    // }
 
     // TODO(burdon): Batch mode.
     items?.forEach(item => model.addNode({
@@ -67,11 +71,15 @@ const useGraphModel = (party?: Party) => {
     }));
 
     // TODO(burdon): Idempotent.
-    items?.forEach(item => {
-      if (item.parent) {
-        model.createLink(model.getNode(item.id)!, model.getNode(item.parent.id)!);
-      }
-    });
+    // items?.forEach(item => {
+    //   if (item.parent) {
+    //     model.createLink(model.getNode(item.id)!, model.getNode(item.parent.id)!);
+    //   }
+    // });
+
+    console.log(model.graph.nodes.length, items?.length)
+
+    model.update();
   }, [items]);
 
   return model;
@@ -127,9 +135,28 @@ const App = () => {
               className={clsx(defaultGraphStyles, styles)}
               arrows
               drag
-              nodeClass={(node: GraphNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')}
-              label={(node: GraphNode<Item<ObjectModel>>) => node.data!.model.getProperty('title')}
               model={model}
+              forces={{
+                manyBody: {
+                  distanceMax: 300
+                },
+                center: {
+                  strength: 0.1
+                },
+                // x: {
+                //   strength: 0.05
+                // },
+                // y: {
+                //   strength: 0.05
+                // }
+              }}
+              classes={{
+                node: (node: GraphNode<Item<ObjectModel>>) => node.data!.type!.replaceAll(/\W/g, '_')
+              }}
+              labels={{
+                text: (node: GraphNode<Item<ObjectModel>>, highlight) =>
+                  highlight ? node.data!.model.getProperty('title') : undefined
+              }}
             />
           </Zoom>
         </SVG>
