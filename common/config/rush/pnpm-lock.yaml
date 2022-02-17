@@ -69,6 +69,7 @@ importers:
       download: ^8.0.0
       esbuild: ^0.11.23
       expect: ~27.0.2
+      source-map-support: ^0.5.12
       tail: ~2.2.4
       ts-node: ^9.1.1
       typescript: ^4.5.2
@@ -87,6 +88,7 @@ importers:
       debug: 4.3.3
       download: 8.0.0
       esbuild: 0.11.23
+      source-map-support: 0.5.21
       tail: 2.2.4
     devDependencies:
       '@dxos/async': link:../../common/async
