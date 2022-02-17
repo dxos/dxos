@@ -107,6 +107,10 @@ export class NetworkManager {
       options.label
     );
 
+    swarm.errors.handle(error => {
+      log(`Swarm error: ${error}`);
+    })
+
     this._swarms.set(topic, swarm);
     this._signal.join(topic, peerId);
     this._maps.set(topic, new SwarmMapper(swarm, presence));
