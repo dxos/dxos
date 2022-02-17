@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.27.4](https://www.github.com/dxos/protocols/compare/v2.27.3...v2.27.4) (2022-02-17)
+
+
+### Bug Fixes
+
+* Stream ignore unhandled errors ([#952](https://www.github.com/dxos/protocols/issues/952)) ([65c47ed](https://www.github.com/dxos/protocols/commit/65c47ed640e116e3bf884284fbdafb600c3d1b5c))
+* update config. ([#956](https://www.github.com/dxos/protocols/issues/956)) ([0a2ac7a](https://www.github.com/dxos/protocols/commit/0a2ac7a15bd30bab765f57fe8f640d489b747f36))
+
 ### [2.27.3](https://www.github.com/dxos/protocols/compare/v2.27.2...v2.27.3) (2022-02-17)
 
 
