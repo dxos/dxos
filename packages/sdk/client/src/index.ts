@@ -22,5 +22,6 @@ export {
   OpenProgress,
   PartyMember,
   ResultSet,
-  PARTY_ITEM_TYPE
+  PARTY_ITEM_TYPE,
+  ItemFilterDeleted
 } from '@dxos/echo-db';

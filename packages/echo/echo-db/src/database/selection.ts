@@ -94,7 +94,7 @@ export class Selection<T extends Entity<any>> {
    * Finish the selection and return the result.
    */
   query (options: QueryOptions = {}): SelectionResult<T> {
-    return new SelectionResult<T>(() => this._execute(options), this._update);
+    return new SelectionResult<T>(() => this._execute(options), this._update, this._root);
   }
 
   /**
@@ -175,7 +175,8 @@ export class SelectionResult<T extends Entity<any>> {
 
   constructor (
     private readonly _execute: () => T[],
-    private readonly _update: Event<Entity<any>[]>
+    private readonly _update: Event<Entity<any>[]>,
+    private readonly _root: SelectionRoot
   ) {
     this._lastResult = this._execute();
     this.update.addEffect(() => _update.on(entities => {
@@ -203,6 +204,13 @@ export class SelectionResult<T extends Entity<any>> {
     const res = this.result;
     assert(res.length === 1, 'Expected one result, got ' + res.length);
     return res[0];
+  }
+
+  /**
+   * The root of the selection. Either a database or an item. Must be a stable reference.
+   */
+  get root (): SelectionRoot {
+    return this._root;
   }
 }
 
