@@ -18,7 +18,7 @@ import { Falsy } from '@dxos/util';
  * @param selection Selection from which to query data. Can be falsy - in that case the hook will return undefined.
  * @param deps Array of values that trigger the selector when changed.
  */
-export function useSelection<T extends Entity<any>>(
+export function useSelection<T extends Entity<any>> (
   selection: Selection<T> | SelectionResult<T> | Falsy,
   deps: readonly any[] = []
 ): T[] | undefined {
@@ -46,6 +46,6 @@ export function useSelection<T extends Entity<any>>(
 }
 
 const coerseSelection = <T extends Entity>(arg: Selection<T> | SelectionResult<T> | Falsy): SelectionResult<T> | undefined =>
-  !arg ? undefined :
-    arg instanceof Selection ? arg.query() :
-      arg 
+  !arg ? undefined
+    : arg instanceof Selection ? arg.query()
+      : arg;

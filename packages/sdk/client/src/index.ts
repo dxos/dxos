@@ -23,5 +23,5 @@ export {
   PartyMember,
   ResultSet,
   PARTY_ITEM_TYPE,
-  ItemFilterDeleted,
+  ItemFilterDeleted
 } from '@dxos/echo-db';
