@@ -4,6 +4,7 @@
 
 import clsx from 'clsx';
 import debug from 'debug';
+import faker from 'faker';
 import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
@@ -117,7 +118,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   });
   useButton('Reset', () => {
     model.clear();
-    model.createNodes(undefined, 12);
+    model.createNodes(undefined, faker.datatype.number({ min: 6, max: 36 }));
   });
   useButton('Create', () => {
     model.createNodes(undefined, 1);
@@ -164,7 +165,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
       },
       onLinkClick: (link: GraphLayoutLink<TestNode>, event: MouseEvent) => {
         if (event.metaKey) {
-          model.deleteLink(link);
+          model.deleteLink(link.id);
         }
       },
       arrows: {

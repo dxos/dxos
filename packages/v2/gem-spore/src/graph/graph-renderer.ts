@@ -11,8 +11,6 @@ import { createBullets } from './bullets';
 import { GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
 import { getCircumferencePoints } from './util';
 
-// TODO(burdon): Pass __GraphNode__ or GraphLayoutNode to callbacks?
-
 export type LabelOptions<N extends GraphNode> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined
 }
@@ -205,7 +203,17 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .attr('class', 'guides')
       .selectAll<SVGCircleElement, { cx: number, cy: number, r: number }>('circle.guide')
         .data(layout.guides ?? [])
-        .join('circle')
+        .join(
+          enter => enter
+            .append('circle')
+            .attr('r', 0),
+          update => update,
+          exit => exit
+            .transition()
+            .duration(500)
+            .attr('r', 0)
+            .remove()
+        )
         .attr('class', 'guide')
         .attr('cx', d => d.cx)
         .attr('cy', d => d.cy)

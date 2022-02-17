@@ -6,9 +6,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import {
   createSimulationDrag,
-  defaultForceOptions,
   AttributesOptions,
-  ForceOptions,
   GraphForceProjector,
   GraphModel,
   GraphLayoutNode,
@@ -21,10 +19,10 @@ import { useSvgContext } from '@dxos/gem-core';
 
 export interface GraphProps {
   className?: string
-  forces?: ForceOptions
-  arrows?: boolean
-  drag?: boolean
   model?: GraphModel<any>
+  projector?: GraphForceProjector<any>
+  drag?: boolean
+  arrows?: boolean
   labels?: LabelOptions<any>
   attributes?: AttributesOptions<any>
   onSelect?: (node: GraphLayoutNode<any>) => void
@@ -32,22 +30,14 @@ export interface GraphProps {
 
 /**
  * SVG Graph controller.
- * @param className
- * @param forces
- * @param arrows
- * @param drag
- * @param model
- * @param labels
- * @param attributes
- * @param onSelect
  * @constructor
  */
 export const Graph = ({
   className = defaultGraphStyles,
-  forces = defaultForceOptions,
-  arrows,
-  drag,
   model,
+  projector: controlledProjector,
+  drag,
+  arrows,
   labels,
   attributes,
   onSelect
@@ -56,7 +46,7 @@ export const Graph = ({
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    const projector = new GraphForceProjector(context, { forces });
+    const projector = controlledProjector ?? new GraphForceProjector(context);
     const renderer = new GraphRenderer(context, graphRef, {
       drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {
@@ -92,4 +82,4 @@ export const Graph = ({
   return (
     <g ref={graphRef} className={className} />
   );
-}
+};

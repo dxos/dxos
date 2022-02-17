@@ -11,6 +11,16 @@ import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode, G
 const log = debug('gem:graph-force-projector');
 
 /**
+ * Return value or invoke function.
+ * @param v
+ * @param cb
+ * @param def
+ */
+const valueOrFunction = <T> (v: T | ((...args: any[]) => T) | undefined, cb, def: T) => {
+  return (typeof v === 'function') ? cb(v) : v ?? def;
+};
+
+/**
  * Returns the config object or an empty object if the property is set to true (or defaults to true).
  * Otherwise returns undefined.
  * @param options
@@ -91,7 +101,7 @@ export type GraphForceProjectorOptions = {
   guides?: boolean
   forces?: ForceOptions
   attributes?: {
-    radius: (node: GraphLayoutNode<any>, children: number) => number
+    radius: number | ((node: GraphLayoutNode<any>, children: number) => number)
   }
 }
 
@@ -183,9 +193,8 @@ export class GraphForceProjector<N extends GraphNode>
       }
 
       const children = this.numChildren(node);
-      const radius = this.options?.attributes?.radius ?? (() => 6 + children * 2);
       Object.assign(node, {
-        r: radius(node, children)
+        r: valueOrFunction<number>(this.options?.attributes?.radius, (f) => f(node, children), 6)
       });
     });
 
@@ -234,6 +243,7 @@ export class GraphForceProjector<N extends GraphNode>
         log('stopped');
       })
 
+      // .alphaDecay(1 - Math.pow(0.001, 1 / 300))
       .alphaTarget(0)
       .alpha(1)
       .restart();
@@ -278,6 +288,7 @@ export class GraphForceProjector<N extends GraphNode>
       // https://github.com/d3/d3-force#forceCollide
       .force('collide', maybeCreate<ForceCollideOptions>(forces?.collide, (config: ForceCollideOptions) => {
         const force = d3.forceCollide();
+        force.radius(16);
         if (config.strength) {
           force.strength(config.strength);
         }

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 
-import { SVGContext } from '../context';
+import { Scale, SVGContext } from '../context';
 
 export const SVGContextDef = createContext<SVGContext>(undefined);
 
@@ -13,4 +13,11 @@ export const SVGContextDef = createContext<SVGContext>(undefined);
  */
 export const useSvgContext = (): SVGContext => {
   return useContext<SVGContext>(SVGContextDef);
+}
+
+/**
+ * Create new context (as hook).
+ */
+export const createSvgContext = (scale?: Scale): SVGContext => {
+  return useMemo(() => new SVGContext(scale), []);
 }

@@ -6,7 +6,7 @@ import faker from 'faker';
 
 import { EventEmitter } from '@dxos/gem-core';
 
-import { emptyGraph, GraphData, GraphLayoutLink, GraphModel } from '../graph';
+import { emptyGraph, GraphData, GraphModel } from '../graph';
 import { createLink, createNode } from './data';
 import { TestNode } from './types';
 
@@ -24,16 +24,6 @@ export class TestGraphModel implements GraphModel<TestNode> {
     return this._graph;
   }
 
-  subscribe (callback: (graph: GraphData<TestNode>) => void) {
-    return this.updated.on(callback);
-  }
-
-  clear () {
-    this._graph.nodes = [];
-    this._graph.links = [];
-    this.update();
-  }
-
   getNode (id: string) {
     return this._graph.nodes.find(item => item.id === id);
   }
@@ -42,8 +32,14 @@ export class TestGraphModel implements GraphModel<TestNode> {
     return faker.random.arrayElement(this._graph.nodes);
   }
 
-  update () {
-    this.updated.emit(this._graph);
+  subscribe (callback: (graph: GraphData<TestNode>) => void) {
+    return this.updated.on(callback);
+  }
+
+  clear () {
+    this._graph.nodes = [];
+    this._graph.links = [];
+    this.update();
   }
 
   createNodes (node: TestNode = undefined, n: number = 1, update = true) {
@@ -60,15 +56,26 @@ export class TestGraphModel implements GraphModel<TestNode> {
     update && this.update();
   }
 
+  deleteNode (node: string, update = true) {
+    this._graph.nodes = this._graph.nodes.filter(({ id }) => id !== node);
+    this._graph.links = this._graph.links.filter(({ source, target }) => source !== node && target !== node);
+
+    update && this.update();
+  }
+
   createLink (source: TestNode, target: TestNode, update = true) {
     this._graph.links.push(createLink(source, target));
 
     update && this.update();
   }
 
-  deleteLink (link: GraphLayoutLink<TestNode>, update = true) {
-    this._graph.links = this._graph.links.filter(({ id }) => id !== link.id);
+  deleteLink (link: string, update = true) {
+    this._graph.links = this._graph.links.filter(({ id }) => id !== link);
 
     update && this.update();
+  }
+
+  update () {
+    this.updated.emit(this._graph);
   }
 }

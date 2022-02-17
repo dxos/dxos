@@ -4,13 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 
 import {
   convertTreeToGraph,
   createGraph,
   createTree,
+  seed,
   Graph,
+  GraphForceProjector,
   GraphLayoutNode,
   Markers,
   TestGraphModel,
@@ -20,6 +22,8 @@ import {
 export default {
   title: 'gem-spore/Graph'
 };
+
+seed(1);
 
 export const Primary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
@@ -32,9 +36,9 @@ export const Primary = () => {
           <Grid axis />
           <Zoom extent={[1/2, 2]}>
             <Graph
-              arrows
-              drag
               model={model}
+              drag
+              arrows
             />
           </Zoom>
         </SVG>
@@ -43,7 +47,50 @@ export const Primary = () => {
   );
 };
 
-export const Secondary = ({ graph = true }) => {
+export const Secondary = () => {
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+  const context = createSvgContext();
+  const projector = useMemo(() => new GraphForceProjector(context, {
+    guides: true,
+    forces: {
+      manyBody: {
+        strength: -80
+      },
+      link: {
+        distance: 40,
+        iterations: 5
+      },
+      radial: {
+        radius: 100,
+        strength: 0.02
+      }
+    },
+    attributes: {
+      radius: (node, count) => 6 + Math.log(count + 1) * 4
+    }
+  }), []);
+
+  return (
+    <FullScreen>
+      <SVGContextProvider context={context}>
+        <SVG>
+          <Markers />
+          <Grid axis />
+          <Zoom extent={[1/2, 2]}>
+            <Graph
+              model={model}
+              drag
+              arrows
+              projector={projector}
+            />
+          </Zoom>
+        </SVG>
+      </SVGContextProvider>
+    </FullScreen>
+  );
+};
+
+export const Tertiary = ({ graph = true }) => {
   const selected = useMemo(() => new Set(), []);
   const model = useMemo(() => {
     return graph ?
@@ -59,26 +106,17 @@ export const Secondary = ({ graph = true }) => {
           <Grid axis />
           <Zoom extent={[1/2, 2]}>
             <Graph
-              arrows
-              forces={{
-                link: {
-                  distance: 30,
-                  iterations: 3
-                },
-                radial: {
-                  strength: 0.01
-                }
-              }}
-              drag
               model={model}
+              drag
+              arrows
               labels={{
-                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) =>
-                  highlight || selected.has(node.id) ? node.data.label : undefined
+                text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
+                  return highlight || selected.has(node.id) ? node.data.label : undefined;
+                }
               }}
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
-                  class: selected.has(node.id) ? 'selected' : undefined,
-                  // radius: 8 // TODO(burdon): Apply to projector (not renderer).
+                  class: selected.has(node.id) ? 'selected' : undefined
                 })
               }}
               onSelect={(node: GraphLayoutNode<TestNode>) => {
@@ -87,7 +125,6 @@ export const Secondary = ({ graph = true }) => {
                 } else {
                   selected.add(node.id);
                 }
-
                 model.update();
               }}
             />
