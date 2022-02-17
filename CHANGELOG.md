@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.27.2](https://www.github.com/dxos/protocols/compare/v2.27.1...v2.27.2) (2022-02-17)
+
+
+### Bug Fixes
+
+* add missing conf to proto. ([#949](https://www.github.com/dxos/protocols/issues/949)) ([ab03c76](https://www.github.com/dxos/protocols/commit/ab03c765b7f94925a4a66506dddbddfa2f9cde92))
+* **selection-api:** When creating a link, source and target items are updated ([#945](https://www.github.com/dxos/protocols/issues/945)) ([131e7b1](https://www.github.com/dxos/protocols/commit/131e7b144614a9757cfbda164a57eaeec9c450fc))
+
 ### [2.27.1](https://www.github.com/dxos/protocols/compare/v2.27.0...v2.27.1) (2022-02-15)
 
 
