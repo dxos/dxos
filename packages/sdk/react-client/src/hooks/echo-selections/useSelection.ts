@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Entity, Selection } from '@dxos/client';
+import { Entity, Selection, SelectionResult } from '@dxos/client';
 import { Falsy } from '@dxos/util';
 
 /**
@@ -19,16 +19,16 @@ import { Falsy } from '@dxos/util';
  * @param deps Array of values that trigger the selector when changed.
  */
 export function useSelection<T extends Entity<any>> (
-  selection: Selection<T> | Falsy,
+  selection: Selection<T> | SelectionResult<T> | Falsy,
   deps: readonly any[] = []
 ): T[] | undefined {
-  const [result, setResult] = useState(() => selection ? selection.query() : undefined);
+  const [result, setResult] = useState(() => coerseSelection(selection));
   const [data, setData] = useState(() => result ? result.result : undefined);
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
-    const newResult = selection ? selection.query() : undefined;
-    const newData = newResult ? newResult.result : undefined;
+    const newResult = coerseSelection(selection);
+    const newData = newResult?.result;
     setResult(newResult);
     setData(newData);
   }, [!!selection, !!selection && selection.root, ...deps]);
@@ -44,3 +44,8 @@ export function useSelection<T extends Entity<any>> (
 
   return data;
 }
+
+const coerseSelection = <T extends Entity>(arg: Selection<T> | SelectionResult<T> | Falsy): SelectionResult<T> | undefined =>
+  !arg ? undefined
+    : arg instanceof Selection ? arg.query()
+      : arg;
