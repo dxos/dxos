@@ -6,17 +6,17 @@ import React from 'react';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoGraph, Layout } from '../src';
+import { EchoTable, Layout } from '../src';
 
 export default {
-  title: 'demos/Layout'
+  title: 'KitchenSink/Layout'
 };
 
 export const Primary = () => {
   return (
     <FullScreen>
       <Layout>
-        <EchoGraph />
+        <EchoTable />
       </Layout>
     </FullScreen>
   );

@@ -6,13 +6,12 @@ import React, { useEffect, useState } from 'react';
 import { css } from '@emotion/css';
 
 import { Party } from '@dxos/client';
-import { truncateString } from '@dxos/debug';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
 
-import { OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
+import { EchoTable, OrgBuilder, ProjectBuilder, TestType, useGenerator } from '../src';
 
 export default {
-  title: 'demos/selection'
+  title: 'KitchenSink/EchoTable'
 };
 
 // TODO(burdon): Devtools mesh.
@@ -23,37 +22,17 @@ export default {
 const styles = css`
   height: 100vh;
   overflow: scroll;
-
-  table {
-    td {
-      font-family: monospace;
-      font-size: 16px;
-      padding: 2px 8px;
-      color: #333;
-    }
-    
-    // https://mui.com/customization/color/#color-palette
-    td.example_type_org {
-      color: #00796b;
-    }
-    td.example_type_project {
-      color: #7b1fa2;
-    }
-    td.example_type_person {
-      color: #e64a19;
-    }
-    td.example_type_task {
-      color: #388e3c;
-    }
-  }
 `;
+
+// TODO(burdon): Factor out.
 
 const App = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const generator = useGenerator(party);
+
+  // TODO(burdon): Skip party's item.
   const items = useSelection(party?.select()) ?? [];
-  console.log(items);
+  const generator = useGenerator(party);
 
   useEffect(() => {
     setImmediate(async () => {
@@ -83,23 +62,9 @@ const App = () => {
 
   return (
     <div className={styles}>
-      <table>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>
-                {truncateString(item.id, 8)}
-              </td>
-              <td className={item.type!.replace(/\W/g, '_')}>
-                {item.type}
-              </td>
-              <td>
-                {item.model.getProperty('title')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <EchoTable
+        items={items}
+      />
     </div>
   );
 };
