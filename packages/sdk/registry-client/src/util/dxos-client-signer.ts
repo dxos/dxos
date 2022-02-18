@@ -23,7 +23,8 @@ export class DxosClientSigner implements Partial<Signer> {
 
   public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
     // @polkadot/api/packages/types/src/extrinsic/util.ts
-    const encoded = data.length > 512
+    // Number found empirically in signature tests.
+    const encoded = data.length > 514
       ? u8aToHex(this.registry.hash(hexToU8a(data)))
       : data;
 
