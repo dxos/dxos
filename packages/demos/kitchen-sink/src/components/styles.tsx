@@ -7,26 +7,21 @@ import { css } from '@emotion/css';
 // https://mui.com/customization/color/#color-palette
 
 export const styles = css`
-  table {
-    td {
-      font-family: monospace;
-      font-size: 12px;
-      padding: 2px 8px;
-      color: #333;
-    }
-    
-    td.example_type_org {
-      color: #00796b;
-    }
-    td.example_type_project {
-      color: #7b1fa2;
-    }
-    td.example_type_person {
-      color: #e64a19;
-    }
-    td.example_type_task {
-      color: #388e3c;
-    }
+  .monospace {
+    font-family: monospace;
+  }
+
+  .example_type_org {
+    color: #00796b;
+  }
+  .example_type_project {
+    color: #7b1fa2;
+  }
+  .example_type_person {
+    color: #e64a19;
+  }
+  .example_type_task {
+    color: #388e3c;
   }
   
   svg {
