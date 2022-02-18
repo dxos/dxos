@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
-import { Model } from '@dxos/model-factory';
+import { Model, StateManager } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
@@ -19,7 +19,7 @@ const log = debug('dxos:echo-db:items:item');
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
  */
-export class Item<M extends Model> extends Entity<M> {
+export class Item<M extends Model | null = Model | null> extends Entity<M> {
   /**
    * Parent item (or null if this item is a root item).
    */
@@ -61,11 +61,11 @@ export class Item<M extends Model> extends Entity<M> {
     itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
-    model: M,
+    stateManager: StateManager<NonNullable<M>>,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemManager, itemId, itemType, model);
+    super(itemManager, itemId, itemType, stateManager);
     this._updateParent(parent);
   }
 

@@ -24,7 +24,7 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material';
 
-import { PartySharingDialog, SpawnBotDialog } from '@dxos/react-framework'
+import { PartySharingDialog } from '@dxos/react-framework'
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';

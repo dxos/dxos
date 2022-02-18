@@ -5,3 +5,4 @@
 export * from './messages';
 export * from './test-model';
 export * from './test-list-model';
+export * from './test-rig';

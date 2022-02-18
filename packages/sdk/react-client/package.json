@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.26.1",
+  "version": "2.27.4",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -8,8 +8,9 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
+    "book": "toolchain book",
     "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
@@ -31,7 +32,6 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@mui/material": "^5.4.2",
     "@testing-library/react": "^11.0.4",

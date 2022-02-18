@@ -65,7 +65,7 @@ Edit `.env` if necessary
 2. Run the storybook
 
 ```bash
-rush update && rush build --to @dxos/demos
+rush update && rush build --to @dxos/deprecated-demos
 rushx storybook
 ```
 

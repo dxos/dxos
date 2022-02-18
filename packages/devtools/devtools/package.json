@@ -1,14 +1,15 @@
 {
   "name": "@dxos/devtools",
-  "version": "2.26.1",
+  "version": "2.27.4",
   "private": true,
   "license": "GPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
+    "book": "toolchain book",
     "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
@@ -49,7 +50,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/messenger-model": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",

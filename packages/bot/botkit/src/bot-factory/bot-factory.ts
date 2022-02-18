@@ -12,9 +12,9 @@ import { createId } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
-import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
-import { ContentLoader } from './ipfs-content-loader';
+import type { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
 
@@ -92,10 +92,10 @@ export class BotFactory implements BotFactoryService {
       );
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
-      const workingDirectory = handle.getContentPath();
+      const contentDirectory = handle.getContentPath();
 
       if (this._contentLoader && request.package?.ipfsCid) {
-        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, workingDirectory);
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, contentDirectory);
       }
 
       const localPath = request.package?.localPath;
@@ -105,10 +105,14 @@ export class BotFactory implements BotFactoryService {
         handle.localPath = localPath;
       }
 
+      this._bots.set(id, handle);
+
+      handle.startTimestamp = new Date();
+
       const port = await this._botContainer.spawn({
         id,
         localPath,
-        logFilePath: handle.getLogFilePath(new Date())
+        logFilePath: handle.getLogFilePath(handle.startTimestamp)
       });
       log(`[${id}] Openning RPC channel`);
       await handle.open(port);
@@ -118,7 +122,6 @@ export class BotFactory implements BotFactoryService {
         invitation: request.invitation
       });
       log(`[${id}] Initialization complete`);
-      this._bots.set(id, handle);
       return handle.bot;
     } catch (error: any) {
       log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
@@ -131,10 +134,13 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(request.id);
+
+      bot.startTimestamp = new Date();
+
       const port = await this._botContainer.spawn({
         id,
         localPath: bot.localPath,
-        logFilePath: bot.getLogFilePath(new Date())
+        logFilePath: bot.getLogFilePath(bot.startTimestamp)
       });
       log(`[${id}] Openning RPC channel`);
       await bot.open(port);
@@ -189,6 +195,12 @@ export class BotFactory implements BotFactoryService {
 
   async removeAll () {
     await Promise.all(Array.from(this._bots.values()).map(bot => this.remove(bot.bot)));
+  }
+
+  getLogs (request: GetLogsRequest) {
+    assert(request.botId);
+    const bot = this._getBot(request.botId);
+    return bot.getLogsStream();
   }
 
   private _getBot (botId: string) {

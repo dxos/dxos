@@ -1,5 +1,59 @@
 # Change Log
 
+### [2.27.4](https://www.github.com/dxos/protocols/compare/v2.27.3...v2.27.4) (2022-02-17)
+
+
+### Bug Fixes
+
+* Stream ignore unhandled errors ([#952](https://www.github.com/dxos/protocols/issues/952)) ([65c47ed](https://www.github.com/dxos/protocols/commit/65c47ed640e116e3bf884284fbdafb600c3d1b5c))
+* update config. ([#956](https://www.github.com/dxos/protocols/issues/956)) ([0a2ac7a](https://www.github.com/dxos/protocols/commit/0a2ac7a15bd30bab765f57fe8f640d489b747f36))
+
+### [2.27.3](https://www.github.com/dxos/protocols/compare/v2.27.2...v2.27.3) (2022-02-17)
+
+
+### Bug Fixes
+
+* Allow querying for deleted items in useSelection hook ([#950](https://www.github.com/dxos/protocols/issues/950)) ([db3c1c1](https://www.github.com/dxos/protocols/commit/db3c1c1983365384dc54b8cb69f4e81d458f5bb5))
+* **CustomTextField:** updating on peer change ([#942](https://www.github.com/dxos/protocols/issues/942)) ([c3308dd](https://www.github.com/dxos/protocols/commit/c3308ddd3464f92c4c874e3307b76c11fb54f85b))
+
+### [2.27.2](https://www.github.com/dxos/protocols/compare/v2.27.1...v2.27.2) (2022-02-17)
+
+
+### Bug Fixes
+
+* add missing conf to proto. ([#949](https://www.github.com/dxos/protocols/issues/949)) ([ab03c76](https://www.github.com/dxos/protocols/commit/ab03c765b7f94925a4a66506dddbddfa2f9cde92))
+* **selection-api:** When creating a link, source and target items are updated ([#945](https://www.github.com/dxos/protocols/issues/945)) ([131e7b1](https://www.github.com/dxos/protocols/commit/131e7b144614a9757cfbda164a57eaeec9c450fc))
+
+### [2.27.1](https://www.github.com/dxos/protocols/compare/v2.27.0...v2.27.1) (2022-02-15)
+
+
+### Features
+
+* Bot logs stream ([#939](https://www.github.com/dxos/protocols/issues/939)) ([0c1c38c](https://www.github.com/dxos/protocols/commit/0c1c38c3073c5db219a2a33de0a56e4bc2bd8794))
+* word generator demo. ([#921](https://www.github.com/dxos/protocols/issues/921)) ([e3de338](https://www.github.com/dxos/protocols/commit/e3de3381f0425b9f9dfdf9d5cb92821567be280d))
+
+
+### Bug Fixes
+
+* adjust  react-registry-client storybook ([#943](https://www.github.com/dxos/protocols/issues/943)) ([39fac7d](https://www.github.com/dxos/protocols/commit/39fac7d9777143902b60ae8319c55efa7ad8288d))
+
+## [2.27.0](https://www.github.com/dxos/protocols/compare/v2.26.1...v2.27.0) (2022-02-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove config version 0 (#938)
+* Extract model and S/M integration into StateManager class (#916)
+
+### Features
+
+* Add useTestPartyBootstrap ([#937](https://www.github.com/dxos/protocols/issues/937)) ([c47c594](https://www.github.com/dxos/protocols/commit/c47c5946940cec76524515e5e4bff1beed2635fd))
+* Extract model and S/M integration into StateManager class ([#916](https://www.github.com/dxos/protocols/issues/916)) ([c8f77fb](https://www.github.com/dxos/protocols/commit/c8f77fb6bf1d90b6d331450fa9bafa3cf826bda5))
+* Initial bot docs ([#933](https://www.github.com/dxos/protocols/issues/933)) ([bdb8134](https://www.github.com/dxos/protocols/commit/bdb8134b39fa119ba736e8babe57131730258839))
+* Remove config version 0 ([#938](https://www.github.com/dxos/protocols/issues/938)) ([45070a8](https://www.github.com/dxos/protocols/commit/45070a812fd9d1624ab0aa5a8f8d29828c77c69a))
+* Strong ordering for models ([#927](https://www.github.com/dxos/protocols/issues/927)) ([de5c183](https://www.github.com/dxos/protocols/commit/de5c18322078e00dff1337e4c5978d137f987988))
+* **toolchain-node-library:** Add commands for running esbuild-server ([#926](https://www.github.com/dxos/protocols/issues/926)) ([2f77453](https://www.github.com/dxos/protocols/commit/2f7745338707a3cae66794fee652dc9958a9ba52))
+
 ### [2.26.1](https://www.github.com/dxos/protocols/compare/v2.26.0...v2.26.1) (2022-02-08)
 
 

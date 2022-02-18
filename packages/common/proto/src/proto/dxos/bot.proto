@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "./client.proto";
-import "./configv1.proto";
+import "./config.proto";
 import "./echo/invitation.proto";
 
 package dxos.bot;
@@ -50,6 +50,15 @@ message SendCommandResponse {
   bytes response = 1;
 }
 
+message GetLogsResponse {
+  bytes chunk = 1;
+}
+
+message GetLogsRequest {
+  string bot_id = 1;
+}
+
+
 /// Service that is used by clients to communicate with bot factory.
 service BotFactoryService {
   rpc GetBots(google.protobuf.Empty) returns (GetBotsResponse);
@@ -61,6 +70,7 @@ service BotFactoryService {
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
   rpc Remove(Bot) returns (google.protobuf.Empty);
+  rpc GetLogs(GetLogsRequest) returns (stream GetLogsResponse);
  
   // TODO(dmaretskyi): querying metrics/state.
  
@@ -71,7 +81,7 @@ service BotFactoryService {
 
 message InitializeRequest {
   /// Bot runtime configuration.
-  dxos.configv1.Config config = 1;
+  dxos.config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
   dxos.echo.InvitationDescriptor invitation = 2;
@@ -79,7 +89,7 @@ message InitializeRequest {
 
 message StartRequest {
   /// Bot runtime configuration.
-  dxos.configv1.Config config = 1;
+  dxos.config.Config config = 1;
 }
 
 /// Service that is used by bots communicating with bot factory.

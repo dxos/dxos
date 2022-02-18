@@ -67,8 +67,10 @@ common/autoinstallers/*/.npmrc
 
 # Build outputs
 dist
+out
 lib
 build
+out
 
 # Web Extensions
 web-ext-artifacts

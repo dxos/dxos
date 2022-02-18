@@ -5,10 +5,12 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Event } from '@dxos/async';
+import { Event, promiseTimeout } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
+import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Entity } from '.';
 import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
@@ -17,11 +19,13 @@ const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
 
+const modelFactory = new ModelFactory().registerModel(ObjectModel);
+
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
-  new Item(null as any, id, type, new ObjectModel(ObjectModel.meta, id), undefined, parent);
+  new Item(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id, {}), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(null as any, id, type, new ObjectModel(ObjectModel.meta, id), {
+  const link = new Link(null as any, id, type, modelFactory.createModel(ObjectModel.meta.type, id, {}), {
     sourceId: source.id,
     targetId: target.id,
     source: source,
@@ -200,6 +204,35 @@ describe('Selection', () => {
         items[0],
         items[1]
       ]);
+    });
+  });
+
+  describe('events', () => {
+    test('events get filtered correctly', async () => {
+      const update = new Event<Entity[]>();
+      const select = createRootSelector(() => items, () => update, null as any);
+
+      const query = select({ type: OBJECT_ORG })
+        .children()
+        .query();
+
+      {
+        const promise = query.update.waitForCount(1);
+        update.emit([items[2]]);
+        await promiseTimeout(promise, 10, new Error('timeout'));
+      }
+
+      {
+        const promise = query.update.waitForCount(1);
+        update.emit([]);
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+      }
+
+      {
+        const promise = query.update.waitForCount(1);
+        update.emit([items[0]]);
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+      }
     });
   });
 });

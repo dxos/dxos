@@ -11,7 +11,7 @@ import { Message as HaloMessage } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import {
-  createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter
+  createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter, Timeframe
 } from '@dxos/echo-protocol';
 import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
@@ -141,7 +141,8 @@ export class Pipeline {
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  memberKey: memberKey.asUint8Array()
+                  memberKey: memberKey.asUint8Array(),
+                  timeframe: new Timeframe()
                 },
                 data: message.echo
               }));

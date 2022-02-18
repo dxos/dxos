@@ -478,6 +478,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/crypto-names",
+      "projectFolder": "packages/common/crypto-names",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/debug",
       "projectFolder": "packages/common/debug",
       "shouldPublish": true,

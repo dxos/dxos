@@ -7,7 +7,7 @@ import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
+import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -29,7 +29,7 @@ describe('DataMirror', () => {
     const stream = itemDemuxer.open();
     feed.written.on(([msg, meta]) => stream.write({
       data: msg,
-      meta: { ...meta, memberKey: PublicKey.random() }
+      meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe() }
     } as any));
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);

@@ -19,4 +19,5 @@
   },
   "search.followSymlinks": false,
   "editor.tabSize": 2,
+  "hediet.vscode-drawio.theme": "Kennedy"
 }

@@ -9,12 +9,11 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import { createId, PublicKey, randomBytes } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter } from '@dxos/echo-protocol';
+import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/feed-store';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
@@ -26,8 +25,7 @@ describe('Item demuxer', () => {
     const memberKey = PublicKey.random();
 
     const modelFactory = new ModelFactory()
-      .registerModel(TestModel)
-      .registerModel(DefaultModel);
+      .registerModel(TestModel);
 
     const feedWriter = new MockFeedWriter();
     const itemManager = new ItemManager(modelFactory, feedWriter);
@@ -96,15 +94,15 @@ describe('Item demuxer', () => {
 
   it('models can be registered after item was already created', async () => {
     const modelFactory = new ModelFactory()
-      .registerModel(ObjectModel)
-      .registerModel(DefaultModel);
+      .registerModel(ObjectModel);
 
     const writeStream = createTransform<EchoEnvelope, IEchoStream>(
       async (message: EchoEnvelope): Promise<IEchoStream> => ({
         meta: {
           feedKey: randomBytes(),
           memberKey: randomBytes(),
-          seq: 0
+          seq: 0,
+          timeframe: new Timeframe()
         },
         data: message
       })
@@ -129,7 +127,7 @@ describe('Item demuxer', () => {
     {
       await itemManager.update.waitForCount(1);
       const items = itemManager.items;
-      expect(items[0].model).toBeInstanceOf(DefaultModel);
+      expect(items[0].model).toBe(null);
       expect(items[1].model).toBeInstanceOf(ObjectModel);
     }
 

@@ -9,6 +9,7 @@ import memdown from 'memdown';
 import { defs } from '@dxos/config';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
+import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 import { InvalidConfigurationError } from '../../interfaces';
 import { isNode } from '../../util';
 
@@ -16,7 +17,7 @@ export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: defs.System.Storage, snapshotsEnabled = false) => {
+export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapshotsEnabled = false) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     storageType,
@@ -24,16 +25,16 @@ export const createStorageObjects = (config: defs.System.Storage, snapshotsEnabl
     persistent = false
   } = config ?? {};
 
-  if (persistent && storageType === defs.System.Storage.StorageDriver.RAM) {
+  if (persistent && storageType === StorageDriver.RAM) {
     throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
   }
-  if (!persistent && (storageType !== undefined && storageType !== defs.System.Storage.StorageDriver.RAM)) {
+  if (!persistent && (storageType !== undefined && storageType !== StorageDriver.RAM)) {
     throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
   }
-  if (persistent && keyStorage === defs.System.Storage.StorageDriver.RAM) {
+  if (persistent && keyStorage === StorageDriver.RAM) {
     throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
   }
-  if (!persistent && (keyStorage !== defs.System.Storage.StorageDriver.RAM && keyStorage !== undefined)) {
+  if (!persistent && (keyStorage !== StorageDriver.RAM && keyStorage !== undefined)) {
     throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
   }
 
@@ -61,24 +62,24 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
   }
 };
 
-const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): StorageType | undefined => {
+const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
     case undefined: return undefined;
-    case defs.System.Storage.StorageDriver.RAM: return 'ram';
-    case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
-    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
-    case defs.System.Storage.StorageDriver.IDB: return 'idb';
-    case defs.System.Storage.StorageDriver.NODE: return 'node';
-    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`);
+    case StorageDriver.RAM: return 'ram';
+    case StorageDriver.CHROME: return 'chrome';
+    case StorageDriver.FIREFOX: return 'firefox';
+    case StorageDriver.IDB: return 'idb';
+    case StorageDriver.NODE: return 'node';
+    default: throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
   }
 };
 
-const toKeyStorageType = (type: defs.System.Storage.StorageDriver | undefined): KeyStorageType | undefined => {
+const toKeyStorageType = (type: StorageDriver | undefined): KeyStorageType | undefined => {
   switch (type) {
     case undefined: return undefined;
-    case defs.System.Storage.StorageDriver.RAM: return 'ram';
-    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
-    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
-    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`);
+    case StorageDriver.RAM: return 'ram';
+    case StorageDriver.LEVELJS: return 'leveljs';
+    case StorageDriver.JSONDOWN: return 'jsondown';
+    default: throw new Error(`Invalid key storage type: ${StorageDriver[type]}`);
   }
 };

@@ -24,7 +24,7 @@ test.skip('Download & install bot', async () => {
         gateway: 'https://apollo3.kube.moon.dxos.network/dxos/ipfs/gateway/'
       }
     }
-  }));
+  } as any));
 
   const installDirectory = await sourceManager.downloadAndInstallBot(createId(), 'QmPTxbghFFjz59NyXMJwYCAAbhK4etNagybWUKJGaEFU5F', {});
 

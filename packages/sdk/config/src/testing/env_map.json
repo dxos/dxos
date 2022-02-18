@@ -1,12 +1,12 @@
 {
   "TEST_CLIENT_ID": {
-    "path": "client.id", 
+    "path": "runtime.client.id", 
     "type": "number"
   },
   "TEST_CLIENT_TAG": {
-    "path": "client.tag"
+    "path": "runtime.client.tag"
   },
   "TEST_SERVER_ENDPOINT": {
-    "path": "server.endpoint"
+    "path": "runtime.server.endpoint"
   }
 }

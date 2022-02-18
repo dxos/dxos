@@ -1,6 +1,6 @@
 {
   "name": "@dxos/deprecated-demos",
-  "version": "2.26.1",
+  "version": "2.27.4",
   "private": true,
   "description": "SDK demos and storybooks.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -14,8 +14,9 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
-    "book": "esbuild-server book",
-    "build": "tsc --noEmit && npm run book -- --build",
+    "book": "toolchain book",
+    "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "demo:grid": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
@@ -63,7 +64,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.4",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/d3": "~7.0.0",
     "@types/faker": "^5.5.1",

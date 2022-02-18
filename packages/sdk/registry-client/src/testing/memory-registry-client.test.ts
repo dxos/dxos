@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { IRegistryClient } from '../registry-client-types';
 import { DXN } from '../types';
-import { createMockTypes, createMockResourceRecord } from './fake-data-generator';
+import { createMockResourceRecord } from './fake-data-generator';
 import { MemoryRegistryClient } from './memory-registry-client';
 
 describe('Registry API mock', () => {
@@ -18,8 +18,8 @@ describe('Registry API mock', () => {
 
   it('Returns a specific resource', async () => {
     const dxn = 'example:resource';
-    const resource = createMockResourceRecord({ _dxn: DXN.parse(dxn) });
-    mock = new MemoryRegistryClient(createMockTypes(), [resource]);
+    const resource = createMockResourceRecord({ dxn: DXN.parse(dxn) });
+    mock = new MemoryRegistryClient([resource]);
     /* Parse the query DXN separately to ensure it is not the same instance
      * as the resource DXN.
      */
@@ -43,12 +43,12 @@ describe('Registry API mock', () => {
     const typeNames = types.map(type => type.messageName).sort();
 
     expect(typeNames).to.be.deep.equal([
-      'app',
-      'bot',
-      'dxos.type.IPFS',
-      'dxos.type.KUBE',
-      'dxos.type.Service',
-      'file'
+      '.dxos.type.App',
+      '.dxos.type.Bot',
+      '.dxos.type.File',
+      '.dxos.type.IPFS',
+      '.dxos.type.KUBE',
+      '.dxos.type.Service'
     ]);
   });
 });
