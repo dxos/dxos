@@ -24,6 +24,9 @@
     },
     {
       "path": "../feed-store"
+    },
+    {
+      "path": "../../common/util"
     }
   ]
 }

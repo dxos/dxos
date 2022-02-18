@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "2.27.0",
+  "version": "2.27.4",
   "description": "DXOS Wallet Extension",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -20,6 +20,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/proto": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
@@ -34,8 +35,7 @@
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.1.2",
-    "webextension-polyfill": "^0.8.0",
-    "@dxos/proto": "workspace:*"
+    "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",

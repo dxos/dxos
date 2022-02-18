@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.27.0",
+  "version": "2.27.4",
   "description": "Bot",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -33,7 +33,9 @@
     "@dxos/rpc": "workspace:*",
     "debug": "^4.3.3",
     "download": "^8.0.0",
-    "esbuild": "^0.11.23"
+    "esbuild": "^0.11.23",
+    "source-map-support": "^0.5.12",
+    "tail": "~2.2.4"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
@@ -48,6 +50,7 @@
     "@types/download": "^8.0.1",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
+    "@types/tail": "~2.2.1",
     "assert": "^2.0.0",
     "expect": "~27.0.2",
     "ts-node": "^9.1.1",

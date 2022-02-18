@@ -24,6 +24,7 @@ export class Bot implements BotService {
   async initialize (request: InitializeRequest) {
     log('Client bot start initilizing');
     this.client = new Client(request.config);
+    log('Client config:', JSON.stringify(request.config));
 
     log('Client bot initialize');
     await this.client.initialize();

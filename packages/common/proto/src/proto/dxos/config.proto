@@ -140,6 +140,7 @@ message Runtime {
       string package = 1;
       string channel = 2;
       string bin = 3;
+      string config = 4;
     }
 
     string node_path = 1;
@@ -168,6 +169,7 @@ message Runtime {
       message Endpoints {
         string logs = 1;
         string services = 2;
+        string cert = 3;
       }
     
       Endpoints endpoints = 1;
@@ -200,6 +202,8 @@ message Runtime {
        * Public address of a DXNS Account.
       */
       string dxnsAccount = 4;
+
+      string faucet = 5;
     }
 
     message Ipfs {

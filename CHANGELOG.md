@@ -1,5 +1,42 @@
 # Change Log
 
+### [2.27.4](https://www.github.com/dxos/protocols/compare/v2.27.3...v2.27.4) (2022-02-17)
+
+
+### Bug Fixes
+
+* Stream ignore unhandled errors ([#952](https://www.github.com/dxos/protocols/issues/952)) ([65c47ed](https://www.github.com/dxos/protocols/commit/65c47ed640e116e3bf884284fbdafb600c3d1b5c))
+* update config. ([#956](https://www.github.com/dxos/protocols/issues/956)) ([0a2ac7a](https://www.github.com/dxos/protocols/commit/0a2ac7a15bd30bab765f57fe8f640d489b747f36))
+
+### [2.27.3](https://www.github.com/dxos/protocols/compare/v2.27.2...v2.27.3) (2022-02-17)
+
+
+### Bug Fixes
+
+* Allow querying for deleted items in useSelection hook ([#950](https://www.github.com/dxos/protocols/issues/950)) ([db3c1c1](https://www.github.com/dxos/protocols/commit/db3c1c1983365384dc54b8cb69f4e81d458f5bb5))
+* **CustomTextField:** updating on peer change ([#942](https://www.github.com/dxos/protocols/issues/942)) ([c3308dd](https://www.github.com/dxos/protocols/commit/c3308ddd3464f92c4c874e3307b76c11fb54f85b))
+
+### [2.27.2](https://www.github.com/dxos/protocols/compare/v2.27.1...v2.27.2) (2022-02-17)
+
+
+### Bug Fixes
+
+* add missing conf to proto. ([#949](https://www.github.com/dxos/protocols/issues/949)) ([ab03c76](https://www.github.com/dxos/protocols/commit/ab03c765b7f94925a4a66506dddbddfa2f9cde92))
+* **selection-api:** When creating a link, source and target items are updated ([#945](https://www.github.com/dxos/protocols/issues/945)) ([131e7b1](https://www.github.com/dxos/protocols/commit/131e7b144614a9757cfbda164a57eaeec9c450fc))
+
+### [2.27.1](https://www.github.com/dxos/protocols/compare/v2.27.0...v2.27.1) (2022-02-15)
+
+
+### Features
+
+* Bot logs stream ([#939](https://www.github.com/dxos/protocols/issues/939)) ([0c1c38c](https://www.github.com/dxos/protocols/commit/0c1c38c3073c5db219a2a33de0a56e4bc2bd8794))
+* word generator demo. ([#921](https://www.github.com/dxos/protocols/issues/921)) ([e3de338](https://www.github.com/dxos/protocols/commit/e3de3381f0425b9f9dfdf9d5cb92821567be280d))
+
+
+### Bug Fixes
+
+* adjust  react-registry-client storybook ([#943](https://www.github.com/dxos/protocols/issues/943)) ([39fac7d](https://www.github.com/dxos/protocols/commit/39fac7d9777143902b60ae8319c55efa7ad8288d))
+
 ## [2.27.0](https://www.github.com/dxos/protocols/compare/v2.26.1...v2.27.0) (2022-02-14)
 
 
