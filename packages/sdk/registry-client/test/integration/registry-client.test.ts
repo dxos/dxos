@@ -3,7 +3,6 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';

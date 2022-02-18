@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
+import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
+import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { decodeAddress } from '@polkadot/util-crypto';
 
 import { Client } from '@dxos/client';
@@ -16,14 +17,19 @@ export class DxosClientSigner implements Partial<Signer> {
   private id = 0;
   private publicKey: PublicKey
 
-  constructor (private client: Client, address: string) {
+  constructor (private client: Client, address: string, private registry: Registry) {
     this.publicKey = PublicKey.from(decodeAddress(address));
   }
 
   public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
+    // @polkadot/api/packages/types/src/extrinsic/util.ts
+    const encoded = data.length > 256
+      ? u8aToHex(this.registry.hash(hexToU8a(data)))
+      : data;
+
     const result = await this.client.halo.sign({
       publicKey: this.publicKey,
-      payload: data
+      payload: encoded
     });
 
     return {

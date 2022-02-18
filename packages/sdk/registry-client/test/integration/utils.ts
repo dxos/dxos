@@ -35,7 +35,7 @@ export const setup = async () => {
     type: KeyType.DXNS
   });
 
-  const signer = new DxosClientSigner(client, alice.address);
+  const signer = new DxosClientSigner(client, alice.address, apiPromise.registry);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
   const accountsApi = new AccountClient(apiPromise, signTx);
