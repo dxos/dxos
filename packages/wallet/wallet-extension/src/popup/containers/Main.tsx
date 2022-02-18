@@ -8,7 +8,7 @@ import { Button } from '@mui/material';
 
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
+import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
 export const Main = () => {
   const client = useClient();
@@ -16,6 +16,7 @@ export const Main = () => {
   const profile = useProfile();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
+  const [joinHaloDialog, setJoinHaloDialog] = useState(false);
 
   useEffect(() => {
     const partyStream = client.services.PartyService.subscribeParties();
@@ -74,6 +75,16 @@ export const Main = () => {
     return <p>Connecting to the DXOS Wallet Extension...</p>;
   }
 
+  if (joinHaloDialog) {
+    return (
+      <JoinHaloDialog
+        open
+        modal={false}
+        onClose={() => setJoinHaloDialog(false)}
+      />
+    );
+  }
+
   if (!profile) {
     return (
       <RegistrationDialog
@@ -81,7 +92,7 @@ export const Main = () => {
         modal={false}
         onComplete={handleCreateProfile}
         onRestore={null as any}
-        // onJoinHalo={() => setJoinHaloDialog(true)} // TODO(rzadp): Uncomment after ProfileService is implemented fully.
+        onJoinHalo={() => setJoinHaloDialog(true)}
       />
     );
   }
@@ -91,7 +102,7 @@ export const Main = () => {
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
       <p>{profile.publicKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>
-
+      <Button disabled={inProgress} onClick={() => setJoinHaloDialog(true)} variant='outlined'>Join HALO</Button>
       <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>Create party</Button>
       <p>You have {parties.length} parties.</p>
     </div>
