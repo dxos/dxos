@@ -78,6 +78,7 @@ export class ItemDemuxer {
         } else {
           entity = await this._itemManager.constructItem({
             ...modelOpts,
+            parentId: itemMutation?.parentId,
             itemType
           });
         }
