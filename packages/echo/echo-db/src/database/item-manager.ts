@@ -206,9 +206,6 @@ export class ItemManager {
     // Notify Item was udpated.
     // TODO(burdon): Update the item directly?
     this.update.emit(entity);
-    if (parent) {
-      this.update.emit(parent);
-    }
 
     // TODO(telackey): Unsubscribe?
     entity.subscribe(() => {
@@ -253,7 +250,10 @@ export class ItemManager {
     });
 
     const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
-    this._addEntity(item, parent);
+    if (parent) {
+      this.update.emit(parent);
+    }
+    this._addEntity(item);
 
     return item;
   }
