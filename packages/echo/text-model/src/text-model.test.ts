@@ -9,6 +9,7 @@ import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
+import { PublicKey } from '@dxos/crypto';
 
 describe('TextModel', () => {
   test('insert', async () => {
@@ -30,13 +31,13 @@ describe('TextModel', () => {
 
   test('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
-    const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, new MockFeedWriter());
+    const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
 
     model1.model.insert(0, 'Hello World!');
 
     const snapshot = model1.createSnapshot();
 
-    const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, new MockFeedWriter());
+    const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, PublicKey.random(), new MockFeedWriter());
 
     expect(model2.model.textContent).toBe('Hello World!');
   });

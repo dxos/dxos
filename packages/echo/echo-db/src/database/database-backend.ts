@@ -121,13 +121,6 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
     return {
-      getExpectedPosition: () => {
-        return {
-          // TODO(dmaretskyi): Can we provide meaningfull data in here?
-          feedKey: PublicKey.from(Buffer.alloc(PUBLIC_KEY_LENGTH)),
-          seq: 0
-        };
-      },
       write: async (mutation) => {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({ mutation, partyKey: this._partyKey });

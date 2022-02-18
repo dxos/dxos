@@ -6,7 +6,7 @@ import assert from 'assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
 import { ItemID, MutationMeta } from '@dxos/echo-protocol';
-import { Model, ModelMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
+import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 
 import { schema } from './proto/gen';
 import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
@@ -18,7 +18,7 @@ class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
     return this._doc;
   }
 
-  process (mutation: Mutation, meta: MutationMeta): void {
+  process (mutation: Mutation, meta: MutationProcessMeta): void {
     const { update, clientId } = mutation;
     assert(update);
 

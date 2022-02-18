@@ -17,6 +17,7 @@ import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
 import { Invitation, InvitationProxy } from './invitations';
 import { Party } from './party-proxy';
+import { HaloProxy } from './halo-proxy';
 
 export class PartyInvitation extends Invitation<Party> {
   /**
@@ -34,7 +35,8 @@ export class EchoProxy {
   private readonly _subscriptions = new SubscriptionGroup();
 
   constructor (
-    private readonly _serviceProvider: ClientServiceProvider
+    private readonly _serviceProvider: ClientServiceProvider,
+    private readonly _haloProxy: HaloProxy,
   ) {
     this._modelFactory = _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
@@ -70,7 +72,9 @@ export class EchoProxy {
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          const partyProxy = new Party(this._serviceProvider, this._modelFactory, party);
+          await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
+
+          const partyProxy = new Party(this._serviceProvider, this._modelFactory, party, this._haloProxy.profile!.publicKey);
           await partyProxy.init();
           this._parties.set(partyProxy.key, partyProxy);
 

@@ -6,8 +6,7 @@ import assert from 'assert';
 import cloneDeep from 'lodash/cloneDeep';
 import get from 'lodash/get';
 
-import { MutationMeta } from '@dxos/echo-protocol';
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
@@ -19,7 +18,7 @@ class ObjectModelStateMachine implements StateMachine<Record<string, any>, Objec
     return this._object;
   }
 
-  process (mutation: ObjectMutationSet, meta: MutationMeta): void {
+  process (mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
     MutationUtil.applyMutationSet(this._object, mutation);
   }
 

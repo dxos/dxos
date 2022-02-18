@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, ReadOnlyEvent } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
@@ -19,7 +19,7 @@ export class HaloProxy extends InvitationProxy {
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
 
-  private readonly _profileChanged = new Event();
+  public readonly profileChanged = new Event();
   private readonly _contactsChanged = new Event();
 
   private readonly _subscriptions = new SubscriptionGroup();
@@ -44,12 +44,12 @@ export class HaloProxy extends InvitationProxy {
   */
   async reset () {
     await this._serviceProvider.services.SystemService.reset();
-    this._profileChanged.emit();
+    this.profileChanged.emit();
   }
 
   // TODO(burdon): Should be part of profile object. Or use standard Result object.
   subscribeToProfile (cb: () => void): () => void {
-    return this._profileChanged.on(cb);
+    return this.profileChanged.on(cb);
   }
 
   /**
@@ -110,7 +110,7 @@ export class HaloProxy extends InvitationProxy {
 
     const waitForHalo = async () => {
       await waitForFinish();
-      await this._profileChanged.waitForCondition(() => !!this.profile?.publicKey);
+      await this.profileChanged.waitForCondition(() => !!this.profile?.publicKey);
     };
 
     return new Invitation(
@@ -134,13 +134,13 @@ export class HaloProxy extends InvitationProxy {
    * @internal
    */
   async _open () {
-    const gotProfile = this._profileChanged.waitForCount(1);
+    const gotProfile = this.profileChanged.waitForCount(1);
     const gotContacts = this._contactsChanged.waitForCount(1);
 
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data.profile;
-      this._profileChanged.emit();
+      this.profileChanged.emit();
     }, () => {});
     this._subscriptions.push(() => profileStream.close());
 
