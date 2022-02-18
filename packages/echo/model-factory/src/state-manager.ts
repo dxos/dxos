@@ -7,11 +7,11 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
-import { StateMachine } from './state-machine';
+import { StateMachine, MutationProcessMeta } from './state-machine';
 import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
 
 const log = debug('dxos:model-factory:state-manager');
@@ -20,13 +20,12 @@ const warn = log.extend('warn');
 type OptimisticMutation = {
   mutation: Uint8Array
 
-  meta: MutationMeta
+  meta: MutationProcessMeta
 
   /**
-   * Whether this mutation has been written to the feed store.
-   * This also confirms that the feedKey and seq number are correct.
+   * Contains the receipt afer this mutation has been written to the feed.
    */
-  confirmed: boolean
+  receipt?: WriteReceipt
 }
 
 /**
@@ -110,14 +109,10 @@ export class StateManager<M extends Model> {
 
     // Construct and enqueue an optimistic mutation.
     const mutationEncoded = this.modelMeta.mutation.encode(mutation);
-    const expectedPosition = this._writeStream.getExpectedPosition();
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
-      confirmed: false,
       meta: {
-        feedKey: expectedPosition.feedKey.asUint8Array(),
-        seq: expectedPosition.seq,
-        memberKey: this._memberKey.asUint8Array()
+        author: this._memberKey,
       }
     };
     this._optimisticMutations.push(optimisticMutation);
@@ -132,14 +127,8 @@ export class StateManager<M extends Model> {
     // Write mutation to the feed store and assign metadata from the receipt.
     // Confirms that the optimistic mutation has been written to the feed store.
     const receipt = await this._writeStream.write(mutationEncoded);
-    if (!receipt.feedKey.equals(optimisticMutation.meta.feedKey) || receipt.seq !== optimisticMutation.meta.seq) {
-      // TODO(dmaretskyi): Consider having a model-specific sequence number for the snasphots..
-      warn(`Mutation came back from the feed store with a different feed key or seq number: optimistic=${PublicKey.from(optimisticMutation.meta.feedKey)}/${optimisticMutation.meta.seq} vs actual=${receipt.feedKey}/${receipt.seq}`);
-    }
     log(`Confirm ${JSON.stringify(mutation)}`);
-    optimisticMutation.meta.feedKey = receipt.feedKey.asUint8Array();
-    optimisticMutation.meta.seq = receipt.seq;
-    optimisticMutation.confirmed = true;
+    optimisticMutation.receipt = receipt;
 
     // Promise that resolves when this mutation has been processed.
     const processed = this._mutationProcessed.waitFor(meta =>
@@ -148,7 +137,7 @@ export class StateManager<M extends Model> {
 
     // Sanity checks.
     void processed.then(() => {
-      if (!optimisticMutation.confirmed) {
+      if (!optimisticMutation.receipt) {
         console.error(`Optimistic mutation was processed without being confirmed: ${this._itemId}/${mutation.type}`);
       }
       if (this._optimisticMutations.includes(optimisticMutation)) {
@@ -177,13 +166,13 @@ export class StateManager<M extends Model> {
       this._stateMachine.reset(decoded);
     }
 
-    for (const mutaton of this._initialState.mutations ?? []) {
-      const mutationDecoded = this.modelMeta.mutation.decode(mutaton.mutation);
-      this._stateMachine.process(mutationDecoded, mutaton.meta);
+    for (const mutation of this._initialState.mutations ?? []) {
+      const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
+      this._stateMachine.process(mutationDecoded, { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
+      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
     for (const mutation of this._optimisticMutations) {
@@ -218,7 +207,7 @@ export class StateManager<M extends Model> {
   processMessage(meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(m =>
-      m.confirmed && PublicKey.equals(m.meta.feedKey, meta.feedKey) && m.meta.seq === meta.seq
+      m.receipt && PublicKey.equals(m.receipt.feedKey, meta.feedKey) && m.receipt.seq === meta.seq
     );
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
@@ -241,7 +230,7 @@ export class StateManager<M extends Model> {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
         const mutationDecoded = this.modelMeta.mutation.decode(mutation);
-        this._stateMachine!.process(mutationDecoded, meta);
+        this._stateMachine!.process(mutationDecoded, { author: PublicKey.from(meta.memberKey) });
         this._model!.update.emit(this._model!);
       }
     }
