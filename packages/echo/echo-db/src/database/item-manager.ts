@@ -198,7 +198,7 @@ export class ItemManager {
   /**
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
    */
-  private _addEntity (entity: Entity<any>) {
+  private _addEntity (entity: Entity<any>, parent?: Item<any> | null) {
     assert(!this._entities.has(entity.id));
     this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
@@ -250,6 +250,9 @@ export class ItemManager {
     });
 
     const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
+    if (parent) {
+      this.update.emit(parent);
+    }
     this._addEntity(item);
 
     return item;
