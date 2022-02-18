@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
-import { ItemID, MutationMeta } from '@dxos/echo-protocol';
+import { ItemID } from '@dxos/echo-protocol';
 import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 
 import { schema } from './proto/gen';

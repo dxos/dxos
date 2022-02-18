@@ -5,7 +5,6 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 import { DatabaseSnapshot, DataService, EchoEnvelope, FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 

@@ -5,11 +5,11 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { PublicKey } from '@dxos/crypto';
 import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
-import { PublicKey } from '@dxos/crypto';
 
 describe('TextModel', () => {
   test('insert', async () => {

@@ -35,7 +35,7 @@ export class Party extends InvitationProxy {
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
     party: PartyProto,
-    memberKey: PublicKey,
+    memberKey: PublicKey
   ) {
     super();
     this._key = party.publicKey;
@@ -50,7 +50,7 @@ export class Party extends InvitationProxy {
       this._database = new Database(
         this._modelFactory,
         new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
-        memberKey,
+        memberKey
       );
     } else if (this._serviceProvider instanceof ClientServiceHost) {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();

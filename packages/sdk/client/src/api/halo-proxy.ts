@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, ReadOnlyEvent } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';

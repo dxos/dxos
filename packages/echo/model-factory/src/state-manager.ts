@@ -30,7 +30,7 @@ type OptimisticMutation = {
 
 /**
  * Manages the state machine lifecycle.
- * 
+ *
  * Snapshots represent the reified state of a set of mutations up until at a particular Timeframe.
  * The state machine maintains a queue of optimistic and committed mutations as they are written to the output stream.
  * Each mutation written to the stream gets a receipt the provides an async callback when the message is written to the store.
@@ -67,7 +67,7 @@ export class StateManager<M extends Model> {
    * @param modelConstructor Can be undefined if the registry currently doesn't have this model loaded,
    *                         in which case it may be initialized later.
    */
-  constructor(
+  constructor (
     private readonly _modelType: ModelType,
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
@@ -80,20 +80,20 @@ export class StateManager<M extends Model> {
     }
   }
 
-  get initialized(): boolean {
+  get initialized (): boolean {
     return !!this._modelMeta;
   }
 
-  get modelType(): ModelType {
+  get modelType (): ModelType {
     return this._modelType;
   }
 
-  get modelMeta(): ModelMeta {
+  get modelMeta (): ModelMeta {
     assert(this._modelMeta, 'Model not initialized.');
     return this._modelMeta;
   }
 
-  get model(): M {
+  get model (): M {
     assert(this._model, 'Model not initialized.');
     return this._model;
   }
@@ -101,7 +101,7 @@ export class StateManager<M extends Model> {
   /**
    * Writes the mutation to the output stream.
    */
-  private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+  private async _write (mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
     log(`Write ${JSON.stringify(mutation)}`);
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
@@ -112,7 +112,7 @@ export class StateManager<M extends Model> {
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
       meta: {
-        author: this._memberKey,
+        author: this._memberKey
       }
     };
     this._optimisticMutations.push(optimisticMutation);
@@ -153,13 +153,13 @@ export class StateManager<M extends Model> {
     };
   }
 
-  private _resetStateMachine() {
+  private _resetStateMachine () {
     assert(this._modelMeta, 'Model not initialized.');
     log('Construct state machine');
 
     this._stateMachine = this._modelMeta.stateMachine();
 
-    // 
+    //
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot);
@@ -185,7 +185,7 @@ export class StateManager<M extends Model> {
    *
    * Only possible if the modelContructor wasn't passed during StateManager's creation.
    */
-  initialize(modelConstructor: ModelConstructor<M>) {
+  initialize (modelConstructor: ModelConstructor<M>) {
     assert(!this._modelMeta, 'Already iniitalized.');
 
     this._modelMeta = modelConstructor.meta;
@@ -204,7 +204,7 @@ export class StateManager<M extends Model> {
   /**
    * Processes mutations from the inbound stream.
    */
-  processMessage(meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
+  processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(m =>
       m.receipt && PublicKey.equals(m.receipt.feedKey, meta.feedKey) && m.receipt.seq === meta.seq
@@ -242,7 +242,7 @@ export class StateManager<M extends Model> {
   /**
    * Create a snapshot of the current state.
    */
-  createSnapshot(): ModelSnapshot {
+  createSnapshot (): ModelSnapshot {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
@@ -262,7 +262,7 @@ export class StateManager<M extends Model> {
   /**
    * Reset the state to existing snapshot.
    */
-  resetToSnapshot(snapshot: ModelSnapshot) {
+  resetToSnapshot (snapshot: ModelSnapshot) {
     this._initialState = snapshot;
     this._mutations = [];
 

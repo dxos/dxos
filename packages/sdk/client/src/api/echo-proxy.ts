@@ -15,9 +15,9 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProvider } from '../interfaces';
+import { HaloProxy } from './halo-proxy';
 import { Invitation, InvitationProxy } from './invitations';
 import { Party } from './party-proxy';
-import { HaloProxy } from './halo-proxy';
 
 export class PartyInvitation extends Invitation<Party> {
   /**
@@ -36,7 +36,7 @@ export class EchoProxy {
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
-    private readonly _haloProxy: HaloProxy,
+    private readonly _haloProxy: HaloProxy
   ) {
     this._modelFactory = _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
 

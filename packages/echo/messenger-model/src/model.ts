@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { MutationMeta } from '@dxos/echo-protocol';
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
 import { Message, schema } from './proto';
