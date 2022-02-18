@@ -4,8 +4,8 @@
 
 import Bridge from 'crx-bridge';
 
-import { defs } from '@dxos/config';
 import { Client } from '@dxos/client';
+import { defs } from '@dxos/config';
 
 import { createDevtoolsPort } from '../utils';
 import { initPanel } from './init-panel';
