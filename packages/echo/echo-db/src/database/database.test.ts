@@ -273,6 +273,23 @@ describe('Database', () => {
         // 3. Expect an update
         await promiseTimeout(update, 100, new Error('timeout'));
       });
+
+      test('adding an item emits update for parent', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const database = await setupBackend(modelFactory);
+
+        const parentItem = await database.createItem({ model: ObjectModel });
+
+        const query = database.select({ id: parentItem.id }).query();
+        const update = query.update.waitForCount(1);
+
+        const childItem = await database.createItem({
+          model: ObjectModel,
+          parent: parentItem.id
+        });
+        expect(childItem.parent?.id).toEqual(parentItem.id);
+        await promiseTimeout(update, 100, new Error('timeout'));
+      });
     });
   });
 });
