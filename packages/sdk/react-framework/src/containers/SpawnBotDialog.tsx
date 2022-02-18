@@ -9,7 +9,7 @@ import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material
 
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { Party } from '@dxos/client';
-import { useBotFactoryClient } from '@dxos/react-client';
+import { useBotFactoryClient, useConfig } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 import { useBots } from '@dxos/react-registry-client';
 
@@ -29,7 +29,8 @@ export const SpawnBotDialog = ({
   const { bots, error } = useBots();
   const [botPath, setBotPath] = useState<string>();
   const [processing, setProcessing] = useState(false);
-  const botFactoryClient = useBotFactoryClient();
+  const config = useConfig();
+  const botFactoryClient = useBotFactoryClient(config);
 
   const handleSpawnProcess = async (path: string) => {
     try {

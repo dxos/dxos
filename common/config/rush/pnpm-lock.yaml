@@ -2084,6 +2084,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
+      '@dxos/network-manager': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.0.1
@@ -2118,6 +2119,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.3

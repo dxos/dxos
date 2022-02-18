@@ -29,12 +29,14 @@ export const getPeerId = (peer: Protocol) => {
 export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
   return {
     send: async (msg) => {
+      console.log('sending message', msg, peer.id.toString('hex'));
       const extension = peer.getExtension(PluginRpc.extensionName);
       assert(extension, 'Extension is not set');
       await extension.send(msg);
     },
     subscribe: (cb) => {
       const adapterCallback = (obj: SerializedObject) => {
+        console.log('Received message ', obj, peer.id.toString('hex'));
         cb(obj.data);
       };
       receive.on(adapterCallback);
