@@ -10,6 +10,7 @@ Update the required version of Node required by `.node-version` (e.g., via `node
 ```bash
 brew upgrade node-build
 brew upgrade nodenv
+
 nodenv install 16.14.0
 ```
 
