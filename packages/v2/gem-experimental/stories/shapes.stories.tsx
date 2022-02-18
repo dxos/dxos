@@ -151,7 +151,7 @@ const path = path => path
   .attr('d', d => d.line(d.points));
 
 const dot = circle => circle
-  .attr('fill', d => d3.select<SVGGElement, Data>(circle.node().parentNode).datum().color)
+  // .attr('fill', d => data.color)
   .attr('cx', d => d[0])
   .attr('cy', d => d[1])
   .attr('r', d => 2);
