@@ -8,6 +8,7 @@ The project is developed using [rush](https://rushjs.io/) and NodeJS version `16
 Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
 
 ```bash
+brew upgrade node-build
 brew upgrade nodenv
 nodenv install 16.14.0
 ```
