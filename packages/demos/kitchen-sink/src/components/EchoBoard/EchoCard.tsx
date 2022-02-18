@@ -3,10 +3,12 @@
 //
 
 import React, { ReactNode } from 'react';
+
 import { Button, Card, CardActions, CardContent, CardHeader } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
+
 import { Icon } from '../Icon';
 
 export interface EchoCardProps {

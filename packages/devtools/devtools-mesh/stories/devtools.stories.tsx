@@ -9,7 +9,6 @@ import { MemoryRouter, NavLink, Switch, Route } from 'react-router-dom';
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
-import { FullScreen } from '@dxos/react-components';
 import {
   FullyConnectedTopology,
   Swarm,
@@ -26,6 +25,7 @@ import {
   ConnectionLog
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
 

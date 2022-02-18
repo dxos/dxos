@@ -8,7 +8,7 @@ import {
   CheckBoxOutlineBlank as DefaultIcon,
   Business as OrgIcon,
   PersonOutline as PersonIcon,
-  WorkOutline as ProjectIcon,
+  WorkOutline as ProjectIcon
 } from '@mui/icons-material';
 
 import { TestType } from '../testing';
@@ -17,7 +17,7 @@ const icons: { [i: string]: FC } = {
   [TestType.Org]: OrgIcon,
   [TestType.Person]: PersonIcon,
   [TestType.Project]: ProjectIcon
-}
+};
 
 interface IconProps {
   type?: string

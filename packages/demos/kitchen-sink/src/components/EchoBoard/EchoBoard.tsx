@@ -3,7 +3,8 @@
 //
 
 import React from 'react';
-import { Box, Grid } from '@mui/material';
+
+import { Grid } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -19,7 +20,7 @@ export const EchoBoard = ({
   items = [],
   labelProperty = 'title' // TODO(burdon): Convert to adapter.
 }: EchoBoardProps) => {
-  const items2 = items.length > 4 ? [items[1], items[2], items[3], items[4]] : []
+  const items2 = items.length > 4 ? [items[1], items[2], items[3], items[4]] : [];
 
   // TODO(burdon): Scroll.
   return (

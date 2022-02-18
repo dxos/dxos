@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar } from '@dxos/react-components';
 import React, { useState, ReactNode } from 'react';
 
 import { Box } from '@mui/material';
+
+import { CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar } from '@dxos/react-components';
 
 export interface LayoutProps {
   children?: ReactNode | ReactNode[]

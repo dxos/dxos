@@ -2,28 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-import update from 'immutability-helper';
-import React, { useState, useEffect } from 'react';
-import useResizeAware from 'react-resize-aware';
-
-import { makeStyles } from '@mui/styles';
+// import update from 'immutability-helper';
+import React from 'react';
+// import useResizeAware from 'react-resize-aware';
 
 import { SVGContextProvider } from '@dxos/gem-core';
-import {
-  Graph,
-  Markers
-} from '@dxos/gem-spore';
+// import {
+//   Graph,
+//   Markers
+// } from '@dxos/gem-spore';
 
 import { GraphData } from '../../models';
 
-// TODO(burdon): Create container.
-const useStyles = makeStyles(() => ({
-  root: {
-    display: 'flex',
-    flex: 1,
-    position: 'relative' // Important.
-  }
-}));
+// const useStyles = makeStyles(() => ({
+//   root: {
+//     display: 'flex',
+//     flex: 1,
+//     position: 'relative' // Important.
+//   }
+// }));
 
 export interface GraphViewProps {
   data: GraphData,
@@ -40,7 +37,7 @@ export const GraphView = ({
   onCreate = () => {},
   propertyAdapter = () => ({})
 }: GraphViewProps) => {
-  // const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): Merge()
+  // const clazzes = { ...useStyles(), ...classes };
 
   // const [resizeListener, size] = useResizeAware();
   // const { width, height } = size;
@@ -63,7 +60,7 @@ export const GraphView = ({
 
       </svg>
     </SVGContextProvider>
-  )
+  );
 
   /*
   return (

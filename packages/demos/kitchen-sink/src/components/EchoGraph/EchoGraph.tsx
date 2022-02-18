@@ -4,6 +4,7 @@
 
 import clsx from 'clsx';
 import React, { useMemo } from 'react';
+
 import { Box } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';

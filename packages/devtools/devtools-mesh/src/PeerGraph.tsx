@@ -4,23 +4,21 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { colors } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-
 import { PublicKey } from '@dxos/crypto';
 import { SVG, SVGContextProvider } from '@dxos/gem-core';
 import { Graph } from '@dxos/gem-spore';
 import { PeerInfo } from '@dxos/network-manager';
 
-const classMap: Record<string, string> = {
-  ME: 'blue',
-  WAITING_FOR_CONNECTION: 'orange',
-  CONNECTED: 'green',
-  CLOSED: 'red'
-};
+// const classMap: Record<string, string> = {
+//   ME: 'blue',
+//   WAITING_FOR_CONNECTION: 'orange',
+//   CONNECTED: 'green',
+//   CLOSED: 'red'
+// };
 
-const nodeColors: (keyof typeof colors)[] = ['red', 'green', 'blue', 'yellow', 'orange', 'grey'];
+// const nodeColors: (keyof typeof colors)[] = ['red', 'green', 'blue', 'yellow', 'orange', 'grey'];
 
+/*
 const useCustomStyles = makeStyles(() => ({
   nodes: nodeColors.reduce((map: any, color: string) => {
     map[`& g.node.${color} circle`] = {
@@ -37,6 +35,7 @@ const useCustomStyles = makeStyles(() => ({
     return map;
   }, {})
 }));
+*/
 
 export interface PeerGraphProps {
   peers: PeerInfo[]
@@ -55,6 +54,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
         title: peer.id.humanize(),
         state: peer.state
       });
+
       for (const connection of peer.connections) {
         links.push({
           id: `${peer.id.toHex()}-${connection.toHex()}`,
@@ -63,6 +63,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
         });
       }
     }
+
     return { nodes, links };
   }
 
@@ -72,14 +73,16 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
 
   useEffect(() => {
     if (onClick) {
-      const handle = ({ source }: any) => {
-        onClick!(PublicKey.from(source.id));
-      };
+      // const handle = ({ source }: any) => {
+      //   onClick!(PublicKey.from(source.id));
+      // };
 
       // drag.on('click', handle);
       // return () => drag.off('click', handle);
     }
   }, [onClick]);
+
+  console.log(JSON.stringify(data));
 
   return (
     <SVGContextProvider>

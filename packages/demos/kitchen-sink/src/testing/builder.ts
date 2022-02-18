@@ -25,6 +25,8 @@ type Num = [min: number, max: number] | number
 
 const num = (n: Num) => typeof n === 'number' ? n : faker.datatype.number({ min: n[0], max: n[1] });
 
+/*
+// TODO(burdon): Experimental -- define graph shape.
 const schemas = {
   types: [
     {
@@ -40,10 +42,11 @@ const schemas = {
       }
     },
     {
-      type: TestType.Task,
+      type: TestType.Task
     }
   ]
 };
+*/
 
 export class ProjectBuilder {
   constructor (
