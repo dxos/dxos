@@ -55,7 +55,8 @@ export const EchoGraph = ({
       className={styles}
       sx={{
         display: 'flex',
-        flex: 1
+        flex: 1,
+        overflow: 'hidden'
       }}
     >
       <SVGContextProvider>

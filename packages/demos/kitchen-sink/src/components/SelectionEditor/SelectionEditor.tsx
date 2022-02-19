@@ -29,7 +29,7 @@ const exec = (party: Party, text: string): Selection<any> | undefined => {
       return result;
     }
   } catch (err) {
-    console.warn(err);
+    // Ignore.
   }
 };
 
@@ -63,13 +63,15 @@ export const SelectionEditor = ({
     }
   }, [inputRef]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (text: string) => {
     const selection = exec(party, text);
     onUpdate(selection);
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setText(event.target.value);
+    const text = event.target.value;
+    setText(text);
+    handleSubmit(text);
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -79,17 +81,13 @@ export const SelectionEditor = ({
         onUpdate();
         break;
       }
-
-      // TODO(burdon): If ends with ")"
-      default: {
-        handleSubmit();
-      }
     }
   };
 
   return (
     <Box sx={{
-      display: 'flex'
+      display: 'flex',
+      padding: 0.5
     }}>
       <TextField
         inputRef={inputRef}
@@ -97,6 +95,7 @@ export const SelectionEditor = ({
         fullWidth
         multiline
         spellCheck={false}
+        rows={5}
         autoComplete='off'
         placeholder='Enter selection query.'
         value={text}
@@ -111,7 +110,7 @@ export const SelectionEditor = ({
       />
 
       <div>
-        <IconButton onClick={handleSubmit}>
+        <IconButton onClick={() => handleSubmit(text)}>
           <SubmitIcon />
         </IconButton>
       </div>

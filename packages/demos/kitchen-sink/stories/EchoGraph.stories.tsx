@@ -40,14 +40,17 @@ const AppWithEditor = () => {
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
 
   const handleUpdate = (selection?: Selection<any>) => {
-    const selected = new Set<ItemID>();
     const { result = [] } = selection?.query() ?? {};
+    const selected = new Set<ItemID>();
     result.forEach(item => selected.add(item.id));
     setSelected(selected);
+
+    // TODO(burdon): Check changed.
+    model.refresh();
   };
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
       {party && (
         <SelectionEditor
           party={party}
@@ -55,12 +58,12 @@ const AppWithEditor = () => {
         />
       )}
 
-      <Box sx={{ display: 'flex', flex: 1 }}>
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <EchoGraph
           model={model}
+          selected={selected}
           itemAdapter={itemAdapter}
           styles={graphStyles}
-          selected={selected}
         />
       </Box>
     </Box>
