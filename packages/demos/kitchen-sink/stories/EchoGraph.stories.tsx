@@ -9,7 +9,7 @@ import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoGraph } from '../src';
-import { useGraphModel } from './helpers';
+import { itemAdapter, graphStyles, useGraphModel } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoGraph'
@@ -23,6 +23,8 @@ const App = () => {
   return (
     <EchoGraph
       model={model}
+      itemAdapter={itemAdapter}
+      styles={graphStyles}
     />
   );
 };

@@ -9,7 +9,7 @@ import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-cl
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoBoard } from '../src';
-import { useTestParty } from './helpers';
+import { itemAdapter, useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoBoard'
@@ -25,6 +25,7 @@ const App = () => {
     <FullScreen>
       <EchoBoard
         items={items}
+        itemAdapter={itemAdapter}
       />
     </FullScreen>
   );

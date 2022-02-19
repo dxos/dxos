@@ -3,5 +3,5 @@
 //
 
 export * from './EchoCard';
-export * from './EchoCardList';
+export * from './EchoChildList';
 export * from './EchoBoard';

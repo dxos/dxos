@@ -4,53 +4,52 @@
 
 import React, { ReactNode } from 'react';
 
-import { Button, Card, CardActions, CardContent, CardHeader } from '@mui/material';
+import { Card, CardContent, CardHeader } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Icon } from '../Icon';
+import { ItemAdapter } from '../adapter';
 
 export interface EchoCardProps {
   item: Item<ObjectModel>
-  labelProperty: string
+  itemAdapter: ItemAdapter
   children?: ReactNode | ReactNode[]
 }
 
 export const EchoCard = ({
   item,
-  labelProperty = 'title',
+  itemAdapter,
   children
 }: EchoCardProps) => {
+  const { label, icon: Icon, color } = itemAdapter.meta?.(item.type!) ?? {};
+
   return (
     <Card sx={{
-      width: 350,
+      width: 300,
       margin: 1
     }}>
       <CardHeader
         sx={{
+          backgroundColor: color?.[50],
           '.MuiCardHeader-content': {
             overflow: 'hidden'
           }
         }}
-        avatar={<Icon type={item.type} />}
-        title={item.model.getProperty(labelProperty)}
+        avatar={Icon && <Icon />}
+        title={itemAdapter.title(item)}
         titleTypographyProps={{
-          variant: 'h5',
+          variant: 'h6',
           overflow: 'hidden',
           whiteSpace: 'nowrap',
           textOverflow: 'ellipsis'
         }}
-        subheader={item.type}
+        subheader={label}
       />
 
       <CardContent>
         {children}
       </CardContent>
-
-      <CardActions>
-        <Button>OK</Button>
-      </CardActions>
     </Card>
   );
 };

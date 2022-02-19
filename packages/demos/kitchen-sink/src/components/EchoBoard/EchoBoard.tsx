@@ -4,46 +4,71 @@
 
 import React from 'react';
 
-import { Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { ItemAdapter } from '../adapter';
 import { EchoCard } from './EchoCard';
+import { EchoChildList } from './EchoChildList';
 
 export interface EchoBoardProps {
   items?: Item<ObjectModel>[]
-  labelProperty?: string
+  itemAdapter: ItemAdapter
 }
 
 export const EchoBoard = ({
   items = [],
-  labelProperty = 'title' // TODO(burdon): Convert to adapter.
+  itemAdapter
 }: EchoBoardProps) => {
-  const items2 = items.length > 4 ? [items[1], items[2], items[3], items[4]] : [];
+  // TODO(burdon): Create item.
+  const handleCreateItem = (kind: string, title: string) => {
+    console.log('CREATE', kind, title);
+  };
 
-  // TODO(burdon): Scroll.
   return (
     <Grid
       container
+      spacing={2}
       sx={{
         display: 'flex',
-        padding: 1
+        padding: 1,
+        overflow: 'scroll'
       }}
     >
-      {items2.map(item => (
-        <Grid
-          key={item.id}
-          item
-          spacing={2}
-        >
-          <EchoCard
-            item={item}
-            labelProperty={labelProperty}
+      {items.map(item => {
+        const types = itemAdapter.linkedTypes?.(item);
+        if (!types?.length) {
+          return undefined;
+        }
+
+        return (
+          <Grid
+            key={item.id}
+            item
           >
-          </EchoCard>
-        </Grid>
-      ))}
+            <EchoCard
+              item={item}
+              itemAdapter={itemAdapter}
+            >
+              {types!.map(type => (
+                <Box
+                  key={type}
+                  sx={{ paddingBottom: 0.5 }}
+                >
+                  <EchoChildList
+                    item={item}
+                    itemAdapter={itemAdapter}
+                    type={type}
+                    onCreateItem={handleCreateItem}
+                  />
+                </Box>
+              ))}
+            </EchoCard>
+          </Grid>
+        );
+      }).filter(Boolean)}
     </Grid>
   );
 };

@@ -12,17 +12,19 @@ import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-co
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
-import { styles } from '../styles';
+import { ItemAdapter } from '../adapter';
 import { EchoGraphModel } from './model';
 
 export interface EchoGraphProps {
   model?: EchoGraphModel
-  labelProperty?: string
+  itemAdapter: ItemAdapter
+  styles?: any
 }
 
 export const EchoGraph = ({
   model,
-  labelProperty = 'title'
+  itemAdapter,
+  styles
 }: EchoGraphProps) => {
   const context = useSvgContext();
   const projector = useMemo(() => new GraphForceProjector(context, {
@@ -58,8 +60,9 @@ export const EchoGraph = ({
                 })
               }}
               labels={{
-                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
-                  highlight ? node.data!.model.getProperty(labelProperty) : undefined
+                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) => {
+                  return highlight ? itemAdapter.title(node.data!) : undefined;
+                }
               }}
             />
           </Zoom>

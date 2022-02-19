@@ -2,17 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoGraph, EchoTable, Layout } from '../src';
-import { useGraphModel } from './helpers';
+import { itemAdapter, graphStyles, tableStyles, useGraphModel } from './helpers';
 
 export default {
   title: 'KitchenSink/App'
 };
+
+faker.seed(100);
 
 // TODO(burdon): Devtools mesh.
 // TODO(burdon): createItem defaults.
@@ -28,11 +31,15 @@ const App = () => {
         sidebar={(
           <EchoTable
             items={model.graph.nodes}
+            itemAdapter={itemAdapter}
+            styles={tableStyles}
           />
         )}
       >
         <EchoGraph
           model={model}
+          itemAdapter={itemAdapter}
+          styles={graphStyles}
         />
       </Layout>
     </FullScreen>

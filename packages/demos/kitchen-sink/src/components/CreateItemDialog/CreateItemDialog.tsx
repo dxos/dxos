@@ -1,0 +1,88 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import React, { useState } from 'react';
+
+import {
+  Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography
+} from '@mui/material';
+
+import { ItemAdapter } from '../adapter';
+
+interface CreateItemDialogProps {
+  open: boolean
+  type: string
+  itemAdapter: ItemAdapter
+  onCreate: (title: string) => void
+  onCancel: () => void
+}
+
+export const CreateItemDialog = ({
+  open,
+  type,
+  itemAdapter,
+  onCreate,
+  onCancel
+}: CreateItemDialogProps) => {
+  const [title, setTitle] = useState<string>('');
+  const { label, icon: Icon } = itemAdapter.meta?.(type) ?? {};
+
+  const handleSubmit = () => {
+    const value = title.trim();
+    if (value.length) {
+      onCreate(value);
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    switch (event.key) {
+      case 'Enter': {
+        handleSubmit();
+        break;
+      }
+
+      case 'Escape': {
+        onCancel();
+        break;
+      }
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      fullWidth
+      maxWidth='xs'
+    >
+      <DialogContent>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant='h6' sx={{ flex: 1 }}>
+            New {label}
+          </Typography>
+          {Icon && (
+            <Icon />
+          )}
+        </Box>
+      </DialogContent>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin='dense'
+          fullWidth
+          variant='standard'
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={handleSubmit}>Create</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};

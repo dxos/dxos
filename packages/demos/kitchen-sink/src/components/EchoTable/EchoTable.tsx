@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { css } from '@emotion/css';
+import clsx from 'clsx';
 import React, { useMemo, useState } from 'react';
 
 import { Box } from '@mui/material';
@@ -13,9 +15,15 @@ import { truncateString } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { styles } from '../styles';
+import { ItemAdapter } from '../adapter';
 
-const useColumns = (labelProperty: string): GridColDef[] => {
+const defaultStyles = css`
+  .monospace {
+    font-family: monospace;
+  }
+`;
+
+const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => {
   return useMemo(() => [
     {
       field: 'id',
@@ -34,26 +42,28 @@ const useColumns = (labelProperty: string): GridColDef[] => {
       field: 'title',
       headerName: 'Title',
       flex: 1,
-      valueGetter: (params: GridValueGetterParams) => params.row.model.getProperty(labelProperty)
+      valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row)
     }
   ], []);
 };
 
 export interface EchoTableProps {
   items?: Item<ObjectModel>[]
-  labelProperty?: string
+  itemAdapter: ItemAdapter
+  styles?: any
 }
 
 export const EchoTable = ({
   items = [],
-  labelProperty = 'title'
+  itemAdapter,
+  styles
 }: EchoTableProps) => {
-  const columns = useColumns(labelProperty);
+  const columns = useColumns(itemAdapter);
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 
   return (
     <Box
-      className={styles}
+      className={clsx(defaultStyles, styles)}
       sx={{
         display: 'flex',
         flex: 1,

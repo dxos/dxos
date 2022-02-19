@@ -9,7 +9,7 @@ import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-cl
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoTable } from '../src';
-import { useTestParty } from './helpers';
+import { itemAdapter, tableStyles, useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoTable'
@@ -25,6 +25,8 @@ const App = () => {
     <FullScreen>
       <EchoTable
         items={items}
+        itemAdapter={itemAdapter}
+        styles={tableStyles}
       />
     </FullScreen>
   );
