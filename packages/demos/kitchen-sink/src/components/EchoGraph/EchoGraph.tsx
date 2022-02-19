@@ -3,7 +3,7 @@
 //
 
 import clsx from 'clsx';
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -13,6 +13,7 @@ import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-co
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
+import { useUpdatedRef } from '../../util';
 import { ItemAdapter } from '../adapter';
 import { EchoGraphModel } from './model';
 
@@ -38,14 +39,8 @@ export const EchoGraph = ({
     }
   }), []);
 
-  // TODO(burdon): Update Graph renderer on mutation.
-  // TODO(burdon): Hack!
-  const selectedRef = useRef<Set<ItemID>>();
-  useEffect(() => {
-    selectedRef.current = selected;
-    model?.refresh();
-  }, [selected]);
-
+  // TODO(burdon): Hack for stale callback.
+  const selectedRef = useUpdatedRef<Set<ItemID> | undefined>(selected);
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;
     return {
