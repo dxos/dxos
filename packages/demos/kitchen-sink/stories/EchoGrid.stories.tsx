@@ -8,11 +8,11 @@ import React from 'react';
 import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoTable } from '../src';
+import { EchoGrid } from '../src';
 import { itemAdapter, tableStyles, useTestParty } from './helpers';
 
 export default {
-  title: 'KitchenSink/EchoTable'
+  title: 'KitchenSink/EchoGrid'
 };
 
 faker.seed(100);
@@ -23,7 +23,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoTable
+      <EchoGrid
         items={items}
         itemAdapter={itemAdapter}
         styles={tableStyles}

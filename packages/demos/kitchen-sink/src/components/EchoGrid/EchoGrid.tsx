@@ -47,17 +47,17 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => {
   ], []);
 };
 
-export interface EchoTableProps {
+export interface EchoGridProps {
   items?: Item<ObjectModel>[]
   itemAdapter: ItemAdapter
   styles?: any
 }
 
-export const EchoTable = ({
+export const EchoGrid = ({
   items = [],
   itemAdapter,
   styles
-}: EchoTableProps) => {
+}: EchoGridProps) => {
   const columns = useColumns(itemAdapter);
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 

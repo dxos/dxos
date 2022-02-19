@@ -8,11 +8,11 @@ import React from 'react';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoGraph, EchoTable, Layout } from '../src';
+import { EchoGraph, EchoGrid, Layout } from '../src';
 import { itemAdapter, graphStyles, tableStyles, useGraphModel, useTestParty } from './helpers';
 
 export default {
-  title: 'KitchenSink/App'
+  title: 'KitchenSink/Layout'
 };
 
 faker.seed(100);
@@ -30,7 +30,7 @@ const App = () => {
     <FullScreen>
       <Layout
         sidebar={(
-          <EchoTable
+          <EchoGrid
             items={model.graph.nodes}
             itemAdapter={itemAdapter}
             styles={tableStyles}

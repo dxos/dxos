@@ -4,7 +4,8 @@
 
 export * from './EchoBoard';
 export * from './EchoGraph';
-export * from './EchoTable';
+export * from './EchoGrid';
+export * from './EchoList';
 export * from './Layout';
 export * from './SelectionEditor';
 
