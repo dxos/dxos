@@ -44,7 +44,7 @@ export const EchoGraph = ({
   useEffect(() => {
     selectedRef.current = selected;
     model?.refresh();
-  }, [selected])
+  }, [selected]);
 
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;

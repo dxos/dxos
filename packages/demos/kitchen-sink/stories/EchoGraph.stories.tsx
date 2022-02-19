@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Selection } from '@dxos/echo-db'
+import { Selection } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
@@ -44,10 +44,10 @@ const AppWithEditor = () => {
     const { result = [] } = selection?.query() ?? {};
     result.forEach(item => selected.add(item.id));
     setSelected(selected);
-  }
+  };
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', }}>
+    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
       {party && (
         <SelectionEditor
           party={party}

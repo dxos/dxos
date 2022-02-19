@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Selection } from '@dxos/echo-db'
+import { Selection } from '@dxos/echo-db';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
 import { SelectionEditor } from '../src';

@@ -4,11 +4,11 @@
 
 import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { Box, IconButton, TextField } from '@mui/material';
 import { Send as SubmitIcon } from '@mui/icons-material';
+import { Box, IconButton, TextField } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { Selection } from '@dxos/echo-db'
+import { Selection } from '@dxos/echo-db';
 
 // TODO(burdon): Remove React. references.
 // TODO(burdon): Change CustomTextField to onChange.
@@ -22,6 +22,7 @@ import { Selection } from '@dxos/echo-db'
  */
 const exec = (party: Party, text: string): Selection<any> | undefined => {
   try {
+    // eslint-disable-next-line no-new-func
     const exec = new Function(`"use strict"; return function(party) { return party.${text} }`)();
     const result = exec(party);
     if (result instanceof Selection) {
@@ -30,7 +31,7 @@ const exec = (party: Party, text: string): Selection<any> | undefined => {
   } catch (err) {
     console.warn(err);
   }
-}
+};
 
 const defaultSelection =
   'select().filter({ type: \'example:type.org\' }).children().filter({ type: \'example:type.project\' })'
@@ -88,7 +89,7 @@ export const SelectionEditor = ({
 
   return (
     <Box sx={{
-      display: 'flex',
+      display: 'flex'
     }}>
       <TextField
         inputRef={inputRef}
