@@ -10,8 +10,6 @@ import { Box, IconButton, TextField } from '@mui/material';
 import { Party } from '@dxos/client';
 import { Selection } from '@dxos/echo-db';
 
-// TODO(burdon): Remove React. references.
-// TODO(burdon): Change CustomTextField to onChange.
 // TODO(burdon): Review devtools-editor (burdon/editor branch).
 
 /**
@@ -39,23 +37,25 @@ const defaultSelection =
 
 interface SelectionEditorProps {
   party: Party
-  onUpdate: (selection?: Selection<any>) => void
+  onChange: (selection?: Selection<any>) => void
+  delay?: number
 }
 
 /**
  * Simple editor that evaluates text as method calls against a party object.
  * @param party
  * @param onUpdate
+ * @param delay
  * @constructor
  */
 export const SelectionEditor = ({
   party,
-  onUpdate
+  onChange,
+  delay
 }: SelectionEditorProps) => {
   const inputRef = useRef<HTMLInputElement>();
-
-  // TODO(burdon): Allow passing in.
   const [text, setText] = useState<string>(defaultSelection);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (inputRef.current) {
@@ -65,20 +65,24 @@ export const SelectionEditor = ({
 
   const handleSubmit = (text: string) => {
     const selection = exec(party, text);
-    onUpdate(selection);
+    onChange(selection);
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const text = event.target.value;
     setText(text);
-    handleSubmit(text);
+
+    if (delay !== undefined) {
+      clearTimeout(timeoutRef.current!);
+      timeoutRef.current = setTimeout(() => handleSubmit(text), delay);
+    }
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Escape': {
         setText('');
-        onUpdate();
+        onChange();
         break;
       }
     }
@@ -95,9 +99,9 @@ export const SelectionEditor = ({
         fullWidth
         multiline
         spellCheck={false}
-        rows={5}
         autoComplete='off'
         placeholder='Enter selection query.'
+        rows={5}
         value={text}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

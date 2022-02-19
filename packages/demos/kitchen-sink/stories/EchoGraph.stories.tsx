@@ -39,7 +39,7 @@ const AppWithEditor = () => {
   const model = useGraphModel(party);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
 
-  const handleUpdate = (selection?: Selection<any>) => {
+  const handleChange = (selection?: Selection<any>) => {
     const { result = [] } = selection?.query() ?? {};
     const selected = new Set<ItemID>();
     result.forEach(item => selected.add(item.id));
@@ -54,7 +54,8 @@ const AppWithEditor = () => {
       {party && (
         <SelectionEditor
           party={party}
-          onUpdate={handleUpdate}
+          onChange={handleChange}
+          delay={100}
         />
       )}
 

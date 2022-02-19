@@ -6,36 +6,24 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Selection } from '@dxos/echo-db';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
-import { SelectionEditor } from '../src';
-import { useTestParty } from './helpers';
+import { Searchbar } from '../src';
 
 export default {
-  title: 'KitchenSink/SelectionEditor'
+  title: 'KitchenSink/Searchbar'
 };
 
 const App = () => {
-  const [result, setResult] = useState<number>(0);
-  const party = useTestParty();
-  if (!party) {
-    return null;
-  }
+  const [result, setResult] = useState<string>('');
 
-  const handleChange = (selection?: Selection<any>) => {
-    if (selection) {
-      const { result } = selection.query({}); // TODO(burdon): Allow no options.
-      setResult(result?.length);
-    } else {
-      setResult(0);
-    }
+  const handleChange = (value: string) => {
+    setResult(value);
   };
 
   return (
     <Box sx={{ padding: 1 }}>
-      <SelectionEditor
-        party={party}
+      <Searchbar
         onChange={handleChange}
         delay={100}
       />

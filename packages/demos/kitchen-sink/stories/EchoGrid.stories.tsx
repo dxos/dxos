@@ -34,7 +34,7 @@ const App = () => {
 
 export const Primary = () => {
   return (
-    <ClientProvider config={{}}>
+    <ClientProvider>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>

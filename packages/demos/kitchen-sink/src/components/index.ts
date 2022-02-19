@@ -7,6 +7,7 @@ export * from './EchoGraph';
 export * from './EchoGrid';
 export * from './EchoList';
 export * from './Layout';
+export * from './Searchbar';
 export * from './SelectionEditor';
 
 export * from './adapter';
