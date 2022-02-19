@@ -25,6 +25,10 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
     return this.updated.on(callback);
   }
 
+  refresh () {
+    this.updated.emit(this._graph);
+  }
+
   update (items: Item<any>[]) {
     this._graph.nodes = items;
     this._graph.links = [];

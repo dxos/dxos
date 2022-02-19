@@ -7,6 +7,7 @@ import React from 'react';
 import { Box, Grid } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
+import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter } from '../adapter';
@@ -16,17 +17,14 @@ import { EchoChildList } from './EchoChildList';
 export interface EchoBoardProps {
   items?: Item<ObjectModel>[]
   itemAdapter: ItemAdapter
+  onCreateItem?: (type: string, title: string, parent?: ItemID) => void
 }
 
 export const EchoBoard = ({
   items = [],
-  itemAdapter
+  itemAdapter,
+  onCreateItem
 }: EchoBoardProps) => {
-  // TODO(burdon): Create item.
-  const handleCreateItem = (kind: string, title: string) => {
-    console.log('CREATE', kind, title);
-  };
-
   return (
     <Grid
       container
@@ -61,7 +59,7 @@ export const EchoBoard = ({
                     item={item}
                     itemAdapter={itemAdapter}
                     type={type}
-                    onCreateItem={handleCreateItem}
+                    onCreateItem={onCreateItem}
                   />
                 </Box>
               ))}

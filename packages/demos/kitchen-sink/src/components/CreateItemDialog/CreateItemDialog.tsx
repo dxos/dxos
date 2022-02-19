@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
 
 import {
   Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography
@@ -35,11 +35,11 @@ export const CreateItemDialog = ({
     }
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
         handleSubmit();

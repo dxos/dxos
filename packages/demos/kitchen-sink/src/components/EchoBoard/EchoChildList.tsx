@@ -8,6 +8,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
+import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
 import { CreateItemDialog } from '../CreateItemDialog';
@@ -17,7 +18,7 @@ export interface EchoChildListProps {
   item: Item<ObjectModel>
   itemAdapter: ItemAdapter
   type: string
-  onCreateItem?: (type: string, title: string) => void
+  onCreateItem?: (type: string, title: string, parent?: ItemID) => void
 }
 
 export const EchoChildList = ({
@@ -37,8 +38,8 @@ export const EchoChildList = ({
           type={type}
           itemAdapter={itemAdapter}
           onCreate={(title: string) => {
+            onCreateItem?.(type, title, item.id);
             setShowDialog(false);
-            onCreateItem?.(type, title);
           }}
           onCancel={() => setShowDialog(false)}
         />

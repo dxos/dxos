@@ -6,5 +6,6 @@ export * from './EchoBoard';
 export * from './EchoGraph';
 export * from './EchoTable';
 export * from './Layout';
+export * from './SelectionEditor';
 
 export * from './adapter';

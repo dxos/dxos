@@ -9,7 +9,7 @@ import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoGraph, EchoTable, Layout } from '../src';
-import { itemAdapter, graphStyles, tableStyles, useGraphModel } from './helpers';
+import { itemAdapter, graphStyles, tableStyles, useGraphModel, useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/App'
@@ -23,7 +23,8 @@ faker.seed(100);
 // TODO(burdon): dxos:item/party (replace or change slash).
 
 const App = () => {
-  const model = useGraphModel();
+  const party = useTestParty();
+  const model = useGraphModel(party);
 
   return (
     <FullScreen>

@@ -89,9 +89,8 @@ export const itemAdapter: ItemAdapter = {
 /**
  * Create model.
  */
-export const useGraphModel = (): EchoGraphModel => {
+export const useGraphModel = (party?: Party): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
-  const party = useTestParty();
   const items = useSelection(party?.select()) ?? [];
   useEffect(() => {
     model.update(items);
