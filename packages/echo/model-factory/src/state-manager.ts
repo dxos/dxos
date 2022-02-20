@@ -45,6 +45,14 @@ type OptimisticMutation = {
  * - Optimistic mutations.
  */
 export class StateManager<M extends Model> {
+  private _modelMeta: ModelMeta | null = null;
+
+  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
+
+  private _model: M | null = null;
+
+  private readonly _mutationProcessed = new Event<MutationMeta>();
+
   /**
    * Mutations that were applied on top of the _snapshot.
    */
@@ -54,14 +62,6 @@ export class StateManager<M extends Model> {
    * Mutations that were optimistically applied and haven't yet passed through the feed store.
    */
   private _optimisticMutations: OptimisticMutation[] = [];
-
-  private _modelMeta: ModelMeta | null = null;
-
-  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
-
-  private _model: M | null = null;
-
-  private readonly _mutationProcessed = new Event<MutationMeta>();
 
   /**
    * @param modelConstructor Can be undefined if the registry currently doesn't have this model loaded,
@@ -153,28 +153,34 @@ export class StateManager<M extends Model> {
     };
   }
 
+  /**
+   * Re-creates the state machine based on the current snapshot and enqueued mutations.
+   */
   private _resetStateMachine () {
     assert(this._modelMeta, 'Model not initialized.');
     log('Construct state machine');
 
     this._stateMachine = this._modelMeta.stateMachine();
 
-    //
+    // Apply the snapshot.
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
       const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot);
       this._stateMachine.reset(decoded);
     }
 
+    // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
       const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
       this._stateMachine.process(mutationDecoded, { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
+    // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
       this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
+    // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
       this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
     }
