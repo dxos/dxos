@@ -1,12 +1,8 @@
 {
-  "name": "@dxos/kitchen-sink",
+  "name": "@dxos/hello-world",
   "version": "2.27.4",
   "private": true,
-  "description": "Comprehensive set of demos.",
-  "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
-  "bugs": {
-    "url": "'https://github.com/dxos/protocols/issues"
-  },
+  "description": "Hello World.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"

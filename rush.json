@@ -803,6 +803,10 @@
       "projectFolder": "packages/demos/deprecated-demos"
     },
     {
+      "packageName": "@dxos/hello-world",
+      "projectFolder": "packages/demos/hello-world"
+    },
+    {
       "packageName": "@dxos/kitchen-sink",
       "projectFolder": "packages/demos/kitchen-sink"
     },

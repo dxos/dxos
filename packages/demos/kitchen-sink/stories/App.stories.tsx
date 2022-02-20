@@ -66,20 +66,20 @@ export const Secondary = () => {
       setParty(party);
     };
 
+    const handleInvite = async () => {
+      const invitation = await party!.createInvitation();
+      const encodedInvitation = invitation.descriptor.encode();
+      const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
+      await navigator.clipboard.writeText(text);
+
+      console.log(text); // Required for playwright tests.
+    }
+
     if (party) {
       return (
         <App
           party={party}
-          onInvite={async () => {
-            const invitation = await party.createInvitation();
-            const encodedInvitation = invitation.descriptor.encode();
-
-            // TODO(burdon): Downside here is no way to prevent sender from being lazy (sending secret together).
-            const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
-            await navigator.clipboard.writeText(text);
-            // Console log is required for E2E tests.
-            console.log(text);
-          }}
+          onInvite={handleInvite}
         />
       );
     }

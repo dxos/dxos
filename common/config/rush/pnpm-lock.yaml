@@ -508,6 +508,129 @@ importers:
       typescript: 4.5.3
       webpack: 4.44.2
 
+  ../../packages/demos/hello-world:
+    specifiers:
+      '@babel/core': ~7.13.15
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
+      '@dxos/echo-testing': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.7.5
+      '@dxos/gem-core': ~2.2.1-beta.8
+      '@dxos/gem-spore': ~2.2.1-beta.8
+      '@dxos/object-model': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-framework': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@mui/icons-material': ^5.4.2
+      '@mui/lab': ^5.0.0-alpha.69
+      '@mui/material': ^5.4.2
+      '@mui/styles': ^5.4.2
+      '@mui/system': ^5.4.2
+      '@mui/x-data-grid': ^5.5.1
+      '@types/d3': ~7.0.0
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ^4.0.6
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
+      '@types/react': ^17.0.24
+      babel-loader: ^8.1.0
+      babel-plugin-add-module-exports: ^1.0.4
+      buffer: ^6.0.3
+      clsx: ^1.1.0
+      debug: ^4.3.3
+      dotenv: ^8.2.0
+      expect: ~27.0.2
+      faker: ^5.1.0
+      immutability-helper: ^3.0.2
+      mobile-detect: ~1.4.5
+      mocha: ~8.4.0
+      playwright: ^1.7.0
+      pump: ^3.0.0
+      react: ^17.0.2
+      react-docgen-typescript-loader: ^3.7.2
+      react-dom: ^17.0.2
+      robotjs: ~0.6.0
+      ts-loader: ~8.1.0
+      ts-node: ^9.1.1
+      typescript: ^4.5.2
+      webpack: 4.44.2
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/echo-testing': link:../../echo/echo-testing
+      '@dxos/gem-core': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/util': link:../../common/util
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
+      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
+      '@mui/lab': 5.0.0-alpha.69_84b4b9670a6fb5a5b5566d79c2335561
+      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
+      '@mui/styles': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
+      '@mui/system': 5.4.2_ef966af889ffc4849e7222692314a033
+      '@mui/x-data-grid': 5.5.1_60e3b6939b08a32bfd667b9c952f7bcc
+      clsx: 1.1.1
+      debug: 4.3.3
+      immutability-helper: 3.1.1
+      mobile-detect: 1.4.5
+    devDependencies:
+      '@babel/core': 7.13.16
+      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
+      '@dxos/async': link:../../common/async
+      '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.7.5_@types+react@17.0.37
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/d3': 7.0.0
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.isplainobject': 4.0.6
+      '@types/mocha': 8.2.3
+      '@types/node': 14.18.0
+      '@types/pump': 1.1.1
+      '@types/react': 17.0.37
+      babel-loader: 8.2.3_0c9ed85c987bca43d65931123ef87b6c
+      babel-plugin-add-module-exports: 1.0.4
+      buffer: 6.0.3
+      dotenv: 8.6.0
+      expect: 27.0.6
+      faker: 5.5.3
+      mocha: 8.4.0
+      playwright: 1.17.1
+      pump: 3.0.0
+      react: 17.0.2
+      react-docgen-typescript-loader: 3.7.2_typescript@4.5.3+webpack@4.44.2
+      react-dom: 17.0.2_react@17.0.2
+      robotjs: 0.6.0
+      ts-loader: 8.1.0_typescript@4.5.3+webpack@4.44.2
+      ts-node: 9.1.1_typescript@4.5.3
+      typescript: 4.5.3
+      webpack: 4.44.2
+
   ../../packages/demos/kitchen-sink:
     specifiers:
       '@babel/core': ~7.13.15
@@ -6619,7 +6742,7 @@ packages:
       jss-plugin-props-sort: 10.9.0
       jss-plugin-rule-value-function: 10.9.0
       jss-plugin-vendor-prefixer: 10.9.0
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
     dev: false
 
