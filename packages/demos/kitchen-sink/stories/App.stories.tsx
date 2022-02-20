@@ -73,7 +73,7 @@ export const Secondary = () => {
       await navigator.clipboard.writeText(text);
 
       console.log(text); // Required for playwright tests.
-    }
+    };
 
     if (party) {
       return (
