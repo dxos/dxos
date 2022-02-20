@@ -20,35 +20,34 @@ void (async () => {
       }
     }
   }, { rpcPort: port });
-  waitToBeReady();
+  await waitToBeReady();
   await client.initialize();
   initPanel(client);
 })();
 
-
 const TIMEOUT = 1000;
 
-function waitToBeReady() {
+function waitToBeReady () {
   return new Promise<void>((resolve, reject) => {
-    const start = Date.now()
+    const start = Date.now();
 
-    function check() {
+    function check () {
       chrome.devtools.inspectedWindow.eval(
         '!!(window.__DXOS__.devtoolsReady);',
         (result, isException) => {
-          if(!result || isException) {
-            if(Date.now() - start > TIMEOUT) {
-              reject(new Error('Timeout on waiting for client API to initialize.'))
+          if (!result || isException) {
+            if (Date.now() - start > TIMEOUT) {
+              reject(new Error('Timeout on waiting for client API to initialize.'));
             } else {
               setTimeout(check, 50);
             }
           } else {
-            resolve()
+            resolve();
           }
         }
-      )
-
-      check()
+      );
     }
-  })
+
+    check();
+  });
 }
