@@ -36,8 +36,8 @@ export const EchoBoard = ({
       }}
     >
       {items.map(item => {
-        const types = itemAdapter.linkedTypes?.(item);
-        if (!types?.length) {
+        const { childTypes } = itemAdapter.meta?.(item.type!) ?? {};
+        if (!childTypes) {
           return undefined;
         }
 
@@ -50,7 +50,7 @@ export const EchoBoard = ({
               item={item}
               itemAdapter={itemAdapter}
             >
-              {types!.map(type => (
+              {childTypes!.map(type => (
                 <Box
                   key={type}
                   sx={{ paddingBottom: 0.5 }}

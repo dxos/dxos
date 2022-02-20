@@ -5,15 +5,12 @@
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
-
-import { Selection } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoGraph, SelectionEditor } from '../src';
-import { itemAdapter, graphStyles, useGraphModel, useTestParty } from './helpers';
+import { BoxContainer, EchoGraph, execSelection, SelectionEditor } from '../src';
+import { itemAdapter, graphStyles, useGraphModel, useTestParty, defaultSelectionText } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoGraph'
@@ -38,36 +35,36 @@ const AppWithEditor = () => {
   const party = useTestParty();
   const model = useGraphModel(party);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
+  if (!party) {
+    return null;
+  }
 
-  const handleChange = (selection?: Selection<any>) => {
+  const handleSelection = (text: string) => {
+    const selection = execSelection(party, text);
     const { result = [] } = selection?.query() ?? {};
     const selected = new Set<ItemID>();
     result.forEach(item => selected.add(item.id));
     setSelected(selected);
-
-    // TODO(burdon): Check changed.
     model.refresh();
   };
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
-      {party && (
-        <SelectionEditor
-          party={party}
-          onChange={handleChange}
-          delay={100}
-        />
-      )}
+    <BoxContainer expand column>
+      <SelectionEditor
+        initialValue={defaultSelectionText}
+        onChange={handleSelection}
+        delay={100}
+      />
 
-      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <BoxContainer expand>
         <EchoGraph
           model={model}
           selected={selected}
           itemAdapter={itemAdapter}
           styles={graphStyles}
         />
-      </Box>
-    </Box>
+      </BoxContainer>
+    </BoxContainer>
   );
 };
 

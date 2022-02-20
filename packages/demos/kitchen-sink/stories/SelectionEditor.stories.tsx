@@ -6,11 +6,10 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Selection } from '@dxos/echo-db';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
-import { SelectionEditor } from '../src';
-import { useTestParty } from './helpers';
+import { execSelection, SelectionEditor } from '../src';
+import { defaultSelectionText, useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/SelectionEditor'
@@ -23,7 +22,8 @@ const App = () => {
     return null;
   }
 
-  const handleChange = (selection?: Selection<any>) => {
+  const handleChange = (text: string) => {
+    const selection = execSelection(party, text);
     if (selection) {
       const { result } = selection.query({}); // TODO(burdon): Allow no options.
       setResult(result?.length);
@@ -35,7 +35,7 @@ const App = () => {
   return (
     <Box sx={{ padding: 1 }}>
       <SelectionEditor
-        party={party}
+        initialValue={defaultSelectionText}
         onChange={handleChange}
         delay={100}
       />

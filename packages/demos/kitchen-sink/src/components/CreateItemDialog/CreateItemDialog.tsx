@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, ReactNode, useState } from 'react';
 
 import {
   Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography
@@ -12,10 +12,11 @@ import { ItemAdapter } from '../adapter';
 
 interface CreateItemDialogProps {
   open: boolean
-  type: string
+  type?: string
   itemAdapter: ItemAdapter
   onCreate: (title: string) => void
   onCancel: () => void
+  children?: ReactNode
 }
 
 export const CreateItemDialog = ({
@@ -23,10 +24,11 @@ export const CreateItemDialog = ({
   type,
   itemAdapter,
   onCreate,
-  onCancel
+  onCancel,
+  children
 }: CreateItemDialogProps) => {
   const [title, setTitle] = useState<string>('');
-  const { label, icon: Icon } = itemAdapter.meta?.(type) ?? {};
+  const { label = 'Item', icon: Icon } = (type ? itemAdapter.meta?.(type) : undefined) ?? {};
 
   const handleSubmit = () => {
     const value = title.trim();
@@ -42,6 +44,7 @@ export const CreateItemDialog = ({
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
+        event.preventDefault();
         handleSubmit();
         break;
       }
@@ -69,16 +72,22 @@ export const CreateItemDialog = ({
           )}
         </Box>
       </DialogContent>
+
       <DialogContent>
+        {children}
+
         <TextField
           autoFocus
           margin='dense'
           fullWidth
           variant='standard'
+          spellCheck={false}
+          autoComplete='off'
           onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={handleSubmit}>Create</Button>

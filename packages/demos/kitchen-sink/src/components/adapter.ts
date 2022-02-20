@@ -12,6 +12,7 @@ export type ItemMeta = {
   label: string
   plural: string
   color: any
+  childTypes?: string[]
 }
 
 // TODO(burdon): Add link information (children, links, etc.)

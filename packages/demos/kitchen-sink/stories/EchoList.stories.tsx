@@ -19,12 +19,14 @@ faker.seed(100);
 
 const App = () => {
   const party = useTestParty();
+
+  // TODO(burdon): Filter out party item.
   const items = useSelection(party?.select()) ?? [];
 
   return (
     <FullScreen>
       <EchoList
-        items={items}
+        items={items.filter(item => item.type !== '')}
         itemAdapter={itemAdapter}
       />
     </FullScreen>

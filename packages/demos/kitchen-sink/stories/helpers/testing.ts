@@ -2,50 +2,40 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Item } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 import { css } from '@emotion/css';
-import { useEffect, useMemo, useState } from 'react';
 
 import {
-  CheckBoxOutlineBlank as DefaultIcon,
   Business as OrgIcon,
+  CheckBoxOutlineBlank as DefaultIcon,
   PersonOutline as PersonIcon,
-  WorkOutline as ProjectIcon
+  WorkOutline as ProjectIcon,
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
-import { Party } from '@dxos/client';
-import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
-import { useClient, useSelection } from '@dxos/react-client';
-
-import {
-  EchoGraphModel,
-  ItemAdapter,
-  ItemMeta,
-  OrgBuilder,
-  ProjectBuilder,
-  TestType,
-  usePartyBuilder
-} from '../../src';
+import { ItemAdapter, ItemMeta, TestType } from '../../src';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {
     icon: OrgIcon,
     label: 'Organization',
     plural: 'Organizations',
-    color: colors.brown
+    color: colors.brown,
+    childTypes: [TestType.Person, TestType.Project]
   },
   [TestType.Person]: {
     icon: PersonIcon,
     label: 'Person',
     plural: 'People',
-    color: colors.indigo
+    color: colors.indigo,
   },
   [TestType.Project]: {
     icon: ProjectIcon,
     label: 'Project',
     plural: 'Projects',
-    color: colors.blue
+    color: colors.blue,
+    childTypes: [TestType.Task]
   },
   [TestType.Task]: {
     icon: DefaultIcon,
@@ -54,6 +44,10 @@ export const typeMeta: { [i: string]: ItemMeta } = {
     color: colors.green
   }
 };
+
+export const defaultSelectionText =
+  'select().filter({ type: \'example:type.org\' }).children().filter({ type: \'example:type.project\' })'
+    .replace(/\)\./g, ')\n  .');
 
 export const tableStyles = css`
   ${Object.keys(typeMeta).map(
@@ -84,54 +78,4 @@ export const itemAdapter: ItemAdapter = {
   },
 
   meta: (type: string) => typeMeta[type]
-};
-
-/**
- * Create model.
- */
-export const useGraphModel = (party?: Party): EchoGraphModel => {
-  const model = useMemo(() => new EchoGraphModel(), []);
-  const items = useSelection(party?.select()) ?? [];
-  useEffect(() => {
-    model.update(items);
-  }, [items]);
-
-  return model;
-};
-
-/**
- * Generate test party.
- */
-export const useTestParty = (): Party | undefined => {
-  const client = useClient();
-  const [party, setParty] = useState<Party>();
-  const builder = usePartyBuilder(party);
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const party = await client.echo.createParty();
-      setParty(party);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (builder) {
-      setImmediate(async () => {
-        await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
-          await orgBuilder.createPeople([3, 10]);
-          await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {
-            const { result: people } = await orgBuilder.org
-              .select()
-              .children()
-              .filter({ type: TestType.Person })
-              .query();
-
-            await projectBuilder.createTasks([2, 5], people);
-          });
-        });
-      }, []);
-    }
-  }, [builder]);
-
-  return party;
 };

@@ -23,7 +23,6 @@ const App = () => {
   const party = useTestParty();
   const items = useSelection(party?.select()) ?? [];
 
-  // TODO(burdon): Doesn't trigger update.
   const handleCreateItem = (type: string, title: string, parentId?: ItemID) => {
     void party?.database.createItem({
       model: ObjectModel, // TODO(burdon): Set as default.
@@ -38,8 +37,8 @@ const App = () => {
   return (
     <FullScreen>
       <EchoBoard
-        items={items}
         itemAdapter={itemAdapter}
+        items={items}
         onCreateItem={handleCreateItem}
       />
     </FullScreen>

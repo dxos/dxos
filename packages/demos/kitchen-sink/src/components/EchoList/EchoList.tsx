@@ -4,12 +4,15 @@
 
 import React from 'react';
 
-import { List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+
+import { Item } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter } from '../adapter';
 
 export interface EchoListProps {
-  items: any[]
+  items?: Item<ObjectModel>[]
   itemAdapter: ItemAdapter
 }
 
@@ -18,23 +21,36 @@ export const EchoList = ({
   itemAdapter
 }: EchoListProps) => {
   return (
-    <List dense>
-      {items.map((item) => {
-        const { label, icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
-        return (
-          <ListItem key={item.id}>
-            {Icon && (
-              <ListItemIcon>
-                <Icon />
-              </ListItemIcon>
-            )}
-            <ListItemText
-              primary={itemAdapter.title(item)}
-              secondary={label}
-            />
-          </ListItem>
-        );
-      })}
-    </List>
+    <Box sx={{
+      display: 'flex',
+      flex: 1,
+      overflowX: 'hidden',
+      overflowY: 'scroll'
+    }}>
+      <List
+        dense
+        disablePadding
+      >
+        {items.map((item) => {
+          const { label, icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
+          return (
+            <ListItemButton
+              key={item.id}
+              dense
+            >
+              {Icon && (
+                <ListItemIcon>
+                  <Icon />
+                </ListItemIcon>
+              )}
+              <ListItemText
+                primary={itemAdapter.title(item)}
+                secondary={label}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    </Box>
   );
 };

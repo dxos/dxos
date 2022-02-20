@@ -4,18 +4,22 @@
 
 import React, { useState, ReactNode } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar } from '@dxos/react-components';
+import {
+  CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar
+} from '@dxos/react-components';
 
 export interface LayoutProps {
   children?: ReactNode | ReactNode[]
+  title?: string
   sidebar?: ReactNode
   width?: number
 }
 
 export const Layout = ({
   children,
+  title = 'Kitchen Sink',
   sidebar,
   width = 500
 }: LayoutProps) => {
@@ -39,7 +43,7 @@ export const Layout = ({
           {!open && (
             <OpenButton onOpen={() => setOpen(true)} />
           )}
-          <div>ECHO</div>
+          <Typography>{title}</Typography>
         </Toolbar>
       </SlidingAppBar>
 
