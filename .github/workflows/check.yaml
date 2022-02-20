@@ -79,7 +79,7 @@ jobs:
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
 
           # Test the demos storybooks
-          cd packages/demos
+          cd packages/demos/deprecated-demos
           pnpm book &
           pnpm test:playwright
           echo "::endgroup::"
