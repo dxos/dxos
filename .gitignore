@@ -71,6 +71,7 @@ out
 lib
 build
 out
+tmp
 
 # Web Extensions
 web-ext-artifacts
