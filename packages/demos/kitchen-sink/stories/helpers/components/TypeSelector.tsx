@@ -30,7 +30,7 @@ export const TypeSelector = ({
 
   return (
     <IconRadioGroup value={value} onChange={handleChange}>
-      {Object.entries(typeMeta).map(([key, { icon: Icon, }]) => (
+      {Object.entries(typeMeta).map(([key, { icon: Icon }]) => (
         <IconRadio key={key} value={key} size='small'>
           <Icon />
         </IconRadio>

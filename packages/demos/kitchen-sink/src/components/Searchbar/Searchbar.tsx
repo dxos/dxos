@@ -40,7 +40,7 @@ export const Searchbar = ({
       clearTimeout(timeoutRef.current!);
       timeoutRef.current = setTimeout(() => onChange(text), delay);
     }
-  }
+  };
 
   const handleCancel = () => {
     setText('');

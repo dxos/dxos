@@ -9,7 +9,6 @@ import {
   ExpandLess as CloseIcon,
   Share as ShareIcon
 } from '@mui/icons-material';
-
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
 import { Searchbar, SelectionEditor } from '../../../src';

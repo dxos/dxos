@@ -27,4 +27,4 @@ export const Primary = () => {
       </ThemeProvider>
     </FullScreen>
   );
-}
+};

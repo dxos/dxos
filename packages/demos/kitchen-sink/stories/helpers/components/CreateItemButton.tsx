@@ -8,8 +8,8 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
 
 import { CreateItemDialog, TestType } from '../../../src';
-import { itemAdapter} from '../testing';
-import { TypeSelector} from './TypeSelector';
+import { itemAdapter } from '../testing';
+import { TypeSelector } from './TypeSelector';
 
 interface CreateItemButtonProps {
   onCreate: (type: string, title: string) => void
@@ -17,7 +17,7 @@ interface CreateItemButtonProps {
 
 export const CreateItemButton = ({
   onCreate
-}: CreateItemButtonProps ) => {
+}: CreateItemButtonProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [type, setType] = useState<string>(TestType.Org);
 

@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 import { css } from '@emotion/css';
 
 import {
   Business as OrgIcon,
   CheckBoxOutlineBlank as DefaultIcon,
   PersonOutline as PersonIcon,
-  WorkOutline as ProjectIcon,
+  WorkOutline as ProjectIcon
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
+
+import { Item } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter, ItemMeta, TestType } from '../../src';
 
@@ -28,7 +29,7 @@ export const typeMeta: { [i: string]: ItemMeta } = {
     icon: PersonIcon,
     label: 'Person',
     plural: 'People',
-    color: colors.indigo,
+    color: colors.indigo
   },
   [TestType.Project]: {
     icon: ProjectIcon,

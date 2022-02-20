@@ -31,26 +31,29 @@ export const ViewContainer = ({
 }: ViewContainerProps) => {
   return (
     <>
-      <BoxContainer expand sx={{
-        display: value !== ViewType.List ? 'none' : undefined
-      }}>
+      <BoxContainer
+expand sx={{
+  display: value !== ViewType.List ? 'none' : undefined
+}}>
         <EchoList
           itemAdapter={itemAdapter}
           items={items}
         />
       </BoxContainer>
-      <BoxContainer expand sx={{
-        display: value !== ViewType.Board ? 'none' : undefined
-      }}>
+      <BoxContainer
+expand sx={{
+  display: value !== ViewType.Board ? 'none' : undefined
+}}>
         <EchoBoard
           itemAdapter={itemAdapter}
           items={items}
           onCreateItem={onCreateItem}
         />
       </BoxContainer>
-      <BoxContainer expand sx={{
-        display: value !== ViewType.Graph ? 'none' : undefined
-      }}>
+      <BoxContainer
+expand sx={{
+  display: value !== ViewType.Graph ? 'none' : undefined
+}}>
         <EchoGraph
           itemAdapter={itemAdapter}
           model={model}

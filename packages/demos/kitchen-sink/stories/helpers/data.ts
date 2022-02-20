@@ -9,9 +9,8 @@ import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useSelection } from '@dxos/react-client';
 
-import { itemAdapter } from './testing';
-
 import { EchoGraphModel, OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
+import { itemAdapter } from './testing';
 
 // TODO(burdon): Accidentally test types are naturally alphabetical.
 export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
@@ -26,7 +25,7 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
   const tb = itemAdapter.title(b).toLowerCase();
 
   return (ta < tb) ? -1 : (ta > tb) ? 1 : 0;
-}
+};
 
 /**
  * Filter items.
@@ -46,12 +45,12 @@ export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => 
       const title = itemAdapter.title(item)?.toLowerCase();
       return title?.indexOf(text) !== -1;
     }),
-    [text]
+  [text]
   ) ?? [];
 
   items.sort(sortItems);
   return items;
-}
+};
 
 /**
  * Create model.
@@ -60,7 +59,7 @@ export const useGraphModel = (party?: Party): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
   const items = useSelection(party?.select()) ?? [];
   useEffect(() => {
-    let filteredItems = items
+    const filteredItems = items
       .filter(item => item.type?.startsWith('example:'));
 
     model.update(filteredItems);

@@ -32,7 +32,7 @@ export const Primary = () => {
     return (
       <App party={party} />
     );
-  }
+  };
 
   return (
     <ClientProvider>

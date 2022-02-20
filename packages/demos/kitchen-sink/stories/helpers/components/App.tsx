@@ -61,7 +61,7 @@ export const App = ({
 
   const handleSearch = (text: string) => {
     setSearch(text);
-  }
+  };
 
   const handleSelection = (text: string) => {
     const selection = execSelection(party, text);
@@ -98,4 +98,4 @@ export const App = ({
       </ThemeProvider>
     </FullScreen>
   );
-}
+};
