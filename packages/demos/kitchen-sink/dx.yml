@@ -2,7 +2,7 @@ version: 1
 
 module:
   type: dxos:type.app
-  name: dxos:esbook.demos
+  name: dxos:esbook.kitchen-sink
 
 build:
   command: npm run build:book
