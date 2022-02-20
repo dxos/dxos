@@ -93,10 +93,12 @@ export class RpcPeer {
 
     this._open = true;
 
+    log('Send open message');
     await this._sendMessage({ open: true });
     await this._remoteOpenTrigger.wait();
 
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
+    log('Send second open message');
     await this._sendMessage({ open: true });
   }
 
@@ -120,29 +122,36 @@ export class RpcPeer {
 
     if (decoded.request) {
       if (!this._open) {
+        log('Received request while not open.');
         await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
         return;
       }
 
       const req = decoded.request;
       if (req.stream) {
+        log(`Request (stream): ${req.method}`);
         this._callStreamHandler(req, response => {
+          log(`Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(response.error)} close=${response.close}`);
           void this._sendMessage({ response }).catch(error => {
             log(`Unhandled error during stream close: ${error}`);
           });
         });
       } else {
+        log(`Request: ${req.method}`);
         const response = await this._callHandler(req);
 
+        log(`Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(response.error)}`);
         await this._sendMessage({ response });
       }
     } else if (decoded.response) {
       if (!this._open) {
+        log('Received response while not open.');
         return; // Ignore when not open.
       }
 
       assert(typeof decoded.response.id === 'number');
       if (!this._outgoingRequests.has(decoded.response.id)) {
+        log(`Received response with incorrect id: ${decoded.response.id}`);
         return; // Ignore requests with incorrect id.
       }
 
@@ -152,13 +161,17 @@ export class RpcPeer {
         this._outgoingRequests.delete(decoded.response.id);
       }
 
+      log(`Response: ${decoded.response.payload?.type_url}`);
       item.resolve(decoded.response);
     } else if (decoded.open) {
+      log('Received open message');
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (!this._open) {
+        log('Received stream close while not open');
         return; // Ignore when not open.
       }
+      log(`Received stream close: id=${decoded.streamClose.id}`);
 
       assert(typeof decoded.streamClose.id === 'number');
 
