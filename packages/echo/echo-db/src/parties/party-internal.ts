@@ -7,7 +7,7 @@ import assert from 'assert';
 import { synchronized, Event } from '@dxos/async';
 import { KeyHint, createAuthMessage, Authenticator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { raise, timed } from '@dxos/debug';
+import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -64,16 +64,17 @@ export class PartyInternal {
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
+    const identity = this._identityProvider();
     this._partyCore = new PartyCore(
       partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
+      identity.identityKey?.publicKey ?? failUndefined(),
       _initialTimeframe,
       _options
     );
 
-    const identity = this._identityProvider();
     if (identity.preferences) {
       this._preferences = new PartyPreferences(identity.preferences, this);
     }

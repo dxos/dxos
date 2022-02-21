@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -52,9 +53,10 @@ export class Database {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _backend: DatabaseBackend
+    private readonly _backend: DatabaseBackend,
+    memberKey: PublicKey
   ) {
-    this._itemManager = new ItemManager(this._modelFactory, this._backend.getWriteStream());
+    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
   }
 
   get isReadOnly () {

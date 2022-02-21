@@ -1484,6 +1484,7 @@ importers:
   ../../packages/echo/text-model:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1502,6 +1503,7 @@ importers:
       '@types/node': 14.18.0
       yjs: 13.5.22
     devDependencies:
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/object-model': link:../object-model
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.24
@@ -3001,13 +3003,13 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.16.0
-      '@babel/generator': 7.16.5
+      '@babel/generator': 7.16.0
       '@babel/helper-compilation-targets': 7.16.3_@babel+core@7.13.16
-      '@babel/helper-module-transforms': 7.16.5
-      '@babel/helpers': 7.16.5
-      '@babel/parser': 7.16.6
+      '@babel/helper-module-transforms': 7.16.0
+      '@babel/helpers': 7.16.3
+      '@babel/parser': 7.16.4
       '@babel/template': 7.16.0
-      '@babel/traverse': 7.16.5
+      '@babel/traverse': 7.16.3
       '@babel/types': 7.16.0
       convert-source-map: 1.8.0
       debug: 4.3.3
@@ -3254,7 +3256,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.16.0
-    dev: false
 
   /@babel/helper-module-imports/7.16.0:
     resolution: {integrity: sha512-kkH7sWzKPq0xt3H1n+ghb4xEMP8k0U7XV3kkB+ZGy69kDk2ySFW1qPi06sjKzFY3t1j6XbJSqr4mF9L7CYVyhg==}
@@ -3276,7 +3277,6 @@ packages:
       '@babel/types': 7.16.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/helper-module-transforms/7.16.5:
     resolution: {integrity: sha512-CkvMxgV4ZyyioElFwcuWnDCcNIeyqTkCm9BxXZi73RR1ozqlpboqsbGUNvRTflgZtFbbJ1v5Emvm+lkjMYY/LQ==}
@@ -3298,7 +3298,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.16.0
-    dev: false
 
   /@babel/helper-plugin-utils/7.14.5:
     resolution: {integrity: sha512-/37qQCE3K0vvZKwoK4XU/irIJQdIfCJuhU5eKnNxpFDsOkgFaUAwbv+RYw6eYgsC0E4hS7r5KqGULUogqui0fQ==}
@@ -3325,7 +3324,6 @@ packages:
       '@babel/types': 7.16.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/helper-simple-access/7.16.0:
     resolution: {integrity: sha512-o1rjBT/gppAqKsYfUdfHq5Rk03lMQrkPHG1OWzHWpLgVXRH4HnMM9Et9CVdIqwkCQlobnGHEJMsgWP/jE1zUiw==}
@@ -3375,7 +3373,6 @@ packages:
       '@babel/types': 7.16.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@babel/helpers/7.16.5:
     resolution: {integrity: sha512-TLgi6Lh71vvMZGEkFuIxzaPsyeYCHQ5jJOOX1f0xXn0uciFuE8cEk0wyBquMcCxBXZ5BJhE2aUB7pnWTD150Tw==}
@@ -5583,7 +5580,7 @@ packages:
       '@babel/core': 7.13.16
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.0_@babel+core@7.13.16
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/serialize': 1.0.2
@@ -5602,7 +5599,7 @@ packages:
       '@babel/core': 7.16.5
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.0_@babel+core@7.16.5
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/serialize': 1.0.2
@@ -6303,7 +6300,7 @@ packages:
       clsx: 1.1.1
       hoist-non-react-statics: 3.3.2
       popper.js: 1.16.1-lts
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6535,7 +6532,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       moment: 2.29.1
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6581,7 +6578,7 @@ packages:
       '@mui/utils': 5.4.2_react@17.0.2
       '@types/react': 17.0.37
       clsx: 1.1.1
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6618,7 +6615,7 @@ packages:
       clsx: 1.1.1
       csstype: 3.0.10
       hoist-non-react-statics: 3.3.2
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6653,7 +6650,7 @@ packages:
       clsx: 1.1.1
       csstype: 3.0.10
       hoist-non-react-statics: 3.3.2
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6740,7 +6737,7 @@ packages:
       jss-plugin-props-sort: 10.9.0
       jss-plugin-rule-value-function: 10.9.0
       jss-plugin-vendor-prefixer: 10.9.0
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
     dev: false
 
@@ -6768,7 +6765,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       csstype: 3.0.10
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
 
   /@mui/system/5.4.2_ef966af889ffc4849e7222692314a033:
@@ -6797,7 +6794,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       csstype: 3.0.10
-      prop-types: 15.8.1
+      prop-types: 15.7.2
       react: 17.0.2
 
   /@mui/types/7.1.2_@types+react@17.0.37:
@@ -9527,7 +9524,7 @@ packages:
     resolution: {integrity: sha512-o/HelwhuKpTj/frsOsbNLNgnNGVIFsVP/SW2BSF14gVl7kAfMOJ6/8wUAUvG1R1NHKrfG+2sHZTu0yauT1qBrA==}
     engines: {node: '>=6.0'}
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       '@babel/runtime-corejs3': 7.16.3
 
   /arity-n/1.0.4:
@@ -9883,7 +9880,7 @@ packages:
   /babel-plugin-macros/2.8.0:
     resolution: {integrity: sha512-SEP5kJpfGYqYKpBrj5XU3ahw5p5GOHJ0U5ssOSQ/WBVdwkD2Dzlce95exQTs3jOVWPPKLBN2rlEWkCK7dSmLvg==}
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       cosmiconfig: 6.0.0
       resolve: 1.20.0
 
@@ -22885,7 +22882,6 @@ packages:
 
   /source-map-resolve/0.5.3:
     resolution: {integrity: sha512-Htz+RnsXWk5+P2slx5Jh3Q66vhQj1Cllm0zvnaY98+NFx+Dv2CF/f5O/t8x+KaNdrdIAsruNzoh/KpialbqAnw==}
-    deprecated: See https://github.com/lydell/source-map-resolve#deprecated
     dependencies:
       atob: 2.1.2
       decode-uri-component: 0.2.0
@@ -25094,7 +25090,7 @@ packages:
   /wide-align/1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     dependencies:
-      string-width: 4.2.3
+      string-width: 1.0.2
 
   /widest-line/3.1.0:
     resolution: {integrity: sha512-NsmoXalsWVDMGupxZ5R08ka9flZjjiLvHVAWYOKtiKM8ujtZWr9cRffak+uSE48+Ob8ObalXpwyeUiyDD6QFgg==}
