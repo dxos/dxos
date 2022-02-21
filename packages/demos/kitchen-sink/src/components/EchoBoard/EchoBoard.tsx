@@ -12,7 +12,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter } from '../adapter';
 import { EchoCard } from './EchoCard';
-import { EchoChildList } from './EchoChildList';
+import { EchoSubList } from './EchoSubList';
 
 export interface EchoBoardProps {
   items?: Item<ObjectModel>[]
@@ -55,7 +55,7 @@ export const EchoBoard = ({
                   key={type}
                   sx={{ paddingBottom: 0.5 }}
                 >
-                  <EchoChildList
+                  <EchoSubList
                     item={item}
                     itemAdapter={itemAdapter}
                     type={type}

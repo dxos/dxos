@@ -21,7 +21,7 @@ export interface EchoChildListProps {
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void
 }
 
-export const EchoChildList = ({
+export const EchoSubList = ({
   item,
   itemAdapter,
   type,
@@ -86,7 +86,13 @@ export const EchoChildList = ({
                 )}
                 <ListItemText
                   primary={itemAdapter.title(item)}
-                  primaryTypographyProps={{ fontSize: 14, fontWeight: 'medium' }}
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: 'light',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
                 />
               </ListItem>
             );

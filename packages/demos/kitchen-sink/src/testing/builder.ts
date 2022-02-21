@@ -25,6 +25,8 @@ type Num = [min: number, max: number] | number
 
 const num = (n: Num) => typeof n === 'number' ? n : faker.datatype.number({ min: n[0], max: n[1] });
 
+const capitalize = (text: string) => text.length ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+
 /*
 // TODO(burdon): Experimental -- define graph shape.
 const schemas = {
@@ -124,7 +126,8 @@ export class PartyBuilder {
       model: ObjectModel,
       type: TestType.Org,
       props: {
-        title: faker.company.companyName()
+        title: faker.company.companyName(),
+        description: faker.internet.url()
       }
     });
   }
@@ -135,7 +138,8 @@ export class PartyBuilder {
       type: TestType.Person,
       parent: org.id,
       props: {
-        title: faker.name.findName()
+        title: faker.name.findName(),
+        description: faker.name.jobDescriptor()
       }
     });
   }
@@ -146,7 +150,8 @@ export class PartyBuilder {
       type: TestType.Project,
       parent: org.id,
       props: {
-        title: faker.commerce.productName()
+        title: faker.commerce.productName(),
+        description: faker.commerce.productDescription() + '.'
       }
     });
   }
@@ -157,7 +162,8 @@ export class PartyBuilder {
       type: TestType.Task,
       parent: project.id,
       props: {
-        title: faker.lorem.words(3)
+        title: capitalize(faker.git.commitMessage()) + '.',
+        description: faker.hacker.phrase()
       }
     });
   }
