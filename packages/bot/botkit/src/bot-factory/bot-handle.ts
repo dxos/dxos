@@ -14,14 +14,14 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
-import { Bot, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
+import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
 
 /**
  * Represents a running bot instance in BotFactory.
  */
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
-  private _bot: Bot;
+  private readonly _bot: Bot;
   private _config: Config;
   private _startTimestamps: Date[] = [];
   localPath: string | undefined;
@@ -34,11 +34,13 @@ export class BotHandle {
   constructor (
     readonly id: string,
     readonly workingDirectory: string,
-    config: Config = new Config({ version: 1 })
+    config: Config = new Config({ version: 1 }),
+    packageSpecifier: BotPackageSpecifier = {}
   ) {
     this._bot = {
       id,
-      status: Bot.Status.STOPPED
+      status: Bot.Status.STOPPED,
+      packageSpecifier
     };
     this._config = new Config(config.values);
   }
@@ -102,9 +104,8 @@ export class BotHandle {
     );
     await this._rpc.open();
     this._bot.status = Bot.Status.RUNNING;
-    this._bot.error = undefined;
-    this._bot.exitCode = undefined;
-    this._bot.exitSignal = undefined;
+    this._bot.lastStart = this.startTimestamp;
+    this._bot.runtime = {};
     this.update.emit();
   }
 
@@ -128,8 +129,11 @@ export class BotHandle {
    */
   onProcessExited (status: BotExitStatus) {
     this.bot.status = Bot.Status.STOPPED;
-    this.bot.exitCode = status.code ?? undefined;
-    this.bot.exitSignal = status.signal ?? undefined;
+    this.bot.runtime = {
+      ...this.bot.runtime,
+      exitCode: status.code ?? undefined,
+      exitSignal: status.signal ?? undefined
+    };
     this.update.emit();
   }
 
@@ -138,7 +142,11 @@ export class BotHandle {
    */
   onProcessError (error: Error) {
     this.bot.status = Bot.Status.STOPPED;
-    this.bot.error = error.stack;
+
+    this.bot.runtime = {
+      ...this.bot.runtime,
+      error: error.stack
+    };
     this.update.emit();
   }
 

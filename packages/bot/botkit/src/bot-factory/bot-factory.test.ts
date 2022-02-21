@@ -34,7 +34,7 @@ describe('BotFactory', () => {
 
       const { bots } = await botFactory.getBots();
       expect(bots[0].status).toEqual(Bot.Status.STOPPED);
-      expect(bots[0].exitCode).toEqual(255);
+      expect(bots[0].runtime?.exitCode).toEqual(255);
     });
   });
 });

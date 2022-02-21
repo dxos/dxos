@@ -18,15 +18,23 @@ message BotPackageSpecifier {
 message Bot {
   enum Status {
     STOPPED = 0;
-    RUNNING = 1;
+    STARTING = 1;
+    RUNNING = 2;
+    STOPPING = 3;
   }
 
   string id = 1;
   Status status = 2;
+  BotPackageSpecifier package_specifier = 3;
+  Timestamp last_start = 4;
 
-  int32 exit_code = 3;
-  string exit_signal = 4;
-  string error = 5;
+  message Runtime {
+    int32 exit_code = 1;
+    string exit_signal = 2;
+    string error = 3;
+  }
+
+  Runtime runtime = 5;
 }
 
 message GetBotsResponse {

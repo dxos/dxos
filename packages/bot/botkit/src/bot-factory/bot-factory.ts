@@ -80,6 +80,7 @@ export class BotFactory implements BotFactoryService {
     const id = keyToString(randomBytes(6));
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
+      const packageSpecifier = request.package;
 
       if (this._contentResolver && request.package?.dxn) {
         request.package = await this._contentResolver.resolve(request.package.dxn);
@@ -88,7 +89,8 @@ export class BotFactory implements BotFactoryService {
       const handle = new BotHandle(
         id,
         join(process.cwd(), 'bots', id),
-        this._config
+        this._config,
+        packageSpecifier
       );
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
