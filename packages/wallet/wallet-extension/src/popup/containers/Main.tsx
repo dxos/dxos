@@ -7,16 +7,30 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useConfig, useProfile } from '@dxos/react-client';
 import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
+import { Config } from '@dxos/config';
 
 export const Main = () => {
   const client = useClient();
+  const config = useConfig();
+  const [remoteConfig, setRemoteConfig] = useState<Config | undefined>();
   const [parties, setParties] = useState<any[]>([]);
   const profile = useProfile();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
+
+  useEffect(() => {
+    setImmediate(async () => {
+      try {
+        const remoteConfig = await client.services.SystemService.getConfig();
+        setRemoteConfig(new Config(remoteConfig));
+      } catch (error: any) {
+        setError(error);
+      }
+    })
+  }, []);
 
   useEffect(() => {
     const partyStream = client.services.PartyService.subscribeParties();
@@ -100,7 +114,13 @@ export const Main = () => {
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
-      <p>{profile.publicKey.toString()}</p>
+      {remoteConfig?.get('runtime.services.dxns.polkadotAddress') &&
+        <p>Your Polkadot Address: {remoteConfig.get('runtime.services.dxns.polkadotAddress')}</p>
+      }
+      {remoteConfig?.get('runtime.services.dxns.dxnsAccount') &&
+        <p>Your DXNS Account: {remoteConfig.get('runtime.services.dxns.dxnsAccount')}</p>
+      }
+      <p>Your profile public key: {profile.publicKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>
       <Button disabled={inProgress} onClick={() => setJoinHaloDialog(true)} variant='outlined'>Join HALO</Button>
       <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>Create party</Button>
