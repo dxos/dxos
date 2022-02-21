@@ -171,7 +171,10 @@ describe('Protocol plugin rpc', () => {
     ]);
 
     const peerIds = responses.map((response) => response.data);
-    expect(peerIds[0]).toEqual(peerIds[2]);
-    expect(peerIds[0]).not.toEqual(peerIds[1]);
+    expect(peerIds).toEqual([
+      client1Id.toHex(),
+      client2Id.toHex(),
+      client1Id.toHex()
+    ]);
   });
 });

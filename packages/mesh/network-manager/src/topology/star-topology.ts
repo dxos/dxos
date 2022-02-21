@@ -36,8 +36,8 @@ export class StarTopology implements Topology {
       log('As leaf peer dropping all connections apart from central peer.');
       // Drop all connections other than central peer.
       for (const peer of connected) {
-        log(`Dropping extra connection ${peer}`);
         if (!peer.equals(this._centralPeer)) {
+          log(`Dropping extra connection ${peer}`);
           this._controller.disconnect(peer);
         }
       }
@@ -45,7 +45,7 @@ export class StarTopology implements Topology {
     for (const peer of candidates) {
       // Connect to central peer.
       if (peer.equals(this._centralPeer) || ownPeerId.equals(this._centralPeer)) {
-        log(`Connecting to central peer ${peer}`);
+        log(`Connecting to peer ${peer}`);
         this._controller.connect(peer);
       }
     }
