@@ -542,8 +542,6 @@ importers:
       '@types/d3': ~7.0.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.isplainobject': ^4.0.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pump': ^1.1.0
@@ -556,8 +554,6 @@ importers:
       dotenv: ^8.2.0
       expect: ~27.0.2
       faker: ^5.1.0
-      immutability-helper: ^3.0.2
-      mobile-detect: ~1.4.5
       mocha: ~8.4.0
       playwright: ^1.7.0
       pump: ^3.0.0
@@ -594,8 +590,6 @@ importers:
       '@mui/x-data-grid': 5.5.1_60e3b6939b08a32bfd667b9c952f7bcc
       clsx: 1.1.1
       debug: 4.3.3
-      immutability-helper: 3.1.1
-      mobile-detect: 1.4.5
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
@@ -607,8 +601,6 @@ importers:
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.isplainobject': 4.0.6
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/pump': 1.1.1

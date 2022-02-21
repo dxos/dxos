@@ -22,16 +22,20 @@ export const EchoCard = ({
   itemAdapter,
   children
 }: EchoCardProps) => {
-  const { label, icon: Icon, color } = itemAdapter.meta?.(item.type!) ?? {};
+  const { icon: Icon, color } = itemAdapter.meta?.(item.type!) ?? {};
 
   return (
     <Card sx={{
-      width: 300,
+      width: 280,
       margin: 1
     }}>
       <CardHeader
         sx={{
+          alignItems: 'start',
           backgroundColor: color?.[50],
+          '.MuiCardHeader-avatar': {
+            paddingTop: '5px'
+          },
           '.MuiCardHeader-content': {
             overflow: 'hidden'
           }
@@ -44,7 +48,7 @@ export const EchoCard = ({
           whiteSpace: 'nowrap',
           textOverflow: 'ellipsis'
         }}
-        subheader={label}
+        subheader={itemAdapter.description(item)}
       />
 
       <CardContent>
