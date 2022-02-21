@@ -7,7 +7,8 @@ set -euo pipefail
 DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
 
 for APP_PATH in \
-  "packages/demos" \
+  "packages/demos/hello-world" \
+  "packages/demos/kitchen-sink" \
   "packages/devtools/devtools" \
   "packages/devtools/devtools-mesh" \
   "packages/sdk/react-client" \

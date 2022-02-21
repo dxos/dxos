@@ -34,7 +34,7 @@ export const CustomTextField = ({
   clickToEdit = false,
   placeholder,
   editIcon: EditIcon = DefaultEditIcon,
-  onUpdate,
+  onUpdate, // TODO(burdon): onChange.
 
   // BaseTextFieldProps
   variant = 'outlined',
