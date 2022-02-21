@@ -62,7 +62,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.5",
+    "@dxos/esbuild-server": "~1.7.9",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/d3": "~7.0.0",
     "@types/debug": "^4.1.7",

@@ -521,7 +521,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.5
+      '@dxos/esbuild-server': ~1.7.9
       '@dxos/gem-core': ~2.2.1-beta.8
       '@dxos/gem-spore': ~2.2.1-beta.8
       '@dxos/object-model': workspace:*
@@ -596,7 +596,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.5_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.9_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
@@ -636,7 +636,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.5
+      '@dxos/esbuild-server': ~1.7.9
       '@dxos/gem-core': ~2.2.1-beta.8
       '@dxos/gem-spore': ~2.2.1-beta.8
       '@dxos/object-model': workspace:*
@@ -717,7 +717,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.5_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.9_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
@@ -2672,7 +2672,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.7.5
+      '@dxos/esbuild-server': ~1.7.9
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2721,7 +2721,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.7.5_@types+react@17.0.37
+      '@dxos/esbuild-server': 1.7.9_@types+react@17.0.37
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
@@ -2892,7 +2892,7 @@ importers:
 
   ../../toolchains/toolchain-node-library:
     specifiers:
-      '@dxos/esbuild-server': ~1.7.5
+      '@dxos/esbuild-server': ~1.7.9
       '@dxos/eslint-plugin': ~1.0.24
       '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': ~1.4.2
@@ -2914,7 +2914,7 @@ importers:
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
-      '@dxos/esbuild-server': 1.7.5
+      '@dxos/esbuild-server': 1.7.9
       '@dxos/eslint-plugin': 1.0.24_49160144699f5bb2b04429cfe7b55ba8
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@swc-node/register': 1.4.2
@@ -5454,14 +5454,14 @@ packages:
       - webpack-command
     dev: true
 
-  /@dxos/esbuild-server/1.7.5:
-    resolution: {integrity: sha512-ieAR5PFvbGFeVj+LOuX4ZVMkH9Bv2tjatX2KUVySvh31qjCSYTVSIGpDZ9jJxyuUQqQG/sXpJdFUEbam5V5zgA==}
+  /@dxos/esbuild-server/1.7.9:
+    resolution: {integrity: sha512-zu2AhQYOgSo6kMri0bWFdPNJpoQgwKqRoUhTsEVpDGUYCo73Fy5aspWLTxqBtpu+HRROwaHf4Pabisoj28tqBA==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
-      '@mdx-js/esbuild': 2.0.0-rc.1_esbuild@0.12.29
-      '@mdx-js/mdx': 2.0.0-rc.2
-      '@mdx-js/react': 2.0.0-rc.2_react@17.0.2
+      '@mdx-js/esbuild': 2.0.0_esbuild@0.12.29
+      '@mdx-js/mdx': 2.0.0
+      '@mdx-js/react': 2.0.0_react@17.0.2
       chalk: 4.1.2
       esbuild: 0.12.29
       glob: 7.2.0
@@ -5481,14 +5481,14 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/esbuild-server/1.7.5_@types+react@17.0.37:
-    resolution: {integrity: sha512-ieAR5PFvbGFeVj+LOuX4ZVMkH9Bv2tjatX2KUVySvh31qjCSYTVSIGpDZ9jJxyuUQqQG/sXpJdFUEbam5V5zgA==}
+  /@dxos/esbuild-server/1.7.9_@types+react@17.0.37:
+    resolution: {integrity: sha512-zu2AhQYOgSo6kMri0bWFdPNJpoQgwKqRoUhTsEVpDGUYCo73Fy5aspWLTxqBtpu+HRROwaHf4Pabisoj28tqBA==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
-      '@mdx-js/esbuild': 2.0.0-rc.1_esbuild@0.12.29
-      '@mdx-js/mdx': 2.0.0-rc.2
-      '@mdx-js/react': 2.0.0-rc.2_react@17.0.2
+      '@mdx-js/esbuild': 2.0.0_esbuild@0.12.29
+      '@mdx-js/mdx': 2.0.0
+      '@mdx-js/react': 2.0.0_react@17.0.2
       chalk: 4.1.2
       esbuild: 0.12.29
       glob: 7.2.0
@@ -6390,20 +6390,20 @@ packages:
     resolution: {integrity: sha512-rmQPBLe3/DuJy0Bcr1KNuSiIcgV67R2AeLxagKMQTI0R8F9lLC894wJRYhA5ytV0CIi7dzxILqdFeuVbqrkoCA==}
     dev: true
 
-  /@mdx-js/esbuild/2.0.0-rc.1_esbuild@0.12.29:
-    resolution: {integrity: sha512-aSJqPjAtzDYAUtis6GmhNJtUDPBePRWJcFqG/iyxwqHIgay1anXq3FdD9zRKGUN6f07LBeJhtmurI1YuMWnLzg==}
+  /@mdx-js/esbuild/2.0.0_esbuild@0.12.29:
+    resolution: {integrity: sha512-Dxlrr8pZiTdzxTxoIhjWhoWS4HEdT/hGozYI2aZrVlVCndU61RWSChZ5WzcsAI57dTsExQilbhhfIgCCZ+hOug==}
     peerDependencies:
       esbuild: '>=0.11.0'
     dependencies:
-      '@mdx-js/mdx': 2.0.0-rc.2
+      '@mdx-js/mdx': 2.0.0
       esbuild: 0.12.29
       got: 11.8.3
       vfile: 5.2.0
     transitivePeerDependencies:
       - supports-color
 
-  /@mdx-js/mdx/2.0.0-rc.2:
-    resolution: {integrity: sha512-hf/kfsQSl/fhFP6s4TRWic7LYDzwsLieD37n90w8CP3U6dsbVhuk+n/OwLSS1pfdb5NJulTV4LQBv4e4h7Y1iw==}
+  /@mdx-js/mdx/2.0.0:
+    resolution: {integrity: sha512-Q/Zv+gdm80qcxpmL/Dtd/b9+UyZjjJUCQeZyywLAQqre648hRYgeGNPu7Bl2hB7M8/WBLXpabQEKW3dmGdDTDQ==}
     dependencies:
       '@types/estree-jsx': 0.0.1
       '@types/mdx': 2.0.1
@@ -6414,7 +6414,7 @@ packages:
       hast-util-to-estree: 2.0.2
       markdown-extensions: 1.1.1
       periscopic: 3.0.4
-      remark-mdx: 2.0.0-rc.2
+      remark-mdx: 2.0.0
       remark-parse: 10.0.1
       remark-rehype: 10.1.0
       unified: 10.1.1
@@ -6432,8 +6432,8 @@ packages:
     dependencies:
       react: 17.0.2
 
-  /@mdx-js/react/2.0.0-rc.2_react@17.0.2:
-    resolution: {integrity: sha512-WHksgPnvKyDDNq0RQvTnKboe+wxUcq5A7xD12Ob+ASfUR3NRFo/h//k8fjv3t8dgzWX5M0UeU5jsccjykosDEQ==}
+  /@mdx-js/react/2.0.0_react@17.0.2:
+    resolution: {integrity: sha512-icpMd43xqORnHSVRwALZv3ELN3IS7VS3BL+FyH2FFergQPSQ21FX0lN+OMIs0X+3dGY1L0DLhBCkMfPO+yDG7Q==}
     peerDependencies:
       react: '>=16'
     dependencies:
@@ -10725,6 +10725,9 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       queue-tick: 1.0.0
+
+  /ccount/2.0.1:
+    resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
   /chacha20-universal/1.0.4:
     resolution: {integrity: sha512-/IOxdWWNa7nRabfe7+oF+jVkGjlr2xUL4J8l/OvzZhj+c9RpMqoo3Dq+5nU1j/BflRV4BKnaQ4+4oH1yBpQG1Q==}
@@ -18013,23 +18016,25 @@ packages:
     dependencies:
       '@types/estree-jsx': 0.0.1
 
-  /mdast-util-mdx-jsx/1.2.0:
-    resolution: {integrity: sha512-5+ot/kfxYd3ChgEMwsMUO71oAfYjyRI3pADEK4I7xTmWLGQ8Y7ghm1CG36zUoUvDPxMlIYwQV/9DYHAUWdG4dA==}
+  /mdast-util-mdx-jsx/2.0.1:
+    resolution: {integrity: sha512-oPC7/smPBf7vxnvIYH5y3fPo2lw1rdrswFfSb4i0GTAXRUQv7JUU/t/hbp07dgGdUFTSDOHm5DNamhNg/s2Hrg==}
     dependencies:
       '@types/estree-jsx': 0.0.1
+      '@types/hast': 2.3.4
       '@types/mdast': 3.0.10
-      mdast-util-to-markdown: 1.2.6
+      ccount: 2.0.1
+      mdast-util-to-markdown: 1.3.0
       parse-entities: 4.0.0
       stringify-entities: 4.0.2
       unist-util-remove-position: 4.0.1
       unist-util-stringify-position: 3.0.0
       vfile-message: 3.0.2
 
-  /mdast-util-mdx/1.1.0:
-    resolution: {integrity: sha512-leKb9uG7laXdyFlTleYV4ZEaCpsxeU1LlkkR/xp35pgKrfV1Y0fNCuOw9vaRc2a9YDpH22wd145Wt7UY5yzeZw==}
+  /mdast-util-mdx/2.0.0:
+    resolution: {integrity: sha512-M09lW0CcBT1VrJUaF/PYxemxxHa7SLDHdSn94Q9FhxjCQfuW7nMAWKWimTmA3OyDMSTH981NN1csW1X+HPSluw==}
     dependencies:
       mdast-util-mdx-expression: 1.1.1
-      mdast-util-mdx-jsx: 1.2.0
+      mdast-util-mdx-jsx: 2.0.1
       mdast-util-mdxjs-esm: 1.1.1
     transitivePeerDependencies:
       - supports-color
@@ -18040,7 +18045,7 @@ packages:
       '@types/estree-jsx': 0.0.1
       '@types/mdast': 3.0.10
       mdast-util-from-markdown: 1.2.0
-      mdast-util-to-markdown: 1.2.6
+      mdast-util-to-markdown: 1.3.0
     transitivePeerDependencies:
       - supports-color
 
@@ -18058,8 +18063,8 @@ packages:
       unist-util-position: 4.0.1
       unist-util-visit: 4.1.0
 
-  /mdast-util-to-markdown/1.2.6:
-    resolution: {integrity: sha512-doJZmTEGagHypWvJ8ltinmwUsT9ZaNgNIQW6Gl7jNdsI1QZkTHTimYW561Niy2s8AEPAqEgV0dIh2UOVlSXUJA==}
+  /mdast-util-to-markdown/1.3.0:
+    resolution: {integrity: sha512-6tUSs4r+KK4JGTTiQ7FfHmVOaDrLQJPmpjD6wPMlHGUVXoG9Vjc3jIeP+uyBWRf8clwB2blM+W7+KrlMYQnftA==}
     dependencies:
       '@types/mdast': 3.0.10
       '@types/unist': 2.0.6
@@ -21580,7 +21585,7 @@ packages:
     peerDependencies:
       react: '>= 0.14.0'
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       highlight.js: 10.7.3
       lowlight: 1.20.0
       prismjs: 1.25.0
@@ -21832,10 +21837,10 @@ packages:
       commander: 2.20.3
     dev: true
 
-  /remark-mdx/2.0.0-rc.2:
-    resolution: {integrity: sha512-TMgFSEVx42/YzJWjDY+GKw7CGSbp3XKqBraXPxFS27r8iD9U6zuOZKXH4MoLl9JqiTOmQi0M1zJwT2YhPs32ug==}
+  /remark-mdx/2.0.0:
+    resolution: {integrity: sha512-TDnjSv77Oynf+K1deGWZPKSwh3/9hykVAxVm9enAw6BmicCGklREET8s19KYnjGsNPms0pNDJLmp+bnHDVItAQ==}
     dependencies:
-      mdast-util-mdx: 1.1.0
+      mdast-util-mdx: 2.0.0
       micromark-extension-mdxjs: 1.0.0
     transitivePeerDependencies:
       - supports-color
