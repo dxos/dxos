@@ -4,10 +4,11 @@
 
 import { Party } from '@dxos/client';
 
-import { useSelection } from '.';
+import { useSelection } from './useSelection';
 
 /**
  * A Selector used for finding items based on a search pattern.
+ * @param party
  * @param search Searched value.
  */
 // TODO(burdon): Create index.

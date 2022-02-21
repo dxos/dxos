@@ -81,7 +81,7 @@ export class Client {
 
     // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
-    debug.enable(this._config.values.runtime?.system?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
+    debug.enable(this._config.values.runtime?.client?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
     this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
     log(`mode=${Runtime.Client.Mode[this._mode]}`);

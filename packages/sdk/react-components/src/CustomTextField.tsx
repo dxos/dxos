@@ -34,7 +34,7 @@ export const CustomTextField = ({
   clickToEdit = false,
   placeholder,
   editIcon: EditIcon = DefaultEditIcon,
-  onUpdate,
+  onUpdate, // TODO(burdon): onChange.
 
   // BaseTextFieldProps
   variant = 'outlined',
@@ -50,6 +50,10 @@ export const CustomTextField = ({
   useEffect(() => {
     setEditing(editOnly);
   }, [editOnly]);
+
+  useEffect(() => {
+    setText(value ?? '');
+  }, [value]);
 
   const handleUpdate = () => {
     !editOnly && setEditing(false);

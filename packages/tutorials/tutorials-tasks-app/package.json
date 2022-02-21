@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tutorials-tasks-app",
-  "version": "2.26.1",
+  "version": "2.27.5",
   "private": true,
   "scripts": {
     "build": "esbuild-server build",
@@ -34,10 +34,10 @@
     "@dxos/react-framework": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
-    "@mui/icons-material": "^5.0.1",
-    "@mui/lab": "^5.0.0-alpha.48",
-    "@mui/material": "^5.0.1",
-    "@mui/styles": "^5.0.1",
+    "@mui/icons-material": "^5.4.2",
+    "@mui/lab": "^5.0.0-alpha.69",
+    "@mui/material": "^5.4.2",
+    "@mui/styles": "^5.4.2",
     "buffer": "^6.0.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

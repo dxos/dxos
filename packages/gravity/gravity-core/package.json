@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-core",
-  "version": "2.26.1",
+  "version": "2.27.5",
   "private": true,
   "description": "Gravity testing framework",
   "keywords": [],

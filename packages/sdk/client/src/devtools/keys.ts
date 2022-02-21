@@ -12,9 +12,11 @@ import {
 } from '../proto/gen/dxos/devtools';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
-export const subscribeToKeyringKeys = (hook: DevtoolsServiceDependencies) => {
+export const subscribeToKeyringKeys = ({ keyring }: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
-    return hook.keyring.keysUpdate.on((keys) => {
+    next({ keys: keyring.keys });
+
+    return keyring.keysUpdate.on((keys) => {
       next({ keys });
     });
   });

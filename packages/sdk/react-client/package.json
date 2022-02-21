@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.26.1",
+  "version": "2.27.5",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -28,12 +28,13 @@
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1"
+    "use-subscription": "^1.4.1",
+    "@dxos/network-manager": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@mui/material": "^5.0.1",
+    "@mui/material": "^5.4.2",
     "@testing-library/react": "^11.0.4",
     "@testing-library/react-hooks": "5.1.2",
     "@types/debug": "^4.1.7",

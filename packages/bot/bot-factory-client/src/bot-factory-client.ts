@@ -45,6 +45,12 @@ export class BotHandle {
     });
     return response;
   }
+
+  logsStream () {
+    return this._rpc.rpc.getLogs({
+      botId: this._id
+    });
+  }
 }
 
 export class BotFactoryClient {
@@ -66,7 +72,7 @@ export class BotFactoryClient {
         topic,
         peerId,
         topology: new StarTopology(topic),
-        protocol: createProtocolFactory(topic, topic, [new PluginRpc(async (port) => {
+        protocol: createProtocolFactory(topic, peerId, [new PluginRpc(async (port) => {
           resolve(port);
         })])
       });
@@ -108,13 +114,8 @@ export class BotFactoryClient {
     return bots || [];
   }
 
-  async get (id: string) {
+  get (id: string) {
     assert(this._rpc, 'Bot factory client is not started');
-    const bots = await this.list();
-    const bot = bots.find((bot) => bot.id === id);
-    if (!bot?.id) {
-      throw new Error(`Bot ${id} not found`);
-    }
-    return new BotHandle(bot.id, this._rpc);
+    return new BotHandle(id, this._rpc);
   }
 }
