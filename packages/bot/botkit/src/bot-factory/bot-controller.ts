@@ -52,6 +52,7 @@ export class BotController {
     return () => {
       this._peers.delete(peerId);
       peer.close();
+      log(`[${peerId}]: Peer disconnected`);
     };
   }
 }

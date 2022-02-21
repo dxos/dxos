@@ -2330,6 +2330,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
+      '@dxos/network-manager': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.4.2
@@ -2364,6 +2365,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.3
@@ -6299,7 +6301,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@material-ui/styles': 4.11.4_5539cae010396b202b015f3568914e95
       '@material-ui/system': 4.12.1_5539cae010396b202b015f3568914e95
       '@material-ui/types': 5.1.0_@types+react@17.0.37
@@ -6309,7 +6311,7 @@ packages:
       clsx: 1.1.1
       hoist-non-react-statics: 3.3.2
       popper.js: 1.16.1-lts
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6319,6 +6321,7 @@ packages:
   /@material-ui/styles/4.11.4_5539cae010396b202b015f3568914e95:
     resolution: {integrity: sha512-KNTIZcnj/zprG5LW0Sao7zw+yG3O35pviHzejMdcSGCdWbiO8qzRgOYL8JAxAsWBKOKYwVZxXtHWaB5T2Kvxew==}
     engines: {node: '>=8.0.0'}
+    deprecated: 'You can now upgrade to @mui/styles. See the guide: https://mui.com/guides/migration-v4/'
     peerDependencies:
       '@types/react': ^16.8.6 || ^17.0.0
       react: ^16.8.0 || ^17.0.0
@@ -6351,6 +6354,7 @@ packages:
   /@material-ui/system/4.12.1_5539cae010396b202b015f3568914e95:
     resolution: {integrity: sha512-lUdzs4q9kEXZGhbN7BptyiS1rLNHe6kG9o8Y307HCvF4sQxbCgpL2qi+gUk+yI8a2DNk48gISEQxoxpgph0xIw==}
     engines: {node: '>=8.0.0'}
+    deprecated: 'You can now upgrade to @mui/system. See the guide: https://mui.com/guides/migration-v4/'
     peerDependencies:
       '@types/react': ^16.8.6 || ^17.0.0
       react: ^16.8.0 || ^17.0.0
@@ -7611,7 +7615,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       '@babel/code-frame': 7.16.0
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       '@types/aria-query': 4.2.2
       aria-query: 4.2.2
       chalk: 4.1.2
@@ -10840,7 +10844,7 @@ packages:
 
   /chokidar/2.1.8:
     resolution: {integrity: sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg==}
-    deprecated: Chokidar 2 does not receive security updates since 2019. Upgrade to chokidar 3 with 15x fewer dependencies
+    deprecated: Chokidar 2 will break on node v14+. Upgrade to chokidar 3 with 15x less dependencies.
     dependencies:
       anymatch: 2.0.0
       async-each: 1.0.3
@@ -21402,7 +21406,7 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.16.3
       react: 17.0.2
     dev: true
 
@@ -22912,7 +22916,6 @@ packages:
 
   /source-map-url/0.4.1:
     resolution: {integrity: sha512-cPiFOTLUKvJFIg4SKVScy4ilPPW6rFgMgfuZJPNoDuMs3nC1HbMUycBoJw77xFIp6z1UJQJOfx6C9GMH80DiTw==}
-    deprecated: See https://github.com/lydell/source-map-url#deprecated
 
   /source-map/0.5.7:
     resolution: {integrity: sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w=}

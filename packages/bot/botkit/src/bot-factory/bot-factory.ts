@@ -8,7 +8,7 @@ import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { createId } from '@dxos/crypto';
+import { keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-factory';
@@ -77,7 +77,7 @@ export class BotFactory implements BotFactoryService {
   }
 
   async spawnBot (request: SpawnBotRequest) {
-    const id = createId();
+    const id = keyToString(randomBytes(6));
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
 
