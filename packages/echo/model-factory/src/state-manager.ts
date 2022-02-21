@@ -15,7 +15,6 @@ import { StateMachine, MutationProcessMeta } from './state-machine';
 import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
 
 const log = debug('dxos:model-factory:state-manager');
-const warn = log.extend('warn');
 
 type OptimisticMutation = {
   mutation: Uint8Array

@@ -5,8 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { PublicKey } from '@dxos/crypto';
 import { Event, promiseTimeout } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
