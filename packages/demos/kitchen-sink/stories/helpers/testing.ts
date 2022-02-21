@@ -68,6 +68,10 @@ export const itemAdapter: ItemAdapter = {
     return item.model.getProperty('title');
   },
 
+  description: (item: Item<ObjectModel>) => {
+    return item.model.getProperty('description');
+  },
+
   linkedTypes: (item: Item<ObjectModel>) => {
     const types = new Set<string>();
     item.children.forEach(item => item.type && types.add(item.type));
