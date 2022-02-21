@@ -92,6 +92,7 @@ export class BotFactory implements BotFactoryService {
         this._config,
         packageSpecifier
       );
+      handle.status = Bot.Status.STARTING;
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const contentDirectory = handle.getContentPath();
@@ -136,6 +137,7 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(request.id);
+      bot.status = Bot.Status.STARTING;
 
       bot.startTimestamp = new Date();
 
@@ -162,6 +164,7 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(id);
+      bot.status = Bot.Status.STOPPING;
       log(`[${id}] Stopping bot`);
       try {
         await promiseTimeout(bot.rpc.stop(), 3000, new Error('Stopping bot timed out'));

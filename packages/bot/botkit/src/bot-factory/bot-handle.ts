@@ -70,6 +70,13 @@ export class BotHandle {
     this._startTimestamps.push(startTimestamp);
   }
 
+  /**
+   * To express the intent. Restricted to starting and stopping statuses - the rest should be handled automatically.
+   */
+  set status (status: Bot.Status.STARTING | Bot.Status.STOPPING) {
+    this._bot.status = status;
+  }
+
   async initializeDirectories () {
     await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
