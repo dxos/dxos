@@ -71,10 +71,17 @@ export class BotHandle {
   }
 
   /**
-   * To express the intent. Restricted to starting and stopping statuses - the rest should be handled automatically.
+   * To express the intent. The final states (stopped or running) should be updated automaitcally.
    */
-  set status (status: Bot.Status.STARTING | Bot.Status.STOPPING) {
-    this._bot.status = status;
+  setStarting () {
+    this._bot.status = Bot.Status.STARTING;
+  }
+
+  /**
+   * To express the intent. The final states (stopped or running) should be updated automaitcally.
+   */
+  setStoppping () {
+    this._bot.status = Bot.Status.STOPPING;
   }
 
   async initializeDirectories () {
