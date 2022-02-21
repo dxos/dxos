@@ -4,36 +4,13 @@
 
 import React from 'react';
 
-import { ClientProvider, ProfileInitializer, useProfile } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
+import { App } from '../src';
 import { ONLINE_CONFIG } from './config';
 
 export default {
   title: 'HelloWorld/App'
-};
-
-/**
- * Main component.
- */
-const App = () => {
-  const profile = useProfile();
-
-  // TODO(burdon): Tutorial
-  // 1. useClient to create party.
-  // 2. useSelection to query for items.
-  // 3. createItem to create data.
-  // 4. Deploy.
-  // 5. PartySharingDialog
-  // 6. JoinPartyDialog
-
-  return (
-    <div>
-      <h1>App</h1>
-      <pre>
-        {JSON.stringify(profile, undefined, 2)}
-      </pre>
-    </div>
-  );
 };
 
 /**

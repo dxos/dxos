@@ -24,18 +24,20 @@
   "include": [
     "src",
     "stories",
-    "playwright",
-    "grid"
+    "playwright"
   ],
   "references": [
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
     },
     {
       "path": "../../echo/echo-db"
@@ -50,6 +52,12 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -57,15 +65,6 @@
     },
     {
       "path": "../../sdk/react-framework"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     }
   ]
 }
