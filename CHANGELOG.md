@@ -1,5 +1,22 @@
 # Change Log
 
+### [2.27.5](https://www.github.com/dxos/protocols/compare/v2.27.4...v2.27.5) (2022-02-21)
+
+
+### Features
+
+* hello-world demo. ([#962](https://www.github.com/dxos/protocols/issues/962)) ([c7eed3a](https://www.github.com/dxos/protocols/commit/c7eed3ad21c9afded038227866c9f1488ee7c2dc))
+* updated ECHO demos. ([#924](https://www.github.com/dxos/protocols/issues/924)) ([d94eb3d](https://www.github.com/dxos/protocols/commit/d94eb3d5bde654453a2f9322f7a4d9d87513e784))
+
+
+### Bug Fixes
+
+* **config:** Debug property is now retrieved from client ([#955](https://www.github.com/dxos/protocols/issues/955)) ([746fe10](https://www.github.com/dxos/protocols/commit/746fe1028617978f5d94487ac19b072316bd8298))
+* Devtools client config ([#959](https://www.github.com/dxos/protocols/issues/959)) ([a60e437](https://www.github.com/dxos/protocols/commit/a60e437fb16e5f6f1ff5185b825f39d350574589))
+* **echo-db:** When adding an item, parent item gets update triggered ([#953](https://www.github.com/dxos/protocols/issues/953)) ([5fe7eac](https://www.github.com/dxos/protocols/commit/5fe7eac106356cdbe03ca599789d38a12527ad54))
+* Fix topology in bot factory client ([#960](https://www.github.com/dxos/protocols/issues/960)) ([d0672b8](https://www.github.com/dxos/protocols/commit/d0672b8dc17f90f96bfd7fd9dbf52d39fe26835a))
+* Race condition during devtools initialization. ([#961](https://www.github.com/dxos/protocols/issues/961)) ([0b95173](https://www.github.com/dxos/protocols/commit/0b951738dec6ff1ab148d112a66603fab426c092))
+
 ### [2.27.4](https://www.github.com/dxos/protocols/compare/v2.27.3...v2.27.4) (2022-02-17)
 
 
