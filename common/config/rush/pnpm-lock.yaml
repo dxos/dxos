@@ -1029,6 +1029,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -1072,6 +1073,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
