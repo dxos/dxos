@@ -13,9 +13,6 @@ export default {
   title: 'HelloWorld/App'
 };
 
-/**
- * Single-player App story.
- */
 export const Primary = () => {
   return (
     <ClientProvider config={ONLINE_CONFIG}>

@@ -5,14 +5,20 @@ description: DXOS SDK
 
 The project is developed using [rush](https://rushjs.io/) and NodeJS version `16.1.0` via `nodenv`.
 
-To install dependencies:
+Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
 
 ```bash
-nodenv install 16.1.0
+brew upgrade node-build
+brew upgrade nodenv
+
+nodenv install 16.14.0
+```
+
+Install or update rush and its dependencies:
+
+```bash
 npm install -g @microsoft/rush pnpm
 nodenv rehash
-
-sudo ./common/scripts/install-dependencies.sh
 ```
 
 ## Rush monorepo
