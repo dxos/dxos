@@ -209,17 +209,25 @@ describe('Node', () => {
       });
 
       await botHandle.stop();
+      {
+        const { bots } = await botFactoryClient.botFactory.getBots();
+        expect(bots).toHaveLength(1);
+        expect(bots![0].status).toBe(Bot.Status.STOPPED);
+      }
       await botHandle.start();
 
       await testCommand();
 
-      const { bots } = await botFactoryClient.botFactory.getBots();
-      expect(bots).toHaveLength(1);
-      const lastStart = bots![0].lastStart;
-      expect(lastStart instanceof Date && !isNaN(lastStart.getTime())).toBe(true);
+      {
+        const { bots } = await botFactoryClient.botFactory.getBots();
+        expect(bots).toHaveLength(1);
+        expect(bots![0].status).toBe(Bot.Status.RUNNING);
+        const lastStart = bots![0].lastStart;
+        expect(lastStart instanceof Date && !isNaN(lastStart.getTime())).toBe(true);
 
-      await botFactoryClient.botFactory.removeAll();
-      await botFactoryClient.stop();
+        await botFactoryClient.botFactory.removeAll();
+        await botFactoryClient.stop();
+      }
     });
   });
 });
