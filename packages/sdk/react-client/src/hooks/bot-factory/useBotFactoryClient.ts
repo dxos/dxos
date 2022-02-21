@@ -5,8 +5,8 @@
 import { useEffect, useState } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
-import { PublicKey } from '@dxos/crypto';
 import { Config } from '@dxos/config';
+import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { NetworkManager } from '@dxos/network-manager';
 
