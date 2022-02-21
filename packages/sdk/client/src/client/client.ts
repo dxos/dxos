@@ -165,7 +165,7 @@ export class Client {
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
     await this._halo._open();
     await this._echo._open();

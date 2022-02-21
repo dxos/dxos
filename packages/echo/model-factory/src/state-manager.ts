@@ -3,24 +3,47 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/crypto';
+import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
-import { StateMachine } from './state-machine';
+import { StateMachine, MutationProcessMeta } from './state-machine';
 import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
 
+const log = debug('dxos:model-factory:state-manager');
+
+type OptimisticMutation = {
+  mutation: Uint8Array
+
+  meta: MutationProcessMeta
+
+  /**
+   * Contains the receipt afer this mutation has been written to the feed.
+   */
+  receipt?: WriteReceipt
+}
+
 /**
- * Binds the model to the state machine. Manages the state machine lifecycle.
+ * Manages the state machine lifecycle.
+ *
+ * Snapshots represent the reified state of a set of mutations up until at a particular Timeframe.
+ * The state machine maintains a queue of optimistic and committed mutations as they are written to the output stream.
+ * Each mutation written to the stream gets a receipt the provides an async callback when the message is written to the store.
+ * If another mutation is written to the store ahead of the optimistic mutation,
+ * then the state machine is rolled back to the previous snapshot,
+ * and the ordered set of mutations since that point is replayed.
+ *
+ * The state of the model is formed from the following components (in order):
+ * - The custom snapshot from the initial state.
+ * - The snapshot mutations from the initial state.
+ * - The mutatation queue.
+ * - Optimistic mutations.
  */
 export class StateManager<M extends Model> {
-  /**
-   * Mutations that were applied on top of the _snapshot.
-   */
-  private _mutations: ModelMessage<Uint8Array>[] = [];
-
   private _modelMeta: ModelMeta | null = null;
 
   private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
@@ -30,16 +53,25 @@ export class StateManager<M extends Model> {
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   /**
-   * @param _modelType
-   * @param modelConstructor Model's constructor, can be undefined if the registry currently doesn't have this model.
-   * @param _itemId
-   * @param _writeStream
+   * Mutations that were applied on top of the _snapshot.
+   */
+  private _mutations: ModelMessage<Uint8Array>[] = [];
+
+  /**
+   * Mutations that were optimistically applied and haven't yet passed through the feed store.
+   */
+  private _optimisticMutations: OptimisticMutation[] = [];
+
+  /**
+   * @param modelConstructor Can be undefined if the registry currently doesn't have this model loaded,
+   *                         in which case it may be initialized later.
    */
   constructor (
     private readonly _modelType: ModelType,
     modelConstructor: ModelConstructor<M> | undefined,
     private readonly _itemId: ItemID,
-    private _snapshot: ModelSnapshot,
+    private _initialState: ModelSnapshot,
+    private readonly _memberKey: PublicKey,
     private readonly _writeStream: FeedWriter<Uint8Array> | null
   ) {
     if (modelConstructor) {
@@ -69,17 +101,48 @@ export class StateManager<M extends Model> {
    * Writes the mutation to the output stream.
    */
   private async _write (mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
+    log(`Write ${JSON.stringify(mutation)}`);
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
+
+    // Construct and enqueue an optimistic mutation.
+    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const optimisticMutation: OptimisticMutation = {
+      mutation: mutationEncoded,
+      meta: {
+        author: this._memberKey
+      }
+    };
+    this._optimisticMutations.push(optimisticMutation);
+
+    // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
+    if (this.initialized) {
+      log(`Optimistic apply ${JSON.stringify(mutation)}`);
+      this._stateMachine!.process(mutation, optimisticMutation.meta);
+      this._model!.update.emit(this._model!);
+    }
+
+    // Write mutation to the feed store and assign metadata from the receipt.
+    // Confirms that the optimistic mutation has been written to the feed store.
+    const receipt = await this._writeStream.write(mutationEncoded);
+    log(`Confirm ${JSON.stringify(mutation)}`);
+    optimisticMutation.receipt = receipt;
 
     // Promise that resolves when this mutation has been processed.
     const processed = this._mutationProcessed.waitFor(meta =>
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
     );
 
-    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
-    const receipt = await this._writeStream.write(mutationEncoded);
+    // Sanity checks.
+    void processed.then(() => {
+      if (!optimisticMutation.receipt) {
+        console.error(`Optimistic mutation was processed without being confirmed: ${this._itemId}/${mutation.type}`);
+      }
+      if (this._optimisticMutations.includes(optimisticMutation)) {
+        console.error(`Optimistic mutation was processed without being removed from the optimistic queue: ${this._itemId}/${mutation.type}`);
+      }
+    });
 
     return {
       ...receipt,
@@ -89,23 +152,35 @@ export class StateManager<M extends Model> {
     };
   }
 
+  /**
+   * Re-creates the state machine based on the current snapshot and enqueued mutations.
+   */
   private _resetStateMachine () {
     assert(this._modelMeta, 'Model not initialized.');
+    log('Construct state machine');
 
     this._stateMachine = this._modelMeta.stateMachine();
 
-    if (this._snapshot.snapshot) {
+    // Apply the snapshot.
+    if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(this._snapshot.snapshot);
+      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot);
       this._stateMachine.reset(decoded);
     }
 
-    for (const mutaton of this._snapshot.mutations ?? []) {
-      const mutationDecoded = this.modelMeta.mutation.decode(mutaton.mutation);
-      this._stateMachine.process(mutationDecoded, mutaton.meta);
+    // Apply mutations passed with the snapshot.
+    for (const mutation of this._initialState.mutations ?? []) {
+      const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
+      this._stateMachine.process(mutationDecoded, { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
+    // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
+      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), { author: PublicKey.from(mutation.meta.memberKey) });
+    }
+
+    // Apply optimistic mutations.
+    for (const mutation of this._optimisticMutations) {
       this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
     }
   }
@@ -132,29 +207,41 @@ export class StateManager<M extends Model> {
   }
 
   /**
-   * Process mutation from the inbound stream.
+   * Processes mutations from the inbound stream.
    */
   processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
-    const insertionIndex = getInsertionIndex(this._mutations, { meta, mutation });
-    if (insertionIndex !== this._mutations.length) {
-      // Order will be broken, reset the state machine and re-apply all mutations.
-      this._mutations = [
-        ...this._mutations.slice(0, insertionIndex - 1),
-        { meta, mutation },
-        ...this._mutations.slice(insertionIndex)
-      ];
-      this._resetStateMachine();
-    } else {
-      // Mutation can safely be append at the end preserving order.
-      this._mutations.push({ meta, mutation });
-      if (this.initialized) {
-        const mutationDecoded = this.modelMeta.mutation.decode(mutation);
-        this._stateMachine!.process(mutationDecoded, meta);
+    // Remove optimistic mutation from the queue.
+    const optimisticIndex = this._optimisticMutations.findIndex(m =>
+      m.receipt && PublicKey.equals(m.receipt.feedKey, meta.feedKey) && m.receipt.seq === meta.seq
+    );
+    if (optimisticIndex !== -1) {
+      this._optimisticMutations.splice(optimisticIndex, 1);
+    }
 
+    // Insert the mutation into the mutation queue at the right position.
+    const insertionIndex = getInsertionIndex(this._mutations, { meta, mutation });
+    const lengthBefore = this._mutations.length;
+    this._mutations.splice(insertionIndex, 0, { meta, mutation });
+    log(`Process ${PublicKey.from(meta.feedKey)}/${meta.seq} insertionIndex=${insertionIndex} optimisticIndex=${optimisticIndex} queue length=${lengthBefore}`);
+
+    // Perform state updates.
+    if (this.initialized) {
+      // Reset the state machine if processing this mutation would break the order.
+      if (insertionIndex !== lengthBefore || optimisticIndex > 0 || (optimisticIndex === -1 && this._optimisticMutations.length > 0)) {
+        // Order will be broken, reset the state machine and re-apply all mutations.
+        log('Reset due to order change');
+        this._resetStateMachine();
+      } else if (optimisticIndex === -1) {
+        log(`Apply ${JSON.stringify(meta)}`);
+        // Mutation can safely be append at the end preserving order.
+        const mutationDecoded = this.modelMeta.mutation.decode(mutation);
+        this._stateMachine!.process(mutationDecoded, { author: PublicKey.from(meta.memberKey) });
         this._model!.update.emit(this._model!);
-        this._mutationProcessed.emit(meta);
       }
     }
+
+    // Notify listeners that the mutation has been processed.
+    this._mutationProcessed.emit(meta);
   }
 
   /**
@@ -169,9 +256,9 @@ export class StateManager<M extends Model> {
     }
 
     return {
-      snapshot: this._snapshot.snapshot,
+      snapshot: this._initialState.snapshot,
       mutations: [
-        ...(this._snapshot.mutations ?? []),
+        ...(this._initialState.mutations ?? []),
         ...this._mutations
       ]
     };
@@ -181,7 +268,7 @@ export class StateManager<M extends Model> {
    * Reset the state to existing snapshot.
    */
   resetToSnapshot (snapshot: ModelSnapshot) {
-    this._snapshot = snapshot;
+    this._initialState = snapshot;
     this._mutations = [];
 
     if (this.initialized) {

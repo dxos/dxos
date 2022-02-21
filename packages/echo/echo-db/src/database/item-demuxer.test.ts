@@ -28,7 +28,7 @@ describe('Item demuxer', () => {
       .registerModel(TestModel);
 
     const feedWriter = new MockFeedWriter();
-    const itemManager = new ItemManager(modelFactory, feedWriter);
+    const itemManager = new ItemManager(modelFactory, PublicKey.random(), feedWriter);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     const inboundStream = itemDemuxer.open();
@@ -107,7 +107,7 @@ describe('Item demuxer', () => {
         data: message
       })
     );
-    const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
+    const itemManager = new ItemManager(modelFactory, PublicKey.random(), createMockFeedWriterFromStream(writeStream));
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     writeStream.pipe(itemDemuxer.open());
 

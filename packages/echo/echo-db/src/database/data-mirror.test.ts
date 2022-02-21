@@ -23,7 +23,7 @@ describe('DataMirror', () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();
-    const itemManager = new ItemManager(modelFactory, feed);
+    const itemManager = new ItemManager(modelFactory, PublicKey.random(), feed);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, { snapshots: true });
 
     const stream = itemDemuxer.open();
@@ -37,7 +37,7 @@ describe('DataMirror', () => {
     const partyKey = PublicKey.random();
     dataServiceRouter.trackParty(partyKey, dataServiceHost);
 
-    const mirrorItemManager = new ItemManager(modelFactory);
+    const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
     const dataMirror = new DataMirror(mirrorItemManager, dataServiceRouter, partyKey);
 
     dataMirror.open();
