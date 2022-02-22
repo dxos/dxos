@@ -113,11 +113,11 @@ message SignRequest {
    */
   PubKey publicKey = 1;
 
-  google.protobuf.Any payload = 2;
+  bytes payload = 2;
 }
 
 message SignResponse { 
-  google.protobuf.Any signed = 2;
+  bytes signed = 2;
 }
 
 service HaloService {
