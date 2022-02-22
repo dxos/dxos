@@ -8,3 +8,4 @@ export * from './CreateItemButton';
 export * from './TypeSelector';
 export * from './ViewContainer';
 export * from './ViewSelector';
+export * from './GraphShowcase';

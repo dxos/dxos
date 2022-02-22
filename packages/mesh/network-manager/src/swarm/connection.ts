@@ -8,7 +8,7 @@ import debug from 'debug';
 import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from '../transport';

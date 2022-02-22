@@ -4,7 +4,7 @@
 
 import crypto from 'crypto';
 
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 

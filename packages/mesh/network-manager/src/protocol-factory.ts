@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/mesh-protocol';
 
 import { ProtocolProvider } from './network-manager';
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-world",
-  "version": "2.27.5",
+  "version": "2.27.6",
   "private": true,
   "description": "Hello World.",
   "repository": {
@@ -10,7 +10,7 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
-    "book": "esbuild-server book",
+    "book": "esbuild-server book --mdx",
     "build": "tsc --noEmit && npm run book -- --build",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "demo:grid": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
@@ -42,11 +42,11 @@
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
-    "@mui/x-data-grid": "^5.5.1",
     "@mui/lab": "^5.0.0-alpha.69",
     "@mui/material": "^5.4.2",
     "@mui/styles": "^5.4.2",
     "@mui/system": "^5.4.2",
+    "@mui/x-data-grid": "^5.5.1",
     "clsx": "^1.1.0",
     "debug": "^4.3.3"
   },
@@ -55,7 +55,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.7.5",
+    "@dxos/esbuild-server": "~1.7.9",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
