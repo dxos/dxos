@@ -2272,6 +2272,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.7
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
@@ -2303,6 +2304,7 @@ importers:
       protobufjs: 6.11.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/debug': 4.1.7
       '@types/js-yaml': 3.12.7
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
@@ -8422,10 +8424,6 @@ packages:
   /@types/node/10.12.18:
     resolution: {integrity: sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==}
 
-  /@types/node/11.11.6:
-    resolution: {integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==}
-    dev: false
-
   /@types/node/14.18.0:
     resolution: {integrity: sha512-0GeIl2kmVMXEnx8tg1SlG6Gg8vkqirrW752KqolYo1PHevhhZN3bhJ67qHj+bQaINhX0Ra3TlWwRvMCd9iEfNQ==}
 
@@ -10151,6 +10149,7 @@ packages:
   /bip39/2.6.0:
     resolution: {integrity: sha512-RrnQRG2EgEoqO24ea+Q/fftuPUZLmrEM3qNhhGsA3PbaXaCW791LTzPuVyx/VprXQcTbPJ3K3UeTna8ZnVl2sg==}
     dependencies:
+      '@types/node': 14.18.0
       create-hash: 1.2.0
       pbkdf2: 3.1.2
       randombytes: 2.1.0
@@ -10161,7 +10160,7 @@ packages:
   /bip39/3.0.4:
     resolution: {integrity: sha512-YZKQlb752TrUWqHWj7XAwCSjYEgGAk+/Aas3V7NyjQeZYsztO8JnQUaCWhcnL4T+jL8nvB8typ2jRPzTlgugNw==}
     dependencies:
-      '@types/node': 11.11.6
+      '@types/node': 14.18.0
       create-hash: 1.2.0
       pbkdf2: 3.1.2
       randombytes: 2.1.0

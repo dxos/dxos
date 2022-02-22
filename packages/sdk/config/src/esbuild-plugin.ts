@@ -3,10 +3,13 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import type { Plugin } from 'esbuild';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
 import { resolve } from 'path';
+
+const log = debug('dxos:config:plugin');
 
 const CWD = process.cwd();
 const DEFAULT_PATH = resolve(CWD, 'config');
@@ -66,7 +69,7 @@ export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publ
         try {
           content = yaml.load(readFileSync(resolve(configPath, value), 'utf-8'));
         } catch (error: any) {
-          console.error(error);
+          log(`Failed to load file ${value}:`, error);
         }
 
         return {
