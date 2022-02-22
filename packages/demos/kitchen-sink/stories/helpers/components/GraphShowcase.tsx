@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import faker from 'faker';
 import React from 'react';
 
@@ -29,4 +33,4 @@ export const GraphShowcase = () => {
       </ProfileInitializer>
     </ClientProvider>
   );
-}
+};
