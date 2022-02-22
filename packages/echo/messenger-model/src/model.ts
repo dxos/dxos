@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { MutationMeta } from '@dxos/echo-protocol';
-import { ModelMeta, Model, StateMachine } from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
 import { Message, schema } from './proto';
 
@@ -14,7 +13,7 @@ class MessengerModelStateMachiene implements StateMachine<Message[], Message, {}
     return this._messages;
   }
 
-  process (mutation: Message, meta: MutationMeta): void {
+  process (mutation: Message, meta: MutationProcessMeta): void {
     this._messages.push(mutation);
     this._messages.sort((msgA, msgB) => parseInt(msgA.timestamp) - parseInt(msgB.timestamp));
   }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "Config utilities",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -40,8 +40,7 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "esbuild": "^0.11.23",
-    "expect": "~27.0.2",
-    "webpack": "4.44.2"
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"

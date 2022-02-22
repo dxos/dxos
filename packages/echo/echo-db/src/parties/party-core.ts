@@ -6,6 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -59,6 +60,7 @@ export class PartyCore {
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
+    private readonly _memberKey: PublicKey,
     private readonly _initialTimeframe?: Timeframe,
     private readonly _options: PartyOptions = {}
   ) {}
@@ -141,7 +143,8 @@ export class PartyCore {
 
     this._database = new Database(
       this._modelFactory,
-      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true })
+      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
+      this._memberKey
     );
     await this._database.init();
 

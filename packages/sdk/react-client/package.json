@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -28,7 +28,8 @@
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1"
+    "use-subscription": "^1.4.1",
+    "@dxos/network-manager": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
@@ -47,11 +48,9 @@
     "fork-ts-checker-webpack-plugin": "~6.2.5",
     "level-js": "^5.0.2",
     "react": "^17.0.2",
-    "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "^17.0.2",
     "react-test-renderer": "^17.0.2",
-    "typescript": "^4.5.2",
-    "webpack": "4.44.2"
+    "typescript": "^4.5.2"
   },
   "peerDependencies": {
     "react": "*"

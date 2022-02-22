@@ -34,21 +34,23 @@ export class Party extends InvitationProxy {
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
-    _party: PartyProto
+    party: PartyProto,
+    memberKey: PublicKey
   ) {
     super();
-    this._key = _party.publicKey;
-    this._isOpen = _party.isOpen;
-    this._isActive = _party.isActive;
+    this._key = party.publicKey;
+    this._isOpen = party.isOpen;
+    this._isActive = party.isActive;
 
-    if (!_party.isOpen) {
+    if (!party.isOpen) {
       return;
     }
 
     if (this._serviceProvider instanceof ClientServiceProxy) {
       this._database = new Database(
         this._modelFactory,
-        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key)
+        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
+        memberKey
       );
     } else if (this._serviceProvider instanceof ClientServiceHost) {
       const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
