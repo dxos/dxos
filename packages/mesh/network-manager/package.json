@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "Network Manager",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -23,7 +23,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/simple-peer": "9.11.3",

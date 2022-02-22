@@ -7,7 +7,7 @@
 import expect from 'expect';
 
 import { randomBytes } from '@dxos/crypto';
-import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { arraysEqual } from '@dxos/util';
 
 import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';

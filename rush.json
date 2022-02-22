@@ -490,7 +490,7 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/proto",
+      "packageName": "@dxos/protocol",
       "projectFolder": "packages/common/proto",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
@@ -698,7 +698,7 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/protocol",
+      "packageName": "@dxos/mesh-protocol",
       "projectFolder": "packages/mesh/protocol",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
@@ -799,8 +799,16 @@
     //
 
     {
-      "packageName": "@dxos/demos",
-      "projectFolder": "packages/demos"
+      "packageName": "@dxos/deprecated-demos",
+      "projectFolder": "packages/demos/deprecated-demos"
+    },
+    {
+      "packageName": "@dxos/hello-world",
+      "projectFolder": "packages/demos/hello-world"
+    },
+    {
+      "packageName": "@dxos/kitchen-sink",
+      "projectFolder": "packages/demos/kitchen-sink"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",

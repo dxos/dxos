@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-rpc",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "Protocol plugin to be used with @dxos/rpc",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*"
   },

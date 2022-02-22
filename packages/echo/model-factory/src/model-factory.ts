@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
 
 import { Model } from './model';
@@ -46,14 +47,15 @@ export class ModelFactory {
    * @param modelType Model type DXN.
    * @param itemId Id of the item holding the model.
    * @param snapshot Snapshot defining the intial state. `{}` can be provided for empty state.
+   * @param memberKey IDENTITY key of the member authoring the model's mutations.
    * @param writeStream Stream for outbound messages.
    * @returns
    */
-  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, snapshot: ModelSnapshot, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
+  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, snapshot: ModelSnapshot, memberKey: PublicKey, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;
 
-    return new StateManager(modelType, constructor, itemId, snapshot, writeStream ?? null);
+    return new StateManager(modelType, constructor, itemId, snapshot, memberKey, writeStream ?? null);
   }
 
   getModelMeta (modelType: ModelType): ModelMeta {

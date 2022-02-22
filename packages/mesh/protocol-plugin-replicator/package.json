@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -27,7 +27,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/util": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3"

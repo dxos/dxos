@@ -3,10 +3,10 @@
 //
 
 import { checkType } from '@dxos/debug';
-import { TestItemMutation, schema, MutationMeta, TestItemSnapshot } from '@dxos/echo-protocol';
+import { TestItemMutation, schema, TestItemSnapshot } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
-import { StateMachine } from '../state-machine';
+import { StateMachine, MutationProcessMeta } from '../state-machine';
 import { ModelMeta } from '../types';
 
 class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
@@ -16,7 +16,7 @@ class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMuta
     return this._state;
   }
 
-  process (mutation: TestItemMutation, meta: MutationMeta): void {
+  process (mutation: TestItemMutation, meta: MutationProcessMeta): void {
     const { key, value } = mutation;
     this._state.set(key, value);
   }
