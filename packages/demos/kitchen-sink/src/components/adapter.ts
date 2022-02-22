@@ -15,9 +15,9 @@ export type ItemMeta = {
   childTypes?: string[]
 }
 
-// TODO(burdon): Add link information (children, links, etc.)
 export interface ItemAdapter {
   title: (item: Item<ObjectModel>) => string
+  description: (item: Item<ObjectModel>) => string
   linkedTypes?: (item: Item<ObjectModel>) => string[]
   linkedItems?: (item: Item<ObjectModel>, kind: string) => Item<ObjectModel>[]
   meta?: (type: string) => ItemMeta | undefined

@@ -30,9 +30,12 @@ export const EchoList = ({
       <List
         dense
         disablePadding
+        sx={{
+          width: '100%'
+        }}
       >
         {items.map((item) => {
-          const { label, icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
+          const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
           return (
             <ListItemButton
               key={item.id}
@@ -45,7 +48,7 @@ export const EchoList = ({
               )}
               <ListItemText
                 primary={itemAdapter.title(item)}
-                secondary={label}
+                secondary={itemAdapter.description(item)}
               />
             </ListItemButton>
           );

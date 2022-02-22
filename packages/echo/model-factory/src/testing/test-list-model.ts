@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { MutationMeta, schema, TestListMutation } from '@dxos/echo-protocol';
+import { schema, TestListMutation } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
-import { StateMachine } from '../state-machine';
+import { StateMachine, MutationProcessMeta } from '../state-machine';
 import { ModelMeta } from '../types';
 
 class TestListModelStateMachiene implements StateMachine<TestListMutation[], TestListMutation, any> {
@@ -15,7 +15,7 @@ class TestListModelStateMachiene implements StateMachine<TestListMutation[], Tes
     return this._messages;
   }
 
-  process (mutation: TestListMutation, meta: MutationMeta): void {
+  process (mutation: TestListMutation, meta: MutationProcessMeta): void {
     this._messages.push(mutation);
   }
 

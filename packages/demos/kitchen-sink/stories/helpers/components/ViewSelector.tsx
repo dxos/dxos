@@ -7,7 +7,7 @@ import React from 'react';
 import {
   Language as GraphIcon,
   GridOnOutlined as GridIcon,
-  List as ListIcon
+  FormatListBulleted as ListIcon
 } from '@mui/icons-material';
 
 import { IconRadio, IconRadioGroup } from '../../../src';
