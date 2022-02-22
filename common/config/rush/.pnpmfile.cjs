@@ -45,6 +45,8 @@ function readPackage(packageJson, context) {
     packageJson.peerDependencies['react-dom'] = '>=15.0.0'
   } else if(packageJson.name === 'eslint-plugin-unused-imports') {
     packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^4.14.2 || ^5.0.0'
+  } else if (packageJson.name === 'bip39') {
+    packageJson.dependencies['@types/node'] = '^14.0.9'
   }
 
   return packageJson;
