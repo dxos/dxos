@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-bot-deprecated",
-  "version": "2.27.4",
+  "version": "2.27.6",
   "description": "Protocol plugin for managing the life-cycle of bots.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
   "bugs": {
@@ -28,7 +28,7 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/protocol": "workspace:*"
+    "@dxos/mesh-protocol": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

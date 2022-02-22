@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "2.27.4",
+  "version": "2.27.6",
   "private": true,
   "license": "GPL-3.0",
   "author": "DXOS.org",
@@ -26,7 +26,7 @@
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@dxos/rpc": "workspace:*",

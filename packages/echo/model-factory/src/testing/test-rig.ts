@@ -54,7 +54,7 @@ export class TestRig<M extends Model<any>> {
       }
     };
 
-    const stateMnager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, writer);
+    const stateMnager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, key, writer);
 
     const peer = new TestPeer(stateMnager, key);
     this._peers.set(key, peer);

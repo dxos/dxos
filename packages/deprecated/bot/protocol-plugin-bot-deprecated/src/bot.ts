@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
 import { keyToString, keyToBuffer } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/mesh-protocol';
 
 import { schema, Message } from './proto';
 

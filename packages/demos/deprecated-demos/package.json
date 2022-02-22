@@ -1,6 +1,6 @@
 {
   "name": "@dxos/deprecated-demos",
-  "version": "2.27.4",
+  "version": "2.27.6",
   "private": true,
   "description": "SDK demos and storybooks.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",

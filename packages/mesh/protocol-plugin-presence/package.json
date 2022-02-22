@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.27.4",
+  "version": "2.27.6",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
@@ -28,7 +28,7 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^14.0.9",
     "buffer-json-encoding": "^1.0.2",

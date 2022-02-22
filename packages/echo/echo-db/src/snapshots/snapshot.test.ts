@@ -7,6 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
 import { schema, ItemID, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
@@ -79,7 +80,7 @@ describe('snapshot', () => {
 
   test('restore from empty snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const itemManager = new ItemManager(modelFactory);
+    const itemManager = new ItemManager(modelFactory, PublicKey.random());
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     // TODO(burdon): Test.

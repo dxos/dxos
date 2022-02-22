@@ -13,7 +13,7 @@ import { EventEmitter } from 'events';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { keyToBuffer, keyToString } from '@dxos/crypto';
-import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 
 import { wrapMessage } from '../party';
 import { codec, Command } from '../proto';

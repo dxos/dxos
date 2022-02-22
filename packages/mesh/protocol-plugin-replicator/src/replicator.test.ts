@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { boolGuard } from '@dxos/util';
