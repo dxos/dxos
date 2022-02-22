@@ -22,15 +22,16 @@ export class DxosClientSigner implements Partial<Signer> {
   }
 
   public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
+    let payload = hexToU8a(data)  
+
     // @polkadot/api/packages/types/src/extrinsic/util.ts
-    // Number found empirically in signature tests.
-    const encoded = data.length > 514
-      ? u8aToHex(this.registry.hash(hexToU8a(data)))
-      : data;
+    if(payload.length > 256) {
+      payload = this.registry.hash(payload)
+    }
 
     const result = await this.client.halo.sign({
       publicKey: this.publicKey,
-      payload: encoded
+      payload: u8aToHex(payload)
     });
 
     return {
