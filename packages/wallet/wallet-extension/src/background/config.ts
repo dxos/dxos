@@ -16,8 +16,8 @@ export const config: ConfigObject = {
     services: {
       // dxns: {
       //   server: 'ws://127.0.0.1:9945',
-      //   polkadotAddress: '',
-      //   dxnsAccount: ''
+      //   address: '',
+      //   account: ''
       // },
       signal: {
         server: 'wss://enterprise.kube.dxos.network/dxos/signal',

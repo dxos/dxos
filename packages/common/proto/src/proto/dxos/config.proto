@@ -196,12 +196,12 @@ message Runtime {
       /**
        * Public Polkadot Address.
       */
-      string polkadotAddress = 3;
+      string address = 3;
 
       /**
        * Public address of a DXNS Account.
       */
-      string dxnsAccount = 4;
+      string account = 4;
 
       string faucet = 5;
     }

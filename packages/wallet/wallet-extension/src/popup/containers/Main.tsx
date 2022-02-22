@@ -114,11 +114,11 @@ export const Main = () => {
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
-      {remoteConfig?.get('runtime.services.dxns.polkadotAddress') &&
-        <p>Your Polkadot Address: {remoteConfig.get('runtime.services.dxns.polkadotAddress')}</p>
+      {remoteConfig?.get('runtime.services.dxns.address') &&
+        <p>Your Polkadot Address: {remoteConfig.get('runtime.services.dxns.address')}</p>
       }
-      {remoteConfig?.get('runtime.services.dxns.dxnsAccount') &&
-        <p>Your DXNS Account: {remoteConfig.get('runtime.services.dxns.dxnsAccount')}</p>
+      {remoteConfig?.get('runtime.services.dxns.account') &&
+        <p>Your DXNS Account: {remoteConfig.get('runtime.services.dxns.account')}</p>
       }
       <p>Your profile public key: {profile.publicKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>
