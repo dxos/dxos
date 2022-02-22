@@ -17,6 +17,6 @@ module.exports = {
   ],
   outdir: 'out',
   overrides: {
-    sourcemap: 'inline',
+    sourcemap: 'inline'
   }
 };
