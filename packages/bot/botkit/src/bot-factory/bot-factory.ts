@@ -89,8 +89,11 @@ export class BotFactory implements BotFactoryService {
       const handle = new BotHandle(
         id,
         join(process.cwd(), 'bots', id),
-        this._config,
-        packageSpecifier
+        {
+          config: this._config,
+          packageSpecifier,
+          partyKey: request.partyKey,
+        }
       );
       handle.setStarting();
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);

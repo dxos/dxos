@@ -27,6 +27,7 @@ message Bot {
   Status status = 2;
   BotPackageSpecifier package_specifier = 3;
   Timestamp last_start = 4;
+  dxos.halo.keys.PubKey party_key = 5;
 
   message Runtime {
     int32 exit_code = 1;
@@ -34,7 +35,7 @@ message Bot {
     string error = 3;
   }
 
-  Runtime runtime = 5;
+  Runtime runtime = 6;
 }
 
 message GetBotsResponse {
@@ -46,6 +47,9 @@ message SpawnBotRequest {
 
   /// Invitation for the bot to join the target party.
   dxos.echo.InvitationDescriptor invitation = 2;
+
+  /// Key of the party bot is invited to.
+  dxos.halo.keys.PubKey party_key = 3;
 }
 
 message SendCommandRequest {

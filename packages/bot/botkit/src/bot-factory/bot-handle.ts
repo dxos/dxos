@@ -15,6 +15,13 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
+import { PublicKey } from '@dxos/crypto';
+
+interface BotHandleOptions {
+  config?: Config,
+  packageSpecifier?: BotPackageSpecifier,
+  partyKey?: PublicKey
+}
 
 /**
  * Represents a running bot instance in BotFactory.
@@ -34,13 +41,18 @@ export class BotHandle {
   constructor (
     readonly id: string,
     readonly workingDirectory: string,
-    config: Config = new Config({ version: 1 }),
-    packageSpecifier: BotPackageSpecifier = {}
+    options: BotHandleOptions = {}
   ) {
+    const {
+      config = new Config({ version: 1 }),
+      packageSpecifier,
+      partyKey
+    } = options;
     this._bot = {
       id,
       status: Bot.Status.STOPPED,
-      packageSpecifier
+      packageSpecifier,
+      partyKey
     };
     this._config = new Config(config.values);
   }
