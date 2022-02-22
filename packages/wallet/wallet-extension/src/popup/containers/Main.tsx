@@ -6,14 +6,13 @@ import React, { useEffect, useState } from 'react';
 
 import { Button } from '@mui/material';
 
+import { Config } from '@dxos/config';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useConfig, useProfile } from '@dxos/react-client';
 import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
-import { Config } from '@dxos/config';
 
 export const Main = () => {
   const client = useClient();
-  const config = useConfig();
   const [remoteConfig, setRemoteConfig] = useState<Config | undefined>();
   const [parties, setParties] = useState<any[]>([]);
   const profile = useProfile();
@@ -29,7 +28,7 @@ export const Main = () => {
       } catch (error: any) {
         setError(error);
       }
-    })
+    });
   }, []);
 
   useEffect(() => {
