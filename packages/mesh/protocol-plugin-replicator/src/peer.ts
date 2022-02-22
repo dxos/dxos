@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import type { HypercoreFeed } from '@dxos/feed-store';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/mesh-protocol';
 
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 
