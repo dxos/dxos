@@ -48,6 +48,7 @@ export interface ConfigPluginOpts {
 }
 
 export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
+  dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
   return {
