@@ -32,7 +32,7 @@ export const setup = async () => {
   await client.halo.addKeyRecord({
     publicKey: PublicKey.from(decodeAddress(alice.address)),
     secretKey: Buffer.from('//Alice'),
-    type: KeyType.DXNS
+    type: KeyType.DXNS_ADDRESS
   });
 
   const signer = new DxosClientSigner(client, alice.address, apiPromise.registry);

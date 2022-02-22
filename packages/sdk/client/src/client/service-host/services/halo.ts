@@ -66,11 +66,11 @@ export class HaloService implements IHaloService {
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');
-    if (key.type === KeyType.DXNS) {
+    if (key.type === KeyType.DXNS_ADDRESS) {
       assert(request.payload, 'No payload to sign.');
       return this.polkadotSign(key, request.payload);
     }
-    throw new Error('Only DXNS key signing is supported.');
+    throw new Error('Only DXNS Address key signing is supported.');
   }
 }
 

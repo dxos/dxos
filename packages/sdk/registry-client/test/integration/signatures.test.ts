@@ -68,7 +68,7 @@ describe('Signatures', () => {
     await client.halo.addKeyRecord({
       publicKey: PublicKey.from(decodeAddress(keypair.address)),
       secretKey: Buffer.from(uri),
-      type: KeyType.DXNS
+      type: KeyType.DXNS_ADDRESS
     });
   });
 
