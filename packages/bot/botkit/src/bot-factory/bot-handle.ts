@@ -10,12 +10,12 @@ import { Tail } from 'tail';
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
+import { PublicKey } from '@dxos/crypto';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
-import { PublicKey } from '@dxos/crypto';
 
 interface BotHandleOptions {
   config?: Config,

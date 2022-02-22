@@ -92,7 +92,7 @@ export class BotFactory implements BotFactoryService {
         {
           config: this._config,
           packageSpecifier,
-          partyKey: request.partyKey,
+          partyKey: request.partyKey
         }
       );
       handle.setStarting();
