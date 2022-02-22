@@ -7,7 +7,7 @@ export const timestampSubstitutions = {
     encode: (value: Date): any => {
       const unixMilliseconds = value.getTime();
       return {
-        seconds: (unixMilliseconds / 1000).toString(),
+        seconds: Math.floor(unixMilliseconds / 1000).toString(),
         nanos: (unixMilliseconds % 1000) * 1e6
       };
     },

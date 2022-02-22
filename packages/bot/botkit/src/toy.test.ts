@@ -49,6 +49,8 @@ describe('In-Memory', () => {
       expect(bots).toHaveLength(1);
       expect(bots![0].status).toBe(Bot.Status.RUNNING);
       expect(botInitialized).toBe(true);
+      const lastStart = bots![0].lastStart;
+      expect(lastStart instanceof Date && !isNaN(lastStart.getTime())).toBe(true);
 
       const command = PublicKey.random().asUint8Array();
       const response = await botFactoryClient.botFactory.sendCommand({ botId, command });
@@ -207,12 +209,25 @@ describe('Node', () => {
       });
 
       await botHandle.stop();
+      {
+        const { bots } = await botFactoryClient.botFactory.getBots();
+        expect(bots).toHaveLength(1);
+        expect(bots![0].status).toBe(Bot.Status.STOPPED);
+      }
       await botHandle.start();
 
       await testCommand();
 
-      await botFactoryClient.botFactory.removeAll();
-      await botFactoryClient.stop();
+      {
+        const { bots } = await botFactoryClient.botFactory.getBots();
+        expect(bots).toHaveLength(1);
+        expect(bots![0].status).toBe(Bot.Status.RUNNING);
+        const lastStart = bots![0].lastStart;
+        expect(lastStart instanceof Date && !isNaN(lastStart.getTime())).toBe(true);
+
+        await botFactoryClient.botFactory.removeAll();
+        await botFactoryClient.stop();
+      }
     });
   });
 });
