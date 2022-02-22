@@ -9,7 +9,7 @@ import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
 import { PresencePlugin } from './presence-plugin';

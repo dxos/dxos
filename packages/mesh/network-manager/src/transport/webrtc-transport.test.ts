@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { discoveryKey, PublicKey } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';

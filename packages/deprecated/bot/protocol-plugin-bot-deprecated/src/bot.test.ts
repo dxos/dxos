@@ -8,7 +8,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 
 import { BotPlugin } from './bot';
 import { createSpawnCommand } from './botkit-messages';
