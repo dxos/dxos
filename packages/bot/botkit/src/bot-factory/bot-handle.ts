@@ -83,7 +83,7 @@ export class BotHandle {
   }
 
   /**
-   * To express the intent. The final states (stopped or running) should be updated automaitcally.
+   * To express the intent. The final states (stopped or running) should be updated automatically.
    */
   setStarting () {
     this.update.emit();
@@ -91,7 +91,7 @@ export class BotHandle {
   }
 
   /**
-   * To express the intent. The final states (stopped or running) should be updated automaitcally.
+   * To express the intent. The final states (stopped or running) should be updated automatically.
    */
   setStoppping () {
     this.update.emit();
