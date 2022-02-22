@@ -9,9 +9,19 @@ import assert from 'assert';
 import { Stream } from '@dxos/codec-protobuf';
 import { KeyRecord, KeyType } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { AddKeyRecordRequest, Contacts, HaloService as IHaloService, SignRequest, SignResponse } from '../../../proto/gen/dxos/client';
+import {
+  AddKeyRecordRequest,
+  Contacts,
+  HaloService as IHaloService,
+  SignRequest,
+  SignResponse,
+  SetGlobalPreferenceRequest,
+  GetGlobalPreferenceRequest,
+  GetGlobalPreferenceResponse
+} from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts } from './interfaces';
 
@@ -71,6 +81,19 @@ export class HaloService implements IHaloService {
       return this.polkadotSign(key, request.payload);
     }
     throw new Error('Only DXNS Address key signing is supported.');
+  }
+
+  async setGlobalPreference (request: SetGlobalPreferenceRequest): Promise<void> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    assert(preferences, 'Preferences failed to load.');
+    await preferences.setProperty(request.key, request.value);
+  }
+
+  async getGlobalPreference (request: GetGlobalPreferenceRequest): Promise<GetGlobalPreferenceResponse> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    return preferences?.getProperty(request.key);
   }
 }
 

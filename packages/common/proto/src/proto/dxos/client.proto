@@ -120,11 +120,27 @@ message SignResponse {
   bytes signed = 2;
 }
 
+message SetGlobalPreferenceRequest {
+  string key = 1;
+  google.protobuf.Any value = 2;
+}
+
+message GetGlobalPreferenceRequest {
+  string key = 1;
+}
+
+message GetGlobalPreferenceResponse {
+  google.protobuf.Any value = 1;
+}
+
 service HaloService {
   rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
 
   rpc AddKeyRecord(AddKeyRecordRequest) returns (google.protobuf.Empty);
   rpc Sign(SignRequest) returns (SignResponse);
+
+  rpc SetGlobalPreference(SetGlobalPreferenceRequest) returns (google.protobuf.Empty);
+  rpc GetGlobalPreference(GetGlobalPreferenceRequest) returns (GetGlobalPreferenceResponse);
 }
 
 //
