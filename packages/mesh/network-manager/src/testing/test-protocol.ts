@@ -9,7 +9,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { keyToBuffer, keyToString } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/mesh-protocol';
 
 import { protocolFactory } from '../protocol-factory';
 

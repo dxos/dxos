@@ -13,7 +13,7 @@ import queueMicrotask from 'queue-microtask';
 import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { keyToBuffer } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/mesh-protocol';
 
 import { schema } from './proto/gen';
 import { Alive } from './proto/gen/dxos/protocol/presence';

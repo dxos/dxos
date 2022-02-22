@@ -28,7 +28,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
     "@polkadot/keyring": "6.11.1",
