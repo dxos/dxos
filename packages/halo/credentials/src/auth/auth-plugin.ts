@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 
 import { codec } from '../proto';
 import { Authenticator } from './authenticator';

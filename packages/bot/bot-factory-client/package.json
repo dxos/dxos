@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot-factory-client",
-  "version": "2.27.5",
+  "version": "2.27.6",
   "description": "Bot",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -19,7 +19,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/rpc": "workspace:*"
   },

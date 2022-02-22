@@ -7,9 +7,9 @@ import { EventEmitter } from 'events';
 import pump from 'pump';
 import { Stream } from 'stream';
 
+import { getProtocolFromStream, ProtocolOptions } from '@dxos/mesh-protocol';
 import type { Peer } from '@dxos/network-generator';
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
-import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
 
 /**
  * @param topic Buffer to initialize the stream protocol

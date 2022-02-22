@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 
 import { Command } from '../proto';
 import { ERR_GREET_GENERAL, ERR_GREET_INVALID_COMMAND, ERR_GREET_INVALID_INVITATION } from './error-codes';

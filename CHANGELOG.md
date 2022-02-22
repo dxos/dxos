@@ -1,5 +1,14 @@
 # Change Log
 
+### [2.27.6](https://www.github.com/dxos/protocols/compare/v2.27.5...v2.27.6) (2022-02-22)
+
+
+### Features
+
+* Extend bot info ([#966](https://www.github.com/dxos/protocols/issues/966)) ([ce41e5f](https://www.github.com/dxos/protocols/commit/ce41e5ffb1952783cc04dd172a4b8409d2b5a67e))
+* Optimistic updates for models ([#947](https://www.github.com/dxos/protocols/issues/947)) ([d3ef04a](https://www.github.com/dxos/protocols/commit/d3ef04a40bd0ef13f5d1d0271246dcdf414ca3b6))
+* Rename "proto" to "protocol" and "protocol" to "mesh-protocol" ([#973](https://www.github.com/dxos/protocols/issues/973)) ([a2bca7c](https://www.github.com/dxos/protocols/commit/a2bca7c351044248564438fda56441990ead57f9))
+
 ### [2.27.5](https://www.github.com/dxos/protocols/compare/v2.27.4...v2.27.5) (2022-02-21)
 
 

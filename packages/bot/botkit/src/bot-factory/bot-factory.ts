@@ -80,6 +80,7 @@ export class BotFactory implements BotFactoryService {
     const id = keyToString(randomBytes(6));
     try {
       log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
+      const packageSpecifier = request.package;
 
       if (this._contentResolver && request.package?.dxn) {
         request.package = await this._contentResolver.resolve(request.package.dxn);
@@ -88,8 +89,13 @@ export class BotFactory implements BotFactoryService {
       const handle = new BotHandle(
         id,
         join(process.cwd(), 'bots', id),
-        this._config
+        {
+          config: this._config,
+          packageSpecifier,
+          partyKey: request.partyKey
+        }
       );
+      handle.setStarting();
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const contentDirectory = handle.getContentPath();
@@ -134,6 +140,7 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(request.id);
+      bot.setStarting();
 
       bot.startTimestamp = new Date();
 
@@ -160,6 +167,7 @@ export class BotFactory implements BotFactoryService {
     const id = request.id;
     try {
       const bot = this._getBot(id);
+      bot.setStoppping();
       log(`[${id}] Stopping bot`);
       try {
         await promiseTimeout(bot.rpc.stop(), 3000, new Error('Stopping bot timed out'));
