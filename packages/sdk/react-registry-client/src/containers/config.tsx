@@ -4,6 +4,7 @@
 
 import { AccountClient, createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
+
 import { RegistryContext } from '../hooks';
 
 // TODO(burdon): Move to @dxos/util.
@@ -40,5 +41,5 @@ export const createRegistryContext = async (
   return {
     registry,
     accounts
-  }
+  };
 };

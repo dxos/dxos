@@ -27,7 +27,7 @@ export const useRegistry = (): IRegistryClient => {
 
 /**
  * Returns the AccountClient for interacting with DXNS developer accounts.
- * 
+ *
  * Requires `RegistryProvider` component wrapper.
  */
 export const useAccountClient = (): AccountClient | undefined => {
@@ -35,4 +35,4 @@ export const useAccountClient = (): AccountClient | undefined => {
     raise(new Error('`useAccountClient` hook is called outside of RegistryContext.'));
 
   return context.accounts;
-}
+};
