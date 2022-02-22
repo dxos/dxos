@@ -17,6 +17,7 @@ const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMNS ?? '4');
 describe('Replication in a grid', function () {
   this.timeout(0);
 
+  // TODO(burdon): 8080 for esbuilder.
   const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--replication-grid&viewMode=story';
 
   const marginX = 16;
@@ -28,7 +29,7 @@ describe('Replication in a grid', function () {
 
   let inviter: Client;
   let party: Party;
- 
+
   const createInvitation = async () => {
     const invitation = await party.createInvitation();
     return JSON.stringify(invitation.descriptor.toQueryParameters());
