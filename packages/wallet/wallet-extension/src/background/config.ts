@@ -14,10 +14,11 @@ export const config: ConfigObject = {
       }
     },
     services: {
-      dxns: {
-        // TODO(wittjosiah): Remove.
-        dxnsAccount: 'ec677fc0d3076db05091e22019dde347afb1f6c7c5883c2b8e8e24ae3f65d2c0'
-      },
+      // dxns: {
+      //   server: 'ws://127.0.0.1:9945',
+      //   polkadotAddress: '',
+      //   dxnsAccount: ''
+      // },
       signal: {
         server: 'wss://enterprise.kube.dxos.network/dxos/signal',
         api: 'https://enterprise.kube.dxos.network/dxos/signal/api'
