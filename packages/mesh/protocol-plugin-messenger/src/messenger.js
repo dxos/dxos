@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 
 import { Broadcast } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
-import { Extension } from '@dxos/protocol';
+import { Extension } from '@dxos/mesh-protocol';
 
 import { schema } from './proto/gen';
 

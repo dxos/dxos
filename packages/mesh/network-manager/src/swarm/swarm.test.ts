@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
 import { FullyConnectedTopology } from '../topology';

@@ -9,7 +9,7 @@ import { Stream } from 'stream';
 
 import type { Peer } from '@dxos/network-generator';
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
-import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
+import { getProtocolFromStream, ProtocolOptions } from '@dxos/mesh-protocol';
 
 /**
  * @param topic Buffer to initialize the stream protocol

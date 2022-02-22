@@ -35,7 +35,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/proto": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",

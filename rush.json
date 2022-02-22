@@ -698,7 +698,7 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/protocol",
+      "packageName": "@dxos/mesh-protocol",
       "projectFolder": "packages/mesh/protocol",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"

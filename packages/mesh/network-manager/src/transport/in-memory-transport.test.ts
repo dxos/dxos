@@ -6,7 +6,7 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey, PublicKey } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
