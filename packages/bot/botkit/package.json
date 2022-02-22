@@ -27,7 +27,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",

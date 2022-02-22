@@ -14,7 +14,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -28,7 +28,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/rpc': link:../../common/rpc
     devDependencies:
@@ -51,7 +51,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
@@ -81,7 +81,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
@@ -333,7 +333,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
@@ -344,7 +344,7 @@ importers:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
-      '@dxos/proto': link:../proto
+      '@dxos/protocol': link:../proto
       debug: 4.3.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -940,7 +940,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -977,7 +977,7 @@ importers:
       '@dxos/devtools-mesh': link:../devtools-mesh
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/model-factory': link:../../echo/model-factory
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
       '@dxos/rpc': link:../../common/rpc
@@ -1192,7 +1192,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
@@ -1227,7 +1227,7 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../object-model
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -1260,7 +1260,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1283,7 +1283,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': link:../feed-store
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/util': link:../../common/util
       debug: 4.3.3
       pify: 5.0.0
@@ -1661,7 +1661,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/mesh-protocol': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1701,7 +1701,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/mesh-protocol': link:../../mesh/protocol
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/util': link:../../common/util
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
@@ -2189,7 +2189,7 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
@@ -2233,7 +2233,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       '@polkadot/keyring': 6.11.1
@@ -2270,7 +2270,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -2292,7 +2292,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       boolean: 3.1.4
       debug: 4.3.3
       js-yaml: 3.14.1
@@ -2743,7 +2743,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/proto': workspace:*
+      '@dxos/protocol': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -2786,7 +2786,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/proto': link:../../common/proto
+      '@dxos/protocol': link:../../common/proto
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework

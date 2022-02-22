@@ -27,7 +27,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "debug": "^4.3.3"
   },
   "devDependencies": {

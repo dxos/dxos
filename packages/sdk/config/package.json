@@ -21,7 +21,7 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/proto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
     "js-yaml": "^3.13.1",
