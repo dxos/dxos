@@ -120,10 +120,6 @@ export class HaloProxy extends InvitationProxy {
     );
   }
 
-  async getDXNSAddress (): Promise<string | undefined> {
-    return (await this._serviceProvider.services.HaloService.getDXNSAddress()).address;
-  }
-
   async addKeyRecord (keyRecord: KeyRecord) {
     await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
@@ -138,6 +134,14 @@ export class HaloProxy extends InvitationProxy {
 
   async getGlobalPreference (key: string): Promise<string | undefined> {
     return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
+  }
+
+  async setDevicePreference (key: string, value: string): Promise<void> {
+    await this._serviceProvider.services.HaloService.setDevicePreference({ key, value });
+  }
+
+  async getDevicePreference (key: string): Promise<string | undefined> {
+    return (await this._serviceProvider.services.HaloService.getDevicePreference({ key })).value;
   }
 
   /**

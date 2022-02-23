@@ -18,10 +18,9 @@ import {
   HaloService as IHaloService,
   SignRequest,
   SignResponse,
-  SetGlobalPreferenceRequest,
-  GetGlobalPreferenceRequest,
-  GetGlobalPreferenceResponse,
-  GetDXNSAddressResponse
+  SetPreferenceRequest,
+  GetPreferenceRequest,
+  GetPreferenceResponse
 
 } from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
@@ -74,14 +73,6 @@ export class HaloService implements IHaloService {
     };
   }
 
-  async getDXNSAddress (): Promise<GetDXNSAddressResponse> {
-    const keys: (KeyRecord | undefined)[] = await this.echo.halo.keyring.findKeys(Filter.matches({ type: KeyType.DXNS_ADDRESS }));
-    const key = keys[0];
-    return {
-      address: key?.publicKey ? encodeAddress(key.publicKey.asUint8Array()) : undefined
-    };
-  }
-
   async sign (request: SignRequest): Promise<SignResponse> {
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
@@ -93,16 +84,32 @@ export class HaloService implements IHaloService {
     throw new Error('Only DXNS Address key signing is supported.');
   }
 
-  async setGlobalPreference (request: SetGlobalPreferenceRequest): Promise<void> {
+  async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
-  async getGlobalPreference (request: GetGlobalPreferenceRequest): Promise<GetGlobalPreferenceResponse> {
+  async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    assert(preferences, 'Preferences failed to load.');
+    return {
+      value: preferences.getProperty(request.key)
+    };
+  }
+
+  async setDevicePreference (request: SetPreferenceRequest): Promise<void> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    assert(preferences, 'Preferences failed to load.');
+    await preferences.setProperty(request.key, request.value);
+  }
+
+  async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     return {
       value: preferences.getProperty(request.key)
