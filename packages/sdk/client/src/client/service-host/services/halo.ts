@@ -3,7 +3,7 @@
 //
 
 import PolkadotKeyring from '@polkadot/keyring';
-import { cryptoWaitReady } from '@polkadot/util-crypto';
+import { cryptoWaitReady, encodeAddress } from '@polkadot/util-crypto';
 import assert from 'assert';
 
 import { Stream } from '@dxos/codec-protobuf';
@@ -78,7 +78,7 @@ export class HaloService implements IHaloService {
     const keys: (KeyRecord | undefined)[] = await this.echo.halo.keyring.findKeys(Filter.matches({ type: KeyType.DXNS_ADDRESS }));
     const key = keys[0];
     return {
-      address: key?.publicKey?.toString()
+      address: key?.publicKey ? encodeAddress(key.publicKey.asUint8Array()) : undefined
     };
   }
 
