@@ -33,10 +33,13 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
 
 export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
 
-export const createRootSelector = (getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot): RootSelector => {
+export const createRootSelector = (
+  getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot
+): RootSelector => {
   return (filter?: RootFilter): Selection<any> => {
     const predicate = filter ? filterToPredicate(filter) : () => true;
-    return new Selection(options => getItems().filter(createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
+    return new Selection(options => getItems().filter(
+      createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
   };
 };
 
@@ -126,7 +129,16 @@ export class Selection<T extends Entity<any>> {
    * Select children of the items in this selection.
    */
   children (this: Selection<Item<any>>): Selection<Item<any>> {
-    return this._createSubSelection((item, options) => item.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
+    return this._createSubSelection((item, options) => item.flatMap(
+      item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))));
+  }
+
+  /**
+   * Select parent of the items in this selection.
+   */
+  parent (this: Selection<Item<any>>): Selection<Item<any>> {
+    return this._createSubSelection((item, options) => item.flatMap(
+      item => item.parent ? [item.parent].filter(createQueryOptionsFilter(options)) : []));
   }
 
   /**
@@ -134,7 +146,8 @@ export class Selection<T extends Entity<any>> {
    */
   links (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
-    return this._createSubSelection((item, options) => item.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
+    return this._createSubSelection((item, options) => item.flatMap(
+      item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
   /**
@@ -142,7 +155,8 @@ export class Selection<T extends Entity<any>> {
    */
   refs (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link<any>> {
     const predicate = linkFilterToPredicate(filter);
-    return this._createSubSelection((item, options) => item.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
+    return this._createSubSelection((item, options) => item.flatMap(
+      item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))));
   }
 
   /**
@@ -150,7 +164,8 @@ export class Selection<T extends Entity<any>> {
    */
   target (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
-    return this._createSubSelection((links, options) => links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
+    return this._createSubSelection((links, options) => links.flatMap(
+      link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 
   /**
@@ -158,7 +173,8 @@ export class Selection<T extends Entity<any>> {
    */
   source (this: Selection<Link<any>>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
-    return this._createSubSelection((links, options) => links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
+    return this._createSubSelection((links, options) => links.flatMap(
+      link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)));
   }
 }
 
@@ -167,7 +183,8 @@ export class Selection<T extends Entity<any>> {
  */
 export class SelectionResult<T extends Entity<any>> {
   /**
-   * Fired when there are updates in the selection. Only update that are relevant to the selection cause the update.
+   * Fired when there are updates in the selection.
+   * Only update that are relevant to the selection cause the update.
    */
   readonly update = new Event<T[]>();
 

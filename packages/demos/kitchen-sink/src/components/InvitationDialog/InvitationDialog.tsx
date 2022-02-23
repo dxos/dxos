@@ -46,6 +46,7 @@ export const InvitationDialog = ({
           onChange={event => setInvitationCode(event.target.value)}
           variant='outlined'
           label='Invitation code'
+          autoComplete='off'
           spellCheck={false}
         />
 

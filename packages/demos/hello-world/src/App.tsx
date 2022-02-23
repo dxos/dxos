@@ -48,7 +48,14 @@ export const App = () => {
   return (
     <Box sx={{ padding: 1 }}>
       <Box sx={{ display: 'flex' }}>
-        <TextField inputRef={inputRef} autoFocus fullWidth />
+        <TextField
+          inputRef={inputRef}
+          autoFocus
+          fullWidth
+          autoComplete='off'
+          spellCheck={false}
+        />
+
         <Button onClick={handleClick}>Add</Button>
         <Button onClick={() => setSharing(true)}>Share</Button>
         <Button onClick={() => setJoining(true)}>Join</Button>
