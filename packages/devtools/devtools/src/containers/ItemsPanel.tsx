@@ -107,6 +107,10 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
           <td>{item.type}</td>
         </tr>
         <tr>
+          <td>Deleted</td>
+          <td>{item.deleted}</td>
+        </tr>
+        <tr>
           <td>Properties</td>
           <td>
             <JsonTreeView data={modelToObject(item.model)} />
