@@ -59,6 +59,7 @@ export const useGraphModel = (party?: Party): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
   const items = useSelection(party?.select()) ?? [];
   useEffect(() => {
+    // TODO(burdon): API should filter out root item.
     const filteredItems = items
       .filter(item => item.type?.startsWith('example:'));
 
@@ -86,7 +87,7 @@ export const useTestParty = (): Party | undefined => {
   useEffect(() => {
     if (builder) {
       setImmediate(async () => {
-        await buildTestParty(party!, builder);
+        await buildTestParty(builder);
       }, []);
     }
   }, [builder, party]);
@@ -94,7 +95,11 @@ export const useTestParty = (): Party | undefined => {
   return party;
 };
 
-export const buildTestParty = async (party: Party, builder: PartyBuilder) => {
+/**
+ * Build the party.
+ * @param builder
+ */
+export const buildTestParty = async (builder: PartyBuilder) => {
   await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople([3, 10]);
     await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {

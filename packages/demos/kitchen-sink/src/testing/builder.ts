@@ -167,6 +167,42 @@ export class PartyBuilder {
       }
     });
   }
+
+  async createRandomItem (parent?: Item<ObjectModel>) {
+    if (!parent) {
+      const { result: items } = this.party
+        .select()
+        .filter(item => item.type === TestType.Org || item.type === TestType.Project)
+        .query();
+      const parent = faker.random.arrayElement(items);
+      if (parent) {
+        await this.createRandomItem(parent);
+      }
+    } else {
+      switch (parent.type) {
+        case TestType.Org: {
+          const type = faker.random.arrayElement([TestType.Project, TestType.Person]);
+          switch (type) {
+            case TestType.Project: {
+              await this.createProject(parent);
+              break;
+            }
+
+            case TestType.Person: {
+              await this.createPerson(parent);
+              break;
+            }
+          }
+          break;
+        }
+
+        case TestType.Project: {
+          await this.createTask(parent);
+          break;
+        }
+      }
+    }
+  }
 }
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useRef } from 'react';
+import { EffectCallback, useEffect, useRef } from 'react';
 
 // TODO(burdon): Factor hook utils (incl. gem useStateRef).
 
@@ -16,4 +16,21 @@ export const useUpdatedRef = <T> (value: T) => {
     ref.current = value;
   }, [value]);
   return ref;
+};
+
+/**
+ * Effect with timer.
+ * @param f
+ * @param deps
+ * @param delay
+ */
+export const useDebouncedEffect = (f: EffectCallback, deps: any[], delay = 1000) => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(f, delay);
+  }, deps);
 };

@@ -39,6 +39,13 @@ const App = () => {
         onChange={handleChange}
         delay={100}
       />
+      <br />
+      <br />
+
+      <SelectionEditor
+        onChange={handleChange}
+        delay={100}
+      />
 
       <Box sx={{ padding: 1 }}>
         {result}

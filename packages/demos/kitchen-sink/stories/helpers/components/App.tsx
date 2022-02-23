@@ -9,7 +9,7 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { FullScreen } from '@dxos/react-components';
 
-import { execSelection, ThemeProvider } from '../../../src';
+import { execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
 import { useGraphModel, useQuery } from '../data';
 import { itemAdapter } from '../testing';
 import { AppBar } from './AppBar';
@@ -22,6 +22,12 @@ interface AppProps {
   onInvite?: () => void
 }
 
+/**
+ * Main application.
+ * @param party
+ * @param onInvite
+ * @constructor
+ */
 export const App = ({
   party,
   onInvite
@@ -31,6 +37,7 @@ export const App = ({
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
   const model = useGraphModel(party);
   const items = useQuery(party, search);
+  const builder = usePartyBuilder(party);
 
   // Update selection.
   useEffect(() => {
@@ -41,14 +48,19 @@ export const App = ({
 
     setSelected(selected);
     model.refresh();
-    // TODO(burdon): Items.length hack (if just items, the recursion).
+    // TODO(burdon): Items.length hack (if just items, then recursion).
   }, [search, items.length]);
 
   if (!party) {
     return null;
   }
 
-  const handleCreateItem = (type: string, title: string, parentId?: ItemID) => {
+  const handleCreateItem = (type?: string, title?: string, parentId?: ItemID) => {
+    if (!type) {
+      builder?.createRandomItem();
+      return;
+    }
+
     void party.database.createItem({
       model: ObjectModel, // TODO(burdon): Set as default.
       type,

@@ -32,18 +32,18 @@ export const ViewContainer = ({
   return (
     <>
       <BoxContainer
-expand sx={{
-  display: value !== ViewType.List ? 'none' : undefined
-}}>
+        expand sx={{
+          display: value !== ViewType.List ? 'none' : undefined
+        }}>
         <EchoList
           itemAdapter={itemAdapter}
           items={items}
         />
       </BoxContainer>
       <BoxContainer
-expand sx={{
-  display: value !== ViewType.Board ? 'none' : undefined
-}}>
+        expand sx={{
+          display: value !== ViewType.Board ? 'none' : undefined
+        }}>
         <EchoBoard
           itemAdapter={itemAdapter}
           items={items}
@@ -51,9 +51,9 @@ expand sx={{
         />
       </BoxContainer>
       <BoxContainer
-expand sx={{
-  display: value !== ViewType.Graph ? 'none' : undefined
-}}>
+        expand sx={{
+          display: value !== ViewType.Graph ? 'none' : undefined
+        }}>
         <EchoGraph
           itemAdapter={itemAdapter}
           model={model}

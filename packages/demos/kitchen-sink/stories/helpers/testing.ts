@@ -46,9 +46,11 @@ export const typeMeta: { [i: string]: ItemMeta } = {
   }
 };
 
-export const defaultSelectionText =
-  'select().filter({ type: \'example:type.org\' }).children().filter({ type: \'example:type.project\' })'
-    .replace(/\)\./g, ')\n  .');
+const format = (text: string) => text.replace(/\)\./g, ')\n  .');
+
+export const defaultSelectionText = format(
+  `select().filter({ type: ${TestType.Org} }).children().filter({ type: ${TestType.Project} })`
+);
 
 export const tableStyles = css`
   ${Object.keys(typeMeta).map(
