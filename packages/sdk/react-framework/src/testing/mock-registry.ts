@@ -22,7 +22,7 @@ export const createMockRegistryWithBots = () => {
   const botRecord = createMockResourceRecord({
     type: '.dxos.type.Bot',
     data: {
-      dxn: 'dxos:test.bot',
+      dxn: 'dxos:test.bot'
     }
   });
   const botTypeResourceRecord = {
