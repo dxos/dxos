@@ -120,6 +120,10 @@ message SignResponse {
   bytes signed = 2;
 }
 
+message GetDXNSAddressResponse {
+  string address = 1;
+}
+
 message SetGlobalPreferenceRequest {
   string key = 1;
   string value = 2;
@@ -138,6 +142,8 @@ service HaloService {
 
   rpc AddKeyRecord(AddKeyRecordRequest) returns (google.protobuf.Empty);
   rpc Sign(SignRequest) returns (SignResponse);
+
+  rpc GetDXNSAddress(google.protobuf.Empty) returns (GetDXNSAddressResponse);
 
   rpc SetGlobalPreference(SetGlobalPreferenceRequest) returns (google.protobuf.Empty);
   rpc GetGlobalPreference(GetGlobalPreferenceRequest) returns (GetGlobalPreferenceResponse);

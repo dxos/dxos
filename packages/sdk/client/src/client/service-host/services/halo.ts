@@ -7,7 +7,7 @@ import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { KeyRecord, KeyType } from '@dxos/credentials';
+import { Filter, KeyRecord, KeyType } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
@@ -20,7 +20,9 @@ import {
   SignResponse,
   SetGlobalPreferenceRequest,
   GetGlobalPreferenceRequest,
-  GetGlobalPreferenceResponse
+  GetGlobalPreferenceResponse,
+  GetDXNSAddressResponse
+
 } from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts } from './interfaces';
@@ -69,6 +71,14 @@ export class HaloService implements IHaloService {
 
     return {
       signed: keypair.sign(payload, { withType: true })
+    };
+  }
+
+  async getDXNSAddress (): Promise<GetDXNSAddressResponse> {
+    const keys: (KeyRecord | undefined)[] = await this.echo.halo.keyring.findKeys(Filter.matches({ type: KeyType.DXNS_ADDRESS }));
+    const key = keys[0];
+    return {
+      address: key?.publicKey?.toString()
     };
   }
 

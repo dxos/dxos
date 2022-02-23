@@ -120,6 +120,10 @@ export class HaloProxy extends InvitationProxy {
     );
   }
 
+  async getDXNSAddress (): Promise<string | undefined> {
+    return (await this._serviceProvider.services.HaloService.getDXNSAddress()).address;
+  }
+
   async addKeyRecord (keyRecord: KeyRecord) {
     await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
