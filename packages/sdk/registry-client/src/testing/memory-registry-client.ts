@@ -78,7 +78,7 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line unused-imports/no-unused-vars
   async getRecords<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<R[]> {
-    return this.records as R[];
+    return this.records.filter(record => Filtering.matchRecord(record, query)) as R[];
   }
 
   async queryResources (query?: IQuery): Promise<Resource[]> {

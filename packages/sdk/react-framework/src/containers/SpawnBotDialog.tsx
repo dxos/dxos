@@ -32,12 +32,12 @@ export const SpawnBotDialog = ({
   const config = useConfig();
   const botFactoryClient = useBotFactoryClient(config);
 
-  const handleSpawnProcess = async (path: string) => {
+  const handleSpawnProcess = async (dxn: string) => {
     try {
       assert(botFactoryClient, 'Bot factory client is not available.');
       setProcessing(true);
-      const botHandle = await botFactoryClient!.spawn(
-        { localPath: path },
+      const botHandle = await botFactoryClient.spawn(
+        { dxn },
         party
       );
 
@@ -60,9 +60,9 @@ export const SpawnBotDialog = ({
           label='Select bot'
           onChange={(event) => setBotPath(event.target.value)}
         >
-          {bots.filter(({ localPath }) => !!localPath).map(({ localPath }) => (
-            <MenuItem key={localPath} value={localPath}>
-              {localPath}
+          {bots.filter(bot => bot.dxn && bot.tag === 'latest').map(({ dxn }) => (
+            <MenuItem key={dxn.toString()} value={dxn.toString()}>
+              {dxn.toString()}
             </MenuItem>
           ))}
         </Select>
