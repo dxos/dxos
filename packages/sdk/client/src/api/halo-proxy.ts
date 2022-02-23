@@ -128,12 +128,12 @@ export class HaloProxy extends InvitationProxy {
     return await this._serviceProvider.services.HaloService.sign(request);
   }
 
-  async setGlobalPreference (key: string, value: any): Promise<void> {
+  async setGlobalPreference (key: string, value: string): Promise<void> {
     await this._serviceProvider.services.HaloService.setGlobalPreference({ key, value });
   }
 
-  async getGlobalPreference (key: string): Promise<any> {
-    return await this._serviceProvider.services.HaloService.getGlobalPreference({ key });
+  async getGlobalPreference (key: string): Promise<string | undefined> {
+    return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
   }
 
   /**

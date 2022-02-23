@@ -93,7 +93,10 @@ export class HaloService implements IHaloService {
   async getGlobalPreference (request: GetGlobalPreferenceRequest): Promise<GetGlobalPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
-    return preferences?.getProperty(request.key);
+    assert(preferences, 'Preferences failed to load.');
+    return {
+      value: preferences.getProperty(request.key)
+    };
   }
 }
 

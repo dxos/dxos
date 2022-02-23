@@ -220,8 +220,8 @@ describe('Client', () => {
         // await invitee.halo.setGlobalPreference('DXNSAccount', '123')
         // await waitForExpect(async () => {
         //   expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
-        // })
-      }).timeout(5000);
+        // }, 10_000, 100)
+      }).timeout(10_000);
     });
 
     describe('data', () => {
