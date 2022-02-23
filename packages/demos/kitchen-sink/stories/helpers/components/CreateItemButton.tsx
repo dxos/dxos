@@ -27,7 +27,7 @@ export const CreateItemButton = ({
     } else {
       setOpen(true);
     }
-  }
+  };
 
   const handleCreate = (title: string) => {
     setOpen(false);

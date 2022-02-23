@@ -9,9 +9,9 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoGraph, execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
+import { execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
 import { useGraphModel, useQuery } from '../data';
-import { graphStyles, itemAdapter } from '../testing';
+import { itemAdapter } from '../testing';
 import { AppBar } from './AppBar';
 import { CreateItemButton } from './CreateItemButton';
 import { ViewContainer } from './ViewContainer';
@@ -57,7 +57,7 @@ export const App = ({
 
   const handleCreateItem = (type?: string, title?: string, parentId?: ItemID) => {
     if (!type) {
-      builder?.createRandomItem();
+      void builder?.createRandomItem();
       return;
     }
 

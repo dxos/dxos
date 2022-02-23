@@ -176,6 +176,8 @@ export class PartyBuilder {
           switch (type) {
             case TestType.Project: {
               const project = await this.createProject(parent);
+              const projectBuilder = new ProjectBuilder(this, parent, project);
+              await projectBuilder.createTasks([2, 5]);
               break;
             }
 

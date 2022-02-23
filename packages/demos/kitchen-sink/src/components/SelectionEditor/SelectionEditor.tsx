@@ -32,7 +32,7 @@ const completions = [
   {
     match: 'select',
     replace: 'select()'
-  },
+  }
 ];
 
 /**
@@ -47,7 +47,6 @@ export const SelectionEditor = ({
 }: SelectionEditorProps) => {
   const inputRef = useRef<HTMLInputElement>();
   const [text, setText] = useState<string>(initialValue ?? '');
-  const [pos, setPos] = useState<number>(-1);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
