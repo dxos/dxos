@@ -14,11 +14,9 @@ export const config: ConfigObject = {
       }
     },
     services: {
-      // dxns: {
-      //   server: 'ws://127.0.0.1:9945',
-      //   address: '',
-      //   account: ''
-      // },
+      dxns: {
+        server: 'ws://127.0.0.1:9945'
+      },
       signal: {
         server: 'wss://enterprise.kube.dxos.network/dxos/signal',
         api: 'https://enterprise.kube.dxos.network/dxos/signal/api'

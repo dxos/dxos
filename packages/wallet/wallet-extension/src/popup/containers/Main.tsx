@@ -13,18 +13,20 @@ import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dx
 
 export const Main = () => {
   const client = useClient();
-  const [remoteConfig, setRemoteConfig] = useState<Config | undefined>();
   const [parties, setParties] = useState<any[]>([]);
   const profile = useProfile();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
+  const [polkadotAddress, setPolkadotAddress] = useState<string | undefined>();
+  const [DXNSAccount, setDXNSAccount] = useState<string | undefined>();
 
   useEffect(() => {
     setImmediate(async () => {
       try {
-        const remoteConfig = await client.services.SystemService.getConfig();
-        setRemoteConfig(new Config(remoteConfig));
+        const remoteConfig = new Config(await client.services.SystemService.getConfig());
+        setPolkadotAddress(remoteConfig.get('runtime.services.dxns.address') ?? await client.halo.getDevicePreference('DXNSAddress'));
+        setDXNSAccount(remoteConfig.get('runtime.services.dxns.account') ?? await client.halo.getGlobalPreference('DXNSAccount'));
       } catch (error: any) {
         setError(error);
       }
@@ -113,11 +115,11 @@ export const Main = () => {
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
-      {remoteConfig?.get('runtime.services.dxns.address') &&
-        <p>Your Polkadot Address: {remoteConfig.get('runtime.services.dxns.address')}</p>
+      {polkadotAddress &&
+        <p>Your Polkadot Address: {polkadotAddress}</p>
       }
-      {remoteConfig?.get('runtime.services.dxns.account') &&
-        <p>Your DXNS Account: {remoteConfig.get('runtime.services.dxns.account')}</p>
+      {DXNSAccount &&
+        <p>Your DXNS Account: {DXNSAccount}</p>
       }
       <p>Your profile public key: {profile.publicKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>

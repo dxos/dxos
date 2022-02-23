@@ -3,11 +3,11 @@
 //
 
 import PolkadotKeyring from '@polkadot/keyring';
-import { cryptoWaitReady, encodeAddress } from '@polkadot/util-crypto';
+import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { Filter, KeyRecord, KeyType } from '@dxos/credentials';
+import { KeyRecord, KeyType } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
@@ -94,9 +94,8 @@ export class HaloService implements IHaloService {
   async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
-    assert(preferences, 'Preferences failed to load.');
     return {
-      value: preferences.getProperty(request.key)
+      value: preferences?.getProperty(request.key)
     };
   }
 
@@ -110,9 +109,8 @@ export class HaloService implements IHaloService {
   async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
-    assert(preferences, 'Preferences failed to load.');
     return {
-      value: preferences.getProperty(request.key)
+      value: preferences?.getProperty(request.key)
     };
   }
 }
