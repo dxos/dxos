@@ -103,12 +103,6 @@ export const App = ({
           value={view}
           onCreateItem={handleCreateItem}
         />
-        {/*<EchoGraph*/}
-        {/*  model={model}*/}
-        {/*  selected={selected}*/}
-        {/*  itemAdapter={itemAdapter}*/}
-        {/*  styles={graphStyles}*/}
-        {/*/>*/}
 
         <CreateItemButton
           onCreate={handleCreateItem}
