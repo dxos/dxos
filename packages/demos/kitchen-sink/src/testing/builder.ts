@@ -169,22 +169,13 @@ export class PartyBuilder {
   }
 
   async createRandomItem (parent?: Item<ObjectModel>) {
-    if (!parent) {
-      const { result: items } = this.party
-        .select()
-        .filter(item => item.type === TestType.Org || item.type === TestType.Project)
-        .query();
-      const parent = faker.random.arrayElement(items);
-      if (parent) {
-        await this.createRandomItem(parent);
-      }
-    } else {
+    if (parent) {
       switch (parent.type) {
         case TestType.Org: {
           const type = faker.random.arrayElement([TestType.Project, TestType.Person]);
           switch (type) {
             case TestType.Project: {
-              await this.createProject(parent);
+              const project = await this.createProject(parent);
               break;
             }
 
@@ -200,6 +191,27 @@ export class PartyBuilder {
           await this.createTask(parent);
           break;
         }
+      }
+
+      return;
+    }
+
+    if (Math.random() < 0.2) {
+      // New org.
+      const org = await this.createOrg();
+      const orgBuilder = new OrgBuilder(this, org);
+      await orgBuilder.createProjects([2, 3]);
+      await orgBuilder.createPeople([2, 4]);
+    } else {
+      // Random parent.
+      const { result: items } = this.party
+        .select()
+        .filter(item => item.type === TestType.Org || item.type === TestType.Project)
+        .query();
+
+      parent = faker.random.arrayElement(items);
+      if (parent) {
+        await this.createRandomItem(parent);
       }
     }
   }

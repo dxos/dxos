@@ -4,12 +4,13 @@
 
 import faker from 'faker';
 import React, { useState } from 'react';
+import { Box, Button } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { BoxContainer, EchoGraph, execSelection, SelectionEditor } from '../src';
+import { BoxContainer, EchoGraph, execSelection, SelectionEditor, usePartyBuilder } from '../src';
 import { itemAdapter, graphStyles, useGraphModel, useTestParty, defaultSelectionText } from './helpers';
 
 export default {
@@ -34,6 +35,7 @@ const App = () => {
 const AppWithEditor = () => {
   const party = useTestParty();
   const model = useGraphModel(party);
+  const builder = usePartyBuilder(party);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
   if (!party) {
     return null;
@@ -48,13 +50,22 @@ const AppWithEditor = () => {
     model.refresh();
   };
 
+  const handleGenerate = async () => {
+    await builder?.createRandomItem();
+  };
+
   return (
     <BoxContainer expand column>
-      <SelectionEditor
-        initialValue={defaultSelectionText}
-        onChange={handleSelection}
-        delay={100}
-      />
+      <Box sx={{ display: 'flex' }}>
+        <SelectionEditor
+          initialValue={defaultSelectionText}
+          onChange={handleSelection}
+          delay={100}
+        />
+        <Box>
+          <Button onClick={handleGenerate}>Generate</Button>
+        </Box>
+      </Box>
 
       <BoxContainer expand>
         <EchoGraph

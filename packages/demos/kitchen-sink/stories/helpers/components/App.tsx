@@ -9,9 +9,9 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { FullScreen } from '@dxos/react-components';
 
-import { execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
+import { EchoGraph, execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
 import { useGraphModel, useQuery } from '../data';
-import { itemAdapter } from '../testing';
+import { graphStyles, itemAdapter } from '../testing';
 import { AppBar } from './AppBar';
 import { CreateItemButton } from './CreateItemButton';
 import { ViewContainer } from './ViewContainer';
@@ -103,6 +103,12 @@ export const App = ({
           value={view}
           onCreateItem={handleCreateItem}
         />
+        {/*<EchoGraph*/}
+        {/*  model={model}*/}
+        {/*  selected={selected}*/}
+        {/*  itemAdapter={itemAdapter}*/}
+        {/*  styles={graphStyles}*/}
+        {/*/>*/}
 
         <CreateItemButton
           onCreate={handleCreateItem}

@@ -58,13 +58,15 @@ export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => 
 export const useGraphModel = (party?: Party): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
   const items = useSelection(party?.select()) ?? [];
+
   useEffect(() => {
     // TODO(burdon): API should filter out root item.
     const filteredItems = items
       .filter(item => item.type?.startsWith('example:'));
 
+    console.log('update', filteredItems.length);
     model.update(filteredItems);
-  }, [items]);
+  }, [items.length]);
 
   return model;
 };

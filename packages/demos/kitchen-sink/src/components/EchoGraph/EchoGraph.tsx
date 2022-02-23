@@ -22,13 +22,17 @@ export interface EchoGraphProps {
   selected?: Set<ItemID>
   itemAdapter: ItemAdapter
   styles?: any
+  options?: {
+    grid?: boolean
+  }
 }
 
 export const EchoGraph = ({
   model,
   selected,
   itemAdapter,
-  styles
+  styles,
+  options = {}
 }: EchoGraphProps) => {
   const context = useSvgContext();
   const projector = useMemo(() => new GraphForceProjector(context, {
@@ -62,7 +66,9 @@ export const EchoGraph = ({
       <SVGContextProvider>
         <SVG>
           <Markers />
-          <Grid axis />
+          {options.grid !== false && (
+            <Grid axis />
+          )}
           <Zoom>
             <Graph
               className={clsx(defaultGraphStyles, styles)}

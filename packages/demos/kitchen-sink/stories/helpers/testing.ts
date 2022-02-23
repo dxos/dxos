@@ -49,7 +49,7 @@ export const typeMeta: { [i: string]: ItemMeta } = {
 const format = (text: string) => text.replace(/\)\./g, ')\n  .');
 
 export const defaultSelectionText = format(
-  `select().filter({ type: ${TestType.Org} }).children().filter({ type: ${TestType.Project} })`
+  `select().filter({ type: '${TestType.Org}' }).children().filter({ type: '${TestType.Project}' })`
 );
 
 export const tableStyles = css`
@@ -59,7 +59,7 @@ export const tableStyles = css`
 
 export const graphStyles = css`
   ${Object.keys(typeMeta).map(
-    type => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[200]}; } }`)}
+    type => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[100]}; } }`)}
 `;
 
 /**
