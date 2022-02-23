@@ -29,38 +29,38 @@ export const ViewContainer = ({
   selected,
   onCreateItem
 }: ViewContainerProps) => {
+  // TODO(burdon): Views lose state but graph has terrible performance if other views are updated.
   return (
     <>
-      <BoxContainer
-expand sx={{
-  display: value !== ViewType.List ? 'none' : undefined
-}}>
-        <EchoList
-          itemAdapter={itemAdapter}
-          items={items}
-        />
-      </BoxContainer>
-      <BoxContainer
-expand sx={{
-  display: value !== ViewType.Board ? 'none' : undefined
-}}>
-        <EchoBoard
-          itemAdapter={itemAdapter}
-          items={items}
-          onCreateItem={onCreateItem}
-        />
-      </BoxContainer>
-      <BoxContainer
-expand sx={{
-  display: value !== ViewType.Graph ? 'none' : undefined
-}}>
-        <EchoGraph
-          itemAdapter={itemAdapter}
-          model={model}
-          selected={selected}
-          styles={graphStyles}
-        />
-      </BoxContainer>
+      {value === ViewType.List && (
+        <BoxContainer expand>
+          <EchoList
+            itemAdapter={itemAdapter}
+            items={items}
+          />
+        </BoxContainer>
+      )}
+
+      {value === ViewType.Board && (
+        <BoxContainer expand>
+          <EchoBoard
+            itemAdapter={itemAdapter}
+            items={items}
+            onCreateItem={onCreateItem}
+          />
+        </BoxContainer>
+      )}
+
+      {value === ViewType.Graph && (
+        <BoxContainer expand>
+          <EchoGraph
+            model={model}
+            selected={selected}
+            itemAdapter={itemAdapter}
+            styles={graphStyles}
+          />
+        </BoxContainer>
+      )}
     </>
   );
 };

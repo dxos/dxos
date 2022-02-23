@@ -54,7 +54,7 @@ export const Secondary = () => {
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
       const builder = new PartyBuilder(party);
-      await buildTestParty(party, builder!);
+      await buildTestParty(builder!);
       setParty(party);
     };
 
