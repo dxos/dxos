@@ -36,7 +36,7 @@ const clientConfig: ConfigObject = {
         server: 'ws://localhost:4000'
       },
       bot: {
-        topic: 'e61469c04e4265e145f9863dd4b84fd6dee8f31e10160c38f9bb3c289e3c09bc'
+        topic: 'd5943248a8b8390bc0c08d9fc5fc447a3fff88abb0474c9fd647672fc8b03edb'
       }
     }
   }

@@ -16,6 +16,7 @@ import { Item } from './item';
 import { Link } from './link';
 import { createRootSelector } from './selection';
 
+// TODO(burdon): Dots or slashes!?
 const OBJECT_ORG = 'dxos:object/org';
 const OBJECT_PERSON = 'dxos:object/person';
 const LINK_EMPLOYEE = 'dxos:link/employee';
@@ -43,19 +44,24 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
 
 const org1 = createItem('item/1', OBJECT_ORG);
 const org2 = createItem('item/2', OBJECT_ORG);
+
+const person1 = createItem('item/3', OBJECT_PERSON, org1);
+const person2 = createItem('item/4', OBJECT_PERSON, org1);
+const person3 = createItem('item/5', OBJECT_PERSON, org2);
+
 const items: Item<any>[] = [
   org1,
   org2,
-  createItem('item/3', OBJECT_PERSON, org1),
-  createItem('item/4', OBJECT_PERSON, org1),
-  createItem('item/5', OBJECT_PERSON, org2)
+  person1,
+  person2,
+  person3
 ];
 
 const links: Link<any>[] = [
-  createLink('link/1', LINK_EMPLOYEE, items[0], items[2]),
-  createLink('link/2', LINK_EMPLOYEE, items[0], items[3]),
-  createLink('link/3', LINK_EMPLOYEE, items[0], items[4]),
-  createLink('link/4', LINK_EMPLOYEE, items[1], items[4])
+  createLink('link/1', LINK_EMPLOYEE, org1, person1),
+  createLink('link/2', LINK_EMPLOYEE, org1, person2),
+  createLink('link/3', LINK_EMPLOYEE, org1, person3),
+  createLink('link/4', LINK_EMPLOYEE, org2, person3)
 ];
 
 const rootSelector = createRootSelector(() => items, () => new Event(), null as any);
@@ -140,9 +146,9 @@ describe('Selection', () => {
           .children()
           .query().result
       ).toEqual([
-        items[2],
-        items[3],
-        items[4]
+        person1,
+        person2,
+        person3
       ]);
     });
 
@@ -152,9 +158,41 @@ describe('Selection', () => {
           .children()
           .query().result
       ).toEqual([
-        items[2],
-        items[3]
+        person1,
+        person2
       ]);
+    });
+  });
+
+  describe('parent', () => {
+    test('from multiple items', () => {
+      expect(
+        rootSelector()
+          .filter({ type: OBJECT_PERSON })
+          .parent()
+          .query().result
+      ).toEqual([
+        org1,
+        org2
+      ]);
+    });
+
+    test('from single item', () => {
+      expect(
+        rootSelector({ id: person1.id })
+          .parent()
+          .query().result
+      ).toEqual([
+        org1
+      ]);
+    });
+
+    test('is empty', () => {
+      expect(
+        rootSelector({ id: org1.id })
+          .parent()
+          .query().result
+      ).toEqual([]);
     });
   });
 
@@ -191,9 +229,9 @@ describe('Selection', () => {
           .target()
           .query().result
       ).toEqual([
-        items[2],
-        items[3],
-        items[4]
+        person1,
+        person2,
+        person3
       ]);
     });
 
@@ -204,8 +242,8 @@ describe('Selection', () => {
           .source()
           .query().result
       ).toEqual([
-        items[0],
-        items[1]
+        org1,
+        org2
       ]);
     });
   });
@@ -221,7 +259,7 @@ describe('Selection', () => {
 
       {
         const promise = query.update.waitForCount(1);
-        update.emit([items[2]]);
+        update.emit([person1]);
         await promiseTimeout(promise, 10, new Error('timeout'));
       }
 
@@ -233,7 +271,7 @@ describe('Selection', () => {
 
       {
         const promise = query.update.waitForCount(1);
-        update.emit([items[0]]);
+        update.emit([org1]);
         await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
     });

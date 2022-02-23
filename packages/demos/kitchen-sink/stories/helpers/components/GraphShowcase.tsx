@@ -12,7 +12,11 @@ import { EchoGraph } from '../../../src';
 
 faker.seed(100);
 
-const App = () => {
+interface AppProps {
+  grid?: boolean
+}
+
+const App = ({ grid }: AppProps) => {
   const party = useTestParty();
   const model = useGraphModel(party);
 
@@ -21,15 +25,22 @@ const App = () => {
       model={model}
       itemAdapter={itemAdapter}
       styles={graphStyles}
+      options={{
+        grid
+      }}
     />
   );
 };
 
-export const GraphShowcase = () => {
+/**
+ * Component embedded within MDX.
+ * @constructor
+ */
+export const GraphShowcase = (options: AppProps) => {
   return (
     <ClientProvider>
       <ProfileInitializer>
-        <App />
+        <App {...options} />
       </ProfileInitializer>
     </ClientProvider>
   );

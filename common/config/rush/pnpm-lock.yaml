@@ -390,7 +390,6 @@ importers:
   ../../packages/demos/deprecated-demos:
     specifiers:
       '@babel/core': ~7.13.15
-      '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -425,8 +424,6 @@ importers:
       '@types/node': ^14.0.9
       '@types/pump': ^1.1.0
       '@types/react': ^17.0.24
-      babel-loader: ^8.1.0
-      babel-plugin-add-module-exports: ^1.0.4
       buffer: ^6.0.3
       clsx: ^1.1.0
       debug: ^4.3.3
@@ -439,14 +436,11 @@ importers:
       playwright: ^1.7.0
       pump: ^3.0.0
       react: ^17.0.2
-      react-docgen-typescript-loader: ^3.7.2
       react-dom: ^17.0.2
       react-resize-aware: ^3.1.1
       robotjs: ~0.6.0
-      ts-loader: ~8.1.0
       ts-node: ^9.1.1
       typescript: ^4.5.2
-      webpack: 4.44.2
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -477,7 +471,6 @@ importers:
       react-resize-aware: 3.1.1_react@17.0.2
     devDependencies:
       '@babel/core': 7.13.16
-      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
@@ -490,8 +483,6 @@ importers:
       '@types/node': 14.18.0
       '@types/pump': 1.1.1
       '@types/react': 17.0.37
-      babel-loader: 8.2.3_0c9ed85c987bca43d65931123ef87b6c
-      babel-plugin-add-module-exports: 1.0.4
       buffer: 6.0.3
       dotenv: 8.6.0
       expect: 27.0.6
@@ -500,13 +491,10 @@ importers:
       playwright: 1.17.1
       pump: 3.0.0
       react: 17.0.2
-      react-docgen-typescript-loader: 3.7.2_typescript@4.5.3+webpack@4.44.2
       react-dom: 17.0.2_react@17.0.2
       robotjs: 0.6.0
-      ts-loader: 8.1.0_typescript@4.5.3+webpack@4.44.2
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
-      webpack: 4.44.2
 
   ../../packages/demos/hello-world:
     specifiers:
@@ -538,12 +526,10 @@ importers:
       '@mui/styles': ^5.4.2
       '@mui/system': ^5.4.2
       '@mui/x-data-grid': ^5.5.1
-      '@types/d3': ~7.0.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
       '@types/react': ^17.0.24
       buffer: ^6.0.3
       clsx: ^1.1.0
@@ -553,7 +539,6 @@ importers:
       faker: ^5.1.0
       mocha: ~8.4.0
       playwright: ^1.7.0
-      pump: ^3.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       robotjs: ~0.6.0
@@ -591,12 +576,10 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/esbuild-server': 1.7.9_@types+react@17.0.37
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/d3': 7.0.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
-      '@types/pump': 1.1.1
       '@types/react': 17.0.37
       buffer: 6.0.3
       dotenv: 8.6.0
@@ -604,7 +587,6 @@ importers:
       faker: 5.5.3
       mocha: 8.4.0
       playwright: 1.17.1
-      pump: 3.0.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       robotjs: 0.6.0
@@ -614,7 +596,6 @@ importers:
   ../../packages/demos/kitchen-sink:
     specifiers:
       '@babel/core': ~7.13.15
-      '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -645,14 +626,9 @@ importers:
       '@types/d3': ~7.0.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.isplainobject': ^4.0.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
       '@types/react': ^17.0.24
-      babel-loader: ^8.1.0
-      babel-plugin-add-module-exports: ^1.0.4
       buffer: ^6.0.3
       clsx: ^1.1.0
       debug: ^4.3.3
@@ -663,15 +639,11 @@ importers:
       mobile-detect: ~1.4.5
       mocha: ~8.4.0
       playwright: ^1.7.0
-      pump: ^3.0.0
       react: ^17.0.2
-      react-docgen-typescript-loader: ^3.7.2
       react-dom: ^17.0.2
       robotjs: ~0.6.0
-      ts-loader: ~8.1.0
       ts-node: ^9.1.1
       typescript: ^4.5.2
-      webpack: 4.44.2
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -701,7 +673,6 @@ importers:
       mobile-detect: 1.4.5
     devDependencies:
       '@babel/core': 7.13.16
-      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
@@ -710,29 +681,20 @@ importers:
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.isplainobject': 4.0.6
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
-      '@types/pump': 1.1.1
       '@types/react': 17.0.37
-      babel-loader: 8.2.3_0c9ed85c987bca43d65931123ef87b6c
-      babel-plugin-add-module-exports: 1.0.4
       buffer: 6.0.3
       dotenv: 8.6.0
       expect: 27.0.6
       faker: 5.5.3
       mocha: 8.4.0
       playwright: 1.17.1
-      pump: 3.0.0
       react: 17.0.2
-      react-docgen-typescript-loader: 3.7.2_typescript@4.5.3+webpack@4.44.2
       react-dom: 17.0.2_react@17.0.2
       robotjs: 0.6.0
-      ts-loader: 8.1.0_typescript@4.5.3+webpack@4.44.2
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
-      webpack: 4.44.2
 
   ../../packages/deprecated/bot/bot-deprecated:
     specifiers:
@@ -1098,7 +1060,6 @@ importers:
   ../../packages/devtools/devtools-mesh:
     specifiers:
       '@babel/core': ~7.13.15
-      '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
@@ -1119,17 +1080,13 @@ importers:
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-router': ~5.1.16
       '@types/react-router-dom': ~5.1.7
-      fork-ts-checker-webpack-plugin: ~6.2.5
       react: ^17.0.2
       react-copy-to-clipboard: ~5.0.3
-      react-docgen-typescript-loader: ^3.7.2
       react-dom: ^17.0.2
       react-resize-aware: ^3.1.1
       react-router: ~5.2.1
       react-router-dom: ^5.1.2
-      ts-loader: ~8.1.0
       typescript: ^4.5.2
-      webpack: 4.44.2
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -1149,22 +1106,17 @@ importers:
       react-resize-aware: 3.1.1_react@17.0.2
     devDependencies:
       '@babel/core': 7.13.16
-      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.37
       '@types/react-copy-to-clipboard': 5.0.2
       '@types/react-router': 5.1.17
       '@types/react-router-dom': 5.1.9
-      fork-ts-checker-webpack-plugin: 6.2.13
       react: 17.0.2
-      react-docgen-typescript-loader: 3.7.2_typescript@4.5.3+webpack@4.44.2
       react-dom: 17.0.2_react@17.0.2
       react-router: 5.2.1_react@17.0.2
       react-router-dom: 5.3.0_react@17.0.2
-      ts-loader: 8.1.0_typescript@4.5.3+webpack@4.44.2
       typescript: 4.5.3
-      webpack: 4.44.2
 
   ../../packages/echo/echo-db:
     specifiers:
@@ -2276,7 +2228,6 @@ importers:
       lodash.set: ^4.3.2
       node-fetch: ^2.6.0
       protobufjs: ^6.9.0
-      webpack: 4.44.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
@@ -2299,7 +2250,6 @@ importers:
       '@types/node': 14.18.0
       esbuild: 0.11.23
       expect: 27.0.6
-      webpack: 4.44.2
 
   ../../packages/sdk/react-client:
     specifiers:
@@ -2332,12 +2282,10 @@ importers:
       level-js: ^5.0.2
       react: ^17.0.2
       react-display-name: ^0.2.5
-      react-docgen-typescript-loader: ^3.7.2
       react-dom: ^17.0.2
       react-test-renderer: ^17.0.2
       typescript: ^4.5.2
       use-subscription: ^1.4.1
-      webpack: 4.44.2
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/bot-factory-client': link:../../bot/bot-factory-client
@@ -2370,11 +2318,9 @@ importers:
       fork-ts-checker-webpack-plugin: 6.2.13
       level-js: 5.0.2
       react: 17.0.2
-      react-docgen-typescript-loader: 3.7.2_typescript@4.5.3+webpack@4.44.2
       react-dom: 17.0.2_react@17.0.2
       react-test-renderer: 17.0.2_react@17.0.2
       typescript: 4.5.3
-      webpack: 4.44.2
 
   ../../packages/sdk/react-components:
     specifiers:
@@ -2558,12 +2504,10 @@ importers:
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       assert: ^2.0.0
-      babel-loader: ^8.1.0
       debug: ^4.3.3
       react: ^17.0.2
       react-dom: ^17.0.2
       typescript: ^4.5.2
-      webpack: 4.44.2
     dependencies:
       '@dxos/debug': link:../../common/debug
       '@dxos/registry-client': link:../registry-client
@@ -2579,11 +2523,9 @@ importers:
       '@types/lodash': 4.14.178
       '@types/node': 14.18.0
       '@types/react': 17.0.37
-      babel-loader: 8.2.3_0c9ed85c987bca43d65931123ef87b6c
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       typescript: 4.5.3
-      webpack: 4.44.2
 
   ../../packages/sdk/registry-client:
     specifiers:
@@ -9040,21 +8982,6 @@ packages:
       '@webassemblyjs/ast': 1.9.0
       '@webassemblyjs/wast-parser': 1.9.0
       '@xtuc/long': 4.2.2
-
-  /@webpack-contrib/schema-utils/1.0.0-beta.0_webpack@4.44.2:
-    resolution: {integrity: sha512-LonryJP+FxQQHsjGBi6W786TQB1Oym+agTpY0c+Kj8alnIw+DLUJb6SI8Y1GHGhLCH1yPRrucjObUmxNICQ1pg==}
-    engines: {node: '>= 6.9.0 || >= 8.9.0'}
-    peerDependencies:
-      webpack: ^3.0.0 || ^4.0.0
-    dependencies:
-      ajv: 6.12.6
-      ajv-keywords: 3.5.2_ajv@6.12.6
-      chalk: 2.4.2
-      strip-ansi: 4.0.0
-      text-table: 0.2.0
-      webpack: 4.44.2
-      webpack-log: 1.2.0
-    dev: true
 
   /@wirelineio/registry-client/1.1.0-beta.3:
     resolution: {integrity: sha512-TEXw/RJUJlVMDih/+I4ogILRdAr/XqcOb6+4Y/pCBrUf/BvifG4Spl0JGof+iQmJih4HcM/G/VXz1QF4pTvcPw==}
@@ -17624,6 +17551,7 @@ packages:
       big.js: 5.2.2
       emojis-list: 3.0.0
       json5: 2.2.0
+    dev: false
 
   /locate-path/2.0.0:
     resolution: {integrity: sha1-K1aLJl7slExtnA3pw9u7ygNUzY4=}
@@ -17770,13 +17698,6 @@ packages:
       success-symbol: 0.1.0
     dev: true
 
-  /log-symbols/2.2.0:
-    resolution: {integrity: sha512-VeIAFslyIerEJLXHziedo2basKbMKtTw3vfn5IzG0XTjhAVEJyNHnL2p7vc+wBDSdQuUpNw3M2u6xb9QsAY5Eg==}
-    engines: {node: '>=4'}
-    dependencies:
-      chalk: 2.4.2
-    dev: true
-
   /log-symbols/4.0.0:
     resolution: {integrity: sha512-FN8JBzLx6CzeMrB0tg6pqlGU1wCrXW+ZXGH481kfsBqer0hToTIiHdjH4Mq8xJUbvATujKCvaREGWpGUionraA==}
     engines: {node: '>=10'}
@@ -17804,14 +17725,6 @@ packages:
     resolution: {integrity: sha512-G6A/nJLRgWOuuwdNuA6koovfEV1YpqqAG4pRUlFaz3jj2QNZ8M4vBqnVA+HBTmU/AMNUtlOsMmSpF6NyOjztbA==}
     engines: {node: '>= 0.6.0'}
     dev: false
-
-  /loglevelnext/1.0.5:
-    resolution: {integrity: sha512-V/73qkPuJmx4BcBF19xPBr+0ZRVBhc4POxvZTZdMeXpJ4NItXSJ/MSwuFT0kQJlCbXvdlZoQQ/418bS1y9Jh6A==}
-    engines: {node: '>= 6'}
-    dependencies:
-      es6-symbol: 3.1.3
-      object.assign: 4.1.2
-    dev: true
 
   /long/4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
@@ -21348,27 +21261,6 @@ packages:
     resolution: {integrity: sha512-I+vcaK9t4+kypiSgaiVWAipqHRXYmZIuAiS8vzFvXHHXVigg/sMKwlRgLy6LH2i3rmP+0Vzfl5lFsFRwF1r3pg==}
     dev: false
 
-  /react-docgen-typescript-loader/3.7.2_typescript@4.5.3+webpack@4.44.2:
-    resolution: {integrity: sha512-fNzUayyUGzSyoOl7E89VaPKJk9dpvdSgyXg81cUkwy0u+NBvkzQG3FC5WBIlXda0k/iaxS+PWi+OC+tUiGxzPA==}
-    peerDependencies:
-      typescript: '*'
-    dependencies:
-      '@webpack-contrib/schema-utils': 1.0.0-beta.0_webpack@4.44.2
-      loader-utils: 1.4.0
-      react-docgen-typescript: 1.22.0_typescript@4.5.3
-      typescript: 4.5.3
-    transitivePeerDependencies:
-      - webpack
-    dev: true
-
-  /react-docgen-typescript/1.22.0_typescript@4.5.3:
-    resolution: {integrity: sha512-MPLbF8vzRwAG3GcjdL+OHQlhgtWsLTXs+7uJiHfEeT3Ur7IsZaNYqRTLQ9sj2nB6M6jylcPCeCmH7qbszJmecg==}
-    peerDependencies:
-      typescript: '>= 3.x'
-    dependencies:
-      typescript: 4.5.3
-    dev: true
-
   /react-dom/17.0.2_react@17.0.2:
     resolution: {integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==}
     peerDependencies:
@@ -23930,22 +23822,6 @@ packages:
       typescript: 4.5.3
       yargs-parser: 20.2.9
 
-  /ts-loader/8.1.0_typescript@4.5.3+webpack@4.44.2:
-    resolution: {integrity: sha512-YiQipGGAFj2zBfqLhp28yUvPP9jUGqHxRzrGYuc82Z2wM27YIHbElXiaZDc93c3x0mz4zvBmS6q/DgExpdj37A==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      typescript: '*'
-      webpack: '*'
-    dependencies:
-      chalk: 4.1.2
-      enhanced-resolve: 4.5.0
-      loader-utils: 2.0.2
-      micromatch: 4.0.4
-      semver: 7.3.5
-      typescript: 4.5.3
-      webpack: 4.44.2
-    dev: true
-
   /ts-morph/10.0.2:
     resolution: {integrity: sha512-TVuIfEqtr9dW25K3Jajqpqx7t/zLRFxKu2rXQZSDjTm4MO4lfmuj1hn8WEryjeDDBFcNOCi+yOmYUYR4HucrAg==}
     dependencies:
@@ -24873,16 +24749,6 @@ packages:
     dependencies:
       loader-utils: 1.2.3
       webpack: 4.44.2
-    dev: true
-
-  /webpack-log/1.2.0:
-    resolution: {integrity: sha512-U9AnICnu50HXtiqiDxuli5gLB5PGBo7VvcHx36jRZHwK4vzOYLbImqT4lwWwoMHdQWwEKw736fCHEekokTEKHA==}
-    engines: {node: '>=6'}
-    dependencies:
-      chalk: 2.4.2
-      log-symbols: 2.2.0
-      loglevelnext: 1.0.5
-      uuid: 3.4.0
     dev: true
 
   /webpack-log/2.0.0:
