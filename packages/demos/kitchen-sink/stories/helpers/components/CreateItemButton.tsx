@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { MouseEvent, useState } from 'react';
 
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
@@ -12,7 +12,7 @@ import { itemAdapter } from '../testing';
 import { TypeSelector } from './TypeSelector';
 
 interface CreateItemButtonProps {
-  onCreate: (type: string, title: string) => void
+  onCreate: (type?: string, title?: string) => void
 }
 
 export const CreateItemButton = ({
@@ -20,6 +20,14 @@ export const CreateItemButton = ({
 }: CreateItemButtonProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [type, setType] = useState<string>(TestType.Org);
+
+  const handleClick = (event: MouseEvent) => {
+    if (event.metaKey) {
+      onCreate();
+    } else {
+      setOpen(true);
+    }
+  };
 
   const handleCreate = (title: string) => {
     setOpen(false);
@@ -43,7 +51,7 @@ export const CreateItemButton = ({
       </CreateItemDialog>
 
       <Fab
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
         size='small'
         sx={{
           position: 'fixed',
