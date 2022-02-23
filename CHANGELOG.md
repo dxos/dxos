@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.27.7](https://www.github.com/dxos/protocols/compare/v2.27.6...v2.27.7) (2022-02-23)
+
+
+### Features
+
+* add mdx support ([#972](https://www.github.com/dxos/protocols/issues/972)) ([7c445c8](https://www.github.com/dxos/protocols/commit/7c445c8b28db908b965c314ef4d36fc3f9fa4f29))
+
 ### [2.27.6](https://www.github.com/dxos/protocols/compare/v2.27.5...v2.27.6) (2022-02-22)
 
 
