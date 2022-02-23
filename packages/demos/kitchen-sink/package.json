@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "2.27.6",
+  "version": "2.27.7",
   "private": true,
   "description": "Comprehensive set of demos.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",

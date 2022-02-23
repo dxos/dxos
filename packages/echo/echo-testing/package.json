@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-testing",
-  "version": "2.27.6",
+  "version": "2.27.7",
   "description": "ECHO testing utils.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
   "bugs": {

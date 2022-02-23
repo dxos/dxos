@@ -16,13 +16,13 @@ const BOT_DXN = 'dxos:type.bot';
 
 export const createMockRegistryWithBots = () => {
   const types = createMockTypes();
-  const botTypeRecord = types.find(type => type.messageName === 'bot');
+  const botTypeRecord = types.find(type => type.messageName === '.dxos.type.Bot');
   assert(botTypeRecord, 'Bot type not found: bot');
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
     type: '.dxos.type.Bot',
     data: {
-      localPath: './stories/bots/start-story-bot'
+      dxn: 'dxos:test.bot'
     }
   });
   const botTypeResourceRecord = {
@@ -39,6 +39,6 @@ export const createMockRegistryWithBots = () => {
     ...records,
     botRecord,
     botTypeResourceRecord
-  ]);
+  ], types);
   return memoryRegistryClient;
 };
