@@ -29,7 +29,7 @@ export const ViewContainer = ({
   selected,
   onCreateItem
 }: ViewContainerProps) => {
-  // TODO(burdon): Views lose state but graph has terrible performance if other views are updated.
+  // TODO(burdon): Views lose state when not rendered, but graph has poor performance if other views are updated.
   return (
     <>
       {value === ViewType.List && (
