@@ -7,11 +7,6 @@ import urljoin from 'url-join';
 
 // TODO(burdon): Factor out to debug package (gravity?)
 
-const config = {
-  // esbuild-server book
-  baseUrl: 'http://localhost:8080/#/'
-};
-
 /**
  * https://playwright.dev/docs/api/class-playwright
  */

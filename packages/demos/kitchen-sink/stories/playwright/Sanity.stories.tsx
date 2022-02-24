@@ -8,15 +8,11 @@ export default {
   title: 'Testing/Sanity'
 };
 
-interface SanityProps {
-  config: any
-}
-
 /**
  * Playwright tests.
  * @constructor
  */
-export const Primary = ({}: SanityProps) => {
+export const Primary = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<{ value: string }>();
   const handleClick = () => {

@@ -30,7 +30,7 @@ describe('Sanity test.', function () {
 
   it('Starts the test', async () => {
     const page = await launcher.browser.newPage();
-    await page.goto(launcher.url('/Primary'))
+    await page.goto(launcher.url('/Primary'));
 
     const value = 'sanity test';
     const input = await page.locator('input[data-id="test-input"]');
