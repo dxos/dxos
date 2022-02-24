@@ -629,6 +629,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
+      '@types/url-join': ~4.0.1
       buffer: ^6.0.3
       clsx: ^1.1.0
       debug: ^4.3.3
@@ -644,6 +645,7 @@ importers:
       robotjs: ~0.6.0
       ts-node: ^9.1.1
       typescript: ^4.5.2
+      url-join: ^4.0.1
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -671,6 +673,7 @@ importers:
       debug: 4.3.3
       immutability-helper: 3.1.1
       mobile-detect: 1.4.5
+      url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/async': link:../../common/async
@@ -684,6 +687,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
+      '@types/url-join': 4.0.1
       buffer: 6.0.3
       dotenv: 8.6.0
       expect: 27.0.6
@@ -19491,7 +19495,7 @@ packages:
   /original/1.0.2:
     resolution: {integrity: sha512-hyBVl6iqqUOJ8FqRe+l/gS8H+kKYjrEndd5Pm1MfBtsEKA038HkkdbAl/72EAXGyonD/PFsvmVG+EvcIpliMBg==}
     dependencies:
-      url-parse: 1.5.3
+      url-parse: 1.5.10
     dev: false
 
   /os-browserify/0.3.0:
@@ -22666,7 +22670,7 @@ packages:
       faye-websocket: 0.11.4
       inherits: 2.0.4
       json3: 3.3.3
-      url-parse: 1.5.3
+      url-parse: 1.5.10
     dev: false
 
   /sockjs/0.3.24:
@@ -24300,8 +24304,8 @@ packages:
     dependencies:
       prepend-http: 2.0.0
 
-  /url-parse/1.5.3:
-    resolution: {integrity: sha512-IIORyIQD9rvj0A4CLWsHkBBJuNqWpFQe224b6j9t/ABmquIS0qDU2pY6kl6AuOrL5OkCXHMCFNe1jBcuAggjvQ==}
+  /url-parse/1.5.10:
+    resolution: {integrity: sha512-WypcfiRhfeUP9vvF0j6rw0J3hrWrw6iZv3+22h6iRMJ/8z1Tj6XfLP4DsUix5MhMPnXpiHDoKyoZ/bdCkwBCiQ==}
     dependencies:
       querystringify: 2.2.0
       requires-port: 1.0.0
