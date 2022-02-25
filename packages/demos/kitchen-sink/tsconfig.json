@@ -24,8 +24,7 @@
   "include": [
     "src",
     "stories",
-    "playwright",
-    "grid"
+    "playwright"
   ],
   "references": [
     {
