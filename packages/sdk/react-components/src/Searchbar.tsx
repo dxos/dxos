@@ -54,7 +54,6 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
         autoFocus
         spellCheck={false}
         placeholder={placeholder}
-        inputProps={{ 'aria-label': 'search' }}
         value={text || ''}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

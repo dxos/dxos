@@ -36,6 +36,7 @@ export const AppBar = ({
       <MuiAppBar>
         <Toolbar>
           <ToggleButton
+            data-id='test-button-selection'
             size='small'
             value='check'
             selected={advanced}

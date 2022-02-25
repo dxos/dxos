@@ -5,6 +5,7 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
+import { TestType } from '../../src/testing';
 import { Launcher } from '../util';
 
 const config = {
@@ -13,6 +14,9 @@ const config = {
 };
 
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
+
+const defaultSelectionText =
+  `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })`;
 
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
@@ -40,34 +44,7 @@ describe('Grid demo', function () {
 
     await launcher.open();
     await launcher.page.goto(launcher.url(url));
-
     return launcher;
-  };
-
-  /**
-   * Create grid of launchers.
-   */
-  const createGrid = async (url: string, [rows, columns]: [number, number]): Promise<Launcher[]> => {
-    const launchers = [];
-
-    const { width, height } = robot.getScreenSize();
-    const size = {
-      width: Math.round((width - (columns - 1) * spacing) / columns),
-      height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
-    };
-
-    for (let row = 0; row < rows; row++) {
-      for (let column = 0; column < columns; column++) {
-        const launcher = await createLauncher(url, {
-          x: column * (size.width + spacing),
-          y: marginTop + row * (size.height + spacing)
-        }, size);
-
-        launchers.push(launcher);
-      }
-    }
-
-    return launchers;
   };
 
   /**
@@ -81,10 +58,6 @@ describe('Grid demo', function () {
         if (invitation.indexOf('encodedInvitation') !== -1) {
           await invitee.page.fill('input[data-id=test-input-join]', invitation);
           await invitee.page.click('button[data-id=test-button-join]');
-
-          // Show graph.
-          await invitee.page.click('button[data-id=test-button-view-graph]');
-
           resolve(true);
         }
       });
@@ -96,30 +69,75 @@ describe('Grid demo', function () {
     });
   };
 
+  /**
+   * Generates iterator of browser launcher promises.
+   * NOTE: Synchronous generator of promises vs async generator (async function* {})
+   */
+  function * createGrid (url: string, [rows, columns]: [number, number]): Generator<Promise<Launcher>> {
+    const { width, height } = robot.getScreenSize();
+    const size = {
+      width: Math.round((width - (columns - 1) * spacing) / columns),
+      height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
+    };
+
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        const launcher = createLauncher(url, {
+          x: column * (size.width + spacing),
+          y: marginTop + row * (size.height + spacing)
+        }, size);
+
+        yield launcher;
+      }
+    }
+  }
+
   /* eslint-disable jest/expect-expect */
   it('Opens grid', async () => {
-    // TODO(burdon): Create generator so don't have to wait until each load.
-    const launchers = await createGrid('/Secondary', [rows, columns]);
+    const promises = createGrid('/Secondary', [rows, columns]);
 
-    // Create initial party.
-    const first = launchers[0];
-    await first.page.click('button[data-id=test-button-create]');
+    let page = 0;
+    let graph: Launcher | undefined;
+    let previous: Launcher | undefined;
+    for await (const launcher of promises) {
+      page++;
+      if (!previous) {
+        await launcher.page.click('button[data-id=test-button-create]');
+      } else {
+        // Do invitation.
+        await invite(previous, launcher);
 
-    // Show cards.
-    await first.page.click('button[data-id=test-button-view-board]');
+        // Select view.
+        const view = (page === 3) ? 'board' : 'graph'; // faker.random.arrayElement(['list', 'board', 'graph']);
+        await launcher.page.click(`button[data-id=test-button-view-${view}]`);
 
-    // Invite successive peers.
-    for await (const i of Array.from(Array(launchers.length - 1)).map((_, i) => i)) {
-      await invite(launchers[i], launchers[i + 1]);
+        // Type query.
+        if (page === 2) {
+          graph = launcher;
+        }
+      }
+
+      previous = launcher;
     }
 
-    // Create items.
-    let count = 10;
-    const i = setInterval(async () => {
-      await first.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
-      if (--count === 0) {
-        clearInterval(i);
-      }
-    }, 500);
+    // Select items.
+    if (graph) {
+      await graph.page.click('button[data-id=test-button-selection]');
+
+      let i = 0;
+      const lines = defaultSelectionText.split('\n');
+      const interval = setInterval(async () => {
+        if (i >= lines.length) {
+          clearInterval(interval);
+        } else {
+          const text = lines[i++];
+          // TODO(burdon): May lose focus when other window opens. Type new stuff each time.
+          await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
+
+          // Generate data.
+          await graph!.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
+        }
+      }, 2000);
+    }
   });
 });

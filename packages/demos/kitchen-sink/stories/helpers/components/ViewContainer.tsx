@@ -33,7 +33,7 @@ export const ViewContainer = ({
   return (
     <>
       {value === ViewType.List && (
-        <BoxContainer expand>
+        <BoxContainer expand column>
           <EchoList
             itemAdapter={itemAdapter}
             items={items}
