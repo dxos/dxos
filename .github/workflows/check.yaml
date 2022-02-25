@@ -113,7 +113,7 @@ jobs:
 
           # Test the Tasks App
           echo "::group::tutorials-tasks-app"
-          cd packages/tutorials/tutorials-tasks-app
+          cd packages/demos/tutorials-tasks-app
           ./scripts/start-and-wait.sh
           pnpm test:playwright
           echo "::endgroup::"

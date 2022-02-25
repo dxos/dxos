@@ -34,7 +34,7 @@ jobs:
         cd protocols
         set -e
 
-        cd packages/tutorials/tutorials-tasks-app/
+        cd packages/demos/tutorials-tasks-app/
         rushx pack:app
 
         # Undo package.json changes that are made for packing purposes
@@ -56,9 +56,9 @@ jobs:
         git config --global user.email "ci@dxos.org"
         git config --global user.name "ci"
 
-        cp -R protocols/packages/tutorials/tutorials-tasks-app/package/* tutorials-tasks-app/
+        cp -R protocols/packages/demos/tutorials-tasks-app/package/* tutorials-tasks-app/
         # copy dot files as well
-        cp -R protocols/packages/tutorials/tutorials-tasks-app/package/.[a-zA-Z0-9]* tutorials-tasks-app
+        cp -R protocols/packages/demos/tutorials-tasks-app/package/.[a-zA-Z0-9]* tutorials-tasks-app
         cd tutorials-tasks-app
         git status
         git checkout -b ci/release

@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.27.8](https://www.github.com/dxos/protocols/compare/v2.27.7...v2.27.8) (2022-02-25)
+
+
+### Features
+
+* demo with auto-complete. ([#980](https://www.github.com/dxos/protocols/issues/980)) ([8a03a5c](https://www.github.com/dxos/protocols/commit/8a03a5c4d16c705b4f9967cb45db6e93359767d8))
+
+
+### Bug Fixes
+
+* Pipeline use message timeframe ([#986](https://www.github.com/dxos/protocols/issues/986)) ([322d137](https://www.github.com/dxos/protocols/commit/322d137fb3f36abc02972258bfe5ace4e7f1e006))
+
 ### [2.27.7](https://www.github.com/dxos/protocols/compare/v2.27.6...v2.27.7) (2022-02-23)
 
 
