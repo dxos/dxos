@@ -19,7 +19,7 @@ describe('Grid demo', function () {
 
   const spacing = 16;
   const marginTop = 24; // OSX toolbar.
-  const [rows, columns] = [2, 4]; // TODO(burdon): argv.
+  const [rows, columns] = [2, 3]; // TODO(burdon): argv.
 
   /**
    * Create positioned launcher.
@@ -80,12 +80,10 @@ describe('Grid demo', function () {
         const invitation = msg.text();
         if (invitation.indexOf('encodedInvitation') !== -1) {
           await invitee.page.fill('input[data-id=test-input-join]', invitation);
-          const buttonJoin = await invitee.page.locator('button[data-id=test-button-join]');
-          await buttonJoin.click();
+          await invitee.page.click('button[data-id=test-button-join]');
 
           // Show graph.
-          const buttonView = await invitee.page.locator('button[data-id=test-button-view-graph]');
-          await buttonView.click();
+          await invitee.page.click('button[data-id=test-button-view-graph]');
 
           resolve(true);
         }
@@ -93,28 +91,35 @@ describe('Grid demo', function () {
 
       // Click share.
       setImmediate(async () => {
-        const buttonShare = await inviter.page.locator('button[data-id=test-button-share]');
-        await buttonShare.click();
+        await inviter.page.click('button[data-id=test-button-share]');
       });
     });
   };
 
   /* eslint-disable jest/expect-expect */
   it('Opens grid', async () => {
-    // TODO(burdon): Create generator so don't have to wait.
+    // TODO(burdon): Create generator so don't have to wait until each load.
     const launchers = await createGrid('/Secondary', [rows, columns]);
 
+    // Create initial party.
     const first = launchers[0];
-    const buttonCreate = await first.page.locator('button[data-id=test-button-create]');
-    await buttonCreate.click();
+    await first.page.click('button[data-id=test-button-create]');
 
     // Show cards.
-    const buttonView = await first.page.locator('button[data-id=test-button-view-board]');
-    await buttonView.click();
+    await first.page.click('button[data-id=test-button-view-board]');
 
     // Invite successive peers.
     for await (const i of Array.from(Array(launchers.length - 1)).map((_, i) => i)) {
       await invite(launchers[i], launchers[i + 1]);
     }
+
+    // Create items.
+    let count = 10;
+    const i = setInterval(async () => {
+      await first.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
+      if (--count === 0) {
+        clearInterval(i);
+      }
+    }, 500);
   });
 });
