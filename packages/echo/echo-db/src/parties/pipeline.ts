@@ -142,7 +142,7 @@ export class Pipeline {
                   seq: block.seq,
                   feedKey: block.key,
                   memberKey: memberKey.asUint8Array(),
-                  timeframe: new Timeframe()
+                  timeframe: message.echo.timeframe ?? new Timeframe()
                 },
                 data: message.echo
               }));
