@@ -9,13 +9,13 @@ DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
 for APP_PATH in \
   "packages/demos/hello-world" \
   "packages/demos/kitchen-sink" \
+  "packages/demos/tutorials-tasks-app" \
   "packages/devtools/devtools" \
   "packages/devtools/devtools-mesh" \
   "packages/sdk/react-client" \
   "packages/sdk/react-components" \
   "packages/sdk/react-framework" \
   "packages/sdk/react-registry-client" \
-  "packages/tutorials/tutorials-tasks-app" \
   "packages/wallet/wallet-playground"
 do
   cd $APP_PATH
