@@ -20,6 +20,7 @@ export const createMockRegistryWithBots = () => {
   assert(botTypeRecord, 'Bot type not found: bot');
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
+    dxn: DXN.fromDomainName('dxos', 'test.bot'),
     type: '.dxos.type.Bot',
     data: {
       dxn: 'dxos:test.bot'

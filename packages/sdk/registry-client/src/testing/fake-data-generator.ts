@@ -99,14 +99,15 @@ export const createMockResourceRecord = ({
     dataRaw: new Uint8Array(),
     data: sanitizeExtensionData(data, type.cid)
   };
-
+  
   return {
     resource: {
       id: dxn ?? createDxn(),
       tags: {
         latest: record.cid
       },
-      versions: {}
+      versions: {},
+      type: type.cid
     },
     record: record
   };
