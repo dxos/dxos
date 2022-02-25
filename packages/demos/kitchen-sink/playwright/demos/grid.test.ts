@@ -14,7 +14,7 @@ const config = {
 
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 
-describe('Grid demo', async function () {
+describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
 
   const spacing = 16;
@@ -34,11 +34,13 @@ describe('Grid demo', async function () {
       // https://peter.sh/experiments/chromium-command-line-switches
       args: [
         `--window-position=${position.x},${position.y}`,
-        `--window-size=${size.width},${size.height}`,
+        `--window-size=${size.width},${size.height}`
       ]
     });
+
     await launcher.open();
-    launcher.page.goto(launcher.url(url));
+    await launcher.page.goto(launcher.url(url));
+
     return launcher;
   };
 
@@ -52,7 +54,7 @@ describe('Grid demo', async function () {
     const size = {
       width: Math.round((width - (columns - 1) * spacing) / columns),
       height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
-    }
+    };
 
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
@@ -65,14 +67,15 @@ describe('Grid demo', async function () {
       }
     }
 
-    return Promise.all(launchers);
+    return launchers;
   };
 
   /**
    * Create and process invitation.
    */
   const invite = async (inviter: Launcher, invitee: Launcher) => {
-    return new Promise(async (resolve) => {
+    return new Promise((resolve) => {
+      // Wait for console message with invitation.
       inviter.page.on('console', async (msg) => {
         const invitation = msg.text();
         if (invitation.indexOf('encodedInvitation') !== -1) {
@@ -88,12 +91,17 @@ describe('Grid demo', async function () {
         }
       });
 
-      const buttonShare = await inviter.page.locator('button[data-id=test-button-share]');
-      await buttonShare.click();
+      // Click share.
+      setImmediate(async () => {
+        const buttonShare = await inviter.page.locator('button[data-id=test-button-share]');
+        await buttonShare.click();
+      });
     });
   };
 
+  /* eslint-disable jest/expect-expect */
   it('Opens grid', async () => {
+    // TODO(burdon): Create generator so don't have to wait.
     const launchers = await createGrid('/Secondary', [rows, columns]);
 
     const first = launchers[0];
@@ -105,7 +113,7 @@ describe('Grid demo', async function () {
     await buttonView.click();
 
     // Invite successive peers.
-    for await (let i of Array.from(Array(launchers.length - 1)).map((_, i) => i)) {
+    for await (const i of Array.from(Array(launchers.length - 1)).map((_, i) => i)) {
       await invite(launchers[i], launchers[i + 1]);
     }
   });
