@@ -21,9 +21,11 @@ const defaultSelectionText =
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
 
-  const spacing = 16;
+  const spacing = 8;
   const marginTop = 24; // OSX toolbar.
-  const [rows, columns] = [2, 3]; // TODO(burdon): argv.
+  const { width, height } = robot.getScreenSize();
+  const minSize = { width: 750, height: 500 };
+  const [rows, columns] = [Math.floor(height / minSize.height), Math.floor(width / minSize.width)];
 
   /**
    * Create positioned launcher.
@@ -63,7 +65,6 @@ describe('Grid demo', function () {
    * NOTE: Synchronous generator of promises vs async generator (async function* {})
    */
   function * createGrid (url: string, [rows, columns]: [number, number]): Generator<Promise<Launcher>> {
-    const { width, height } = robot.getScreenSize();
     const size = {
       width: Math.round((width - (columns - 1) * spacing) / columns),
       height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
@@ -125,13 +126,11 @@ describe('Grid demo', function () {
           // Generate data.
           await graph!.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
 
-          // TODO(burdon): May lose focus when other window opens. Type new stuff each time.
-          setTimeout(async () => {
-            const text = lines[i++];
-            await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
-          }, 100);
+          // NOTE: May lose focus when other window opens.
+          const text = lines[i++];
+          await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
         }
-      }, 2000);
+      }, 5000);
     }
   });
 });
