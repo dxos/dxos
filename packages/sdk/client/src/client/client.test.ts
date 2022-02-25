@@ -217,10 +217,10 @@ describe('Client', () => {
         });
 
         // The preference can be changed and synced back.
-        await invitee.halo.setGlobalPreference('DXNSAccount', '123')
+        await invitee.halo.setGlobalPreference('DXNSAccount', '123');
         await waitForExpect(async () => {
           expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
-        }, 10_000, 100)
+        }, 10_000, 100);
       }).timeout(10_000);
     });
 
