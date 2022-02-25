@@ -16,7 +16,7 @@ const config = {
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 
 const defaultSelectionText =
-  `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })`;
+  `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })\n.children()`;
 
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
@@ -51,22 +51,11 @@ describe('Grid demo', function () {
    * Create and process invitation.
    */
   const invite = async (inviter: Launcher, invitee: Launcher) => {
-    return new Promise((resolve) => {
-      // Wait for console message with invitation.
-      inviter.page.on('console', async (msg) => {
-        const invitation = msg.text();
-        if (invitation.indexOf('encodedInvitation') !== -1) {
-          await invitee.page.fill('input[data-id=test-input-join]', invitation);
-          await invitee.page.click('button[data-id=test-button-join]');
-          resolve(true);
-        }
-      });
+    await inviter.page.click('button[data-id=test-button-share]');
 
-      // Click share.
-      setImmediate(async () => {
-        await inviter.page.click('button[data-id=test-button-share]');
-      });
-    });
+    const invitation = await inviter.page.evaluate(() => navigator.clipboard.readText());
+    await invitee.page.fill('input[data-id=test-input-join]', invitation);
+    await invitee.page.click('button[data-id=test-button-join]');
   };
 
   /**
@@ -108,9 +97,11 @@ describe('Grid demo', function () {
         await invite(previous, launcher);
 
         // Select view.
-        // TODO(burdon): Scroll board.
         const view = (page === 3) ? 'board' : 'graph'; // faker.random.arrayElement(['list', 'board', 'graph']);
         await launcher.page.click(`button[data-id=test-button-view-${view}]`);
+
+        // TODO(burdon): Scroll board.
+        // await launcher.page.locator('.MuiGrid-item:nth-child(5)').scrollIntoViewIfNeeded();
 
         // Type query.
         if (page === 2) {

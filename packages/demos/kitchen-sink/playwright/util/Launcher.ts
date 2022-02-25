@@ -25,6 +25,10 @@ export class Launcher {
     return this._browser!;
   }
 
+  get context (): BrowserContext {
+    return this._context!;
+  }
+
   get page (): Page {
     return this._page!;
   }
@@ -37,6 +41,7 @@ export class Launcher {
     // https://playwright.dev/docs/api/class-browsertype#browser-type-launch
     this._browser = await this._type.launch(this._launchOptions);
     this._context = await this._browser.newContext({ viewport: null });
+    await this._context.grantPermissions(['clipboard-write', 'clipboard-read']);
     this._page = await this._context.newPage();
   }
 
