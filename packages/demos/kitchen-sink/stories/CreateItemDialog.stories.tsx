@@ -28,14 +28,14 @@ export const Primary = () => {
 };
 
 export const Secondary = () => {
-  const handleCreate = (type: string, title: string) => {
+  const handleCreate = (type?: string, title?: string) => {
     console.log(type, title);
   };
 
   return (
     <FullScreen>
       <CreateItemButton
-        onCreate={(type: string, title: string) => handleCreate(type, title)}
+        onCreate={(type?: string, title?: string) => handleCreate(type, title)}
       />
     </FullScreen>
   );
