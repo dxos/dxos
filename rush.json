@@ -808,7 +808,7 @@
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",
-      "projectFolder": "packages/tutorials/tutorials-tasks-app"
+      "projectFolder": "packages/demos/tutorials-tasks-app"
     },
 
     //
