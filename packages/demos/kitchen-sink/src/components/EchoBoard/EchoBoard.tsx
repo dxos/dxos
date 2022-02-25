@@ -32,7 +32,8 @@ export const EchoBoard = ({
       sx={{
         display: 'flex',
         padding: 1,
-        overflow: 'scroll'
+        overflow: 'scroll',
+        justifyContent: 'center'
       }}
     >
       {items.map(item => {
