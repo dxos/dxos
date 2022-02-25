@@ -51,6 +51,8 @@ export const CreateItemButton = ({
       </CreateItemDialog>
 
       <Fab
+        data-id='test-button-create'
+        color='primary'
         onClick={handleClick}
         size='small'
         sx={{

@@ -17,7 +17,10 @@ export const defaultTheme = {
     MuiAppBar: {
       defaultProps: {
         elevation: 0
-      },
+      }
+    },
+
+    MuiToolbar: {
       styleOverrides: {
         root: {
           backgroundColor: colors.blueGrey[50]

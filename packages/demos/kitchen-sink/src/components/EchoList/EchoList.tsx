@@ -4,11 +4,12 @@
 
 import React from 'react';
 
-import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { BoxContainer } from '../../components';
 import { ItemAdapter } from '../adapter';
 
 export interface EchoListProps {
@@ -21,39 +22,42 @@ export const EchoList = ({
   itemAdapter
 }: EchoListProps) => {
   return (
-    <Box sx={{
-      display: 'flex',
-      flex: 1,
-      overflowX: 'hidden',
-      overflowY: 'scroll'
-    }}>
-      <List
-        dense
-        disablePadding
-        sx={{
-          width: '100%'
-        }}
-      >
-        {items.map((item) => {
-          const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
-          return (
-            <ListItemButton
-              key={item.id}
-              dense
-            >
-              {Icon && (
-                <ListItemIcon>
-                  <Icon />
-                </ListItemIcon>
-              )}
-              <ListItemText
-                primary={itemAdapter.title(item)}
-                secondary={itemAdapter.description(item)}
-              />
-            </ListItemButton>
-          );
-        })}
-      </List>
-    </Box>
+    <BoxContainer expand column>
+      <BoxContainer expand scrollY>
+        <List
+          dense
+          disablePadding
+          sx={{
+            width: '100%'
+          }}
+        >
+          {items.map((item) => {
+            const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
+            return (
+              <ListItemButton
+                key={item.id}
+                dense
+              >
+                {Icon && (
+                  <ListItemIcon>
+                    <Icon />
+                  </ListItemIcon>
+                )}
+                <ListItemText
+                  primary={itemAdapter.title(item)}
+                  secondary={itemAdapter.description(item)}
+                />
+              </ListItemButton>
+            );
+          })}
+        </List>
+      </BoxContainer>
+
+      <Toolbar>
+        <Typography>
+          {items?.length} Items.
+        </Typography>
+      </Toolbar>
+    </BoxContainer>
   );
 };
