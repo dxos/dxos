@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { Launcher } from './util';
+import { Launcher } from '../util';
 
 const config = {
   // esbuild-server book

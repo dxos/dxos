@@ -17,12 +17,12 @@
     "book": "esbuild-server book --mdx",
     "build": "tsc --noEmit && npm run book -- --build",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
-    "demo:grid": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
+    "demo:grid": "mocha -r ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
     "test": "exit 0",
-    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
+    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/tests/*.test.ts'",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [

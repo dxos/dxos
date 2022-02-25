@@ -79,6 +79,7 @@ export const AppBar = ({
 
           {onInvite && (
             <IconButton
+              data-id='test-button-share'
               size='small'
               sx={{ marginLeft: 2 }}
               onClick={onInvite}

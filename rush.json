@@ -799,10 +799,6 @@
     //
 
     {
-      "packageName": "@dxos/deprecated-demos",
-      "projectFolder": "packages/demos/deprecated-demos"
-    },
-    {
       "packageName": "@dxos/hello-world",
       "projectFolder": "packages/demos/hello-world"
     },
