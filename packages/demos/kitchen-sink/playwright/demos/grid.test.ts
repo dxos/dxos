@@ -108,6 +108,7 @@ describe('Grid demo', function () {
         await invite(previous, launcher);
 
         // Select view.
+        // TODO(burdon): Scroll board.
         const view = (page === 3) ? 'board' : 'graph'; // faker.random.arrayElement(['list', 'board', 'graph']);
         await launcher.page.click(`button[data-id=test-button-view-${view}]`);
 
@@ -130,12 +131,14 @@ describe('Grid demo', function () {
         if (i >= lines.length) {
           clearInterval(interval);
         } else {
-          const text = lines[i++];
-          // TODO(burdon): May lose focus when other window opens. Type new stuff each time.
-          await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
-
           // Generate data.
           await graph!.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
+
+          // TODO(burdon): May lose focus when other window opens. Type new stuff each time.
+          setTimeout(async () => {
+            const text = lines[i++];
+            await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
+          }, 100);
         }
       }, 2000);
     }
