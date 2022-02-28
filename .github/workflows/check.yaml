@@ -135,5 +135,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GHR_COMPRESS: xz
-          GHR_PATH: packages/devtools/devtools-extension/dist
+          GHR_PATH: packages/devtools/devtools-extension/dist/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
