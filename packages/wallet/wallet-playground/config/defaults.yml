@@ -1,4 +1,8 @@
-app:
-  title: "Wallet Playground App"
-system:
-  remote: true
+version: 1
+
+runtime:
+  props:
+    title: 'Wallet Playground App'
+
+  client:
+    mode: 'remote'

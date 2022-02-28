@@ -68,7 +68,7 @@ describe('Signatures', () => {
     await client.halo.addKeyRecord({
       publicKey: PublicKey.from(decodeAddress(keypair.address)),
       secretKey: Buffer.from(uri),
-      type: KeyType.DXNS
+      type: KeyType.DXNS_ADDRESS
     });
   });
 
@@ -100,7 +100,7 @@ describe('Signatures', () => {
 
   it('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, keypair.address) });
+      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, keypair.address, apiPromise.registry) });
     };
     const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
 

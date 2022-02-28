@@ -4,6 +4,7 @@
 
 import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair, SubmittableExtrinsic } from '@polkadot/api/types';
+import { Address } from '@polkadot/types/interfaces';
 import { Event, EventRecord } from '@polkadot/types/interfaces/system';
 import { ISubmittableResult } from '@polkadot/types/types';
 
@@ -11,6 +12,11 @@ import { MaybePromise } from '@dxos/util';
 
 type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
 export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
+
+interface SendTransactionResult {
+  events: EventRecord[],
+  signer: Address
+}
 
 /**
  * TODO(burdon): Comment.
@@ -32,7 +38,7 @@ export class ApiTransactionHandler {
   async sendTransaction (
     transaction: SubmittableExtrinsic<'promise'>,
     signFn: SignTxFunction = this.signFn
-  ) : Promise<EventRecord[]> {
+  ) : Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
       if (!signFn) {
         throw new Error('Create or select an account first.');
@@ -49,7 +55,10 @@ export class ApiTransactionHandler {
             // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
             // https://github.com/dxos/dot/issues/167
             if (status.isFinalized || status.isInBlock) {
-              resolve(events);
+              resolve({
+                events,
+                signer: signedTransaction.signer
+              });
             }
           }).catch(reject);
         } catch (error) {
@@ -60,7 +69,7 @@ export class ApiTransactionHandler {
   }
 
   async sendSudoTransaction (transaction: Tx, sudoSignFn: SignTxFunction | AddressOrPair):
-    Promise<EventRecord[]> {
+    Promise<SendTransactionResult> {
     const sudoTx = this.api.tx.sudo.sudo(transaction);
     const signFn = typeof sudoSignFn === 'function' ? sudoSignFn : (tx: Tx) => tx.signAsync(sudoSignFn);
     return this.sendTransaction(sudoTx, signFn);

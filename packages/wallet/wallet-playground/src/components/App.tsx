@@ -88,7 +88,7 @@ const App = () => {
           open={!joinHaloDialog}
           onComplete={handleCreateProfile}
           onRestore={null as any}
-          // onJoinHalo={() => setJoinHaloDialog(true)} // TODO(rzadp): Uncomment after ProfileService is implemented fully.
+          onJoinHalo={() => setJoinHaloDialog(true)}
         />
         <JoinHaloDialog
           open={joinHaloDialog}
@@ -104,7 +104,7 @@ const App = () => {
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
       <p>{profile.publicKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>
-      {/* <Button onClick={() => setHaloSharingDialog(true)}>Share HALO</Button> //TODO(rzadp): Uncomment after ProfileService is implemented fully.  */}
+      <Button disabled={inProgress} onClick={() => setHaloSharingDialog(true)} variant='outlined'>Share HALO</Button>
       <HaloSharingDialog
         open={haloSharingDialog}
         onClose={() => setHaloSharingDialog(false)}
