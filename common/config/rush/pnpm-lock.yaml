@@ -2176,6 +2176,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.7
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
@@ -2206,6 +2207,7 @@ importers:
       protobufjs: 6.11.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/debug': 4.1.7
       '@types/js-yaml': 3.12.7
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
