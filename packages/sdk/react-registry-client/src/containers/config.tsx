@@ -2,8 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
+import { AccountClient, createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
+
+import { RegistryContext } from '../hooks';
 
 // TODO(burdon): Move to @dxos/util.
 type AsyncProvider<T> = T | (() => MaybePromise<T>);
@@ -23,12 +25,21 @@ interface RegistryClientConfig {
 
 export type RegistryConfigProvider = AsyncProvider<RegistryClientConfig>
 
-export const createRegistryClient = async (configProvider: RegistryConfigProvider, signFn?: SignTxFunction) => {
+export const createRegistryContext = async (
+  configProvider: RegistryConfigProvider,
+  signFn?: SignTxFunction
+): Promise<RegistryContext> => {
   const config = await resolveAsyncProvider(configProvider);
   if (!config.services?.dxns) {
     throw new Error('Config missing DXNS endpoint.');
   }
 
   const apiPromise = await createApiPromise(config.services.dxns.server);
-  return new RegistryClient(apiPromise, signFn);
+  const registry = new RegistryClient(apiPromise, signFn);
+  const accounts = new AccountClient(apiPromise, signFn);
+
+  return {
+    registry,
+    accounts
+  };
 };

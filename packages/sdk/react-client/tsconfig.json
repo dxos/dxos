@@ -43,6 +43,9 @@
       "path": "../../echo/echo-db"
     },
     {
+      "path": "../../mesh/network-manager"
+    },
+    {
       "path": "../../common/util"
     }
   ]

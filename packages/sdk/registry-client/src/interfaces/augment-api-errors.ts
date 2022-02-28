@@ -80,6 +80,7 @@ declare module '@polkadot/api/types/errors' {
       [key: string]: AugmentedError<ApiType>;
     };
     registry: {
+      AccountNotFound: AugmentedError<ApiType>;
       AlreadyRegistered: AugmentedError<ApiType>;
       AuctionAlreadyCreated: AugmentedError<ApiType>;
       AuctionClosed: AugmentedError<ApiType>;

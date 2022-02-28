@@ -6,6 +6,8 @@ import assert from 'assert';
 
 import { randomBytes } from '@dxos/crypto';
 
+export const DOMAIN_KEY_LENGTH = 32;
+
 /**
  * Represents a domain key.
  *
@@ -17,13 +19,13 @@ export class DomainKey {
   }
 
   static random (): DomainKey {
-    return new DomainKey(new Uint8Array(randomBytes(32)));
+    return new DomainKey(new Uint8Array(randomBytes(DOMAIN_KEY_LENGTH)));
   }
 
   constructor (
     public readonly value: Uint8Array
   ) {
-    assert(value.length === 32, 'Invalid domain key length.');
+    assert(value.length === DOMAIN_KEY_LENGTH, 'Invalid domain key length.');
   }
 
   toHex () {
