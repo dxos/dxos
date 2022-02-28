@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.27.8",
+  "version": "2.27.9",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",

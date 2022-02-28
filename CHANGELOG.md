@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.27.9](https://www.github.com/dxos/protocols/compare/v2.27.8...v2.27.9) (2022-02-28)
+
+
+### Features
+
+* **Devtools:** Added "deleted" prop to items panel ([#979](https://www.github.com/dxos/protocols/issues/979)) ([b7600b7](https://www.github.com/dxos/protocols/commit/b7600b75bbeddb3834e5f219ca29db64e5c8e3e6))
+
 ### [2.27.8](https://www.github.com/dxos/protocols/compare/v2.27.7...v2.27.8) (2022-02-25)
 
 
