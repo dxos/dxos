@@ -13,7 +13,7 @@ import { createRegistryClient, RegistryConfigProvider } from './config';
 const log = debug('dxos:react-registry-client:error');
 
 interface RegistryProviderProps {
-  children?: ReactNode | ReactNode[]
+  children?: ReactNode
   config?: RegistryConfigProvider
   registry?: IRegistryClient
 }

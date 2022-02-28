@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 
 import { styled } from '@mui/material';
 
@@ -20,4 +20,4 @@ const FullScreenDiv = styled('div')({
 });
 
 // TODO(wittjosiah): Props and cleanup.
-export const FullScreen: React.FunctionComponent<any> = FullScreenDiv;
+export const FullScreen: FunctionComponent<any> = FullScreenDiv;

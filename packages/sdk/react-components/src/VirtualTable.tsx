@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { ReactNode, RefObject, memo, useEffect, useRef, useState } from 'react';
 
 import {
   ArrowUpward as UpIcon,
@@ -219,7 +219,7 @@ const VirtualTableRow = ({ row, columns, selected, handleSelect, getValue, rende
 
 // Memoize row so that it is not updated on each scroll event.
 // https://reactjs.org/docs/hooks-faq.html#how-do-i-implement-shouldcomponentupdate
-const MemoVirtualTableRow = React.memo(VirtualTableRow, (oldProps, newProps) => {
+const MemoVirtualTableRow = memo(VirtualTableRow, (oldProps, newProps) => {
   // Layout changed.
   if (oldProps.row.top !== newProps.row.top || oldProps.row.height !== newProps.row.height) {
     log('Changed layout', oldProps.row.key);
@@ -252,7 +252,7 @@ interface ScrollState {
   scrollTop: number
 }
 
-const useScrollHandler = (scrollContainerRef: React.RefObject<HTMLDivElement>): [ScrollState, () => void] => {
+const useScrollHandler = (scrollContainerRef: RefObject<HTMLDivElement>): [ScrollState, () => void] => {
   const [scrollState, setScrollState] = useState<ScrollState>({
     clientHeight: 0, scrollHeight: 0, scrollTop: 0
   });
