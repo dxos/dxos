@@ -85,6 +85,7 @@ export const RegistrySearchDialog = ({
   const content = (
     <>
       {typeFilter.length === 0 && (
+        // TODO(wittjosiah): Loading placeholder.
         <Box>
           {types.map(type => (
             <Chip
