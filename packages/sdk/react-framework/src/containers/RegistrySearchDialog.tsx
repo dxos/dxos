@@ -10,11 +10,12 @@ import { Dialog } from '@dxos/react-components';
 import { useRegistry } from '@dxos/react-registry-client';
 import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
+
 export interface RegistrySearchDialogProps {
   open: boolean
   title?: string
   typeFilter?: CID[]
-  onSearch: (searchInput: string) => Promise<Resource[]>
+  onSearch?: (searchInput: string) => Promise<Resource[]>
   onSelect: (resource: Resource) => Promise<void>
   onClose?: () => void
   closeOnSuccess?: boolean
@@ -42,6 +43,14 @@ export const RegistrySearchDialog = ({
   const [selectedTypes, setSelectedTypes] = useState<CID[]>(typeFilter);
   const [processing, setProcessing] = useState(false);
 
+  const handleSearch = (searchInput: string) => {
+    if (onSearch) {
+      return onSearch(searchInput);
+    }
+
+    return registry.queryResources({ text: searchInput });
+  }
+
   useEffect(() => {
     setImmediate(async () => {
       const queriedTypes = await registry.getTypeRecords();
@@ -51,7 +60,7 @@ export const RegistrySearchDialog = ({
 
   useEffect(() => {
     setImmediate(async () => {
-      const resources = await onSearch(searchInput);
+      const resources = await handleSearch(searchInput);
       const resourcesFilteredByType = selectedTypes.length > 0
         ? resources.filter(resource =>
           selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
@@ -69,17 +78,17 @@ export const RegistrySearchDialog = ({
   };
 
   const handleClose = () => {
-    onClose?.();
     handleReset();
+    onClose?.();
   };
 
   const handleSelect = async () => {
     setProcessing(true);
     selectedResource && await onSelect?.(selectedResource);
+    handleReset();
     if (closeOnSuccess) {
       onClose?.();
     }
-    handleReset();
   };
 
   const content = (
@@ -133,10 +142,10 @@ export const RegistrySearchDialog = ({
     <>
       <Button onClick={handleClose}>Close</Button>
       <Button
-        disabled={!processing && !selectedResource}
+        disabled={processing || !selectedResource}
         onClick={handleSelect}
       >
-        Select
+        {processing ? 'Processing' : 'Select'}
       </Button>
     </>
   );

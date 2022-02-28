@@ -69,7 +69,7 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   async getDomains (): Promise<Domain[]> {
-    return [{ key: DomainKey.random(), owners: [], name: 'dxos' }];
+    return [{ key: DomainKey.random(), owner: '0x', name: 'dxos' }];
   }
 
   async getRecord<R extends RegistryRecord = RegistryRecord> (cidLike: CIDLike): Promise<R | undefined> {
