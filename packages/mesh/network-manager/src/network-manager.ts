@@ -30,15 +30,14 @@ export interface NetworkManagerOptions {
 
 const log = debug('dxos:network-manager');
 
+/**
+ * TODO(burdon): Comment.
+ */
 export class NetworkManager {
   private readonly _ice?: any[];
-
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(x => x.toHex());
-
   private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(x => x.toHex());
-
   private readonly _signal: SignalManager;
-
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();

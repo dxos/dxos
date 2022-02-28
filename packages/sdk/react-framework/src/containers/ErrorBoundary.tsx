@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React, { Component, ErrorInfo, ReactNode, useContext, useEffect } from 'react';
+import React, { Component, ErrorInfo, FunctionComponent, ReactNode, useContext, useEffect } from 'react';
 
 import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../components';
 import { ErrorContext } from '../hooks';
@@ -22,7 +22,7 @@ const GlobalErrorWrapper = ({
   indicator: ErrorIndicator
 }: {
   children: ReactNode,
-  indicator?: React.FC<ErrorIndicatorProps> | null
+  indicator?: FunctionComponent<ErrorIndicatorProps> | null
 }) => {
   const { errors, addError, resetErrors } = useContext(ErrorContext)!;
 
@@ -64,8 +64,8 @@ const GlobalErrorWrapper = ({
 // TODO(burdon): Configure loading indicator (that can be reset downstream).
 
 interface ErrorBoundaryProps {
-  indicator?: React.FC<ErrorIndicatorProps> | null
-  view: React.FC<ErrorViewProps>
+  indicator?: FunctionComponent<ErrorIndicatorProps> | null
+  view: FunctionComponent<ErrorViewProps>
   onError: (error: Error, errorInfo: ErrorInfo) => void
   onReload?: () => void
   onReset?: () => void

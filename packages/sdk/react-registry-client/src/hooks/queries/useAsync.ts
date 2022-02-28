@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { DependencyList, useEffect, useState } from 'react';
 
 import { MaybePromise } from '@dxos/util';
 
@@ -11,7 +11,14 @@ interface Result<T> {
   error?: unknown
 }
 
-export const useAsync = <T>(getData: () => MaybePromise<T> | undefined, initalValue: T, deps: React.DependencyList = []): Result<T> => {
+/**
+ * Async data fetcher.
+ * @param getData
+ * @param initalValue
+ * @param deps
+ */
+// TODO(burdon): Rename.
+export const useAsync = <T>(getData: () => MaybePromise<T> | undefined, initalValue: T, deps: DependencyList = []): Result<T> => {
   const [error, setError] = useState<any>(undefined);
   const [data, setData] = useState<T>(initalValue);
 

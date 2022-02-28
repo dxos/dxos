@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import React, { useState, useRef } from 'react';
+import React, { SyntheticEvent, useState, useRef } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
@@ -27,11 +27,11 @@ export const ImportDialog = ({
   const [error, setError] = useState<string>();
   const minLength = 8;
 
-  const handlePassChange = (event: React.SyntheticEvent) => {
+  const handlePassChange = (event: SyntheticEvent) => {
     setPassphrase((event.target as HTMLTextAreaElement).value);
   };
 
-  const handleFileChange = (event: React.SyntheticEvent) => {
+  const handleFileChange = (event: SyntheticEvent) => {
     assert(event.target);
     const input = event.target as HTMLInputElement;
     const file = input.files![0];

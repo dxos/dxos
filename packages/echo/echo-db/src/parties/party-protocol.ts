@@ -6,11 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import {
-  AuthPlugin,
-  Authenticator,
-  GreetingCommandPlugin
-} from '@dxos/credentials';
+import { AuthPlugin, Authenticator, GreetingCommandPlugin } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import type { HypercoreFeed } from '@dxos/feed-store';
@@ -36,9 +32,6 @@ export interface CredentialsProvider {
 export interface PartyProvider {
   get(): PartyInternal
 }
-
-// TODO(burdon): Exercise in refactoring (ie, "dependency inversion").
-// TODO(burdon): Consistently use crypto utils for asBuffer, toString('base64'), toHex, etc?
 
 /**
  * Manages the party's connection to the network swarm.

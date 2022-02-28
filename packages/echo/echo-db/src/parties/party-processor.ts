@@ -12,8 +12,9 @@ import {
   KeyRecord,
   PartyState,
   PartyAuthenticator,
-  Message as HaloMessage
-  , IdentityEventType, PartyEventType
+  Message as HaloMessage,
+  IdentityEventType,
+  PartyEventType
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
@@ -27,7 +28,7 @@ export interface FeedSetProvider {
 }
 
 /**
- * Party processor for testing.
+ * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
 export class PartyProcessor {
   private readonly _state: PartyState;

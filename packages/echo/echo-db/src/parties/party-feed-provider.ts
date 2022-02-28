@@ -26,18 +26,19 @@ export class PartyFeedProvider {
   // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
   async createOrOpenWritableFeed () {
     let feed: FeedDescriptor | undefined;
-
     for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
       const fullKey = this._keyring.getFullKey(feedKey);
       if (fullKey && fullKey.secretKey) {
         feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
       }
     }
+
     if (feed) {
       const feedKey = this._keyring.getKey(feed.key);
       assert(feedKey, 'Feed key not found');
       return feed;
     }
+
     return this._createReadWriteFeed();
   }
 

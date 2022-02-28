@@ -12,8 +12,7 @@ import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe 
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Database, TimeframeClock } from '../database';
-import { FeedDatabaseBackend } from '../database/database-backend';
+import { Database, FeedDatabaseBackend, TimeframeClock } from '../database';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
@@ -33,27 +32,26 @@ export interface PartyOptions {
 }
 
 /**
- * Encapsulates core components needed to run a party:
- *  - ECHO database with item-manager & item-demuxer.
- *  - Collection of feeds from the feed store.
- *  - HALO PartyState state-machine that handles key admission.
- *  - A Pipeline with the feed-store iterator that reads the messages in the proper order.
+ * Encapsulates core components needed by a party:
+ * - ECHO database with item-manager & item-demuxer.
+ * - Collection of feeds from the feed store.
+ * - HALO PartyState state-machine that handles key admission.
+ * - A Pipeline with the feed-store iterator that reads the messages in the proper order.
  *
  * The core class also handles the combined ECHO and HALO state snapshots.
  */
-// TODO(marik-d): Try to pick a better name for it.
 export class PartyCore {
   /**
    * Snapshot to be restored from when party.open() is called.
    */
   private _databaseSnapshot: DatabaseSnapshot | undefined;
 
-  private _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
   private _pipeline?: Pipeline;
-  private _timeframeClock?: TimeframeClock;
   private _partyProcessor?: PartyProcessor;
+  private _timeframeClock?: TimeframeClock;
 
   constructor (
     private readonly _partyKey: PartyKey,
