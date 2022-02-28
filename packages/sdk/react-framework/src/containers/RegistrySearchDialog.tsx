@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { Autocomplete, Box, Button, Chip, TextField } from '@mui/material';
 
 import { Dialog } from '@dxos/react-components';
-import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 import { useRegistry } from '@dxos/react-registry-client';
+import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
 export interface RegistrySearchDialogProps {
   open: boolean
@@ -54,8 +54,8 @@ export const RegistrySearchDialog = ({
       const resources = await onSearch(searchInput);
       const resourcesFilteredByType = selectedTypes.length > 0
         ? resources.filter(resource =>
-            selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
-          )
+          selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
+        )
         : resources;
       setSearchOptions(resourcesFilteredByType);
     });

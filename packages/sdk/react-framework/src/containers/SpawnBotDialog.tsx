@@ -39,7 +39,7 @@ export const SpawnBotDialog = ({
       setBotType(botType);
     });
   });
-  
+
   const handleSearch = (searchInput: string) => registry.queryResources({ text: searchInput });
 
   const handleSelect = async (resource: Resource) => {

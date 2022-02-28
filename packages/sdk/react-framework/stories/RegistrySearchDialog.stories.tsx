@@ -59,7 +59,7 @@ const WithRegistry = () => {
 
 export const Secondary = () => {
   return (
-    <RegistryProvider config={{ services: { dxns: { server: DXNS_SERVER }} }}>
+    <RegistryProvider config={{ services: { dxns: { server: DXNS_SERVER } } }}>
       <WithRegistry />
     </RegistryProvider>
   );
