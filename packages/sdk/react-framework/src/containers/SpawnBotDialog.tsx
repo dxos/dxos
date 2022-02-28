@@ -2,46 +2,32 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import React, { useState } from 'react';
 
 import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
-import type { BotHandle } from '@dxos/bot-factory-client';
-import { Party } from '@dxos/client';
-import { useBotFactoryClient, useConfig } from '@dxos/react-client';
 import { Dialog } from '@dxos/react-components';
 import { useBots } from '@dxos/react-registry-client';
 
 export interface SpawnBotDialogProps {
   open: boolean,
   onClose: () => void,
-  party: Party,
-  onBotCreated: (bot: BotHandle) => void
+  onSpawn: (dxn: string) => Promise<void>
 }
 
 export const SpawnBotDialog = ({
   open,
   onClose,
-  party,
-  onBotCreated
+  onSpawn
 } : SpawnBotDialogProps) => {
   const { bots, error } = useBots();
-  const [botPath, setBotPath] = useState<string>();
+  const [botDXN, setBotDXN] = useState<string>();
   const [processing, setProcessing] = useState(false);
-  const config = useConfig();
-  const botFactoryClient = useBotFactoryClient(config);
 
   const handleSpawnProcess = async (dxn: string) => {
     try {
-      assert(botFactoryClient, 'Bot factory client is not available.');
       setProcessing(true);
-      const botHandle = await botFactoryClient.spawn(
-        { dxn },
-        party
-      );
-
-      onBotCreated(botHandle);
+      await onSpawn(dxn);
       onClose();
     } finally {
       setProcessing(false);
@@ -56,9 +42,9 @@ export const SpawnBotDialog = ({
         <InputLabel id='select-bot-label'>Select bot</InputLabel>
         <Select
           labelId='select-bot-label'
-          value={botPath || ''}
+          value={botDXN || ''}
           label='Select bot'
-          onChange={(event) => setBotPath(event.target.value)}
+          onChange={(event) => setBotDXN(event.target.value)}
         >
           {bots.filter(bot => bot.dxn && bot.tag === 'latest').map(({ dxn }) => (
             <MenuItem key={dxn.toString()} value={dxn.toString()}>
@@ -73,10 +59,10 @@ export const SpawnBotDialog = ({
       <>
         <Button onClick={onClose}>Close</Button>
         <Button
-          disabled={!!error || processing || !botFactoryClient || !botPath}
-          onClick={() => botPath && handleSpawnProcess(botPath)}
+          disabled={!!error || processing || !botDXN}
+          onClick={() => botDXN && handleSpawnProcess(botDXN)}
         >
-          {botFactoryClient ? (processing ? 'Spawning' : ('Spawn')) : 'Loading...'}
+          {processing ? 'Spawning' : 'Spawn'}
         </Button>
       </>
     );
