@@ -106,19 +106,4 @@ describe('Signatures', () => {
 
     await auctionsApi.createAuction(auctionName(), 100000);
   });
-
-  it('Works for different sizes of transaction', async () => {
-    const signFn: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new DxosClientSigner(client, keypair.address, apiPromise.registry) });
-    };
-    const transactionsHandler = new ApiTransactionHandler(apiPromise, signFn);
-
-    // Empirical approach to find the cut-off for
-    // hashing vs not-hashing payload before signing in DxosClientSigner.
-    for (let i = 174; i < 196; i += 1) {
-      const data = 'a'.repeat(i);
-      const tx = apiPromise.tx.registry.addRecord(data);
-      await transactionsHandler.sendTransaction(tx);
-    }
-  });
 });
