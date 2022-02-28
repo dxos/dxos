@@ -138,7 +138,7 @@ jobs:
       - name: Release
         uses: fnkr/github-action-ghr@v1
         env:
-          GHR_COMPRESS: xz
+          GHR_COMPRESS: zip
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
       - name: Cleanup
