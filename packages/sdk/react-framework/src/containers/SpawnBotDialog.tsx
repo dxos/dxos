@@ -2,121 +2,71 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 
-import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-
-import { sleep } from '@dxos/async';
 import type { BotHandle } from '@dxos/bot-factory-client';
 import { Party } from '@dxos/client';
+import { raise } from '@dxos/debug';
 import { useBotFactoryClient, useConfig } from '@dxos/react-client';
-import { Dialog } from '@dxos/react-components';
-import { useBots, useRegistry } from '@dxos/react-registry-client';
-import { RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { useRegistry } from '@dxos/react-registry-client';
+import { DXN, Resource, ResourceRecord } from '@dxos/registry-client';
 
-import { RegistrySearchDialog } from './RegistrySearchDialog';
+import { RegistrySearchDialog, RegistrySearchDialogProps } from './RegistrySearchDialog';
 
-export interface SpawnBotDialogProps {
-  open: boolean,
-  onClose: () => void,
-  party: Party,
+const log = debug('dxos:react-framework:SpawnBotDialog');
+
+const BOT_TYPE_DXN = DXN.parse('dxos:type.bot');
+
+export interface SpawnBotDialogProps extends Omit<RegistrySearchDialogProps, 'onSearch' | 'onSelect'> {
+  party: Party
   onBotCreated: (bot: BotHandle) => void
 }
 
 export const SpawnBotDialog = ({
-  open,
-  onClose,
   party,
-  onBotCreated
-} : SpawnBotDialogProps) => {
-  const registry = useRegistry();
-  const [botType, setBotType] = useState<RegistryTypeRecord | undefined>();
-  const { bots, error } = useBots();
-  const [botPath, setBotPath] = useState<string>();
-  const [processing, setProcessing] = useState(false);
+  onBotCreated,
+  ...props
+}: SpawnBotDialogProps) => {
   const config = useConfig();
   const botFactoryClient = useBotFactoryClient(config);
-
-  const handleSearch = (searchInput: string) => registry.queryResources({ text: searchInput });
+  const registry = useRegistry();
+  const [botType, setBotType] = useState<ResourceRecord>();
 
   useEffect(() => {
-    const loadBotType = async () => {
-      const queriedBotType = await registry.getTypeRecords();
-      setBotType(queriedBotType[0]);
-    };
+    setImmediate(async () => {
+      const botType = await registry.getResourceRecord(BOT_TYPE_DXN, 'latest') ?? raise(new Error('Bot type not found.'));
+      setBotType(botType);
+    });
+  });
+  
+  const handleSearch = (searchInput: string) => registry.queryResources({ text: searchInput });
 
-    loadBotType();
-  }, []);
-
-  const handleSpawnProcess = async (dxn: string) => {
+  const handleSelect = async (resource: Resource) => {
     if (!botFactoryClient) {
-      console.log('Bot factory client is not available.');
+      log('Bot factory client is not available.');
       return;
     }
 
-    setProcessing(true);
-    const botHandle = await botFactoryClient.spawn(
-      { dxn },
-      party
-    );
+    const botHandle = await botFactoryClient.spawn({
+      dxn: resource.id.toString()
+    }, party);
 
     onBotCreated(botHandle);
-    onClose();
-
-    setProcessing(false);
   };
 
-  const noBotsContent = <div> No bots available. </div>;
-
-  const spawnBotContent = (
-    <>
-      <RegistrySearchDialog
-        open={open}
-        // selectedType={botType?.cid}
-        modal={false}
-        onSearch={handleSearch}
-        onSelect={() => sleep(1000).then(() => {})}
-        onClose={() => {}}
-      />
-      {/* <FormControl fullWidth style={{ marginTop: '10px' }}>
-        <InputLabel id='select-bot-label'>Select bot</InputLabel>
-        <Select
-          labelId='select-bot-label'
-          value={botPath || ''}
-          label='Select bot'
-          onChange={(event) => setBotPath(event.target.value)}
-        >
-          {bots.filter(bot => bot.dxn && bot.tag === 'latest').map(({ dxn }) => (
-            <MenuItem key={dxn.toString()} value={dxn.toString()}>
-              {dxn.toString()}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl> */}
-    </>
-  );
-
-  const joinPartyActions = (
-    <>
-      <Button onClick={onClose}>Close</Button>
-      <Button
-        disabled={!!error || processing || !botFactoryClient || !botPath}
-        onClick={() => botPath && handleSpawnProcess(botPath)}
-      >
-        {botFactoryClient ? (processing ? 'Spawning' : ('Spawn')) : 'Loading...'}
-      </Button>
-    </>
-  );
+  if (!botType) {
+    return null;
+  }
 
   return (
-    <Dialog
-      maxWidth='md'
-      open={open}
+    <RegistrySearchDialog
       title='Spawn Bot'
-      processing={processing}
-      actions={joinPartyActions}
-      // content={error ? <div> Error: {error} </div> : (bots.length > 0 ? spawnBotContent : noBotsContent)}
-      content={spawnBotContent}
+      typeFilter={[botType.record.cid]}
+      onSearch={handleSearch}
+      onSelect={handleSelect}
+      closeOnSuccess
+      {...props}
     />
   );
 };

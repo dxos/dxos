@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Autocomplete, Box, Button, Chip, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, Chip, TextField } from '@mui/material';
 
 import { Dialog } from '@dxos/react-components';
 import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
@@ -13,10 +13,11 @@ import { useRegistry } from '@dxos/react-registry-client';
 export interface RegistrySearchDialogProps {
   open: boolean
   title?: string
-  selectedType?: CID
+  typeFilter?: CID[]
   onSearch: (searchInput: string) => Promise<Resource[]>
   onSelect: (resource: Resource) => Promise<void>
   onClose?: () => void
+  closeOnSuccess?: boolean
   modal?: boolean
 }
 
@@ -26,10 +27,11 @@ export interface RegistrySearchDialogProps {
 export const RegistrySearchDialog = ({
   open,
   title,
-  selectedType,
+  typeFilter = [],
   onSearch,
   onSelect,
   onClose,
+  closeOnSuccess,
   modal
 }: RegistrySearchDialogProps) => {
   const registry = useRegistry();
@@ -37,38 +39,24 @@ export const RegistrySearchDialog = ({
   const [searchOptions, setSearchOptions] = useState<Resource[]>([]);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<RegistryTypeRecord[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<CID[]>(typeFilter);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    const loadTypes = async () => {
+    setImmediate(async () => {
       const queriedTypes = await registry.getTypeRecords();
       setTypes(queriedTypes);
-    }
-
-    loadTypes();
+    });
   }, []);
 
   useEffect(() => {
     setImmediate(async () => {
       const resources = await onSearch(searchInput);
-      let resourcesFilteredByType;
-      if (selectedType) {
-        resourcesFilteredByType = resources.filter(resource => {
-          console.log(resource);
-          console.log(selectedType)
-          return resource.type === selectedType
-        })
-      } else {
-        resourcesFilteredByType = selectedTypes.length
-          ? resources.filter(resource => {
-              if (!resource.type) {
-                return false;
-              }
-              return selectedTypes.some(selectedType => selectedType.cid.equals(resource.type as CID));
-            })
-          : resources;
-      }
-      console.log(resourcesFilteredByType)
+      const resourcesFilteredByType = selectedTypes.length > 0
+        ? resources.filter(resource =>
+            selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
+          )
+        : resources;
       setSearchOptions(resourcesFilteredByType);
     });
   }, [searchInput, selectedTypes]);
@@ -77,6 +65,7 @@ export const RegistrySearchDialog = ({
     setSearchInput('');
     setSearchOptions([]);
     setSelectedResource(null);
+    setProcessing(false);
   };
 
   const handleClose = () => {
@@ -85,32 +74,35 @@ export const RegistrySearchDialog = ({
   };
 
   const handleSelect = async () => {
+    setProcessing(true);
     selectedResource && await onSelect?.(selectedResource);
+    if (closeOnSuccess) {
+      onClose?.();
+    }
     handleReset();
   };
 
   const content = (
     <>
-      {!selectedType && (
+      {typeFilter.length === 0 && (
         <Box>
           {types.map(type => (
             <Chip
+              key={type.messageName}
               label={type.messageName}
               sx={{
+                marginBottom: 1,
                 marginRight: 1,
-                bgcolor: selectedTypes.includes(type) ? 'action.active' : undefined,
-                color: selectedTypes.includes(type) ? 'primary.contrastText' : undefined
+                bgcolor: selectedTypes.includes(type.cid) ? 'action.active' : undefined,
+                color: selectedTypes.includes(type.cid) ? 'primary.contrastText' : undefined
               }}
-              onClick={() => {
-                if (selectedTypes.includes(type)) {
-                  setSelectedTypes(prev => prev.filter(setSelectedType => setSelectedType !== type));
+              onClick={() => setSelectedTypes(prev => {
+                if (selectedTypes.includes(type.cid)) {
+                  return prev.filter(setSelectedType => setSelectedType !== type.cid);
                 } else {
-                  setSelectedTypes([
-                    ...selectedTypes,
-                    type
-                  ]);
+                  return [...prev, type.cid];
                 }
-              }}
+              })}
             />
           ))}
         </Box>
@@ -140,7 +132,7 @@ export const RegistrySearchDialog = ({
     <>
       <Button onClick={handleClose}>Close</Button>
       <Button
-        disabled={!selectedResource}
+        disabled={!processing && !selectedResource}
         onClick={handleSelect}
       >
         Select
@@ -148,25 +140,14 @@ export const RegistrySearchDialog = ({
     </>
   );
 
-  // return (
-  //   <Dialog
-  //     maxWidth='xs'
-  //     modal={modal}
-  //     open={open}
-  //     title={title || 'Registry Search'}
-  //     content={content}
-  //     actions={actions}
-  //   />
-  // );
   return (
-    <Box>
-      <Typography>{title || 'Registry Search'}</Typography>
-      <Box>
-        {content}
-      </Box>
-      {/* <Box>
-        {actions}
-      </Box> */}
-    </Box>
+    <Dialog
+      maxWidth='xs'
+      modal={modal}
+      open={open}
+      title={title || 'Registry Search'}
+      content={content}
+      actions={actions}
+    />
   );
 };

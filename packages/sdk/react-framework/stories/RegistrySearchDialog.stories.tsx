@@ -4,8 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-// import { Box, Button } from '@mui/material';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { sleep } from '@dxos/async';
 import { RegistryProvider } from '@dxos/react-registry-client';
@@ -25,7 +24,7 @@ export const Primary = () => {
   return (
     <RegistryProvider registry={mockRegistry}>
       <Box margin={2}>
-        {/* <Button onClick={() => setOpen(true)}>Open</Button> */}
+        <Button onClick={() => setOpen(true)}>Open</Button>
         <RegistrySearchDialog
           open={open}
           onSearch={handleSearch}
