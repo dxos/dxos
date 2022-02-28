@@ -38,9 +38,8 @@ export const InvitationDialog = ({
   return (
     <Dialog open={open} fullWidth maxWidth='sm'>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ '&.MuiDialogContent-root': { paddingTop: 1 } }}>
         <TextField
-          id='start-dialog-invitation-input'
           fullWidth
           value={invitationCode}
           onChange={event => setInvitationCode(event.target.value)}
@@ -48,6 +47,9 @@ export const InvitationDialog = ({
           label='Invitation code'
           autoComplete='off'
           spellCheck={false}
+          inputProps={{
+            'data-id': 'test-input-join'
+          }}
         />
 
         <div style={{ height: 8, marginTop: 16 }}>
@@ -58,6 +60,7 @@ export const InvitationDialog = ({
       </DialogContent>
       <DialogActions>
         <Button
+          data-id='test-button-join'
           color='secondary'
           variant='contained'
           onClick={async () => {
@@ -77,6 +80,7 @@ export const InvitationDialog = ({
           Join Party
         </Button>
         <Button
+          data-id='test-button-create'
           color='primary'
           variant='contained'
           onClick={() => {

@@ -132,6 +132,9 @@ export const SelectionEditor = ({
       value={text}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
+      inputProps={{
+        'data-id': 'test-input-selection'
+      }}
       sx={{
         '.MuiInputBase-input': {
           fontFamily: 'monospace'

@@ -64,7 +64,6 @@ export const useGraphModel = (party?: Party): EchoGraphModel => {
     const filteredItems = items
       .filter(item => item.type?.startsWith('example:'));
 
-    console.log('update', filteredItems.length);
     model.update(filteredItems);
   }, [items.length]);
 

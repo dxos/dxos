@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.27.7",
+  "version": "2.27.8",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -24,12 +24,12 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1",
-    "@dxos/network-manager": "workspace:*"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
