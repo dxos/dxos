@@ -1,0 +1,52 @@
+/**
+ * This is the main configuration file for Rush.
+ * For full documentation, please see https://rushjs.io
+ */
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/rush/v5/rush.schema.json",
+  "nodeSupportedVersionRange": ">=12.13.0 <13.0.0 || >=14.15.0 <15.0.0 || >=16.13.0 <17.0.0",
+  "rushVersion": "5.62.4",
+  "pnpmVersion": "6.7.1",
+  "pnpmOptions": {
+    "useWorkspaces": true
+  },
+
+  "projects": [
+    {
+      "packageName": "@dxos/gem-canvas",
+      "projectFolder": "packages/gem-canvas",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@dxos/gem-core",
+      "projectFolder": "packages/gem-core",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@dxos/gem-experimental",
+      "projectFolder": "packages/gem-experimental",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@dxos/gem-globe",
+      "projectFolder": "packages/gem-globe",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@dxos/gem-physik",
+      "projectFolder": "packages/gem-physik",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    },
+    {
+      "packageName": "@dxos/gem-spore",
+      "projectFolder": "packages/gem-spore",
+      "versionPolicyName": "lockStepPolicy",
+      "shouldPublish": true
+    }
+  ]
+}

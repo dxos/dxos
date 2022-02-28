@@ -1,3 +1,0 @@
-<component name="DependencyValidationManager">
-  <scope name="V7" pattern="file[gem]:packages/v7//*" />
-</component>
