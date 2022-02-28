@@ -60,6 +60,7 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       DX_PROFILE_URL: ${{ secrets.dx_profile_url }}
       DX_DXNS_USER_URI: ${{ secrets.DX_DXNS_USER_URI }}
+      DX_DXNS_ACCOUNT: ${{ secrets.DX_DXNS_ACCOUNT }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       DX_PROFILE: ci
     timeout-minutes: 25
