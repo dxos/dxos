@@ -19,6 +19,8 @@ Each identitiy is created from a set of DIDs and keys stored in the keyring.
 
 ### ECHO
 
+[Main page](./echo.md)
+
 Eventually-Consistent Hierrarhical Object-store.
 
 Processes mutations and snapshots to maintain a set of items and links with models.
