@@ -10,7 +10,6 @@ import { Dialog } from '@dxos/react-components';
 import { useRegistry } from '@dxos/react-registry-client';
 import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
-
 export interface RegistrySearchDialogProps {
   open: boolean
   title?: string
@@ -49,7 +48,7 @@ export const RegistrySearchDialog = ({
     }
 
     return registry.queryResources({ text: searchInput });
-  }
+  };
 
   useEffect(() => {
     setImmediate(async () => {
