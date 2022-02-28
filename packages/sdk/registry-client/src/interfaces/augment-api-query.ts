@@ -9,7 +9,7 @@ import type { AccountId, Balance, BlockNumber, Hash, Moment, Releases } from '@p
 import type { SessionIndex } from '@polkadot/types/interfaces/session';
 import type { AccountInfo, ConsumedWeight, DigestOf, EventIndex, EventRecord, LastRuntimeUpgradeInfo, Phase } from '@polkadot/types/interfaces/system';
 import type { Multiplier } from '@polkadot/types/interfaces/txpayment';
-import type { Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { Account, AccountKey, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
 import type { ApiTypes } from '@polkadot/api/types';
 
 declare module '@polkadot/api/types/storage' {
@@ -92,6 +92,7 @@ declare module '@polkadot/api/types/storage' {
       [key: string]: QueryableStorageEntry<ApiType>;
     };
     registry: {
+      accounts: AugmentedQuery<ApiType, (arg: AccountKey | string | Uint8Array) => Observable<Option<Account>>, [AccountKey]> & QueryableStorageEntry<ApiType, [AccountKey]>;
       auctions: AugmentedQuery<ApiType, (arg: Bytes | string | Uint8Array) => Observable<Option<Auction>>, [Bytes]> & QueryableStorageEntry<ApiType, [Bytes]>;
       domainNames: AugmentedQuery<ApiType, (arg: Text | string) => Observable<Option<DomainKey>>, [Text]> & QueryableStorageEntry<ApiType, [Text]>;
       domains: AugmentedQuery<ApiType, (arg: DomainKey | string | Uint8Array) => Observable<Option<Domain>>, [DomainKey]> & QueryableStorageEntry<ApiType, [DomainKey]>;
