@@ -26,10 +26,10 @@ do
   echo "::group::Publishing $PKG_NAME"
   
   # Canary deployment
-  dx dxns --verbose deploy --tag dev --version=false
+  dx dxns --account $DX_DXNS_ACCOUNT --verbose deploy --tag dev --version=false
 
   # Latest version deployment
-  dx dxns --verbose deploy --tag latest --skipExisting
+  dx dxns --account $DX_DXNS_ACCOUNT --verbose deploy --tag latest --skipExisting
 
   cd -
   echo "::endgroup::"
