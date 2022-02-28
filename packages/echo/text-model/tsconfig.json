@@ -20,6 +20,9 @@
       "path": "../model-factory"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../object-model"
     }
   ]
