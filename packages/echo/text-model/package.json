@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.27.8",
+  "version": "2.28.0",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
@@ -33,12 +33,12 @@
     "yjs": "^13.4.1"
   },
   "devDependencies": {
+    "@dxos/crypto": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2",
-    "@dxos/crypto": "workspace:*"
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"

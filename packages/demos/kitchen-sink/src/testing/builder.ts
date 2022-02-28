@@ -198,7 +198,7 @@ export class PartyBuilder {
       return;
     }
 
-    if (Math.random() < 0.2) {
+    if (Math.random() < 0.4) {
       // New org.
       const org = await this.createOrg();
       const orgBuilder = new OrgBuilder(this, org);

@@ -29,13 +29,13 @@ export const ViewSelector = ({
 }: ViewSelectorProps) => {
   return (
     <IconRadioGroup value={value} onChange={onChange}>
-      <IconRadio value={ViewType.List} size='small'>
+      <IconRadio data-id='test-button-view-list' value={ViewType.List} size='small'>
         <ListIcon />
       </IconRadio>
-      <IconRadio value={ViewType.Board} size='small'>
+      <IconRadio data-id='test-button-view-board' value={ViewType.Board} size='small'>
         <GridIcon />
       </IconRadio>
-      <IconRadio value={ViewType.Graph} size='small'>
+      <IconRadio data-id='test-button-view-graph' value={ViewType.Graph} size='small'>
         <GraphIcon />
       </IconRadio>
     </IconRadioGroup>

@@ -36,6 +36,7 @@ export const AppBar = ({
       <MuiAppBar>
         <Toolbar>
           <ToggleButton
+            data-id='test-button-selection'
             size='small'
             value='check'
             selected={advanced}
@@ -79,6 +80,7 @@ export const AppBar = ({
 
           {onInvite && (
             <IconButton
+              data-id='test-button-share'
               size='small'
               sx={{ marginLeft: 2 }}
               onClick={onInvite}

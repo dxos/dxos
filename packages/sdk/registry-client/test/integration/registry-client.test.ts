@@ -3,24 +3,12 @@
 //
 
 import { ApiPromise } from '@polkadot/api/promise';
-import Keyring from '@polkadot/keyring';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import {
-  App,
-  IRegistryClient,
-  CID,
-  DomainKey,
-  DXN,
-  RegistryClient,
-  createCID,
-  createApiPromise,
-  createKeyring,
-  schemaJson
-} from '../../src';
-import { DEFAULT_DOT_ENDPOINT } from './test-config';
+import { AccountKey, App, CID, createCID, DomainKey, DXN, IRegistryClient, schemaJson } from '../../src';
+import { setup } from './utils';
 
 chai.use(chaiAsPromised);
 
@@ -33,15 +21,14 @@ const randomName = () => {
 
 describe('Registry Client', () => {
   let registryApi: IRegistryClient;
-  let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
+  let account: AccountKey;
 
   beforeEach(async () => {
-    const keyring = await createKeyring();
-    const config = { uri: '//Alice' };
-    apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
-    keypair = keyring.addFromUri(config.uri);
-    registryApi = new RegistryClient(apiPromise, keypair);
+    const setupResult = await setup();
+    apiPromise = setupResult.apiPromise;
+    registryApi = setupResult.registryApi;
+    account = await setupResult.accountsApi.createAccount();
   });
 
   afterEach(async () => {
@@ -61,10 +48,10 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves type details', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-      await registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), typeCid);
+      await registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, typeCid);
 
       const type = await registryApi.getTypeRecord(typeCid);
       expect(type?.messageName).to.equal('.dxos.type.App');
@@ -94,8 +81,8 @@ describe('Registry Client', () => {
         hasSso: false
       }, appTypeCid);
 
-      domainKey = await registryApi.registerDomain();
-      await registryApi.updateResource(DXN.fromDomainKey(domainKey, appResourceName), contentCid);
+      domainKey = await registryApi.registerDomain(account);
+      await registryApi.updateResource(DXN.fromDomainKey(domainKey, appResourceName), account, contentCid);
     });
 
     it('Retrieves a list of resources', async () => {
@@ -125,7 +112,7 @@ describe('Registry Client', () => {
 
     it('Deletes a single resource', async () => {
       const id = DXN.fromDomainKey(domainKey, appResourceName);
-      await registryApi.deleteResource(id);
+      await registryApi.deleteResource(id, account);
       const resource = await registryApi.getResource(id);
       expect(resource).to.be.undefined;
     });
@@ -155,9 +142,9 @@ describe('Registry Client', () => {
         }, appTypeCid);
 
         versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
-        await registryApi.updateResource(versionedDxn, version2, { tags: ['beta'], version: '2.0.0' });
-        await registryApi.updateResource(versionedDxn, version3, { tags: ['alpha'], version: '3.0.0' });
-        await registryApi.updateResource(versionedDxn, version4); // Latest tag by default.
+        await registryApi.updateResource(versionedDxn, account, version2, { tags: ['beta'], version: '2.0.0' });
+        await registryApi.updateResource(versionedDxn, account, version3, { tags: ['alpha'], version: '3.0.0' });
+        await registryApi.updateResource(versionedDxn, account, version4); // Latest tag by default.
       });
 
       it('Properly Registers resource with tags and versions', async () => {
@@ -286,27 +273,33 @@ describe('Registry Client', () => {
 
   describe('Register name', () => {
     it('Assigns a name to a type', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.App');
 
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
+      await expect(
+        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+      ).to.be.fulfilled;
     });
 
     it('Does allow to overwrite already registered name', async () => {
-      const domainKey = await registryApi.registerDomain();
+      const domainKey = await registryApi.registerDomain(account);
 
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
+      await expect(
+        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+      ).to.be.fulfilled;
 
-      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid)).to.be.fulfilled;
+      await expect(
+        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+      ).to.be.fulfilled;
     });
   });
 
   describe('Register domain', () => {
     it('Allows to register a free domain without a vanity name', async () => {
-      await expect(registryApi.registerDomain()).to.be.fulfilled;
+      await expect(registryApi.registerDomain(account)).to.be.fulfilled;
     });
   });
 });
