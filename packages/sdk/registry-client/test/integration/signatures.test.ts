@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import {
   AuctionsClient, createApiPromise, SignTxFunction,
-  createKeyring, registryTypes, DxosClientSigner, ApiTransactionHandler
+  createKeyring, registryTypes, DxosClientSigner
 } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
