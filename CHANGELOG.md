@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.28.0](https://www.github.com/dxos/protocols/compare/v2.27.9...v2.28.0) (2022-02-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* Introduce DXNS Accounts (#930)
+
+### Features
+
+* Introduce DXNS Accounts ([#930](https://www.github.com/dxos/protocols/issues/930)) ([557f45a](https://www.github.com/dxos/protocols/commit/557f45a129acf9b71a7c7aac597f15c6a848efeb))
+
 ### [2.27.9](https://www.github.com/dxos/protocols/compare/v2.27.8...v2.27.9) (2022-02-28)
 
 
