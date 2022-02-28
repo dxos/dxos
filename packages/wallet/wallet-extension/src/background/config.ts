@@ -14,13 +14,23 @@ export const config: ConfigObject = {
       }
     },
     services: {
+      dxns: {
+        server: 'ws://127.0.0.1:9945'
+      },
       signal: {
-        server: 'wss://apollo3.kube.moon.dxos.network/dxos/signal'
+        server: 'wss://enterprise.kube.dxos.network/dxos/signal',
+        api: 'https://enterprise.kube.dxos.network/dxos/signal/api'
       },
       ice: [
-        { urls: 'stun:apollo3.kube.moon.dxos.network:3478' },
+        { urls: 'stun:enterprise.kube.dxos.network:3478' },
         {
-          urls: 'turn:apollo3.kube.moon.dxos.network:3478',
+          urls: 'turn:enterprise.kube.dxos.network:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        },
+        { urls: 'stun:discovery.kube.dxos.network:3478' },
+        {
+          urls: 'turn:discovery.kube.dxos.network:3478',
           username: 'dxos',
           credential: 'dxos'
         }

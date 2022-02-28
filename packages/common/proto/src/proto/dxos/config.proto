@@ -194,10 +194,16 @@ message Runtime {
       string accountUri = 2;
 
       /**
-       * Public address of the DXNS Account - not a secret.
+       * Public Polkadot Address.
       */
-      string account = 3;
-      string faucet = 4;
+      string address = 3;
+
+      /**
+       * Public address of a DXNS Account.
+      */
+      string account = 4;
+
+      string faucet = 5;
     }
 
     message Ipfs {

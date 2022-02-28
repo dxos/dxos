@@ -5,6 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
+import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { ConfigObject } from '@dxos/config';
@@ -201,6 +202,26 @@ describe('Client', () => {
 
         expect(invitee.halo.profile).not.toBeUndefined();
       }).timeout(5000);
+
+      test('DXNS Account is synced between devices', async () => {
+        const { inviter, invitee } = await prepareInvitations();
+
+        const DXNSAccount = 'd3abd23e3f36a61a9e5d58e4b6286f89649594eedbd096b3a6e256ca1fe4c147';
+        await inviter.halo.setGlobalPreference('DXNSAccount', DXNSAccount);
+
+        const invitation = await inviter.halo.createInvitation();
+        await invitee.halo.acceptInvitation(invitation.descriptor).wait();
+
+        await waitForExpect(async () => {
+          expect(await invitee.halo.getGlobalPreference('DXNSAccount')).toEqual(DXNSAccount);
+        });
+
+        // The preference can be changed and synced back.
+        await invitee.halo.setGlobalPreference('DXNSAccount', '123');
+        await waitForExpect(async () => {
+          expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
+        }, 10_000, 100);
+      }).timeout(10_000);
     });
 
     describe('data', () => {

@@ -4,6 +4,14 @@
 import type { BTreeMap, Bytes, Option, Struct, Text, U8aFixed, Vec, bool, u128 } from '@polkadot/types';
 import type { AccountId, BlockNumber } from '@polkadot/types/interfaces/runtime';
 
+/** @name Account */
+export interface Account extends Struct {
+  readonly devices: Vec<AccountId>;
+}
+
+/** @name AccountKey */
+export interface AccountKey extends U8aFixed {}
+
 /** @name Auction */
 export interface Auction extends Struct {
   readonly name: Bytes;
@@ -16,7 +24,7 @@ export interface Auction extends Struct {
 /** @name Domain */
 export interface Domain extends Struct {
   readonly name: Option<Text>;
-  readonly owners: Vec<AccountId>;
+  readonly owner: AccountKey;
 }
 
 /** @name DomainKey */

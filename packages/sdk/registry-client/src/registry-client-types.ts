@@ -9,6 +9,7 @@ import {
   CID,
   Domain,
   DomainKey,
+  AccountKey,
   DXN,
   RegistryDataRecord,
   RegistryRecord,
@@ -124,8 +125,9 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
 
   /**
    * Creates a new domain in the system under a generated name.
+   * @param account DXNS account that will own the domain.
    */
-  registerDomain (): Promise<DomainKey>
+  registerDomain (account: AccountKey): Promise<DomainKey>
 
   /**
    * Registers or updates a resource in the system.
@@ -137,6 +139,7 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    */
    updateResource (
      resource: DXN,
+     account: AccountKey,
      contentCid: CID,
      opts?: UpdateResourceOptions
   ): Promise<void>
@@ -145,5 +148,5 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * Deletes a resource in the system.
    * @param resource Identifies the domain and name of the resource.
    */
-  deleteResource (resource: DXN): Promise<void>
+  deleteResource (resource: DXN, account: AccountKey,): Promise<void>
 }
