@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import {
-  createMockResourceRecord,
   createMockResourceRecords,
   createMockTypes,
   DXN,
