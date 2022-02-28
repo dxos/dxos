@@ -13,7 +13,7 @@ import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { MetadataStore } from '../metadata';
 
 const STALL_TIMEOUT = 1000;
-const warn = debug('dxos:echo:feed-store-iterator:warn');
+const warn = debug('dxos:echo:party-feed-provider:warn');
 
 export class PartyFeedProvider {
   constructor (

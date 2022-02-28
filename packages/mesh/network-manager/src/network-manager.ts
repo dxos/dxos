@@ -140,7 +140,8 @@ export class NetworkManager {
 
     await swarm.destroy();
     this._swarms.delete(topic);
-    this.topicsUpdated.emit();
+
+    await this.topicsUpdated.emit();
   }
 
   // TODO(marik-d): Remove.

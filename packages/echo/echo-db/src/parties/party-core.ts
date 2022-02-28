@@ -132,7 +132,6 @@ export class PartyCore {
     );
 
     const feedWriteStream = createFeedWriter(feed.feed);
-
     this._pipeline = new Pipeline(
       this._partyProcessor, iterator, this._timeframeClock, feedWriteStream, this._options);
 
