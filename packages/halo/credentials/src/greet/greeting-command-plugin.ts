@@ -20,7 +20,7 @@ import { codec, Command } from '../proto';
 import { PeerId } from '../typedefs';
 import { ERR_GREET_GENERAL } from './error-codes';
 
-const log = debug('dxos:creds:greet:plugin'); // eslint-disable-line unused-imports/no-unused-vars
+const log = debug('dxos:halo:greet:plugin'); // eslint-disable-line unused-imports/no-unused-vars
 
 const DEFAULT_TIMEOUT = 30000;
 

@@ -1,5 +1,30 @@
 # Change Log
 
+### [2.28.1](https://www.github.com/dxos/protocols/compare/v2.28.0...v2.28.1) (2022-03-01)
+
+
+### Bug Fixes
+
+* Bot factory uses IPFS folders ([ae4ea02](https://www.github.com/dxos/protocols/commit/ae4ea0282ce1916e47112e5f47d3fa1cbe671db2))
+
+## [2.28.0](https://www.github.com/dxos/protocols/compare/v2.27.9...v2.28.0) (2022-02-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* Introduce DXNS Accounts (#930)
+
+### Features
+
+* Introduce DXNS Accounts ([#930](https://www.github.com/dxos/protocols/issues/930)) ([557f45a](https://www.github.com/dxos/protocols/commit/557f45a129acf9b71a7c7aac597f15c6a848efeb))
+
+### [2.27.9](https://www.github.com/dxos/protocols/compare/v2.27.8...v2.27.9) (2022-02-28)
+
+
+### Features
+
+* **Devtools:** Added "deleted" prop to items panel ([#979](https://www.github.com/dxos/protocols/issues/979)) ([b7600b7](https://www.github.com/dxos/protocols/commit/b7600b75bbeddb3834e5f219ca29db64e5c8e3e6))
+
 ### [2.27.8](https://www.github.com/dxos/protocols/compare/v2.27.7...v2.27.8) (2022-02-25)
 
 

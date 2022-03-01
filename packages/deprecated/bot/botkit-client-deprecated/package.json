@@ -1,9 +1,9 @@
 {
   "name": "@dxos/botkit-client-deprecated",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "description": "Botkit client",
   "keywords": [],
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

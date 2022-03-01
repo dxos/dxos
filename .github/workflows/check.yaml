@@ -123,3 +123,23 @@ jobs:
           sudo apt-get install -y lsof
           kill $(lsof -t -i:3000) || true
           kill $(lsof -t -i:8080) || true
+
+  # https://github.com/marketplace/actions/github-releases
+  release:
+    name: Upload Devtools Artifact
+    runs-on: [self-hosted, dind-actions-runner]
+    needs: [check]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Setup
+        run: |
+          mkdir artifacts
+          mv packages/devtools/devtools-extension/dist artifacts/devtools
+      - name: Release
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_COMPRESS: zip
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+      - name: Cleanup
+        run: rm -rf artifacts

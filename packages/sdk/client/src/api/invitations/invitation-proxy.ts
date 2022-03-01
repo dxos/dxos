@@ -32,7 +32,7 @@ export class InvitationProxy {
   readonly activeInvitations: InvitationRequest[] = [];
   readonly invitationsUpdate = new Event();
 
-  protected async createInvitationRequest ({ stream }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
+  async createInvitationRequest ({ stream }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();

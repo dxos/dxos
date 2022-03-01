@@ -7,8 +7,7 @@ import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
 import {
-  PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes,
-  sign as cryptoSign, verify as cryptoVerify
+  PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes, sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
 import { arraysEqual } from '@dxos/util';
 

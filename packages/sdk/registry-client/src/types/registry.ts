@@ -15,7 +15,7 @@ import { DXN } from './dxn';
 export interface Domain {
   key: DomainKey,
   name?: string,
-  owners: string[],
+  owner: string,
 }
 
 /**

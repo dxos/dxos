@@ -1,8 +1,8 @@
 {
   "name": "@dxos/test-bot-deprecated",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "description": "Test bot",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/main.js",
   "types": "dist/src/main.d.ts",

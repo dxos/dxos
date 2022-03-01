@@ -1,7 +1,7 @@
 {
   "name": "@dxos/messenger-model",
-  "version": "2.27.8",
-  "license": "AGPL-3.0",
+  "version": "2.28.1",
+  "license": "MIT",
   "main": "dist/src/index.js",
   "files": [
     "src",

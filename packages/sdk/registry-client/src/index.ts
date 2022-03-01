@@ -14,6 +14,7 @@ export * from './testing';
 export * from './types';
 export * from './util';
 
+export * from './accounts-client';
 export * from './auctions-client';
 export * from './queries';
 export * from './registry-client';

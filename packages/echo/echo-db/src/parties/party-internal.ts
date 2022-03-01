@@ -16,12 +16,11 @@ import { Database } from '../database';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
+import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { ResultSet } from '../result';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
-import { PartyFeedProvider } from './party-feed-provider';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import { CredentialsProvider, PartyProtocol } from './party-protocol';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
@@ -32,24 +31,16 @@ export interface PartyMember {
   displayName?: string
 }
 
-// TODO(burdon): Factor out public API.
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PartyFilter {}
-
 /**
- * Internal representation of a party.
+ * TODO(burdon): Comment.
  */
-// TODO(burdon): Rename PartyImpl.
 export class PartyInternal {
   public readonly update = new Event<void>();
 
-  // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
-
   private readonly _preferences?: PartyPreferences;
-
   private _invitationManager?: InvitationManager;
-  private _protocol?: PartyProtocol;
+  private _protocol?: PartyProtocolFactory;
 
   constructor (
     partyKey: PartyKey,
@@ -65,6 +56,7 @@ export class PartyInternal {
     _options: PartyOptions = {}
   ) {
     const identity = this._identityProvider();
+
     this._partyCore = new PartyCore(
       partyKey,
       _feedProvider,
@@ -80,6 +72,17 @@ export class PartyInternal {
     }
   }
 
+  get partyInfo () {
+    return {
+      key: this.key.toHex(),
+      isOpen: this.isOpen,
+      isActive: this.isActive,
+      feedKeys: this._feedProvider.getFeedKeys().length,
+      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
+      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
+    };
+  }
+
   get key (): PartyKey {
     return this._partyCore.key;
   }
@@ -92,51 +95,52 @@ export class PartyInternal {
     return this._partyCore.database;
   }
 
+  // TODO(burdon): Create Devtools interface?
+
+  // TODO(burdon): Remove?
   get processor () {
     return this._partyCore.processor;
   }
 
+  // TODO(burdon): Remove?
   get pipeline () {
     return this._partyCore.pipeline;
   }
 
+  // TODO(burdon): Remove?
+  get timeframe () {
+    return this._partyCore.timeframe;
+  }
+
+  // TODO(burdon): Remove?
+  get timeframeUpdate () {
+    return this._partyCore.timeframeUpdate;
+  }
+
+  // TODO(burdon): Remove?
   get invitationManager () {
     assert(this._invitationManager, 'Party not open.');
     return this._invitationManager;
+  }
+
+  // TODO(burdon): Remove?
+  get feedProvider (): PartyFeedProvider {
+    return this._feedProvider;
+  }
+
+  get preferences (): PartyPreferences {
+    assert(this._preferences, 'Preferences not available.');
+    return this._preferences;
   }
 
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
 
-  get preferences (): PartyPreferences {
-    assert(this._preferences, 'Preferences not available');
-    return this._preferences;
-  }
-
-  get feedProvider (): PartyFeedProvider {
-    return this._feedProvider;
-  }
-
-  get timeframeUpdate (): Event<Timeframe> {
-    return this._partyCore.timeframeUpdate;
-  }
-
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
-  }
-
-  get partyInfo () {
-    return {
-      key: this.key.toHex(),
-      isOpen: this.isOpen,
-      isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeedKeys().length,
-      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
-      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
-    };
   }
 
   /**
@@ -149,31 +153,33 @@ export class PartyInternal {
       return this;
     }
 
+    const identity = this._identityProvider();
+    assert(identity.deviceKey, 'Missing device key.');
+
     await this._partyCore.open(this._hints);
 
-    const identity = this._identityProvider();
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
       this._identityProvider,
       this._networkManager
     );
 
-    assert(identity.deviceKey, 'Missing device key.');
+    //
+    // Network/swarm.
+    //
 
     const writeFeed = await this._partyCore.getWriteFeed();
-    // Network/swarm.
-    this._protocol = new PartyProtocol(
+
+    this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      this._partyCore.processor.getActiveFeedSet(),
-      this._invitationManager,
       this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
-      this._partyCore.processor.authenticator
+      this._invitationManager,
+      this._partyCore.processor.authenticator,
+      this._partyCore.processor.getActiveFeedSet()
     );
-
-    // TODO(burdon): Support read-only parties.
 
     // Replication.
     await this._protocol.start();

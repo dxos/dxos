@@ -1,8 +1,8 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "description": "DXOS Wallet Extension",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
     "book": "toolchain book",
@@ -20,7 +20,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",

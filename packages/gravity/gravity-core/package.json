@@ -1,10 +1,10 @@
 {
   "name": "@dxos/gravity-core",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "private": true,
   "description": "Gravity testing framework",
   "keywords": [],
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "scripts": {

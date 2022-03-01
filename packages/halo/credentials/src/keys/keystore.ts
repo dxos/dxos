@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import { KeyRecord } from '../proto';
 
-const log = debug('dxos:creds:keys:keystore'); // eslint-disable-line unused-imports/no-unused-vars
+const log = debug('dxos:halo:keys:keystore'); // eslint-disable-line unused-imports/no-unused-vars
 
 const marshaller = {
   marshall (record: KeyRecord) {

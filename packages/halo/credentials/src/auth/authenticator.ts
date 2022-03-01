@@ -12,7 +12,7 @@ import { Keyring } from '../keys';
 import { isSignedMessage, PartyState } from '../party';
 import { codec, KeyType, Message } from '../proto';
 
-const log = debug('dxos:creds:auth');
+const log = debug('dxos:halo:auth');
 
 const MAX_AGE = 24 * 60 * 60; // One day.
 
@@ -20,23 +20,17 @@ const MAX_AGE = 24 * 60 * 60; // One day.
  * Abstract base class for Authenticators.
  * Used by AuthPlugin for authenticating nodes during handshake.
  */
-/* TODO(telackey): Explain here the intention behind the abstract base class: is in the future to have
- *   different authentication methods (besides the current PartyAuthenticator) for replication auth,
- *   or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
- */
+// TODO(telackey): Explain here the intention behind the abstract base class:
+//  E.g., to have different authentication methods (besides the current PartyAuthenticator) for replication auth,
+//  or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
 export abstract class Authenticator {
-  /* TODO(dboreham): The following static methods:
-   * temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
-   */
-  /**
-   * @param {Message} credentials
-   */
+  // TODO(dboreham): The following static methods:
+  //  temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
+
   static encodePayload (credentials: Message) {
     return codec.encode(credentials);
   }
 
-  /**
-   */
   static decodePayload (credentials: Buffer) {
     return codec.decode(credentials);
   }
@@ -74,9 +68,8 @@ export class PartyAuthenticator extends Authenticator {
    * @param credentials
    * @returns {boolean} true if authenticated, else false
    */
-  /* TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage` signing a
-   *  message of type `dxos.credentials.auth.Auth`.
-   */
+  // TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage`
+  //  signing a message of type `dxos.credentials.auth.Auth`.
   override async authenticate (credentials: any) {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
@@ -90,7 +83,8 @@ export class PartyAuthenticator extends Authenticator {
       return false;
     }
 
-    /* TODO(telackey): This is not how it should be done. We would rather use the remote
+    /*
+     * TODO(telackey): This is not how it should be done. We would rather use the remote
      * nonce for anti-replay, but we will need to add hooks for retrieving it and signing it
      * between connect() and handshake() to do that. In the meantime, not allowing infinite replay
      * is at least something.

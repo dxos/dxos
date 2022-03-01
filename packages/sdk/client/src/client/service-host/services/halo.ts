@@ -3,16 +3,25 @@
 //
 
 import PolkadotKeyring from '@polkadot/keyring';
-import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { KeyRecord, KeyType } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { AddKeyRecordRequest, Contacts, HaloService as IHaloService, SignRequest, SignResponse } from '../../../proto/gen/dxos/client';
+import {
+  AddKeyRecordRequest,
+  Contacts,
+  HaloService as IHaloService,
+  SignRequest,
+  SignResponse,
+  SetPreferenceRequest,
+  GetPreferenceRequest,
+  GetPreferenceResponse
+} from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts } from './interfaces';
 
@@ -50,7 +59,7 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
-  private async polkadotSign (key: KeyRecord, payload: SignRequest['payload']): Promise<SignResponse> {
+  private async polkadotSign (key: KeyRecord, payload: Uint8Array): Promise<SignResponse> {
     await cryptoWaitReady();
 
     assert(key.secretKey, 'Secret key is missing.');
@@ -58,9 +67,8 @@ export class HaloService implements IHaloService {
     const keyring = new PolkadotKeyring({ type: 'sr25519' });
     const keypair = keyring.addFromUri(key.secretKey.toString());
 
-    const signature = u8aToHex(keypair.sign(hexToU8a(payload), { withType: true }));
     return {
-      signed: signature
+      signed: keypair.sign(payload, { withType: true })
     };
   }
 
@@ -68,10 +76,41 @@ export class HaloService implements IHaloService {
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');
-    if (key.type === KeyType.DXNS) {
+    if (key.type === KeyType.DXNS_ADDRESS) {
+      assert(request.payload, 'No payload to sign.');
       return this.polkadotSign(key, request.payload);
     }
-    throw new Error('Only DXNS key signing is supported.');
+    throw new Error('Only DXNS Address key signing is supported.');
+  }
+
+  async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    assert(preferences, 'Preferences failed to load.');
+    await preferences.setProperty(request.key, request.value);
+  }
+
+  async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    return {
+      value: preferences?.getProperty(request.key)
+    };
+  }
+
+  async setDevicePreference (request: SetPreferenceRequest): Promise<void> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    assert(preferences, 'Preferences failed to load.');
+    await preferences.setProperty(request.key, request.value);
+  }
+
+  async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
+    assert(request.key, 'Missing key of property.');
+    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    return {
+      value: preferences?.getProperty(request.key)
+    };
   }
 }
 

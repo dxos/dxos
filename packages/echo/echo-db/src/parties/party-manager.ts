@@ -31,17 +31,19 @@ export interface OpenProgress {
 }
 
 /**
- * Manages the life-cycle of parties.
+ * Top-level class manages the complete life-cycle of parties.
+ *
+ * `PartyManager` => `PartyManager` => `PartyInternal` => `PartyCore`
  */
 export class PartyManager {
   // External event listener.
-  // TODO(burdon): Wrap aawith subscribe.
   readonly update = new Event<PartyInternal>();
 
   // Map of parties by party key.
   private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
 
   // Unsubscribe handlers.
+  // TODO(burdon): Never used.
   private readonly _onCloseHandlers: (() => void)[] = [];
 
   private _open = false;
@@ -53,12 +55,12 @@ export class PartyManager {
     private readonly _partyFactory: PartyFactory
   ) {}
 
-  get parties (): PartyInternal[] {
-    return Array.from(this._parties.values());
-  }
-
   get isOpen () {
     return this._open;
+  }
+
+  get parties (): PartyInternal[] {
+    return Array.from(this._parties.values());
   }
 
   @synchronized
@@ -157,14 +159,12 @@ export class PartyManager {
    * @param partyKey
    * @param hints
    */
-  /* TODO(telackey): Remove 'feeds' since should not be listed here. The set of trusted feeds is the
-   * under the authority of the PartyStateMachine.
-   */
   @synchronized
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
-    /* The caller should have checked if the Party existed before calling addParty, but that check
+    /*
+     * The caller should have checked if the Party existed before calling addParty, but that check
      * is not within a single critical section, and so things may have changed. So we must perform that
      * check again, here within the synchronized block.
      */

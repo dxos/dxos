@@ -1,13 +1,13 @@
 {
   "name": "@dxos/hello-world",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "private": true,
   "description": "Hello World.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"
   },
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
     "book": "esbuild-server book --mdx",

@@ -11,7 +11,7 @@ import {
 } from '@dxos/react-components';
 
 export interface LayoutProps {
-  children?: ReactNode | ReactNode[]
+  children?: ReactNode
   title?: string
   sidebar?: ReactNode
   width?: number

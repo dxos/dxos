@@ -60,6 +60,7 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       DX_PROFILE_URL: ${{ secrets.dx_profile_url }}
       DX_DXNS_USER_URI: ${{ secrets.DX_DXNS_USER_URI }}
+      DX_DXNS_ACCOUNT: ${{ secrets.DX_DXNS_ACCOUNT }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       DX_PROFILE: ci
     timeout-minutes: 25
@@ -83,8 +84,9 @@ jobs:
         set -e
         \. "$NVM_DIR/nvm.sh" && nvm use
 
-        yarn global add @dxos/cli@v2.13.13
-        yarn global add @dxos/cli-dxns@v2.13.13
+        yarn global add @dxos/cli@v2.14.0
+        yarn global add @dxos/cli-dxns@v2.14.0
+        yarn global add @dxos/cli-app@v2.14.0
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use

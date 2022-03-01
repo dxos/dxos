@@ -106,7 +106,8 @@ export const createMockResourceRecord = ({
       tags: {
         latest: record.cid
       },
-      versions: {}
+      versions: {},
+      type: type.cid
     },
     record: record
   };

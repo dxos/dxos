@@ -15,10 +15,10 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
+import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
-import { PartyFeedProvider } from './party-feed-provider';
 
 describe('PartyCore', () => {
   const setup = async () => {

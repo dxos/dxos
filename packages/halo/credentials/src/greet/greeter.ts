@@ -25,7 +25,7 @@ import {
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { Invitation, InvitationOnFinish, SecretProvider, SecretValidator } from './invitation';
 
-const log = debug('dxos:creds:greet');
+const log = debug('dxos:halo:greet');
 
 export type PartyWriter = (params: Message[]) => Promise<Message[]>;
 export type HintProvider = (params: Message[]) => Promise<KeyHint[]>;

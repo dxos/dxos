@@ -24,7 +24,7 @@ import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';
 
-const log = debug('dxos:creds:auth:test');
+const log = debug('dxos:halo:auth:test');
 
 const createTestKeyring = async () => {
   const keyring = new Keyring();

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/browser-tests",
-  "version": "2.27.8",
+  "version": "2.28.1",
   "private": true,
   "description": "Browser tests for SDK.",
   "bugs": {
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"
   },
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "files": [
     "dist",
     "src"

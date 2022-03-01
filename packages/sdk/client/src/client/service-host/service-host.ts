@@ -3,7 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
-import * as debug from '@dxos/debug'; // TODO(burdon): ???
+import * as debug from '@dxos/debug'; // TODO(burdon): Why import *?
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../../devtools';

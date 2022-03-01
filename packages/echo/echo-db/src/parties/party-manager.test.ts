@@ -33,14 +33,13 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Item } from '../database';
-import { HaloFactory, IdentityManager } from '../halo';
-import { autoPartyOpener } from '../halo/party-opener';
+import { autoPartyOpener, HaloFactory, IdentityManager } from '../halo';
 import { OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore } from '../metadata';
+import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';
 import { PartyFactory } from './party-factory';
-import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 

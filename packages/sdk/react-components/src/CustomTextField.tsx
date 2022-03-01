@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { FunctionComponent, useEffect, useRef, useState } from 'react';
+import React, { FunctionComponent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import {
   Clear as ResetIcon,
@@ -71,7 +71,7 @@ export const CustomTextField = ({
     setText(value);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     const { key } = event;
     switch (key) {
       case 'Enter': {

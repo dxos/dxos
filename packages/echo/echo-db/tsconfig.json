@@ -29,6 +29,9 @@
       "path": "../feed-store"
     },
     {
+      "path": "../../mesh/protocol"
+    },
+    {
       "path": "../model-factory"
     },
     {
@@ -38,10 +41,7 @@
       "path": "../object-model"
     },
     {
-      "path": "../../common/proto"
-    },
-    {
-      "path": "../../mesh/protocol"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../mesh/protocol-plugin-presence"

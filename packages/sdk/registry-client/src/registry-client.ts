@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ApiPromise } from '@polkadot/api/promise';
-import { AddressOrPair } from '@polkadot/api/types';
 import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
@@ -13,8 +11,7 @@ import protobuf from 'protobufjs';
 import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
-import { ApiTransactionHandler } from './api';
-import { SignTxFunction } from './api/api-transaction-handler';
+import { BaseClient } from './base-client';
 import {
   decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData
 } from './encoding';
@@ -24,6 +21,7 @@ import { Filtering, IQuery } from './queries';
 import { IRegistryClient } from './registry-client-types';
 import {
   CID, Domain, DomainKey,
+  AccountKey,
   DXN, RecordKind,
   RecordMetadata,
   RegistryDataRecord,
@@ -63,17 +61,8 @@ export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {
 /**
  * Main API for DXNS registry.
  */
-export class RegistryClient implements IRegistryClient {
+export class RegistryClient extends BaseClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
-
-  private _transactionsHandler: ApiTransactionHandler;
-
-  constructor (
-    private api: ApiPromise,
-    signFn: SignTxFunction | AddressOrPair = tx => tx
-  ) {
-    this._transactionsHandler = new ApiTransactionHandler(api, signFn);
-  }
 
   //
   // Domains
@@ -92,14 +81,14 @@ export class RegistryClient implements IRegistryClient {
       return {
         key,
         name: domain.name.unwrapOr(undefined)?.toString(),
-        owners: domain.owners.map(owner => owner.toHuman())
+        owner: domain.owner.toHex()
       };
     });
   }
 
-  async registerDomain (): Promise<DomainKey> {
+  async registerDomain (account: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this._transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, account.value));
     return domainKey;
   }
 
@@ -195,7 +184,7 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async insertRawRecord (data: Uint8Array): Promise<CID> {
-    const events = await this._transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
+    const { events } = await this.transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(compactAddLength(data)));
     const event = events.map(e => e.event).find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
     return new CID(event.data[1].toU8a());
@@ -346,21 +335,37 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async updateResource (
-    resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+    resource: DXN,
+    account: AccountKey,
+    contentCid: CID,
+    opts: UpdateResourceOptions = { tags: ['latest'] }
+  ): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this._transactionsHandler.sendTransaction(
+    await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(
-        domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
+        domainKey.value,
+        account.value,
+        resource.resource,
+        contentCid.value,
+        opts.version ?? null,
+        opts.tags ?? []
+      )
+    );
   }
 
-  async deleteResource (resource: DXN): Promise<void> {
+  async deleteResource (resource: DXN, account: AccountKey): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this._transactionsHandler.sendTransaction(
-      this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
+    await this.transactionsHandler.sendTransaction(
+      this.api.tx.registry.deleteResource(
+        domainKey.value,
+        account.value,
+        resource.resource
+      )
+    );
   }
 
   /**
