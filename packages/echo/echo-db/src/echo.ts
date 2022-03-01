@@ -117,6 +117,7 @@ export class ECHO {
     snapshotStorage = createRamStorage(),
     metadataStorage = createRamStorage(),
     networkManagerOptions,
+    /// TODO(burdon): See options below.
     snapshots = true,
     snapshotInterval = 100,
     readLogger,
@@ -128,15 +129,7 @@ export class ECHO {
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
     this._metadataStore = new MetadataStore(metadataStorage);
-
-    const options = {
-      snapshots,
-      snapshotInterval,
-      readLogger,
-      writeLogger
-    };
     this._keyring = new Keyring(new KeyStore(keyStorage));
-
     this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
 
     const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
@@ -145,6 +138,14 @@ export class ECHO {
       this._feedStore,
       partyKey
     );
+
+    // TODO(burdon): Restructure options (e.g., hierarchical options for snapshots).
+    const options = {
+      snapshots,
+      snapshotInterval,
+      readLogger,
+      writeLogger
+    };
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -162,12 +163,12 @@ export class ECHO {
       partyFactory
     );
 
-    // TODO(burdon): Why is this constructed inside of ECHO (rather than passed in)?
+    // TODO(burdon): Why does this need both PartyManager and PartyFactory?
     this._halo = new HALO({
       keyring: this._keyring,
+      partyManager: this._partyManager,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager,
       metadataStore: this._metadataStore
     });
 

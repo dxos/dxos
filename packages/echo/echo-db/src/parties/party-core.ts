@@ -23,7 +23,7 @@ export interface PartyOptions {
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
   // TODO(burdon): Hierarchical options.
-  // code ({ snapshot: { enabled: true, interval: 100 } })
+  // snapshots: { enabled: true, interval: 100 } }
   snapshots?: boolean;
   snapshotInterval?: number;
 }

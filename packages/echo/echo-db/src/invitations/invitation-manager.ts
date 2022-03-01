@@ -48,6 +48,7 @@ export class InvitationManager {
       this._identity.identityKey,
       this._identity.deviceKeyChain
     );
+
     await this._partyProcessor.writeHaloMessage(invitationMessage);
 
     return new InvitationDescriptor(
@@ -62,11 +63,10 @@ export class InvitationManager {
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator = defaultInvitationAuthenticator, options: InvitationOptions = {}) {
     assert(this._networkManager);
-
     const responder = new GreetingResponder(
       this._networkManager,
-      this._identity,
-      this._partyProcessor
+      this._partyProcessor,
+      this._identity
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

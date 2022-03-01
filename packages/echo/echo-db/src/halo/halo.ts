@@ -21,6 +21,11 @@ import type { CreateProfileOptions } from './types';
 
 const log = debug('dxos:echo');
 
+export interface ProfileInfo {
+  publicKey: PublicKey,
+  username: string | undefined
+}
+
 export interface HaloConfiguration {
   keyring: Keyring,
   partyFactory: PartyFactory,
@@ -29,27 +34,23 @@ export interface HaloConfiguration {
   metadataStore: MetadataStore
 }
 
-export interface ProfileInfo {
-  publicKey: PublicKey,
-  username: string | undefined
-}
-
 /**
- * Interface to manage user's identity and devices.
+ * Manages user's identity and devices.
  */
 export class HALO {
-  private readonly _identityManager: IdentityManager;
   private readonly _keyring: Keyring;
   private readonly _partyManager: PartyManager;
+  private readonly _identityManager: IdentityManager;
 
   constructor ({
     keyring,
+    partyManager,
     partyFactory,
     networkManager,
-    partyManager,
     metadataStore
   }: HaloConfiguration) {
     this._keyring = keyring;
+    this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
       partyFactory,
@@ -58,7 +59,6 @@ export class HALO {
     );
 
     this._identityManager = new IdentityManager(this._keyring, haloFactory, metadataStore);
-    this._partyManager = partyManager;
   }
 
   toString () {

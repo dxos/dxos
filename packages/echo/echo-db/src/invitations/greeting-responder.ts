@@ -44,11 +44,9 @@ export enum GreetingState {
  * Upon successful greeting, the peer is admitted into the Party specified in the invitation descriptor.
  */
 export class GreetingResponder {
-  private readonly _greeter: Greeter;
-
   private readonly _greeterPlugin: GreetingCommandPlugin;
-
   private readonly _swarmKey: SwarmKey = randomBytes();
+  private readonly _greeter: Greeter;
 
   private _state: GreetingState = GreetingState.INITIALIZED;
 
@@ -59,8 +57,8 @@ export class GreetingResponder {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _identity: Identity,
-    private readonly _partyProcessor: PartyProcessor
+    private readonly _partyProcessor: PartyProcessor,
+    private readonly _identity: Identity
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
