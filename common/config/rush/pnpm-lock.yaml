@@ -63,12 +63,15 @@ importers:
       '@types/download': ^8.0.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      '@types/node-fetch': ^2.5.10
       '@types/tail': ~2.2.1
+      abort-controller: ~3.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.11.23
       expect: ~27.0.2
+      node-fetch: ^2.6.0
       source-map-support: ^0.5.12
       tail: ~2.2.4
       ts-node: ^9.1.1
@@ -85,9 +88,11 @@ importers:
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
+      abort-controller: 3.0.0
       debug: 4.3.3
       download: 8.0.0
       esbuild: 0.11.23
+      node-fetch: 2.6.6
       source-map-support: 0.5.21
       tail: 2.2.4
     devDependencies:
@@ -103,6 +108,7 @@ importers:
       '@types/download': 8.0.1
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
+      '@types/node-fetch': 2.5.12
       '@types/tail': 2.2.1
       assert: 2.0.0
       expect: 27.0.6
@@ -8858,6 +8864,13 @@ packages:
   /abbrev/1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
 
+  /abort-controller/3.0.0:
+    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
+    engines: {node: '>=6.5'}
+    dependencies:
+      event-target-shim: 5.0.1
+    dev: false
+
   /abstract-extension/3.1.1:
     resolution: {integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==}
     dependencies:
@@ -13297,6 +13310,11 @@ packages:
     dependencies:
       d: 1.0.1
       es5-ext: 0.10.53
+    dev: false
+
+  /event-target-shim/5.0.1:
+    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
+    engines: {node: '>=6'}
     dev: false
 
   /event-to-promise/0.8.0:
