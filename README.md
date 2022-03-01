@@ -1,6 +1,6 @@
 [![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
 
-![js-dxos](./docs/images/github-repo-banner.png)
+![js-dxos](./docs/assets/images/github-repo-banner.png)
 
 ## DXOS Protocols
 
@@ -10,7 +10,7 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Quick start
 
-[Getting started](./docs/internal/getting-started.md).
+[Getting started](./docs/getting-started.md).
 
 
 ## Installation and usage

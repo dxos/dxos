@@ -2,7 +2,7 @@
 
 ## The stack
 
-<img src="../assets/diagrams/stack.drawio.svg">
+<img src="./diagrams/stack.drawio.svg">
 
 ### Client
 
@@ -27,7 +27,7 @@ Processes mutations and snapshots to maintain a set of items and links with mode
 ECHO is a hierrahical graph database where items a stored in a tree structure, connected by links.
 Each item or link has state-machine and a model.
 
-[Architecture](../assets/diagrams/echo-architecture.drawio.png)
+[Architecture](./diagrams/echo-architecture.drawio.png)
 
 #### Models and state machines
 
@@ -39,20 +39,21 @@ The most common is the `ObjectModel` which is a key-value store.
 
 Other examples include `TextModel`, `ChessModel`, `MessengerModel`. Users can register their own custom models and state machines.
 
-[Architecture](../assets/diagrams/state-machine.drawio.svg)
+[Architecture](./diagrams/state-machine.drawio.svg)
 
 ### MESH
 
 Networking and replication mechanisms.
 
-Peers can join swarms where WebRTC connections are esablished to other peers. This can allow for replication within a pary, invitations, and bot-factory communication.
+Peers can join swarms where WebRTC connections are esablished to other peers. 
+This can allow for replication within a pary, invitations, and bot-factory communication.
 
 Signal servers are hosted on KUBEs and are used to establish WebRTC connections.
 
 Each connections has an associated `Protocol` object with it which defines the protocol capabilities in the form of extensions.
 Extensions are generally created by plugins which implement the custom networking logic for different aspects of the stack: replication, authentication, invitaitons, presense, RPC and so on.
 
-[Architecture](../assets/diagrams/mesh.drawio.svg)
+[Architecture](./diagrams/mesh.drawio.svg)
 
 ## Infrastucture and tools
 
@@ -68,7 +69,7 @@ Clients can send commands to spawn new bots or to control the existing ones.
 
 Bot factory is designed to allow for many bot runtimes: NodeJS, Deno, Docker, browser (playwright), etc.
 
-[Architecture](../assets/diagrams/bot.drawio.svg)
+[Architecture](./diagrams/bot.drawio.svg)
 
 ### Protobuf compiler
 

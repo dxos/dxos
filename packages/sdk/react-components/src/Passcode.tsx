@@ -3,7 +3,7 @@
 //
 
 import { keyframes } from '@emotion/react';
-import React, { createRef, useEffect, useState } from 'react';
+import React, { SyntheticEvent, createRef, useEffect, useState } from 'react';
 
 import { useTheme, Box } from '@mui/material';
 
@@ -140,8 +140,8 @@ export const Passcode = ({
     }
   };
 
-  const handleFocusChange = (ev: React.SyntheticEvent) => {
-    setFocused(ev.type === 'focus');
+  const handleFocusChange = (event: SyntheticEvent) => {
+    setFocused(event.type === 'focus');
   };
 
   const chars = new Array(length);

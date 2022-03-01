@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import { FunctionComponent } from 'react';
 
 import { styled } from '@mui/material';
 
@@ -16,4 +16,4 @@ const ColumnDiv = styled('div')({
 });
 
 // TODO(wittjosiah): Props and cleanup.
-export const Column: React.FunctionComponent<any> = ColumnDiv;
+export const Column: FunctionComponent<any> = ColumnDiv;
