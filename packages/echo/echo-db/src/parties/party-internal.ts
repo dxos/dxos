@@ -154,20 +154,23 @@ export class PartyInternal {
       return this;
     }
 
+    const identity = this._identityProvider();
+    assert(identity.deviceKey, 'Missing device key.');
+
     await this._partyCore.open(this._hints);
 
-    const identity = this._identityProvider();
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
       this._identityProvider,
       this._networkManager
     );
 
-    assert(identity.deviceKey, 'Missing device key.');
+    //
+    // Network/swarm.
+    //
 
     const writeFeed = await this._partyCore.getWriteFeed();
 
-    // Network/swarm.
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,

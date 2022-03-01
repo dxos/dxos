@@ -135,6 +135,11 @@ export class PartyCore {
     // TODO(burdon): Support read-only parties.
     const [readStream, writeStream] = await this._pipeline.open();
 
+    // Must happen after open.
+    if (this._pipeline.outboundHaloStream) {
+      this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
+    }
+
     //
     // Database
     //
@@ -147,16 +152,12 @@ export class PartyCore {
 
     await this._database.init();
 
-    if (this._pipeline.outboundHaloStream) {
-      this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
-    }
-
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
 
     if (this._options.snapshots) {
       createAutomaticSnapshots(
-        this, // TODO(burdon): Don't pass this.
+        this, // TODO(burdon): Don't pass `this`.
         this._timeframeClock,
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
