@@ -71,7 +71,7 @@ export const Main = () => {
   const [haloInviteOpen, setHaloInviteOpen] = useState(false);
   const [partyKey, setPartyKey] = useState();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const handleButtonClick = (event) => {
     setAnchorEl(event.currentTarget);

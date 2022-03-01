@@ -33,8 +33,7 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Item } from '../database';
-import { HaloFactory, IdentityManager } from '../halo';
-import { autoPartyOpener } from '../halo/party-opener';
+import { autoPartyOpener, HaloFactory, IdentityManager } from '../halo';
 import { OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';

@@ -14,7 +14,7 @@ import { ItemAdapter } from '../adapter';
 export interface EchoCardProps {
   item: Item<ObjectModel>
   itemAdapter: ItemAdapter
-  children?: ReactNode | ReactNode[]
+  children?: ReactNode
 }
 
 export const EchoCard = ({
