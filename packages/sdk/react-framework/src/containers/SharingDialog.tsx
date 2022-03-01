@@ -2,20 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { MouseEvent, useState } from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 import urlJoin from 'url-join';
 
-import {
-  Clear as CancelIcon, QrCode2 as QRCodeIcon
-} from '@mui/icons-material';
-import { Button, IconButton, Popover, Typography } from '@mui/material';
-import { Box } from '@mui/system';
+import { Clear as CancelIcon, QrCode2 as QRCodeIcon } from '@mui/icons-material';
+import { Box, Button, IconButton, Popover, Typography } from '@mui/material';
 
 import { InvitationRequest, PartyMember } from '@dxos/client';
-import {
-  CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
-} from '@dxos/react-components';
+import { CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode } from '@dxos/react-components';
 
 interface PendingInvitationProps {
   invitationCode: string
@@ -63,7 +58,7 @@ const PendingInvitationView = ({
           </IconButton>
           <IconButton
             size='small'
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => setPopoverAnchor(event.currentTarget)}
+            onClick={(event: MouseEvent<HTMLButtonElement>) => setPopoverAnchor(event.currentTarget)}
           >
             <QRCodeIcon />
           </IconButton>

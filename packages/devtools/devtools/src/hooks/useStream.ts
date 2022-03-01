@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import { DependencyList, useState, useEffect } from 'react';
 
 import { Stream } from '@dxos/codec-protobuf';
 
-export const useStream = <T>(streamFactory: () => Stream<T>, deps: React.DependencyList = []): T | undefined => {
+export const useStream = <T>(streamFactory: () => Stream<T>, deps: DependencyList = []): T | undefined => {
   const [value, setValue] = useState<T | undefined>();
 
   useEffect(() => {

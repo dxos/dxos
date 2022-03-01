@@ -35,7 +35,6 @@ export interface OpenProgress {
  */
 export class PartyManager {
   // External event listener.
-  // TODO(burdon): Wrap aawith subscribe.
   readonly update = new Event<PartyInternal>();
 
   // Map of parties by party key.
@@ -157,14 +156,12 @@ export class PartyManager {
    * @param partyKey
    * @param hints
    */
-  /* TODO(telackey): Remove 'feeds' since should not be listed here. The set of trusted feeds is the
-   * under the authority of the PartyStateMachine.
-   */
   @synchronized
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
-    /* The caller should have checked if the Party existed before calling addParty, but that check
+    /*
+     * The caller should have checked if the Party existed before calling addParty, but that check
      * is not within a single critical section, and so things may have changed. So we must perform that
      * check again, here within the synchronized block.
      */

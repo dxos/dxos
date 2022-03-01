@@ -115,7 +115,8 @@ export class PartyFactory {
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     const identity = this._identityProvider();
 
-    /* TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
+    /*
+     * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
      * mechanism is broken by not waiting on the messages to be processed before returning.
      */
 

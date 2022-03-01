@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
@@ -48,7 +48,7 @@ export const PartyJoinPanel = (
             multiline
             fullWidth
             value={invitationCode}
-            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+            onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
               setInvitationCode(event.target.value);
               setPin('');
             }}
@@ -60,7 +60,7 @@ export const PartyJoinPanel = (
               <TextField
                 disabled={!invitationCode}
                 value={pin}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
                 size='small'
                 label='PIN'
               />

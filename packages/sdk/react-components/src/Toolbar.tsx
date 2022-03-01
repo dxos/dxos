@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import { FunctionComponent } from 'react';
 
 import {
   Toolbar as MuiToolbar,
@@ -21,4 +21,4 @@ const StyledToolbar = styled(MuiToolbar)<MuiToolbarProps>(({ theme }) => ({
   }
 }));
 
-export const Toolbar: React.FunctionComponent<MuiToolbarProps> = StyledToolbar;
+export const Toolbar: FunctionComponent<MuiToolbarProps> = StyledToolbar;

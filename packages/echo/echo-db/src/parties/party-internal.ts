@@ -37,17 +37,13 @@ export interface PartyMember {
 export interface PartyFilter {}
 
 /**
- * Internal representation of a party.
+ * TODO(burdon): Comment.
  */
-// TODO(burdon): Rename PartyImpl.
 export class PartyInternal {
   public readonly update = new Event<void>();
 
-  // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
-
   private readonly _preferences?: PartyPreferences;
-
   private _invitationManager?: InvitationManager;
   private _protocol?: PartyProtocol;
 
@@ -65,6 +61,7 @@ export class PartyInternal {
     _options: PartyOptions = {}
   ) {
     const identity = this._identityProvider();
+
     this._partyCore = new PartyCore(
       partyKey,
       _feedProvider,
@@ -80,6 +77,17 @@ export class PartyInternal {
     }
   }
 
+  get partyInfo () {
+    return {
+      key: this.key.toHex(),
+      isOpen: this.isOpen,
+      isActive: this.isActive,
+      feedKeys: this._feedProvider.getFeedKeys().length,
+      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
+      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
+    };
+  }
+
   get key (): PartyKey {
     return this._partyCore.key;
   }
@@ -92,17 +100,30 @@ export class PartyInternal {
     return this._partyCore.database;
   }
 
+  // TODO(burdon): Remove?
   get processor () {
     return this._partyCore.processor;
   }
 
+  // TODO(burdon): Remove?
   get pipeline () {
     return this._partyCore.pipeline;
   }
 
+  // TODO(burdon): Remove?
   get invitationManager () {
     assert(this._invitationManager, 'Party not open.');
     return this._invitationManager;
+  }
+
+  // TODO(burdon): Remove?
+  get feedProvider (): PartyFeedProvider {
+    return this._feedProvider;
+  }
+
+  // TODO(burdon): Remove?
+  get timeframeUpdate (): Event<Timeframe> {
+    return this._partyCore.timeframeUpdate;
   }
 
   get title () {
@@ -114,29 +135,10 @@ export class PartyInternal {
     return this._preferences;
   }
 
-  get feedProvider (): PartyFeedProvider {
-    return this._feedProvider;
-  }
-
-  get timeframeUpdate (): Event<Timeframe> {
-    return this._partyCore.timeframeUpdate;
-  }
-
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
-  }
-
-  get partyInfo () {
-    return {
-      key: this.key.toHex(),
-      isOpen: this.isOpen,
-      isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeedKeys().length,
-      timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
-      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
-    };
   }
 
   /**
