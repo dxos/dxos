@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityProvider } from '../halo';
-import { PartyProcessor } from '../parties';
+import { PartyProcessor } from '../pipeline';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

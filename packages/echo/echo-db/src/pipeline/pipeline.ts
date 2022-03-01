@@ -20,8 +20,8 @@ import { TimeframeClock } from '../database';
 import { PartyProcessor } from './party-processor';
 
 interface Options {
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
+  readLogger?: (msg: any) => void
+  writeLogger?: (msg: any) => void
 }
 
 const log = debug('dxos:echo:parties:pipeline');

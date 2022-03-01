@@ -19,21 +19,22 @@ import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { PartyFeedProvider } from './party-feed-provider';
 
-const log = debug('dxos:echo:party-protocol');
+const log = debug('dxos:echo:party-protocol-factory');
 
 export interface CredentialsProvider {
   /**
-   * The credentials (eg, a serialized AuthMessage) as a bytes.
+   * The credentials (e.g., a serialized AuthMessage) as a bytes.
    */
-  get(): Buffer
+  get (): Buffer
 }
 
 /**
  * Manages the party's connection to the network swarm.
  */
-export class PartyProtocol {
+export class PartyProtocolFactory {
   private readonly _peerId = PublicKey.random(); // TODO(marik-d): Should this be a specific peer id?
-  private readonly _presence = new PresencePlugin(this._peerId.asBuffer());
+
+  private readonly _presencePlugin = new PresencePlugin(this._peerId.asBuffer());
   private readonly _haloProtocolPluginFactory: HaloProtocolPluginFactory;
   private readonly _replicatorProtocolPluginFactory: ReplicatorProtocolPluginFactory;
 
@@ -43,16 +44,17 @@ export class PartyProtocol {
     private readonly _partyKey: PartyKey,
     private readonly _networkManager: NetworkManager,
     private readonly _feedProvider: PartyFeedProvider,
-    activeFeeds: FeedSetProvider,
-    invitationManager: InvitationManager,
     private readonly _identityProvider: IdentityProvider,
     private readonly _credentials: CredentialsProvider,
-    authenticator: Authenticator
+    invitationManager: InvitationManager,
+    authenticator: Authenticator,
+    activeFeeds: FeedSetProvider
   ) {
-    // TODO(burdon): Does it make sense to pass in factories rather than creating them here?
-    //   ONLY if the system can function without one of them!
+    // Authentication.
     this._haloProtocolPluginFactory =
       new HaloProtocolPluginFactory(this._partyKey, this._identityProvider, invitationManager, authenticator);
+
+    // Replication.
     this._replicatorProtocolPluginFactory =
       new ReplicatorProtocolPluginFactory(this._feedProvider, activeFeeds);
   }
@@ -75,7 +77,7 @@ export class PartyProtocol {
       protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }),
       peerId: this._peerId,
       topic: this._partyKey,
-      presence: this._presence,
+      presence: this._presencePlugin,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._partyKey}`
     });
@@ -97,7 +99,7 @@ export class PartyProtocol {
     const plugins = [
       ...this._haloProtocolPluginFactory.createPlugins(),
       ...this._replicatorProtocolPluginFactory.createPlugins(),
-      this._presence
+      this._presencePlugin
     ];
 
     const protocol = new Protocol({
@@ -116,8 +118,8 @@ export class PartyProtocol {
         // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
         protocol.setContext({ topic: this._partyKey.toHex() });
 
-        // TODO(burdon): Inconsistent use of toHex and asBuffer.
-        //   Need to progressively clean-up all uses of Keys via Typescript.
+        // TODO(burdon): IMPORTANT: inconsistent use of toHex and asBuffer.
+        //  - Need to progressively clean-up all uses of Keys via Typescript.
         return this._partyKey.asBuffer();
       },
 

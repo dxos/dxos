@@ -8,6 +8,7 @@ export * from './echo';
 export * from './invitations';
 export * from './database';
 export * from './parties';
+export * from './pipeline';
 export * from './result';
 export * from './snapshots';
 export * from './util';

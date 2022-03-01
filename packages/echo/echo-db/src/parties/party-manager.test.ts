@@ -36,10 +36,10 @@ import { Item } from '../database';
 import { autoPartyOpener, HaloFactory, IdentityManager } from '../halo';
 import { OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore } from '../metadata';
+import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';
 import { PartyFactory } from './party-factory';
-import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 

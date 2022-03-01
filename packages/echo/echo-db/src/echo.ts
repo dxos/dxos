@@ -23,13 +23,17 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyInternal, PartyManager } from './parties';
+import { OpenProgress, PartyFactory, PartyInternal, PartyManager } from './parties';
+import { PartyFeedProvider } from './pipeline';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
 
-// TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
+const error = log.extend('error');
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface PartyFilter {}
 
 /**
  * Various options passed to `ECHO.create`.
@@ -285,7 +289,7 @@ export class ECHO {
         await this._feedStore.storage.destroy();
       }
     } catch (err: any) {
-      log('Error clearing feed storage:', err);
+      error('Error clearing feed storage:', err);
     }
 
     await this.halo.reset();
@@ -293,13 +297,13 @@ export class ECHO {
     try {
       await this._snapshotStore.clear();
     } catch (err: any) {
-      log('Error clearing snapshot storage:', err);
+      error('Error clearing snapshot storage:', err);
     }
 
     try {
       await this._metadataStore.clear();
     } catch (err: any) {
-      log('Error clearing metadata storage:', err);
+      error('Error clearing metadata storage:', err);
     }
   }
 

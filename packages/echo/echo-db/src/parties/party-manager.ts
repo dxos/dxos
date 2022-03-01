@@ -31,7 +31,9 @@ export interface OpenProgress {
 }
 
 /**
- * Manages the life-cycle of parties.
+ * Top-level class manages the complete life-cycle of parties.
+ *
+ * `PartyManager` => `PartyManager` => `PartyInternal` => `PartyCore`
  */
 export class PartyManager {
   // External event listener.

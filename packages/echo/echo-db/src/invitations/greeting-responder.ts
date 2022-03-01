@@ -20,7 +20,7 @@ import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { Identity } from '../halo';
-import { PartyProcessor } from '../parties';
+import { PartyProcessor } from '../pipeline';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
