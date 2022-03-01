@@ -42,7 +42,7 @@
       "path": "../../echo/echo-db"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../sdk/react-client"
