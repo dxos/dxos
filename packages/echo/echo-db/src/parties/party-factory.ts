@@ -25,15 +25,15 @@ import { IdentityProvider } from '../halo';
 import {
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
+import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';
-import { PartyFeedProvider } from './party-feed-provider';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 const log = debug('dxos:echo:parties:party-factory');
 
 /**
- * Creates parties.
+ * Creates and constructs party instances.
  */
 export class PartyFactory {
   constructor (
@@ -123,7 +123,7 @@ export class PartyFactory {
     const feedProvider = this._createFeedProvider(partyKey);
     const { feed } = await feedProvider.createOrOpenWritableFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
-    assert(feedKeyPair, 'Keypair for writable feed not found');
+    assert(feedKeyPair, 'Keypair for writable feed not found.');
     const party = new PartyInternal(
       partyKey,
       this._modelFactory,
@@ -137,7 +137,7 @@ export class PartyFactory {
     );
 
     await party.open();
-    assert(identity.identityKey, 'No identity key');
+    assert(identity.identityKey, 'No identity key.');
     const isHalo = identity.identityKey.publicKey.equals(partyKey);
     const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
     assert(signingKey, 'No device key or keychain.');
@@ -232,6 +232,7 @@ export class PartyFactory {
         ));
       }
     }
+
     return party;
   }
 

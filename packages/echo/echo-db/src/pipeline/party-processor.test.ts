@@ -8,11 +8,17 @@ import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
 import {
-  Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage, createIdentityInfoMessage
+  Keyring,
+  KeyType,
+  createEnvelopeMessage,
+  createFeedAdmitMessage,
+  createIdentityInfoMessage,
+  createKeyAdmitMessage,
+  createPartyGenesisMessage
 } from '@dxos/credentials';
 import { IHaloStream } from '@dxos/echo-protocol';
 
-import { PartyProcessor } from './party-processor';
+import { PartyProcessor } from '../pipeline';
 
 const log = debug('dxos:echo:parties:party-processor:test');
 

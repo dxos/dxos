@@ -31,7 +31,9 @@ export interface OpenProgress {
 }
 
 /**
- * Manages the life-cycle of parties.
+ * Top-level class manages the complete life-cycle of parties.
+ *
+ * `PartyManager` => `PartyManager` => `PartyInternal` => `PartyCore`
  */
 export class PartyManager {
   // External event listener.
@@ -41,6 +43,7 @@ export class PartyManager {
   private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
 
   // Unsubscribe handlers.
+  // TODO(burdon): Never used.
   private readonly _onCloseHandlers: (() => void)[] = [];
 
   private _open = false;
@@ -52,12 +55,12 @@ export class PartyManager {
     private readonly _partyFactory: PartyFactory
   ) {}
 
-  get parties (): PartyInternal[] {
-    return Array.from(this._parties.values());
-  }
-
   get isOpen () {
     return this._open;
+  }
+
+  get parties (): PartyInternal[] {
+    return Array.from(this._parties.values());
   }
 
   @synchronized

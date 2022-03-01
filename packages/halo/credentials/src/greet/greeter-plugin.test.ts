@@ -18,7 +18,7 @@ import { Greeter } from './greeter';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { SecretProvider, SecretValidator } from './invitation';
 
-const log = debug('dxos:creds:greet');
+const log = debug('dxos:halo:greet');
 
 /**
  * Create the Greeter with Plugin and Protocol.
