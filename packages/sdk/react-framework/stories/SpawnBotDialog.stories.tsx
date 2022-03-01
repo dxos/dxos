@@ -26,17 +26,16 @@ const User = () => {
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Spawn bot</Button>
+        <Button onClick={() => setBotRunning(false)}>Stop bot</Button>
       </Toolbar>
-      {open && (
-        <SpawnBotDialog
-          open={open}
-          onClose={() => setOpen(false)}
-          onSpawn={async () => {
-            await sleep(2000);
-            setBotRunning(true);
-          }}
-        />
-      )}
+      <SpawnBotDialog
+        open={open}
+        onSelect={async () => {
+          await sleep(2000);
+          setBotRunning(true);
+        }}
+        onClose={() => setOpen(false)}
+      />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         Bot running: {botRunning ? 'yes' : 'no'}
       </Box>

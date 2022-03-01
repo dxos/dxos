@@ -4,17 +4,20 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Autocomplete, Button, TextField } from '@mui/material';
+import { Autocomplete, Box, Button, Chip, TextField } from '@mui/material';
 
 import { Dialog } from '@dxos/react-components';
-import { Resource } from '@dxos/registry-client';
+import { useRegistry } from '@dxos/react-registry-client';
+import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
 export interface RegistrySearchDialogProps {
   open: boolean
   title?: string
-  onSearch: (searchInput: string) => Promise<Resource[]>
+  typeFilter?: CID[]
+  onSearch?: (searchInput: string) => Promise<Resource[]>
   onSelect: (resource: Resource) => Promise<void>
   onClose?: () => void
+  closeOnSuccess?: boolean
   modal?: boolean
 }
 
@@ -24,68 +27,124 @@ export interface RegistrySearchDialogProps {
 export const RegistrySearchDialog = ({
   open,
   title,
+  typeFilter = [],
   onSearch,
   onSelect,
   onClose,
+  closeOnSuccess,
   modal
 }: RegistrySearchDialogProps) => {
+  const registry = useRegistry();
   const [searchInput, setSearchInput] = useState('');
   const [searchOptions, setSearchOptions] = useState<Resource[]>([]);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<CID[]>(typeFilter);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSearch = (searchInput: string) => {
+    if (onSearch) {
+      return onSearch(searchInput);
+    }
+
+    return registry.queryResources({ text: searchInput });
+  };
 
   useEffect(() => {
     setImmediate(async () => {
-      const resources = await onSearch(searchInput);
-      setSearchOptions(resources);
+      const queriedTypes = await registry.getTypeRecords();
+      setTypes(queriedTypes);
     });
-  }, [searchInput]);
+  }, []);
+
+  useEffect(() => {
+    setImmediate(async () => {
+      const resources = await handleSearch(searchInput);
+      const resourcesFilteredByType = selectedTypes.length > 0
+        ? resources.filter(resource =>
+          selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
+        )
+        : resources;
+      setSearchOptions(resourcesFilteredByType);
+    });
+  }, [searchInput, selectedTypes]);
 
   const handleReset = () => {
     setSearchInput('');
     setSearchOptions([]);
     setSelectedResource(null);
+    setProcessing(false);
   };
 
   const handleClose = () => {
-    onClose?.();
     handleReset();
+    onClose?.();
   };
 
   const handleSelect = async () => {
+    setProcessing(true);
     selectedResource && await onSelect?.(selectedResource);
     handleReset();
+    if (closeOnSuccess) {
+      onClose?.();
+    }
   };
 
   const content = (
-    <Autocomplete
-      fullWidth
-      options={searchOptions}
-      getOptionLabel={option => option.id.toString()}
-      renderInput={params => (
-        <TextField
-          {...params}
-          label='Search'
-          placeholder='Search'
-          variant='standard'
-          autoFocus
-          spellCheck={false}
-        />
+    <>
+      {typeFilter.length === 0 && (
+        // TODO(wittjosiah): Loading placeholder.
+        <Box>
+          {types.map(type => (
+            <Chip
+              key={type.messageName}
+              label={type.messageName}
+              sx={{
+                marginBottom: 1,
+                marginRight: 1,
+                bgcolor: selectedTypes.includes(type.cid) ? 'action.active' : undefined,
+                color: selectedTypes.includes(type.cid) ? 'primary.contrastText' : undefined
+              }}
+              onClick={() => setSelectedTypes(prev => {
+                if (selectedTypes.includes(type.cid)) {
+                  return prev.filter(setSelectedType => setSelectedType !== type.cid);
+                } else {
+                  return [...prev, type.cid];
+                }
+              })}
+            />
+          ))}
+        </Box>
       )}
-      inputValue={searchInput}
-      onInputChange={(event, newValue) => setSearchInput(newValue)}
-      value={selectedResource}
-      onChange={(event, newValue) => setSelectedResource(newValue)}
-    />
+      <Autocomplete
+        fullWidth
+        options={searchOptions}
+        getOptionLabel={option => option.id.toString()}
+        renderInput={params => (
+          <TextField
+            {...params}
+            placeholder='Search'
+            variant='standard'
+            autoFocus
+            spellCheck={false}
+          />
+        )}
+        inputValue={searchInput}
+        onInputChange={(event, newValue) => setSearchInput(newValue)}
+        value={selectedResource}
+        onChange={(event, newValue) => setSelectedResource(newValue)}
+      />
+    </>
   );
 
   const actions = (
     <>
       <Button onClick={handleClose}>Close</Button>
       <Button
-        disabled={!selectedResource}
+        disabled={processing || !selectedResource}
         onClick={handleSelect}
       >
-        Select
+        {processing ? 'Processing' : 'Select'}
       </Button>
     </>
   );
