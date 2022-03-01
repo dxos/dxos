@@ -80,7 +80,6 @@ export class PartyInternal {
       feedKeys: this._feedProvider.getFeedKeys().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
-
     };
   }
 

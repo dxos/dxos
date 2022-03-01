@@ -24,7 +24,6 @@ const MAX_AGE = 24 * 60 * 60; // One day.
 //  E.g., to have different authentication methods (besides the current PartyAuthenticator) for replication auth,
 //  or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
 export abstract class Authenticator {
-
   // TODO(dboreham): The following static methods:
   //  temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
 
