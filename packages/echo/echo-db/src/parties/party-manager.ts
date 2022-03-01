@@ -43,6 +43,7 @@ export class PartyManager {
   private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
 
   // Unsubscribe handlers.
+  // TODO(burdon): Never used.
   private readonly _onCloseHandlers: (() => void)[] = [];
 
   private _open = false;
@@ -54,12 +55,12 @@ export class PartyManager {
     private readonly _partyFactory: PartyFactory
   ) {}
 
-  get parties (): PartyInternal[] {
-    return Array.from(this._parties.values());
-  }
-
   get isOpen () {
     return this._open;
+  }
+
+  get parties (): PartyInternal[] {
+    return Array.from(this._parties.values());
   }
 
   @synchronized
