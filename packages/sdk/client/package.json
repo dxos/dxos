@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.28.0",
+  "version": "2.28.1",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -28,7 +28,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
     "@polkadot/keyring": "6.11.1",

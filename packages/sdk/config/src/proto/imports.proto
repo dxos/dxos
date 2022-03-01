@@ -1,1 +1,1 @@
-import "@dxos/protocol/src/proto/dxos/config.proto";
+import "@dxos/protocols/src/proto/dxos/config.proto";

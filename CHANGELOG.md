@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.1](https://www.github.com/dxos/protocols/compare/v2.28.0...v2.28.1) (2022-03-01)
+
+
+### Bug Fixes
+
+* Bot factory uses IPFS folders ([ae4ea02](https://www.github.com/dxos/protocols/commit/ae4ea0282ce1916e47112e5f47d3fa1cbe671db2))
+
 ## [2.28.0](https://www.github.com/dxos/protocols/compare/v2.27.9...v2.28.0) (2022-02-28)
 
 
