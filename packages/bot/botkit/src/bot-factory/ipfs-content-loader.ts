@@ -28,7 +28,7 @@ export class IPFSContentLoader implements ContentLoader {
     const url = `${this._ipfsEndpoint}/${ipfsCid}/`;
     const files = await (await fetch(this._ipfsEndpoint.replace('/ipfs/', `/api/v0/ls?arg=${ipfsCid}`))).json();
     for await (const file of files.Objects[0].Links) {
-      const path = url + file.Name
+      const path = url + file.Name;
       log(`Downloading ${path}`);
       await download(path, dir, { extract: true, timeout: DOWNLOAD_TIMEOUT, rejectUnauthorized: false });
     }
