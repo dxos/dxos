@@ -491,7 +491,7 @@
     },
     {
       "packageName": "@dxos/protocols",
-      "projectFolder": "packages/common/proto",
+      "projectFolder": "packages/common/protocols",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

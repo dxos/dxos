@@ -29,7 +29,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
     devDependencies:
       '@dxos/client': link:../../sdk/client
@@ -82,7 +82,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
       debug: 4.3.3
@@ -226,15 +226,6 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.24
 
-  ../../packages/common/proto:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-    dependencies:
-      '@dxos/codec-protobuf': link:../codec-protobuf
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-
   ../../packages/common/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -295,6 +286,15 @@ importers:
   ../../packages/common/protobuf-test:
     specifiers: {}
 
+  ../../packages/common/protocols:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+    dependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+
   ../../packages/common/random-access-multi-storage:
     specifiers:
       '@dxos/browser-mocha': workspace:*
@@ -344,7 +344,7 @@ importers:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
-      '@dxos/protocols': link:../proto
+      '@dxos/protocols': link:../protocols
       debug: 4.3.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
@@ -893,7 +893,7 @@ importers:
       '@dxos/devtools-mesh': link:../devtools-mesh
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/model-factory': link:../../echo/model-factory
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
       '@dxos/rpc': link:../../common/rpc
@@ -1135,7 +1135,7 @@ importers:
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.7
@@ -1189,7 +1189,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': link:../feed-store
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       debug: 4.3.3
       pify: 5.0.0
@@ -1607,7 +1607,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/mesh-protocol': link:../../mesh/protocol
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
@@ -2139,7 +2139,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       '@polkadot/keyring': 6.11.1
@@ -2198,7 +2198,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       boolean: 3.1.4
       debug: 4.3.3
       js-yaml: 3.14.1
@@ -2615,7 +2615,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/protocols': link:../../common/proto
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
