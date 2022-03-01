@@ -96,7 +96,7 @@ export const RegistrationDialog = ({
     element.click();
   };
 
-  const handleNext = async (ev: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> => {
+  const handleNext = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> => {
     setError(undefined);
     setProcessing(false);
 
@@ -122,7 +122,7 @@ export const RegistrationDialog = ({
           return word !== seedWords[seedWordTestIndexes[i]] ? true : undefined;
         });
 
-        const skipMatch = (debug || ev.shiftKey || !!isMobile);
+        const skipMatch = (debug || event.shiftKey || !!isMobile);
         if (match || skipMatch) {
           setProcessing(true);
           await onComplete(seedPhrase, username);

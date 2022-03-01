@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, ReactNode, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 
-import {
-  Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography
-} from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography } from '@mui/material';
 
 import { ItemAdapter } from '../adapter';
 
@@ -37,11 +35,11 @@ export const CreateItemDialog = ({
     }
   };
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
         event.preventDefault();

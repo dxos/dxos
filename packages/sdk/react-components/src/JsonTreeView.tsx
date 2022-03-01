@@ -3,7 +3,7 @@
 //
 
 import isPlainObject from 'lodash.isplainobject';
-import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
+import React, { ChangeEvent, ReactElement, ReactNode, useEffect, useState } from 'react';
 
 import {
   ChevronRight as ChevronRightIcon,
@@ -218,7 +218,7 @@ export const JsonTreeView = ({
     );
   };
 
-  const handleToggle = (_event: React.ChangeEvent<unknown>, nodeIds: string[]) => {
+  const handleToggle = (_event: ChangeEvent<unknown>, nodeIds: string[]) => {
     setExpanded(nodeIds);
   };
 

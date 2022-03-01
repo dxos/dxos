@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { SyntheticEvent, useState } from 'react';
 
 import { Button, TextField } from '@mui/material';
 
@@ -26,7 +26,7 @@ export const ExportDialog = ({
   const minLength = 8;
 
   let passphrase = '';
-  const handleChange = (event: React.SyntheticEvent) => {
+  const handleChange = (event: SyntheticEvent) => {
     passphrase = (event.target as HTMLTextAreaElement).value.trim();
   };
 

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 
 import { Clear as ResetIcon } from '@mui/icons-material';
 import { FormControl, IconButton, Input, InputAdornment } from '@mui/material';
@@ -17,7 +17,7 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
   const [text, setText] = useState<string | undefined>();
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const text = event.target.value as string;
     setText(text);
 
@@ -32,7 +32,7 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
     onSearch && onSearch(undefined);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case 'Enter': {
         onSearch && onSearch(undefined);

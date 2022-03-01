@@ -6,11 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import {
-  AuthPlugin,
-  Authenticator,
-  GreetingCommandPlugin
-} from '@dxos/credentials';
+import { AuthPlugin, Authenticator, GreetingCommandPlugin } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import type { HypercoreFeed } from '@dxos/feed-store';
@@ -22,9 +18,8 @@ import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { PartyFeedProvider } from './party-feed-provider';
-import { PartyInternal } from './party-internal';
 
-const log = debug('dxos:echo:replication-adapter');
+const log = debug('dxos:echo:party-protocol');
 
 export interface CredentialsProvider {
   /**
@@ -33,21 +28,12 @@ export interface CredentialsProvider {
   get(): Buffer
 }
 
-export interface PartyProvider {
-  get(): PartyInternal
-}
-
-// TODO(burdon): Exercise in refactoring (ie, "dependency inversion").
-// TODO(burdon): Consistently use crypto utils for asBuffer, toString('base64'), toHex, etc?
-
 /**
  * Manages the party's connection to the network swarm.
  */
 export class PartyProtocol {
   private readonly _peerId = PublicKey.random(); // TODO(marik-d): Should this be a specific peer id?
-
   private readonly _presence = new PresencePlugin(this._peerId.asBuffer());
-
   private readonly _haloProtocolPluginFactory: HaloProtocolPluginFactory;
   private readonly _replicatorProtocolPluginFactory: ReplicatorProtocolPluginFactory;
 

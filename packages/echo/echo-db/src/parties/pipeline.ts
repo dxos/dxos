@@ -29,7 +29,6 @@ const log = debug('dxos:echo:parties:pipeline');
 /**
  * Manages the inbound and outbound message streams for an individual party.
  */
-// TODO(burdon): Requires major refactoring/simplification?
 export class Pipeline {
   private readonly _errors = new Event<Error>();
 
@@ -43,7 +42,6 @@ export class Pipeline {
    */
   private _outboundEchoStream: FeedWriter<EchoEnvelope> | undefined;
 
-  // TODO(burdon): Pair with PartyProcessor.
   /**
    * Halo message stream to write into pipeline.
    */
@@ -116,8 +114,9 @@ export class Pipeline {
           const { data: message } = block;
 
           //
-          // HALO.
+          // HALO
           //
+
           if (message.halo) {
             await this._partyProcessor.processMessage({
               meta: createFeedMeta(block),
@@ -126,8 +125,9 @@ export class Pipeline {
           }
 
           //
-          // ECHO.
+          // ECHO
           //
+
           if (message.echo) {
             this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
             const memberKey = this._partyProcessor.getFeedOwningMember(PublicKey.from(block.key));
@@ -154,7 +154,7 @@ export class Pipeline {
             log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
           }
         } catch (err: any) {
-          console.error('Error in message processing');
+          console.error('Error in message processing.');
           console.error(err);
         }
       }

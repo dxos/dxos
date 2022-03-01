@@ -21,7 +21,6 @@ import {
   SetPreferenceRequest,
   GetPreferenceRequest,
   GetPreferenceResponse
-
 } from '../../../proto/gen/dxos/client';
 import { resultSetToStream } from '../../../util';
 import { CreateServicesOpts } from './interfaces';

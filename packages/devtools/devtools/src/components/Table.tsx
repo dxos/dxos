@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 
 import {
   Box,
@@ -57,4 +57,4 @@ const StyledTableCell = styled(MuiTableCell, {
   fontFamily: monospace ? 'monospace' : ''
 }));
 
-export const TableCell: React.FunctionComponent<TableCellProps> = StyledTableCell;
+export const TableCell: FunctionComponent<TableCellProps> = StyledTableCell;

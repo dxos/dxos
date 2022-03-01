@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import React, { useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 
 import {
   Check as TrueIcon,
@@ -49,7 +49,7 @@ const CustomDataCell = ({ key, row, value, rowSelected }: DataCellProps): JSX.El
         <div>
           <Checkbox
             checked={value}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
               row[key] = event.target.checked;
             }}
           />
