@@ -319,6 +319,10 @@ export class ECHO {
     return party;
   }
 
+  /**
+   * Clones an existing party from a snapshot.
+   * @param snapshot
+   */
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
@@ -338,7 +342,6 @@ export class ECHO {
     }
 
     const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
-    // TODO(burdon): Don't create a new instance (maintain map).
     return party;
   }
 
@@ -363,7 +366,6 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  // TODO(burdon): Expose state machine for invitations.
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 

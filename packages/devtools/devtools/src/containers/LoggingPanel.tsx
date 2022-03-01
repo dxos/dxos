@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 
 import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
 
@@ -54,7 +54,7 @@ export const LoggingPanel = () => {
     return () => clearTimeout(t);
   }, [namespaces]);
 
-  const handleEnabled = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEnabled = async (event: ChangeEvent<HTMLInputElement>) => {
     setEnabled(event.target.checked);
   };
 

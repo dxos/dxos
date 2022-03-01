@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -51,7 +51,7 @@ const Drawer = styled(MuiDrawer, {
   }
 }));
 
-export const SlidingDrawer: React.FunctionComponent<SlidingDrawerProps> = Drawer;
+export const SlidingDrawer: FunctionComponent<SlidingDrawerProps> = Drawer;
 
 // ----------------------------------------------------------------------------.
 // AppBar.
@@ -86,7 +86,7 @@ const AppBar = styled(MuiAppBar, {
   });
 });
 
-export const SlidingAppBar: React.FunctionComponent<AppBarProps> = AppBar;
+export const SlidingAppBar: FunctionComponent<AppBarProps> = AppBar;
 
 // ----------------------------------------------------------------------------.
 // Content.
@@ -124,7 +124,7 @@ const Content = styled('main', {
   });
 });
 
-export const SlidingContent: React.FunctionComponent<ContentProps> = Content;
+export const SlidingContent: FunctionComponent<ContentProps> = Content;
 
 // ----------------------------------------------------------------------------.
 // Helpers.
