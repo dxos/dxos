@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  ActivationOptions, Database, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, RemoteDatabaseBackend, RootSelector
+  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend, RootSelector
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -21,8 +21,9 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
-export class Party extends InvitationProxy {
+export class Party {
   private readonly _database?: Database;
+  private readonly _invitationProxy = new InvitationProxy();
 
   private _key: PartyKey;
   private _isOpen: boolean;
@@ -37,7 +38,6 @@ export class Party extends InvitationProxy {
     party: PartyProto,
     memberKey: PublicKey
   ) {
-    super();
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;
@@ -58,6 +58,10 @@ export class Party extends InvitationProxy {
     } else {
       throw new Error('Unrecognized service provider.');
     }
+  }
+
+  get invitationProxy () {
+    return this._invitationProxy;
   }
 
   async init () {
@@ -146,7 +150,7 @@ export class Party extends InvitationProxy {
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
-    return this.createInvitationRequest({ stream });
+    return this._invitationProxy.createInvitationRequest({ stream });
   }
 
   queryMembers () {

@@ -15,7 +15,7 @@ import { PartyEventType } from './events';
 import { isEnvelope, isPartyInvitationMessage, isSignedMessage } from './party-credential';
 import { PartyInvitationManager } from './party-invitation-manager';
 
-const log = debug('dxos:creds:party');
+const log = debug('dxos:halo:party');
 
 /**
  * The party state is constructed via signed messages on the feeds.

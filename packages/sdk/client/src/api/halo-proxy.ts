@@ -15,21 +15,26 @@ export interface CreateInvitationOptions extends InvitationOptions {
   onPinGenerated?: (pin: string) => void
 }
 
-export class HaloProxy extends InvitationProxy {
+export class HaloProxy {
+  private readonly _invitationProxy = new InvitationProxy();
+  private readonly _subscriptions = new SubscriptionGroup();
+
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
 
-  public readonly profileChanged = new Event();
   private readonly _contactsChanged = new Event();
+  public readonly profileChanged = new Event();
 
-  private readonly _subscriptions = new SubscriptionGroup();
+  constructor (
+    private readonly _serviceProvider: ClientServiceProvider
+  ) {}
 
-  constructor (private readonly _serviceProvider: ClientServiceProvider) {
-    super();
+  toString () {
+    return `HaloProxy(${this._profile?.publicKey})`;
   }
 
-  override toString () {
-    return `HaloProxy(${this._profile?.publicKey})`;
+  get invitationProxy () {
+    return this._invitationProxy;
   }
 
   /**
@@ -87,7 +92,7 @@ export class HaloProxy extends InvitationProxy {
    */
   async createInvitation (): Promise<InvitationRequest> {
     const stream = await this._serviceProvider.services.ProfileService.createInvitation();
-    return this.createInvitationRequest({ stream });
+    return this._invitationProxy.createInvitationRequest({ stream });
   }
 
   /**

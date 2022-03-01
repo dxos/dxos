@@ -9,5 +9,5 @@ import { useInvitations } from './useInvitations';
 
 export const usePartyInvitations = (partyKey?: PublicKey) => {
   const party = useParty(partyKey);
-  return useInvitations(party);
+  return useInvitations(party?.invitationProxy);
 };

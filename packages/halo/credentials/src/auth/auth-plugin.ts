@@ -12,7 +12,7 @@ import { codec } from '../proto';
 import { Authenticator } from './authenticator';
 import { ERR_AUTH_GENERAL, ERR_AUTH_REJECTED } from './error-codes';
 
-const log = debug('dxos:creds:auth');
+const log = debug('dxos:halo:auth');
 
 const EXTENSION_NAME = 'dxos.credentials.auth';
 

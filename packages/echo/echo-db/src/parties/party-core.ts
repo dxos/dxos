@@ -13,11 +13,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../database';
+import { createMessageSelector, PartyProcessor, PartyFeedProvider, Pipeline } from '../pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
-import { createMessageSelector } from './message-selector';
-import { PartyFeedProvider } from './party-feed-provider';
-import { PartyProcessor } from './party-processor';
-import { Pipeline } from './pipeline';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
@@ -26,7 +23,7 @@ export interface PartyOptions {
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
   // TODO(burdon): Hierarchical options.
-  // code ({ snapshot: { enabled: true, interval: 100 } })
+  // snapshots: { enabled: true, interval: 100 } }
   snapshots?: boolean;
   snapshotInterval?: number;
 }
@@ -34,9 +31,8 @@ export interface PartyOptions {
 /**
  * Encapsulates core components needed by a party:
  * - ECHO database with item-manager & item-demuxer.
- * - Collection of feeds from the feed store.
  * - HALO PartyState state-machine that handles key admission.
- * - A Pipeline with the feed-store iterator that reads the messages in the proper order.
+ * - Data processing pipeline with the feed-store iterator that reads the messages in the proper order.
  *
  * The core class also handles the combined ECHO and HALO state snapshots.
  */
@@ -98,7 +94,7 @@ export class PartyCore {
 
   async getWriteFeed () {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
-    assert(feed, `No writable feed found for party ${this._partyKey}`);
+    assert(feed, `No writable feed found for party: ${this._partyKey}`);
     return feed;
   }
 
@@ -112,8 +108,6 @@ export class PartyCore {
       return this;
     }
 
-    const feed = await this._feedProvider.createOrOpenWritableFeed();
-
     this._timeframeClock = new TimeframeClock(this._initialTimeframe);
 
     if (!this._partyProcessor) {
@@ -123,38 +117,47 @@ export class PartyCore {
       }
     }
 
+    //
+    // Pipeline
+    //
+
     const iterator = await this._feedProvider.createIterator(
-      createMessageSelector(
-        this._partyProcessor,
-        this._timeframeClock
-      ),
+      createMessageSelector(this._partyProcessor, this._timeframeClock),
       this._initialTimeframe
     );
 
-    const feedWriteStream = createFeedWriter(feed.feed);
+    const { feed } = await this._feedProvider.createOrOpenWritableFeed();
+    const feedWriteStream = createFeedWriter(feed);
+
     this._pipeline = new Pipeline(
       this._partyProcessor, iterator, this._timeframeClock, feedWriteStream, this._options);
 
     // TODO(burdon): Support read-only parties.
     const [readStream, writeStream] = await this._pipeline.open();
 
+    // Must happen after open.
+    if (this._pipeline.outboundHaloStream) {
+      this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
+    }
+
+    //
+    // Database
+    //
+
     this._database = new Database(
       this._modelFactory,
       new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
       this._memberKey
     );
-    await this._database.init();
 
-    if (this._pipeline.outboundHaloStream) {
-      this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
-    }
+    await this._database.init();
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
 
     if (this._options.snapshots) {
       createAutomaticSnapshots(
-        this,
+        this, // TODO(burdon): Don't pass `this`.
         this._timeframeClock,
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
@@ -164,10 +167,10 @@ export class PartyCore {
     return this;
   }
 
-   /**
-    * Closes the pipeline and streams.
-    */
-   @synchronized
+  /**
+   * Closes the pipeline and streams.
+   */
+  @synchronized
   async close () {
     if (!this.isOpen) {
       return this;
@@ -187,30 +190,30 @@ export class PartyCore {
     return this;
   }
 
-   /**
-    * Create a snapshot of the current state.
-    */
-   createSnapshot (): PartySnapshot {
-     assert(this.isOpen, 'Party not open.');
+  /**
+   * Create a snapshot of the current state.
+   */
+  createSnapshot (): PartySnapshot {
+    assert(this.isOpen, 'Party not open.');
 
-     return {
-       partyKey: this.key.asUint8Array(),
-       timeframe: this._timeframeClock!.timeframe,
-       timestamp: Date.now(),
-       database: this.database.createSnapshot(),
-       halo: this.processor.makeSnapshot()
-     };
-   }
+    return {
+      partyKey: this.key.asUint8Array(),
+      timeframe: this._timeframeClock!.timeframe,
+      timestamp: Date.now(),
+      database: this.database.createSnapshot(),
+      halo: this.processor.makeSnapshot()
+    };
+  }
 
-   async restoreFromSnapshot (snapshot: PartySnapshot) {
-     assert(!this.isOpen, 'Party is already open.');
-     assert(!this._partyProcessor, 'Party processor already exists.');
-     assert(snapshot.halo);
-     assert(snapshot.database);
+  async restoreFromSnapshot (snapshot: PartySnapshot) {
+    assert(!this.isOpen, 'Party is already open.');
+    assert(!this._partyProcessor, 'Party processor already exists.');
+    assert(snapshot.halo);
+    assert(snapshot.database);
 
-     this._partyProcessor = new PartyProcessor(this._partyKey);
-     await this._partyProcessor.restoreFromSnapshot(snapshot.halo);
+    this._partyProcessor = new PartyProcessor(this._partyKey);
+    await this._partyProcessor.restoreFromSnapshot(snapshot.halo);
 
-     this._databaseSnapshot = snapshot.database;
-   }
+    this._databaseSnapshot = snapshot.database;
+  }
 }

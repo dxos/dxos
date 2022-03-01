@@ -20,8 +20,8 @@ import { TimeframeClock } from '../database';
 import { PartyProcessor } from './party-processor';
 
 interface Options {
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
+  readLogger?: (msg: any) => void
+  writeLogger?: (msg: any) => void
 }
 
 const log = debug('dxos:echo:parties:pipeline');
@@ -176,7 +176,8 @@ export class Pipeline {
           timeframe: this._timeframeClock.timeframe
         }
       }), loggingWriter);
-      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
+      this._outboundHaloStream =
+        mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
     }
 
     return [

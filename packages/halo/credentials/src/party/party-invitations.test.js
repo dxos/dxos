@@ -20,7 +20,7 @@ import {
 import { PartyState } from './party-state';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
-const log = debug('dxos:creds:party:test');
+const log = debug('dxos:halo:party:test');
 
 const createPartyKeyrings = async () => {
   // This Keyring has all the keypairs, so it is the initial source of things.

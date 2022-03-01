@@ -53,7 +53,7 @@ export class IdentityManager {
   private async _initialize (halo: PartyInternal) {
     assert(this._identity.identityKey, 'No identity key.');
     assert(this._identity.deviceKey, 'No device key.');
-    assert(halo.isOpen, 'Halo must be open.');
+    assert(halo.isOpen, 'HALO must be open.');
 
     const haloParty = new HaloParty(halo, this._identity.identityKey!.publicKey, this._identity.deviceKey.publicKey);
     this._identity.setHalo(haloParty);

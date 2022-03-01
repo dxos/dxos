@@ -15,9 +15,10 @@ import { PartyProcessor } from './party-processor';
 const log = debug('dxos:echo:parties:message-selector');
 
 /**
- * The MessageSelector makes sure that we read in a trusted order. The first message we wish to process is
- * the PartyGenesis, which will admit a Feed. As we encounter and process FeedAdmit messages those are added
- * to the Party's trust, and we begin processing messages from them as well.
+ * The MessageSelector makes sure that we read in a trusted order.
+ * The first message we wish to process is the PartyGenesis, which will admit a Feed.
+ * As we encounter and process FeedAdmit messages those are added to the Party's trust,
+ * and we begin processing messages from them as well.
  *
  * @param partyProcessor
  * @param timeframeClock

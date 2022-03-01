@@ -23,13 +23,17 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, PartyFactory, PartyFeedProvider, PartyFilter, PartyInternal, PartyManager } from './parties';
+import { OpenProgress, PartyFactory, PartyInternal, PartyManager } from './parties';
+import { PartyFeedProvider } from './pipeline';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
 
-// TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
+const error = log.extend('error');
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface PartyFilter {}
 
 /**
  * Various options passed to `ECHO.create`.
@@ -113,6 +117,7 @@ export class ECHO {
     snapshotStorage = createRamStorage(),
     metadataStorage = createRamStorage(),
     networkManagerOptions,
+    /// TODO(burdon): See options below.
     snapshots = true,
     snapshotInterval = 100,
     readLogger,
@@ -124,15 +129,7 @@ export class ECHO {
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
     this._metadataStore = new MetadataStore(metadataStorage);
-
-    const options = {
-      snapshots,
-      snapshotInterval,
-      readLogger,
-      writeLogger
-    };
     this._keyring = new Keyring(new KeyStore(keyStorage));
-
     this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
 
     const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
@@ -141,6 +138,14 @@ export class ECHO {
       this._feedStore,
       partyKey
     );
+
+    // TODO(burdon): Restructure options (e.g., hierarchical options for snapshots).
+    const options = {
+      snapshots,
+      snapshotInterval,
+      readLogger,
+      writeLogger
+    };
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -158,12 +163,12 @@ export class ECHO {
       partyFactory
     );
 
-    // TODO(burdon): Why is this constructed inside of ECHO (rather than passed in)?
+    // TODO(burdon): Why does this need both PartyManager and PartyFactory?
     this._halo = new HALO({
       keyring: this._keyring,
+      partyManager: this._partyManager,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager,
       metadataStore: this._metadataStore
     });
 
@@ -285,7 +290,7 @@ export class ECHO {
         await this._feedStore.storage.destroy();
       }
     } catch (err: any) {
-      log('Error clearing feed storage:', err);
+      error('Error clearing feed storage:', err);
     }
 
     await this.halo.reset();
@@ -293,13 +298,13 @@ export class ECHO {
     try {
       await this._snapshotStore.clear();
     } catch (err: any) {
-      log('Error clearing snapshot storage:', err);
+      error('Error clearing snapshot storage:', err);
     }
 
     try {
       await this._metadataStore.clear();
     } catch (err: any) {
-      log('Error clearing metadata storage:', err);
+      error('Error clearing metadata storage:', err);
     }
   }
 
