@@ -29,7 +29,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
     "pify": "~5.0.0",
