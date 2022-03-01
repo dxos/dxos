@@ -23,7 +23,7 @@
       "path": "../feed-store"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/util"

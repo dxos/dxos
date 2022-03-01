@@ -19,7 +19,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     }
   ]
 }

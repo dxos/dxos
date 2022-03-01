@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.28.0",
+  "version": "2.28.1",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
   "bugs": {
@@ -35,7 +35,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",

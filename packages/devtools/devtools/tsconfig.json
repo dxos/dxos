@@ -37,7 +37,7 @@
       "path": "../../echo/model-factory"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../sdk/react-components"

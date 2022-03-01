@@ -41,7 +41,7 @@
       "path": "../object-model"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../mesh/protocol-plugin-presence"
