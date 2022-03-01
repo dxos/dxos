@@ -1,4 +1,4 @@
 syntax = "proto3";
 
-import "@dxos/protocol/src/proto/dxos/bot.proto";
-import "@dxos/protocol/src/proto/dxos/config.proto";
+import "@dxos/protocols/src/proto/dxos/bot.proto";
+import "@dxos/protocols/src/proto/dxos/config.proto";

@@ -35,7 +35,7 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../mesh/protocol-plugin-rpc"

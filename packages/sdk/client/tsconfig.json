@@ -50,7 +50,7 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../common/proto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/rpc"

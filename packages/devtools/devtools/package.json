@@ -26,7 +26,7 @@
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@dxos/protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@dxos/rpc": "workspace:*",

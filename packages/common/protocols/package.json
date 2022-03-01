@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/protocol",
+  "name": "@dxos/protocols",
   "version": "2.28.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "bugs": {
