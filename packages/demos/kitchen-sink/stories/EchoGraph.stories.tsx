@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { Box, Button } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
 import { BoxContainer, EchoGraph, execSelection, SelectionEditor, usePartyBuilder } from '../src';
 import { itemAdapter, graphStyles, useGraphModel, useTestParty, defaultSelectionText } from './helpers';
