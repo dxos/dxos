@@ -1,10 +1,7 @@
-# Epochs spec
+# Epochs Spec
 
 Epochs are blocks of contiguous messages spanning all peers within a party.
 They enable compression for quicker startup, and provide "sync" points for consensus and consistency.
-
-
-### Consistency
 
 Timeframes provide a common reference point for mutations across the feeds within a party.
 However, when peers are partitioned, they start to diverge from each other.

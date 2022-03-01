@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"
   },
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
     "book": "esbuild-server book --mdx",

@@ -10,7 +10,7 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Quick start
 
-[Getting started](./docs/internal/getting-started.md).
+[Getting started](./docs/getting-started.md).
 
 
 ## Installation and usage

@@ -6,7 +6,7 @@
     "dxos",
     "api-reference"
   ],
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
   "scripts": {
