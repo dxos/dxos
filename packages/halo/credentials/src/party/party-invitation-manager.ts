@@ -11,7 +11,7 @@ import { KeyRecord, SignedMessage } from '../proto';
 import { PartyEventType } from './events';
 import { PartyState } from './party-state';
 
-const log = debug('dxos:creds:party');
+const log = debug('dxos:halo:party');
 
 /**
  * A class to manage the lifecycle of invitations which are written to the Party.

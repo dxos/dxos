@@ -12,7 +12,7 @@ import { ERR_GREET_GENERAL, ERR_GREET_INVALID_COMMAND, ERR_GREET_INVALID_INVITAT
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { createGreetingClaimResponse } from './greeting-message';
 
-const log = debug('dxos:creds:greet:claim');
+const log = debug('dxos:halo:greet:claim');
 
 export type PartyInvitationGreetingHandler = (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => Promise<any>;
 

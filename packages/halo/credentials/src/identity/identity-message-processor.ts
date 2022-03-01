@@ -13,7 +13,7 @@ import { Keyring, assertValidPublicKey } from '../keys';
 import { PartyState, isEnvelope, isSignedMessage } from '../party';
 import { SignedMessage } from '../proto';
 
-const log = debug('dxos:creds:party');
+const log = debug('dxos:halo:party');
 
 /**
  * Process and manage IdentityInfo, DeviceInfo, and other "identity" Party messages.

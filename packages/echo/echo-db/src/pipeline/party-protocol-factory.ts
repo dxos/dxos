@@ -72,7 +72,7 @@ export class PartyProtocolFactory {
       sampleSize: 20
     };
 
-    log('Starting...', this._partyKey.toHex());
+    log(`Joining swarm: ${this._partyKey.toHex()}`);
     return this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }),
       peerId: this._peerId,
@@ -89,7 +89,7 @@ export class PartyProtocolFactory {
     }
     this._started = false;
 
-    log('Stopping...', this._partyKey.toHex());
+    log(`Leaving swarm: ${this._partyKey.toHex()}`);
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 

@@ -176,7 +176,8 @@ export class Pipeline {
           timeframe: this._timeframeClock.timeframe
         }
       }), loggingWriter);
-      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
+      this._outboundHaloStream =
+        mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
     }
 
     return [
