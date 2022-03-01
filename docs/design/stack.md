@@ -2,4 +2,4 @@
 
 The diagram below illustrates the DXOS stack.
 
-![Stack](../assets/diagrams/stack.svg);
+![Stack](./diagrams/stack.drawio.svg);
