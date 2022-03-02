@@ -12,7 +12,7 @@ import { MessageSelector } from '@dxos/echo-protocol';
 import { TimeframeClock } from '../database';
 import { PartyProcessor } from './party-processor';
 
-const log = debug('dxos:echo:parties:message-selector');
+const log = debug('dxos:echo-db:message-selector');
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.

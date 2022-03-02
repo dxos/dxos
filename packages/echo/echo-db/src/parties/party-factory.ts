@@ -30,7 +30,7 @@ import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
-const log = debug('dxos:echo:parties:party-factory');
+const log = debug('dxos:echo-db:party-factory');
 
 /**
  * Creates and constructs party instances.

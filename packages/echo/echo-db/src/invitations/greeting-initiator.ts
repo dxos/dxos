@@ -31,7 +31,7 @@ import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 
-const log = debug('dxos:echo:invitations:greeting-initiator');
+const log = debug('dxos:echo-db:greeting-initiator');
 
 const DEFAULT_TIMEOUT = 30_000;
 

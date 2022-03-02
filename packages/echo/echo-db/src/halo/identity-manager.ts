@@ -15,15 +15,11 @@ import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
 
-const log = debug('dxos:echo:parties:identity-manager');
+const log = debug('dxos:echo-db:identity-manager');
 
 /**
  * Manages the keyring and HALO party.
  */
-// TODO(burdon): This should be merge with KeyRing and HaloParty.
-//   Factor out HaloParty life-cycle (create/join, etc) from usage (identity, device, preferences, contacts).
-//   Need abstraction: since `identityManager.halo` is called from many places.
-//   ignore ECHO => PartyManager => IdentityManaager => HaloParty
 export class IdentityManager {
   private readonly _identity: Identity;
 

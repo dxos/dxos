@@ -13,7 +13,7 @@ import { Model } from '@dxos/model-factory';
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
 
-const log = debug('dxos:echo:items:data-mirror');
+const log = debug('dxos:echo-db:data-mirror');
 
 // TODO(dmaretskyi): Subscription cleanup.
 

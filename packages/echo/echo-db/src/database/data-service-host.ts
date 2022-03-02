@@ -24,7 +24,7 @@ import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 
-const log = debug('dxos:echo:items:data-service-host');
+const log = debug('dxos:echo-db:data-service-host');
 
 /**
  * Provides methods for DataService for a single party.

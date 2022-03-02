@@ -55,9 +55,9 @@ export class Client {
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;
+
   private readonly _mode: Runtime.Client.Mode;
   private _serviceProvider!: ClientServiceProvider;
-
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
 
@@ -71,13 +71,13 @@ export class Client {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
+
     this._config = (config instanceof Config) ? config : new Config(config);
+    this._options = options;
 
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
       throw new InvalidConfigurationError(`Expected config version 1, got ${this._config.values.version}.`);
     }
-
-    this._options = options;
 
     // TODO(burdon): Default error level: 'dxos:*:error'
     // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');

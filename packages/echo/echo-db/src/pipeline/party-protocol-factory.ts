@@ -19,7 +19,7 @@ import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { PartyFeedProvider } from './party-feed-provider';
 
-const log = debug('dxos:echo:party-protocol-factory');
+const log = debug('dxos:echo-db:party-protocol-factory');
 
 export interface CredentialsProvider {
   /**
