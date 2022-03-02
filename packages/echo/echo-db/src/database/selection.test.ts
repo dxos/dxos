@@ -16,10 +16,8 @@ import { Item } from './item';
 import { Link } from './link';
 import { createSelector } from './selection';
 
-// TODO(burdon): Dots or slashes!?
-const OBJECT_ORG = 'dxos:object/org';
-const OBJECT_PERSON = 'dxos:object/person';
-const LINK_EMPLOYEE = 'dxos:link/employee';
+// Use to prevent ultra-long diffs.
+const ids = (entities: Entity[]) => entities.map(entity => entity.id);
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
@@ -42,30 +40,47 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
-const org1 = createItem('item/1', OBJECT_ORG);
-const org2 = createItem('item/2', OBJECT_ORG);
+const createRootSelector = createSelector(() => items, () => new Event(), null as any);
 
-const person1 = createItem('item/3', OBJECT_PERSON, org1);
-const person2 = createItem('item/4', OBJECT_PERSON, org1);
-const person3 = createItem('item/5', OBJECT_PERSON, org2);
+const createReducer = (value: any) => createSelector(() => items, () => new Event(), null as any, value)();
+
+// TODO(burdon): Use more complex data set (org, person, project, task).
+
+const ITEM_ORG = 'example:item/org';
+const ITEM_PROJECT = 'example:item/project';
+const ITEM_PERSON = 'example:item/person';
+const LINK_MEMBER = 'example:link/member';
+
+const org1 = createItem('org/1', ITEM_ORG);
+const org2 = createItem('org/2', ITEM_ORG);
+
+const project1 = createItem('project/1', ITEM_PROJECT, org1);
+const project2 = createItem('project/2', ITEM_PROJECT, org1);
+const project3 = createItem('project/3', ITEM_PROJECT, org2);
+
+const person1 = createItem('person/1', ITEM_PERSON, org1);
+const person2 = createItem('person/2', ITEM_PERSON, org1);
+const person3 = createItem('person/3', ITEM_PERSON, org2);
+const person4 = createItem('person/4', ITEM_PERSON, org2);
 
 const items: Item<any>[] = [
   org1,
   org2,
+  project1,
+  project2,
+  project3,
   person1,
   person2,
-  person3
+  person3,
+  person4
 ];
 
 const links: Link<any>[] = [
-  createLink('link/1', LINK_EMPLOYEE, org1, person1),
-  createLink('link/2', LINK_EMPLOYEE, org1, person2),
-  createLink('link/3', LINK_EMPLOYEE, org1, person3),
-  createLink('link/4', LINK_EMPLOYEE, org2, person3)
+  createLink('link/1', LINK_MEMBER, project1, person1),
+  createLink('link/2', LINK_MEMBER, project1, person2),
+  createLink('link/3', LINK_MEMBER, project2, person1),
+  createLink('link/4', LINK_MEMBER, project2, person3)
 ];
-
-const createRootSelector = createSelector(() => items, () => new Event(), null as any);
-const createReducer = (value: any) => createSelector(() => items, () => new Event(), null as any, value)();
 
 // TODO(burdon): Test subscriptions/reactivity.
 
@@ -92,14 +107,14 @@ describe('Selection', () => {
 
     test('single type', () => {
       expect(
-        createRootSelector({ type: OBJECT_PERSON })
+        createRootSelector({ type: ITEM_PROJECT })
           .query().result
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
-        createRootSelector({ type: [OBJECT_ORG, OBJECT_PERSON] })
+        createRootSelector({ type: [ITEM_ORG, ITEM_PROJECT] })
           .query().result
       ).toHaveLength(5);
     });
@@ -117,7 +132,7 @@ describe('Selection', () => {
     test('single type', () => {
       expect(
         createRootSelector()
-          .filter({ type: OBJECT_PERSON })
+          .filter({ type: ITEM_PROJECT })
           .query().result
       ).toHaveLength(3);
     });
@@ -125,7 +140,7 @@ describe('Selection', () => {
     test('multiple types', () => {
       expect(
         createRootSelector()
-          .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
+          .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
           .query().result
       ).toHaveLength(5);
     });
@@ -133,7 +148,7 @@ describe('Selection', () => {
     test('by function', () => {
       expect(
         createRootSelector()
-          .filter(item => item.type === OBJECT_ORG)
+          .filter(item => item.type === ITEM_ORG)
           .query().result
       ).toHaveLength(2);
     });
@@ -141,51 +156,53 @@ describe('Selection', () => {
 
   describe('children', () => {
     test('from multiple items', () => {
-      expect(
+      expect(ids(
         createRootSelector()
-          .filter({ type: OBJECT_ORG })
-          .children()
+          .filter({ type: ITEM_ORG })
+          .children({ type: ITEM_PROJECT })
           .query().result
-      ).toEqual([
-        person1,
-        person2,
-        person3
-      ]);
+      )).toBe(ids([
+        project1,
+        project2,
+        project3
+      ]));
     });
 
     test('from single item', () => {
-      expect(
+      expect(ids(
         createRootSelector({ id: org1.id })
           .children()
           .query().result
-      ).toEqual([
+      )).toBe(ids([
+        project1,
+        project2,
         person1,
         person2
-      ]);
+      ]));
     });
   });
 
   describe('parent', () => {
     test('from multiple items', () => {
-      expect(
+      expect(ids(
         createRootSelector()
-          .filter({ type: OBJECT_PERSON })
+          .filter({ type: ITEM_PROJECT })
           .parent()
           .query().result
-      ).toEqual([
+      )).toBe(ids([
         org1,
         org2
-      ]);
+      ]));
     });
 
     test('from single item', () => {
-      expect(
-        createRootSelector({ id: person1.id })
+      expect(ids(
+        createRootSelector({ id: project1.id })
           .parent()
           .query().result
-      ).toEqual([
+      )).toBe(ids([
         org1
-      ]);
+      ]));
     });
 
     test('is empty', () => {
@@ -199,53 +216,35 @@ describe('Selection', () => {
 
   describe('links', () => {
     test('links from single item', () => {
-      expect(
-        createRootSelector({ id: org1.id })
+      expect(ids(
+        createRootSelector({ id: project1.id })
           .links()
+          .target()
           .query().result
-      ).toEqual([
-        links[0],
-        links[1],
-        links[2]
-      ]);
+      )).toBe(ids([
+        person1,
+        person2
+      ]));
     });
 
     test('links from multiple items', () => {
       expect(
-        createRootSelector({ type: OBJECT_ORG })
+        createRootSelector({ type: ITEM_PROJECT })
           .links()
           .query().result
-      ).toEqual([
-        links[0],
-        links[1],
-        links[2],
-        links[3]
-      ]);
-    });
-
-    test('targets', () => {
-      expect(
-        createRootSelector({ id: org1.id })
-          .links()
-          .target()
-          .query().result
-      ).toEqual([
-        person1,
-        person2,
-        person3
-      ]);
+      ).toHaveLength(links.length);
     });
 
     test('sources', () => {
-      expect(
-        createRootSelector({ type: OBJECT_PERSON })
+      expect(ids(
+        createRootSelector({ type: ITEM_PERSON })
           .refs()
           .source()
           .query().result
-      ).toEqual([
-        org1,
-        org2
-      ]);
+      )).toBe(ids([
+        project1,
+        project2
+      ]));
     });
   });
 
@@ -255,19 +254,24 @@ describe('Selection', () => {
     // TODO(burdon): What if reduce called multiple times (change API?).
     // TODO(burdon): Get context (selection) as second arg? For nested traversal.
     test('visitor', () => {
-      const query = createReducer({ count: 0 })
-        .filter({ type: OBJECT_ORG })
-        .call((items: Item[], result) => {
-          return { count: result.count + items.length };
+      const query = createReducer({ numItems: 0, numLinks: 0 })
+        .filter({ type: ITEM_ORG })
+        .call((items: Item[], { numItems, ...rest }) => {
+          return { ...rest, numItems: numItems + items.length, stage: 'a' };
         })
-        .children()
-        .call((items: Item[], result) => {
-          return { count: result.count + items.length };
+        .children({ type: ITEM_PROJECT })
+        .call((items: Item[], { numItems, ...rest }) => {
+          return { ...rest, numItems: numItems + items.length, stage: 'c' };
         })
+        .links({ type: LINK_MEMBER })
+        .call((links: Link[], { numLinks, ...rest }) => {
+          return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
+        })
+        .target()
         .query(); // TODO(burdon): Different verb?
 
-      expect(query.result).toEqual([person1, person2, person3]);
-      expect(query.value).toEqual({ count: 5 });
+      expect(ids(query.result)).toBe(ids([person1, person2, person3]));
+      expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
     });
   });
 
@@ -276,13 +280,13 @@ describe('Selection', () => {
       const update = new Event<Entity[]>();
       const select = createSelector(() => items, () => update, null as any);
 
-      const query = select({ type: OBJECT_ORG })
+      const query = select({ type: ITEM_ORG })
         .children()
         .query();
 
       {
         const promise = query.update.waitForCount(1);
-        update.emit([person1]);
+        update.emit([project1]);
         await promiseTimeout(promise, 10, new Error('timeout'));
       }
 

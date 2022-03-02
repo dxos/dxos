@@ -92,7 +92,7 @@ export const createSelector = (
   // Provider is called each time the query is executed.
   itemsProvider: () => Item[],
   // TODO(burdon): Why is this a provider?
-  updateEventProvider: () => Event<Entity[]>,
+  updateEventProvider: () => Event<Entity<any>[]>,
   root: SelectionRoot,
   value?: any
 ): RootSelector => {
@@ -118,21 +118,27 @@ export const createSelector = (
  */
 export const createItemSelector = (
   root: Item,
-  update: Event<Entity[]>,
+  update: Event<Entity<any>[]>,
   value?: any
 ): Selection<Item> => new Selection(() => [[root, value]], update, root);
 
 /**
- * Selection is a DSL building queries into an ECHO database.
+ * Selections are used to construct database subscriptions.
+ * They are [monads](https://www.quora.com/What-are-monads-in-computer-science) that support
+ * the functional composition of predicates to traverse the graph.
+ * Additionally, selections may be used to create reducers that compute an aggregated value over the traversal.
+ *
+ * Implementation:
+ * Each Selection contains a visitor
  */
 export class Selection<T extends Entity, R = any> {
   /**
-   * @param _visitor Execute the query.
+   * @param _visitor Executes the query.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor (
-    private readonly _visitor: (options: QueryOptions, result?: R) => SelectionContext<T, R>,
+    private readonly _visitor: (options: QueryOptions) => SelectionContext<T, R>,
     private readonly _update: Event<Entity[]>,
     private readonly _root: SelectionRoot
   ) {}
@@ -143,7 +149,7 @@ export class Selection<T extends Entity, R = any> {
   private _createSubSelection<U extends Entity> (
     map: (entities: SelectionContext<T, R>, options: QueryOptions, result?: R) => SelectionContext<U, R>
   ): Selection<U> {
-    return new Selection((options, result) => map(this._visitor(options, result), options), this._update, this._root);
+    return new Selection(options => map(this._visitor(options), options), this._update, this._root);
   }
 
   /**
@@ -182,9 +188,13 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select children of the items in this selection.
    */
-  children (this: Selection<Item>): Selection<Item> {
+  children (this: Selection<Item>, filter?: ItemFilter): Selection<Item> {
+    const predicate = filter ? filterToPredicate(filter) : Boolean;
     return this._createSubSelection(([items, result], options) => [
-      items.flatMap(item => Array.from(item._children.values()).filter(createQueryOptionsFilter(options))),
+      items.flatMap(item => Array.from(item._children.values())
+        .filter(createQueryOptionsFilter(options))
+        .filter(predicate)
+      ),
       result
     ]);
   }
@@ -245,7 +255,8 @@ export class Selection<T extends Entity, R = any> {
 }
 
 /**
- * Represents a live-query that can notify about future updates to the relevant subset of items.
+ * Query subscription.
+ * Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
  */
 export class SelectionResult<T extends Entity, R> { // TODO(burdon): Remove any from Entity
   /**

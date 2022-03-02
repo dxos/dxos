@@ -41,6 +41,8 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
     }
   }
 
+  // NOTE: --no-diff is ignored since the `expect` package generates the output.
+
   const options = [
     ...sources,
     forceClose ? '--exit' : '--no-exit',
