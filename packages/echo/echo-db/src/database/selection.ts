@@ -117,9 +117,11 @@ export class Selection<T extends Entity<any>, R = any> {
 
   /**
    * Creates a derrived selection by aplying a mapping function to the result of the current selection.
+   * @param map Maps items onto new sub array (e.g., filtering, traversing).
+   * @private
    */
   private _createSubSelection<U extends Entity<any>> (
-    map: (items: T[], options: QueryOptions, value?: R) => U[]
+    map: (items: T[], options: QueryOptions) => U[]
   ): Selection<U> {
     return new Selection((options, value) => map(this._visitor(options, value), options), this._update, this._root);
   }
@@ -150,9 +152,9 @@ export class Selection<T extends Entity<any>, R = any> {
    * @param visitor
    */
   call(visitor: Callable<T, R>): Selection<T> {
-    return this._createSubSelection((items, options, value) => {
-      const result = visitor(items, value!);
-      return items; // TODO(burdon): Return tuple.
+    return this._createSubSelection(items => {
+      // const result = visitor(items, value!);
+      return items;
     });
   }
 
