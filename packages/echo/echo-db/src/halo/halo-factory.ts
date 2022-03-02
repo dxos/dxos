@@ -34,7 +34,7 @@ export interface HaloCreationOptions {
   deviceDisplayName?: string
 }
 
-const log = debug('dxos:echo:parties:halo-factory');
+const log = debug('dxos:echo-db:halo-factory');
 
 /**
  * Create and manage HALO parties.

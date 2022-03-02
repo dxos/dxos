@@ -21,6 +21,10 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
+/**
+ * Main public Party API.
+ * Proxies requests to local/remove services.
+ */
 export class Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new InvitationProxy();
@@ -41,7 +45,6 @@ export class Party {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;
-
     if (!party.isOpen) {
       return;
     }
@@ -146,7 +149,8 @@ export class Party {
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
-   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required, but only the specified recipient can accept the invitation.
+   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
+   *   but only the specified recipient can accept the invitation.
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
@@ -160,8 +164,9 @@ export class Party {
     );
   }
 
-  setTitle (title: string) {
-    return this.setProperty(PARTY_TITLE_PROPERTY, title);
+  async setTitle (title: string) {
+    await this.setProperty(PARTY_TITLE_PROPERTY, title);
+    return this;
   }
 
   async setProperty (key: string, value?: any) {

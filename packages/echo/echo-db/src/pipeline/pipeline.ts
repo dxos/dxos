@@ -24,7 +24,7 @@ interface Options {
   writeLogger?: (msg: any) => void
 }
 
-const log = debug('dxos:echo:parties:pipeline');
+const log = debug('dxos:echo-db:pipeline');
 
 /**
  * Manages the inbound and outbound message streams for an individual party.

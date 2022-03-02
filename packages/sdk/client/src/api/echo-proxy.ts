@@ -28,17 +28,21 @@ export class PartyInvitation extends Invitation<Party> {
   }
 }
 
+/**
+ * Client proxy to local/remote ECHO service.
+ */
 export class EchoProxy {
-  private readonly _modelFactory: ModelFactory;
-  private _parties = new ComplexMap<PublicKey, Party>(key => key.toHex());
+  private readonly _parties = new ComplexMap<PublicKey, Party>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _modelFactory: ModelFactory;
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory = _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost
+      ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
@@ -55,11 +59,13 @@ export class EchoProxy {
   }
 
   toString () {
-    return 'EchoProxy';
+    return `EchoProxy(${JSON.stringify(this.info())})`;
   }
 
   info () {
-    return this.toString();
+    return {
+      parties: this._parties.size
+    };
   }
 
   /**
@@ -99,6 +105,7 @@ export class EchoProxy {
       }
       this._partiesChanged.emit();
     }, () => {});
+
     this._subscriptions.push(() => partiesStream.close());
 
     await gotParties;
@@ -112,7 +119,7 @@ export class EchoProxy {
       await party.destroy();
     }
 
-    this._subscriptions.unsubscribe();
+    await this._subscriptions.unsubscribe();
   }
 
   //
@@ -178,7 +185,8 @@ export class EchoProxy {
    * To be used with `party.createInvitation` on the inviter side.
    */
   acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation {
-    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(invitationDescriptor.toProto());
+    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
+      invitationDescriptor.toProto());
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
       invitationDescriptor,
