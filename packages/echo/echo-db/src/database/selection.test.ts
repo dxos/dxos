@@ -14,7 +14,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Entity } from '.';
 import { Item } from './item';
 import { Link } from './link';
-import { createRootSelector } from './selection';
+import { createSelector } from './selection';
 
 // TODO(burdon): Dots or slashes!?
 const OBJECT_ORG = 'dxos:object/org';
@@ -64,7 +64,8 @@ const links: Link<any>[] = [
   createLink('link/4', LINK_EMPLOYEE, org2, person3)
 ];
 
-const rootSelector = createRootSelector(() => items, () => new Event(), null as any);
+const createRootSelector = createSelector(() => items, () => new Event(), null as any);
+const createReducer = (value: any) => createSelector(() => items, () => new Event, null as any, value)();
 
 // TODO(burdon): Test subscriptions/reactivity.
 
@@ -72,33 +73,33 @@ describe('Selection', () => {
   describe('root', () => {
     test('all', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .query().result
       ).toHaveLength(items.length);
     });
 
     test('by id', () => {
       expect(
-        rootSelector({ id: org1.id })
+        createRootSelector({ id: org1.id })
           .query().result
       ).toEqual([org1]);
 
       expect(
-        rootSelector({ id: org2.id })
+        createRootSelector({ id: org2.id })
           .query().result
       ).toEqual([org2]);
     });
 
     test('single type', () => {
       expect(
-        rootSelector({ type: OBJECT_PERSON })
+        createRootSelector({ type: OBJECT_PERSON })
           .query().result
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
-        rootSelector({ type: [OBJECT_ORG, OBJECT_PERSON] })
+        createRootSelector({ type: [OBJECT_ORG, OBJECT_PERSON] })
           .query().result
       ).toHaveLength(5);
     });
@@ -107,7 +108,7 @@ describe('Selection', () => {
   describe('filter', () => {
     test('invalid', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter({ type: 'dxos:type.invalid' })
           .query().result
       ).toHaveLength(0);
@@ -115,7 +116,7 @@ describe('Selection', () => {
 
     test('single type', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter({ type: OBJECT_PERSON })
           .query().result
       ).toHaveLength(3);
@@ -123,7 +124,7 @@ describe('Selection', () => {
 
     test('multiple types', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter({ type: [OBJECT_ORG, OBJECT_PERSON] })
           .query().result
       ).toHaveLength(5);
@@ -131,7 +132,7 @@ describe('Selection', () => {
 
     test('by function', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter(item => item.type === OBJECT_ORG)
           .query().result
       ).toHaveLength(2);
@@ -141,7 +142,7 @@ describe('Selection', () => {
   describe('children', () => {
     test('from multiple items', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter({ type: OBJECT_ORG })
           .children()
           .query().result
@@ -154,7 +155,7 @@ describe('Selection', () => {
 
     test('from single item', () => {
       expect(
-        rootSelector({ id: org1.id })
+        createRootSelector({ id: org1.id })
           .children()
           .query().result
       ).toEqual([
@@ -167,7 +168,7 @@ describe('Selection', () => {
   describe('parent', () => {
     test('from multiple items', () => {
       expect(
-        rootSelector()
+        createRootSelector()
           .filter({ type: OBJECT_PERSON })
           .parent()
           .query().result
@@ -179,7 +180,7 @@ describe('Selection', () => {
 
     test('from single item', () => {
       expect(
-        rootSelector({ id: person1.id })
+        createRootSelector({ id: person1.id })
           .parent()
           .query().result
       ).toEqual([
@@ -189,7 +190,7 @@ describe('Selection', () => {
 
     test('is empty', () => {
       expect(
-        rootSelector({ id: org1.id })
+        createRootSelector({ id: org1.id })
           .parent()
           .query().result
       ).toEqual([]);
@@ -199,7 +200,7 @@ describe('Selection', () => {
   describe('links', () => {
     test('links from single item', () => {
       expect(
-        rootSelector({ id: org1.id })
+        createRootSelector({ id: org1.id })
           .links()
           .query().result
       ).toEqual([
@@ -211,7 +212,7 @@ describe('Selection', () => {
 
     test('links from multiple items', () => {
       expect(
-        rootSelector({ type: OBJECT_ORG })
+        createRootSelector({ type: OBJECT_ORG })
           .links()
           .query().result
       ).toEqual([
@@ -224,7 +225,7 @@ describe('Selection', () => {
 
     test('targets', () => {
       expect(
-        rootSelector({ id: org1.id })
+        createRootSelector({ id: org1.id })
           .links()
           .target()
           .query().result
@@ -237,7 +238,7 @@ describe('Selection', () => {
 
     test('sources', () => {
       expect(
-        rootSelector({ type: OBJECT_PERSON })
+        createRootSelector({ type: OBJECT_PERSON })
           .refs()
           .source()
           .query().result
@@ -250,10 +251,11 @@ describe('Selection', () => {
 
   describe('call', () => {
     // TODO(burdon): Test links.
+    // TODO(burdon): Test visitor with no value.
+    // TODO(burdon): What if reduce called multiple times (change API?).
     // TODO(burdon): Get context (selection) as second arg? For nested traversal.
     test('visitor', () => {
-      const query = rootSelector()
-        .reduce({ count: 0 })
+      const query = createReducer({ count: 0 })
         .filter({ type: OBJECT_ORG })
         .call((items: Item[], result) => {
           return { count: result.count + items.length };
@@ -262,7 +264,7 @@ describe('Selection', () => {
         .call((items: Item[], result) => {
           return { count: result.count + items.length };
         })
-        .query();
+        .query(); // TODO(burdon): Different verb?
 
       expect(query.result).toEqual([ person1, person2, person3 ]);
       expect(query.value).toEqual({ count: 5 });
@@ -272,7 +274,7 @@ describe('Selection', () => {
   describe('events', () => {
     test('events get filtered correctly', async () => {
       const update = new Event<Entity[]>();
-      const select = createRootSelector(() => items, () => update, null as any);
+      const select = createSelector(() => items, () => update, null as any);
 
       const query = select({ type: OBJECT_ORG })
         .children()

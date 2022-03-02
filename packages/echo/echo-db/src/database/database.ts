@@ -16,7 +16,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { createRootSelector, RootFilter } from './selection';
+import { createSelector, RootFilter } from './selection';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -175,7 +175,7 @@ export class Database {
    * @param selector {SelectFilter}
    * @param [filter]
    */
-  select = createRootSelector(
+  select = createSelector(
     () => this._itemManager.items,
     () => this._itemManager.debouncedUpdate,
     this

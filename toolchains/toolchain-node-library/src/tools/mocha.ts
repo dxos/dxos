@@ -12,6 +12,7 @@ export interface ExecMochaOpts {
 
 /**
  * https://mochajs.org/#command-line-usage
+ * https://mochajs.org/#reporters
  * E.g., `rushx test ./src/database/** -w --reporter min
  *
  * @param userArgs
