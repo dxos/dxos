@@ -104,7 +104,7 @@ export const createSelector = (
         .filter(predicate);
 
       return [items, value];
-    }
+    };
 
     return new Selection(visitor, updateEventProvider(), root);
   };
@@ -164,7 +164,7 @@ export class Selection<T extends Entity, R = any> {
    * Visitor.
    * @param visitor
    */
-  call(visitor: Callable<T, R>): Selection<T> {
+  call (visitor: Callable<T, R>): Selection<T> {
     return this._createSubSelection(([items, result]) => [items, visitor(items, result!)]);
   }
 
@@ -268,7 +268,7 @@ export class SelectionResult<T extends Entity, R> { // TODO(burdon): Remove any 
     // TODO(burdon): Should also fire if entities have been REMOVED from the set?
     this.update.addEffect(() => _update.on(currentEntities => {
       const result = this._execute();
-      const [entities] = result
+      const [entities] = result;
       const set = new Set([...entities, ...this._lastResult[0]]);
       this._lastResult = result;
 

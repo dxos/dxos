@@ -65,7 +65,7 @@ const links: Link<any>[] = [
 ];
 
 const createRootSelector = createSelector(() => items, () => new Event(), null as any);
-const createReducer = (value: any) => createSelector(() => items, () => new Event, null as any, value)();
+const createReducer = (value: any) => createSelector(() => items, () => new Event(), null as any, value)();
 
 // TODO(burdon): Test subscriptions/reactivity.
 
@@ -266,10 +266,10 @@ describe('Selection', () => {
         })
         .query(); // TODO(burdon): Different verb?
 
-      expect(query.result).toEqual([ person1, person2, person3 ]);
+      expect(query.result).toEqual([person1, person2, person3]);
       expect(query.value).toEqual({ count: 5 });
     });
-  })
+  });
 
   describe('events', () => {
     test('events get filtered correctly', async () => {
