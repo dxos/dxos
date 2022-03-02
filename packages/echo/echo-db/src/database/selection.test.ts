@@ -248,6 +248,25 @@ describe('Selection', () => {
     });
   });
 
+  describe('call', () => {
+    // TODO(burdon): Stack is traversed twice.
+    // TODO(burdon): Get context (from "this"?)
+    test('visitor', () => {
+      expect(
+        rootSelector()
+          .filter({ type: OBJECT_ORG })
+          .call((items: Entity<any>[]) => console.log(items.length))
+          .children()
+          .call((items: Entity<any>[]) => console.log(items.length))
+          .query().result
+      ).toEqual([
+        person1,
+        person2,
+        person3
+      ]);
+    });
+  })
+
   describe('events', () => {
     test('events get filtered correctly', async () => {
       const update = new Event<Entity[]>();

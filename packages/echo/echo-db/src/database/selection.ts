@@ -69,6 +69,8 @@ export enum ItemFilterDeleted {
   SHOW_DELETED_ONLY = 2
 }
 
+export type Visitor = (entities: Entity<any>[]) => void
+
 export type QueryOptions = {
   /**
    * Controls how deleted items are filtered.
@@ -112,6 +114,20 @@ export class Selection<T extends Entity<any>> {
    */
   get root (): SelectionRoot {
     return this._root;
+  }
+
+  /**
+   * Visitor.
+   * @param visitor
+   */
+  // TODO(burdon): Reducer.
+  call(this: Selection<Item<any>>, visitor: Visitor): Selection<Item<any>>
+  call(this: Selection<Link<any>>, visitor: Visitor): Selection<Link<any>>
+  call<U extends Entity<any>>(this: Selection<U>, visitor: Visitor): Selection<U> {
+    return this._createSubSelection(items => {
+      visitor(items);
+      return items;
+    });
   }
 
   /**
@@ -211,7 +227,7 @@ export class SelectionResult<T extends Entity<any>> {
    * Get the result of this select.
    */
   get result (): T[] {
-    return dedup(this._execute());
+    return dedupe(this._execute());
   }
 
   /**
@@ -285,4 +301,4 @@ const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.HIDE_DELETED }: 
   };
 };
 
-const dedup = <T>(arr: T[]) => Array.from(new Set(arr));
+const dedupe = <T>(arr: T[]) => Array.from(new Set(arr));
