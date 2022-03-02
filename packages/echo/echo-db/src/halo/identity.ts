@@ -19,7 +19,6 @@ const log = debug('dxos:echo:parties:identity');
  */
 export class Identity {
   private _identityKey?: KeyRecord;
-
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
