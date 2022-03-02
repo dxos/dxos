@@ -48,18 +48,20 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   ];
 
   // Set defaults.
-  let watchFiles = false;
-  let shouldWatch = false;
-  for (const arg of userArgs) {
-    if (arg === '-w' || arg === '--watch') {
-      shouldWatch = true;
-    } else if (arg === '--watch-files') {
-      watchFiles = true;
+  {
+    let watchFiles = false;
+    let shouldWatch = false;
+    for (const arg of userArgs) {
+      if (arg === '-w' || arg === '--watch') {
+        shouldWatch = true;
+      } else if (arg === '--watch-files') {
+        watchFiles = true;
+      }
     }
-  }
 
-  if (shouldWatch && !watchFiles) {
-    options.push(`--watch-files="${defaultSources}"`);
+    if (shouldWatch && !watchFiles) {
+      options.push(`--watch-files="${defaultSources}"`);
+    }
   }
 
   // TODO(burdon): Verbose option.
