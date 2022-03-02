@@ -121,7 +121,7 @@ export class Selection<T extends Entity<any>, R = any> {
   private _createSubSelection<U extends Entity<any>> (
     map: (items: T[], options: QueryOptions, value?: R) => U[]
   ): Selection<U> {
-    return new Selection(options => map(this._visitor(options), options), this._update, this._root);
+    return new Selection((options, value) => map(this._visitor(options, value), options), this._update, this._root);
   }
 
   /**
