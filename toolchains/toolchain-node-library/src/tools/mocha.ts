@@ -12,8 +12,7 @@ export interface ExecMochaOpts {
 
 /**
  * https://mochajs.org/#command-line-usage
- * E.g., `rushx test -w --watch-files="./src/**"`
- * NOTE: Must quote glob.
+ * E.g., `rushx test ./src/database/** -w
  *
  * @param userArgs
  * @param forceClose
@@ -25,18 +24,20 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
 
   // TODO(burdon): Assume first args are either a glob or expanded glob of sources.
   const sources = [];
-  while (userArgs?.length) {
-    const arg = userArgs.shift()!;
-    if (arg.charAt(0) === '-') {
-      userArgs.unshift(arg);
-      break;
-    } else {
-      sources.push(arg);
+  {
+    while (userArgs?.length) {
+      const arg = userArgs.shift()!;
+      if (arg.charAt(0) === '-') {
+        userArgs.unshift(arg);
+        break;
+      } else {
+        sources.push(arg);
+      }
     }
-  }
 
-  if (!sources.length) {
-    sources.push(defaultSpec);
+    if (!sources.length) {
+      sources.push(defaultSpec);
+    }
   }
 
   const options = [
