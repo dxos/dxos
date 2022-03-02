@@ -63,6 +63,8 @@ export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
 
 export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
 
+const dedupe = <T>(arr: T[]) => Array.from(new Set(arr));
+
 /**
  * Factory for root item selector.
  * @param itemsProvider
@@ -95,8 +97,8 @@ export const createItemSelector = (
   update: Event<Entity<any>[]>
 ): Selection<Item<any>> => new Selection(() => [root], update, root);
 
-// TODO(burdon): Returned from visitor.
-export type Traversal <T extends Entity, R> = [entities: T[], result: R]
+// TODO(burdon): Returned from each stage of the visitor.
+export type Traversal <T extends Entity, R> = [entities: T[], result?: R]
 
 export type Callable<T extends Entity, R> = (entities: T[], result: R) => R
 
@@ -117,27 +119,25 @@ export class Selection<T extends Entity<any>, R = any> {
 
   /**
    * Creates a derrived selection by aplying a mapping function to the result of the current selection.
-   * @param map Maps items onto new sub array (e.g., filtering, traversing).
-   * @private
    */
   private _createSubSelection<U extends Entity<any>> (
-    map: (items: T[], options: QueryOptions) => U[]
+    map: (items: T[], options: QueryOptions, value?: R) => U[]
   ): Selection<U> {
-    return new Selection((options, value) => map(this._visitor(options, value), options), this._update, this._root);
+    return new Selection(options => map(this._visitor(options), options), this._update, this._root);
   }
 
   /**
    * Finish the selection and return the result.
    */
   query (options: QueryOptions = {}): SelectionResult<T, R> {
-    return new SelectionResult<T, R>(() => this._visitor(options), this._update, this._root);
+    return new SelectionResult<T, R>(() => [this._visitor(options), undefined], this._update, this._root);
   }
 
   /**
    * Call reducer.
    */
   reduce (value: R, options: QueryOptions = {}) {
-    return new SelectionResult<T, R>(() => this._visitor(options, value), this._update, this._root);
+    return new SelectionResult<T, R>(() => [this._visitor(options, value), undefined], this._update, this._root);
   }
 
   /**
@@ -152,7 +152,7 @@ export class Selection<T extends Entity<any>, R = any> {
    * @param visitor
    */
   call(visitor: Callable<T, R>): Selection<T> {
-    return this._createSubSelection(items => {
+    return this._createSubSelection((items, options) => {
       // const result = visitor(items, value!);
       return items;
     });
@@ -232,23 +232,25 @@ export class SelectionResult<T extends Entity<any>, R> { // TODO(burdon): Remove
    */
   readonly update = new Event<T[]>();
 
-  private _lastResult: T[] = [];
+  private _lastResult: Traversal<T, R>;
 
   constructor (
-    private readonly _execute: () => T[], //Traversal<T, R>[],
+    private readonly _execute: () => Traversal<T, R>,
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {
     this._lastResult = this._execute();
 
     // Re-run if deps change.
-    this.update.addEffect(() => _update.on(entities => {
+    this.update.addEffect(() => _update.on(current => {
       const result = this._execute();
-      const set = new Set([...result, ...this._lastResult]);
+      const [entities] = result
+      const set = new Set([...entities, ...this._lastResult]);
       this._lastResult = result;
 
-      if (entities.some(entity => set.has(entity as any))) {
-        this.update.emit(result);
+      // TODO(burdon): Should also fire if entities have been removed from the set.
+      if (current.some(entity => set.has(entity as any))) {
+        this.update.emit(entities);
       }
     }));
   }
@@ -257,8 +259,9 @@ export class SelectionResult<T extends Entity<any>, R> { // TODO(burdon): Remove
    * Get the result of this select.
    */
   get result (): T[] {
-    // TODO(burdon): Why re-run? Provider refresh method?
-    return dedupe(this._execute());
+    // TODO(burdon): Why re-run? Provider refresh method instead?
+    const [entities] = this._execute();
+    return dedupe(entities);
   }
 
   /**
@@ -331,5 +334,3 @@ const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.HIDE_DELETED }: 
     }
   };
 };
-
-const dedupe = <T>(arr: T[]) => Array.from(new Set(arr));
