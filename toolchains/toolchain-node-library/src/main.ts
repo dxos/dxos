@@ -77,10 +77,10 @@ async function execTest (userArgs?: string[]) {
   const jsdom = project.toolchainConfig.jsdom ?? false;
 
   if (project.toolchainConfig.testingFramework === 'mocha') {
-    console.log(chalk.bold`\nmocha`);
+    console.log(chalk.bold`\nMocha Tests`);
     await execMocha({ userArgs, forceClose, jsdom });
   } else {
-    console.log(chalk.bold`\njest`);
+    console.log(chalk.bold`\nJest Tests`);
     await execJest({ project, userArgs, forceClose });
   }
 }

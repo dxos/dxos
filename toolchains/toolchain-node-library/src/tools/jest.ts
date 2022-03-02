@@ -9,11 +9,17 @@ import { Project } from '../project';
 import { execTool } from './common';
 
 export interface ExecJestOpts {
-  project: Project,
-  forceClose?: boolean,
+  project: Project
+  forceClose?: boolean
   userArgs?: string[]
 }
 
+/**
+ * https://jestjs.io/docs/cli
+ * @param project
+ * @param userArgs
+ * @param forceClose
+ */
 export async function execJest ({ project, userArgs = [], forceClose }: ExecJestOpts) {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
