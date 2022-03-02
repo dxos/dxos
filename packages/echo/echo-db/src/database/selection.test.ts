@@ -249,34 +249,23 @@ describe('Selection', () => {
   });
 
   describe('call', () => {
-    // TODO(burdon): Stack is traversed twice (when result is created and on access).
+    // TODO(burdon): Test links.
     // TODO(burdon): Get context (selection) as second arg? For nested traversal.
     test('visitor', () => {
-      console.log('!!!TESTING!!!');
-      let count = 0;
       const query = rootSelector()
+        .reduce({ count: 0 })
         .filter({ type: OBJECT_ORG })
-        .call((items: Entity<any>[], result) => {
-          console.log('1', result);
-          return { count: result.count + 1 };
+        .call((items: Item[], result) => {
+          return { count: result.count + items.length };
         })
         .children()
-        .call((items: Entity<any>[], result) => {
-          console.log('2', result);
-          return { count: result.count + 1 };
+        .call((items: Item[], result) => {
+          return { count: result.count + items.length };
         })
-        // .query();
-        .reduce({ count: 0 });
+        .query();
 
-      expect(
-        query.result // TODO(burdon): Visitor shouldn't call result.
-      ).toEqual([
-        person1,
-        person2,
-        person3
-      ]);
-
-      expect(count).toBe(5);
+      expect(query.result).toEqual([ person1, person2, person3 ]);
+      expect(query.value).toEqual({ count: 5 });
     });
   })
 
