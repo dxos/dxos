@@ -22,22 +22,20 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   const defaultSpec = './src/**/*.test.*';
   const defaultSources = './src/**/*';
 
-  // TODO(burdon): Assume first args are either a glob or expanded glob of sources.
+  // Assume first args are either a glob or expanded glob of sources.
   const sources = [];
-  {
-    while (userArgs?.length) {
-      const arg = userArgs.shift()!;
-      if (arg.charAt(0) === '-') {
-        userArgs.unshift(arg);
-        break;
-      } else {
-        sources.push(arg);
-      }
+  while (userArgs?.length) {
+    const arg = userArgs.shift()!;
+    if (arg.charAt(0) === '-') { // Start of options.
+      userArgs.unshift(arg);
+      break;
+    } else {
+      sources.push(arg);
     }
+  }
 
-    if (!sources.length) {
-      sources.push(defaultSpec);
-    }
+  if (!sources.length) {
+    sources.push(defaultSpec);
   }
 
   const options = [
@@ -48,20 +46,18 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   ];
 
   // Set defaults.
-  {
-    let watchFiles = false;
-    let shouldWatch = false;
-    for (const arg of userArgs) {
-      if (arg === '-w' || arg === '--watch') {
-        shouldWatch = true;
-      } else if (arg === '--watch-files') {
-        watchFiles = true;
-      }
+  let watchFiles = false;
+  let shouldWatch = false;
+  for (const arg of userArgs) {
+    if (arg === '-w' || arg === '--watch') {
+      shouldWatch = true;
+    } else if (arg === '--watch-files') {
+      watchFiles = true;
     }
+  }
 
-    if (shouldWatch && !watchFiles) {
-      options.push(`--watch-files="${defaultSources}"`);
-    }
+  if (shouldWatch && !watchFiles) {
+    options.push(`--watch-files="${defaultSources}"`);
   }
 
   // TODO(burdon): Verbose option.
