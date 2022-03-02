@@ -7,7 +7,7 @@ import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
 import { createServiceBundle } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
-import { PartyService, ProfileService, SystemService, HaloService } from '../proto/gen/dxos/client';
+import { PartyService, ProfileService, SystemService, HaloService, NetworkService } from '../proto/gen/dxos/client';
 import { DevtoolsHost, TracingService } from '../proto/gen/dxos/devtools';
 
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
@@ -19,6 +19,7 @@ export interface ClientServices {
   DataService: DataService;
   DevtoolsHost: DevtoolsHost;
   TracingService: TracingService;
+  NetworkService: NetworkService;
 }
 
 export const clientServiceBundle = createServiceBundle<ClientServices>({
@@ -29,7 +30,8 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   // DataService is provided and implemented internally in ECHO so we import it from there.
   DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
-  TracingService: schema.getService('dxos.devtools.TracingService')
+  TracingService: schema.getService('dxos.devtools.TracingService'),
+  NetworkService: schema.getService('dxos.client.NetworkService')
 });
 
 export interface ClientServiceProvider {

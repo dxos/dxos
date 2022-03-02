@@ -5,6 +5,7 @@
 import { ClientServices } from '../../../interfaces';
 import { createHaloService } from './halo';
 import { CreateServicesOpts } from './interfaces';
+import { createNetworkService } from './network';
 import { createPartyService } from './party';
 import { createProfileService } from './profile';
 import { createSystemService } from './system';
@@ -23,6 +24,7 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
       subscribeToRpcTrace: () => {
         throw new Error('Tracing not available');
       }
-    }
+    },
+    NetworkService: createNetworkService(opts),
   };
 };
