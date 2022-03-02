@@ -249,21 +249,27 @@ describe('Selection', () => {
   });
 
   describe('call', () => {
-    // TODO(burdon): Stack is traversed twice.
-    // TODO(burdon): Get context (from "this"?)
+    // TODO(burdon): Stack is traversed twice (when result is created and on access).
+    // TODO(burdon): Get context (selection) as second arg?
     test('visitor', () => {
+      let count = 0;
+      const query = rootSelector()
+        .filter({ type: OBJECT_ORG })
+        .call((items: Entity<any>[]) => count += items.length)
+        .children()
+        .call((items: Entity<any>[]) => count += items.length)
+        // .query();
+        .reduce({});
+
       expect(
-        rootSelector()
-          .filter({ type: OBJECT_ORG })
-          .call((items: Entity<any>[]) => console.log(items.length))
-          .children()
-          .call((items: Entity<any>[]) => console.log(items.length))
-          .query().result
+        query.result // TODO(burdon): Visitor shouldn't call result.
       ).toEqual([
         person1,
         person2,
         person3
       ]);
+
+      expect(count).toBe(5);
     });
   })
 

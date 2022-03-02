@@ -12,7 +12,7 @@ export interface ExecMochaOpts {
 
 /**
  * https://mochajs.org/#command-line-usage
- * E.g., `rushx test ./src/database/** -w
+ * E.g., `rushx test ./src/database/** -w --reporter min
  *
  * @param userArgs
  * @param forceClose
@@ -65,7 +65,7 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   }
 
   // TODO(burdon): Verbose option.
-  // console.log(JSON.stringify(options, undefined, 2));
+  console.log('Options:', JSON.stringify(options, undefined, 2));
 
   const requires = jsdom ? ['-r', 'jsdom-global/register'] : [];
   await execTool('mocha', [

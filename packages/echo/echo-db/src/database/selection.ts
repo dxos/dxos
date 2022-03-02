@@ -29,23 +29,6 @@ export type ItemIdFilter = {
   id: ItemID
 }
 
-export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
-
-export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
-
-export const createRootSelector = (
-  getItems: () => Item<any>[], getUpdateEvent: () => Event<Entity<any>[]>, root: SelectionRoot
-): RootSelector => {
-  return (filter?: RootFilter): Selection<any> => {
-    const predicate = filter ? filterToPredicate(filter) : () => true;
-    return new Selection(options => getItems().filter(
-      createQueryOptionsFilter(options)).filter(predicate), getUpdateEvent(), root);
-  };
-};
-
-export const createItemSelector = (root: Item<any>, update: Event<Entity<any>[]>): Selection<Item<any>> =>
-  new Selection(() => [root], update, root);
-
 /**
  * Represents where the selection has started.
  */
@@ -69,8 +52,6 @@ export enum ItemFilterDeleted {
   SHOW_DELETED_ONLY = 2
 }
 
-export type Visitor = (entities: Entity<any>[]) => void
-
 export type QueryOptions = {
   /**
    * Controls how deleted items are filtered.
@@ -78,19 +59,60 @@ export type QueryOptions = {
   deleted?: ItemFilterDeleted
 }
 
+export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
+
+export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
+
+/**
+ * Factory for root item selector.
+ * @param itemsProvider
+ * @param updateEventProvider
+ * @param root
+ */
+// TODO(burdon): Explain why providers are necessary.
+export const createRootSelector = (
+  itemsProvider: () => Item<any>[],
+  updateEventProvider: () => Event<Entity<any>[]>,
+  root: SelectionRoot
+): RootSelector => {
+  return (filter?: RootFilter): Selection<any> => {
+    const predicate = filter ? filterToPredicate(filter) : () => true;
+    return new Selection(
+      options => itemsProvider()
+        .filter(createQueryOptionsFilter(options))
+        .filter(predicate),
+      updateEventProvider(),
+      root
+    );
+  };
+};
+
+/**
+ * Factory for specific item selector.
+ * @param root
+ * @param update
+ */
+export const createItemSelector = (
+  root: Item<any>,
+  update: Event<Entity<any>[]>
+): Selection<Item<any>> => new Selection(() => [root], update, root);
+
+export type Traversal <T extends Entity, R> = [entities: T[], result: R]
+
+export type Visitor<T extends Entity, R> = (entities: T[], result: R) => R
+
 /**
  * Selection is a DSL building queries into an ECHO database.
  */
-export class Selection<T extends Entity<any>> {
+export class Selection<T extends Entity<any>, R = any> {
   /**
-   *
-   * @param _execute Execute the query.
-   * @param _updateFilter Predicate to determine if the update event should be fired based on the set of changed items.
+   * @param _traverse Execute the query.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor (
-    private readonly _execute: (options: QueryOptions) => T[],
+    // TODO(burdon): Traverse and reduce. Pure functions.
+    private readonly _traverse: (options: QueryOptions) => T[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {}
@@ -98,15 +120,24 @@ export class Selection<T extends Entity<any>> {
   /**
    * Finish the selection and return the result.
    */
-  query (options: QueryOptions = {}): SelectionResult<T> {
-    return new SelectionResult<T>(() => this._execute(options), this._update, this._root);
+  query (options: QueryOptions = {}): SelectionResult<T, R> {
+    return new SelectionResult<T, R>(() => this._traverse(options), this._update, this._root);
+  }
+
+  /**
+   * Call reducer.
+   */
+  reduce (value: R, options: QueryOptions = {}) {
+    return new SelectionResult<T, R>(() => this._traverse(options), this._update, this._root);
   }
 
   /**
    * Creates a derrived selection by aplying a mapping function to the result of the current selection.
    */
-  private _createSubSelection<U extends Entity<any>> (map: (arg: T[], options: QueryOptions) => U[]): Selection<U> {
-    return new Selection(options => map(this._execute(options), options), this._update, this._root);
+  private _createSubSelection<U extends Entity<any>> (
+    map: (arg: T[], options: QueryOptions) => U[]
+  ): Selection<U> {
+    return new Selection(options => map(this._traverse(options), options), this._update, this._root);
   }
 
   /**
@@ -120,14 +151,10 @@ export class Selection<T extends Entity<any>> {
    * Visitor.
    * @param visitor
    */
-  // TODO(burdon): Reducer.
-  call(this: Selection<Item<any>>, visitor: Visitor): Selection<Item<any>>
-  call(this: Selection<Link<any>>, visitor: Visitor): Selection<Link<any>>
-  call<U extends Entity<any>>(this: Selection<U>, visitor: Visitor): Selection<U> {
+  call(visitor: Visitor<T, R>): Selection<T> {
     return this._createSubSelection(items => {
-      visitor(items);
       return items;
-    });
+    }); // TODO(burdon): Return items and call visitor.
   }
 
   /**
@@ -197,21 +224,23 @@ export class Selection<T extends Entity<any>> {
 /**
  * Represents a live-query that can notify about future updates to the relevant subset of items.
  */
-export class SelectionResult<T extends Entity<any>> {
+export class SelectionResult<T extends Entity<any>, R> { // TODO(burdon): Remove any from Entity
   /**
    * Fired when there are updates in the selection.
    * Only update that are relevant to the selection cause the update.
    */
   readonly update = new Event<T[]>();
 
-  private _lastResult: T[];
+  private _lastResult: T[] = [];
 
   constructor (
-    private readonly _execute: () => T[],
+    private readonly _execute: () => T[], //Traversal<T, R>[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {
     this._lastResult = this._execute();
+
+    // Re-run if deps change.
     this.update.addEffect(() => _update.on(entities => {
       const result = this._execute();
       const set = new Set([...result, ...this._lastResult]);
@@ -227,6 +256,7 @@ export class SelectionResult<T extends Entity<any>> {
    * Get the result of this select.
    */
   get result (): T[] {
+    // TODO(burdon): Why re-run? Provider refresh method?
     return dedupe(this._execute());
   }
 
