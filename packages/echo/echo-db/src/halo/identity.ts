@@ -10,7 +10,7 @@ import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
 
-const log = debug('dxos:echo:parties:identity');
+const log = debug('dxos:echo-db:identity');
 
 /**
  * Represents users identity exposing access to signing keys and HALO party.

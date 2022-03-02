@@ -16,7 +16,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
-const log = debug('dxos:echo:item-manager');
+const log = debug('dxos:echo-db:item-manager');
 
 export interface ModelConstructionOptions {
   itemId: ItemID

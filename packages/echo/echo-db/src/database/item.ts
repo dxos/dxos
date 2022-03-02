@@ -12,7 +12,7 @@ import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
 
-const log = debug('dxos:echo-db:items:item');
+const log = debug('dxos:echo-db:item');
 
 /**
  * A globally addressable data item.
