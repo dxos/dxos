@@ -13,8 +13,8 @@ import { createServices } from './services';
 import { createStorageObjects } from './storage';
 
 export class ClientServiceHost implements ClientServiceProvider {
-  private readonly _echo: ECHO;
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
+  private readonly _echo: ECHO;
 
   constructor (
     private readonly _config: Config
