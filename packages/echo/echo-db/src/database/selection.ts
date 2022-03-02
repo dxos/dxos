@@ -77,13 +77,11 @@ export const createRootSelector = (
 ): RootSelector => {
   return (filter?: RootFilter): Selection<any> => {
     const predicate = filter ? filterToPredicate(filter) : () => true;
-    return new Selection(
-      options => itemsProvider()
-        .filter(createQueryOptionsFilter(options))
-        .filter(predicate),
-      updateEventProvider(),
-      root
-    );
+    const visitor = (options: QueryOptions) => itemsProvider()
+      .filter(createQueryOptionsFilter(options))
+      .filter(predicate);
+
+    return new Selection(visitor, updateEventProvider(), root);
   };
 };
 
@@ -97,47 +95,47 @@ export const createItemSelector = (
   update: Event<Entity<any>[]>
 ): Selection<Item<any>> => new Selection(() => [root], update, root);
 
+// TODO(burdon): Returned from visitor.
 export type Traversal <T extends Entity, R> = [entities: T[], result: R]
 
-export type Visitor<T extends Entity, R> = (entities: T[], result: R) => R
+export type Callable<T extends Entity, R> = (entities: T[], result: R) => R
 
 /**
  * Selection is a DSL building queries into an ECHO database.
  */
 export class Selection<T extends Entity<any>, R = any> {
   /**
-   * @param _traverse Execute the query.
+   * @param _visitor Execute the query.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
    */
   constructor (
-    // TODO(burdon): Traverse and reduce. Pure functions.
-    private readonly _traverse: (options: QueryOptions) => T[],
+    private readonly _visitor: (options: QueryOptions, value?: R) => T[],
     private readonly _update: Event<Entity<any>[]>,
     private readonly _root: SelectionRoot
   ) {}
 
   /**
+   * Creates a derrived selection by aplying a mapping function to the result of the current selection.
+   */
+  private _createSubSelection<U extends Entity<any>> (
+    map: (items: T[], options: QueryOptions, value?: R) => U[]
+  ): Selection<U> {
+    return new Selection(options => map(this._visitor(options), options), this._update, this._root);
+  }
+
+  /**
    * Finish the selection and return the result.
    */
   query (options: QueryOptions = {}): SelectionResult<T, R> {
-    return new SelectionResult<T, R>(() => this._traverse(options), this._update, this._root);
+    return new SelectionResult<T, R>(() => this._visitor(options), this._update, this._root);
   }
 
   /**
    * Call reducer.
    */
   reduce (value: R, options: QueryOptions = {}) {
-    return new SelectionResult<T, R>(() => this._traverse(options), this._update, this._root);
-  }
-
-  /**
-   * Creates a derrived selection by aplying a mapping function to the result of the current selection.
-   */
-  private _createSubSelection<U extends Entity<any>> (
-    map: (arg: T[], options: QueryOptions) => U[]
-  ): Selection<U> {
-    return new Selection(options => map(this._traverse(options), options), this._update, this._root);
+    return new SelectionResult<T, R>(() => this._visitor(options, value), this._update, this._root);
   }
 
   /**
@@ -151,10 +149,11 @@ export class Selection<T extends Entity<any>, R = any> {
    * Visitor.
    * @param visitor
    */
-  call(visitor: Visitor<T, R>): Selection<T> {
-    return this._createSubSelection(items => {
-      return items;
-    }); // TODO(burdon): Return items and call visitor.
+  call(visitor: Callable<T, R>): Selection<T> {
+    return this._createSubSelection((items, options, value) => {
+      const result = visitor(items, value!);
+      return items; // TODO(burdon): Return tuple.
+    });
   }
 
   /**
