@@ -198,7 +198,7 @@ export class BotHandle {
     this._log('Bot started');
   }
 
-  private async _updateAfterStart () {
+  private _updateAfterStart () {
     this._bot.status = Bot.Status.RUNNING;
     this._bot.lastStart = this.startTimestamp;
     this._bot.runtime = {};
