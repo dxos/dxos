@@ -73,6 +73,7 @@ export const RegistrySearchDialog = ({
     setSearchInput('');
     setSearchOptions([]);
     setSelectedResource(null);
+    setSelectedTypes(typeFilter);
     setProcessing(false);
   };
 
@@ -120,6 +121,7 @@ export const RegistrySearchDialog = ({
         fullWidth
         options={searchOptions}
         getOptionLabel={option => option.id.toString()}
+        autoHighlight
         renderInput={params => (
           <TextField
             {...params}
@@ -127,6 +129,11 @@ export const RegistrySearchDialog = ({
             variant='standard'
             autoFocus
             spellCheck={false}
+            onKeyPress={async (event) => {
+              if (event.key === 'Enter' && (!processing || selectedResource)) {
+                await handleSelect();
+              }
+            }}
           />
         )}
         inputValue={searchInput}
