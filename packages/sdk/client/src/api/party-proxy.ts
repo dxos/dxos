@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend, RootSelector
+  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -144,7 +144,7 @@ export class Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-   get reduce (): Database['reduce'] {
+  get reduce (): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }
 

@@ -9,6 +9,7 @@ import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { IRegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer } from './bot-container';
@@ -17,7 +18,6 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('In-Memory', () => {
   describe('No client', () => {

@@ -7,13 +7,13 @@ import fs from 'fs';
 import path from 'path';
 
 import { createId, PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
 
 import { NodeContainer } from '../bot-container';
 import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
 import { setupBroker, setupClient } from '../testutils';
 import { buildBot } from './build-bot';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('Build bot', () => {
   let outfile: string;

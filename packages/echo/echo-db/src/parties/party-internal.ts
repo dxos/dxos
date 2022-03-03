@@ -11,6 +11,7 @@ import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item } from '../database';
 import { IdentityNotInitializedError } from '../errors';
@@ -21,7 +22,6 @@ import { ResultSet } from '../result';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import { ObjectModel } from '@dxos/object-model';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 export const PARTY_TITLE_PROPERTY = 'title';

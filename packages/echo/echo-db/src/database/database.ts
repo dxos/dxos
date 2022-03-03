@@ -10,6 +10,7 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Selection } from '.';
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
@@ -17,7 +18,6 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { createSelector, RootFilter } from './selection';
-import { Selection } from '.';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -46,8 +46,6 @@ enum State {
  */
 export class Database {
   private readonly _itemManager: ItemManager;
-
- 
 
   private _state = State.INITIAL;
 
@@ -178,7 +176,7 @@ export class Database {
    * Returns a selection context, which can be used to traverse the object graph.
    * @param filter
    */
-  select(filter?: RootFilter): Selection<Item<any>> {
+  select (filter?: RootFilter): Selection<Item<any>> {
     return createSelector<void>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,

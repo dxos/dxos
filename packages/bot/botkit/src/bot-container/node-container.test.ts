@@ -9,6 +9,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
 import { createRpcClient } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
@@ -16,7 +17,6 @@ import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createHandle } from '../testutils/bots';
 import { createIpcPort, NodeContainer } from './node-container';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('Node container', function () {
   // Running node command can be slow.
