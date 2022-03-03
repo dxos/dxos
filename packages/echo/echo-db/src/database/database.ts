@@ -46,6 +46,12 @@ enum State {
 export class Database {
   private readonly _itemManager: ItemManager;
 
+  private readonly _selector = createSelector(
+    () => this._itemManager.items,
+    () => this._itemManager.debouncedUpdate,
+    this
+  );
+
   private _state = State.INITIAL;
 
   /**
@@ -173,14 +179,27 @@ export class Database {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
-   * @param selector {SelectFilter}
-   * @param [filter]
+   * @param filter
    */
-  select = createSelector(
-    () => this._itemManager.items,
-    () => this._itemManager.debouncedUpdate,
-    this
-  );
+  select (filter?: RootFilter) {
+    return this._selector(filter);
+  }
+
+  /**
+   * Returns a reducer selection context.
+   * @param result
+   * @param filter
+   */
+  reduce (result: any, filter?: RootFilter) {
+    const selector = createSelector(
+      () => this._itemManager.items,
+      () => this._itemManager.debouncedUpdate,
+      this,
+      result
+    );
+
+    return selector(filter);
+  }
 
   createSnapshot () {
     this._assertInitialized();

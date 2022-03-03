@@ -293,13 +293,13 @@ export class SelectionResult<T extends Entity, R = any> {
    * Get the result of this select.
    */
   // TODO(burdon): Rename entities.
+  // TODO(burdon): Don't trigger execute in getter (provide refresh method).
   get result (): T[] {
-    // TODO(burdon): Why re-run? Provider refresh method instead?
     const [entities] = this._execute();
     return dedupe(entities);
   }
 
-  // TODO(burdon): Better name for reducer result?
+  // TODO(burdon): Better name for reducer result? Just return value directly?
   get value (): R {
     const [, value] = this._execute();
     return value!;

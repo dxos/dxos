@@ -42,7 +42,7 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
 
 const createRootSelector = createSelector(() => items, () => new Event(), null as any);
 
-const createReducer = (value: any) => createSelector(() => items, () => new Event(), null as any, value)();
+const createReducer = (result: any) => createSelector(() => items, () => new Event(), null as any, result)();
 
 // TODO(burdon): Use more complex data set (org, person, project, task).
 

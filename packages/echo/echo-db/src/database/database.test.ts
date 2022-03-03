@@ -235,7 +235,7 @@ describe('Database', () => {
         await update;
 
         {
-          const items = query.result;
+          const { result: items } = query;
           expect(items).toHaveLength(9);
         }
 
@@ -289,6 +289,17 @@ describe('Database', () => {
         });
         expect(childItem.parent?.id).toEqual(parentItem.id);
         await promiseTimeout(update, 100, new Error('timeout'));
+      });
+    });
+
+    describe('reducer', () => {
+      test('simple counter', async () => {
+        const modelFactory = new ModelFactory().registerModel(ObjectModel);
+        const database = await setupBackend(modelFactory);
+
+        await Promise.all(Array.from({ length: 8 }).map(() => database.createItem({ model: ObjectModel })));
+        const { value } = database.reduce(0).call((items) => items.length).query();
+        expect(value).toBe(8);
       });
     });
   });
