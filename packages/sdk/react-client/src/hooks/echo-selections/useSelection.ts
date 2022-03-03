@@ -22,12 +22,12 @@ export const useSelection = <T extends Entity<any>> (
   selection: Selection<T> | SelectionResult<T> | Falsy,
   deps: readonly any[] = []
 ): T[] | undefined => {
-  const [result, setResult] = useState(() => coerseSelection(selection));
+  const [result, setResult] = useState(() => coerceSelection(selection));
   const [data, setData] = useState(() => result ? result.result : undefined);
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
-    const newResult = coerseSelection(selection);
+    const newResult = coerceSelection(selection);
     const newData = newResult?.result;
     setResult(newResult);
     setData(newData);
@@ -45,8 +45,6 @@ export const useSelection = <T extends Entity<any>> (
   return data;
 };
 
-// TODO(burdon): Typo (coerce).
-const coerseSelection = <T extends Entity>(arg: Selection<T> | SelectionResult<T> | Falsy): SelectionResult<T> | undefined =>
-  !arg ? undefined
-    : arg instanceof Selection ? arg.query()
-      : arg;
+const coerceSelection = <T extends Entity>(
+  arg: Selection<T> | SelectionResult<T> | Falsy
+): SelectionResult<T> | undefined => !arg ? undefined : arg instanceof Selection ? arg.query() : arg;

@@ -10,13 +10,14 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Selection } from '.';
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { createRootSelector, RootFilter } from './selection';
+import { createSelector, RootFilter } from './selection';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -159,27 +160,46 @@ export class Database {
   /**
    * Waits for item matching the filter to be present and returns it.
    */
-  async waitForItem<T extends Model<any> = any> (filter: RootFilter): Promise<Item<T>> {
+  async waitForItem<T extends Model<any>> (filter: RootFilter): Promise<Item<T>> {
     const query = this.select(filter).query();
     await query.update.waitForCondition(() => {
       const { result } = query;
       return Array.isArray(result) ? result.length > 0 : result !== undefined;
     });
+
     const item = Array.isArray(query.result) ? query.result[0] : query.result;
     assert(item, 'Race condition detected');
-    return item;
+    return item as Item<T>;
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
-   * @param selector {SelectFilter}
-   * @param [filter]
+   * @param filter
    */
-  select = createRootSelector(
-    () => this._itemManager.items,
-    () => this._itemManager.debouncedUpdate,
-    this
-  );
+  select (filter?: RootFilter): Selection<Item<any>> {
+    return createSelector<void>(
+      () => this._itemManager.items,
+      () => this._itemManager.debouncedUpdate,
+      this,
+      filter,
+      undefined
+    );
+  }
+
+  /**
+   * Returns a reducer selection context.
+   * @param result
+   * @param filter
+   */
+  reduce<R> (result: R, filter?: RootFilter): Selection<Item<any>, R> {
+    return createSelector(
+      () => this._itemManager.items,
+      () => this._itemManager.debouncedUpdate,
+      this,
+      filter,
+      result
+    );
+  }
 
   createSnapshot () {
     this._assertInitialized();
