@@ -17,10 +17,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { DataServiceRouter } from './database/data-service-router';
+import { DataServiceRouter } from './database';
 import { InvalidStorageVersionError } from './errors';
-import { HALO } from './halo';
-import { autoPartyOpener } from './halo/party-opener';
+import { autoPartyOpener, HALO } from './halo';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
 import { OpenProgress, PartyFactory, PartyInternal, PartyManager } from './parties';

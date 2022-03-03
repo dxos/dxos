@@ -7,15 +7,13 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import {
-  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot
-} from '@dxos/echo-protocol';
+import { DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
-import { Entity } from './entity';
-import { Item } from './item';
+import { Entity } from '../entity';
+import { Item } from '../item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
 
 const log = debug('dxos:echo-db:item-demuxer');
@@ -93,7 +91,7 @@ export class ItemDemuxer {
         const item = this._itemManager.getItem(itemId);
         assert(item);
 
-        item._processMutation(itemMutation, itemId => this._itemManager.getItem(itemId));
+        item._processMutation(itemMutation, (itemId: ItemID) => this._itemManager.getItem(itemId));
       }
 
       //

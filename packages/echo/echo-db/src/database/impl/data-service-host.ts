@@ -18,11 +18,11 @@ import {
   SubscribeEntityStreamResponse
 } from '@dxos/echo-protocol';
 
-import { EntityNotFoundError } from '../errors';
-import { Item } from './item';
+import { EntityNotFoundError } from '../../errors';
+import { Item } from '../item';
+import { Link } from '../link';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 
 const log = debug('dxos:echo-db:data-service-host');
 

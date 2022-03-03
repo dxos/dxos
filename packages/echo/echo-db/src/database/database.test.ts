@@ -10,7 +10,7 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { DataServiceHost } from './data-service-host';
+import { DataServiceHost } from './impl';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';

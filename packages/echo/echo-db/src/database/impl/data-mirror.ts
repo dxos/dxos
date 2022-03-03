@@ -10,7 +10,7 @@ import { failUndefined } from '@dxos/debug';
 import { DataService } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
 
-import { Entity } from './entity';
+import { Entity } from '../entity';
 import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo-db:data-mirror');

@@ -8,8 +8,8 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, StateManager } from '@dxos/model-factory';
 
 import { Entity } from './entity';
+import { ItemManager } from './impl';
 import { Item } from './item';
-import { ItemManager } from './item-manager';
 
 export interface LinkData {
   sourceId: ItemID

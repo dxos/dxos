@@ -8,7 +8,7 @@ import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/
 import { Model, StateManager } from '@dxos/model-factory';
 
 import { Entity } from './entity';
-import { ItemManager } from './item-manager';
+import { ItemManager } from './impl';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
 

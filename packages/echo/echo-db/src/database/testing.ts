@@ -8,15 +8,15 @@ import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
-import { DataServiceHost } from './data-service-host';
-import { DataServiceRouter } from './data-service-router';
 import { Database } from './database';
-import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
+import { DataServiceHost, DataServiceRouter, FeedDatabaseBackend, RemoteDatabaseBackend } from './impl';
 
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
   const inboundStream = new Readable({ read () {}, objectMode: true });
-  feed.written.on(([data, meta]) => inboundStream.push({ data, meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe([[meta.feedKey, meta.seq]]) } }));
+  feed.written.on(([data, meta]) => inboundStream.push(
+    { data, meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe([[meta.feedKey, meta.seq]]) } })
+  );
 
   const database = new Database(
     modelFactory,
