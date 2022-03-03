@@ -759,42 +759,6 @@
     },
 
     //
-    // bot-deprecated
-    // NOTE: KEEP SORTED
-    //
-
-    {
-      "packageName": "@dxos/bot-deprecated",
-      "projectFolder": "packages/deprecated/bot/bot-deprecated",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/botkit-deprecated",
-      "projectFolder": "packages/deprecated/bot/botkit-deprecated",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/botkit-client-deprecated",
-      "projectFolder": "packages/deprecated/bot/botkit-client-deprecated",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/protocol-plugin-bot-deprecated",
-      "projectFolder": "packages/deprecated/bot/protocol-plugin-bot-deprecated",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/test-bot-deprecated",
-      "projectFolder": "packages/deprecated/bot/test-bot-deprecated",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-
-    //
     // tutorials
     //
 
@@ -816,10 +780,6 @@
     // NOTE: KEEP SORTED
     //
 
-    {
-      "packageName": "@dxos/gravity-core",
-      "projectFolder": "packages/gravity/gravity-core"
-    },
     {
       "packageName": "@dxos/browser-mocha",
       "projectFolder": "packages/gravity/browser-mocha"
