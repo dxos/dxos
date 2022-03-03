@@ -10,10 +10,10 @@ import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { PartyFactory, OpenProgress, PartyManager } from '../parties';
-import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';

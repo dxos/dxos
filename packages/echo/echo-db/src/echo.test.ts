@@ -15,6 +15,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Item } from './api';
 import { ECHO } from './echo';
+import { Contact } from './halo';
 import { defaultInvitationAuthenticator } from './invitations';
 import { inviteTestPeer } from './util';
 
@@ -477,8 +478,10 @@ describe('ECHO', () => {
     const a = await setup({ createProfile: true });
     const b = await setup({ createProfile: true });
 
-    const updatedA = a.halo.queryContacts().update.waitFor(contacts => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
-    const updatedB = b.halo.queryContacts().update.waitFor(contacts => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedA = a.halo.queryContacts().update.waitFor(
+      (contacts: Contact[]) => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedB = b.halo.queryContacts().update.waitFor(
+      (contacts: Contact[]) => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
 
     // Create the Party.
     const partyA = await a.createParty();

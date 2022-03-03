@@ -11,10 +11,11 @@ import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Item } from '../api';
+import { Item, ResultSet } from '../api';
 import { PartyInternal } from '../parties';
-import { ResultSet } from '../result';
-import { HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty } from './halo-party';
+import {
+  HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty
+} from './halo-party';
 
 /**
  * Manage settings.
