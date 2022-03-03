@@ -249,11 +249,13 @@ describe('Selection', () => {
   });
 
   describe('call', () => {
-    // TODO(burdon): Test links.
-    // TODO(burdon): Test visitor with no value.
-    // TODO(burdon): What if reduce called multiple times (change API?).
-    // TODO(burdon): Get context (selection) as second arg? For nested traversal.
-    test('visitor', () => {
+    test('simple reducer', () => {
+      const query = createReducer(0).call((items, count) => count + items.length).query();
+      expect(query.value).toEqual(items.length);
+    });
+
+    // TODO(burdon): Support nested traverals (context as third arg?)
+    test('complex reducer', () => {
       const query = createReducer({ numItems: 0, numLinks: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => {
