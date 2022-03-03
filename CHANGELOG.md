@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.2](https://www.github.com/dxos/protocols/compare/v2.28.1...v2.28.2) (2022-03-03)
+
+
+### Features
+
+* Improve keyboard UX of RegistrySearchDialog ([#1018](https://www.github.com/dxos/protocols/issues/1018)) ([cc97ac0](https://www.github.com/dxos/protocols/commit/cc97ac04940b9be9204a2dfe406795095074a2cb))
+* Selection visitor ([#1013](https://www.github.com/dxos/protocols/issues/1013)) ([45b56c5](https://www.github.com/dxos/protocols/commit/45b56c5260ba24825b9adf4f1ae06e7c0d2d5632))
+
 ### [2.28.1](https://www.github.com/dxos/protocols/compare/v2.28.0...v2.28.1) (2022-03-01)
 
 
