@@ -25,7 +25,7 @@ const App = () => {
   const handleChange = (text: string) => {
     const selection = execSelection(party, text);
     if (selection) {
-      const { result } = selection.query({}); // TODO(burdon): Allow no options.
+      const { result } = selection.query();
       setResult(result?.length);
     } else {
       setResult(0);

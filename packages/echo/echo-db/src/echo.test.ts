@@ -13,7 +13,7 @@ import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from './database';
+import { Item } from './api';
 import { ECHO } from './echo';
 import { defaultInvitationAuthenticator } from './invitations';
 import { inviteTestPeer } from './util';

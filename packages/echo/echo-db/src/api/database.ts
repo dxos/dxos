@@ -10,14 +10,11 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Selection } from '.';
-import { DataServiceHost } from './data-service-host';
-import { DatabaseBackend } from './database-backend';
+import { DatabaseBackend, DataServiceHost, ItemManager } from '../database';
 import { Entity } from './entity';
 import { Item } from './item';
-import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { createSelector, RootFilter } from './selection';
+import { Selection, createSelector, RootFilter } from './selection';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -192,7 +189,7 @@ export class Database {
    * @param filter
    */
   reduce<R> (result: R, filter?: RootFilter): Selection<Item<any>, R> {
-    return createSelector(
+    return createSelector<R>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
       this,
