@@ -18,12 +18,12 @@ import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 
-const portToClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
+const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
   const rpc = createRpcClient(
     schema.getService('dxos.bot.BotService'),
     {
       port,
-      timeout: 60_000
+      timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
     }
   );
   await rpc.open();
@@ -45,7 +45,7 @@ describe('Node container', function () {
       logFilePath
     });
 
-    const rpcClient = await portToClient(port);
+    const rpcClient = await createBotRpcClient(port);
     await rpcClient.rpc.initialize({});
     const command = PublicKey.random();
     const { response } = await rpcClient.rpc.command({ command: command.asUint8Array() });
@@ -80,7 +80,7 @@ describe('Node container', function () {
         logFilePath
       });
 
-      const rpcClient = await portToClient(port);
+      const rpcClient = await createBotRpcClient(port);
       await rpcClient.rpc.initialize({
         config: config.values,
         invitation
@@ -104,7 +104,7 @@ describe('Node container', function () {
         logFilePath
       });
 
-      const rpcClient = await portToClient(port);
+      const rpcClient = await createBotRpcClient(port);
       await rpcClient.rpc.initialize({
         config: config.values,
         invitation
@@ -130,7 +130,7 @@ describe('Node container', function () {
       id,
       localPath: require.resolve('../bots/failing-bot')
     });
-    const rpcClient = await portToClient(port);
+    const rpcClient = await createBotRpcClient(port);
     await rpcClient.rpc.initialize({});
 
     const promise = container.exited.waitForCount(1);

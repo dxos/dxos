@@ -25,8 +25,6 @@ interface BotHandleOptions {
   partyKey?: PublicKey
 }
 
-type StartParams = { initialize: false } | { initialize: true, invite?: InvitationDescriptor };
-
 /**
  * Represents a running bot instance in BotFactory.
  */
@@ -131,13 +129,19 @@ export class BotHandle {
   }
 
   async spawn (invitation?: InvitationDescriptor): Promise<Bot> {
-    const bot = await this._start({ initialize: true, invite: invitation });
-    return bot;
+    this.bot.status = Bot.Status.STARTING;
+    await this._spawn();
+    await this._initialize(invitation);
+    this._updateAfterStart();
+    return this.bot;
   }
 
   async start (): Promise<Bot> {
-    const bot = await this._start({ initialize: false });
-    return bot;
+    this.bot.status = Bot.Status.STARTING;
+    await this._spawn();
+    await this._start();
+    this._updateAfterStart();
+    return this.bot;
   }
 
   async stop (): Promise<Bot> {
@@ -159,8 +163,7 @@ export class BotHandle {
     await this._clearFiles();
   }
 
-  private async _start (params: StartParams): Promise<Bot> {
-    this._bot.status = Bot.Status.STARTING;
+  private async _spawn (): Promise<void> {
     const port = await this._botContainer.spawn({
       id: this.id,
       localPath: this.localPath,
@@ -172,37 +175,35 @@ export class BotHandle {
       schema.getService('dxos.bot.BotService'),
       {
         port,
-        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+        timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
       }
     );
     await this._rpc.open();
-    if (params.initialize) {
-      this._log('Initializing bot');
-      await this.rpc.initialize({
-        config: this.config.values,
-        invitation: params.invite
-      });
-      this._log('Initialization complete');
-    } else {
-      this._log('Starting bot');
-      await this.rpc.start({
-        config: this.config.values
-      });
-      this._log('Bot started');
-    }
+  }
+
+  private async _initialize (invitation?: InvitationDescriptor): Promise<void> {
+    this._log('Initializing bot');
+    await this.rpc.initialize({
+      config: this.config.values,
+      invitation
+    });
+    this._log('Initialization complete');
+  }
+
+  private async _start (): Promise<void> {
+    this._log('Starting bot');
+    await this.rpc.start({
+      config: this.config.values
+    });
+    this._log('Bot started');
+  }
+
+  private async _updateAfterStart () {
     this._bot.status = Bot.Status.RUNNING;
     this._bot.lastStart = this.startTimestamp;
     this._bot.runtime = {};
     this.update.emit();
     this._log('Bot started');
-    return this.bot;
-  }
-
-  async close () {
-    assert(this._rpc, 'BotHandle is not open');
-    this._rpc.close();
-    this._rpc = null;
-    this.update.emit();
   }
 
   private async _clearFiles () {

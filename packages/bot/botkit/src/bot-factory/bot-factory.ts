@@ -135,9 +135,15 @@ export class BotFactory implements BotFactoryService {
 
   async stop (request: Bot) {
     assert(request.id);
-    const bot = this._getBot(request.id);
-    await bot.stop();
-    return bot.bot;
+    const id = request.id;
+    try {
+      const bot = this._getBot(request.id);
+      await bot.stop();
+      return bot.bot;
+    } catch (error: any) {
+      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+      throw error;
+    }
   }
 
   async remove (request: Bot) {
@@ -146,8 +152,9 @@ export class BotFactory implements BotFactoryService {
     try {
       const bot = this._getBot(id);
       await bot.remove();
+      this._bots.delete(id);
     } catch (error: any) {
-      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+      log(`[${id}] Failed to remove bot: ${error.stack ?? error}`);
       throw error;
     }
   }
