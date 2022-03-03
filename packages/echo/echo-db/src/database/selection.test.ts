@@ -40,9 +40,11 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
-const createRootSelector = (filter?: RootFilter) => createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
+const createRootSelector = (filter?: RootFilter) =>
+  createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
 
-const createReducer = <R>(result: R) => createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
+const createReducer = <R>(result: R) =>
+  createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
 
 // TODO(burdon): Use more complex data set (org, person, project, task).
 
@@ -248,7 +250,7 @@ describe('Selection', () => {
     });
   });
 
-  describe('call', () => {
+  describe('reducer', () => {
     test('simple reducer', () => {
       const query = createReducer(0).call((items, count) => count + items.length).query();
       expect(query.value).toEqual(items.length);
@@ -270,9 +272,8 @@ describe('Selection', () => {
           return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
         })
         .target()
-        .query(); // TODO(burdon): Different verb?
+        .query();
 
-      expect(ids(query.result)).toStrictEqual(ids([person1, person2, person3]));
       expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
     });
   });

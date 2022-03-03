@@ -23,7 +23,7 @@ export const useSelection = <T extends Entity<any>> (
   deps: readonly any[] = []
 ): T[] | undefined => {
   const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState(() => result ? result.result : undefined);
+  const [data, setData] = useState<T[] | undefined>(() => result ? result.result : undefined);
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
@@ -36,8 +36,8 @@ export const useSelection = <T extends Entity<any>> (
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      return result.update.on(newData => {
-        setData(newData);
+      return result.update.on((entities: T[]) => {
+        setData(entities);
       });
     }
   }, [result]);
@@ -45,6 +45,24 @@ export const useSelection = <T extends Entity<any>> (
   return data;
 };
 
+/**
+ * @param selection
+ * @param value
+ * @param deps
+ */
+// TODO(burdon): Implement.
+export const useReducer = <T extends Entity<any>, R extends any> (
+  selection: Selection<T> | SelectionResult<T> | Falsy,
+  value: R,
+  deps: readonly any[] = []
+) => {
+  return undefined;
+};
+
+/**
+ * @param arg
+ */
+// TODO(burdon): ???
 const coerceSelection = <T extends Entity>(
   arg: Selection<T> | SelectionResult<T> | Falsy
 ): SelectionResult<T> | undefined => !arg ? undefined : arg instanceof Selection ? arg.query() : arg;

@@ -192,7 +192,7 @@ export class Database {
    * @param filter
    */
   reduce<R> (result: R, filter?: RootFilter): Selection<Item<any>, R> {
-    return createSelector(
+    return createSelector<R>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
       this,

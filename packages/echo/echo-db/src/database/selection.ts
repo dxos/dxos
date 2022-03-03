@@ -86,12 +86,13 @@ const dedupe = <T>(values: T[]) => Array.from(new Set(values));
  * @param itemsProvider
  * @param updateEventProvider
  * @param root
+ * @param filter
  * @param value Initial reducer value.
  */
 export const createSelector = <R>(
   // Provider is called each time the query is executed.
   itemsProvider: () => Item[],
-  // TODO(burdon): Why is this a provider?
+  // TODO(burdon): Replace with direct event handler.
   updateEventProvider: () => Event<Entity[]>,
   root: SelectionRoot,
   filter: RootFilter | undefined,
@@ -106,7 +107,7 @@ export const createSelector = <R>(
     return [items, value];
   };
 
-  return new Selection(visitor, updateEventProvider(), root);
+  return new Selection(visitor, updateEventProvider(), root, value !== undefined);
 };
 
 /**
@@ -119,7 +120,7 @@ export const createItemSelector = <R>(
   root: Item<any>,
   update: Event<Entity[]>,
   value: R
-): Selection<Item<any>, R> => new Selection(() => [[root], value], update, root);
+): Selection<Item<any>, R> => new Selection(() => [[root], value], update, root, value !== undefined);
 
 /**
  * Selections are used to construct database subscriptions.
@@ -135,11 +136,13 @@ export class Selection<T extends Entity<any>, R = void> {
    * @param _visitor Executes the query.
    * @param _update The unfiltered update event.
    * @param _root The root of the selection. Must be a stable reference.
+   * @param _reducer
    */
   constructor (
     private readonly _visitor: (options: QueryOptions) => SelectionContext<T, R>,
     private readonly _update: Event<Entity[]>,
-    private readonly _root: SelectionRoot
+    private readonly _root: SelectionRoot,
+    private readonly _reducer = false
   ) {}
 
   /**
@@ -148,14 +151,15 @@ export class Selection<T extends Entity<any>, R = void> {
   private _createSubSelection<U extends Entity> (
     map: (context: SelectionContext<T, R>, options: QueryOptions) => SelectionContext<U, R>
   ): Selection<U, R> {
-    return new Selection(options => map(this._visitor(options), options), this._update, this._root);
+    return new Selection(options => map(this._visitor(options), options), this._update, this._root, this._reducer);
   }
 
   /**
    * Finish the selection and return the result.
    */
+  // TODO(burdon): Rename exec.
   query (options: QueryOptions = {}): SelectionResult<T, R> {
-    return new SelectionResult<T, R>(() => this._visitor(options), this._update, this._root);
+    return new SelectionResult<T, R>(() => this._visitor(options), this._update, this._root, this._reducer);
   }
 
   /**
@@ -264,25 +268,27 @@ export class SelectionResult<T extends Entity, R = any> {
    */
   readonly update = new Event<T[]>();
 
-  private _lastResult: SelectionContext<T, R>;
+  private _lastResult?: SelectionContext<T, R>;
 
   constructor (
     private readonly _execute: () => SelectionContext<T, R>,
     private readonly _update: Event<Entity[]>,
-    private readonly _root: SelectionRoot
+    private readonly _root: SelectionRoot,
+    private readonly _reducer: boolean
   ) {
-    this._lastResult = this._execute();
+    this.refresh();
 
     // Re-run if deps change.
     // TODO(burdon): Explain this.
     // TODO(burdon): Should also fire if entities have been REMOVED from the set?
     this.update.addEffect(() => _update.on(currentEntities => {
       const result = this._execute();
-      const [entities] = result;
-      const set = new Set([...entities, ...this._lastResult[0]]);
-      this._lastResult = result;
+      const [entities, value] = result;
+      const set = new Set([...entities, ...this._lastResult![0]]);
+      this._lastResult = [dedupe(entities), value];
 
-      if (currentEntities.some(entity => set.has(entity as any))) {
+      // Filters mutation events only if selection (since we can't reason about deps of call methods).
+      if (this._reducer || currentEntities.some(entity => set.has(entity as any))) {
         this.update.emit(entities);
       }
     }));
@@ -290,18 +296,36 @@ export class SelectionResult<T extends Entity, R = any> {
 
   /**
    * Get the result of this select.
+   * @deprecated
    */
-  // TODO(burdon): Rename entities.
-  // TODO(burdon): Don't trigger execute in getter (provide refresh method).
   get result (): T[] {
-    const [entities] = this._execute();
-    return dedupe(entities);
+    if (!this._lastResult) {
+      this.refresh();
+    }
+
+    const [entities] = this._lastResult!;
+    return entities;
   }
 
-  // TODO(burdon): Better name for reducer result? Just return value directly?
-  get value (): R {
-    const [, value] = this._execute();
-    return value!;
+  /**
+   * Returns the selection or reducer result.
+   */
+  get value (): R extends void ? T[] : R {
+    if (!this._lastResult) {
+      this.refresh();
+    }
+
+    const [entities, value] = this._lastResult!;
+    return (this._reducer ? value : entities) as any;
+  }
+
+  /**
+   * Re-run query.
+   */
+  refresh () {
+    const [entities, result] = this._execute();
+    this._lastResult = [dedupe(entities), result];
+    return this;
   }
 
   /**
