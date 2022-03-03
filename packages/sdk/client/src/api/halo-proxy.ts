@@ -4,17 +4,16 @@
 
 import { Event } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
-import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
+import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
 import { Profile, SignRequest } from '../proto/gen/dxos/client';
 import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
 
-export interface CreateInvitationOptions extends InvitationOptions {
-  onPinGenerated?: (pin: string) => void
-}
-
+/**
+ * Client proxy to local/remote HALO service.
+ */
 export class HaloProxy {
   private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new SubscriptionGroup();
@@ -30,7 +29,13 @@ export class HaloProxy {
   ) {}
 
   toString () {
-    return `HaloProxy(${this._profile?.publicKey})`;
+    return `HaloProxy(${JSON.stringify(this.info())})`;
+  }
+
+  info () {
+    return {
+      key: this._profile?.publicKey
+    };
   }
 
   get invitationProxy () {

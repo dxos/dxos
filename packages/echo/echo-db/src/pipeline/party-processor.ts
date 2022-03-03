@@ -20,7 +20,7 @@ import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
 
-const log = debug('dxos:echo:parties:party-processor');
+const log = debug('dxos:echo-db:party-processor');
 
 export interface FeedSetProvider {
   get(): FeedKey[]

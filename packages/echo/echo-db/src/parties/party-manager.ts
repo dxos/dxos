@@ -22,7 +22,7 @@ import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-in
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 
-const log = debug('dxos:echo:parties:party-manager');
+const log = debug('dxos:echo-db:party-manager');
 
 export interface OpenProgress {
   haloOpened: boolean;

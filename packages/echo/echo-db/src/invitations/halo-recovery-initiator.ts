@@ -29,7 +29,7 @@ import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 
-const log = debug('dxos:echo:invitations:halo-recovery-initiator');
+const log = debug('dxos:echo-db:halo-recovery-initiator');
 
 const DEFAULT_TIMEOUT = 30000;
 

@@ -14,7 +14,7 @@ import { ItemManager } from './item-manager';
  *
  * Subclassed by Item and Link.
  */
-export class Entity<M extends Model | null = Model | null> {
+export class Entity<M extends Model | null = Model> {
   // Called whenever item processes mutation.
   protected readonly _onUpdate = new Event<Entity<any>>();
 

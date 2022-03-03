@@ -9,6 +9,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { createId, PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
@@ -111,7 +112,7 @@ describe('Node container', function () {
       const command = PublicKey.random().asUint8Array();
       await rpcClient.rpc.command({ command: command });
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 

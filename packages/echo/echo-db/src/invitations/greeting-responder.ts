@@ -24,7 +24,7 @@ import { PartyProcessor } from '../pipeline';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
-const log = debug('dxos:echo:invitations:greeting-responder');
+const log = debug('dxos:echo-db:greeting-responder');
 
 /**
  * GreetingResponder transitions through the following states:

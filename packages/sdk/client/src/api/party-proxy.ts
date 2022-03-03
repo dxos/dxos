@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend, RootSelector
+  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -21,6 +21,10 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
+/**
+ * Main public Party API.
+ * Proxies requests to local/remove services.
+ */
 export class Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new InvitationProxy();
@@ -41,7 +45,6 @@ export class Party {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;
-
     if (!party.isOpen) {
       return;
     }
@@ -134,8 +137,15 @@ export class Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-  get select (): RootSelector {
+  get select (): Database['select'] {
     return this.database.select.bind(this.database);
+  }
+
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get reduce (): Database['reduce'] {
+    return this.database.reduce.bind(this.database);
   }
 
   /**
@@ -146,7 +156,8 @@ export class Party {
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
-   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required, but only the specified recipient can accept the invitation.
+   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
+   *   but only the specified recipient can accept the invitation.
    */
   async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
@@ -160,8 +171,9 @@ export class Party {
     );
   }
 
-  setTitle (title: string) {
-    return this.setProperty(PARTY_TITLE_PROPERTY, title);
+  async setTitle (title: string) {
+    await this.setProperty(PARTY_TITLE_PROPERTY, title);
+    return this;
   }
 
   async setProperty (key: string, value?: any) {
