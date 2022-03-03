@@ -12,39 +12,22 @@ export interface ExecMochaOpts {
 
 /**
  * https://mochajs.org/#command-line-usage
-<<<<<<< HEAD
- * E.g., `rushx test ./src/database/** -w
-=======
  * https://mochajs.org/#reporters
  * E.g., `rushx test ./src/database/** -w --reporter min
->>>>>>> origin/main
  *
  * @param userArgs
  * @param forceClose
  * @param jsdom
  */
 export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
+
+  //
+  // Sources
+  // Assume first args are either a glob or expanded glob of sources.
+  //
+
   const defaultSpec = './src/**/*.test.*';
   const defaultSources = './src/**/*';
-
-<<<<<<< HEAD
-  // Assume first args are either a glob or expanded glob of sources.
-  const sources = [];
-  while (userArgs?.length) {
-    const arg = userArgs.shift()!;
-    if (arg.charAt(0) === '-') { // Start of options.
-      userArgs.unshift(arg);
-      break;
-    } else {
-      sources.push(arg);
-    }
-  }
-
-  if (!sources.length) {
-    sources.push(defaultSpec);
-  }
-=======
-  // TODO(burdon): Assume first args are either a glob or expanded glob of sources.
   const sources = [];
   {
     while (userArgs?.length) {
@@ -62,8 +45,10 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
     }
   }
 
+  //
+  // Options
   // NOTE: --no-diff is ignored since the `expect` package generates the output.
->>>>>>> origin/main
+  //
 
   const options = [
     ...sources,
@@ -73,24 +58,6 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   ];
 
   // Set defaults.
-<<<<<<< HEAD
-  let watchFiles = false;
-  let shouldWatch = false;
-  for (const arg of userArgs) {
-    if (arg === '-w' || arg === '--watch') {
-      shouldWatch = true;
-    } else if (arg === '--watch-files') {
-      watchFiles = true;
-    }
-  }
-
-  if (shouldWatch && !watchFiles) {
-    options.push(`--watch-files="${defaultSources}"`);
-  }
-
-  // TODO(burdon): Verbose option.
-  // console.log(JSON.stringify(options, undefined, 2));
-=======
   {
     let watchFiles = false;
     let shouldWatch = false;
@@ -109,7 +76,6 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
 
   // TODO(burdon): Verbose option.
   console.log('Options:', JSON.stringify(options, undefined, 2));
->>>>>>> origin/main
 
   const requires = jsdom ? ['-r', 'jsdom-global/register'] : [];
   await execTool('mocha', [
