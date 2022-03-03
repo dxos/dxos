@@ -8,11 +8,11 @@ import fs from 'fs';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout, ReadOnlyEvent } from '@dxos/async';
+import { Event, promiseTimeout } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';

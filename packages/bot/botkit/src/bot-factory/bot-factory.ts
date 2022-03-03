@@ -10,7 +10,7 @@ import { Config } from '@dxos/config';
 import { keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
-import { BotHandle } from '../bot-factory';
+import { BotHandle } from './bot-handle';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { ContentResolver } from './dxns-content-resolver';
 import type { ContentLoader } from './ipfs-content-loader';
@@ -78,7 +78,7 @@ export class BotFactory implements BotFactoryService {
   async spawnBot (request: SpawnBotRequest) {
     const id = keyToString(randomBytes(6));
     try {
-      log(`${id}: Resolving bot package: ${JSON.stringify(request.package)}`);
+      log(`[${id}] Resolving bot package: ${JSON.stringify(request.package)}`);
       const packageSpecifier = request.package;
 
       if (this._contentResolver && request.package?.dxn) {
