@@ -276,7 +276,7 @@ importers:
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
-      browser-mocha: ~1.4.8
+      browser-mocha: ^1.4.8
       expect: ~27.0.2
       mocha: ~8.4.0
     devDependencies:
@@ -667,183 +667,6 @@ importers:
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
       wait-for-expect: 3.0.2
-
-  ../../packages/deprecated/bot/bot-deprecated:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/mocha': ~8.2.2
-      debug: ^4.3.3
-      expect: ~27.0.2
-      lodash.defaultsdeep: ^4.6.1
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/echo-db': link:../../../echo/echo-db
-      '@dxos/network-manager': link:../../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@types/debug': 4.1.7
-      '@types/lodash.defaultsdeep': 4.6.6
-      debug: 4.3.3
-      lodash.defaultsdeep: 4.6.1
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.3
-      expect: 27.0.6
-
-  ../../packages/deprecated/bot/botkit-client-deprecated:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      assert: ^2.0.0
-      debug: ^4.3.3
-      hypercore-crypto: ^2.3.0
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/network-manager': link:../../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      assert: 2.0.0
-      debug: 4.3.3
-      hypercore-crypto: 2.3.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
-
-  ../../packages/deprecated/bot/botkit-deprecated:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/chance': ^1.1.0
-      '@types/debug': ^4.1.7
-      '@types/download': ^8.0.1
-      '@types/fs-extra': ^9.0.4
-      '@types/js-yaml': ^3.12.5
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.get': ^4.4.6
-      '@types/mocha': ~8.2.2
-      '@types/node': ^14.0.9
-      '@types/node-fetch': ^2.5.10
-      '@types/tar': ^4.0.4
-      '@wirelineio/registry-client': ~1.1.0-beta.3
-      assert: ^2.0.0
-      chance: ^1.1.6
-      debug: ^4.3.3
-      download: ^8.0.0
-      esbuild: ^0.11.23
-      expect: ~27.0.2
-      fs-extra: ^8.1.0
-      js-yaml: ^3.13.1
-      lodash.defaults: ^4.2.0
-      lodash.defaultsdeep: ^4.6.1
-      lodash.get: ^4.4.2
-      moment: ^2.24.0
-      node-fetch: ^2.6.0
-      pkg-up: ^3.1.0
-      playwright: ^1.7.0
-      read-pkg-up: ^7.0.1
-      sodium-universal: ~3.0.4
-      tar: ^6.0.5
-      tree-kill: ^1.2.2
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/esbuild-plugins': link:../../../../toolchains/esbuild-plugins
-      '@dxos/network-manager': link:../../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@dxos/registry-client': link:../../../sdk/registry-client
-      '@types/chance': 1.1.3
-      '@types/debug': 4.1.7
-      '@types/download': 8.0.1
-      '@types/fs-extra': 9.0.13
-      '@types/js-yaml': 3.12.7
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.get': 4.4.6
-      '@types/node': 14.18.0
-      '@types/node-fetch': 2.5.12
-      '@types/tar': 4.0.5
-      '@wirelineio/registry-client': 1.1.0-beta.3
-      assert: 2.0.0
-      chance: 1.1.8
-      debug: 4.3.3
-      download: 8.0.0
-      esbuild: 0.11.23
-      fs-extra: 8.1.0
-      js-yaml: 3.14.1
-      lodash.defaults: 4.2.0
-      lodash.defaultsdeep: 4.6.1
-      lodash.get: 4.4.2
-      moment: 2.29.1
-      node-fetch: 2.6.6
-      pkg-up: 3.1.0
-      playwright: 1.17.1
-      read-pkg-up: 7.0.1
-      sodium-universal: 3.0.4
-      tar: 6.1.11
-      tree-kill: 1.2.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.3
-      expect: 27.0.6
-
-  ../../packages/deprecated/bot/protocol-plugin-bot-deprecated:
-    specifiers:
-      '@dxos/broadcast': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/jest': ^26.0.7
-      '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
-      ngraph.generators: ^18.0.1
-      pump: ^3.0.0
-      wait-for-expect: ^3.0.2
-    dependencies:
-      '@dxos/broadcast': link:../../../mesh/broadcast
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/mesh-protocol': link:../../../mesh/protocol
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
-      '@types/jest': 26.0.24
-      '@types/node': 14.18.0
-      '@types/pump': 1.1.1
-      ngraph.generators: 18.0.1
-      pump: 3.0.0
-      wait-for-expect: 3.0.2
-
-  ../../packages/deprecated/bot/test-bot-deprecated:
-    specifiers:
-      '@dxos/bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-    dependencies:
-      '@dxos/bot-deprecated': link:../bot-deprecated
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
 
   ../../packages/devtools/devtools:
     specifiers:
@@ -1485,85 +1308,6 @@ importers:
       '@types/mocha': 8.2.3
       expect: 27.0.6
       mocha: 8.4.0
-
-  ../../packages/gravity/gravity-core:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/bot-deprecated': workspace:*
-      '@dxos/botkit-client-deprecated': workspace:*
-      '@dxos/botkit-deprecated': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/messenger-model': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/download': ^8.0.1
-      '@types/fs-extra': ^9.0.4
-      '@types/js-yaml': ^3.12.5
-      '@types/mocha': ~8.2.2
-      '@types/node': ^14.0.9
-      assert: ^2.0.0
-      bip32: ~2.0.6
-      debug: ^4.3.3
-      dotenv: ^8.2.0
-      download: ^8.0.0
-      esbuild: ^0.11.23
-      expect: ~27.0.2
-      fs-extra: ^8.1.0
-      js-yaml: ^3.13.1
-      process-exists: ^4.0.0
-      pstree.remy: ^1.1.8
-      read-pkg-up: ^7.0.1
-      tree-kill: ^1.2.2
-      ts-node: ^9.1.1
-      typescript: ^4.5.2
-      wrtc: ^0.4.7
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/bot-deprecated': link:../../deprecated/bot/bot-deprecated
-      '@dxos/botkit-client-deprecated': link:../../deprecated/bot/botkit-client-deprecated
-      '@dxos/botkit-deprecated': link:../../deprecated/bot/botkit-deprecated
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/protocol-plugin-bot-deprecated': link:../../deprecated/bot/protocol-plugin-bot-deprecated
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/signal': link:../../mesh/signal
-      '@types/debug': 4.1.7
-      '@types/fs-extra': 9.0.13
-      assert: 2.0.0
-      debug: 4.3.3
-      dotenv: 8.6.0
-      download: 8.0.0
-      esbuild: 0.11.23
-      fs-extra: 8.1.0
-      js-yaml: 3.14.1
-      read-pkg-up: 7.0.1
-      tree-kill: 1.2.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/download': 8.0.1
-      '@types/js-yaml': 3.12.7
-      '@types/mocha': 8.2.3
-      '@types/node': 14.18.0
-      bip32: 2.0.6
-      expect: 27.0.6
-      process-exists: 4.1.0
-      pstree.remy: 1.1.8
-      ts-node: 9.1.1_typescript@4.5.3
-      typescript: 4.5.3
-      wrtc: 0.4.7
 
   ../../packages/halo/credentials:
     specifiers:
@@ -7715,6 +7459,7 @@ packages:
 
   /@types/chance/1.1.3:
     resolution: {integrity: sha512-X6c6ghhe4/sQh4XzcZWSFaTAUOda38GQHmq9BUanYkOE/EO7ZrkazwKmtsj3xzTjkLWmwULE++23g3d3CCWaWw==}
+    dev: true
 
   /@types/chrome/0.0.125:
     resolution: {integrity: sha512-WBbihYza9NNaE/rlIpBiSE9o2MfLN1GMltDoW6rgaDDIZL+1z08ii2ZAsDbvnrkrG2ohVyQjLODG3IbzakEvGA==}
@@ -7919,6 +7664,7 @@ packages:
     resolution: {integrity: sha512-/C8kTMRTNiNuWGl5nEyKbPiMv6HA+0RbEXzFhFBEzASM6+oa4tJro9b8nj7eRlOFfuLdzUU+DS/GPDlvvzMOhA==}
     dependencies:
       '@types/node': 14.18.0
+    dev: true
 
   /@types/download/8.0.1:
     resolution: {integrity: sha512-t5DjMD6Y1DxjXtEHl7Kt+nQn9rOmVLYD8p4Swrcc5QpgyqyqR2gXTIK6RwwMnNeFJ+ZIiIW789fQKzCrK7AOFA==}
@@ -7926,6 +7672,7 @@ packages:
       '@types/decompress': 4.2.4
       '@types/got': 8.3.6
       '@types/node': 14.18.0
+    dev: true
 
   /@types/duplexify/3.6.0:
     resolution: {integrity: sha512-5zOA53RUlzN74bvrSGwjudssD9F3a797sDZQkiYpUOxW+WHaXTCPz4/d5Dgi6FKnOqZ2CpaTo0DhgIfsXAOE/A==}
@@ -7992,6 +7739,7 @@ packages:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
       '@types/node': 14.18.0
+    dev: true
 
   /@types/geojson/7946.0.8:
     resolution: {integrity: sha512-1rkryxURpr6aWP7R786/UQOkJ3PcpQiWkAXBmdWc7ryFWqN6a4xfK7BtjXvFBKO9LjQ+MWQSWxYeZX1OApnArA==}
@@ -8007,6 +7755,7 @@ packages:
     resolution: {integrity: sha512-nvLlj+831dhdm4LR2Ly+HTpdLyBaMynoOr6wpIxS19d/bPeHQxFU5XQ6Gp6ohBpxvCWZM1uHQIC2+ySRH1rGrQ==}
     dependencies:
       '@types/node': 14.18.0
+    dev: true
 
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
@@ -8053,6 +7802,7 @@ packages:
 
   /@types/js-yaml/3.12.7:
     resolution: {integrity: sha512-S6+8JAYTE1qdsc9HMVsfY7+SgSuUU/Tp6TYTmITW0PZxiyIMvol3Gy//y69Wkhs0ti4py5qgR3uZH6uz/DNzJQ==}
+    dev: true
 
   /@types/json-schema/7.0.9:
     resolution: {integrity: sha512-qcUXuemtEu+E5wZSJHNxUXeCZhAfXKQ41D+duX+VYPde7xyEVZci+/oXKJL13tnRs9lR2pr4fod59GT6/X1/yQ==}
@@ -8100,11 +7850,13 @@ packages:
     resolution: {integrity: sha512-k3bXTg1/54Obm6uFEtSwvDm2vCyK9jSROv0V9X3gFFNPu7eKmvqqadPSXx0SkVVixSilR30BxhFlnIj8OavXOA==}
     dependencies:
       '@types/lodash': 4.14.178
+    dev: true
 
   /@types/lodash.get/4.4.6:
     resolution: {integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==}
     dependencies:
       '@types/lodash': 4.14.178
+    dev: true
 
   /@types/lodash.isplainobject/4.0.6:
     resolution: {integrity: sha512-8G41YFhmOl8Ck6NrwLK5hhnbz6ADfuDJP+zusDnX3PoYhfC60+H/rQE6zmdO4yFzPCPJPY4oGZK2spbXm6gYEA==}
@@ -8163,12 +7915,6 @@ packages:
   /@types/minimatch/3.0.5:
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
 
-  /@types/minipass/3.1.0:
-    resolution: {integrity: sha512-b2yPKwCrB8x9SB65kcCistMoe3wrYnxxt5rJSZ1kprw0uOXvhuKi9kTQ746Y+Pbqoh+9C0N4zt0ztmTnG9yg7A==}
-    dependencies:
-      '@types/node': 14.18.0
-    dev: false
-
   /@types/mocha/8.2.3:
     resolution: {integrity: sha512-ekGvFhFgrc2zYQoX4JeZPmVzZxw6Dtllga7iGHzfbYIYkAMUx/sAFP2GdFpLff+vdHXu5fl7WX9AT+TtqYcsyw==}
     dev: true
@@ -8184,6 +7930,7 @@ packages:
 
   /@types/node/10.12.18:
     resolution: {integrity: sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==}
+    dev: false
 
   /@types/node/14.18.0:
     resolution: {integrity: sha512-0GeIl2kmVMXEnx8tg1SlG6Gg8vkqirrW752KqolYo1PHevhhZN3bhJ67qHj+bQaINhX0Ra3TlWwRvMCd9iEfNQ==}
@@ -8331,13 +8078,6 @@ packages:
 
   /@types/tapable/1.0.8:
     resolution: {integrity: sha512-ipixuVrh2OdNmauvtT51o3d8z12p6LtFW9in7U79der/kwejjdNchQC5UMn5u/KxNoM7VHHOs/l8KS8uHxhODQ==}
-
-  /@types/tar/4.0.5:
-    resolution: {integrity: sha512-cgwPhNEabHaZcYIy5xeMtux2EmYBitfqEceBUi2t5+ETy4dW6kswt6WX4+HqLeiiKOo42EXbGiDmVJ2x+vi37Q==}
-    dependencies:
-      '@types/minipass': 3.1.0
-      '@types/node': 14.18.0
-    dev: false
 
   /@types/testing-library__jest-dom/5.9.5:
     resolution: {integrity: sha512-ggn3ws+yRbOHog9GxnXiEZ/35Mow6YtPZpd7Z5mKDeZS/o7zx3yAle0ov/wjhVB5QT4N2Dt+GNoGCdqkBGCajQ==}
@@ -9154,10 +8894,6 @@ packages:
     resolution: {integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=}
     engines: {node: '>=0.10.0'}
 
-  /ansi-regex/3.0.0:
-    resolution: {integrity: sha1-7QMXwyIGT3lGbAKWa922Bas32Zg=}
-    engines: {node: '>=4'}
-
   /ansi-regex/4.1.0:
     resolution: {integrity: sha512-1apePfXM1UOSqw0o9IiFAovVz9M5S1Dg+4TrDwfMewQ6p/rmMueb7tWZjQ1rx4Loy1ArBggoqGpfqqdI4rondg==}
     engines: {node: '>=6'}
@@ -9898,6 +9634,7 @@ packages:
       tiny-secp256k1: 1.1.6
       typeforce: 1.18.0
       wif: 2.0.6
+    dev: false
 
   /bip39/2.6.0:
     resolution: {integrity: sha512-RrnQRG2EgEoqO24ea+Q/fftuPUZLmrEM3qNhhGsA3PbaXaCW791LTzPuVyx/VprXQcTbPJ3K3UeTna8ZnVl2sg==}
@@ -10151,6 +9888,7 @@ packages:
     resolution: {integrity: sha1-vhYedsNU9veIrkBx9j806MTwpCo=}
     dependencies:
       base-x: 3.0.9
+    dev: false
 
   /bs58check/2.1.2:
     resolution: {integrity: sha512-0TS1jicxdU09dwJMNZtVAfzPi6Q6QeN0pM1Fkzrjn+XYHvzMKPU3pHVpva+769iNVSfIYWf7LJ6WR+BuuMf8cA==}
@@ -10158,6 +9896,7 @@ packages:
       bs58: 4.0.1
       create-hash: 1.2.0
       safe-buffer: 5.2.1
+    dev: false
 
   /bser/2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
@@ -10522,10 +10261,6 @@ packages:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  /chance/1.1.8:
-    resolution: {integrity: sha512-v7fi5Hj2VbR6dJEGRWLmJBA83LJMS47pkAbmROFxHWd9qmE1esHRZW8Clf1Fhzr3rjxnNZVCjOEv/ivFxeIMtg==}
-    dev: false
-
   /char-regex/1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
     engines: {node: '>=10'}
@@ -10631,6 +10366,23 @@ packages:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
+
+  /chokidar/3.5.3:
+    resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==}
+    engines: {node: '>= 8.10.0'}
+    requiresBuild: true
+    dependencies:
+      anymatch: 3.1.2
+      braces: 3.0.2
+      glob-parent: 5.1.2
+      is-binary-path: 2.1.0
+      is-glob: 4.0.3
+      normalize-path: 3.0.0
+      readdirp: 3.6.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    optional: true
 
   /chownr/1.1.4:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
@@ -12411,6 +12163,7 @@ packages:
   /dotenv/8.6.0:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
     engines: {node: '>=10'}
+    dev: true
 
   /download/8.0.0:
     resolution: {integrity: sha512-ASRY5QhDk7FK+XrQtQyvhpDKanLluEEQtWl/J7Lxuf/b+i8RYh997QeXvL85xitrmRKVlx9c7eTrcRdq2GS4eA==}
@@ -15623,6 +15376,7 @@ packages:
   /is-fullwidth-code-point/2.0.0:
     resolution: {integrity: sha1-o7MKXE8ZkYMWeqq5O+764937ZU8=}
     engines: {node: '>=4'}
+    dev: false
 
   /is-fullwidth-code-point/3.0.0:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
@@ -17422,6 +17176,7 @@ packages:
 
   /lodash.defaults/4.2.0:
     resolution: {integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=}
+    dev: true
 
   /lodash.defaultsdeep/4.6.1:
     resolution: {integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==}
@@ -18840,6 +18595,7 @@ packages:
 
   /ngraph.events/0.0.3:
     resolution: {integrity: sha1-OPVTFvPSB61jH/lPZiLKjywOh9A=}
+    dev: false
 
   /ngraph.events/1.2.1:
     resolution: {integrity: sha512-D4C+nXH/RFxioGXQdHu8ELDtC6EaCiNsZtih0IvyGN81OZSUby4jXoJ5+RNWasfsd0FnKxxpAROyUMzw64QNsw==}
@@ -18850,11 +18606,13 @@ packages:
     dependencies:
       ngraph.graph: 18.0.0
       ngraph.random: 0.1.0
+    dev: false
 
   /ngraph.graph/18.0.0:
     resolution: {integrity: sha512-HH39PulrZrFIcO6Qw4Ts3aYqPauAV/6p2lbbtPiFZoUDAASLtfnfg4wtXohy0ZE9Ik51wUgWaZ+FfyKk/SRlzQ==}
     dependencies:
       ngraph.events: 0.0.3
+    dev: false
 
   /ngraph.graph/19.1.0:
     resolution: {integrity: sha512-9cws84qfPkrYa7BaBtT+KgZfLXrd6pNL9Gl5Do+MBO/0Hm6rOM7qK78MZaO1uEoIK6p2pgUs6lu29zn/6tP59w==}
@@ -18868,6 +18626,7 @@ packages:
 
   /ngraph.random/0.1.0:
     resolution: {integrity: sha1-G26Vc1KeCAZ32m/6CYeQ12oJSKk=}
+    dev: false
 
   /nice-try/1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
@@ -20592,13 +20351,6 @@ packages:
   /prismjs/1.25.0:
     resolution: {integrity: sha512-WCjJHl1KEWbnkQom1+SzftbtXMKQoezOCYs5rECqMN+jP+apI7ftoflyqigqzopSO3hMhTEb0mFClA8lkolgEg==}
 
-  /process-exists/4.1.0:
-    resolution: {integrity: sha512-BBJoiorUKoP2AuM5q/yKwIfT1YWRHsaxjW+Ayu9erLhqKOfnXzzVVML0XTYoQZuI1YvcWKmc1dh06DEy4+KzfA==}
-    engines: {node: '>=10'}
-    dependencies:
-      ps-list: 6.3.0
-    dev: true
-
   /process-nextick-args/2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
 
@@ -20716,17 +20468,8 @@ packages:
   /prr/1.0.1:
     resolution: {integrity: sha1-0/wRS6BplaRexok/SEzrHXj19HY=}
 
-  /ps-list/6.3.0:
-    resolution: {integrity: sha512-qau0czUSB0fzSlBOQt0bo+I2v6R+xiQdj78e1BR/Qjfl5OHWJ/urXi8+ilw1eHe+5hSeDI1wrwVTgDp2wst4oA==}
-    engines: {node: '>=8'}
-    dev: true
-
   /psl/1.8.0:
     resolution: {integrity: sha512-RIdOzyoavK+hA18OGGWDqUTsCLhtA7IcZ/6NCs4fFJaHBDab+pDDmDIByWFRQJq2Cd7r1OoQxBGKOaztq+hjIQ==}
-
-  /pstree.remy/1.1.8:
-    resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
-    dev: true
 
   /public-encrypt/4.0.3:
     resolution: {integrity: sha512-zVpa8oKZSz5bTMTFClc1fQOnyyEzpl5ozpi1B5YcvBrdohMjH2rfsBtyXcuNuwjsDIXmBYlF2N5FlJYhR29t8Q==}
@@ -22850,13 +22593,6 @@ packages:
       is-fullwidth-code-point: 1.0.0
       strip-ansi: 3.0.1
 
-  /string-width/2.1.1:
-    resolution: {integrity: sha512-nOqH59deCq9SRHlxq1Aw85Jnt4w6KvLKqWVik6oA9ZklXLNIOlqg4F2yrT1MVaTjAqvVwdfeZ7w7aCvJD7ugkw==}
-    engines: {node: '>=4'}
-    dependencies:
-      is-fullwidth-code-point: 2.0.0
-      strip-ansi: 4.0.0
-
   /string-width/3.1.0:
     resolution: {integrity: sha512-vafcv6KjVZKSgz06oM/H6GDBrAtz8vdhQakGjFIvNrHA6y3HCF1CInLy+QLq8dTJPQ1b+KDUqDFctkdRW44e1w==}
     engines: {node: '>=6'}
@@ -22929,12 +22665,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       ansi-regex: 2.1.1
-
-  /strip-ansi/4.0.0:
-    resolution: {integrity: sha1-qEeQIusaw2iocTibY1JixQXuNo8=}
-    engines: {node: '>=4'}
-    dependencies:
-      ansi-regex: 3.0.0
 
   /strip-ansi/5.2.0:
     resolution: {integrity: sha512-DuRs1gKbBqsMKIZlrffwlug8MHkcnpjs5VPmL1PAh+mA30U0DTotfDZ0d2UUsXpPmPmMMJ6W773MaA3J+lbiWA==}
@@ -23474,6 +23204,7 @@ packages:
       create-hmac: 1.1.7
       elliptic: 6.5.4
       nan: 2.15.0
+    dev: false
 
   /tiny-warning/1.0.3:
     resolution: {integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==}
@@ -23603,6 +23334,7 @@ packages:
   /tree-kill/1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
+    dev: true
 
   /trim-repeated/1.0.0:
     resolution: {integrity: sha1-42RqLqTokTEr9+rObPsFOAvAHCE=}
@@ -23822,6 +23554,7 @@ packages:
 
   /typeforce/1.18.0:
     resolution: {integrity: sha512-7uc1O8h1M1g0rArakJdf0uLRSSgFcYexrVoKo+bzJd32gd4gDy2L/Z+8/FjPnU9ydY3pEnVPtr9FyscYY60K1g==}
+    dev: false
 
   /typescript/4.5.3:
     resolution: {integrity: sha512-eVYaEHALSt+s9LbvgEv4Ef+Tdq7hBiIZgii12xXJnukryt3pMgJf6aKhoCZ3FWQsu6sydEnkg11fYXLzhLBjeQ==}
@@ -24406,7 +24139,7 @@ packages:
       graceful-fs: 4.2.8
       neo-async: 2.6.2
     optionalDependencies:
-      chokidar: 3.5.2
+      chokidar: 3.5.3
       watchpack-chokidar2: 2.0.1
 
   /watchpack/2.1.1:
@@ -24765,7 +24498,7 @@ packages:
   /wide-align/1.1.3:
     resolution: {integrity: sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==}
     dependencies:
-      string-width: 2.1.1
+      string-width: 1.0.2
 
   /wide-align/1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
@@ -24783,6 +24516,7 @@ packages:
     resolution: {integrity: sha1-CNP1IFbGZnkplyb63g1DKudLRwQ=}
     dependencies:
       bs58check: 2.1.2
+    dev: false
 
   /winreg/0.0.12:
     resolution: {integrity: sha1-BxBVVLoanQiXklHRKUdb/64wBrc=}

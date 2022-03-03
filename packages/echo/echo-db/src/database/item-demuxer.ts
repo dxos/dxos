@@ -18,7 +18,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
 
-const log = debug('dxos:echo:item-demuxer');
+const log = debug('dxos:echo-db:item-demuxer');
 
 export interface ItemDemuxerOptions {
   snapshots?: boolean

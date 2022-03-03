@@ -9,7 +9,7 @@ import { SubscriptionGroup, Unsubscribe } from '@dxos/util';
 import { PartyManager } from '../parties';
 import { Preferences } from './preferences';
 
-const log = debug('dxos:echo:halo:party-opener');
+const log = debug('dxos:echo-db:party-opener');
 
 /**
  * Automatically adds, opens, and clothes parties from HALO preferences.

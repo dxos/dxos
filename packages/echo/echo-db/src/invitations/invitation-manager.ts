@@ -32,7 +32,7 @@ export class InvitationManager {
 
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.
-    assert(this._identity.identityKey, 'No identity key');
+    assert(this._identity.identityKey, 'No identity key.');
     return this._identity.identityKey.publicKey.equals(this._partyProcessor.partyKey);
   }
 
@@ -61,7 +61,8 @@ export class InvitationManager {
   /**
    * Creates an invitation for a remote peer.
    */
-  async createInvitation (authenticationDetails: InvitationAuthenticator = defaultInvitationAuthenticator, options: InvitationOptions = {}) {
+  async createInvitation (
+    authenticationDetails: InvitationAuthenticator = defaultInvitationAuthenticator, options: InvitationOptions = {}) {
     assert(this._networkManager);
     const responder = new GreetingResponder(
       this._networkManager,

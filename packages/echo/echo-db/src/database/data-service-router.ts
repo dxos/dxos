@@ -22,7 +22,7 @@ import { ComplexMap } from '@dxos/util';
 import { PartyNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
-const log = debug('dxos:echo:items:data-service-router');
+const log = debug('dxos:echo-db:data-service-router');
 
 /**
  * Routes DataService requests to different DataServiceHost instances based on party id.

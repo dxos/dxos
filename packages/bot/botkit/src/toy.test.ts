@@ -9,6 +9,7 @@ import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { IRegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer } from './bot-container';
@@ -103,7 +104,7 @@ describe('In-Memory', () => {
         type: TEST_ECHO_TYPE
       });
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 

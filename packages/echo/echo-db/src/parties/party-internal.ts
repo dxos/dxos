@@ -11,8 +11,9 @@ import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 
-import { Database } from '../database';
+import { Database, Item } from '../database';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
@@ -241,13 +242,13 @@ export class PartyInternal {
   /**
    * Returns a special Item that is used by the Party to manage its properties.
    */
-  async getPropertiesItem () {
+  async getPropertiesItem (): Promise<Item<ObjectModel>> {
     assert(this.isOpen, 'Party not open.');
 
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
     const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().result;
     assert(items.length === 1, 'Party properties missing.');
-    return items[0];
+    return items[0] as Item<ObjectModel>;
   }
 
   /**

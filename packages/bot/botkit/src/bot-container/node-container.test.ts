@@ -8,14 +8,27 @@ import expect from 'expect';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-import { PublicKey } from '@dxos/crypto';
-import { createRpcClient } from '@dxos/rpc';
+import { createId, PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
+import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
+import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
-import { createHandle } from '../testutils/bots';
 import { createIpcPort, NodeContainer } from './node-container';
+
+const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
+  const rpc = createRpcClient(
+    schema.getService('dxos.bot.BotService'),
+    {
+      port,
+      timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+    }
+  );
+  await rpc.open();
+  return rpc;
+};
 
 describe('Node container', function () {
   // Running node command can be slow.
@@ -24,24 +37,25 @@ describe('Node container', function () {
   it('Starts an empty node bot', async () => {
     const container = new NodeContainer(['@swc-node/register']);
 
-    const handle = createHandle();
-    const logFilePath = join('/tmp', `${handle.id}.log`);
+    const id = createId();
+    const logFilePath = join('/tmp', `${id}.log`);
     const port = await container.spawn({
-      id: handle.id,
+      id,
       localPath: require.resolve('../bots/empty-bot'),
       logFilePath
     });
 
-    await handle.open(port);
-    await handle.rpc.initialize({});
+    const rpcClient = await createBotRpcClient(port);
+    await rpcClient.rpc.initialize({});
     const command = PublicKey.random();
-    const { response } = await handle.rpc.command({ command: command.asUint8Array() });
+    const { response } = await rpcClient.rpc.command({ command: command.asUint8Array() });
     assert(response);
     expect(PublicKey.from(response).toString()).toBe(command.toString());
 
     expect(existsSync(logFilePath)).toBe(true);
 
-    container.killAll();
+    await rpcClient.rpc.stop();
+    rpcClient.close();
   });
 
   describe('With signal server', () => {
@@ -58,23 +72,22 @@ describe('Node container', function () {
       const { client, invitation } = await setupClient(config);
 
       const container = new NodeContainer(['@swc-node/register']);
-      const handle = createHandle();
-      const logFilePath = join('/tmp', `${handle.id}.log`);
+      const id = createId();
+      const logFilePath = join('/tmp', `${id}.log`);
       const port = await container.spawn({
-        id: handle.id,
+        id,
         localPath: require.resolve('../bots/start-client-bot'),
         logFilePath
       });
 
-      await handle.open(port);
-      await handle.rpc.initialize({
+      const rpcClient = await createBotRpcClient(port);
+      await rpcClient.rpc.initialize({
         config: config.values,
         invitation
       });
 
-      await handle.rpc.stop();
-      await handle.close();
-      container.killAll();
+      await rpcClient.rpc.stop();
+      rpcClient.close();
       await client.destroy();
     });
 
@@ -83,27 +96,27 @@ describe('Node container', function () {
       const { client, party, invitation } = await setupClient(config);
 
       const container = new NodeContainer(['@swc-node/register']);
-      const handle = createHandle();
-      const logFilePath = join('/tmp', `${handle.id}.log`);
+      const id = createId();
+      const logFilePath = join('/tmp', `${id}.log`);
       const port = await container.spawn({
-        id: handle.id,
+        id,
         localPath: require.resolve('../bots/start-echo-bot'),
         logFilePath
       });
 
-      await handle.open(port);
-      await handle.rpc.initialize({
+      const rpcClient = await createBotRpcClient(port);
+      await rpcClient.rpc.initialize({
         config: config.values,
         invitation
       });
       const command = PublicKey.random().asUint8Array();
-      await handle.rpc.command({ command: command });
+      await rpcClient.rpc.command({ command: command });
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-      await handle.rpc.stop();
+      await rpcClient.rpc.stop();
       container.killAll();
       await client.destroy();
     });
@@ -112,23 +125,23 @@ describe('Node container', function () {
   it('Detects when the bot crashes', async () => {
     const container = new NodeContainer(['@swc-node/register']);
 
-    const handle = createHandle();
+    const id = createId();
     const port = await container.spawn({
-      id: handle.id,
+      id,
       localPath: require.resolve('../bots/failing-bot')
     });
-    await handle.open(port);
-    await handle.rpc.initialize({});
+    const rpcClient = await createBotRpcClient(port);
+    await rpcClient.rpc.initialize({});
 
     const promise = container.exited.waitForCount(1);
 
-    void handle.rpc.command({}).catch(() => {}); // This will hang because the bot has crashed.
+    void rpcClient.rpc.command({}).catch(() => {}); // This will hang because the bot has crashed.
 
     const [, status] = await promise;
     expect(status.code).toBe(255);
     expect(status.signal).toBe(null);
 
-    await handle.close();
+    rpcClient.close();
   });
 
   describe('IPC port', () => {

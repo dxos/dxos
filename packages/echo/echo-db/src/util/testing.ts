@@ -13,7 +13,7 @@ import { PartyInternal } from '..';
 import { ECHO } from '../echo';
 import { createRamStorage } from './persistant-ram-storage';
 
-const log = debug('dxos:echo:testing');
+const log = debug('dxos:echo-db:testing');
 
 export const messageLogger = (tag: string) => (message: any) => {
   log(tag, JSON.stringify(message, jsonReplacer, 2));

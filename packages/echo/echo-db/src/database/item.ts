@@ -12,14 +12,14 @@ import { ItemManager } from './item-manager';
 import type { Link } from './link';
 import { Selection, createItemSelector } from './selection';
 
-const log = debug('dxos:echo-db:items:item');
+const log = debug('dxos:echo-db:item');
 
 /**
  * A globally addressable data item.
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
  */
-export class Item<M extends Model | null = Model | null> extends Entity<M> {
+export class Item<M extends Model | null = Model> extends Entity<M> {
   /**
    * Parent item (or null if this item is a root item).
    */
@@ -101,7 +101,7 @@ export class Item<M extends Model | null = Model | null> extends Entity<M> {
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
   select (): Selection<Item<any>> {
-    return createItemSelector(this, this._itemManager.debouncedUpdate);
+    return createItemSelector(this as Item, this._itemManager.debouncedUpdate, undefined);
   }
 
   /**
