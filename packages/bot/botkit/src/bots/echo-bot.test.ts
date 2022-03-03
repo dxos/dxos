@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('Echo Bot', () => {
   it('Starts a bot', async () => {
@@ -21,7 +22,7 @@ describe('Echo Bot', () => {
     const command = PublicKey.random().asUint8Array();
     await bot.command({ command: command });
 
-    const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+    const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
     const payload = item.model.getProperty('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 

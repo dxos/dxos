@@ -137,8 +137,15 @@ export class Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-  get select (): RootSelector {
+  get select (): Database['select'] {
     return this.database.select.bind(this.database);
+  }
+
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+   get reduce (): Database['reduce'] {
+    return this.database.reduce.bind(this.database);
   }
 
   /**

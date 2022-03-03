@@ -13,6 +13,7 @@ import { BotFactory } from '../bot-factory';
 import { TEST_ECHO_TYPE } from '../bots';
 import { setupBroker, setupClient } from '../testutils';
 import { buildBot } from './build-bot';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('Build bot', () => {
   let outfile: string;
@@ -65,7 +66,7 @@ describe('Build bot', () => {
       command
     });
 
-    const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+    const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
     const payload = item.model.getProperty('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 

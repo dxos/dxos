@@ -17,6 +17,7 @@ import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -103,7 +104,7 @@ describe('In-Memory', () => {
         type: TEST_ECHO_TYPE
       });
 
-      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
