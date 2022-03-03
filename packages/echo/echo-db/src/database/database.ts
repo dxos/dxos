@@ -165,6 +165,7 @@ export class Database {
       const { result } = query;
       return Array.isArray(result) ? result.length > 0 : result !== undefined;
     });
+
     const item = Array.isArray(query.result) ? query.result[0] : query.result;
     assert(item, 'Race condition detected');
     return item;

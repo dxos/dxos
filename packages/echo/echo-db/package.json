@@ -60,7 +60,7 @@
     "expect": "~27.0.2",
     "lodash": "4.17.21",
     "memdown": "^5.1.0",
-    "mocha": "~9.2.1"
+    "mocha": "~8.4.0"
   },
   "publishConfig": {
     "access": "public"

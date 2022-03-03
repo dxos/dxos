@@ -161,7 +161,7 @@ describe('Selection', () => {
           .filter({ type: ITEM_ORG })
           .children({ type: ITEM_PROJECT })
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         project1,
         project2,
         project3
@@ -173,7 +173,7 @@ describe('Selection', () => {
         createRootSelector({ id: org1.id })
           .children()
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         project1,
         project2,
         person1,
@@ -189,7 +189,7 @@ describe('Selection', () => {
           .filter({ type: ITEM_PROJECT })
           .parent()
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         org1,
         org2
       ]));
@@ -200,7 +200,7 @@ describe('Selection', () => {
         createRootSelector({ id: project1.id })
           .parent()
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         org1
       ]));
     });
@@ -221,7 +221,7 @@ describe('Selection', () => {
           .links()
           .target()
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         person1,
         person2
       ]));
@@ -241,7 +241,7 @@ describe('Selection', () => {
           .refs()
           .source()
           .query().result
-      )).toBe(ids([
+      )).toStrictEqual(ids([
         project1,
         project2
       ]));
@@ -270,7 +270,7 @@ describe('Selection', () => {
         .target()
         .query(); // TODO(burdon): Different verb?
 
-      expect(ids(query.result)).toBe(ids([person1, person2, person3]));
+      expect(ids(query.result)).toStrictEqual(ids([person1, person2, person3]));
       expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
     });
   });

@@ -14,11 +14,6 @@ import { Link } from './link';
 
 export type OneOrMultiple<T> = T | T[];
 
-/**
- * Represents where the selection has started.
- */
-export type SelectionRoot = Database | Entity;
-
 //
 // Filters
 //
@@ -29,7 +24,7 @@ export type ItemIdFilter = {
 
 export type ItemFilter = {
   type?: OneOrMultiple<string>
-  parent?: ItemID | Item
+  parent?: ItemID | Item<any>
 }
 
 export type LinkFilter = {
@@ -38,9 +33,9 @@ export type LinkFilter = {
 
 export type Predicate<T extends Entity> = (entity: T) => boolean;
 
-export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>
+export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item<any>>
 
-export type RootSelector = (filter?: RootFilter) => Selection<Item>
+export type RootSelector = (filter?: RootFilter) => Selection<Item<any>>
 
 /**
  * Controls how deleted items are filtered.
@@ -68,6 +63,11 @@ export type QueryOptions = {
 }
 
 /**
+ * Represents where the selection has started.
+ */
+export type SelectionRoot = Database | Entity;
+
+/**
  * Returned from each stage of the visitor.
  */
 export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R]
@@ -90,7 +90,7 @@ const dedupe = <T>(values: T[]) => Array.from(new Set(values));
  */
 export const createSelector = (
   // Provider is called each time the query is executed.
-  itemsProvider: () => Item[],
+  itemsProvider: () => Item<any>[],
   // TODO(burdon): Why is this a provider?
   updateEventProvider: () => Event<Entity<any>[]>,
   root: SelectionRoot,
@@ -117,10 +117,10 @@ export const createSelector = (
  * @param value Initial reducer value.
  */
 export const createItemSelector = (
-  root: Item,
+  root: Item<any>,
   update: Event<Entity<any>[]>,
   value?: any
-): Selection<Item> => new Selection(() => [[root, value]], update, root);
+): Selection<Item<any>> => new Selection(() => [[root, value]], update, root);
 
 /**
  * Selections are used to construct database subscriptions.
@@ -178,7 +178,7 @@ export class Selection<T extends Entity, R = any> {
    * Filter entities of this selection.
    * @param filter A filter object or a predicate function.
    */
-  filter(this: Selection<Item>, filter: ItemFilter): Selection<Item>
+  filter(this: Selection<Item<any>>, filter: ItemFilter): Selection<Item<any>>
   filter<U extends Entity>(this: Selection<U>, filter: Predicate<U>): Selection<U>
   filter<U extends Entity> (this: Selection<U>, filter: Predicate<T> | ItemFilter): Selection<U> {
     const predicate = filterToPredicate(filter);
@@ -188,7 +188,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select children of the items in this selection.
    */
-  children (this: Selection<Item>, filter?: ItemFilter): Selection<Item> {
+  children (this: Selection<Item<any>>, filter?: ItemFilter): Selection<Item<any>> {
     const predicate = filter ? filterToPredicate(filter) : Boolean;
     return this._createSubSelection(([items, result], options) => [
       items.flatMap(item => Array.from(item._children.values())
@@ -202,7 +202,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select parent of the items in this selection.
    */
-  parent (this: Selection<Item>): Selection<Item> {
+  parent (this: Selection<Item<any>>): Selection<Item<any>> {
     return this._createSubSelection(([items, result], options) => [
       items.flatMap(item => item.parent ? [item.parent].filter(createQueryOptionsFilter(options)) : []),
       result
@@ -212,7 +212,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select links sourcing from the items in this selection.
    */
-  links (this: Selection<Item>, filter: LinkFilter = {}): Selection<Link> {
+  links (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link> {
     const predicate = linkFilterToPredicate(filter);
     return this._createSubSelection(([items, result], options) => [
       items.flatMap(item => item.links.filter(predicate).filter(createQueryOptionsFilter(options))),
@@ -223,7 +223,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select links pointing to items in this selection.
    */
-  refs (this: Selection<Item>, filter: LinkFilter = {}): Selection<Link> {
+  refs (this: Selection<Item<any>>, filter: LinkFilter = {}): Selection<Link> {
     const predicate = linkFilterToPredicate(filter);
     return this._createSubSelection(([items, result], options) => [
       items.flatMap(item => item.refs.filter(predicate).filter(createQueryOptionsFilter(options))),
@@ -234,7 +234,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select targets of links in this selection.
    */
-  target (this: Selection<Link>, filter: ItemFilter = {}): Selection<Item> {
+  target (this: Selection<Link>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection(([links, result], options) => [
       links.flatMap(link => link.target).filter(predicate).filter(createQueryOptionsFilter(options)),
@@ -245,7 +245,7 @@ export class Selection<T extends Entity, R = any> {
   /**
    * Select sources of links in this selection.
    */
-  source (this: Selection<Link>, filter: ItemFilter = {}): Selection<Item> {
+  source (this: Selection<Link>, filter: ItemFilter = {}): Selection<Item<any>> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection(([links, result], options) => [
       links.flatMap(link => link.source).filter(predicate).filter(createQueryOptionsFilter(options)),
@@ -258,7 +258,7 @@ export class Selection<T extends Entity, R = any> {
  * Query subscription.
  * Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
  */
-export class SelectionResult<T extends Entity, R> { // TODO(burdon): Remove any from Entity
+export class SelectionResult<T extends Entity, R = any> {
   /**
    * Fired when there are updates in the selection.
    * Only update that are relevant to the selection cause the update.
@@ -322,7 +322,7 @@ export class SelectionResult<T extends Entity, R> { // TODO(burdon): Remove any 
   }
 }
 
-const coerceToId = (item: Item | ItemID): ItemID => {
+const coerceToId = (item: Item<any> | ItemID): ItemID => {
   if (typeof item === 'string') {
     return item;
   }
@@ -346,7 +346,7 @@ const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): 
   return itemFilterToPredicate(filter);
 };
 
-const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item> => {
+const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item<any>> => {
   if ('id' in filter) {
     return item => item.id === filter.id;
   } else {
