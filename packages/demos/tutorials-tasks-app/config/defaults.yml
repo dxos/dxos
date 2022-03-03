@@ -10,6 +10,7 @@ runtime:
 
   services:
     signal:
-      server: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
+      server: "wss://demo.kube.dxos.network/dxos/signal"
+      api: "https://demo.kube.dxos.network/dxos/signal/api"
     dxns:
-      server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
+      server: "wss://node1.devnet.dxos.network/dxns/ws"
