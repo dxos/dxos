@@ -17,6 +17,7 @@ import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { createSelector, RootFilter } from './selection';
+import { Selection } from '.';
 
 export interface ItemCreationOptions<M extends Model> {
   model: ModelConstructor<M>
@@ -46,11 +47,7 @@ enum State {
 export class Database {
   private readonly _itemManager: ItemManager;
 
-  private readonly _selector = createSelector(
-    () => this._itemManager.items,
-    () => this._itemManager.debouncedUpdate,
-    this
-  );
+ 
 
   private _state = State.INITIAL;
 
@@ -165,7 +162,7 @@ export class Database {
   /**
    * Waits for item matching the filter to be present and returns it.
    */
-  async waitForItem<T extends Model<any> = any> (filter: RootFilter): Promise<Item<T>> {
+  async waitForItem<T extends Model<any>> (filter: RootFilter): Promise<Item<T>> {
     const query = this.select(filter).query();
     await query.update.waitForCondition(() => {
       const { result } = query;
@@ -174,15 +171,21 @@ export class Database {
 
     const item = Array.isArray(query.result) ? query.result[0] : query.result;
     assert(item, 'Race condition detected');
-    return item;
+    return item as Item<T>;
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    * @param filter
    */
-  select (filter?: RootFilter) {
-    return this._selector(filter);
+  select(filter?: RootFilter): Selection<Item<any>> {
+    return createSelector<void>(
+      () => this._itemManager.items,
+      () => this._itemManager.debouncedUpdate,
+      this,
+      filter,
+      undefined
+    );
   }
 
   /**
@@ -191,14 +194,13 @@ export class Database {
    * @param filter
    */
   reduce (result: any, filter?: RootFilter) {
-    const selector = createSelector(
+    return createSelector(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
       this,
+      filter,
       result
     );
-
-    return selector(filter);
   }
 
   createSnapshot () {

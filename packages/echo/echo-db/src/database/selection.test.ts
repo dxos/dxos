@@ -11,7 +11,7 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Entity } from '.';
+import { Entity, RootFilter } from '.';
 import { Item } from './item';
 import { Link } from './link';
 import { createSelector } from './selection';
@@ -40,9 +40,9 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
-const createRootSelector = createSelector(() => items, () => new Event(), null as any);
+const createRootSelector = (filter?: RootFilter) => createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
 
-const createReducer = (result: any) => createSelector(() => items, () => new Event(), null as any, result)();
+const createReducer = <R>(result: R) => createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
 
 // TODO(burdon): Use more complex data set (org, person, project, task).
 
@@ -280,9 +280,8 @@ describe('Selection', () => {
   describe('events', () => {
     test('events get filtered correctly', async () => {
       const update = new Event<Entity[]>();
-      const select = createSelector(() => items, () => update, null as any);
 
-      const query = select({ type: ITEM_ORG })
+      const query = createSelector<void>(() => items, () => update, null as any, { type: ITEM_ORG }, undefined)
         .children()
         .query();
 

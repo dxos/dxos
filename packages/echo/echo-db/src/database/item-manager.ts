@@ -50,7 +50,7 @@ export class ItemManager {
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedUpdate: Event<Entity<Model>[]> = debounceEntityUpdateEvent(this.update);
+  readonly debouncedUpdate: Event<Entity[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
