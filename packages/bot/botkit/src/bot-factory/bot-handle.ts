@@ -3,19 +3,21 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import fs from 'fs';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event } from '@dxos/async';
+import { Event, promiseTimeout } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
-import { BotExitStatus } from '../bot-container';
+import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
+import { InvitationDescriptor } from '../proto/gen/dxos/echo/invitation';
 
 interface BotHandleOptions {
   config?: Config,
@@ -29,6 +31,7 @@ interface BotHandleOptions {
 export class BotHandle {
   private _rpc: ProtoRpcClient<BotService> | null = null;
   private readonly _bot: Bot;
+  private readonly _log = debug(`dxos:botkit:bot-handle:${this.id}`);
   private _config: Config;
   private _startTimestamps: Date[] = [];
   localPath: string | undefined;
@@ -41,6 +44,7 @@ export class BotHandle {
   constructor (
     readonly id: string,
     readonly workingDirectory: string,
+    private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
     const {
@@ -50,11 +54,33 @@ export class BotHandle {
     } = options;
     this._bot = {
       id,
-      status: Bot.Status.STOPPED,
+      status: Bot.Status.SPAWNING,
       packageSpecifier,
       partyKey
     };
     this._config = new Config(config.values);
+
+    this._botContainer.exited.on(([id, status]) => {
+      if (id !== this.id) {
+        return;
+      }
+
+      this.onProcessExited(status);
+    });
+
+    this._botContainer.error.on(async ([id, error]) => {
+      if (id !== this.id) {
+        return;
+      }
+
+      this.onProcessError(error);
+
+      try {
+        await this._botContainer.kill(id);
+      } catch (err) {
+        this._log(`Failed to kill bot: ${id}`);
+      }
+    });
   }
 
   get rpc () {
@@ -82,22 +108,6 @@ export class BotHandle {
     this._startTimestamps.push(startTimestamp);
   }
 
-  /**
-   * To express the intent. The final states (stopped or running) should be updated automatically.
-   */
-  setStarting () {
-    this.update.emit();
-    this._bot.status = Bot.Status.STARTING;
-  }
-
-  /**
-   * To express the intent. The final states (stopped or running) should be updated automatically.
-   */
-  setStoppping () {
-    this.update.emit();
-    this._bot.status = Bot.Status.STOPPING;
-  }
-
   async initializeDirectories () {
     await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
@@ -118,33 +128,85 @@ export class BotHandle {
     );
   }
 
-  async open (port: RpcPort): Promise<void> {
-    if (this._rpc) {
-      await this.close();
-    }
+  async spawn (invitation?: InvitationDescriptor): Promise<Bot> {
+    this.bot.status = Bot.Status.STARTING;
+    await this._spawn();
+    await this._initialize(invitation);
+    this._updateAfterStart();
+    return this.bot;
+  }
 
+  async start (): Promise<Bot> {
+    this.bot.status = Bot.Status.STARTING;
+    await this._spawn();
+    await this._start();
+    this._updateAfterStart();
+    return this.bot;
+  }
+
+  async stop (): Promise<Bot> {
+    try {
+      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
+    } catch (error: any) {
+      this._log(`Failed to stop bot: ${error}`);
+    }
+    await this._botContainer.kill(this.id);
+    await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
+    this._log('Bot stopped');
+    return this.bot;
+  }
+
+  async remove () {
+    if (this.bot.status === Bot.Status.RUNNING) {
+      await this.stop();
+    }
+    await this._clearFiles();
+  }
+
+  private async _spawn (): Promise<void> {
+    const port = await this._botContainer.spawn({
+      id: this.id,
+      localPath: this.localPath,
+      logFilePath: this.getLogFilePath(this.startTimestamp)
+    });
+
+    this._log('Openning RPC channel');
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotService'),
       {
         port,
-        timeout: 60_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+        timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
       }
     );
     await this._rpc.open();
+  }
+
+  private async _initialize (invitation?: InvitationDescriptor): Promise<void> {
+    this._log('Initializing bot');
+    await this.rpc.initialize({
+      config: this.config.values,
+      invitation
+    });
+    this._log('Initialization complete');
+  }
+
+  private async _start (): Promise<void> {
+    this._log('Starting bot');
+    await this.rpc.start({
+      config: this.config.values
+    });
+    this._log('Bot started');
+  }
+
+  private _updateAfterStart () {
     this._bot.status = Bot.Status.RUNNING;
     this._bot.lastStart = this.startTimestamp;
     this._bot.runtime = {};
     this.update.emit();
+    this._log('Bot started');
   }
 
-  async close () {
-    assert(this._rpc, 'BotHandle is not open');
-    this._rpc.close();
-    this._rpc = null;
-    this.update.emit();
-  }
-
-  async clearFiles () {
+  private async _clearFiles () {
     await fs.promises.rm(this.workingDirectory, { recursive: true, force: true });
   }
 
