@@ -11,10 +11,10 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Entity, RootFilter } from '.';
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { createSelector } from './selection';
+import { RootFilter, createSelector } from './selection';
 
 // Use to prevent ultra-long diffs.
 const ids = (entities: Entity[]) => entities.map(entity => entity.id);
@@ -40,9 +40,11 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
-const createRootSelector = (filter?: RootFilter) => createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
+const createRootSelector = (filter?: RootFilter) =>
+  createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
 
-const createReducer = <R>(result: R) => createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
+const createReducer = <R>(result: R) =>
+  createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
 
 // TODO(burdon): Use more complex data set (org, person, project, task).
 
@@ -270,9 +272,8 @@ describe('Selection', () => {
           return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
         })
         .target()
-        .query(); // TODO(burdon): Different verb? (exec?)
+        .query();
 
-      expect(ids(query.result)).toStrictEqual(ids([person1, person2, person3]));
       expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
     });
   });

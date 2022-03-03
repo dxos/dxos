@@ -176,9 +176,11 @@ describe('Node', () => {
 
         let unsub: (() => void) | undefined;
         const waitForNewItem = new Promise<boolean>(resolve => {
-          unsub = party
-            .database
-            .select({ type: TEST_ECHO_TYPE }).query()
+          const result = party.database
+            .select({ type: TEST_ECHO_TYPE })
+            .query();
+
+          result
             .update.on(async (items) => {
               for (const item of items) {
                 const payload = item.model.getProperty('payload');
@@ -188,11 +190,13 @@ describe('Node', () => {
               }
             });
         });
+
         await botHandle.sendCommand(command);
         const timeout = async () => {
           await sleep(5000);
           return false;
         };
+
         const found = await Promise.race([waitForNewItem, timeout()]);
         expect(found).toBe(true);
         unsub?.();

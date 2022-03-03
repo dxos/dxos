@@ -32,7 +32,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from '../database';
+import { Item } from '../api';
 import { autoPartyOpener, HaloFactory, IdentityManager } from '../halo';
 import { OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore } from '../metadata';

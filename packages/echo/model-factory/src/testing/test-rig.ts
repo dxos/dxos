@@ -9,10 +9,10 @@ import { createId, PublicKey } from '@dxos/crypto';
 import { FeedWriter, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { ModelMessage, StateManager } from '..';
 import { Model } from '../model';
 import { ModelFactory } from '../model-factory';
-import { ModelConstructor } from '../types';
+import { StateManager } from '../state-manager';
+import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 

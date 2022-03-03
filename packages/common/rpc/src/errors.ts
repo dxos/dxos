@@ -21,6 +21,7 @@ function preprocessStack (stack: string) {
   if (!match) {
     return stack;
   }
+
   return stack.slice(match.index);
 }
 
