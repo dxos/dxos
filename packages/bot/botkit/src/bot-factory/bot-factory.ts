@@ -112,7 +112,7 @@ export class BotFactory implements BotFactoryService {
 
       this._bots.set(id, handle);
       handle.startTimestamp = new Date();
-      await handle.spawn();
+      await handle.spawn(request.invitation);
       return handle.bot;
     } catch (error: any) {
       log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);

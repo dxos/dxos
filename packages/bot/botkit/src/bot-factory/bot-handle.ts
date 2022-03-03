@@ -183,12 +183,18 @@ export class BotHandle {
         invitation: params.invite
       });
       this._log(`Initialization complete`);
+    } else {
+      this._log('Starting bot');
+      await this.rpc.start({
+        config: this.config.values
+      });
+      this._log('Bot started');
     }
     this._bot.status = Bot.Status.RUNNING;
     this._bot.lastStart = this.startTimestamp;
     this._bot.runtime = {};
     this.update.emit();
-    this._log('Bots stated');
+    this._log('Bot started');
     return this.bot;
   }
 
