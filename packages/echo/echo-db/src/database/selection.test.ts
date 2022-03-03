@@ -248,7 +248,7 @@ describe('Selection', () => {
     });
   });
 
-  describe('call', () => {
+  describe('reducer', () => {
     test('simple reducer', () => {
       const query = createReducer(0).call((items, count) => count + items.length).query();
       expect(query.value).toEqual(items.length);
@@ -263,14 +263,14 @@ describe('Selection', () => {
         })
         .children({ type: ITEM_PROJECT })
         .call((items: Item[], { numItems, ...rest }) => {
-          return { ...rest, numItems: numItems + items.length, stage: 'c' };
+          return { ...rest, numItems: numItems + items.length, stage: 'b' };
         })
         .links({ type: LINK_MEMBER })
         .call((links: Link[], { numLinks, ...rest }) => {
           return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
         })
         .target()
-        .query(); // TODO(burdon): Different verb?
+        .query(); // TODO(burdon): Different verb? (exec?)
 
       expect(ids(query.result)).toStrictEqual(ids([person1, person2, person3]));
       expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
