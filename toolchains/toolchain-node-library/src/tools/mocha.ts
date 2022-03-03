@@ -20,10 +20,14 @@ export interface ExecMochaOpts {
  * @param jsdom
  */
 export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
+
+  //
+  // Sources
+  // Assume first args are either a glob or expanded glob of sources.
+  //
+
   const defaultSpec = './src/**/*.test.*';
   const defaultSources = './src/**/*';
-
-  // TODO(burdon): Assume first args are either a glob or expanded glob of sources.
   const sources = [];
   {
     while (userArgs?.length) {
@@ -41,7 +45,10 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
     }
   }
 
+  //
+  // Options
   // NOTE: --no-diff is ignored since the `expect` package generates the output.
+  //
 
   const options = [
     ...sources,

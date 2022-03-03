@@ -12,7 +12,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
-export type OneOrMultiple<T> = T | T[];
+export type OneOrMultiple<T> = T | T[]
 
 //
 // Filters
@@ -272,6 +272,10 @@ export class SelectionResult<T extends Entity, R = any> {
     private readonly _root: SelectionRoot
   ) {
     this._lastResult = this._execute();
+
+    // TODO(burdon): Query updates are based on
+
+    // TODO(burdon): Every update should update reducer.
 
     // Re-run if deps change.
     // TODO(burdon): Explain this.

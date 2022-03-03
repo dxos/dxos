@@ -5,6 +5,7 @@ module.exports = {
   ],
   rules: {
     'no-lone-blocks': 'off',
+    'padded-blocks': 'off',
     'no-restricted-imports': [
       'error',
       {
