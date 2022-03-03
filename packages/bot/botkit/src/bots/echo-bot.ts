@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { InitializeRequest, SendCommandRequest } from '../proto/gen/dxos/bot';
+import { SendCommandRequest } from '../proto/gen/dxos/bot';
 import { Bot } from './client-bot';
 
 const log = debug('dxos:bot:echo-bot');

@@ -13,9 +13,9 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
+import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
-import { BotService } from '../proto/gen/dxos/bot';
 
 const portToClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
   const rpc = createRpcClient(
@@ -27,7 +27,7 @@ const portToClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> 
   );
   await rpc.open();
   return rpc;
-}
+};
 
 describe('Node container', function () {
   // Running node command can be slow.

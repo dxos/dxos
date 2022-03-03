@@ -10,8 +10,8 @@ import { Config } from '@dxos/config';
 import { keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
-import { BotHandle } from './bot-handle';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { BotHandle } from './bot-handle';
 import type { ContentResolver } from './dxns-content-resolver';
 import type { ContentLoader } from './ipfs-content-loader';
 

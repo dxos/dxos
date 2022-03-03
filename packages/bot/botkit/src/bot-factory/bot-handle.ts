@@ -132,24 +132,24 @@ export class BotHandle {
 
   async spawn (invitation?: InvitationDescriptor): Promise<Bot> {
     const bot = await this._start({ initialize: true, invite: invitation });
-    return bot; 
+    return bot;
   }
 
   async start (): Promise<Bot> {
     const bot = await this._start({ initialize: false });
-    return bot; 
+    return bot;
   }
 
   async stop (): Promise<Bot> {
-      try {
-        await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
-      } catch (error: any) {
-        this._log(`Failed to stop bot: ${error}`);
-      }
-      await this._botContainer.kill(this.id);
-      await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
-      this._log(`Bot stopped`);
-      return this.bot;
+    try {
+      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
+    } catch (error: any) {
+      this._log(`Failed to stop bot: ${error}`);
+    }
+    await this._botContainer.kill(this.id);
+    await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
+    this._log('Bot stopped');
+    return this.bot;
   }
 
   async remove () {
@@ -167,7 +167,7 @@ export class BotHandle {
       logFilePath: this.getLogFilePath(this.startTimestamp)
     });
 
-    this._log(`Openning RPC channel`);
+    this._log('Openning RPC channel');
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotService'),
       {
@@ -177,12 +177,12 @@ export class BotHandle {
     );
     await this._rpc.open();
     if (params.initialize) {
-      this._log(`Initializing bot`);
+      this._log('Initializing bot');
       await this.rpc.initialize({
         config: this.config.values,
         invitation: params.invite
       });
-      this._log(`Initialization complete`);
+      this._log('Initialization complete');
     } else {
       this._log('Starting bot');
       await this.rpc.start({

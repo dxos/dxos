@@ -139,7 +139,7 @@ describe('Node', () => {
       await clientSetup.client.destroy();
     });
 
-    it.only('Spawns and restarts echo-bot', async () => {
+    it('Spawns and restarts echo-bot', async () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
