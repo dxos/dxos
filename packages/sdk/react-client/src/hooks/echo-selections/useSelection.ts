@@ -28,9 +28,8 @@ export const useSelection = <T extends Entity<any>> (
   // Update selection when the query or customs deps change.
   useEffect(() => {
     const newResult = coerceSelection(selection);
-    const newData = newResult?.result;
     setResult(newResult);
-    setData(newData);
+    setData(newResult?.result);
   }, [!!selection, !!selection && selection.root, ...deps]);
 
   // Update data when database updates.
@@ -50,13 +49,32 @@ export const useSelection = <T extends Entity<any>> (
  * @param value
  * @param deps
  */
-// TODO(burdon): Implement.
-export const useReducer = <T extends Entity<any>, R extends any> (
+// TODO(burdon): Factor out common code with useSelection.
+export const useReducer = <T extends Entity<any>, R> (
   selection: Selection<T> | SelectionResult<T> | Falsy,
   value: R,
   deps: readonly any[] = []
 ) => {
-  return undefined;
+  const [result, setResult] = useState(() => coerceSelection(selection));
+  const [data, setData] = useState<R | undefined>(() => result ? result.value : undefined);
+
+  // Update selection when the query or customs deps change.
+  useEffect(() => {
+    const newResult = coerceSelection(selection);
+    setResult(newResult);
+    setData(newResult?.value);
+  }, [!!selection, !!selection && selection.root, ...deps]);
+
+  // Update data when database updates.
+  useEffect(() => {
+    if (result) {
+      return result.update.on(() => {
+        setData(result.value);
+      });
+    }
+  }, [result]);
+
+  return data;
 };
 
 /**

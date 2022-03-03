@@ -8,9 +8,9 @@ import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
+import { Database } from '../api';
 import { DataServiceHost } from './data-service-host';
 import { DataServiceRouter } from './data-service-router';
-import { Database } from './database';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {

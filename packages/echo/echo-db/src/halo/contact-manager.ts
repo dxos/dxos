@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Item } from '../database';
+import { Item } from '../api';
 import { PartyInternal, PartyMember } from '../parties';
 import { ResultSet } from '../result';
 import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';

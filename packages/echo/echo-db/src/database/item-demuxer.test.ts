@@ -14,7 +14,7 @@ import { createTransform } from '@dxos/feed-store';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Item } from './item';
+import { Item } from '../api';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 

@@ -1,0 +1,45 @@
+# https://github.com/marketplace/actions/github-releases
+name: Upload Release Artifacts
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          clean: false
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16.14
+      - name: Setup
+        run: |
+          # Needed for dependencies to install (playwright/robotjs)
+          sudo apt-get install libxtst-dev libpng++-dev
+
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+          npm install -g @microsoft/rush pnpm
+          
+          # Install dependencies
+          node common/scripts/install-run-rush.js install
+      - name: Build
+        run: node common/scripts/install-run-rush.js build --verbose
+      - name: Gather Artifacts
+        run: |
+          mkdir artifacts
+          mv packages/devtools/devtools-extension/dist artifacts/devtools
+          mv packages/wallet/wallet-extension/dist artifacts/wallet
+      - name: Upload
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_COMPRESS: zip
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+      - name: Cleanup
+        run: rm -rf artifacts

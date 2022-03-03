@@ -7,9 +7,9 @@ import assert from 'assert';
 import { Model } from '@dxos/model-factory';
 import { range } from '@dxos/util';
 
-import { PartyInternal } from '..';
-import { Item, ItemCreationOptions } from '../database';
+import { Item, ItemCreationOptions } from '../api';
 import { ECHO } from '../echo';
+import { PartyInternal } from '../parties';
 import { createTestInstance, inviteTestPeer } from './testing';
 
 // TODO(burdon): These are very narrow functions. Refactor into factories.
