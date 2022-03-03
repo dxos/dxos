@@ -6,7 +6,6 @@ import assert from 'assert';
 import { debug } from 'debug';
 import { join } from 'path';
 
-import { promiseTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { keyToString, randomBytes } from '@dxos/crypto';
 
@@ -89,13 +88,13 @@ export class BotFactory implements BotFactoryService {
       const handle = new BotHandle(
         id,
         join(process.cwd(), 'bots', id),
+        this._botContainer,
         {
           config: this._config,
           packageSpecifier,
           partyKey: request.partyKey
         }
       );
-      handle.setStarting();
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const contentDirectory = handle.getContentPath();
@@ -112,22 +111,8 @@ export class BotFactory implements BotFactoryService {
       }
 
       this._bots.set(id, handle);
-
       handle.startTimestamp = new Date();
-
-      const port = await this._botContainer.spawn({
-        id,
-        localPath,
-        logFilePath: handle.getLogFilePath(handle.startTimestamp)
-      });
-      log(`[${id}] Openning RPC channel`);
-      await handle.open(port);
-      log(`[${id}] Initializing bot`);
-      await handle.rpc.initialize({
-        config: handle.config.values,
-        invitation: request.invitation
-      });
-      log(`[${id}] Initialization complete`);
+      await handle.spawn();
       return handle.bot;
     } catch (error: any) {
       log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
@@ -139,22 +124,8 @@ export class BotFactory implements BotFactoryService {
     assert(request.id);
     const id = request.id;
     try {
-      const bot = this._getBot(request.id);
-      bot.setStarting();
-
-      bot.startTimestamp = new Date();
-
-      const port = await this._botContainer.spawn({
-        id,
-        localPath: bot.localPath,
-        logFilePath: bot.getLogFilePath(bot.startTimestamp)
-      });
-      log(`[${id}] Openning RPC channel`);
-      await bot.open(port);
-      log(`[${id}] Initializing bot`);
-      await bot.rpc.start({ config: bot.config.values });
-      await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.RUNNING);
-      log(`[${id}] Initialization complete`);
+      const bot = this._getBot(id);
+      await bot.start();
       return bot.bot;
     } catch (error: any) {
       log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
@@ -164,34 +135,21 @@ export class BotFactory implements BotFactoryService {
 
   async stop (request: Bot) {
     assert(request.id);
-    const id = request.id;
-    try {
-      const bot = this._getBot(id);
-      bot.setStoppping();
-      log(`[${id}] Stopping bot`);
-      try {
-        await promiseTimeout(bot.rpc.stop(), 3000, new Error('Stopping bot timed out'));
-      } catch (error: any) {
-        log(`[${id}] Failed to stop bot: ${error}`);
-      }
-      await this._botContainer.kill(id);
-      await bot.update.waitForCondition(() => bot.bot.status === Bot.Status.STOPPED);
-      log(`[${id}] Bot stopped`);
-      return bot.bot;
-    } catch (error: any) {
-      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
-      throw error;
-    }
+    const bot = this._getBot(request.id);
+    await bot.stop();
+    return bot.bot;
   }
 
   async remove (request: Bot) {
     assert(request.id);
-    const bot = this._getBot(request.id);
-    if (bot.bot.status === Bot.Status.RUNNING) {
-      await this.stop(bot.bot);
+    const id = request.id;
+    try {
+      const bot = this._getBot(id);
+      await bot.remove();
+    } catch (error: any) {
+      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
+      throw error;
     }
-    this._bots.delete(request.id);
-    await bot.clearFiles();
   }
 
   async sendCommand (request: SendCommandRequest) {
