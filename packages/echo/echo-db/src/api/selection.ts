@@ -70,7 +70,7 @@ export type SelectionRoot = Database | Entity;
 /**
  * Returned from each stage of the visitor.
  */
-export type SelectionContext<T extends Entity, R> = [entities: T[], result: R]
+export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R]
 
 /**
  * Visitor callback.
@@ -264,9 +264,9 @@ export class SelectionResult<T extends Entity, R = any> {
    * Fired when there are updates in the selection.
    * Only update that are relevant to the selection cause the update.
    */
-  readonly update = new Event<T[]>(); // TODO(burdon): Result result object.
+  readonly update = new Event<SelectionResult<T>>(); // TODO(burdon): Result result object.
 
-  private _lastResult?: SelectionContext<T, R>;
+  private _lastResult: SelectionContext<T, R> = [[]];
 
   constructor (
     private readonly _execute: () => SelectionContext<T, R>,
@@ -276,22 +276,27 @@ export class SelectionResult<T extends Entity, R = any> {
   ) {
     this.refresh();
 
-    // TODO(burdon): Every update should update reducer.
-
     // Re-run if deps change.
-    // TODO(burdon): Explain this.
-    // TODO(burdon): Should also fire if entities have been REMOVED from the set?
     this.update.addEffect(() => _update.on(currentEntities => {
-      const result = this._execute();
-      const [entities, value] = result;
-      const set = new Set([...entities, ...this._lastResult![0]]);
-      this._lastResult = [dedupe(entities), value];
+      const [previousEntities] = this._lastResult;
+
+      this.refresh();
 
       // Filters mutation events only if selection (since we can't reason about deps of call methods).
+      const set = new Set([...previousEntities, ...this._lastResult![0]]);
       if (this._reducer || currentEntities.some(entity => set.has(entity as any))) {
-        this.update.emit(entities);
+        this.update.emit(this);
       }
     }));
+  }
+
+  /**
+   * Re-run query.
+   */
+  refresh () {
+    const [entities, result] = this._execute();
+    this._lastResult = [dedupe(entities), result];
+    return this;
   }
 
   /**
@@ -302,11 +307,17 @@ export class SelectionResult<T extends Entity, R = any> {
   }
 
   /**
-   * Get the result of this select.
    * @deprecated
    */
   // TODO(burdon): Remove.
-  get result (): T[] {
+  // get result () {
+  //   return this.entities;
+  // }
+
+  /**
+   * Get the result of this selection.
+   */
+  get entities (): T[] {
     if (!this._lastResult) {
       this.refresh();
     }
@@ -328,21 +339,12 @@ export class SelectionResult<T extends Entity, R = any> {
   }
 
   /**
-   * Re-run query.
-   */
-  refresh () {
-    const [entities, result] = this._execute();
-    this._lastResult = [dedupe(entities), result];
-    return this;
-  }
-
-  /**
-   * If the result contains exatly one entity, returns it, errors otherwise.
+   * Return the first element if the set has exactly one element.
    */
   expectOne (): T {
-    const res = this.result;
-    assert(res.length === 1, 'Expected one result, got ' + res.length);
-    return res[0];
+    const entities = this.entities;
+    assert(entities.length === 1, `Expected one result; got ${entities.length}`);
+    return entities[0];
   }
 }
 

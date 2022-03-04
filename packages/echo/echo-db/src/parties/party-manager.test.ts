@@ -38,7 +38,8 @@ import { OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage, messageLogger } from '../util';
+import { messageLogger } from '../testing';
+import { createRamStorage } from '../util';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
@@ -263,11 +264,11 @@ describe('Party manager', () => {
 
     const [updated, onUpdate] = latch();
     partyB.database.select({ type: 'example:item/test' }).query()
-      .update.on((items) => {
-        if (items.length) {
-          const [itemB] = items;
+      .update.on(result => {
+        if (result.entities.length) {
+          const [itemB] = result.entities;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${items[0].id}`);
+            log(`B has ${itemB.id}`);
             onUpdate();
           }
         }
@@ -318,11 +319,11 @@ describe('Party manager', () => {
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
     partyB.database.select({ type: 'example:item/test' }).query()
-      .update.on((items) => {
-        if (items.length) {
-          const [itemB] = items;
+      .update.on(result => {
+        if (result.entities.length) {
+          const [itemB] = result.entities;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${items[0].id}`);
+            log(`B has ${itemB.id}`);
             onUpdate();
           }
         }
@@ -399,11 +400,11 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     partyB.database.select({ type: 'example:item/test' }).query()
-      .update.on((items) => {
-        if (items.length) {
-          const [itemB] = items;
+      .update.on(result => {
+        if (result.entities.length) {
+          const [itemB] = result.entities;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${items[0].id}`);
+            log(`B has ${itemB.id}`);
             onUpdate();
           }
         }
@@ -458,11 +459,11 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     partyB.database.select({ type: 'example:item/test' }).query()
-      .update.on((items) => {
-        if (items.length) {
-          const [itemB] = items;
+      .update.on(result => {
+        if (result.entities.length) {
+          const [itemB] = result.entities;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${items[0].id}`);
+            log(`B has ${itemB.id}`);
             onUpdate();
           }
         }

@@ -181,8 +181,8 @@ describe('Node', () => {
             .query();
 
           result
-            .update.on(async (items) => {
-              for (const item of items) {
+            .update.on(async result => {
+              for (const item of result.entities) {
                 const payload = item.model.getProperty('payload');
                 if (PublicKey.from(payload).toString() === PublicKey.from(command).toString()) {
                   resolve(true);

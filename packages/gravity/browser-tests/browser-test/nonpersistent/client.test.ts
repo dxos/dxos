@@ -81,7 +81,7 @@ describe('Client - nonpersistent', () => {
     const invite = await party.createInvitation();
     const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
 
-    const otherItem = otherParty.database.select({ type: 'example:item/test' }).query().result[0];
+    const otherItem = otherParty.database.select({ type: 'example:item/test' }).query().entities[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();

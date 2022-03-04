@@ -23,20 +23,20 @@ export const useSelection = <T extends Entity<any>> (
   deps: readonly any[] = []
 ): T[] | undefined => {
   const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState<T[] | undefined>(() => result ? result.result : undefined);
+  const [data, setData] = useState<T[] | undefined>(() => result ? result.entities : undefined);
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
     const newResult = coerceSelection(selection);
     setResult(newResult);
-    setData(newResult?.result);
+    setData(newResult?.entities);
   }, [!!selection, !!selection && selection.root, ...deps]);
 
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      return result.update.on((entities: T[]) => {
-        setData(entities);
+      return result.update.on(result => {
+        setData(result.entities);
       });
     }
   }, [result]);
@@ -45,11 +45,12 @@ export const useSelection = <T extends Entity<any>> (
 };
 
 /**
+ * Hook to process selection reducer.
+ *
  * @param selection
  * @param value
  * @param deps
  */
-// TODO(burdon): Factor out common code with useSelection.
 export const useReducer = <T extends Entity<any>, R> (
   selection: Selection<T> | SelectionResult<T> | Falsy,
   value: R,
@@ -68,7 +69,7 @@ export const useReducer = <T extends Entity<any>, R> (
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      return result.update.on(() => {
+      return result.update.on(result => {
         setData(result.value);
       });
     }
@@ -78,9 +79,10 @@ export const useReducer = <T extends Entity<any>, R> (
 };
 
 /**
- * @param arg
+ * @param value Selection or SelectionResult from hook.
  */
-// TODO(burdon): ???
 const coerceSelection = <T extends Entity>(
-  arg: Selection<T> | SelectionResult<T> | Falsy
-): SelectionResult<T> | undefined => !arg ? undefined : arg instanceof Selection ? arg.query() : arg;
+  value: Selection<T> | SelectionResult<T> | Falsy
+): SelectionResult<T> | undefined => {
+  return !value ? undefined : value instanceof Selection ? value.query() : value;
+};

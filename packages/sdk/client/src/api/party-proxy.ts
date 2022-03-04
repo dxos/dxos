@@ -71,6 +71,7 @@ export class Party {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.init();
     }
+
     await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
   }
 
@@ -189,7 +190,7 @@ export class Party {
   }
 
   private getPropertiesItem () {
-    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().result;
+    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().entities;
     return items[0];
   }
 

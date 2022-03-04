@@ -104,13 +104,13 @@ export const buildTestParty = async (builder: PartyBuilder) => {
   await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople([3, 10]);
     await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {
-      const { result: people } = await orgBuilder.org
+      const result = await orgBuilder.org
         .select()
         .children()
         .filter({ type: TestType.Person })
         .query();
 
-      await projectBuilder.createTasks([2, 5], people);
+      await projectBuilder.createTasks([2, 5], result.entities);
     });
   });
 };
