@@ -22,18 +22,18 @@ export class ContactManager {
   ) {}
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    return this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query().result[0];
+    return this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query().entities[0];
   }
 
   queryContacts (): ResultSet<Contact> {
     const event = new Event();
-    const query = this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query();
-    query.update.on(() => {
+    const result = this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query();
+    result.update.on(() => {
       event.emit();
     });
 
     const getter = (): Contact[] => {
-      const [contactListItem] = query.result;
+      const [contactListItem] = result.entities;
       const contacts = contactListItem?.model.toObject();
       return Object.values(contacts ?? {}).map((contact: any) => ({
         publicKey: PublicKey.from(contact.publicKey._value),

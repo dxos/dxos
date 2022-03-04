@@ -14,4 +14,5 @@ export * from './metadata';
 export * from './parties';
 export * from './pipeline';
 export * from './snapshots';
+export * from './testing';
 export * from './util';

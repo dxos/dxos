@@ -77,7 +77,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const [globalItem] = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query().result;
+    const [globalItem] = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query().entities;
     return globalItem;
   }
 
@@ -85,7 +85,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query().result;
+    const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query().entities;
     return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 
@@ -133,7 +133,7 @@ export class Preferences {
     const [partyDesc] = this._party.database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')))
-      .query().result;
+      .query().entities;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({
@@ -159,15 +159,15 @@ export class Preferences {
       };
     };
 
-    const query = this._party.database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).query();
+    const result = this._party.database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).query();
 
     // Wrap the query event so we can have manual control.
     const event = new Event();
-    query.update.on(() => event.emit());
+    result.update.on(() => event.emit());
 
-    const result = new ResultSet<JoinedParty>(event, () => query.result.map(converter));
-    const unsubscribe = result.subscribe(callback);
-    if (result.value.length) {
+    const resultSet = new ResultSet<JoinedParty>(event, () => result.entities.map(converter));
+    const unsubscribe = resultSet.subscribe(callback);
+    if (resultSet.value.length) {
       event.emit();
     }
 

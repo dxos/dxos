@@ -14,11 +14,12 @@ const log = debug('dxos:bot:story-bot');
 export class StoryBot extends Bot {
   constructor () {
     super();
-    log('constructing story bot');
+    log('Constructing story bot.');
   }
 
   override async onStart () {
-    log('onInit');
+    log('Starting...');
+
     assert(this.party);
     const COUNTER_TYPE = 'DXOS_COUNTER';
     const counterItem = await this.party.database.createItem({
@@ -30,16 +31,18 @@ export class StoryBot extends Bot {
     });
 
     // Subscribe to updates in ECHO and keep counter of occurrences of word DXOS.
-    this.party.database.select({ type: 'TEST_TYPE' }).query().update.on(async (data) => {
+    this.party.database.select({ type: 'TEST_TYPE' }).query().update.on(async result => {
       log('onUpdate triggered');
+
       let counter = 0;
-      data.forEach(item => {
+      result.entities.forEach(item => {
         const textItem = item.model.getProperty('text');
         if (typeof textItem === 'string') {
           log(`Found text item: ${textItem}`);
           counter += textItem.match(/DXOS/g)?.length ?? 0;
         }
       });
+
       if (counter !== counterItem.model.getProperty('counter')) {
         log(`Updating counter with value ${counter}`);
         await counterItem.model.setProperty('counter', counter);

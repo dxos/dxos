@@ -79,7 +79,7 @@ export class PartyInternal {
       isActive: this.isActive,
       feedKeys: this._feedProvider.getFeedKeys().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
-      properties: this.isOpen ? this.getPropertiesSet().result[0]?.model.toObject() : undefined
+      properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };
   }
 
@@ -245,7 +245,7 @@ export class PartyInternal {
     assert(this.isOpen, 'Party not open.');
 
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().result;
+    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().entities;
     assert(items.length === 1, 'Party properties missing.');
     return items[0] as Item<ObjectModel>;
   }

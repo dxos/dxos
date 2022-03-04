@@ -3,5 +3,3 @@
 //
 
 export * from './persistant-ram-storage';
-export * from './testing';
-export * from './testing-factories';

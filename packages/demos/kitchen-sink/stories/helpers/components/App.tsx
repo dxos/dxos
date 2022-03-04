@@ -77,9 +77,9 @@ export const App = ({
 
   const handleSelection = (text: string) => {
     const selection = execSelection(party, text);
-    const { result = [] } = selection?.query() ?? {};
+    const result = selection?.query();
     const selected = new Set<ItemID>();
-    result.forEach(item => selected.add(item.id));
+    result?.entities.forEach(item => selected.add(item.id));
     setSelected(selected);
     model.refresh();
   };
