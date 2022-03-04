@@ -78,7 +78,7 @@ export class NetworkServiceProvider implements NetworkService {
     assert(request.data, 'Data is required');
 
     const connection = this._connections.get([request.topic, request.destinationPeerId]) ?? raise(new Error('Connection not found'));
-    connection.send(request.data);
+    await connection.send(request.data);
   }
 }
 

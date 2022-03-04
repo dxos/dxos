@@ -286,7 +286,7 @@ describe('Client', () => {
           onConnection: ({ port }) => {
             port.subscribe(data => {
               if (Buffer.from(data).toString() === 'ping') {
-                port.send(Buffer.from('pong'));
+                void port.send(Buffer.from('pong'));
               }
             });
           }
@@ -304,7 +304,7 @@ describe('Client', () => {
             }
           });
         });
-        port.send(Buffer.from('ping'));
+        await port.send(Buffer.from('ping'));
         await promiseTimeout(pong, 100, new Error('Timeout'));
       });
     });
