@@ -20,6 +20,7 @@ import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
+import { NetworkProxy } from '../api/network';
 
 const log = debug('dxos:client');
 
@@ -60,6 +61,7 @@ export class Client {
 
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
+  private _network!: NetworkProxy;
 
   private _initialized = false;
 
@@ -126,6 +128,11 @@ export class Client {
     return this._halo;
   }
 
+  get network(): NetworkProxy {
+    assert(this._network, 'Client not initialized.');
+    return this._network;
+  }
+
   /**
    * Client services that can be proxied.
    */
@@ -166,6 +173,7 @@ export class Client {
 
     this._halo = new HaloProxy(this._serviceProvider);
     this._echo = new EchoProxy(this._serviceProvider, this._halo);
+    this._network = new NetworkProxy(this._serviceProvider);
 
     await this._halo._open();
     await this._echo._open();

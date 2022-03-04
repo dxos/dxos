@@ -7,18 +7,19 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { promiseTimeout, sleep, waitForCondition } from '@dxos/async';
 import { ConfigObject } from '@dxos/config';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase, keyPairFromSeedPhrase, PublicKey } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
+import { createBundledRpcServer, createLinkedPorts, createRpcServer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
+import { schema } from '../proto/gen';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -268,6 +269,46 @@ describe('Client', () => {
         expect(item1.model.getProperty('prop1')).toEqual('x');
       });
     });
+
+    describe('networking', () => {
+      test.only('client calls an RPC on the other client', async () => {
+        const topic = PublicKey.random()
+
+        const provider = await createClient();
+        await provider.initialize()
+        afterTest(() => provider.destroy())
+        provider.network.joinSwam({
+          topic,
+          peerId: topic,
+          topology: {
+            type: 'star',
+            centralPeer: topic,
+          },
+          onConnection: ({ port }) => {
+           port.subscribe(data => {
+             if(Buffer.from(data).toString() === 'ping') {
+               port.send(Buffer.from('pong'));
+             }
+           })
+          }
+        })
+
+        const client = await createClient();
+        await client.initialize()
+        afterTest(() => client.destroy())
+        const { port } = await client.network.dial(topic);
+
+        const pong = new Promise<void>(resolve => {
+          port.subscribe(data => {
+            if(Buffer.from(data).toString() === 'pong') {
+              resolve();
+            }
+          })
+        })
+        port.send(Buffer.from('ping'));
+        await promiseTimeout(pong, 100, new Error('Timeout'));
+      })
+    })
   }
 
   describe('local', () => {
