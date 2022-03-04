@@ -271,7 +271,7 @@ describe('Client', () => {
     });
 
     describe('networking', () => {
-      test.only('client calls an RPC on the other client', async () => {
+      test('client calls an RPC on the other client', async () => {
         const topic = PublicKey.random()
 
         const provider = await createClient();

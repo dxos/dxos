@@ -1,7 +1,7 @@
 import { Event } from "@dxos/async";
 import { PublicKey } from "@dxos/crypto";
-import { RpcPort } from "@dxos/rpc";
-import { ComplexMap } from "@dxos/util";
+import { RpcClosedError, RpcPort } from "@dxos/rpc";
+import { ComplexMap, SubscriptionGroup } from "@dxos/util";
 import { ClientServiceProvider } from "..";
 import assert from "assert";
 
@@ -36,6 +36,8 @@ export class JoinedSwarm {
 }
 
 export class NetworkProxy {
+  private readonly _cleanup = new SubscriptionGroup();
+
   constructor(
     private readonly _serviceProvider: ClientServiceProvider,
   ) {}
@@ -51,6 +53,18 @@ export class NetworkProxy {
     });
     const ports = new ComplexMap<PublicKey, Event<Uint8Array>>(x => x.toHex());
     const cleanupMap = new ComplexMap<PublicKey, () => void>(x => x.toHex());
+
+    const cleanup = () => {
+      this._serviceProvider.services.NetworkService.leaveSwarm({ topic: options.topic }).catch(() => {});
+
+      for(const peerId of ports.keys()) {
+        cleanupMap.get(peerId)?.();
+        ports.delete(peerId!);
+        cleanupMap.delete(peerId);
+      }
+    }
+    this._cleanup.push(cleanup);
+
     stream.subscribe(
       msg => {
         if(msg.peerConnected) {
@@ -85,10 +99,10 @@ export class NetworkProxy {
         }
       },
       err => {
-        for(const peerId of ports.keys()) {
-          cleanupMap.get(peerId)?.();
-          ports.delete(peerId!);
-          cleanupMap.delete(peerId);
+        cleanup();
+        
+        if(err instanceof RpcClosedError) {
+          return;
         }
 
         // TODO(dmaretskyi): Proper error handling.
@@ -114,5 +128,12 @@ export class NetworkProxy {
         }
       })
     })
+  }
+
+  /**
+   * @internal
+   */
+  _close() {
+    this._cleanup.unsubscribe();
   }
 }

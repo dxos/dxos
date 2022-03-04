@@ -222,6 +222,7 @@ export class Client {
   async destroy () {
     await this._echo._close();
     this._halo._close();
+    this._network._close();
 
     if (!this._initialized) {
       return;
