@@ -158,14 +158,10 @@ export class Database {
    * Waits for item matching the filter to be present and returns it.
    */
   async waitForItem<T extends Model<any>> (filter: RootFilter): Promise<Item<T>> {
-    const query = this.select(filter).query();
-    await query.update.waitForCondition(() => {
-      const { result } = query;
-      return Array.isArray(result) ? result.length > 0 : result !== undefined;
-    });
-
-    const item = Array.isArray(query.result) ? query.result[0] : query.result;
-    assert(item, 'Race condition detected');
+    const result = this.select(filter).query();
+    await result.update.waitForCondition(() => result.entities.length > 0);
+    const item = result.expectOne();
+    assert(item, 'Possible condition detected.');
     return item as Item<T>;
   }
 

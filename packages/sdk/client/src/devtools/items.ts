@@ -19,8 +19,8 @@ const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsRes
       items: []
     };
 
-    const { result: items } = party.database.select().query();
-    for (const item of items) {
+    const queryResult = party.database.select().query();
+    for (const item of queryResult.entities) {
       partyInfo.items.push({
         id: item.id,
         type: item.type,

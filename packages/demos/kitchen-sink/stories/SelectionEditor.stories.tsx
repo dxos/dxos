@@ -25,8 +25,8 @@ const App = () => {
   const handleChange = (text: string) => {
     const selection = execSelection(party, text);
     if (selection) {
-      const { result } = selection.query();
-      setResult(result?.length);
+      const result = selection.query();
+      setResult(result.entities.length);
     } else {
       setResult(0);
     }

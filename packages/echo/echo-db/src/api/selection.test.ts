@@ -91,33 +91,33 @@ describe('Selection', () => {
     test('all', () => {
       expect(
         createRootSelector()
-          .query().result
+          .query().entities
       ).toHaveLength(items.length);
     });
 
     test('by id', () => {
       expect(
         createRootSelector({ id: org1.id })
-          .query().result
+          .query().entities
       ).toEqual([org1]);
 
       expect(
         createRootSelector({ id: org2.id })
-          .query().result
+          .query().entities
       ).toEqual([org2]);
     });
 
     test('single type', () => {
       expect(
         createRootSelector({ type: ITEM_PROJECT })
-          .query().result
+          .query().entities
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
         createRootSelector({ type: [ITEM_ORG, ITEM_PROJECT] })
-          .query().result
+          .query().entities
       ).toHaveLength(5);
     });
   });
@@ -127,7 +127,7 @@ describe('Selection', () => {
       expect(
         createRootSelector()
           .filter({ type: 'dxos:type.invalid' })
-          .query().result
+          .query().entities
       ).toHaveLength(0);
     });
 
@@ -135,7 +135,7 @@ describe('Selection', () => {
       expect(
         createRootSelector()
           .filter({ type: ITEM_PROJECT })
-          .query().result
+          .query().entities
       ).toHaveLength(3);
     });
 
@@ -143,7 +143,7 @@ describe('Selection', () => {
       expect(
         createRootSelector()
           .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
-          .query().result
+          .query().entities
       ).toHaveLength(5);
     });
 
@@ -151,7 +151,7 @@ describe('Selection', () => {
       expect(
         createRootSelector()
           .filter(item => item.type === ITEM_ORG)
-          .query().result
+          .query().entities
       ).toHaveLength(2);
     });
   });
@@ -162,7 +162,7 @@ describe('Selection', () => {
         createRootSelector()
           .filter({ type: ITEM_ORG })
           .children({ type: ITEM_PROJECT })
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         project1,
         project2,
@@ -174,7 +174,7 @@ describe('Selection', () => {
       expect(ids(
         createRootSelector({ id: org1.id })
           .children()
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         project1,
         project2,
@@ -190,7 +190,7 @@ describe('Selection', () => {
         createRootSelector()
           .filter({ type: ITEM_PROJECT })
           .parent()
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         org1,
         org2
@@ -201,7 +201,7 @@ describe('Selection', () => {
       expect(ids(
         createRootSelector({ id: project1.id })
           .parent()
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         org1
       ]));
@@ -211,7 +211,7 @@ describe('Selection', () => {
       expect(
         createRootSelector({ id: org1.id })
           .parent()
-          .query().result
+          .query().entities
       ).toEqual([]);
     });
   });
@@ -222,7 +222,7 @@ describe('Selection', () => {
         createRootSelector({ id: project1.id })
           .links()
           .target()
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         person1,
         person2
@@ -233,7 +233,7 @@ describe('Selection', () => {
       expect(
         createRootSelector({ type: ITEM_PROJECT })
           .links()
-          .query().result
+          .query().entities
       ).toHaveLength(links.length);
     });
 
@@ -242,7 +242,7 @@ describe('Selection', () => {
         createRootSelector({ type: ITEM_PERSON })
           .refs()
           .source()
-          .query().result
+          .query().entities
       )).toStrictEqual(ids([
         project1,
         project2

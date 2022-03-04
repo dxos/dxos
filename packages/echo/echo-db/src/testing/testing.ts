@@ -11,7 +11,7 @@ import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
 import { PartyInternal } from '../parties';
-import { createRamStorage } from './persistant-ram-storage';
+import { createRamStorage } from '../util';
 
 const log = debug('dxos:echo-db:testing');
 

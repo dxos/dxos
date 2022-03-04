@@ -18,7 +18,7 @@ test('can load from saved state', async () => {
 
   expect(echo.halo.getProfile()?.username).toEqual('Test profile');
 
-  const person: Item<ObjectModel> = echo.queryParties().first.database.select({ type: 'dxos:item.person' }).query().result[0];
+  const person: Item<ObjectModel> = echo.queryParties().first.database.select({ type: 'dxos:item.person' }).query().entities[0];
 
   expect(person.model).toBeInstanceOf(ObjectModel);
   expect(person.model.toObject()).toEqual({ firstName: 'Edith', lastName: 'Smith' });
