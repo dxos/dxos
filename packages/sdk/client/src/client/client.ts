@@ -232,6 +232,7 @@ export class Client {
   @synchronized
   async reset () {
     await this.services.SystemService.reset();
+    this._halo.profileChanged.emit();
     this._initialized = false;
   }
 
