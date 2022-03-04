@@ -55,7 +55,7 @@ export const Main = () => {
   const handleReset = async () => {
     setInProgress(true);
     try {
-      await client.halo.reset();
+      await client.reset();
       window.location.reload();
     } catch (e: any) {
       console.error(e);
