@@ -14,12 +14,11 @@ import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createBundledRpcServer, createLinkedPorts, createRpcServer } from '@dxos/rpc';
+import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../interfaces';
 import { Client } from './client';
-import { schema } from '../proto/gen';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -272,43 +271,43 @@ describe('Client', () => {
 
     describe('networking', () => {
       test('client calls an RPC on the other client', async () => {
-        const topic = PublicKey.random()
+        const topic = PublicKey.random();
 
         const provider = await createClient();
-        await provider.initialize()
-        afterTest(() => provider.destroy())
+        await provider.initialize();
+        afterTest(() => provider.destroy());
         provider.network.joinSwam({
           topic,
           peerId: topic,
           topology: {
             type: 'star',
-            centralPeer: topic,
+            centralPeer: topic
           },
           onConnection: ({ port }) => {
-           port.subscribe(data => {
-             if(Buffer.from(data).toString() === 'ping') {
-               port.send(Buffer.from('pong'));
-             }
-           })
+            port.subscribe(data => {
+              if (Buffer.from(data).toString() === 'ping') {
+                port.send(Buffer.from('pong'));
+              }
+            });
           }
-        })
+        });
 
         const client = await createClient();
-        await client.initialize()
-        afterTest(() => client.destroy())
+        await client.initialize();
+        afterTest(() => client.destroy());
         const { port } = await client.network.dial(topic);
 
         const pong = new Promise<void>(resolve => {
           port.subscribe(data => {
-            if(Buffer.from(data).toString() === 'pong') {
+            if (Buffer.from(data).toString() === 'pong') {
               resolve();
             }
-          })
-        })
+          });
+        });
         port.send(Buffer.from('ping'));
         await promiseTimeout(pong, 100, new Error('Timeout'));
-      })
-    })
+      });
+    });
   }
 
   describe('local', () => {

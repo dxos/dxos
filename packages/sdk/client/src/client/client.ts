@@ -13,6 +13,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 
 import { EchoProxy, HaloProxy } from '../api';
+import { NetworkProxy } from '../api/network';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { InvalidConfigurationError } from '../interfaces/errors';
@@ -20,7 +21,6 @@ import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
-import { NetworkProxy } from '../api/network';
 
 const log = debug('dxos:client');
 
@@ -128,7 +128,7 @@ export class Client {
     return this._halo;
   }
 
-  get network(): NetworkProxy {
+  get network (): NetworkProxy {
     assert(this._network, 'Client not initialized.');
     return this._network;
   }

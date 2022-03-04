@@ -25,6 +25,6 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
         throw new Error('Tracing not available');
       }
     },
-    NetworkService: createNetworkService(opts),
+    NetworkService: createNetworkService(opts)
   };
 };
