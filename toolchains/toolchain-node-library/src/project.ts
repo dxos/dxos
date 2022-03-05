@@ -14,7 +14,6 @@ export class Project {
     }
 
     const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8'));
-
     return new Project(packageRoot, packageJson);
   }
 
@@ -31,7 +30,9 @@ export class Project {
    * Uses heuristics to determine if the project is a react package.
    */
   get isReactPackage (): boolean {
-    return !!(this.packageJsonContents.dependencies?.react ?? this.packageJsonContents.devDependencies?.react ?? this.packageJsonContents.peerDependencies?.react);
+    return !!(this.packageJsonContents.dependencies?.react ??
+      this.packageJsonContents.devDependencies?.react ??
+      this.packageJsonContents.peerDependencies?.react);
   }
 }
 

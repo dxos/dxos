@@ -75,7 +75,7 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   }
 
   // TODO(burdon): Verbose option.
-  console.log('Options:', JSON.stringify(options, undefined, 2));
+  // console.log('Options:', JSON.stringify(options, undefined, 2));
 
   const requires = jsdom ? ['-r', 'jsdom-global/register'] : [];
   await execTool('mocha', [
