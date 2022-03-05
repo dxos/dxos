@@ -81,8 +81,8 @@ export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: E
   await execTool('mocha', [
     ...requires,
     '-r', '@swc-node/register',
-    '-r', require.resolve('./wtfnode.js'),
-    '-r', require.resolve('./catch-unhandled-rejections.js'),
+    '-r', require.resolve('./util/wtfnode.js'),
+    '-r', require.resolve('./util/catch-unhandled-rejections.js'),
     ...options
   ], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.

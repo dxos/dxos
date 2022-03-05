@@ -9,7 +9,7 @@ import { join } from 'path';
 import yargs, { Arguments } from 'yargs';
 
 import { Project } from './project';
-import { execCommand, execJest, execTool, execLint, execMocha, execPackageScript } from './tools';
+import { execCommand, execJest, execTool, execLint, execMocha, execScript } from './tools';
 
 const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
@@ -123,18 +123,19 @@ type Handler = (argv: Arguments) => Promise<void>;
  * @param title
  * @param handler
  * @param timeout
+ * @param verbose
  */
-function handler (title: string, handler: Handler, timeout = false): Handler {
-  return async (argv: Arguments) => {
+function handler (title: string, handler: Handler, timeout = false, verbose = true): Handler {
+  return async function (argv: Arguments) {
     const t = timeout && setTimeout(() => {
       process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
       process.exit(1);
     }, PACKAGE_TIMEOUT);
 
     const start = Date.now();
-    console.log(chalk`\n{green.bold ${title} started}`);
+    verbose && console.log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
+    verbose && console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
 
     t && clearTimeout(t);
   }
@@ -150,15 +151,6 @@ yargs(process.argv.slice(2))
   // Build
   //
 
-  .command(
-    'demo',
-    'Demo',
-    yargs => yargs,
-    handler('Demo', async (argv: Arguments) => {
-      console.log(argv);
-    }, true)
-  )
-
   .command<{ watch?: boolean }>(
     'build',
     'Build the package.',
@@ -169,9 +161,9 @@ yargs(process.argv.slice(2))
         default: false
       })
       .strict(),
-    handler('Build', async (argv: Arguments<any>) => {
+    async (argv) => {
       await execBuild({ watch: argv.watch });
-    })
+    }
   )
 
   .command(
@@ -199,7 +191,7 @@ yargs(process.argv.slice(2))
       // Additional test steps are executed by default only when build:test is run.
       for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
         console.log(chalk.bold`\n${step}`);
-        await execPackageScript(project, step, []);
+        await execScript(project, step, []);
       }
     }, true)
   )

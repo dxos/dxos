@@ -6,4 +6,4 @@ export * from './common';
 export * from './jest';
 export * from './lint';
 export * from './mocha';
-export * from './packageScript';
+export * from './script';

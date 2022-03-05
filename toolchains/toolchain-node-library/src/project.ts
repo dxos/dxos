@@ -6,11 +6,18 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { sync as pkgDir } from 'pkg-dir';
 
+export interface ToolchainConfig {
+  forceCloseTests?: boolean
+  testingFramework?: 'mocha' | 'jest'
+  additionalTestSteps?: string[]
+  jsdom?: boolean
+}
+
 export class Project {
   static load (): Project {
     const packageRoot = pkgDir(process.cwd());
     if (!packageRoot) {
-      throw new Error('Must be executed inside a package');
+      throw new Error('Must be executed inside a package.');
     }
 
     const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8'));
@@ -34,11 +41,4 @@ export class Project {
       this.packageJsonContents.devDependencies?.react ??
       this.packageJsonContents.peerDependencies?.react);
   }
-}
-
-export interface ToolchainConfig {
-  forceCloseTests?: boolean,
-  testingFramework?: 'mocha' | 'jest';
-  additionalTestSteps?: string[];
-  jsdom?: boolean,
 }
