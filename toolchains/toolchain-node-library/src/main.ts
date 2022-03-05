@@ -131,10 +131,10 @@ function handler (title: string, handler: Handler, timeout = false): Handler {
       process.exit(1);
     }, PACKAGE_TIMEOUT);
 
-    const before = Date.now();
+    const start = Date.now();
     console.log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - before}} ms`);
+    console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
 
     t && clearTimeout(t);
   }
