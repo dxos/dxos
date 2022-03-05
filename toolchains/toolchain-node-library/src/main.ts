@@ -121,24 +121,20 @@ type Handler = (argv: Arguments) => Promise<void>;
 /**
  * Wraps yargs handler.
  * @param title
- * @param f
+ * @param handler
  * @param timeout
  */
-function handler (title: string, f: Handler, timeout = false): Handler {
+function handler (title: string, handler: Handler, timeout = false): Handler {
   return async (argv: Arguments) => {
     const t = timeout && setTimeout(() => {
       process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
       process.exit(1);
     }, PACKAGE_TIMEOUT);
 
-    try {
-      const before = Date.now();
-      console.log(chalk`\n{green.bold ${title} started}`);
-      await f(argv);
-      console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - before}} ms`);
-    } catch (err) {
-      console.error(err);
-    }
+    const before = Date.now();
+    console.log(chalk`\n{green.bold ${title} started}`);
+    await handler(argv);
+    console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - before}} ms`);
 
     t && clearTimeout(t);
   }
