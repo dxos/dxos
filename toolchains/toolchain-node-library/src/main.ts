@@ -138,7 +138,7 @@ function handler (title: string, handler: Handler, timeout = false, verbose = tr
     verbose && console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
 
     t && clearTimeout(t);
-  }
+  };
 }
 
 /**
@@ -147,9 +147,9 @@ function handler (title: string, handler: Handler, timeout = false, verbose = tr
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
 
-  //
-  // Build
-  //
+//
+// Build
+//
 
   .command<{ watch?: boolean }>(
     'build',
@@ -196,9 +196,9 @@ yargs(process.argv.slice(2))
     }, true)
   )
 
-  //
-  // Testing
-  //
+//
+// Testing
+//
 
   .command(
     'test',
@@ -209,9 +209,9 @@ yargs(process.argv.slice(2))
     }, true)
   )
 
-  //
-  // ESBuild server/book
-  //
+//
+// ESBuild server/book
+//
 
   .command(
     'build:book',
@@ -243,9 +243,9 @@ yargs(process.argv.slice(2))
     }
   )
 
-  //
-  // Lint
-  //
+//
+// Lint
+//
 
   .command(
     'lint',
@@ -257,9 +257,9 @@ yargs(process.argv.slice(2))
     }
   )
 
-  //
-  // Run scripts.
-  //
+//
+// Run scripts.
+//
 
   .command<{ command: string }>(
     ['* <command>', 'run <command>'],
