@@ -13,7 +13,7 @@ export function NodeGlobalsPolyfillPlugin (): Plugin {
     name: 'node-globals-polyfill',
     setup ({ initialOptions }) {
       const polyfills = [
-        // TODO(unknown): Use `buffer` module from NPM.
+        // TODO: Use `buffer` module from NPM.
         resolve(__dirname, '../../polyfills/process.js'),
         resolve(__dirname, '../../polyfills/Buffer.js')
       ];

@@ -7,7 +7,7 @@ import { ChildProcess, spawn, SpawnSyncOptionsWithBufferEncoding } from 'child_p
 
 import { TOOLCHAIN_PACKAGE_DIR } from '../common';
 
-function printChildStatus (child: ChildProcess, name: string, startTime: number) {
+function printChildStatus (child: ChildProcess, name: string, start: number) {
   if (child.exitCode === null) {
     process.stderr.write(chalk`{red error}: ${name} terminated due to a signal: ${child.signalCode}\n`);
     process.exit(1);
@@ -15,14 +15,17 @@ function printChildStatus (child: ChildProcess, name: string, startTime: number)
     process.stderr.write(chalk`{red error}: ${name} exited with code ${child.exitCode}\n`);
     process.exit(child.exitCode ?? 1);
   } else {
-    console.log(chalk`{green.bold OK} in {bold ${Date.now() - startTime}} ms`);
+    console.log(chalk`{green.bold OK} in {bold ${Date.now() - start}} ms`);
   }
 }
 
 export async function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
-  const before = Date.now();
+  const start = Date.now();
 
-  const child = spawn(`${TOOLCHAIN_PACKAGE_DIR}/node_modules/.bin/${name}`, args, { stdio: 'inherit', ...opts });
+  const child = spawn(`${TOOLCHAIN_PACKAGE_DIR}/node_modules/.bin/${name}`, args, {
+    stdio: 'inherit',
+    ...opts
+  });
 
   await new Promise<void>((resolve, reject) => {
     child.on('exit', (code) => {
@@ -30,11 +33,11 @@ export async function execTool (name: string, args: string[] = [], opts?: SpawnS
     });
   });
 
-  printChildStatus(child, name, before);
+  printChildStatus(child, name, start);
 }
 
 export async function execCommand (command: string, args: string[]) {
-  const before = Date.now();
+  const start = Date.now();
 
   const child = spawn(command, args, {
     shell: true,
@@ -51,5 +54,5 @@ export async function execCommand (command: string, args: string[]) {
     });
   });
 
-  printChildStatus(child, command, before);
+  printChildStatus(child, command, start);
 }
