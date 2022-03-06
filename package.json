@@ -4,6 +4,6 @@
     "packages/*/*"
   ],
   "scripts": {
-    "preinstall": "echo 'This project is using Rush Stack. More details in the readme.' && false"
+    "preinstall": "echo 'This project is using the Rush Stack. More details in the README.' && false"
   }
 }
