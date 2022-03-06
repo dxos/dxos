@@ -49,14 +49,6 @@ export class HaloProxy {
     return this._profile;
   }
 
-  /**
-   * Reset the identity and delete all key records.
-  */
-  async reset () {
-    await this._serviceProvider.services.SystemService.reset();
-    this.profileChanged.emit();
-  }
-
   // TODO(burdon): Should be part of profile object. Or use standard Result object.
   subscribeToProfile (cb: () => void): () => void {
     return this.profileChanged.on(cb);
