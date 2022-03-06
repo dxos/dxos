@@ -6,14 +6,10 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
-import yargs from 'yargs';
+import yargs, { Arguments } from 'yargs';
 
 import { Project } from './project';
-import { execCommand, execTool } from './tools/common';
-import { execJest } from './tools/jest';
-import { execLint } from './tools/lint';
-import { execMocha } from './tools/mocha';
-import { execPackageScript } from './tools/packageScript';
+import { execCommand, execJest, execTool, execLint, execMocha, execScript } from './tools';
 
 const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
@@ -28,6 +24,8 @@ interface BuildOptions {
  */
 async function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
+
+  // TODO(burdon): Config (paths, etc.)
 
   if (project.packageJsonContents.jest) {
     process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored\n`);
@@ -52,12 +50,11 @@ async function execBuild (opts: BuildOptions = {}) {
   // Compile protocol buffer definitions.
   const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
-    console.log(chalk.bold`\nprotobuf`);
+    console.log(chalk.bold`\nProtobuf`);
 
     // TODO(burdon): Document this.
-    const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts'))
-      ? join(project.packageRoot, 'src/proto/substitutions.ts')
-      : undefined;
+    const file = join(project.packageRoot, 'src/proto/substitutions.ts');
+    const substitutions = fs.existsSync(file) ? join(file) : undefined;
 
     await execTool('build-protobuf', [
       '-o',
@@ -67,10 +64,14 @@ async function execBuild (opts: BuildOptions = {}) {
     ]);
   }
 
-  console.log(chalk.bold`\ntypescript`);
+  console.log(chalk.bold`\nTypescript`);
   await execTool('tsc', opts.watch ? ['--watch'] : []);
 }
 
+/**
+ * Mocha/Jest tests.
+ * @param userArgs
+ */
 async function execTest (userArgs?: string[]) {
   const project = Project.load();
   const forceClose = project.toolchainConfig.forceCloseTests ?? false;
@@ -115,17 +116,41 @@ async function execStart () {
   await execTool('esbuild-server', ['dev']);
 }
 
-function setPackageTimeout () {
-  const id = setTimeout(() => {
-    process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
-    process.exit(1);
-  }, PACKAGE_TIMEOUT);
+type Handler = (argv: Arguments) => Promise<void>;
 
-  return () => clearTimeout(id);
+/**
+ * Wraps yargs handler.
+ * @param title
+ * @param handler
+ * @param timeout
+ * @param verbose
+ */
+function handler (title: string, handler: Handler, timeout = false, verbose = true): Handler {
+  return async function (argv: Arguments) {
+    const t = timeout && setTimeout(() => {
+      process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+      process.exit(1);
+    }, PACKAGE_TIMEOUT);
+
+    const start = Date.now();
+    verbose && console.log(chalk`\n{green.bold ${title} started}`);
+    await handler(argv);
+    verbose && console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
+
+    t && clearTimeout(t);
+  };
 }
 
+/**
+ * Main yargs entry-point.
+ */
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
+
+//
+// Build
+//
+
   .command<{ watch?: boolean }>(
     'build',
     'Build the package.',
@@ -137,71 +162,67 @@ yargs(process.argv.slice(2))
       })
       .strict(),
     async (argv) => {
-      const before = Date.now();
       await execBuild({ watch: argv.watch });
-      console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
     }
   )
+
+  .command(
+    'build:bundle',
+    'Build a bundle for the package.',
+    yargs => yargs
+      .strict(),
+    handler('Bundle', async () => {
+      await execBuildBundle();
+    })
+  )
+
   .command(
     'build:test',
     'build, lint, and test the package',
     yargs => yargs
       .strict(),
-    async () => {
+    handler('Tests', async () => {
       const project = Project.load();
-
-      const clear = setPackageTimeout();
-
-      const before = Date.now();
       await execBuild();
-
-      console.log(chalk.bold`\neslint`);
       await execLint(project);
-
       await execTest();
 
       // Additional test steps execution placed here to allow to run tests without additional steps.
       // Additional test steps are executed by default only when build:test is run.
       for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
         console.log(chalk.bold`\n${step}`);
-        await execPackageScript(project, step, []);
+        await execScript(project, step, []);
       }
+    }, true)
+  )
 
-      console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
-      clear();
-    }
-  )
+//
+// Testing
+//
+
   .command(
-    'build:bundle',
-    'Build a bundle for the package.',
-    yargs => yargs
-      .strict(),
-    async () => {
-      const before = Date.now();
-      await execBuildBundle();
-      console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
-    }
+    'test',
+    'run tests',
+    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+    handler('Tests', async ({ _ }) => {
+      await execTest(_.slice(1).map(String));
+    }, true)
   )
+
+//
+// ESBuild server/book
+//
+
   .command(
     'build:book',
     'Build the storybook for the package.',
     yargs => yargs
       .strict(),
-    async () => {
-      const before = Date.now();
+    handler('Build', async () => {
       await execBuildBook();
-      console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
-    }
+    })
   )
-  .command(
-    'book',
-    'Run the storybook for the package.',
-    yargs => yargs
-      .strict(),
-    async () => {
-      await execBook();
-    }
-  )
+
   .command(
     'start',
     'Run a dev server for the package.',
@@ -211,6 +232,21 @@ yargs(process.argv.slice(2))
       await execStart();
     }
   )
+
+  .command(
+    'book',
+    'Run the storybook for the package.',
+    yargs => yargs
+      .strict(),
+    async () => {
+      await execBook();
+    }
+  )
+
+//
+// Lint
+//
+
   .command(
     'lint',
     'run linter',
@@ -220,24 +256,17 @@ yargs(process.argv.slice(2))
       await execLint(project, _.slice(1).map(String));
     }
   )
-  .command(
-    'test',
-    'run tests',
-    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    async ({ _ }) => {
-      const clear = setPackageTimeout();
 
-      await execTest(_.slice(1).map(String));
-      clear();
-    }
-  )
+//
+// Run scripts.
+//
+
   .command<{ command: string }>(
     ['* <command>', 'run <command>'],
     'run script or a tool',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     async ({ command, _ }) => {
       const project = Project.load();
-
       if (project.packageJsonContents.scripts?.[command]) {
         await execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
       } else {
@@ -245,4 +274,5 @@ yargs(process.argv.slice(2))
       }
     }
   )
+
   .argv;

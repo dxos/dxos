@@ -5,7 +5,7 @@
 import { Project } from '../project';
 import { execCommand } from './common';
 
-export async function execPackageScript (project: Project, script: string, args: string[]) {
+export async function execScript (project: Project, script: string, args: string[]) {
   if (!project.packageJsonContents.scripts?.[script]) {
     throw new Error(`Script '${script}' not found in package.json`);
   }
