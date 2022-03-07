@@ -5,7 +5,7 @@
   "description": "Comprehensive set of demos.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
   "bugs": {
-    "url": "'https://github.com/dxos/protocols/issues"
+    "url": "https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",
@@ -14,15 +14,19 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "book": "esbuild-server book --mdx",
-    "build": "tsc --noEmit && npm run book -- --build",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
+    "book": "toolchain book",
+    "build": "toolchain build",
+    "build:book": "toolchain build:book",
+    "build:bundle": "toolchain build:bundle",
+    "build:test": "toolchain build:test",
+    "config": "toolchain config",
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha -r ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
-    "test": "exit 0",
+    "start": "toolchain start",
+    "test": "toolchain test",
     "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/tests/*.test.ts'",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
@@ -71,8 +75,10 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
     "@types/url-join": "~4.0.1",
     "buffer": "^6.0.3",
+    "concurrently": "~7.0.0",
     "dotenv": "^8.2.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
@@ -82,8 +88,7 @@
     "react-dom": "^17.0.2",
     "robotjs": "~0.6.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.5.2",
-    "concurrently": "~7.0.0"
+    "typescript": "^4.5.2"
   },
   "publishConfig": {
     "access": "private"
