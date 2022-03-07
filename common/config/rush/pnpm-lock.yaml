@@ -253,6 +253,7 @@ importers:
       typescript: ~4.5.4
       use-resize-observer: ^8.0.0
     dependencies:
+      '@dxos/gem-core': link:../gem-core
       debug: 4.3.3
       matter-js: 0.18.0
       use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
@@ -262,7 +263,6 @@ importers:
       '@dxos/esbuild-plugins': 2.27.8
       '@dxos/esbuild-server': 2.2.5
       '@dxos/eslint-plugin': 1.0.24_1a58291d5de64ba74d8d611ac4a671f0
-      '@dxos/gem-core': link:../gem-core
       '@emotion/css': 11.7.1_@babel+core@7.17.5
       '@emotion/react': 11.8.1_@babel+core@7.17.5+react@17.0.2
       '@types/debug': 4.1.7
@@ -791,8 +791,8 @@ packages:
       react: '*'
       react-dom: '*'
     dependencies:
-      '@emotion/css': 11.7.1_@babel+core@7.17.5
-      '@emotion/react': 11.8.1_@babel+core@7.17.5+react@17.0.2
+      '@emotion/css': 11.7.1
+      '@emotion/react': 11.8.1_react@17.0.2
       clsx: 1.1.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
