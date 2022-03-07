@@ -16,7 +16,7 @@ const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
 // TODO(burdon): Replace console.log with process.stdout.write.
 
-type Handler = (argv: Arguments) => Promise<void>;
+type Handler <T> = (argv: Arguments<T>) => Promise<void>;
 
 /**
  * Wraps yargs handler.
@@ -25,8 +25,8 @@ type Handler = (argv: Arguments) => Promise<void>;
  * @param timeout
  * @param verbose
  */
-function handler (title: string, handler: Handler, timeout = false, verbose = true): Handler {
-  return async function (argv: Arguments) {
+function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
+  return async function (argv: Arguments<T>) {
     const t = timeout && setTimeout(() => {
       process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
       process.exit(1);
@@ -42,6 +42,7 @@ function handler (title: string, handler: Handler, timeout = false, verbose = tr
 }
 
 interface BuildOptions {
+  minify?: boolean
   verbose?: boolean
   watch?: boolean
 }
@@ -90,7 +91,7 @@ async function execBuild (config: Config, options: BuildOptions = {}) {
 /**
  * Creates a bundled build of the current package.
  */
-async function execBuildBundle (config: Config, minify = true) {
+async function execBuildBundle (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
   const { outdir } = project.esbuildConfig;
 
@@ -99,7 +100,7 @@ async function execBuildBundle (config: Config, minify = true) {
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['build']);
 
-  if (minify) {
+  if (options.minify) {
     const filename = project.entryPoint.split('/').slice(-1)[0];
     const name = filename.split('.')[0];
 
@@ -111,12 +112,21 @@ async function execBuildBundle (config: Config, minify = true) {
 /**
  * Creates a static build of the storybook for the current package.
  */
-async function execBuildBook (config: Config) {
+async function execBuildBook (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-  fs.rmSync(join(project.packageRoot, './out'), { recursive: true, force: true });
+  const { outdir } = project.esbuildConfig;
+
+  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['book', '--build']);
+
+  if (options.minify) {
+    const name = 'index';
+
+    fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'))
+    await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
+  }
 }
 
 /**
@@ -193,9 +203,13 @@ yargs(process.argv.slice(2))
     'build:bundle',
     'Build a bundle for the package.',
     yargs => yargs
+      .option('minify', {
+        type: 'boolean',
+        default: false
+      })
       .strict(),
-    handler('Bundle', async () => {
-      await execBuildBundle(defaults);
+    handler<{ minify: boolean }>('Bundle', async (argv) => {
+      await execBuildBundle(defaults, { minify: argv.minify });
     })
   )
 
@@ -228,9 +242,13 @@ yargs(process.argv.slice(2))
     'build:book',
     'Build the storybook for the package.',
     yargs => yargs
+      .option('minify', {
+        type: 'boolean',
+        default: false
+      })
       .strict(),
-    handler('Build book', async () => {
-      await execBuildBook(defaults);
+    handler<{ minify: boolean }>('Build book', async (argv) => {
+      await execBuildBook(defaults, { minify: argv.minify });
     })
   )
 

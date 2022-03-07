@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { TestType } from '../../src';
+import { TestType } from '../../src/testing'; // NOTE: Must explicitly include /testing dir.
 import { Launcher } from '../util';
 
 const config = {
@@ -13,13 +13,10 @@ const config = {
   baseUrl: 'http://localhost:8080/#/'
 };
 
-// TODO(burdon): Primary?
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
-
-  console.log('!!!!!!!!!!!!!');
 
   const spacing = 8;
   const marginTop = 24; // OSX toolbar.
