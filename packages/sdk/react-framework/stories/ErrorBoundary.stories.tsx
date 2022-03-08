@@ -8,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button } from '@mui/material';
 
 import { Client } from '@dxos/client';
+import { DXOSError } from '@dxos/debug';
 import { ClientProvider } from '@dxos/react-client';
 
 import { ErrorBoundary, ErrorView, useErrors } from '../src';
@@ -20,8 +21,10 @@ debug.enable('*');
 
 enum ErrorType {
   Async = 1,
-  Promise = 2,
-  Invalid = 3
+  AsyncFatal = 2,
+  Promise = 3,
+  PromiseFatal = 4,
+  Invalid = 5
 }
 
 const TestApp = () => {
@@ -31,19 +34,23 @@ const TestApp = () => {
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
     switch (trigger) {
-      case ErrorType.Async: {
+      case ErrorType.Async:
+      case ErrorType.AsyncFatal: {
+        const code = trigger === ErrorType.Async ? 'NON_FATAL' : 'FATAL';
         t = setTimeout(() => {
           setTrigger(undefined);
-          throw new Error('Async error.');
+          throw new DXOSError(code, 'Async error.');
         }, 1000);
         break;
       }
 
-      case ErrorType.Promise: {
+      case ErrorType.Promise:
+      case ErrorType.PromiseFatal: {
+        const code = trigger === ErrorType.Promise ? 'NON_FATAL' : 'FATAL';
         setImmediate(async () => await new Promise((resolve, reject) => {
           t = setTimeout(() => {
             setTrigger(undefined);
-            reject(new Error('Promise rejected.'));
+            reject(new DXOSError(code, 'Promise rejected.'));
           }, 1000);
         }));
         break;
@@ -68,8 +75,14 @@ const TestApp = () => {
           <Button onClick={() => setTrigger(ErrorType.Async)}>
             Async
           </Button>
+          <Button onClick={() => setTrigger(ErrorType.AsyncFatal)}>
+            Async Fatal
+          </Button>
           <Button onClick={() => setTrigger(ErrorType.Promise)}>
             Promise
+          </Button>
+          <Button onClick={() => setTrigger(ErrorType.PromiseFatal)}>
+            Promise Fatal
           </Button>
           <Button onClick={resetError} color='secondary'>
             Reset
@@ -103,7 +116,7 @@ export const Primary = () => {
 
   return (
     <ErrorBoundary
-      // indicator={null}
+      onError={(error) => error.message.startsWith('FATAL')}
       onReset={async () => {
         await clientRef.current!.reset();
       }}
