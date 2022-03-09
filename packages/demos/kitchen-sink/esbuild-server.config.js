@@ -10,13 +10,17 @@ const {
 
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
-  plugins: [
-    NodeGlobalsPolyfillPlugin(),
-    FixMemdownPlugin(),
-    NodeModulesPlugin()
+  entryPoints: [
+    'stories/main.tsx'
   ],
   outdir: 'out',
   overrides: {
-    sourcemap: 'inline',
-  }
+    sourcemap: 'inline'
+  },
+  plugins: [
+    NodeGlobalsPolyfillPlugin(), // TODO(burdon): Reorder.
+    FixMemdownPlugin(),
+    NodeModulesPlugin()
+  ],
+  staticDir: 'public'
 };

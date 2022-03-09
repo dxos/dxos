@@ -28,10 +28,13 @@
   ],
   "references": [
     {
-      "path": "../../sdk/client"
+      "path": "../../common/util"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
     },
     {
       "path": "../../common/crypto"
@@ -49,6 +52,12 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -56,15 +65,6 @@
     },
     {
       "path": "../../sdk/react-framework"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     }
   ]
 }

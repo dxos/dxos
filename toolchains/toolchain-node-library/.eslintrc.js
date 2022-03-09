@@ -5,7 +5,6 @@ module.exports = {
   ],
   rules: {
     'no-lone-blocks': 'off',
-    'padded-blocks': 'off',
     'no-restricted-imports': [
       'error',
       {
@@ -17,6 +16,7 @@ module.exports = {
         ]
       }
     ],
+    'padded-blocks': 'off',
   },
   ignorePatterns: [
     'src/proto/gen/*'
@@ -29,10 +29,10 @@ module.exports = {
       ],
       rules: {
         '@typescript-eslint/no-non-null-assertion': 'off',
+        'jest/valid-expect': 'off',
         'no-unused-expressions': 'off',
-        'no-use-before-define': 'off',
-        'jest/valid-expect': 'off'
+        'no-use-before-define': 'off'
       }
     }
   ]
-}
+};

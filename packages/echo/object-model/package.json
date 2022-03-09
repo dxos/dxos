@@ -5,7 +5,7 @@
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
   "bugs": {
-    "url": "'https://github.com/dxos/protocols/issues"
+    "url": "https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",
