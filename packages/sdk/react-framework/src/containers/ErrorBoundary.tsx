@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React, { Component, ErrorInfo, FunctionComponent, ReactNode, useContext, useEffect } from 'react';
+import React, { Component, FunctionComponent, ReactNode, useContext, useEffect } from 'react';
 
 import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../components';
 import { ErrorContext } from '../hooks';
@@ -66,14 +66,14 @@ const GlobalErrorWrapper = ({
 interface ErrorBoundaryProps {
   indicator?: FunctionComponent<ErrorIndicatorProps> | null
   view: FunctionComponent<ErrorViewProps>
-  onError: (error: Error, errorInfo: ErrorInfo) => void
+  onError: (error: Error) => boolean
   onReload?: () => void
   onReset?: () => void
 }
 
 interface ErrorBoundaryState {
-  error: Error | undefined
   errors: Error[]
+  fatal: boolean
 }
 
 /**
@@ -86,49 +86,42 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   static defaultProps = {
     indicator: ErrorIndicator, // TODO(burdon): Debug only.
     view: ErrorView,
-    onError: logError,
+    onError: undefined,
     onReload: undefined,
     onReset: undefined
   };
 
-  /**
-   * https://reactjs.org/docs/react-component.html#static-getderivedstatefromerror
-   */
-  static getDerivedStateFromError (error: Error) {
-    return { error };
-  }
-
   override state = {
-    error: undefined, // Error during child rendering.
-    errors: [] // All runtime errors.
+    errors: [], // All runtime errors.
+    fatal: false // Whether the head error is fatal or not.
   };
 
-  override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
-    const { onError } = this.props;
+  // Note: Render errors also trigger global onerror before componentDidCatch.
+  override componentDidCatch (error: Error) {
     const { errors } = this.state;
 
-    onError(error, errorInfo);
-    this.setState({ errors: [error, ...errors] });
+    this.setState({ errors: [error, ...errors], fatal: true });
   }
 
   override render () {
     const { children, onReload, onReset, indicator, view: View } = this.props;
-    const { error, errors } = this.state;
+    const { errors, fatal } = this.state;
 
     const addError = (error: Error) => {
-      this.setState({
-        errors: [error, ...errors]
-      });
+      const { onError } = this.props;
+
+      const fatal = onError?.(error) ?? false;
+      this.setState({ errors: [error, ...errors], fatal });
     };
 
     const resetErrors = () => {
       this.setState({ errors: [] });
     };
 
-    if (error) {
+    if (fatal) {
       return (
         <View
-          error={error}
+          error={errors[0]}
           onReload={onReload}
           onReset={onReset}
         />
