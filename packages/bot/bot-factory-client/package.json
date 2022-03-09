@@ -19,8 +19,8 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
