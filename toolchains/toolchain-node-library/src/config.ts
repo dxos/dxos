@@ -39,4 +39,4 @@ export const defaults: Config = {
     src: './src/**/*',
     spec: './src/**/*.test.*'
   }
-}
+};

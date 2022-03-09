@@ -104,7 +104,7 @@ async function execBuildBundle (config: Config, options: BuildOptions = {}) {
     const filename = project.entryPoint.split('/').slice(-1)[0];
     const name = filename.split('.')[0];
 
-    fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'))
+    fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
     await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
 }
@@ -124,7 +124,7 @@ async function execBuildBook (config: Config, options: BuildOptions = {}) {
   if (options.minify) {
     const name = 'index';
 
-    fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'))
+    fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
     await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
 }

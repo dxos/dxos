@@ -22,10 +22,15 @@ export class Project {
       throw new Error('Must be executed inside a package.');
     }
 
+    // Package config.
     const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8'));
 
-    // TODO(burdon): Check necessary.
-    const esbuildConfig = require(join(packageRoot, config.esbuild.config));
+    // ESBuild config.
+    let esbuildConfig;
+    const configFile = join(packageRoot, config.esbuild.config);
+    if (fs.existsSync(configFile)) {
+      esbuildConfig = require(configFile);
+    }
 
     return new Project(packageRoot, packageJson, esbuildConfig);
   }
@@ -33,7 +38,7 @@ export class Project {
   constructor (
     public readonly packageRoot: string,
     public readonly packageJsonContents: any,
-    public readonly esbuildConfig: any
+    public readonly esbuildConfig?: any
   ) {}
 
   get entryPoint () {
