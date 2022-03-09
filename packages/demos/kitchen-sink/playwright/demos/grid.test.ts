@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { TestType } from '../../src/testing';
+import { TestType } from '../../src/testing'; // NOTE: Must explicitly include /testing dir.
 import { Launcher } from '../util';
 
 const config = {
@@ -14,9 +14,6 @@ const config = {
 };
 
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
-
-const defaultSelectionText =
-  `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })\n.children()`;
 
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
@@ -116,6 +113,9 @@ describe('Grid demo', function () {
     // Select items.
     if (graph) {
       await graph.page.click('button[data-id=test-button-selection]');
+
+      const defaultSelectionText =
+        `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })\n.children()`;
 
       let i = 0;
       const lines = defaultSelectionText.split('\n');

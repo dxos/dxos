@@ -35,10 +35,10 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../mesh/protocol-plugin-rpc"
     },
     {
-      "path": "../../mesh/protocol-plugin-rpc"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../sdk/registry-client"

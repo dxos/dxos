@@ -7,7 +7,9 @@ import * as protobuf from 'protobufjs';
 
 import { sanitizeExtensionData } from '../encoding';
 import { schemaJson } from '../proto';
-import { CID, DXN, RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord, TypeRecordMetadata } from '../types';
+import {
+  CID, DXN, RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord, TypeRecordMetadata
+} from '../types';
 
 const defs = protobuf.Root.fromJSON(schemaJson);
 

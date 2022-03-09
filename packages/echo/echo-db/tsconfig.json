@@ -41,13 +41,13 @@
       "path": "../object-model"
     },
     {
-      "path": "../../common/protocols"
-    },
-    {
       "path": "../../mesh/protocol-plugin-presence"
     },
     {
       "path": "../../mesh/protocol-plugin-replicator"
+    },
+    {
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/random-access-multi-storage"
