@@ -15,7 +15,7 @@ Bots framework allows you to create a custom DXOS bot and run it on a KUBE, or u
 
 General bots framework architecture is presented on a diagram below.
 
-<img src="../../docs/assets/diagrams/bot.drawio.svg" />
+<img src="../../docs/design/diagrams/bot.drawio.svg" />
 
 BotController is what exposes BotFactory service to the outer world. You can use [BotFactoryClient](bot-factory-client) to connect to and use BotFactory service in your code. To create a BotFactory client in your code you can do:
 ```typescript
@@ -101,7 +101,7 @@ Example:
 ├── node-pre-gyp@0.17.0
 ├── npm@7.11.2
 └── ts-node@10.5.0
-➜ export NODE_PATH=/Users/username/.nodenv/versions/16.1.0/lib/node_modules
+➜ export NODE_PATH=/Users/username/.nodenv/versions/16.14.0/lib/node_modules
 ```
 
 To spawn a bot in a local development mode you need to create a party and open first:
@@ -123,41 +123,56 @@ bot start [botId]
 bot remove [botId]
 ```
 
+You can get bot logs by running
+```bash
+bot logs [botId]
+```
+
 ## Deploy
 
-When your bot is ready, you can deploy it to DXNS to make it acccessible for bot factories on the KUBEs. You can do it in three steps:
-1. Build.
-2. Publish.
-3. Register.
-
-### Build
-
-In a terminal, run
+Deploying a bot will make it accessible for bot-factories and other users. Bots are deployed in the same way as any other DXOS entity - using `dxns deploy` command. Example usage:
 ```bash
-dx bot build --entryPoint /path/to/custom-bot/entrypoint --outfile /path/to/outfile
+dx dxns deploy \   
+  --config dx.yml \
+  --path out \
+  --tag latest \
+  --version "1.0.0"
 ```
-This should create a file `/path/to/outfile`, which contains a bundled bot.
 
-### Publish
-
-In this step we'll publish file created in a previous step to IPFS. To do this, go to the directory where the file is placed. Here create a file named `bot.yml` using this template:
+This will register the bot under the latest tag and version `1.0.0`. You can also provide only `--tag` or `--version` option. One more available option is `--skipExisting` - it will skip registering on DXNS if specified tag or version already exists. `--out` option specifies a path to a directory containing bundled bot - this directory and its contents will get published to IPFS. In this example we'll publish contents of a folder named `out`. `--config` option specifies a path to a yaml config file - the convention is to name it `dx.yml`. The config structure is the same as in case of app config. The example config is provided below:
 ```yaml
-name: Bot
-description: Bot description
-version: 1.0.0
-```
-Replace default name, description and version with relevant info. Next in the same directory run:
-```bash
-bot publish --buildPath /path/to/outfile
-```
+version: 1
 
-### Register
+module:
+  type: dxos:type.bot
+  name: dxos:bot.exmaple
+  description: Example bot
+  author: DXOS.org
+  license: AGPL-3.0
+  repository: 'https://github.com/dxos/example'
 
-In this step we'll register the bot in DXNS. In the same directory as in previous step, run:
+build:
+  command: npm run release
 ```
-bot register --name BOT_NAME --domain BOT_DOMAIN
+The `module` field contains data that will be registered on DXNS. The `build` field contains info on how to build a bot. In this example we use `release` command from bot's `package.json` file. Let's take a look on how those commands might look like:
+```json
+{
+  "scripts": {
+    "bundle": "node ./scripts/bundle.js",
+    "release": "rm -rf out && npm run bundle"
+  }
+}
 ```
-After this, bot resource will be available under DXN BOT_DOMAIN:BOT_NAME. It should also be accessible for bot factories.
+Here we uses the script that bundles the bot. A recommended way to bundle a bot is to use `bundleBot` function provided by `@dxos/botkit` package. Example byndling script is provied below.
+```javascript
+const { buildBot } = require('@dxos/botkit/dist/src/botkit');
+
+buildBot({ 
+  entryPoint: './src/start-chess-bot.ts',
+  outfile: './out/main.js'
+});
+```
+Please note that the entry point of every bundled bot should be named `main.js` - after downloading bot's content form IPFS, bot factory will look for and run file named `main.js`. In our case we create a single file in the `out` directory named `main.js` - this the only file that will get published to IPFS. 
 
 ---
 **NOTE**

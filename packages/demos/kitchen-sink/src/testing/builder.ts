@@ -206,12 +206,11 @@ export class PartyBuilder {
       await orgBuilder.createPeople([2, 4]);
     } else {
       // Random parent.
-      const { result: items } = this.party
-        .select()
+      const result = this.party.select()
         .filter(item => item.type === TestType.Org || item.type === TestType.Project)
         .query();
 
-      parent = faker.random.arrayElement(items);
+      parent = faker.random.arrayElement(result.entities);
       if (parent) {
         await this.createRandomItem(parent);
       }

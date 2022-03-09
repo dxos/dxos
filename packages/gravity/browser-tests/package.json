@@ -4,7 +4,7 @@
   "private": true,
   "description": "Browser tests for SDK.",
   "bugs": {
-    "url": "'https://github.com/dxos/protocols/issues"
+    "url": "https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",

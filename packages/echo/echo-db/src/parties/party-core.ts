@@ -12,7 +12,8 @@ import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe 
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Database, FeedDatabaseBackend, TimeframeClock } from '../database';
+import { Database } from '../api';
+import { FeedDatabaseBackend, TimeframeClock } from '../database';
 import { createMessageSelector, PartyProcessor, PartyFeedProvider, Pipeline } from '../pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 

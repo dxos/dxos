@@ -4,6 +4,7 @@
 
 export { codec } from '@dxos/echo-protocol';
 
+export * from './api';
 export * from './database';
 export * from './echo';
 export * from './errors';
@@ -12,6 +13,6 @@ export * from './invitations';
 export * from './metadata';
 export * from './parties';
 export * from './pipeline';
-export * from './result';
 export * from './snapshots';
+export * from './testing';
 export * from './util';

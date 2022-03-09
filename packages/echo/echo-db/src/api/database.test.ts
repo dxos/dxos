@@ -10,10 +10,9 @@ import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { DataServiceHost } from './data-service-host';
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost, DataServiceHost } from '../database';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
-import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -81,9 +80,8 @@ describe('Database', () => {
       expect(item.id).not.toBeUndefined();
       expect(item.model).toBeInstanceOf(ObjectModel);
 
-      const { result: items } = database.select().query();
-      expect(items).toHaveLength(1);
-      expect(items[0] === item).toBeTruthy();
+      const result = database.select().query();
+      expect(result.expectOne()).toBeTruthy();
     });
 
     test('mutate item with object model', async () => {
@@ -113,9 +111,9 @@ describe('Database', () => {
       const parent = await database.createItem({ model: ObjectModel });
       const child = await database.createItem({ model: ObjectModel, parent: parent.id });
 
-      const { result: items } = database.select().query();
-      expect(items).toHaveLength(2);
-      expect(items).toEqual([parent, child]);
+      const result = database.select().query();
+      expect(result.entities).toHaveLength(2);
+      expect(result.entities).toEqual([parent, child]);
 
       expect(parent.children).toHaveLength(1);
       expect(parent.children[0] === child).toBeTruthy();
@@ -225,28 +223,27 @@ describe('Database', () => {
           database.createItem({ model: TestListModel })
         ));
 
-        // TODO(burdon): Trigger result on initial subscription.
-        const query = database.select().query();
-        const items = query.result;
+        const result = database.select().query();
+        const items = result.entities;
         expect(items).toHaveLength(10);
 
-        const update = query.update.waitForCount(1);
+        const update = result.update.waitForCount(1);
         await items[0].delete();
         await update;
 
         {
-          const { result: items } = query;
-          expect(items).toHaveLength(9);
+          const result = database.select().query();
+          expect(result.entities).toHaveLength(9);
         }
 
         {
-          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
-          expect(items).toHaveLength(10);
+          const result = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          expect(result.entities).toHaveLength(10);
         }
 
         {
-          const { result: items } = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
-          expect(items).toHaveLength(1);
+          const result = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          expect(result.entities).toHaveLength(1);
         }
       });
 

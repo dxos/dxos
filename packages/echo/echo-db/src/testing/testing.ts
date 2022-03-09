@@ -9,9 +9,9 @@ import { NetworkManagerOptions } from '@dxos/network-manager';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
-import { PartyInternal } from '..';
 import { ECHO } from '../echo';
-import { createRamStorage } from './persistant-ram-storage';
+import { PartyInternal } from '../parties';
+import { createRamStorage } from '../util';
 
 const log = debug('dxos:echo-db:testing');
 

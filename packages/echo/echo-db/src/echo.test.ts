@@ -13,10 +13,11 @@ import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from './database';
+import { Item } from './api';
 import { ECHO } from './echo';
+import { Contact } from './halo';
 import { defaultInvitationAuthenticator } from './invitations';
-import { inviteTestPeer } from './util';
+import { inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:test');
 
@@ -65,14 +66,14 @@ describe('ECHO', () => {
       // TODO(burdon): Update currently called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const { result: items } = party.database.select().query();
-        items.forEach(item => {
+        const result1 = party.database.select().query();
+        result1.entities.forEach(item => {
           log('Item:', String(item));
         });
 
         // TODO(burdon): Check item mutations.
-        const { result } = party.database.select({ type: 'dxos:item/document' }).query();
-        expect(result).toHaveLength(2);
+        const result2 = party.database.select({ type: 'dxos:item/document' }).query();
+        expect(result2.entities).toHaveLength(2);
         onUpdate();
       });
     });
@@ -107,12 +108,12 @@ describe('ECHO', () => {
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = party.database.select().query().result;
+        const items = party.database.select().query().entities;
         items.forEach(item => {
           log('Item:', String(item));
         });
 
-        const item = party.database.select({ type: 'dxos:item/document' }).query().result[0];
+        const item = party.database.select({ type: 'dxos:item/document' }).query().entities[0];
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -198,7 +199,7 @@ describe('ECHO', () => {
     assert(party);
     log('Initialized party');
 
-    const items = party.database.select().query().result;
+    const items = party.database.select().query().entities;
     await waitForCondition(() => items.length > 0);
     expect(items.length).toBeGreaterThan(0);
   });
@@ -301,7 +302,7 @@ describe('ECHO', () => {
 
       // Subscribe to Item updates on B.
       const updated = partyB.database.select({ type: 'example:item/test' }).query()
-        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
+        .update.waitFor(result => !!itemA && !!result.entities.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await partyA.database
@@ -397,7 +398,7 @@ describe('ECHO', () => {
     // Empty across the board.
     for (const node of [a1, a2, b1, b2]) {
       const [party] = node.queryParties().value;
-      expect(party.database.select({ type: 'example:item/test' }).query().result.length).toBe(0);
+      expect(party.database.select({ type: 'example:item/test' }).query().entities.length).toBe(0);
     }
 
     for await (const node of [a1, a2, b1, b2]) {
@@ -409,8 +410,8 @@ describe('ECHO', () => {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
         otherParty.database.select({ type: 'example:item/test' }).query()
-          .update.on(items => {
-            if (items.find(current => current.id === item?.id)) {
+          .update.on(result => {
+            if (result.entities.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
               onUpdate();
             }
@@ -459,8 +460,8 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = b.queryParties().value[0].database.select({ type: 'example:item/test' }).query()
-        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
+      const updated = b.queryParties().value[0].database.select({ type: 'example:item/test' })
+        .query().update.waitFor(items => !!itemA && !!items.entities.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await a.queryParties().value[0].database
@@ -477,8 +478,10 @@ describe('ECHO', () => {
     const a = await setup({ createProfile: true });
     const b = await setup({ createProfile: true });
 
-    const updatedA = a.halo.queryContacts().update.waitFor(contacts => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
-    const updatedB = b.halo.queryContacts().update.waitFor(contacts => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedA = a.halo.queryContacts().update.waitFor(
+      (contacts: Contact[]) => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedB = b.halo.queryContacts().update.waitFor(
+      (contacts: Contact[]) => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
 
     // Create the Party.
     const partyA = await a.createParty();
@@ -590,9 +593,9 @@ describe('ECHO', () => {
     const [updated, onUpdate] = latch();
 
     partyA.database.select({ type: 'example:item/test' }).query()
-      .update.on(items => {
-        if (items.length) {
-          const [receivedItem] = items;
+      .update.on(result => {
+        if (result.entities.length) {
+          const [receivedItem] = result.entities;
           if (itemA && itemA.id === receivedItem.id) {
             onUpdate();
           }
@@ -602,9 +605,7 @@ describe('ECHO', () => {
     itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
     await updated; // Wait for update.
 
-    expect(partyA.database.select({ type: 'example:item/test' }).query()
-      .result.length)
-      .toEqual(1);
+    expect(partyA.database.select({ type: 'example:item/test' }).query().entities.length).toEqual(1);
 
     await partyA.deactivate({ global: true });
     await partyA.activate({ global: true });
@@ -613,12 +614,10 @@ describe('ECHO', () => {
     expect(partyA.isActive).toBe(true);
 
     await partyA.database
-      .select({ type: 'example:item/test' }).query()
-      .update.waitFor(items => items.length > 0);
-    expect(partyA.database.select({ type: 'example:item/test' }).query()
-      .result
-      .length
-    ).toEqual(1);
+      .select({ type: 'example:item/test' })
+      .query()
+      .update.waitFor(result => result.entities.length > 0);
+    expect(partyA.database.select({ type: 'example:item/test' }).query().entities.length).toEqual(1);
   }).timeout(10_000);
 
   test('Deactivate Party - multi device', async () => {
