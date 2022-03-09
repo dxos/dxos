@@ -9,6 +9,7 @@ import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 
 import { mapFromKeyValues } from './config';
 
+// TODO(wittjosiah): Update config file path to align with esbuild-plugin.
 const DEFAULT_PATH = resolve(process.cwd(), 'config');
 
 const KEYS_TO_FILE = {

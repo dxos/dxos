@@ -12,20 +12,12 @@ import { resolve } from 'path';
 const log = debug('dxos:config:plugin');
 
 const CWD = process.cwd();
-const DEFAULT_PATH = resolve(CWD, 'config');
 
 const KEYS_TO_FILE = {
-  __CONFIG_DEFAULTS__: 'defaults.yml',
-  __CONFIG_DYNAMICS__: 'config.yml'
+  __CONFIG_DEFAULTS__: 'dx.yml'
 };
 
 export interface ConfigPluginOpts {
-  /**
-   * Path to the directory with config files.
-   * @default './config'
-   */
-  configPath?: string
-
   /**
    * The Dynamics() config.yml file is special, it will be loaded if the dynamic property is set to false.
    * If dynamic is set to true each app will try to load from an endpoint (using {publicUrl}/config/config.json),
@@ -47,7 +39,7 @@ export interface ConfigPluginOpts {
   publicUrl?: string
 }
 
-export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
+export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
   dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
@@ -68,7 +60,7 @@ export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publ
         let content = {};
 
         try {
-          content = yaml.load(readFileSync(resolve(configPath, value), 'utf-8'));
+          content = yaml.load(readFileSync(resolve(CWD, value), 'utf-8'));
         } catch (error: any) {
           log(`Failed to load file ${value}:`, error);
         }
@@ -79,6 +71,8 @@ export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publ
         };
       }, {
         __DXOS_CONFIG__: { dynamic, publicUrl },
+        // TODO(wittjosiah): Support for local dynamics & env overrides.
+        __CONFIG_DYNAMICS__: {},
         __CONFIG_ENVS__: {}
       });
 
