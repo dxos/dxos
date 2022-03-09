@@ -4,6 +4,7 @@
 
 import type { Config as ConfigObject } from './proto/gen/dxos/config';
 
+// TODO(burdon): Rename ConfigType.
 export type { ConfigObject };
 
 type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
