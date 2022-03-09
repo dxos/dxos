@@ -19,7 +19,7 @@ const Main = () => {
   return (
     <App party={party} />
   );
-}
+};
 
 const start = () => {
   ReactDOM.render(
