@@ -526,6 +526,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
       '@types/url-join': ~4.0.1
       buffer: ^6.0.3
       clsx: ^1.1.0
@@ -585,6 +586,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
+      '@types/react-dom': 17.0.11
       '@types/url-join': 4.0.1
       buffer: 6.0.3
       concurrently: 7.0.0
@@ -2487,6 +2489,7 @@ importers:
       jsdom-global: ~3.0.2
       mocha: ~8.4.0
       pkg-dir: ~5.0.0
+      terser: ^5.12.0
       ts-jest: ^26.5.6
       ts-node: ^9.1.1
       typescript: ^4.5.2
@@ -2506,6 +2509,7 @@ importers:
       jsdom-global: 3.0.2_jsdom@18.0.1
       mocha: 8.4.0
       pkg-dir: 5.0.0
+      terser: 5.12.0
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.5.3
       typescript: 4.5.3
       wtfnode: 0.9.1
@@ -20992,7 +20996,6 @@ packages:
       fsevents: 2.3.2
     transitivePeerDependencies:
       - '@types/webpack'
-      - acorn
       - bufferutil
       - canvas
       - fibers
@@ -23036,11 +23039,9 @@ packages:
       schema-utils: 3.1.1
       serialize-javascript: 5.0.1
       source-map: 0.6.1
-      terser: 5.10.0
+      terser: 5.12.0
       webpack: 4.44.2
       webpack-sources: 1.4.3
-    transitivePeerDependencies:
-      - acorn
     dev: false
 
   /terser/4.8.0:
@@ -23052,16 +23053,12 @@ packages:
       source-map: 0.6.1
       source-map-support: 0.5.21
 
-  /terser/5.10.0:
-    resolution: {integrity: sha512-AMmF99DMfEDiRJfxfY5jj5wNH/bYO09cniSqhfoyxc8sFoYIgkJy86G04UoZU5VjlpnplVu0K6Tx6E9b5+DlHA==}
+  /terser/5.12.0:
+    resolution: {integrity: sha512-R3AUhNBGWiFc77HXag+1fXpAxTAFRQTJemlJKjAgD9r8xXTpjNKqIXwHM/o7Rh+O0kUJtS3WQVdBeMKFk5sw9A==}
     engines: {node: '>=10'}
     hasBin: true
-    peerDependencies:
-      acorn: ^8.5.0
-    peerDependenciesMeta:
-      acorn:
-        optional: true
     dependencies:
+      acorn: 8.6.0
       commander: 2.20.3
       source-map: 0.7.3
       source-map-support: 0.5.21

@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Config } from '../config';
 import { execTool } from './common';
 
 export interface ExecMochaOpts {
+  config: Config
   forceClose?: boolean
   userArgs?: string[]
   jsdom?: boolean
@@ -15,19 +17,29 @@ export interface ExecMochaOpts {
  * https://mochajs.org/#reporters
  * E.g., `rushx test ./src/database/** -w --reporter min
  *
+ * @param config
  * @param userArgs
  * @param forceClose
  * @param jsdom
  */
-export async function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
+export async function execMocha ({
+  config,
+  userArgs = [],
+  forceClose,
+  jsdom = false
+}: ExecMochaOpts) {
+  const {
+    tests: {
+      src: defaultSources,
+      spec: defaultSpec
+    }
+  } = config;
 
   //
   // Sources
   // Assume first args are either a glob or expanded glob of sources.
   //
 
-  const defaultSpec = './src/**/*.test.*';
-  const defaultSources = './src/**/*';
   const sources = [];
   {
     while (userArgs?.length) {
