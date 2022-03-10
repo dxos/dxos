@@ -20,7 +20,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "browser-mocha": "^1.4.8",
     "eslint": "^7.12.1",

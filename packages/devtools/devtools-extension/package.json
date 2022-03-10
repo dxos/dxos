@@ -48,7 +48,7 @@
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/download": "^8.0.1",
     "@types/react": "^17.0.24",

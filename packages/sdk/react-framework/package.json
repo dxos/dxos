@@ -48,7 +48,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/registry-client": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",

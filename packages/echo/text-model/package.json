@@ -36,7 +36,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/object-model": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",

@@ -44,7 +44,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/random-access-multi-storage": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/from2": "~2.3.1",

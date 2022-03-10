@@ -34,7 +34,7 @@
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.4.2",
     "@testing-library/react": "^11.0.4",
     "@testing-library/react-hooks": "5.1.2",

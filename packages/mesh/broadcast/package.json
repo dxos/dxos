@@ -30,7 +30,7 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/network-generator": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",

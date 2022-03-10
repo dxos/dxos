@@ -450,6 +450,10 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/protocols-toolchain",
+      "projectFolder": "toolchains/protocols-toolchain"
+    },
+    {
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/toolchain-node-library"
     },

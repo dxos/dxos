@@ -45,7 +45,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",
     "@types/chai-as-promised": "^7.1.3",

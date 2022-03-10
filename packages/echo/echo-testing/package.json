@@ -31,7 +31,7 @@
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/object-model": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
     "@types/lodash": "^4.14.175",
