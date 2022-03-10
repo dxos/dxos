@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@dxos/esbuild-server": "~1.7.9",
-    "@dxos/eslint-plugin": "~1.0.24",
+    "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/protobuf-compiler": "workspace:*",
     "@swc-node/register": "~1.4.2",
     "@types/yargs": "~16.0.1",

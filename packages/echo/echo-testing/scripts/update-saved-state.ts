@@ -1,8 +1,14 @@
-import { createPersistentInstance } from "../src/persistant-instance";
-import { rmSync } from 'fs'
-import { ObjectModel } from "@dxos/object-model";
+//
+// Copyright 2022 DXOS.org
+//
 
-(async () => {
+import { rmSync } from 'fs';
+
+import { ObjectModel } from '@dxos/object-model';
+
+import { createPersistentInstance } from '../src/persistant-instance';
+
+void (async () => {
   const storagePath = './saved-state';
 
   try {
@@ -12,13 +18,13 @@ import { ObjectModel } from "@dxos/object-model";
   const echo = createPersistentInstance(storagePath);
   await echo.open();
   await echo.halo.createProfile({
-    username: 'Test profile',
+    username: 'Test profile'
   });
 
   const party = await echo.createParty();
   const person = await party.database.createItem({ model: ObjectModel, type: 'dxos:item.person', props: { firstName: 'Edith', lastName: 'Finch' } });
   await person.model.setProperty('lastName', 'Smith');
-  
+
   // TODO(dmaretskyi): Invitations do not work.
   // const otherPeer = new ECHO();
   // await otherPeer.open();

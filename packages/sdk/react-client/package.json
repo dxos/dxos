@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/toolchain-node-library": "workspace:*",
     "@mui/material": "^5.4.2",
     "@testing-library/react": "^11.0.4",
@@ -44,6 +45,7 @@
     "@types/react": "^17.0.24",
     "@types/testing-library__jest-dom": "~5.9.5",
     "@types/use-subscription": "^1.0.0",
+    "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "fork-ts-checker-webpack-plugin": "~6.2.5",
     "level-js": "^5.0.2",

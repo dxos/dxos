@@ -28,6 +28,7 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/object-model": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
@@ -36,6 +37,7 @@
     "@types/lodash": "^4.14.175",
     "@types/mocha": "~8.2.2",
     "abstract-leveldown": "~7.0.0",
+    "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "jsondown": "dxos/jsondown#main",
     "ts-node": "^9.1.1",
