@@ -16,10 +16,8 @@
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
   "include": [
-    "src/**/*",
-    "browser-tests",
-    "tools/**/*",
-    "browser-mocha",
+    "scripts",
+    "src",
     "stories"
   ],
   "references": [

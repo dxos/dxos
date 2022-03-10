@@ -47,6 +47,7 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/download": "^8.0.1",
@@ -59,9 +60,11 @@
     "crx": "^5.0.1",
     "download": "^8.0.0",
     "esbuild": "^0.11.23",
+    "eslint": "^7.12.1",
     "express": "~4.17.1",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
+    "typescript": "^4.5.2",
     "web-ext": "~6.6.0"
   }
 }

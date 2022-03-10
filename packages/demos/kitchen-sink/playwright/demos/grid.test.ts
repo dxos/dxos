@@ -79,7 +79,6 @@ describe('Grid demo', function () {
     }
   }
 
-  /* eslint-disable jest/expect-expect */
   it('Opens grid', async () => {
     const promises = createGrid('/Secondary', [rows, columns]);
 
