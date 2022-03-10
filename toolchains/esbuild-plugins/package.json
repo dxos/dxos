@@ -23,8 +23,11 @@
     "util": "~0.12.4"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/node": "^14.0.9"
+    "@types/node": "^14.0.9",
+    "eslint": "^7.12.1",
+    "typescript": "^4.5.2"
   },
   "publishConfig": {
     "access": "public"

@@ -2,12 +2,16 @@
 // Copyright 2019 DXOS.org
 //
 
-const { EventEmitter } = require('events');
+// TODO(wittjosiah): Lint.
+/* eslint-disable */
+
 const crypto = require('crypto');
+const { EventEmitter } = require('events');
+
 const { Suite } = require('@dxos/benchmark-suite');
 const { NetworkGenerator } = require('@dxos/network-generator');
 
-const { Broadcast } = require('.');
+const { Broadcast } = require('./src');
 
 class Peer extends EventEmitter {
   constructor (id) {
