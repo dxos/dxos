@@ -16,7 +16,7 @@ const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
 // TODO(burdon): Replace console.log with process.stdout.write.
 
-type Handler <T> = (argv: Arguments<T>) => Promise<void>;
+export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
 
 /**
  * Wraps yargs handler.
@@ -25,7 +25,7 @@ type Handler <T> = (argv: Arguments<T>) => Promise<void>;
  * @param timeout
  * @param verbose
  */
-function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
+export function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
   return async function (argv: Arguments<T>) {
     const t = timeout && setTimeout(() => {
       process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
@@ -41,7 +41,7 @@ function handler <T> (title: string, handler: Handler<T>, timeout = false, verbo
   };
 }
 
-interface BuildOptions {
+export interface BuildOptions {
   minify?: boolean
   verbose?: boolean
   watch?: boolean
@@ -50,7 +50,7 @@ interface BuildOptions {
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
  */
-async function execBuild (config: Config, options: BuildOptions = {}) {
+export async function execBuild (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
 
   try {
@@ -87,7 +87,7 @@ async function execBuild (config: Config, options: BuildOptions = {}) {
 /**
  * Creates a bundled build of the current package.
  */
-async function execBuildBundle (config: Config, options: BuildOptions = {}) {
+export async function execBuildBundle (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
   const { outdir } = project.esbuildConfig;
 
@@ -108,7 +108,7 @@ async function execBuildBundle (config: Config, options: BuildOptions = {}) {
 /**
  * Creates a static build of the storybook for the current package.
  */
-async function execBuildBook (config: Config, options: BuildOptions = {}) {
+export async function execBuildBook (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
   const { outdir } = project.esbuildConfig;
 
@@ -128,14 +128,14 @@ async function execBuildBook (config: Config, options: BuildOptions = {}) {
 /**
  * Runs the storybook for the current package.
  */
-async function execBook () {
+export async function execBook () {
   await execTool('esbuild-server', ['book']);
 }
 
 /**
  * Runs a dev server for the current package.
  */
-async function execStart () {
+export async function execStart () {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
   await execTool('esbuild-server', ['dev']);
 }
@@ -145,7 +145,7 @@ async function execStart () {
  * @param config
  * @param userArgs
  */
-async function execTest (config: Config, userArgs?: string[]) {
+export async function execTest (config: Config, userArgs?: string[]) {
   const project = Project.load(config);
 
   if (project.packageJsonContents.jest) {
