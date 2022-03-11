@@ -20,6 +20,8 @@ jobs:
           node-version: 16.14
       - name: Setup
         run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use
+
           # Needed for dependencies to install (playwright/robotjs)
           sudo apt-get install libxtst-dev libpng++-dev
 
