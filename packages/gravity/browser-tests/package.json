@@ -34,7 +34,7 @@
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
     "@dxos/signal": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",

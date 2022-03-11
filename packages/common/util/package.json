@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "eslint": "^7.12.1",
     "typescript": "^4.5.2"

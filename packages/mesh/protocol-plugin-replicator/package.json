@@ -38,7 +38,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/jest": "^26.0.7",

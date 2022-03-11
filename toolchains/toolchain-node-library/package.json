@@ -1,14 +1,11 @@
 {
   "name": "@dxos/toolchain-node-library",
   "version": "2.28.2",
-  "private": true,
-  "bin": {
-    "toolchain": "./main.js"
-  },
+  "main": "./dist/src/index.js",
   "scripts": {
-    "build": "ts-node src/main.ts build",
+    "build": "tsc",
     "build:test": "pnpm build && pnpm lint",
-    "lint": "ts-node src/main.ts lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@dxos/esbuild-server": "~1.7.9",
