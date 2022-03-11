@@ -1,4 +1,4 @@
-![Github Actions](https://github.com/dxos/protocols/workflows/CI/badge.svg)
+[![build](https://github.com/dxos/protocols/actions/workflows/check.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/check.yaml)
 [![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
 
