@@ -48,7 +48,7 @@ jobs:
           ./common/scripts/publish-artifacts.sh ${GITHUB_REF##*/}
         env:
           GITHUB_REF: ${{ github.ref }}
-          DX_PROFILE_URL: ${{ secrets.dx_profile_url }}
+          DX_PROFILE_URL: ${{ secrets.DX_PROFILE_URL }}
           DX_DXNS_USER_URI: ${{ secrets.DX_DXNS_USER_URI }}
           DX_DXNS_ACCOUNT: ${{ secrets.DX_DXNS_ACCOUNT }}
           DX_PROFILE: ci
