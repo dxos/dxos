@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { useRegistry } from '@dxos/react-registry-client';
 import { DXN, ResourceRecord } from '@dxos/registry-client';
 
-import { RegistrySearchDialog, RegistrySearchDialogProps } from './RegistrySearchDialog';
+import { RegistrySearchDialog, RegistrySearchDialogProps } from '../RegistrySearch';
 
 const BOT_TYPE_DXN = DXN.parse('dxos:type.bot');
 

@@ -22,11 +22,10 @@ export const createCID = (): CID => {
 
 /**
  * Generates a random DXN.
- *
  * Accepts a custom domain, uses 'example' by default.
  */
-export const createDxn = (domain = 'example'): DXN => {
-  return DXN.fromDomainName(domain, faker.internet.domainWord());
+export const createDXN = (domain = 'example'): DXN => {
+  return DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'));
 };
 
 export const mockTypeNames = [
@@ -84,13 +83,12 @@ export interface CreateMockResourceRecordOptions {
  * Allows record data and meta to be provided, otherwise are left empty.
  */
 export const createMockResourceRecord = ({
-  dxn,
   type: typeName,
+  dxn,
   meta = {},
   data = {}
 } : CreateMockResourceRecordOptions = {}): ResourceRecord => {
-  const type =
-    mockTypes.find(type => type.messageName === typeName) ?? faker.random.arrayElement(mockTypes);
+  const type = mockTypes.find(type => type.messageName === typeName) ?? faker.random.arrayElement(mockTypes);
 
   const record: RegistryDataRecord = {
     kind: RecordKind.Data,
@@ -103,15 +101,15 @@ export const createMockResourceRecord = ({
   };
 
   return {
+    record: record,
     resource: {
-      id: dxn ?? createDxn(),
+      id: dxn ?? createDXN(), // TODO(burdon): Either pass in or don't.
       tags: {
         latest: record.cid
       },
       versions: {},
       type: type.cid
-    },
-    record: record
+    }
   };
 };
 
@@ -135,4 +133,15 @@ export const createMockRecord = (): RegistryDataRecord => {
 /**
  * Generates a list of resource records with random types.
  */
-export const createMockResourceRecords = () => Array.from({ length: 30 }).map(() => createMockResourceRecord());
+export const createMockResourceRecords = (n = 30) => {
+  const dxns = new Map<string, DXN>();
+  while (dxns.size < n) {
+    const dxn = createDXN();
+    const key = String(dxn);
+    if (!dxns.has(key)) {
+      dxns.set(key, dxn);
+    }
+  }
+
+  return Array.from(dxns.values()).map(dxn => createMockResourceRecord({ dxn }));
+}

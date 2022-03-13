@@ -57,7 +57,7 @@ const WithRegistry = () => {
   );
 };
 
-export const Secondary = () => {
+export const WithTestnet = () => {
   return (
     <RegistryProvider config={{ services: { dxns: { server: DXNS_SERVER } } }}>
       <WithRegistry />
