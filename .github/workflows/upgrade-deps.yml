@@ -25,7 +25,6 @@ jobs:
         with:
           EXECUTE_COMMANDS: |
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-            \. "$NVM_DIR/nvm.sh" && nvm use
 
             # Needed for dependencies to install (playwright/robotjs)
             sudo apt-get install libxtst-dev libpng++-dev
