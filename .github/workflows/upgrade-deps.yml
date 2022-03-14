@@ -19,13 +19,16 @@ jobs:
     steps:
       - uses: actions/setup-node@v1
         with:
-          node-version: 16.1
+          node-version: 16.14.0
       - name: Upgrade DXOS dependencies
         uses: technote-space/create-pr-action@v2
         with:
           EXECUTE_COMMANDS: |
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-            sudo ./common/scripts/install-dependencies.sh
+            \. "$NVM_DIR/nvm.sh" && nvm use
+
+            # Needed for dependencies to install (playwright/robotjs)
+            sudo apt-get install libxtst-dev libpng++-dev
 
             npx npm-check-updates@12.1.0 -u --deep '@dxos/*'
 
