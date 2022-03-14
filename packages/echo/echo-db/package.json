@@ -53,8 +53,8 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/testutils": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/testutils": "workspace:*",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "@types/pify": "^3.0.2",

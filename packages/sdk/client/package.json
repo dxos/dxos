@@ -48,9 +48,9 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",

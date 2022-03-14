@@ -40,9 +40,9 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
