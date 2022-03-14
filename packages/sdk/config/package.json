@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "2.28.2",
+  "version": "2.28.3",
   "description": "Config utilities",
   "keywords": [],
   "license": "MIT",
@@ -32,8 +32,8 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/js-yaml": "^3.12.5",
     "@types/lodash.defaultsdeep": "^4.6.6",

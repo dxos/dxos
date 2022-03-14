@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.28.2",
+  "version": "2.28.3",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -47,10 +47,10 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",

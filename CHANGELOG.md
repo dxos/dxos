@@ -1,5 +1,14 @@
 # Change Log
 
+### [2.28.3](https://www.github.com/dxos/protocols/compare/v2.28.2...v2.28.3) (2022-03-11)
+
+
+### Features
+
+* ErrorBoundary supports fatal error types ([#1034](https://www.github.com/dxos/protocols/issues/1034)) ([9d32fdf](https://www.github.com/dxos/protocols/commit/9d32fdf3cf6cc28fd1f83950d1bcbcad213903ec))
+* Reusable toolchain ([#1038](https://www.github.com/dxos/protocols/issues/1038)) ([043fdd5](https://www.github.com/dxos/protocols/commit/043fdd5aefe7a2e2ec15e8f522c49741a309bc55))
+* Selection API update. ([#1023](https://www.github.com/dxos/protocols/issues/1023)) ([08b5c54](https://www.github.com/dxos/protocols/commit/08b5c548ed30ae43e3a925140b7e179452edb41d))
+
 ### [2.28.2](https://www.github.com/dxos/protocols/compare/v2.28.1...v2.28.2) (2022-03-03)
 
 

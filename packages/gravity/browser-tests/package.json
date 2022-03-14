@@ -1,6 +1,6 @@
 {
   "name": "@dxos/browser-tests",
-  "version": "2.28.2",
+  "version": "2.28.3",
   "private": true,
   "description": "Browser tests for SDK.",
   "bugs": {
@@ -32,9 +32,9 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
