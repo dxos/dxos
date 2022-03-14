@@ -30,11 +30,11 @@ const User = () => {
       </Toolbar>
       <SpawnBotDialog
         open={open}
+        onClose={() => setOpen(false)}
         onSelect={async () => {
           await sleep(2000);
           setBotRunning(true);
         }}
-        onClose={() => setOpen(false)}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         Bot running: {botRunning ? 'yes' : 'no'}

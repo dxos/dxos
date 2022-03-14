@@ -10,20 +10,20 @@ import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/regist
 
 import { RegistryTypeFilter } from './RegistryTypeFilter';
 
+// TODO(burdon): Pass in filter (that contains the registry).
+
 export interface RegistrySearchPanelProps {
   registry: IRegistryClient
   typeFilter?: CID[]
-  onSearch?: (searchInput: string) => Promise<Resource[]>
-  onSelect: (resource: Resource) => Promise<void> // TODO(burdon): Why async?
+  onSelect: (resource: Resource) => void
 }
 
 /**
- *
+ * Registry search with optional filters.
  */
 export const RegistrySearchPanel = ({
   registry,
   typeFilter = [],
-  onSearch, // TODO(burdon): Why?
   onSelect
 }: RegistrySearchPanelProps) => {
   const [searchInput, setSearchInput] = useState('');
@@ -32,15 +32,6 @@ export const RegistrySearchPanel = ({
   const [selectedTypes, setSelectedTypes] = useState<CID[]>(typeFilter);
   const [selected, setSelected] = useState<Resource | null>(null);
   const [processing, setProcessing] = useState(false); // TODO(burdon): Why?
-
-  const doSearch = async (searchInput: string) => {
-    // TODO(burdon): Either fully externalize query or handle everything here.
-    if (onSearch) {
-      return onSearch(searchInput);
-    }
-
-    return registry.queryResources({ text: searchInput });
-  };
 
   useEffect(() => {
     setImmediate(async () => {
@@ -51,7 +42,8 @@ export const RegistrySearchPanel = ({
 
   useEffect(() => {
     setImmediate(async () => {
-      const resources = await doSearch(searchInput);
+      // TODO(burdon): Push filter by type.
+      const resources = await registry.queryResources({ text: searchInput });
       setSearchOptions(selectedTypes.length === 0 ? resources : resources.filter(resource =>
         selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
       ));
@@ -68,7 +60,7 @@ export const RegistrySearchPanel = ({
 
   const handleSelect = async () => {
     setProcessing(true);
-    selected && await onSelect?.(selected);
+    selected && onSelect?.(selected);
     handleReset(); // TODO(burdon): Why reset?
   };
 
@@ -82,6 +74,7 @@ export const RegistrySearchPanel = ({
         />
       )}
 
+      // TODO(burdon): Use react-components
       <Autocomplete
         fullWidth
         autoHighlight

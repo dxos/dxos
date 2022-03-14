@@ -2286,6 +2286,7 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2323,6 +2324,7 @@ importers:
       typescript: ^4.5.2
       url-join: ^4.0.1
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       debug: 4.3.3

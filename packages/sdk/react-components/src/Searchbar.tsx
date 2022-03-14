@@ -46,9 +46,7 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
   };
 
   return (
-    <FormControl
-      fullWidth
-    >
+    <FormControl fullWidth>
       <Input
         fullWidth
         autoFocus

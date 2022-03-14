@@ -16,8 +16,7 @@ export interface RegistrySearchDialogProps {
   open: boolean
   title?: string
   typeFilter?: CID[]
-  onSearch?: (searchInput: string) => Promise<Resource[]>
-  onSelect: (resource: Resource) => Promise<void>
+  onSelect: (resource: Resource) => void
   onClose?: () => void
   closeOnSuccess?: boolean
   modal?: boolean
@@ -30,14 +29,14 @@ export const RegistrySearchDialog = ({
   open,
   title,
   typeFilter = [],
-  onSearch, // TODO(burdon): Why?
   onSelect,
   onClose,
   closeOnSuccess,
   modal
 }: RegistrySearchDialogProps) => {
-  const registry = useRegistry(); // TODO(burdon): Avoid hooks if able to make simpler component.
-  const [selected, setSelected] = useState<Resource | null>(null);
+  // TODO(burdon): Avoid hooks if able to make simpler component.
+  const registry = useRegistry();
+  const [selected, setSelected] = useState<Resource>();
 
   const handleClose = () => {
     onClose?.();
@@ -54,14 +53,15 @@ export const RegistrySearchDialog = ({
     <RegistrySearchPanel
       registry={registry}
       typeFilter={typeFilter}
-      onSearch={onSearch}
-      onSelect={handleSelect}
+      onSelect={selected => setSelected(selected)}
     />
   );
 
   const actions = (
     <>
-      <Button onClick={handleClose}>
+      <Button
+        onClick={handleClose}
+      >
         Close
       </Button>
       <Button

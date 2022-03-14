@@ -42,14 +42,11 @@ const WithRegistry = () => {
   const registry = useRegistry();
   const [open, setOpen] = useState(true);
 
-  const handleSearch = useCallback((searchInput: string) => registry.queryResources({ text: searchInput }), []);
-
   return (
     <Box margin={2}>
       <Button onClick={() => setOpen(true)}>Open</Button>
       <RegistrySearchDialog
         open={open}
-        onSearch={handleSearch}
         onSelect={() => sleep(1000).then(() => setOpen(false))}
         onClose={() => setOpen(false)}
       />

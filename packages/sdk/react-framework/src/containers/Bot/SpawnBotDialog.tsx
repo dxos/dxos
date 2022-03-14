@@ -12,13 +12,16 @@ import { RegistrySearchDialog, RegistrySearchDialogProps } from '../RegistrySear
 
 const BOT_TYPE_DXN = DXN.parse('dxos:type.bot');
 
+// TODO(burdon): Do not extend other dialogs.
 export const SpawnBotDialog = ({ ...props }: RegistrySearchDialogProps) => {
-  const registry = useRegistry();
+  const registry = useRegistry(); // TODO(burdon): Pass in registry.
   const [botType, setBotType] = useState<ResourceRecord>();
 
+  // TODO(burdon): Should not require query (Just DXN).
   useEffect(() => {
     setImmediate(async () => {
-      const botType = await registry.getResourceRecord(BOT_TYPE_DXN, 'latest') ?? raise(new Error('Bot type not found.'));
+      const botType = await registry.getResourceRecord(BOT_TYPE_DXN, 'latest') ??
+        raise(new Error('Bot type not found.'));
       setBotType(botType);
     });
   });
