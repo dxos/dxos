@@ -384,6 +384,26 @@ importers:
       source-map-support: 0.5.21
       typescript: 4.5.3
 
+  ../../packages/common/react-async:
+    specifiers:
+      '@dxos/eslint-plugin': ~1.0.26
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/react': ^17.0.24
+      eslint: ^7.12.1
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.5.2
+    devDependencies:
+      '@dxos/eslint-plugin': 1.0.26_eslint@7.32.0+typescript@4.5.3
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/debug': 4.1.7
+      '@types/react': 17.0.37
+      eslint: 7.32.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.3
+
   ../../packages/common/rpc:
     specifiers:
       '@dxos/async': workspace:*

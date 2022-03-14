@@ -4,33 +4,35 @@
 
 import { Event } from '@dxos/async';
 
-// NOTE: Label must be unique.
-export type SearchResult = { id: string, label: string }
+/**
+ * Search result.
+ */
+export type SearchResult<T> = { text: string, value: T }
 
 /**
  * Text search interface.
  */
-export interface SearchModel {
+export interface SearchModel<T> {
   // Get current results.
-  results: SearchResult[]
+  results: SearchResult<T>[]
 
   // Returns unsubscribe method.
-  subscribe: (callback: (results: SearchResult[]) => void) => void
+  subscribe: (callback: (results: SearchResult<T>[]) => void) => void
 
   // Set text filter.
-  setFilter: (text: string) => void
+  setText: (text: string) => void
 }
 
 /**
  * Simple text search model.
  */
-export class TextSearchModel implements SearchModel {
-  _update = new Event<SearchResult[]>();
-  _results: SearchResult[] = [];
+export class TextSearchModel<T> implements SearchModel<T> {
+  _update = new Event<SearchResult<T>[]>();
+  _results: SearchResult<T>[] = [];
   _timeout?: ReturnType<typeof setTimeout>;
 
   constructor (
-    private readonly _values: SearchResult[],
+    private readonly _values: SearchResult<T>[],
     private readonly _delay = 500
   ) {}
 
@@ -38,11 +40,11 @@ export class TextSearchModel implements SearchModel {
     return this._results;
   }
 
-  subscribe (callback: (results: SearchResult[]) => void) {
+  subscribe (callback: (results: SearchResult<T>[]) => void) {
     return this._update.on(callback);
   }
 
-  setFilter (text: string) {
+  setText (text: string) {
     const str = text.trim().toLowerCase();
     this._timeout && clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
@@ -50,14 +52,14 @@ export class TextSearchModel implements SearchModel {
       if (str.length) {
         const match = new Set<string>();
         this._values.forEach(value => {
-          const label = value.label.toLowerCase();
-          if (label.indexOf(str) === 0 && !match.has(value.label)) {
+          const label = value.text.toLowerCase();
+          if (label.indexOf(str) === 0 && !match.has(label)) {
             this._results.push(value);
             match.add(label);
           }
         });
 
-        this._results.sort(({ label: a }, { label: b }) => a < b ? -1 : a > b ? 1 : 0);
+        this._results.sort(({ text: a }, { text: b }) => a < b ? -1 : a > b ? 1 : 0);
       }
 
       this._update.emit(this._results);

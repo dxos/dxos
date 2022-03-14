@@ -2,19 +2,67 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Autocomplete, Box, TextField } from '@mui/material';
+import { Box } from '@mui/material';
 
+import { Event } from '@dxos/async';
 import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { SearchAutocomplete, SearchModel, SearchResult } from '@dxos/react-components';
 
 import { RegistryTypeFilter } from './RegistryTypeFilter';
 
-// TODO(burdon): Pass in filter (that contains the registry).
+/**
+ * Filterable resource search model.
+ */
+export class RegistrySearchModel implements SearchModel<Resource> {
+  _update = new Event<SearchResult<Resource>[]>();
+  _results: SearchResult<Resource>[] = [];
+  _text?: string = undefined;
+
+  constructor (
+    private readonly _registry: IRegistryClient,
+    private _types: CID[] = []
+  ) {}
+
+  get results () {
+    return [];
+  }
+
+  subscribe (callback: (results: SearchResult<Resource>[]) => void) {
+    return this._update.on(callback);
+  }
+
+  setTypes (types: CID[] = []) {
+    this._types = types;
+    this.doUpdate();
+  }
+
+  setText (text?: string) {
+    this._text = text;
+    this.doUpdate();
+  }
+
+  doUpdate () {
+    setImmediate(async () => {
+      // TODO(burdon): Push type predicate.
+      // TODO(burdon): Extend filter for Braneframe ActionDialog.
+      let resources = await this._registry.queryResources({ text: this._text });
+      if (this._types.length) {
+        resources = resources.filter(resource => this._types.some(type => type.equals(resource.type!)));
+      }
+
+      this._results = resources.map(resource => ({
+        text: resource.id.toString(),
+        value: resource
+      }));
+    });
+  }
+}
 
 export interface RegistrySearchPanelProps {
-  registry: IRegistryClient
-  typeFilter?: CID[]
+  model: RegistrySearchModel
+  types?: RegistryTypeRecord[]
   onSelect: (resource: Resource) => void
 }
 
@@ -22,84 +70,42 @@ export interface RegistrySearchPanelProps {
  * Registry search with optional filters.
  */
 export const RegistrySearchPanel = ({
-  registry,
-  typeFilter = [],
+  model,
+  types = [],
   onSelect
 }: RegistrySearchPanelProps) => {
-  const [searchInput, setSearchInput] = useState('');
-  const [searchOptions, setSearchOptions] = useState<Resource[]>([]);
-  const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<CID[]>(typeFilter);
-  const [selected, setSelected] = useState<Resource | null>(null);
-  const [processing, setProcessing] = useState(false); // TODO(burdon): Why?
+  const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
 
-  useEffect(() => {
-    setImmediate(async () => {
-      const types = await registry.getTypeRecords();
-      setTypes(types);
-    });
-  }, []);
+  // TODO(burdon): Factor out.
+  // useEffect(() => {
+  //   setImmediate(async () => {
+  //     const types = await registry.getTypeRecords();
+  //     setTypes(types);
+  //   });
+  // }, []);
 
-  useEffect(() => {
-    setImmediate(async () => {
-      // TODO(burdon): Push filter by type.
-      const resources = await registry.queryResources({ text: searchInput });
-      setSearchOptions(selectedTypes.length === 0 ? resources : resources.filter(resource =>
-        selectedTypes.some(selectedType => resource.type && selectedType.equals(resource.type))
-      ));
-    });
-  }, [searchInput, selectedTypes]);
+  const handleTypeSelect = (selected: CID[]) => {
+    setSelectedTypes(selected);
+    model.setTypes(selected);
+  }
 
-  const handleReset = () => {
-    setSearchInput('');
-    setSearchOptions([]);
-    setSelected(null);
-    setSelectedTypes(typeFilter);
-    setProcessing(false);
-  };
-
-  const handleSelect = async () => {
-    setProcessing(true);
-    selected && onSelect?.(selected);
-    handleReset(); // TODO(burdon): Why reset?
+  const handleSelect = (selected: SearchResult<Resource>) => {
+    onSelect(selected.value);
   };
 
   return (
     <Box>
-      {typeFilter.length === 0 && (
+      {types.length !== 0 && (
         <RegistryTypeFilter
           types={types}
-          selected={selectedTypes}
-          onSelectedChange={selected => setSelectedTypes(selected)}
+          selected={selectedTypes} // TODO(burdon): Controlled?
+          onSelectedChange={handleTypeSelect}
         />
       )}
 
-      // TODO(burdon): Use react-components
-      <Autocomplete
-        fullWidth
-        autoHighlight
-        clearOnEscape
-        options={searchOptions}
-        getOptionLabel={option => option.id.toString()}
-        inputValue={searchInput}
-        onInputChange={(event, newValue) => setSearchInput(newValue)}
-        value={selected}
-        onChange={(event, newValue) => setSelected(newValue)}
-        renderInput={params => (
-          <TextField
-            {...params}
-            placeholder='Search'
-            variant='standard'
-            autoFocus
-            autoComplete='off'
-            spellCheck={false}
-            onKeyPress={async (event) => {
-              if (event.key === 'Enter' && (!processing || selected)) {
-                await handleSelect();
-              }
-            }}
-          />
-        )}
+      <SearchAutocomplete
+        model={model}
+        onSelect={handleSelect}
       />
     </Box>
   );

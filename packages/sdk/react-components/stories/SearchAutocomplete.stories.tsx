@@ -14,13 +14,13 @@ export default {
 };
 
 const createValues = (n = 100) => Array.from({ length: n }).map((_, i) => ({
-  id: String(i),
-  label: faker.lorem.word().toLowerCase()
+  text: faker.lorem.word().toLowerCase(),
+  value: String(i)
 }));
 
 export const Primary = () => {
-  const [value, setValue] = useState<SearchResult>();
-  const model = useMemo(() => new TextSearchModel(createValues(100)), []);
+  const [value, setValue] = useState<SearchResult<string>>();
+  const model = useMemo(() => new TextSearchModel<string>(createValues(100)), []);
 
   return (
     <Box sx={{ margin: 2 }}>

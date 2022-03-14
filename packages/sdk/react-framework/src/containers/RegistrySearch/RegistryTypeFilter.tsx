@@ -8,8 +8,6 @@ import { styled, Chip } from '@mui/material';
 
 import { CID, RegistryTypeRecord } from '@dxos/registry-client';
 
-// Consider: https://mui.com/components/autocomplete/#multiple-values
-
 // https://mui.com/components/chips/#chip-array
 const List = styled('ul')(({ theme }) => ({
   display: 'flex',

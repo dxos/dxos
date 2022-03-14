@@ -516,6 +516,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-async",
+      "projectFolder": "packages/common/react-async",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/rpc",
       "projectFolder": "packages/common/rpc",
       "shouldPublish": true,

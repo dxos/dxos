@@ -9,8 +9,8 @@ import { Autocomplete, TextField } from '@mui/material';
 import { SearchModel, SearchResult } from './SearchModel';
 
 export interface SearchAutocompleteProps<T> {
-  model: SearchModel
-  onSelect: (value: SearchResult) => void
+  model: SearchModel<T>
+  onSelect: (value: SearchResult<T>) => void
 }
 
 /**
@@ -31,7 +31,7 @@ export const SearchAutocomplete = ({
   //  - https://mui.com/components/autocomplete/#virtualization
 
   const handleInputChange = (text: string) => {
-    model.setFilter(text);
+    model.setText(text);
   }
 
   const handleChange = (value: any) => {
@@ -44,6 +44,7 @@ export const SearchAutocomplete = ({
       autoHighlight
       clearOnEscape
       options={results}
+      getOptionLabel={value => value.text}
       onInputChange={(event, text) => handleInputChange(text)}
       onChange={(event, value) => handleChange(value)}
       renderInput={params => (
