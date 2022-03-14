@@ -27,7 +27,7 @@
     "@dxos/codec-protobuf": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "eslint": "^7.12.1",
     "typescript": "^4.5.2"
