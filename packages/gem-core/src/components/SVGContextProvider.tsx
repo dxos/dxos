@@ -42,7 +42,7 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
   return (
     <SVGContextDef.Provider value={context}>
       {/* Flex is imporant otherwise div has extra padding.  */}
-      <div ref={resizeRef} style={{ display: 'flex', width: '100%' }}>
+      <div ref={resizeRef} style={{ display: 'flex', width: '100%', height: '100%' }}>
         {children}
       </div>
     </SVGContextDef.Provider>
