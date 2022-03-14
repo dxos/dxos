@@ -50,6 +50,7 @@ const styles = css`
   align-items: center;
   padding: 0;
   background-color: #EEE;
+  position: absolute;
   button {
     width: 32px;
     height: 32px;
@@ -81,7 +82,7 @@ export const Toolbar = ({
 }: ToolbarProps) => {
   if (onMinimize && minimized) {
     return (
-      <div className={styles} style={{ position: 'absolute', right: 0 }}>
+      <div className={styles} style={{ right: 0 }}>
         <button onClick={() => onMinimize?.(false)}>
           <ToggleMinimizedIcon />
         </button>
@@ -90,7 +91,7 @@ export const Toolbar = ({
   }
 
   return (
-    <div className={styles}>
+    <div className={styles} style={{ width: '100%' }}>
       <div style={{ width: 200 }}>
         {actions['tools'].map((binding: Binding) => {
           const { action, icon: Icon, label } = binding;
