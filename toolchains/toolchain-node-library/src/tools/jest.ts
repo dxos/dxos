@@ -24,6 +24,7 @@ export async function execJest ({ project, userArgs = [], forceClose }: ExecJest
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
     : join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.json');
+
   await execTool('jest', [
     '--config', config,
     '--passWithNoTests',

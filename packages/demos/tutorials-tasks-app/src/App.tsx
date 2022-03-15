@@ -4,14 +4,14 @@
 
 import React from 'react';
 
+import { configProvider } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
 import { Root } from './components';
-import { initConfig } from './config';
 
 export const App = () => {
   return (
-    <ClientProvider config={initConfig}>
+    <ClientProvider config={configProvider}>
       <Root />
     </ClientProvider>
   );

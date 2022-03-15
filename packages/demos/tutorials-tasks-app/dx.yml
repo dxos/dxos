@@ -6,3 +6,18 @@ module:
 
 build:
   command: npm run build
+
+runtime:
+  props:
+    title: "Tasks App"
+
+  client:
+    storage:
+      persistent: true
+
+  services:
+    signal:
+      server: "wss://demo.kube.dxos.network/dxos/signal"
+      api: "https://demo.kube.dxos.network/dxos/signal/api"
+    dxns:
+      server: "wss://node1.devnet.dxos.network/dxns/ws"

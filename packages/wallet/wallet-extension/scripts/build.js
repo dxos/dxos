@@ -1,19 +1,26 @@
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins')
-const { build } = require('esbuild')
+//
+// Copyright 2022 DXOS.org
+//
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+const chalk = require('chalk');
+const copy = require('copy');
+const { build } = require('esbuild');
+const fs = require('fs');
+const { join } = require('path');
 const rmdir = require('rmdir');
-const { promisify } = require('util')
-const copy = require('copy')
-const { join } = require('path')
-const fs = require('fs')
-const chalk = require('chalk')
+const { promisify } = require('util');
 
-const distDir = join(__dirname, '../dist')
-const srcDir = join(__dirname, '../src')
-const publicDir = join(__dirname, '../public')
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
 
-; (async () => {
-  if(fs.existsSync(distDir)) {
-    await promisify(rmdir)(distDir)
+const distDir = join(__dirname, '../dist');
+const srcDir = join(__dirname, '../src');
+const publicDir = join(__dirname, '../public');
+
+void (async () => {
+  if (fs.existsSync(distDir)) {
+    await promisify(rmdir)(distDir);
   }
 
   try {
@@ -30,22 +37,22 @@ const publicDir = join(__dirname, '../public')
       plugins: [
         NodeModulesPlugin(),
         NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin(),
+        FixMemdownPlugin()
       ],
-      watch: process.argv.includes('--watch') ? {onRebuild: ((error) => {
-        if (error) {
-          console.error(chalk.red('\nBuild failed.'))
-        } else {
-          console.log(chalk.green(`\nRebuild finished.`))
-        }
-       })} : false,
-    })
+      watch: process.argv.includes('--watch') ? {
+        onRebuild: ((error) => {
+          if (error) {
+            console.error(chalk.red('\nBuild failed.'));
+          } else {
+            console.log(chalk.green('\nRebuild finished.'));
+          }
+        })
+      } : false
+    });
   } catch (err) {
     console.error(err); // \/ Turns out, they're not always printed.
     process.exit(-1); // Diagnostics are already printed.
   }
-  
 
-  await promisify(copy)(`${publicDir}/**`, distDir)
-})()
-
+  await promisify(copy)(`${publicDir}/**`, distDir);
+})();
