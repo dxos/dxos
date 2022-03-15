@@ -14,6 +14,7 @@ export default {
 };
 
 const createValues = (n = 100) => Array.from({ length: n }).map((_, i) => ({
+  id: String(i),
   text: faker.lorem.word().toLowerCase(),
   value: String(i)
 }));

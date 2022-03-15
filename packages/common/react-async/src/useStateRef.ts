@@ -17,6 +17,7 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from
  *
  * @param initialValue
  */
+// TODO(burdon): Replace with useCallback?
 export const useStateRef = <V extends any>(
   initialValue?: V | (() => V)
 ): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {

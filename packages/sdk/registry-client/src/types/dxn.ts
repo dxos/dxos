@@ -6,8 +6,10 @@ import { DomainKey } from './domain-key';
 
 /**
  * Decentralized Name.
- * Example: dxn://example:foo/bar
+ * Example: dxn://example:foo.bar
  */
+// TODO(burdon): dxn:// prefix?
+// TODO(burdon): Dots or slashes?
 export class DXN {
   /**
    * Lower-case.
@@ -81,7 +83,7 @@ export class DXN {
 
   public readonly key?: DomainKey;
   public readonly domain?: string;
-  public readonly resource: string;
+  public readonly resource: string; // TODO(burdon): Rename path? name?
 
   private constructor ({ key, domain, resource }: {
     key?: DomainKey,

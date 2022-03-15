@@ -6,6 +6,7 @@ import React from 'react';
 
 import { styled, Chip } from '@mui/material';
 
+import { useControlledState } from '@dxos/react-async';
 import { CID, RegistryTypeRecord } from '@dxos/registry-client';
 
 // https://mui.com/components/chips/#chip-array
@@ -38,9 +39,11 @@ export interface RegistryTypeFilterProps {
  */
 export const RegistryTypeFilter = ({
   types,
-  selected = [],
+  selected: controlledSelected = [],
   onSelectedChange
 }: RegistryTypeFilterProps) => {
+  const [selected, setSelected] = useControlledState<CID[]>(controlledSelected, onSelectedChange);
+
   return (
     <List>
       {types.map(type => (
@@ -50,8 +53,8 @@ export const RegistryTypeFilter = ({
             size='small'
             color={selected?.includes(type.cid) ? 'primary' : undefined}
             onClick={() => {
-              onSelectedChange(selected?.includes(type.cid) ?
-                selected?.filter(t => t !== type.cid) : [...selected, type.cid]);
+              const on = selected?.includes(type.cid);
+              setSelected(on ? selected?.filter((t: CID) => t !== type.cid) : [...selected, type.cid]);
             }}
           />
         </ListItem>

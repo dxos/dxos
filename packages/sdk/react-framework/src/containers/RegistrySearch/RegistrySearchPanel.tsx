@@ -2,63 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Event } from '@dxos/async';
-import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/registry-client';
-import { SearchAutocomplete, SearchModel, SearchResult } from '@dxos/react-components';
+import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
 
+import { createTypeFilter, RegistrySearchModel } from './RegistrySearchModel';
 import { RegistryTypeFilter } from './RegistryTypeFilter';
-
-/**
- * Filterable resource search model.
- */
-export class RegistrySearchModel implements SearchModel<Resource> {
-  _update = new Event<SearchResult<Resource>[]>();
-  _results: SearchResult<Resource>[] = [];
-  _text?: string = undefined;
-
-  constructor (
-    private readonly _registry: IRegistryClient,
-    private _types: CID[] = []
-  ) {}
-
-  get results () {
-    return [];
-  }
-
-  subscribe (callback: (results: SearchResult<Resource>[]) => void) {
-    return this._update.on(callback);
-  }
-
-  setTypes (types: CID[] = []) {
-    this._types = types;
-    this.doUpdate();
-  }
-
-  setText (text?: string) {
-    this._text = text;
-    this.doUpdate();
-  }
-
-  doUpdate () {
-    setImmediate(async () => {
-      // TODO(burdon): Push type predicate.
-      // TODO(burdon): Extend filter for Braneframe ActionDialog.
-      let resources = await this._registry.queryResources({ text: this._text });
-      if (this._types.length) {
-        resources = resources.filter(resource => this._types.some(type => type.equals(resource.type!)));
-      }
-
-      this._results = resources.map(resource => ({
-        text: resource.id.toString(),
-        value: resource
-      }));
-    });
-  }
-}
 
 export interface RegistrySearchPanelProps {
   model: RegistrySearchModel
@@ -76,7 +28,7 @@ export const RegistrySearchPanel = ({
 }: RegistrySearchPanelProps) => {
   const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
 
-  // TODO(burdon): Factor out.
+  // TODO(burdon): Factor out (pass in).
   // useEffect(() => {
   //   setImmediate(async () => {
   //     const types = await registry.getTypeRecords();
@@ -84,13 +36,15 @@ export const RegistrySearchPanel = ({
   //   });
   // }, []);
 
-  const handleTypeSelect = (selected: CID[]) => {
-    setSelectedTypes(selected);
-    model.setTypes(selected);
+  const handleTypeSelect = (types: CID[]) => {
+    setSelectedTypes(types);
+    model.setFilters([
+      createTypeFilter(types)
+    ]);
   }
 
   const handleSelect = (selected: SearchResult<Resource>) => {
-    onSelect(selected.value);
+    onSelect(selected?.value);
   };
 
   return (
@@ -98,7 +52,7 @@ export const RegistrySearchPanel = ({
       {types.length !== 0 && (
         <RegistryTypeFilter
           types={types}
-          selected={selectedTypes} // TODO(burdon): Controlled?
+          selected={selectedTypes}
           onSelectedChange={handleTypeSelect}
         />
       )}

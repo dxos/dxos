@@ -10,7 +10,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
  *
  * ```tsx
  * const Component = ({ value: controlledValue, onChange }: { value: string, onChange: (value:string) => void }) => {
- *   const [value, setValue] = useControlledState(controlledValue);
+ *   const [value, setValue] = useControlledState(controlledValue, onChange);
  *   const handleUpdate = (value: string) => setValue(value);
  * }
  *
@@ -18,7 +18,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
  * @param onChange
  * @param deps other deps that may change the state
  */
-export const useControlledState = <T extends any> (
+export const useControlledState = <T> (
   controlledValue: T,
   onChange?: (value: T) => void,
   deps?: any[]
@@ -30,8 +30,8 @@ export const useControlledState = <T extends any> (
 
   return [
     value,
-    (f: T | ((previous: T) => T)) => {
-      const newValue = (typeof value === 'function') ? (f as Function)(value) : f;
+    (callback: T | ((previous: T) => T)) => {
+      const newValue = (typeof value === 'function') ? (callback as Function)(value) : callback;
       setValue(newValue);
       onChange?.(newValue);
     }

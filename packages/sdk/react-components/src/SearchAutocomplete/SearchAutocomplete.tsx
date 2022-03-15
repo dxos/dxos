@@ -47,6 +47,7 @@ export const SearchAutocomplete = ({
       getOptionLabel={value => value.text}
       onInputChange={(event, text) => handleInputChange(text)}
       onChange={(event, value) => handleChange(value)}
+      isOptionEqualToValue={(a, b) => a.id === b.id}
       renderInput={params => (
         <TextField
           {...params}

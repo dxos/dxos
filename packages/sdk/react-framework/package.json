@@ -23,6 +23,7 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

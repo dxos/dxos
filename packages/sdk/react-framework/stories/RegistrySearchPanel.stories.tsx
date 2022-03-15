@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 import { Resource } from '@dxos/registry-client';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
-import { RegistrySearchPanel } from '../src';
+import { RegistrySearchPanel, useRegistrySearchModel } from '../src';
 import { createMockRegistry } from './helpers';
 
 export default {
@@ -18,13 +18,14 @@ export default {
 
 export const Primary = () => {
   const mockRegistry = useMemo(() => createMockRegistry(), []);
+  const model = useRegistrySearchModel(mockRegistry);
   const [selected, setSelected] = useState<Resource>();
 
   return (
     <RegistryProvider registry={mockRegistry}>
       <Box sx={{ margin: 2 }}>
         <RegistrySearchPanel
-          registry={mockRegistry} // TODO(burdon): Same for dialog (write up rules for components).
+          model={model}
           onSelect={resource => setSelected(resource)}
         />
 
