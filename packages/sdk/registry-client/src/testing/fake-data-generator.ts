@@ -89,7 +89,7 @@ export const createMockResourceRecord = ({
     },
     versions: {},
     type: type.cid
-  }
+  };
 
   return { record, resource };
 };
@@ -125,4 +125,4 @@ export const createMockResourceRecords = (n = 30) => {
   }
 
   return Array.from(dxns.values()).map(dxn => createMockResourceRecord({ dxn }));
-}
+};

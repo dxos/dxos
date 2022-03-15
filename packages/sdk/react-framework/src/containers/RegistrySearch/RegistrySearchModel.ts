@@ -5,19 +5,19 @@
 import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
-import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 import { SearchModel, SearchResult } from '@dxos/react-components';
+import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
 export type SearchFilter = (resource: Resource) => boolean
 
 export const useRegistrySearchModel = (registry: IRegistryClient) => {
   return useMemo(() => new RegistrySearchModel(registry), []);
-}
+};
 
 export const getTypeName = (type: RegistryTypeRecord) => {
   const parts = type.messageName.split('.');
   return parts[parts.length - 1];
-}
+};
 
 export const createTypeFilter = (types: CID[]) => (resource: Resource) => {
   return types.some(type => resource.type && type.equals(resource.type));
@@ -88,7 +88,7 @@ export class RegistrySearchModel implements SearchModel<Resource> {
           type: type ? getTypeName(type) : undefined,
           text: resource.id.toString(),
           value: resource
-        })
+        });
       });
 
       this._results = this._results.sort((a, b) => {

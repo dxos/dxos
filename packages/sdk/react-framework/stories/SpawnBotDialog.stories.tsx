@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { IRegistryClient, Resource } from '@dxos/registry-client';
 import React, { useMemo, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
@@ -10,6 +9,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { sleep } from '@dxos/async';
 import { FullScreen } from '@dxos/react-components';
 import { RegistryProvider, useRegistry } from '@dxos/react-registry-client';
+import { IRegistryClient, Resource } from '@dxos/registry-client';
 
 import { ErrorBoundary, SpawnBotDialog } from '../src';
 import { createMockRegistryWithBots, Column } from './helpers';

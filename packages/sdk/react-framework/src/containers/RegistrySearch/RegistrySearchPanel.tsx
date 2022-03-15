@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
+import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
 import { createTypeFilter, RegistrySearchModel } from './RegistrySearchModel';
 import { RegistryTypeFilter } from './RegistryTypeFilter';
@@ -33,7 +33,7 @@ export const RegistrySearchPanel = ({
     model.setFilters([
       createTypeFilter(types)
     ]);
-  }
+  };
 
   const handleSelect = (selected: SearchResult<Resource>) => {
     onSelect(selected?.value);

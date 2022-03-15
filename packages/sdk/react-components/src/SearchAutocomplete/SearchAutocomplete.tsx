@@ -34,11 +34,11 @@ export const SearchAutocomplete = ({
 
   const handleInputChange = (text: string) => {
     model.setText(text);
-  }
+  };
 
   const handleChange = (value: any) => {
     onSelect(value);
-  }
+  };
 
   return (
     <Autocomplete

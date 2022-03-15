@@ -7,8 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { Box } from '@mui/material';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { RegistryTypeRecord, Resource } from '@dxos/registry-client';
 import { RegistryProvider } from '@dxos/react-registry-client';
+import { RegistryTypeRecord, Resource } from '@dxos/registry-client';
 
 import { RegistrySearchPanel, useRegistrySearchModel } from '../src';
 import { createMockRegistry } from './helpers';

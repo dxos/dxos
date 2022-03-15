@@ -9,6 +9,8 @@ import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
 
+// TODO(burdon): Define as protobufs.
+
 /**
  * Domains are auctioned namespaces for records.
  */
@@ -98,6 +100,7 @@ export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMeta
 /**
  * Distinguish regular data records from type records, which define the data record schema.
  */
+// TODO(burdon): Should Type records be a special "table"; do we need versioning?
 export enum RecordKind {
   Type = 'TYPE',
   Data = 'DATA'

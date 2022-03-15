@@ -2,4 +2,4 @@ syntax = "proto3";
 
 import "@dxos/protocols/src/proto/dxos/bot.proto";
 import "@dxos/protocols/src/proto/dxos/config.proto";
-import "@dxos/registry-client/src/proto/dxns/type.proto";
+import "@dxos/registry-client/src/proto/dxns/types.proto";
