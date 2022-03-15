@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolchain-node-library",
-  "version": "2.28.3",
+  "version": "2.28.4",
   "main": "./dist/src/index.js",
   "scripts": {
     "build": "tsc",
