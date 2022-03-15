@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "2.2.1-beta.8",
+  "version": "2.2.1-beta.10",
   "description": "Gem spore.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -39,7 +39,7 @@
     }
   },
   "dependencies": {
-    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-core": "2.2.1-beta.10",
     "csstype": "^3.0.10",
     "d3": "^7.2.1",
     "debug": "^4.1.1",
@@ -54,7 +54,6 @@
     "@dxos/esbuild-plugins": "^2.19.2",
     "@dxos/esbuild-server": "^2.2.5",
     "@dxos/eslint-plugin": "~1.0.10",
-    "@dxos/gem-core": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.7.1",
     "@types/d3": "^7.1.0",
