@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -28,14 +28,6 @@ export const RegistrySearchPanel = ({
 }: RegistrySearchPanelProps) => {
   const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
 
-  // TODO(burdon): Factor out (pass in).
-  // useEffect(() => {
-  //   setImmediate(async () => {
-  //     const types = await registry.getTypeRecords();
-  //     setTypes(types);
-  //   });
-  // }, []);
-
   const handleTypeSelect = (types: CID[]) => {
     setSelectedTypes(types);
     model.setFilters([
@@ -59,6 +51,7 @@ export const RegistrySearchPanel = ({
 
       <SearchAutocomplete
         model={model}
+        groupBy='type'
         onSelect={handleSelect}
       />
     </Box>

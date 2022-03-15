@@ -7,7 +7,7 @@ import { Event } from '@dxos/async';
 /**
  * Search result.
  */
-export type SearchResult<T> = { id: string, text: string, value: T }
+export type SearchResult<T> = { id: string, type?: string, text: string, value: T }
 
 export type Filter<T> = (value: T) => boolean
 

@@ -9,6 +9,8 @@ import { styled, Chip } from '@mui/material';
 import { useControlledState } from '@dxos/react-async';
 import { CID, RegistryTypeRecord } from '@dxos/registry-client';
 
+import { getTypeName } from './RegistrySearchModel';
+
 // https://mui.com/components/chips/#chip-array
 const List = styled('ul')(({ theme }) => ({
   display: 'flex',
@@ -22,11 +24,6 @@ const List = styled('ul')(({ theme }) => ({
 const ListItem = styled('li')(({ theme }) => ({
   margin: theme.spacing(0.5)
 }));
-
-export const typeName = (type: RegistryTypeRecord) => {
-  const parts = type.messageName.split('.');
-  return parts[parts.length - 1];
-}
 
 export interface RegistryTypeFilterProps {
   types: RegistryTypeRecord[]
@@ -49,7 +46,7 @@ export const RegistryTypeFilter = ({
       {types.map(type => (
         <ListItem key={type.messageName}>
           <Chip
-            label={typeName(type)}
+            label={getTypeName(type)}
             size='small'
             color={selected?.includes(type.cid) ? 'primary' : undefined}
             onClick={() => {

@@ -11,6 +11,7 @@ import { SearchModel, SearchResult } from './SearchModel';
 export interface SearchAutocompleteProps<T> {
   model: SearchModel<T>
   onSelect: (value: SearchResult<T>) => void
+  groupBy?: string
 }
 
 /**
@@ -18,7 +19,8 @@ export interface SearchAutocompleteProps<T> {
  */
 export const SearchAutocomplete = ({
   model,
-  onSelect
+  onSelect,
+  groupBy
 }: SearchAutocompleteProps<any>) => {
   const [results, setResults] = useState(model.results);
   useEffect(() => {
@@ -44,10 +46,11 @@ export const SearchAutocomplete = ({
       autoHighlight
       clearOnEscape
       options={results}
-      getOptionLabel={value => value.text}
+      isOptionEqualToValue={(a, b) => a.id === b.id}
+      groupBy={groupBy ? option => (option as any)[groupBy] : undefined}
+      getOptionLabel={option => option.text}
       onInputChange={(event, text) => handleInputChange(text)}
       onChange={(event, value) => handleChange(value)}
-      isOptionEqualToValue={(a, b) => a.id === b.id}
       renderInput={params => (
         <TextField
           {...params}

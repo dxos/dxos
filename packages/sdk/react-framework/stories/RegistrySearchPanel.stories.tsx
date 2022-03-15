@@ -6,7 +6,8 @@ import React, { useMemo, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Resource } from '@dxos/registry-client';
+import { useAsyncEffect } from '@dxos/react-async';
+import { RegistryTypeRecord, Resource } from '@dxos/registry-client';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
 import { RegistrySearchPanel, useRegistrySearchModel } from '../src';
@@ -17,20 +18,27 @@ export default {
 };
 
 export const Primary = () => {
-  const mockRegistry = useMemo(() => createMockRegistry(), []);
-  const model = useRegistrySearchModel(mockRegistry);
+  const registry = useMemo(() => createMockRegistry(), []);
+  const model = useRegistrySearchModel(registry);
   const [selected, setSelected] = useState<Resource>();
 
+  const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
+  useAsyncEffect(async () => {
+    await model.initialize();
+    setTypes(model.types);
+  }, []);
+
   return (
-    <RegistryProvider registry={mockRegistry}>
+    <RegistryProvider registry={registry}>
       <Box sx={{ margin: 2 }}>
         <RegistrySearchPanel
           model={model}
+          types={types}
           onSelect={resource => setSelected(resource)}
         />
 
         <Box sx={{ marginTop: 2 }}>
-          {String(selected?.id)}
+          {selected?.id.toString()}
         </Box>
       </Box>
     </RegistryProvider>
