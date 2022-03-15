@@ -20,7 +20,7 @@ export const getTypeName = (type: RegistryTypeRecord) => {
 }
 
 export const createTypeFilter = (types: CID[]) => (resource: Resource) => {
-  return types.some(type => type.equals(resource.type!));
+  return types.some(type => resource.type && type.equals(resource.type));
 };
 
 export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: Resource) => {
@@ -82,7 +82,7 @@ export class RegistrySearchModel implements SearchModel<Resource> {
       }
 
       this._results = resources.map(resource => {
-        const type = this._types.find(type => resource.type && type.cid.equals(resource.type));
+        const type = this._types.find(type => resource.type && resource.type.equals(type.cid));
         return ({
           id: resource.id.toString(),
           type: type ? getTypeName(type) : undefined,

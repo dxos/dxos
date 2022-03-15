@@ -33,7 +33,7 @@ export const Primary = () => {
       <Box sx={{ margin: 2 }}>
         <RegistrySearchPanel
           model={model}
-          types={types}
+          types={types} // TODO(burdon): Factor out type selector.
           onSelect={resource => setSelected(resource)}
         />
 

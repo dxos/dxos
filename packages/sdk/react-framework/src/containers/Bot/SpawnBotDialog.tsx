@@ -2,40 +2,49 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import { raise } from '@dxos/debug';
-import { useRegistry } from '@dxos/react-registry-client';
-import { DXN, ResourceRecord } from '@dxos/registry-client';
+import { useAsyncEffect } from '@dxos/react-async';
+import { Dialog } from '@dxos/react-components';
+import { IRegistryClient, Resource } from '@dxos/registry-client';
 
-import { RegistrySearchDialog, RegistrySearchDialogProps } from '../RegistrySearch';
+import { createTypeFilter, useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
 
-const BOT_TYPE_DXN = DXN.parse('dxos:type.bot');
+interface SpawnBotDialogProps {
+  registry: IRegistryClient
+  open: boolean
+  onClose: () => void
+  onSelect: (resource: Resource) => void
+}
 
-// TODO(burdon): Do not extend other dialogs.
-export const SpawnBotDialog = ({ ...props }: RegistrySearchDialogProps) => {
-  const registry = useRegistry(); // TODO(burdon): Pass in registry.
-  const [botType, setBotType] = useState<ResourceRecord>();
-
-  // TODO(burdon): Should not require query (Just DXN).
-  useEffect(() => {
-    setImmediate(async () => {
-      const botType = await registry.getResourceRecord(BOT_TYPE_DXN, 'latest') ??
-        raise(new Error('Bot type not found.'));
-      setBotType(botType);
-    });
-  });
-
-  if (!botType) {
-    return null;
-  }
+// TODO(burdon): Panel (with invite).
+export const SpawnBotDialog = ({
+  registry,
+  open,
+  onClose,
+  onSelect
+}: SpawnBotDialogProps) => {
+  // TODO(burdon): Create hook to create pre-filtered model.
+  const model = useRegistrySearchModel(registry);
+  useAsyncEffect(async () => {
+    await model.initialize();
+    // TODO(burdon): DXN of type?
+    const botType = model.types.find(type => type.messageName === '.dxos.type.Bot');
+    model.setFilters([
+      createTypeFilter([botType!.cid])
+    ]);
+  }, []);
 
   return (
-    <RegistrySearchDialog
-      title='Spawn Bot'
-      typeFilter={[botType.record.cid]}
-      closeOnSuccess
-      {...props}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      content={(
+        <RegistrySearchPanel
+          model={model}
+          onSelect={onSelect}
+        />
+      )}
     />
   );
 };

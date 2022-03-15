@@ -11,8 +11,6 @@ import {
   CID, DXN, RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord, TypeRecordMetadata
 } from '../types';
 
-const defs = protobuf.Root.fromJSON(schemaJson);
-
 /**
  * Generates a random CID.
  */
@@ -28,41 +26,25 @@ export const createDXN = (domain = 'example'): DXN => {
   return DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'));
 };
 
-export const mockTypeNames = [
-  {
-    type: '.dxos.type.KUBE',
-    label: 'KUBE'
-  },
-  {
-    type: '.dxos.type.Service',
-    label: 'KUBE Service'
-  },
-  {
-    type: '.dxos.type.IPFS',
-    label: 'IPFS service'
-  },
-  {
-    type: '.dxos.type.File',
-    label: 'File'
-  },
-  {
-    type: '.dxos.type.App',
-    label: 'App'
-  },
-  {
-    type: '.dxos.type.Bot',
-    label: 'Bot'
-  }
+export const mockTypeMessageNames = [
+  '.dxos.type.App',
+  '.dxos.type.Bot',
+  '.dxos.type.File',
+  '.dxos.type.IPFS',
+  '.dxos.type.KUBE',
+  '.dxos.type.Service'
 ];
 
-const mockTypes = mockTypeNames.map((item): RegistryTypeRecord => ({
+const protobufDefs = protobuf.Root.fromJSON(schemaJson);
+
+const mockTypes: RegistryTypeRecord[] = mockTypeMessageNames.map(messageName => ({
   cid: createCID(),
   kind: RecordKind.Type,
   meta: {
     created: faker.date.recent(30)
   },
-  messageName: item.type,
-  protobufDefs: defs
+  messageName,
+  protobufDefs
 }));
 
 /**
@@ -87,7 +69,7 @@ export const createMockResourceRecord = ({
   dxn,
   meta = {},
   data = {}
-} : CreateMockResourceRecordOptions = {}): ResourceRecord => {
+}: CreateMockResourceRecordOptions = {}): ResourceRecord => {
   const type = mockTypes.find(type => type.messageName === typeName) ?? faker.random.arrayElement(mockTypes);
 
   const record: RegistryDataRecord = {
@@ -100,17 +82,16 @@ export const createMockResourceRecord = ({
     data: sanitizeExtensionData(data, type.cid)
   };
 
-  return {
-    record: record,
-    resource: {
-      id: dxn ?? createDXN(), // TODO(burdon): Either pass in or don't.
-      tags: {
-        latest: record.cid
-      },
-      versions: {},
-      type: type.cid
-    }
-  };
+  const resource = {
+    id: dxn ?? createDXN(), // TODO(burdon): Either pass in or don't.
+    tags: {
+      latest: record.cid
+    },
+    versions: {},
+    type: type.cid
+  }
+
+  return { record, resource };
 };
 
 /**

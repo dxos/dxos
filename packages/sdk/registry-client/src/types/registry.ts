@@ -77,14 +77,14 @@ export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> {
  * Automatically generated Record metadata.
  */
 export interface InferredRecordMetadata {
-  created?: Date;
+  created?: Date
 }
 
 /**
  * Record metadata provided by the user.
  */
 export interface SuppliedRecordMetadata {
-  description?: string;
+  description?: string
 }
 
 export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata

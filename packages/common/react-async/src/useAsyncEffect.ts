@@ -30,7 +30,8 @@ import { useEffect } from 'react';
  * @param destructor Receives the value retuned from the callback.
  * @param deps
  */
-// TODO(burdon): Create useAsyncMemo?
+// TODO(burdon): Creade useAsyncMemo?
+// TODO(burdon): Replace setImmediate everywhere (approx 30 places).
 export const useAsyncEffect = <T> (
   callback: (isMounted: () => boolean) => Promise<T>,
   destructor?: ((value?: T) => void) | any[],

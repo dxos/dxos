@@ -26,8 +26,8 @@ export const createMockRegistryWithBot = (botPath: string) => {
       localPath: botPath
     }
   });
-  const memoryRegistryClient = new MemoryRegistryClient([...records, botRecord]);
-  return memoryRegistryClient;
+
+  return new MemoryRegistryClient([...records, botRecord]);
 };
 
 export const setupMockRegistryWithBot = async (botPath: string) => {

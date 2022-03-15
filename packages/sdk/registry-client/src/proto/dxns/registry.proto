@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-package dxos.registry;
-
 import "google/protobuf/timestamp.proto";
+
+package dxos.registry;
 
 message Record {
   /**
