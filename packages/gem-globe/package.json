@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "2.2.1-beta.8",
+  "version": "2.2.1-beta.10",
   "description": "Gem Globe.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
@@ -21,7 +21,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-core": "2.2.1-beta.10",
     "d3": "^7.2.1",
     "d3-geo-projection": "^4.0.0",
     "d3-inertia": "^0.4.0",
