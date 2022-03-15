@@ -34,6 +34,17 @@ export class AccountClient extends BaseClient {
     };
   }
 
+  async getAllAccounts (): Promise<DxnsAccount[]> {
+    const accounts = await this.api.query.registry.accounts.entries();
+    return accounts.map(accountRecord => {
+      const deviceRecords = accountRecord[1].unwrap().devices;
+      return {
+        id: accountRecord[0].toHex(),
+        devices: deviceRecords.map(device => device.toString())
+      };
+    });
+  }
+
   /**
    * Add a new device to an existing DXNS account.
    */
