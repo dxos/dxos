@@ -384,26 +384,6 @@ importers:
       source-map-support: 0.5.21
       typescript: 4.5.3
 
-  ../../packages/common/react-async:
-    specifiers:
-      '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/node': ^14.0.9
-      '@types/react': ^17.0.24
-      eslint: ^7.12.1
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      typescript: ^4.5.2
-    devDependencies:
-      '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
-      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@types/node': 14.18.0
-      '@types/react': 17.0.37
-      eslint: 7.32.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      typescript: 4.5.3
-
   ../../packages/common/rpc:
     specifiers:
       '@dxos/async': workspace:*
@@ -2259,6 +2239,7 @@ importers:
       fork-ts-checker-webpack-plugin: ~6.2.5
       level-js: ^5.0.2
       react: ^17.0.2
+      react-display-name: ^0.2.5
       react-dom: ^17.0.2
       react-test-renderer: ^17.0.2
       typescript: ^4.5.2
@@ -2276,6 +2257,7 @@ importers:
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.3
+      react-display-name: 0.2.5
       use-subscription: 1.5.1_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': 2.28.4
@@ -2304,7 +2286,6 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2342,7 +2323,6 @@ importers:
       typescript: ^4.5.2
       url-join: ^4.0.1
     dependencies:
-      '@dxos/async': link:../../common/async
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       debug: 4.3.3
@@ -2399,7 +2379,6 @@ importers:
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-registry-client': workspace:*
@@ -2434,7 +2413,6 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../react-registry-client
       assert: 2.0.0
       debug: 4.3.3
@@ -5519,7 +5497,7 @@ packages:
       '@babel/core': 7.13.16
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.0_@babel+core@7.13.16
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/serialize': 1.0.2
@@ -5538,7 +5516,7 @@ packages:
       '@babel/core': 7.16.5
       '@babel/helper-module-imports': 7.16.0
       '@babel/plugin-syntax-jsx': 7.16.0_@babel+core@7.16.5
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/serialize': 1.0.2
@@ -5554,7 +5532,7 @@ packages:
     dependencies:
       '@emotion/memoize': 0.7.5
       '@emotion/sheet': 1.1.0
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
       '@emotion/weak-memoize': 0.2.5
       stylis: 4.0.13
 
@@ -5669,7 +5647,7 @@ packages:
       '@emotion/hash': 0.8.0
       '@emotion/memoize': 0.7.5
       '@emotion/unitless': 0.7.5
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
       csstype: 3.0.10
 
   /@emotion/sheet/1.1.0:
@@ -9694,7 +9672,7 @@ packages:
   /babel-plugin-macros/2.8.0:
     resolution: {integrity: sha512-SEP5kJpfGYqYKpBrj5XU3ahw5p5GOHJ0U5ssOSQ/WBVdwkD2Dzlce95exQTs3jOVWPPKLBN2rlEWkCK7dSmLvg==}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       cosmiconfig: 6.0.0
       resolve: 1.20.0
 
@@ -12956,7 +12934,7 @@ packages:
       has: 1.0.3
       is-core-module: 2.8.0
       is-glob: 4.0.3
-      minimatch: 3.1.2
+      minimatch: 3.0.4
       object.values: 1.1.5
       resolve: 1.20.0
       tsconfig-paths: 3.12.0
@@ -13060,7 +13038,7 @@ packages:
       eslint-plugin-es: 3.0.1_eslint@7.32.0
       eslint-utils: 2.1.0
       ignore: 5.1.9
-      minimatch: 3.1.2
+      minimatch: 3.0.4
       resolve: 1.20.0
       semver: 6.3.0
 
@@ -13275,7 +13253,7 @@ packages:
       json-stable-stringify-without-jsonify: 1.0.1
       levn: 0.4.1
       lodash.merge: 4.6.2
-      minimatch: 3.1.2
+      minimatch: 3.0.4
       natural-compare: 1.4.0
       optionator: 0.9.1
       progress: 2.0.3
@@ -21189,6 +21167,10 @@ packages:
       text-table: 0.2.0
     dev: false
 
+  /react-display-name/0.2.5:
+    resolution: {integrity: sha512-I+vcaK9t4+kypiSgaiVWAipqHRXYmZIuAiS8vzFvXHHXVigg/sMKwlRgLy6LH2i3rmP+0Vzfl5lFsFRwF1r3pg==}
+    dev: false
+
   /react-dom/17.0.2_react@17.0.2:
     resolution: {integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==}
     peerDependencies:
@@ -23430,7 +23412,7 @@ packages:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 7.1.7
-      minimatch: 3.0.4
+      minimatch: 3.1.2
 
   /text-table/0.2.0:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
