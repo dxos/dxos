@@ -44,5 +44,8 @@
     "forceCloseTests": true,
     "jsdom": true,
     "testingFramework": "mocha"
+  },
+  "dependencies": {
+    "immutability-helper": "^3.0.2"
   }
 }
