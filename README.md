@@ -19,7 +19,9 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 Here's a demo of the ECHO database and data replication between twoo peers.
 
-![WPKW5J](https://user-images.githubusercontent.com/3523355/158707236-cd81c7e1-90ec-4ddd-921c-b7ad09ca47ee.gif)
+<br/>
+![ECHO](https://user-images.githubusercontent.com/3523355/158708230-82fb1fae-5d51-4142-9679-eb428ef2e328.gif)
+<br/>
 
 To run the demo:
 
