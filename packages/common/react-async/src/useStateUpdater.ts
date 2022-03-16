@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Dispatch, SetStateAction, useState } from 'react';
-
 import update from 'immutability-helper';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 /**
  * Partially updates state without copying complex (expensive) objects.
@@ -37,5 +36,5 @@ export const useStateUpdater = <T> (
     value,
     setValue,
     handleUpdate
-  ]
+  ];
 };

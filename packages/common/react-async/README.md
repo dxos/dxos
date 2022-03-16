@@ -27,7 +27,3 @@ Evaluate the following:
 - https://www.npmjs.com/package/react-async-hook (popular)
 - https://www.npmjs.com/package/use-enhanced-state
 - https://www.npmjs.com/package/react-hooks-lib
-
-Partial updates:
-
-- https://github.com/kolodny/immutability-helper

@@ -23,7 +23,7 @@ const Test = () => {
       items: {
         $push: [1, 2, 3]
       }
-    })
+    });
   }, []);
 
   return (
