@@ -9,7 +9,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
  * The optional callback is triggered only if the state is updated internally.
  *
  * ```tsx
- * const Component = ({ value: controlledValue, onChange }: { value: string, onChange: (value:string) => void }) => {
+ * const Component = ({ value: controlledValue, onChange }) => {
  *   const [value, setValue] = useControlledState(controlledValue, onChange);
  *   const handleUpdate = (value: string) => setValue(value);
  * }
@@ -31,7 +31,7 @@ export const useControlledState = <T> (
   return [
     value,
     (callback: T | ((previous: T) => T)) => {
-      const newValue = (typeof value === 'function') ? (callback as Function)(value) : callback;
+      const newValue = (typeof callback === 'function') ? (callback as Function)(value) : callback;
       setValue(newValue);
       onChange?.(newValue);
     }

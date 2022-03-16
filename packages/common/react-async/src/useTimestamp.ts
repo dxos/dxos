@@ -5,11 +5,16 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Provides a triggered timestamp that can be used to force re-rendering based on deps.
+ * Provides a timestamp that can be used to force re-rendering based on deps.
  *
  * ```tsx
- * const [ts, update] = useTimestamp();
- * const handleRefresh = () => update();
+ * const Test = () => {
+ *   const [ts, update] = useTimestamp();
+ *   const handleRefresh = () => update();
+ *   return (
+ *     <div>{ts}</div>
+ *   );
+*  };
  * ```
  *
  * @param deps
