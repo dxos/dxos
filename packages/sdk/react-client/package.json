@@ -2,7 +2,6 @@
   "name": "@dxos/react-client",
   "version": "2.28.4",
   "description": "React client API",
-  "keywords": [],
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -28,7 +27,6 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "react-display-name": "^0.2.5",
     "use-subscription": "^1.4.1"
   },
   "devDependencies": {
@@ -61,8 +59,8 @@
     "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha",
     "jsdom": true,
-    "forceCloseTests": true
+    "forceCloseTests": true,
+    "testingFramework": "mocha"
   }
 }

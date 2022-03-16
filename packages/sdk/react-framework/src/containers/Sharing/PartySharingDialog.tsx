@@ -9,8 +9,9 @@ import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export interface PartySharingDialogProps extends Omit<SharingDialogProps, 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'> {
-  partyKey: PublicKey,
+export interface PartySharingDialogProps
+  extends Omit<SharingDialogProps, 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'> {
+  partyKey: PublicKey
 }
 
 /**

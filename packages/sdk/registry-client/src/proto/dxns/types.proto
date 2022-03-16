@@ -4,15 +4,17 @@
 
 syntax = "proto3";
 
-package dxos.type;
-
 import "registry.proto";
+
+package dxos.type;
 
 //
 // Records
 //
 
+//
 // Registered as `type.app`.
+//
 message App {
   /**
    * Optional **semver 2.0** compliant record version.
@@ -28,6 +30,7 @@ message App {
   repeated string keywords = 6;
   string display_name = 7;
 
+  // TODO(burdon): Frame-specific or references complete schema of related types?
   // For frames, types of items the frame supports.
   // Content-Type is represented as ECHO item type DXN.
   repeated string content_type = 8;
@@ -35,7 +38,9 @@ message App {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.bot`.
+//
 message Bot {
   /**
    * Optional **semver 2.0** compliant record version.
@@ -55,7 +60,9 @@ message Bot {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.state-machiene`.
+//
 message StateMachiene {
   /// Set of protobuf messages encoded in JSON.
   string mutation_protobuf_defs = 1;
@@ -66,7 +73,9 @@ message StateMachiene {
   bytes code_ipfs_cid = 3;
 }
 
+//
 // Registered as `type.file`.
+//
 message File {
   // MIME type of the file content: https://developer.mozilla.org/en-US/docs/Glossary/MIME_type.
   string content_type = 1;
@@ -78,14 +87,18 @@ message File {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.kube`.
+//
 message KUBE {
   string url = 1;
 
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.service`.
+//
 message Service {
   // TODO(dmaretskyi): How are service type's defined.
   string type = 1;
@@ -98,7 +111,9 @@ message Service {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.service.ipfs`.
+//
 message IPFS {
   string protocol = 1;
   repeated string addresses = 2;
@@ -106,14 +121,18 @@ message IPFS {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.service.bot-factory`.
+//
 message BotFactory {
   string topic = 1;
 
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.service.signal`.
+//
 message Signal {
   string bootstrap = 1;
   string url = 2;
@@ -121,7 +140,9 @@ message Signal {
   Record.Extension extension = 100;
 }
 
+//
 // Registered as `type.service.app-server`.
+//
 message AppServer {
   string url = 1;
 

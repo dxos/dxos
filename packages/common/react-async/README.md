@@ -19,7 +19,6 @@ import 'raf/polyfill';
 import { act } from 'react-dom/test-utils';
 ```
 
-
 ### Next
 
 Evaluate the following:

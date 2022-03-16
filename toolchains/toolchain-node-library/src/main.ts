@@ -96,6 +96,8 @@ export async function execBuildBundle (config: Config, options: BuildOptions = {
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['build']);
 
+  // TODO(burdon): Test terser vs esbuild --minify?
+
   if (options.minify) {
     const filename = project.entryPoint.split('/').slice(-1)[0];
     const name = filename.split('.')[0];

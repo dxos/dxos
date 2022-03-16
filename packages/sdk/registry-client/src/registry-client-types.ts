@@ -20,6 +20,8 @@ import {
   UpdateResourceOptions
 } from './types';
 
+// TODO(burdon): Remove I- prefix.
+
 /**
  * DXNS Registry read-only operations.
  */

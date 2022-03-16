@@ -12,10 +12,10 @@ module.exports = {
   ],
   outdir: 'out',
   plugins: [
-    NodeGlobalsPolyfillPlugin(),
+    ConfigPlugin(),
     FixMemdownPlugin(),
-    NodeModulesPlugin(),
-    ConfigPlugin()
+    NodeGlobalsPolyfillPlugin(),
+    NodeModulesPlugin()
   ],
   staticDir: 'public'
 };

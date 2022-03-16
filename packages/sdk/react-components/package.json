@@ -2,7 +2,6 @@
   "name": "@dxos/react-components",
   "version": "2.28.4",
   "description": "Low-level material components.",
-  "keywords": [],
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -16,11 +15,11 @@
     "build": "toolchain build",
     "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
-    "build:watch": "tsc --watch",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "debug": "^4.3.3",

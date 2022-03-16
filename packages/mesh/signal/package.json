@@ -1,7 +1,7 @@
 {
   "name": "@dxos/signal",
   "version": "2.28.4",
-  "description": "DxOS signal server.",
+  "description": "DXOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
