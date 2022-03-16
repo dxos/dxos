@@ -2,14 +2,6 @@
   "name": "@dxos/echo-db",
   "version": "2.28.4",
   "description": "ECHO database.",
-  "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

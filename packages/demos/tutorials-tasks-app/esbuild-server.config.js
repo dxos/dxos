@@ -13,10 +13,10 @@ module.exports = {
     'src/main.tsx'
   ],
   plugins: [
-    NodeGlobalsPolyfillPlugin(),
+    ConfigPlugin(),
     FixMemdownPlugin(),
-    NodeModulesPlugin(),
-    ConfigPlugin()
+    NodeGlobalsPolyfillPlugin(),
+    NodeModulesPlugin()
   ],
   outdir: 'out',
   staticDir: 'public'

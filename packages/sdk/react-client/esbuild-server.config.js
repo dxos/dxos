@@ -11,12 +11,12 @@ const {
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
   plugins: [
-    NodeGlobalsPolyfillPlugin(),
     FixMemdownPlugin(),
+    NodeGlobalsPolyfillPlugin(),
     NodeModulesPlugin()
   ],
   outdir: 'out',
   overrides: {
-    sourcemap: 'inline',
+    sourcemap: 'inline'
   }
 };

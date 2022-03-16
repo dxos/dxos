@@ -17,7 +17,7 @@ export const MOCK_BOT_DXN = 'dxos:bot:mock';
 export const createMockRegistryWithBot = (botPath: string) => {
   const types = createMockTypes();
   const botTypeRecord = types.find(type => type.messageName === '.dxos.type.Bot');
-  assert(botTypeRecord, 'Bot type not found: bot');
+  assert(botTypeRecord, 'Bot type not found.');
   const records = createMockResourceRecords();
   const botRecord = createMockResourceRecord({
     type: '.dxos.type.Bot',
@@ -26,11 +26,8 @@ export const createMockRegistryWithBot = (botPath: string) => {
       localPath: botPath
     }
   });
-  const memoryRegistryClient = new MemoryRegistryClient([
-    ...records,
-    botRecord
-  ]);
-  return memoryRegistryClient;
+
+  return new MemoryRegistryClient([...records, botRecord]);
 };
 
 export const setupMockRegistryWithBot = async (botPath: string) => {

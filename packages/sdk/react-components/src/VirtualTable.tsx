@@ -16,6 +16,8 @@ import {
 
 const log = debug('dxos:console:virtual-table');
 
+// TODO(burdon): See https://github.com/bvaughn/react-window (rewrite of react-virtualized).
+
 //
 // Data.
 //

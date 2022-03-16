@@ -11,14 +11,17 @@ import waitForExpect from 'wait-for-expect';
 
 import { useStateUpdater } from './useStateUpdater';
 
-// Don't copy this.
+// Expensive object to copy.
 const complex = {
-
+  data: Array.from({ length: 100 }).map((_, i) => ({
+    title: String(i)
+  }))
 };
 
 const Test = () => {
   const [value,, updateValue] = useStateUpdater({ complex, items: [] });
   useEffect(() => {
+    // https://github.com/kolodny/immutability-helper
     updateValue({
       items: {
         $push: [1, 2, 3]

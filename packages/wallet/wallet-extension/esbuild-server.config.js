@@ -11,8 +11,8 @@ const {
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
   plugins: [
-    NodeGlobalsPolyfillPlugin(),
     FixMemdownPlugin(),
+    NodeGlobalsPolyfillPlugin(),
     NodeModulesPlugin()
   ],
   overrides: {
