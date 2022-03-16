@@ -19,9 +19,11 @@ const doAsync = async <T, > (value: T) => {
 
 const Test = () => {
   const [value, setValue] = useState<string>();
-  useAsyncEffect(async () => {
+  useAsyncEffect(async (isMounted) => {
     const value = await doAsync('DXOS');
-    setValue(value);
+    if (isMounted()) {
+      setValue(value);
+    }
   }, []);
 
   return (

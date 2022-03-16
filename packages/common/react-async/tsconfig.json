@@ -17,6 +17,5 @@
   ],
   "exclude": [
     "node_modules"
-  ],
-  "references": []
+  ]
 }
