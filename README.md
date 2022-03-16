@@ -19,8 +19,12 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 Here's a demo of the ECHO database and data replication between twoo peers.
 
+<br/>
+<br/>
+
 ![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
 
+<br/>
 
 To run the demo:
 
