@@ -13,7 +13,9 @@ import { useStateUpdater } from './useStateUpdater';
 
 // Expensive object to copy.
 const complex = {
-  data: Array.from({ length: 100 }).map((_, i) => { title: String(i) })
+  data: Array.from({ length: 100 }).map((_, i) => ({
+    title: String(i)
+  }))
 };
 
 const Test = () => {
