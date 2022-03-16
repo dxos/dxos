@@ -1,13 +1,9 @@
 {
   "name": "@dxos/typedoc",
-  "version": "2.28.3",
+  "version": "2.28.4",
   "description": "DXOS Typedoc - API Reference.",
-  "keywords": [
-    "dxos",
-    "api-reference"
-  ],
   "license": "MIT",
-  "author": "info@dxos.org",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "true",
@@ -23,7 +19,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "eslint": "^7.12.1",
     "typedoc": "^0.22.11",

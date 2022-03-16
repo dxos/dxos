@@ -57,10 +57,10 @@ export async function buildTests (files: string[], opts: BuildTestsOpts) {
     sourcemap: 'inline',
     outfile: join(opts.outDir, 'bundle.js'),
     plugins: [
-      NodeModulesPlugin(),
-      NodeGlobalsPolyfillPlugin(),
+      FixGracefulFsPlugin(),
       FixMemdownPlugin(),
-      FixGracefulFsPlugin()
+      NodeGlobalsPolyfillPlugin(),
+      NodeModulesPlugin()
     ]
   });
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/registry-client",
-  "version": "2.28.3",
+  "version": "2.28.4",
   "description": "DXNS API",
   "license": "MIT",
   "author": "DXOS.org",
@@ -44,7 +44,7 @@
   "devDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",

@@ -8,11 +8,11 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { sleep } from '@dxos/async';
 import { FullScreen } from '@dxos/react-components';
-import { RegistryProvider } from '@dxos/react-registry-client';
+import { RegistryProvider, useRegistry } from '@dxos/react-registry-client';
+import { IRegistryClient, Resource } from '@dxos/registry-client';
 
 import { ErrorBoundary, SpawnBotDialog } from '../src';
-import { createMockRegistryWithBots } from '../src/testing';
-import { Column } from './helpers';
+import { createMockRegistryWithBots, Column } from './helpers';
 
 export default {
   title: 'react-framework/SpawnBotDialog'
@@ -20,31 +20,37 @@ export default {
 
 const User = () => {
   const [open, setOpen] = useState(false);
-  const [botRunning, setBotRunning] = useState(false);
+  const [bot, setBot] = useState<Resource>();
+  const registry = useRegistry();
+
+  console.log(bot);
 
   return (
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Spawn bot</Button>
-        <Button onClick={() => setBotRunning(false)}>Stop bot</Button>
+        <Button onClick={() => setBot(undefined)}>Stop bot</Button>
       </Toolbar>
+
       <SpawnBotDialog
+        registry={registry}
         open={open}
-        onSelect={async () => {
-          await sleep(2000);
-          setBotRunning(true);
-        }}
         onClose={() => setOpen(false)}
+        onSelect={async (resource: Resource) => {
+          await sleep(2000);
+          setBot(resource);
+        }}
       />
+
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        Bot running: {botRunning ? 'yes' : 'no'}
+        {bot && `Running: ${bot.id.toString()}`}
       </Box>
     </Box>
   );
 };
 
 export const Primary = () => {
-  const mockRegistry = useMemo(createMockRegistryWithBots, []);
+  const mockRegistry = useMemo<IRegistryClient>(createMockRegistryWithBots, []);
 
   return (
     <FullScreen>

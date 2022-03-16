@@ -24,13 +24,13 @@ import { createMockTypes, createMockResourceRecords } from './fake-data-generato
 
 /**
  * In-memory implementation of the registry client with statically specified records.
- *
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
 export class MemoryRegistryClient implements IRegistryClient {
   private readonly records: RegistryRecord[]
 
   constructor (
+    // TODO(burdon): Don't provide defaults! Instead create helper method.
     private resources: ResourceRecord<RegistryRecord>[] = createMockResourceRecords(),
     private types: RegistryTypeRecord[] = createMockTypes()
   ) {

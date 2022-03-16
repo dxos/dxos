@@ -18,8 +18,8 @@ module.exports = {
     sourcemap: 'inline'
   },
   plugins: [
-    NodeGlobalsPolyfillPlugin(), // TODO(burdon): Reorder.
     FixMemdownPlugin(),
+    NodeGlobalsPolyfillPlugin(),
     NodeModulesPlugin()
   ],
   staticDir: 'public'

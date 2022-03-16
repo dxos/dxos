@@ -89,12 +89,14 @@ export async function execBuild (config: Config, options: BuildOptions = {}) {
  */
 export async function execBuildBundle (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-  const { outdir } = project.esbuildConfig;
+  const outdir = project.esbuildConfig.outdir ?? defaults.esbuild.outdir;
 
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['build']);
+
+  // TODO(burdon): Test terser vs esbuild --minify?
 
   if (options.minify) {
     const filename = project.entryPoint.split('/').slice(-1)[0];
@@ -110,7 +112,7 @@ export async function execBuildBundle (config: Config, options: BuildOptions = {
  */
 export async function execBuildBook (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-  const { outdir } = project.esbuildConfig;
+  const outdir = project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
 
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 

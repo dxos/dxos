@@ -24,7 +24,7 @@ export function convertSchemaToDescriptor (root: protobuf.Root): FileDescriptorS
  * Message extensions seem to be both inlined in the target type, and included separatelly in the descriptor,
  * which causes an error when parsing the descriptor.
  *
- * This hack removes the extensions from the descriptor.
+ * NOTE: This hack removes the extensions from the descriptor.
  */
 function preprocessSchemaDescriptor (descriptor: any): any {
   if (typeof descriptor === 'object') {
@@ -36,6 +36,7 @@ function preprocessSchemaDescriptor (descriptor: any): any {
       }
     }
   }
+
   return descriptor;
 }
 
@@ -69,6 +70,7 @@ export async function decodeExtensionPayload (extension: Record.Extension, resol
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;
     }
+
     const extension = value as Record.Extension;
     assert(extension.typeRecord);
     assert(extension.data);
@@ -78,10 +80,7 @@ export async function decodeExtensionPayload (extension: Record.Extension, resol
 
     const dataType = getProtoTypeFromTypeRecord(typeRecord);
     const dataJson = dataType.toObject(dataType.decode(Buffer.from(extension.data)), OBJECT_CONVERSION_OPTIONS);
-    return {
-      '@type': typeCid,
-      ...(await mapMessage(dataType, mapper, dataJson))
-    };
+    return { '@type': typeCid, ...(await mapMessage(dataType, mapper, dataJson)) };
   };
   return mapper(extension, RECORD_EXTENSION_NAME);
 }
@@ -91,6 +90,7 @@ export async function encodeExtensionPayload (data: RecordExtension<any>, resolv
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;
     }
+
     const { '@type': typeCid, ...extension } = value as RecordExtension<any>;
     const typeRecord = await resolveType(typeCid);
 
@@ -109,10 +109,7 @@ export async function encodeExtensionPayload (data: RecordExtension<any>, resolv
 export function sanitizeExtensionData (data: unknown, expectedType: CID): RecordExtension<any> {
   assert(typeof data === 'object' && data !== null);
   if (!('@type' in data)) {
-    return {
-      '@type': expectedType,
-      ...data
-    };
+    return { '@type': expectedType, ...data };
   } else {
     assert(data['@type'] instanceof CID);
     assert(expectedType.equals(data['@type']));

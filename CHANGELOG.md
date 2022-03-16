@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.4](https://www.github.com/dxos/protocols/compare/v2.28.3...v2.28.4) (2022-03-15)
+
+
+### Features
+
+* **registry-client:** Introduce an option to fetch all DXNS Accounts ([#1025](https://www.github.com/dxos/protocols/issues/1025)) ([138aa3b](https://www.github.com/dxos/protocols/commit/138aa3b77f1748a6c6cba94edebc258bd36bc7db))
+
 ### [2.28.3](https://www.github.com/dxos/protocols/compare/v2.28.2...v2.28.3) (2022-03-11)
 
 

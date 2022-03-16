@@ -33,6 +33,7 @@ export class DXNSContentResolver implements ContentResolver {
     if (!botIpfsCID && !botLocalPath) {
       throw new Error(`Unable to resolve bot content byt the provided dxn: ${dxn.toString()}`);
     }
+
     const result: ContentResolverResult = {};
     if (botIpfsCID) {
       result.ipfsCid = CID.from(botIpfsCID).toString();

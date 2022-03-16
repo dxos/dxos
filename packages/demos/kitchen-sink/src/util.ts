@@ -4,7 +4,7 @@
 
 import { EffectCallback, useEffect, useRef } from 'react';
 
-// TODO(burdon): Factor hook utils (incl. gem useStateRef).
+// TODO(burdon): Factor hook utils (incl. gem useStateWithRef).
 
 /**
  * Maintains an up-to-date reference to a changing value.
