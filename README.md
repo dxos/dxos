@@ -14,7 +14,19 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 [Getting started](./docs/getting-started.md).
 
+
+## Demo
+
+Here's a demo of the ECHO database and data replication between twoo peers.
+
 ![WPKW5J](https://user-images.githubusercontent.com/3523355/158707236-cd81c7e1-90ec-4ddd-921c-b7ad09ca47ee.gif)
+
+To run the demo:
+
+```bash
+cd packages/demos/kichchen-sink
+rushx demo:grid
+```
 
 
 ## Installation and usage
