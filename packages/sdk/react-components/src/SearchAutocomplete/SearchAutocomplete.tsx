@@ -28,9 +28,13 @@ export const SearchAutocomplete = ({
   }, [model]);
 
   // TODO(burdon): Features:
+  //  - Filtered list.
+  //  - https://mui.com/components/autocomplete/#custom-filter
+  //    - https://github.com/kentcdodds/match-sorter
   //  - https://mui.com/components/autocomplete/#search-as-you-type
   //  - https://mui.com/components/autocomplete/#load-on-open
   //  - https://mui.com/components/autocomplete/#virtualization
+  //    - https://github.com/bvaughn/react-window (rewrite of react-virtualized)
 
   const handleInputChange = (text: string) => {
     model.setText(text);
