@@ -1,5 +1,18 @@
 # Change Log
 
+### [2.28.5](https://www.github.com/dxos/protocols/compare/v2.28.4...v2.28.5) (2022-03-16)
+
+
+### Features
+
+* React async utils. ([#1054](https://www.github.com/dxos/protocols/issues/1054)) ([a65fe66](https://www.github.com/dxos/protocols/commit/a65fe666a8fe90bf337b2bbad604073dc0f9b69a))
+* Refactor RegistrySearchDialog. ([#1043](https://www.github.com/dxos/protocols/issues/1043)) ([4dea7f4](https://www.github.com/dxos/protocols/commit/4dea7f41cef89a8ee79b4621270456c51e7f813a))
+
+
+### Bug Fixes
+
+* Default outdirs for esbuild-server builds ([#1052](https://www.github.com/dxos/protocols/issues/1052)) ([176378e](https://www.github.com/dxos/protocols/commit/176378e48254626c96ae93d4f1005e4f0cbbf082))
+
 ### [2.28.4](https://www.github.com/dxos/protocols/compare/v2.28.3...v2.28.4) (2022-03-15)
 
 
