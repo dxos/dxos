@@ -1,6 +1,6 @@
 
 # @dxos/config
-> DxOS config
+> DXOS config
 
 Load configuration using a simple config folder structure.
 

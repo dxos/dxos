@@ -21,6 +21,8 @@ export interface CustomTextFieldProps extends BaseTextFieldProps {
   placeholder?: string
   editIcon?: FunctionComponent
   onUpdate?: (value: string) => void
+  spellCheck?: boolean
+  autoComplete?: string
 }
 
 /**
@@ -37,6 +39,8 @@ export const CustomTextField = ({
   onUpdate, // TODO(burdon): onChange.
 
   // BaseTextFieldProps
+  spellCheck = false,
+  autoComplete = 'off',
   variant = 'outlined',
   size = 'small',
   ...props
@@ -100,11 +104,8 @@ export const CustomTextField = ({
         onKeyDown={handleKeyDown}
         onBlur={() => saveOnBlur && handleUpdate()}
         inputRef={inputRef}
-        inputProps={{
-          inputprops: {
-            spellCheck: false
-          }
-        }}
+        spellCheck={spellCheck}
+        autoComplete={autoComplete}
         InputProps={{
           endAdornment: (
             <InputAdornment position='end'>
@@ -222,8 +223,8 @@ export const CustomTextField = ({
         <Box className='edit-button'>
           <IconButton
             size='small'
-            onClick={() => !readonly && setEditing(true)}
             title='Edit'
+            onClick={() => !readonly && setEditing(true)}
           >
             <EditIcon />
           </IconButton>

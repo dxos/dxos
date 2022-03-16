@@ -1,7 +1,7 @@
 {
   "name": "@dxos/signal",
-  "version": "2.28.3",
-  "description": "DxOS signal server.",
+  "version": "2.28.4",
+  "description": "DXOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
@@ -67,7 +67,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@types/debug": "^4.1.7",

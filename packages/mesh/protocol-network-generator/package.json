@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-network-generator",
-  "version": "2.28.3",
+  "version": "2.28.4",
   "description": "Protocol network generator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-network-generator#readme",
   "bugs": {
@@ -29,7 +29,7 @@
     "pump": "^3.0.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",

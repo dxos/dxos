@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

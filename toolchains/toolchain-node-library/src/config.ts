@@ -7,7 +7,11 @@
  */
 export interface Config {
   esbuild: {
-    config: string
+    config: string,
+    outdir: string,
+    book: {
+      outdir: string
+    }
   },
   protobuf: {
     src: string
@@ -25,7 +29,11 @@ export interface Config {
 
 export const defaults: Config = {
   esbuild: {
-    config: './esbuild-server.config.js'
+    config: './esbuild-server.config.js',
+    outdir: 'out',
+    book: {
+      outdir: 'out/book'
+    }
   },
   protobuf: {
     src: './src/proto/**/*.proto',

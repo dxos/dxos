@@ -2,21 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './icons';
-
-export * from './CopyText';
-export * from './CopyToClipboard';
+export * from './Clipboard';
 export * from './CustomTextField';
 export * from './Dialog';
-export * from './FullScreen';
+export * from './FullScreen'; // TODO(burdon): Move components from Braneframe.
 export * from './HashIcon';
-export * from './JsonTreeView';
-export * from './MemberAvatar';
+export * from './Icons';
+export * from './JsonTree';
 export * from './MemberList';
 export * from './Passcode';
-export * from './SlidingDrawer';
 export * from './QRCode';
+export * from './SearchAutocomplete';
 export * from './Searchbar';
-export * from './SimpleJsonTreeView';
+export * from './SlidingDrawer';
 export * from './Toolbar';
 export * from './VirtualTable';
