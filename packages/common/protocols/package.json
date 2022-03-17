@@ -11,10 +11,11 @@
     "src"
   ],
   "scripts": {
+    "//": "YOU MUST REBUILD @dxos/echo-protocol AFTER MAKING CHANGES.",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*"
