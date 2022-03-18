@@ -12,11 +12,11 @@ import {
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
+import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter, ItemMeta, TestType } from '../../src';
-import { Party } from '@dxos/client';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {

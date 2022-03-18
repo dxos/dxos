@@ -26,7 +26,7 @@ const StyledButton = (props: ButtonProps) => {
     >
       {props.children}
     </Button>
-  )
+  );
 };
 
 const ImportStory = () => {
@@ -129,4 +129,4 @@ export const ExportParty = () => {
       </ProfileInitializer>
     </ClientProvider>
   );
-}
+};
