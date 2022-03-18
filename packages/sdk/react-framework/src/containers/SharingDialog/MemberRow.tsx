@@ -36,6 +36,7 @@ export const MemberRow = ({
         {member.displayName}
       </Typography>
 
+      {/* TODO(burdon): Role (Read-only, Editor, Admin). */}
       {onRemove && (
         <IconButton size='small' onClick={onRemove}>
           <CancelIcon />

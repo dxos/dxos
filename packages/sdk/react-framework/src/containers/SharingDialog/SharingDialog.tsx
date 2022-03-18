@@ -86,7 +86,7 @@ export const SharingDialog = ({
                   Invite Bot
                 </Button>
                 {showBotSelector && (
-                  <Box sx={{ width: 400 }}>
+                  <Box sx={{ width: 300 }}>
                     <SpawnBotPanel
                       party={party}
                       onClose={() => {

@@ -90,15 +90,15 @@ export const Primary = () => {
       },
       services: {
         dxns: {
-          server: 'wss://dxns1.kube.dxos.network/dxns/ws'
+          server: 'wss://node1.devnet.dxos.network/dxns/ws'
         },
         // TODO(burdon): Configure CLI (`dx bot factory start --dev`).
         signal: {
-          server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+          server: 'wss://demo.kube.dxos.network/dxos/signal'
         },
         // TODO(burdon): In-memory simulator? `dx bot factory start`
         bot: {
-          topic: '3bcdff506034e818e3ad20df52faa5955dcb862e6e01c3001b4925d3d23bd433'
+          topic: '4a202269d2735906d764d9dbf71c95d033738ac6a4dc7bd85598719776d3ab49'
         }
       }
     }
