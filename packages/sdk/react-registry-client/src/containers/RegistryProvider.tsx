@@ -28,7 +28,7 @@ export const RegistryProvider = ({
   registry,
   children
 }: RegistryProviderProps) => {
-  const [value, setValue] = useState<RegistryContext | undefined>(registry && { registry });
+  const [context, setContext] = useState<RegistryContext | undefined>(registry && { registry });
   const [error, setError] = useState<undefined | Error>(undefined);
   if (error) {
     log(error);
@@ -39,7 +39,8 @@ export const RegistryProvider = ({
     if (!registry) {
       setImmediate(async () => {
         try {
-          setValue(await createRegistryContext(config));
+          const context = await createRegistryContext(config);
+          setContext(context);
         } catch (error: any) {
           setError(error);
         }
@@ -48,12 +49,12 @@ export const RegistryProvider = ({
   }, []);
 
   // Still loading.
-  if (!value) {
+  if (!context) {
     return null;
   }
 
   return (
-    <RegistryContext.Provider value={value}>
+    <RegistryContext.Provider value={context}>
       {children}
     </RegistryContext.Provider>
   );

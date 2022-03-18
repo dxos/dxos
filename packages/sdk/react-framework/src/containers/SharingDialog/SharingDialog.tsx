@@ -5,14 +5,18 @@
 import React, { useState } from 'react';
 import urlJoin from 'url-join';
 
-import { Box, Button } from '@mui/material';
+import {
+  Face as NewIcon,
+  Contacts as AddressIcon,
+  Adb as BotIcon
+} from '@mui/icons-material';
+import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
-import { InvitationRequest, Party, PartyMember } from '@dxos/client';
+import { InvitationRequest, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 import { Resource } from '@dxos/registry-client';
 
 import { MemberRow } from './MemberRow';
-import { PendingBotInvitation } from './PendingBotInvitation';
 import { PendingInvitation } from './PendingInvitation';
 import { SpawnBotPanel } from './SpawnBotPanel';
 
@@ -24,17 +28,22 @@ const defaultCreateUrl = (invitationCode: string) => {
   return urlJoin(origin, pathname, `?code=${kubeCode}`, `/#${invitationPath}`);
 };
 
+enum MemberType {
+  ONLINE,
+  OFFLINE,
+  BOT
+}
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
-  party?: Party
   title: string
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
   invitations?: InvitationRequest[]
-  botInvitations?: any[]
-  onCreateInvitation: () => (void | Promise<void>)
-  onCreateBotInvitation?: (resource: Resource) => (void | Promise<void>)
+  onCreateInvitation: () => void
   onCancelInvitation: (invitation: InvitationRequest) => void
+  onCreateOfflineInvitation?: () => void
+  onCreateBotInvitation?: (resource: Resource) => void
   onClose?: () => void
   createUrl?: (invitationCode: string) => string
 }
@@ -47,66 +56,100 @@ export interface SharingDialogProps {
 export const SharingDialog = ({
   open,
   modal,
-  party,
   title,
   members = [],
   invitations = [],
-  botInvitations = [],
   createUrl = defaultCreateUrl,
   onCreateInvitation,
-  onCreateBotInvitation,
   onCancelInvitation,
+  onCreateOfflineInvitation,
+  onCreateBotInvitation,
   onClose
 }: SharingDialogProps) => {
-  const [showBotSelector, setShowBotSelector] = useState(false);
+  const [memberType, setMemberType] = useState(MemberType.ONLINE);
+  const [bot, setBot] = useState<Resource>();
+
+  const active = memberType === MemberType.ONLINE
+    || (memberType === MemberType.BOT && bot);
+
+  const handleInvitation = () => {
+    switch (memberType) {
+      case MemberType.ONLINE: {
+        onCreateInvitation();
+        break;
+      }
+
+      case MemberType.OFFLINE: {
+        onCreateOfflineInvitation?.();
+        break;
+      }
+
+      case MemberType.BOT: {
+        onCreateBotInvitation?.(bot!);
+        break;
+      }
+    }
+  }
 
   return (
     <Dialog
       open={open}
       modal={modal}
       title={title}
+      maxWidth='sm'
       content={(
         <>
-          <Box sx={{ display: 'flex' }}>
-            <Button
-              variant='outlined'
-              onClick={onCreateInvitation}
-            >
-              Invite User
-            </Button>
-
-            {/* TODO(burdon): Advanced panel reveals bot selector? */}
-            {party && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 3
+          }}>
+            {(onCreateOfflineInvitation || onCreateBotInvitation) && (
               <>
-                <Button
-                  variant='outlined'
-                  onClick={() => setShowBotSelector(true)}
-                  sx={{ marginLeft: 1, marginRight: 2 }}
+                <ToggleButtonGroup
+                  exclusive
+                  size='small'
+                  value={memberType}
+                  onChange={(_, value) => setMemberType(value)}
                 >
-                  Invite Bot
-                </Button>
-                {showBotSelector && (
-                  <Box sx={{ width: 300 }}>
+                  <ToggleButton value={MemberType.ONLINE} title='New invitation'>
+                    <NewIcon />
+                  </ToggleButton>
+                  {/* TODO(burdon): Address book for offline invitations. */}
+                  {onCreateOfflineInvitation && (
+                    <ToggleButton value={MemberType.OFFLINE} title='Addresss book'>
+                      <AddressIcon />
+                    </ToggleButton>
+                  )}
+                  {onCreateBotInvitation && (
+                    <ToggleButton value={MemberType.BOT} title='Bot registry'>
+                      <BotIcon />
+                    </ToggleButton>
+                  )}
+                </ToggleButtonGroup>
+
+                <Box sx={{ flex: 1, paddingLeft: 3, paddingRight: 3 }}>
+                  {memberType === MemberType.BOT && (
                     <SpawnBotPanel
-                      party={party}
-                      onClose={() => {
-                        setTimeout(() => {
-                          setShowBotSelector(false);
-                        }, 500);
-                      }}
+                      onSelect={resource => setBot(resource)}
                     />
-                  </Box>
-                )}
+                  )}
+                </Box>
               </>
             )}
+
+            <Button
+              disabled={!active}
+              onClick={handleInvitation}
+            >
+              Send Invite
+            </Button>
           </Box>
 
           <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            flex: 1,
-            padding: 1,
-            marginTop: 2,
             maxHeight: 8 * 40,
             overflow: 'auto'
           }}>
@@ -117,14 +160,6 @@ export const SharingDialog = ({
                 invitationCode={invitation.descriptor.encode().toString()}
                 pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
                 createUrl={createUrl}
-                onCancel={() => onCancelInvitation(invitation)}
-              />
-            ))}
-
-            {/* Bots */}
-            {botInvitations.map((invitation, i) => (
-              <PendingBotInvitation
-                key={i}
                 onCancel={() => onCancelInvitation(invitation)}
               />
             ))}

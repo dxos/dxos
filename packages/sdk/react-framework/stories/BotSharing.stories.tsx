@@ -8,18 +8,12 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 import { ConfigObject } from '@dxos/config';
-import {
-  ClientProvider,
-  ProfileInitializer,
-  useClient,
-  useParties
-} from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
 import { BotFactoryClientProvider } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
 import { ErrorBoundary, PartySharingDialog } from '../src';
-import { Column } from './helpers';
 
 export default {
   title: 'react-framework/BotSharing'
@@ -68,7 +62,7 @@ const Sender = () => {
         open={open}
         partyKey={partyKey}
         onClose={() => setOpen(false)}
-        modal={false}
+        modal={true}
       />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
@@ -86,7 +80,7 @@ export const Primary = () => {
   const config: ConfigObject = {
     runtime: {
       client: {
-        debug: 'dxos:bot-factory-client'
+        debug: 'dxos:bot*'
       },
       services: {
         dxns: {
@@ -111,9 +105,9 @@ export const Primary = () => {
           <ClientProvider config={config}>
             <BotFactoryClientProvider>
               <ProfileInitializer>
-                <Column>
+                <Box sx={{ margin: 2, width: 600 }}>
                   <Sender />
-                </Column>
+                </Box>
               </ProfileInitializer>
             </BotFactoryClientProvider>
           </ClientProvider>

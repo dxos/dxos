@@ -16,9 +16,9 @@ import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { InvalidConfigurationError } from '../interfaces/errors';
-import { DXOS_VERSION } from '../version';
 import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
+import { DXOS_VERSION } from '../version';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
 

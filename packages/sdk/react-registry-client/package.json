@@ -15,12 +15,12 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
-    "debug": "^4.3.3",
-    "@dxos/config": "workspace:*"
+    "debug": "^4.3.3"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

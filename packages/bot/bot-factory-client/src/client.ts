@@ -13,7 +13,6 @@ import { PluginRpc } from '@dxos/protocol-plugin-rpc';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';
-
 import { schema } from './proto/gen';
 import { BotFactoryService, BotPackageSpecifier } from './proto/gen/dxos/bot';
 

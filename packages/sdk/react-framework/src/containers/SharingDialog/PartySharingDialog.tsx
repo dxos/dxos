@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Resource } from '@dxos/registry-client';
 import React from 'react';
 
 import type { PublicKey } from '@dxos/crypto';
-import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
+import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export interface PartySharingDialogProps
-  extends Omit<SharingDialogProps, 'party' | 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'> {
+export interface PartySharingDialogProps extends SharingDialogProps {
   partyKey: PublicKey
 }
 
@@ -21,10 +21,15 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const party = useParty(partyKey);
   const members = useMembers(party);
   const invitations = usePartyInvitations(partyKey);
+  const botClient = useBotFactoryClient(false);
 
   const handleInvitation = async () => {
     await party!.createInvitation();
   }
+
+  const handleBotInvitation = botClient ? async (resource: Resource) => {
+    await botClient!.spawn({ dxn: resource.id.toString() }, party!);
+  } : undefined;
 
   if (!party) {
     return null;
@@ -33,12 +38,12 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   return (
     <SharingDialog
       {...props}
-      party={party}
       title='Party Sharing'
       members={members}
       invitations={invitations}
       onCreateInvitation={handleInvitation}
       onCancelInvitation={invitation => invitation.cancel()}
+      onCreateBotInvitation={handleBotInvitation}
     />
   );
 };
