@@ -50,7 +50,7 @@ export const Primary = () => {
 export const Secondary = () => {
   const Story = () => {
     const client = useClient();
-    const [party, setParty] = useState<Party>();
+    const [party, setParty] = useState<Party | null>();
     const { onImportParty } = usePartyImportExport();
 
     const handleCreateParty = async () => {
