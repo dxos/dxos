@@ -45,7 +45,7 @@ export const Primary = () => {
 };
 
 const InvitationDialogImportPartyStory = () => {
-  const [party, setParty] = useState<Party>();
+  const [party, setParty] = useState<Party | null>();
   const { onImportParty } = usePartyImportExport();
 
   const handleImportParty = async (partyFile: File) => {
