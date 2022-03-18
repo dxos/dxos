@@ -67,10 +67,7 @@ const InvitationDialogImportPartyStory = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          fontSize: 20,
-          '.MuiBackdrop-root': {
-            bgcolor: undefined
-          }
+          fontSize: 20
         }}>
           <span>Party was imported. Party key: </span>
           <span>{party.key.toHex()}</span>
