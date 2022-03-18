@@ -1,15 +1,7 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.28.2",
+  "version": "2.28.5",
   "description": "ECHO database.",
-  "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -52,9 +44,9 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.26",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "@types/pify": "^3.0.2",

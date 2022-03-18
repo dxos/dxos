@@ -1,4 +1,4 @@
-![Github Actions](https://github.com/dxos/protocols/workflows/CI/badge.svg)
+[![build](https://github.com/dxos/protocols/actions/workflows/check.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/check.yaml)
 [![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
 
@@ -13,6 +13,24 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 ## Quick start
 
 [Getting started](./docs/getting-started.md).
+
+
+## Demo
+
+Here's a demo of the ECHO database and data replication between twoo peers.
+
+<br/>
+
+![ECHO](https://user-images.githubusercontent.com/3523355/158708286-f9a8c5f1-83ed-4bac-ab9e-65ddb6861fe3.gif)
+
+<br/>
+
+To run the demo:
+
+```bash
+cd packages/demos/kichchen-sink
+rushx demo:grid
+```
 
 
 ## Installation and usage

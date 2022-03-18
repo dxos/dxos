@@ -444,14 +444,14 @@
     //
 
     {
-      "packageName": "@dxos/esbuild-plugins",
-      "projectFolder": "toolchains/esbuild-plugins",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
+      "packageName": "@dxos/protocols-toolchain",
+      "projectFolder": "toolchains/protocols-toolchain"
     },
     {
       "packageName": "@dxos/toolchain-node-library",
-      "projectFolder": "toolchains/toolchain-node-library"
+      "projectFolder": "toolchains/toolchain-node-library",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
@@ -512,6 +512,12 @@
     {
       "packageName": "@dxos/random-access-multi-storage",
       "projectFolder": "packages/common/random-access-multi-storage",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/react-async",
+      "projectFolder": "packages/common/react-async",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

@@ -71,6 +71,7 @@ message LinkData {
 /**
  * Item creation.
  */
+// TODO(burdon): EntityGenesis?
 message ItemGenesis {
   string itemType = 1;
   string modelType = 2;

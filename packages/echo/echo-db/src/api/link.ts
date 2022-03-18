@@ -21,7 +21,9 @@ export interface LinkData {
 /**
  * Link variant of an item. Link two objects together. Can hold a custom model.
  */
-export class Link<M extends Model | null = Model, L extends Model<any> = any, R extends Model<any> = any> extends Entity<M> {
+// TODO(burdon): All links are ObjectModel?
+export class Link<M extends Model | null = Model, L extends Model<any> = any, R extends Model<any> = any>
+  extends Entity<M> {
   /**
    * @internal
    */

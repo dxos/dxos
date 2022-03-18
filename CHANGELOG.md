@@ -1,5 +1,34 @@
 # Change Log
 
+### [2.28.5](https://www.github.com/dxos/protocols/compare/v2.28.4...v2.28.5) (2022-03-16)
+
+
+### Features
+
+* React async utils. ([#1054](https://www.github.com/dxos/protocols/issues/1054)) ([a65fe66](https://www.github.com/dxos/protocols/commit/a65fe666a8fe90bf337b2bbad604073dc0f9b69a))
+* Refactor RegistrySearchDialog. ([#1043](https://www.github.com/dxos/protocols/issues/1043)) ([4dea7f4](https://www.github.com/dxos/protocols/commit/4dea7f41cef89a8ee79b4621270456c51e7f813a))
+
+
+### Bug Fixes
+
+* Default outdirs for esbuild-server builds ([#1052](https://www.github.com/dxos/protocols/issues/1052)) ([176378e](https://www.github.com/dxos/protocols/commit/176378e48254626c96ae93d4f1005e4f0cbbf082))
+
+### [2.28.4](https://www.github.com/dxos/protocols/compare/v2.28.3...v2.28.4) (2022-03-15)
+
+
+### Features
+
+* **registry-client:** Introduce an option to fetch all DXNS Accounts ([#1025](https://www.github.com/dxos/protocols/issues/1025)) ([138aa3b](https://www.github.com/dxos/protocols/commit/138aa3b77f1748a6c6cba94edebc258bd36bc7db))
+
+### [2.28.3](https://www.github.com/dxos/protocols/compare/v2.28.2...v2.28.3) (2022-03-11)
+
+
+### Features
+
+* ErrorBoundary supports fatal error types ([#1034](https://www.github.com/dxos/protocols/issues/1034)) ([9d32fdf](https://www.github.com/dxos/protocols/commit/9d32fdf3cf6cc28fd1f83950d1bcbcad213903ec))
+* Reusable toolchain ([#1038](https://www.github.com/dxos/protocols/issues/1038)) ([043fdd5](https://www.github.com/dxos/protocols/commit/043fdd5aefe7a2e2ec15e8f522c49741a309bc55))
+* Selection API update. ([#1023](https://www.github.com/dxos/protocols/issues/1023)) ([08b5c54](https://www.github.com/dxos/protocols/commit/08b5c548ed30ae43e3a925140b7e179452edb41d))
+
 ### [2.28.2](https://www.github.com/dxos/protocols/compare/v2.28.1...v2.28.2) (2022-03-03)
 
 

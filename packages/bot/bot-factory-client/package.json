@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot-factory-client",
-  "version": "2.28.2",
+  "version": "2.28.5",
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "eslint": "^7.12.1",

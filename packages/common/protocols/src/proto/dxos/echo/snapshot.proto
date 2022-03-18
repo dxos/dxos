@@ -68,6 +68,7 @@ message LinkSnapshot {
  * The snapshots make consist of a custom snapshot object and/or a list of mutations
  * that are applied to the snapshot or the initial state.
  */
+// TODO(burdon): Rename?
 message ModelSnapshot {
   /**
    * Encoded model snapshot (defined by the model's codec).

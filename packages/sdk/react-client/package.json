@@ -1,8 +1,7 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.28.2",
+  "version": "2.28.5",
   "description": "React client API",
-  "keywords": [],
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -28,13 +27,12 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "react-display-name": "^0.2.5",
     "use-subscription": "^1.4.1"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.28.4",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.4.2",
     "@testing-library/react": "^11.0.4",
     "@testing-library/react-hooks": "5.1.2",
@@ -61,8 +59,8 @@
     "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha",
     "jsdom": true,
-    "forceCloseTests": true
+    "forceCloseTests": true,
+    "testingFramework": "mocha"
   }
 }

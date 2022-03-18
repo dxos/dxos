@@ -84,9 +84,9 @@ jobs:
         set -e
         \. "$NVM_DIR/nvm.sh" && nvm use
 
-        yarn global add @dxos/cli@v2.14.0
-        yarn global add @dxos/cli-dxns@v2.14.0
-        yarn global add @dxos/cli-app@v2.14.0
+        yarn global add @dxos/cli@v2.16.0
+        yarn global add @dxos/cli-dxns@v2.16.0
+        yarn global add @dxos/cli-app@v2.16.0
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use

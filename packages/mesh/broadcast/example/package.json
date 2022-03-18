@@ -11,9 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "discovery-signal-webrtc & parcel index.html --no-cache"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@geut/discovery-swarm-webrtc": "^2.2.2",
     "ngraph.graph": "^18.0.1"

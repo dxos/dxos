@@ -43,6 +43,7 @@ export class ItemDemuxer {
       }
     });
 
+    // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
@@ -182,6 +183,10 @@ export class ItemDemuxer {
   }
 }
 
+/**
+ * Sort based on parents.
+ * @param items
+ */
 export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();

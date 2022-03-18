@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
-import yargs, { Arguments } from 'yargs';
+import { Arguments, Argv } from 'yargs';
 
 import { Config, defaults } from './config';
 import { Project } from './project';
@@ -16,7 +16,7 @@ const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
 // TODO(burdon): Replace console.log with process.stdout.write.
 
-type Handler <T> = (argv: Arguments<T>) => Promise<void>;
+export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
 
 /**
  * Wraps yargs handler.
@@ -25,7 +25,7 @@ type Handler <T> = (argv: Arguments<T>) => Promise<void>;
  * @param timeout
  * @param verbose
  */
-function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
+export function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
   return async function (argv: Arguments<T>) {
     const t = timeout && setTimeout(() => {
       process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
@@ -41,7 +41,7 @@ function handler <T> (title: string, handler: Handler<T>, timeout = false, verbo
   };
 }
 
-interface BuildOptions {
+export interface BuildOptions {
   minify?: boolean
   verbose?: boolean
   watch?: boolean
@@ -50,12 +50,8 @@ interface BuildOptions {
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
  */
-async function execBuild (config: Config, options: BuildOptions = {}) {
+export async function execBuild (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-
-  if (project.packageJsonContents.eslintConfig && !project.packageJsonContents.toolchain?.allowExtendedEslintConfig) {
-    process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored.\n`);
-  }
 
   try {
     fs.rmSync(join(project.packageRoot, config.protobuf.output), { recursive: true, force: true });
@@ -91,14 +87,16 @@ async function execBuild (config: Config, options: BuildOptions = {}) {
 /**
  * Creates a bundled build of the current package.
  */
-async function execBuildBundle (config: Config, options: BuildOptions = {}) {
+export async function execBuildBundle (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-  const { outdir } = project.esbuildConfig;
+  const outdir = project.esbuildConfig.outdir ?? defaults.esbuild.outdir;
 
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['build']);
+
+  // TODO(burdon): Test terser vs esbuild --minify?
 
   if (options.minify) {
     const filename = project.entryPoint.split('/').slice(-1)[0];
@@ -112,9 +110,9 @@ async function execBuildBundle (config: Config, options: BuildOptions = {}) {
 /**
  * Creates a static build of the storybook for the current package.
  */
-async function execBuildBook (config: Config, options: BuildOptions = {}) {
+export async function execBuildBook (config: Config, options: BuildOptions = {}) {
   const project = Project.load(config);
-  const { outdir } = project.esbuildConfig;
+  const outdir = project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
 
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
@@ -132,14 +130,14 @@ async function execBuildBook (config: Config, options: BuildOptions = {}) {
 /**
  * Runs the storybook for the current package.
  */
-async function execBook () {
+export async function execBook () {
   await execTool('esbuild-server', ['book']);
 }
 
 /**
  * Runs a dev server for the current package.
  */
-async function execStart () {
+export async function execStart () {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
   await execTool('esbuild-server', ['dev']);
 }
@@ -149,7 +147,7 @@ async function execStart () {
  * @param config
  * @param userArgs
  */
-async function execTest (config: Config, userArgs?: string[]) {
+export async function execTest (config: Config, userArgs?: string[]) {
   const project = Project.load(config);
 
   if (project.packageJsonContents.jest) {
@@ -169,152 +167,151 @@ async function execTest (config: Config, userArgs?: string[]) {
 }
 
 /**
- * Main yargs entry-point.
+ * Builds core yargs commands for toolchain.
+ * Returns yargs so it can be chained with custom commands.
  */
-// eslint-disable-next-line no-unused-expressions
-yargs(process.argv.slice(2))
-
-  .option('verbose', {
-    alias: 'v',
-    type: 'boolean',
-    default: false
-  })
-
-//
-// Build
-//
-
-  .command<{ verbose?: boolean, watch?: boolean }>(
-    'build',
-    'Build the package.',
-    yargs => yargs
-      .option('watch', {
-        alias: 'w',
-        type: 'boolean',
-        default: false
-      })
-      .strict(),
-    async (argv) => {
-      await execBuild(defaults, { verbose: argv.verbose, watch: argv.watch });
-    }
-  )
-
-  .command(
-    'build:bundle',
-    'Build a bundle for the package.',
-    yargs => yargs
-      .option('minify', {
-        type: 'boolean',
-        default: false
-      })
-      .strict(),
-    handler<{ minify: boolean }>('Bundle', async (argv) => {
-      await execBuildBundle(defaults, { minify: argv.minify });
+export const setupCoreCommands = (yargs: Argv) => (
+  yargs
+    .option('verbose', {
+      alias: 'v',
+      type: 'boolean',
+      default: false
     })
-  )
 
-  .command(
-    'build:test',
-    'build, lint, and test the package',
-    yargs => yargs
-      .strict(),
-    handler('Tests', async () => {
-      const project = Project.load(defaults);
-      await execBuild(defaults);
-      await execLint(project);
-      await execTest(defaults);
+  //
+  // Build
+  //
 
-      // Additional test steps execution placed here to allow to run tests without additional steps.
-      // Additional test steps are executed by default only when build:test is run.
-      for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-        console.log(chalk`\n{green.bold ${step}}`);
-        await execScript(project, step, []);
+    .command<{ verbose?: boolean, watch?: boolean }>(
+      'build',
+      'Build the package.',
+      yargs => yargs
+        .option('watch', {
+          alias: 'w',
+          type: 'boolean',
+          default: false
+        })
+        .strict(),
+      async (argv) => {
+        await execBuild(defaults, { verbose: argv.verbose, watch: argv.watch });
       }
-    }, true)
-  )
+    )
 
-//
-// ESBuild server/book
-// TODO(burdon): Out directory's index.html overwritten build build:bundle
-//
-
-  .command(
-    'build:book',
-    'Build the storybook for the package.',
-    yargs => yargs
-      .option('minify', {
-        type: 'boolean',
-        default: false
+    .command(
+      'build:bundle',
+      'Build a bundle for the package.',
+      yargs => yargs
+        .option('minify', {
+          type: 'boolean',
+          default: false
+        })
+        .strict(),
+      handler<{ minify: boolean }>('Bundle', async (argv) => {
+        await execBuildBundle(defaults, { minify: argv.minify });
       })
-      .strict(),
-    handler<{ minify: boolean }>('Build book', async (argv) => {
-      await execBuildBook(defaults, { minify: argv.minify });
-    })
-  )
+    )
 
-  .command(
-    'book',
-    'Run the storybook for the package.',
-    yargs => yargs
-      .strict(),
-    async () => {
-      await execBook();
-    }
-  )
+    .command(
+      'build:test',
+      'build, lint, and test the package',
+      yargs => yargs
+        .strict(),
+      handler('Tests', async () => {
+        const project = Project.load(defaults);
+        await execBuild(defaults);
+        await execLint(project);
+        await execTest(defaults);
 
-  .command(
-    'start',
-    'Run a dev server for the package.',
-    yargs => yargs
-      .strict(),
-    async () => {
-      await execStart();
-    }
-  )
+        // Additional test steps execution placed here to allow to run tests without additional steps.
+        // Additional test steps are executed by default only when build:test is run.
+        for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+          console.log(chalk`\n{green.bold ${step}}`);
+          await execScript(project, step, []);
+        }
+      }, true)
+    )
 
-//
-// Testing
-//
+  //
+  // ESBuild server/book
+  // TODO(burdon): Out directory's index.html overwritten build build:bundle
+  //
 
-  .command(
-    'test',
-    'run tests',
-    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    handler('Tests', async ({ _ }) => {
-      await execTest(defaults, _.slice(1).map(String));
-    }, true)
-  )
+    .command(
+      'build:book',
+      'Build the storybook for the package.',
+      yargs => yargs
+        .option('minify', {
+          type: 'boolean',
+          default: false
+        })
+        .strict(),
+      handler<{ minify: boolean }>('Build book', async (argv) => {
+        await execBuildBook(defaults, { minify: argv.minify });
+      })
+    )
 
-//
-// Lint
-//
-
-  .command(
-    'lint',
-    'run linter',
-    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    async ({ _ }) => {
-      const project = Project.load(defaults);
-      await execLint(project, _.slice(1).map(String));
-    }
-  )
-
-//
-// Run scripts.
-//
-
-  .command<{ command: string }>(
-    ['* <command>', 'run <command>'],
-    'run script or a tool',
-    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-    async ({ command, _ }) => {
-      const project = Project.load(defaults);
-      if (project.packageJsonContents.scripts?.[command]) {
-        await execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
-      } else {
-        await execCommand(command, _.map(String));
+    .command(
+      'book',
+      'Run the storybook for the package.',
+      yargs => yargs
+        .strict(),
+      async () => {
+        await execBook();
       }
-    }
-  )
+    )
 
-  .argv;
+    .command(
+      'start',
+      'Run a dev server for the package.',
+      yargs => yargs
+        .strict(),
+      async () => {
+        await execStart();
+      }
+    )
+
+  //
+  // Testing
+  //
+
+    .command(
+      'test',
+      'run tests',
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      handler('Tests', async ({ _ }) => {
+        await execTest(defaults, _.slice(1).map(String));
+      }, true)
+    )
+
+  //
+  // Lint
+  //
+
+    .command(
+      'lint',
+      'run linter',
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      async ({ _ }) => {
+        const project = Project.load(defaults);
+        await execLint(project, _.slice(1).map(String));
+      }
+    )
+
+  //
+  // Run scripts.
+  //
+
+    .command<{ command: string }>(
+      ['* <command>', 'run <command>'],
+      'run script or a tool',
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      async ({ command, _ }) => {
+        const project = Project.load(defaults);
+        if (project.packageJsonContents.scripts?.[command]) {
+          await execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
+        } else {
+          await execCommand(command, _.map(String));
+        }
+      }
+    )
+);

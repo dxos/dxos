@@ -1,12 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
     "types": [
       "mocha"

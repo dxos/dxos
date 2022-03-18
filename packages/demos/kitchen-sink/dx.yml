@@ -5,4 +5,4 @@ module:
   name: dxos:esbook.kitchen-sink
 
 build:
-  command: npm run build
+  command: npm run build:bundle

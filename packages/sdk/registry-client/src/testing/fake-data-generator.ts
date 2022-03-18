@@ -11,8 +11,6 @@ import {
   CID, DXN, RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord, TypeRecordMetadata
 } from '../types';
 
-const defs = protobuf.Root.fromJSON(schemaJson);
-
 /**
  * Generates a random CID.
  */
@@ -22,48 +20,31 @@ export const createCID = (): CID => {
 
 /**
  * Generates a random DXN.
- *
  * Accepts a custom domain, uses 'example' by default.
  */
-export const createDxn = (domain = 'example'): DXN => {
-  return DXN.fromDomainName(domain, faker.internet.domainWord());
+export const createDXN = (domain = 'example'): DXN => {
+  return DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'));
 };
 
-export const mockTypeNames = [
-  {
-    type: '.dxos.type.KUBE',
-    label: 'KUBE'
-  },
-  {
-    type: '.dxos.type.Service',
-    label: 'KUBE Service'
-  },
-  {
-    type: '.dxos.type.IPFS',
-    label: 'IPFS service'
-  },
-  {
-    type: '.dxos.type.File',
-    label: 'File'
-  },
-  {
-    type: '.dxos.type.App',
-    label: 'App'
-  },
-  {
-    type: '.dxos.type.Bot',
-    label: 'Bot'
-  }
+export const mockTypeMessageNames = [
+  '.dxos.type.App',
+  '.dxos.type.Bot',
+  '.dxos.type.File',
+  '.dxos.type.IPFS',
+  '.dxos.type.KUBE',
+  '.dxos.type.Service'
 ];
 
-const mockTypes = mockTypeNames.map((item): RegistryTypeRecord => ({
+const protobufDefs = protobuf.Root.fromJSON(schemaJson);
+
+const mockTypes: RegistryTypeRecord[] = mockTypeMessageNames.map(messageName => ({
   cid: createCID(),
   kind: RecordKind.Type,
   meta: {
     created: faker.date.recent(30)
   },
-  messageName: item.type,
-  protobufDefs: defs
+  messageName,
+  protobufDefs
 }));
 
 /**
@@ -84,13 +65,12 @@ export interface CreateMockResourceRecordOptions {
  * Allows record data and meta to be provided, otherwise are left empty.
  */
 export const createMockResourceRecord = ({
-  dxn,
   type: typeName,
+  dxn,
   meta = {},
   data = {}
-} : CreateMockResourceRecordOptions = {}): ResourceRecord => {
-  const type =
-    mockTypes.find(type => type.messageName === typeName) ?? faker.random.arrayElement(mockTypes);
+}: CreateMockResourceRecordOptions = {}): ResourceRecord => {
+  const type = mockTypes.find(type => type.messageName === typeName) ?? faker.random.arrayElement(mockTypes);
 
   const record: RegistryDataRecord = {
     kind: RecordKind.Data,
@@ -102,17 +82,16 @@ export const createMockResourceRecord = ({
     data: sanitizeExtensionData(data, type.cid)
   };
 
-  return {
-    resource: {
-      id: dxn ?? createDxn(),
-      tags: {
-        latest: record.cid
-      },
-      versions: {},
-      type: type.cid
+  const resource = {
+    id: dxn ?? createDXN(), // TODO(burdon): Either pass in or don't.
+    tags: {
+      latest: record.cid
     },
-    record: record
+    versions: {},
+    type: type.cid
   };
+
+  return { record, resource };
 };
 
 /**
@@ -135,4 +114,15 @@ export const createMockRecord = (): RegistryDataRecord => {
 /**
  * Generates a list of resource records with random types.
  */
-export const createMockResourceRecords = () => Array.from({ length: 30 }).map(() => createMockResourceRecord());
+export const createMockResourceRecords = (n = 30) => {
+  const dxns = new Map<string, DXN>();
+  while (dxns.size < n) {
+    const dxn = createDXN();
+    const key = String(dxn);
+    if (!dxns.has(key)) {
+      dxns.set(key, dxn);
+    }
+  }
+
+  return Array.from(dxns.values()).map(dxn => createMockResourceRecord({ dxn }));
+};

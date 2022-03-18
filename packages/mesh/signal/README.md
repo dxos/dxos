@@ -59,4 +59,4 @@ PRs accepted.
 
 GPL-3.0 © dxos
 
-# DxOS Signal Server
+# DXOS Signal Server

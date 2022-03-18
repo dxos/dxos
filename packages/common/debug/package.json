@@ -1,14 +1,7 @@
 {
   "name": "@dxos/debug",
-  "version": "2.28.2",
+  "version": "2.28.5",
   "description": "Debug utilities",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -27,8 +20,8 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.26",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "eslint": "^7.12.1",
