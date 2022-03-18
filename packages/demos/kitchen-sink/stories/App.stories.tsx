@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { usePartyImportExport } from '@dxos/react-framework';
 
 import { InvitationDialog, PartyBuilder } from '../src';
 import {
@@ -50,6 +51,7 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party>();
+    const { onImportParty } = usePartyImportExport();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
@@ -64,6 +66,11 @@ export const Secondary = () => {
       invitation.authenticate(Buffer.from(secret));
       const party = await invitation.getParty();
       setParty(party);
+    };
+
+    const handleImportParty = async (partyFile: File) => {
+      const importedParty = await onImportParty(partyFile);
+      setParty(importedParty);
     };
 
     const handleInvite = async () => {
@@ -89,6 +96,7 @@ export const Secondary = () => {
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
+        onImportParty={handleImportParty}
       />
     );
   };

@@ -20,6 +20,7 @@ interface InvitationDialogProps {
   title?: string
   onCreate: () => void,
   onJoin: (invitationCode: string) => void
+  onImportParty: (partyFile: File) => void
 }
 
 /**
@@ -29,11 +30,31 @@ export const InvitationDialog = ({
   open,
   title = 'Demo',
   onCreate,
-  onJoin
+  onJoin,
+  onImportParty
 }: InvitationDialogProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
+
+  const handleImportParty = async (files: FileList | null) => {
+    if (!files || !onImportParty) {
+      return;
+    }
+
+    const partyFileToImport = files[0];
+
+    setInProgress(true);
+    setError(undefined);
+    try {
+      await onImportParty(partyFileToImport);
+    } catch (error: any) {
+      console.error(error);
+      setError(error);
+    } finally {
+      setInProgress(false);
+    }
+  };
 
   return (
     <Dialog open={open} fullWidth maxWidth='sm'>
@@ -59,6 +80,25 @@ export const InvitationDialog = ({
         {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
+        <>
+          <input
+            style={{ display: 'none' }}
+            id='raised-button-file'
+            type='file'
+            onChange={e => handleImportParty(e.currentTarget.files)}
+          />
+          <label htmlFor='raised-button-file'>
+            <Button
+              data-id='test-button-import'
+              color='primary'
+              variant='outlined'
+              component='span'
+              disabled={inProgress}
+            >
+              Import Party
+            </Button>
+          </label>
+        </>
         <Button
           data-id='test-button-join'
           color='secondary'
