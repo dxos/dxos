@@ -100,8 +100,18 @@ export class DataServiceHost {
   subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
-      const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntityNotFoundError(request.itemId));
-      const snapshot = this._itemDemuxer.createEntitySnapshot(entity);
+      const entityItem = this._itemManager.items.find(item => item.id === request.itemId);
+      let snapshot;
+      if (entityItem) {
+        snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
+      } else {
+        const entityLink = this._itemManager.links.find(link => link.id === request.itemId);
+        if (entityLink) {
+          snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
+        } else {
+          raise(new EntityNotFoundError(request.itemId));
+        }
+      }
 
       log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
       next({ snapshot });
