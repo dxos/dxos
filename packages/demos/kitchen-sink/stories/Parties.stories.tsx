@@ -4,18 +4,18 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, ButtonProps } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
-import { usePartyImportExport } from '@dxos/react-framework';
+import { usePartySerializer } from '@dxos/react-framework';
 
 export default {
   title: 'KitchenSink/Parties'
 };
 
-const StyledButton = (props: any) => {
+const StyledButton = (props: ButtonProps) => {
   return (
     <Button
       variant='contained'
@@ -29,20 +29,31 @@ const StyledButton = (props: any) => {
 
 const InvitationDialogPartyStory = () => {
   const [party, setParty] = useState<Party | null>();
-  const { onExportParty, onImportParty } = usePartyImportExport();
+  const partySerializer = usePartySerializer();
 
-  const handleImportParty = async (partyFile: File) => {
-    const importedParty = await onImportParty(partyFile);
+  const handleImportParty = async (files: FileList) => {
+    const partyFile = files[0];
+    const importedParty = await partySerializer.importParty(partyFile);
     setParty(importedParty);
   };
 
   return (
     <FullScreen>
-      <Box>
-        <StyledButton>
-          Import Party
-        </StyledButton>
-        <StyledButton>
+      <Box display='flex' justifyContent='space-around'>
+        <Box>
+          <input
+            style={{ display: 'none' }}
+            id='raised-button-file'
+            type='file'
+            onChange={e => handleImportParty(e.currentTarget.files)}
+          />
+          <label htmlFor='raised-button-file'>
+            <StyledButton component='span'>
+              Import Party
+            </StyledButton>
+          </label>
+        </Box>
+        <StyledButton disabled={!party}>
           Export Party
         </StyledButton>
         <StyledButton>
@@ -61,7 +72,7 @@ const InvitationDialogPartyStory = () => {
         </Box>
       )}
     </FullScreen>
-  )
+  );
 };
 
 export const ImportParty = () => {
@@ -73,4 +84,3 @@ export const ImportParty = () => {
     </ClientProvider>
   );
 };
-
