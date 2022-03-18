@@ -129,8 +129,6 @@ describe('snapshot', () => {
       data = schema.getCodecForType('dxos.echo.snapshot.DatabaseSnapshot').encode(snapshot);
     }
 
-    console.log('=====', schema.getCodecForType('dxos.echo.snapshot.LinkSnapshot'));
-
     {
       const itemManager = new ItemManager(modelFactory, PublicKey.random());
       const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, { snapshots: true });
@@ -145,8 +143,8 @@ describe('snapshot', () => {
 
       const [item1, item2] = itemManager.items;
       const [link] = itemManager.links;
-      expect(link.source).toBe(item1.id);
-      expect(link.target).toBe(item2.id);
+      expect(link.source.id).toBe(item1.id);
+      expect(link.target.id).toBe(item2.id);
     }
   });
 
