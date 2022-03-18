@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Party } from '@dxos/client';
 import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
@@ -44,8 +45,8 @@ const Parties = () => {
 };
 
 interface UserProps {
-  sharing?: boolean;
-  joining?: boolean;
+  sharing?: boolean
+  joining?: boolean
   remote?: boolean
 }
 
@@ -60,20 +61,24 @@ const User = ({ sharing, joining, remote }: UserProps) => {
         {sharing && <Button disabled={shareOpen} onClick={() => setShareOpen(true)}>Share HALO</Button>}
         {joining && <Button disabled={joinOpen} onClick={() => setJoinOpen(true)}>Join HALO</Button>}
       </Toolbar>
+
       <HaloSharingDialog
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         modal={false}
       />
+
       <JoinHaloDialog
         open={joinOpen}
         onClose={() => setJoinOpen(false)}
         modal={false}
         closeOnSuccess={true}
       />
+
       <Box sx={{ marginTop: 2, padding: 1 }}>
         {remote ? <RemoteParties /> : <Parties />}
       </Box>
+
       <Box sx={{ padding: 1 }}>
         <p>{profile?.username ?? 'Profile not created.'}</p>
       </Box>

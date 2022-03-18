@@ -4,9 +4,7 @@
 
 import { Client } from '@dxos/client';
 
-// TODO(burdon): Print version.
 // http://patorjk.com/software/taag/#p=testall&f=Patorjk-HeX&t=DXOS
-
 const BANNER = (client: Client) => '\n' +
   '_/\\/\\/\\/\\/\\____/\\/\\____/\\/\\____/\\/\\/\\/\\______/\\/\\/\\/\\/\\_\n' +
   '_/\\/\\____/\\/\\____/\\/\\/\\/\\____/\\/\\____/\\/\\__/\\/\\_________\n' +

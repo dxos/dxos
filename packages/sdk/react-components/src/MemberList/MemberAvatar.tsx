@@ -33,9 +33,12 @@ const getColor = (publicKey: PublicKeyLike) => {
   return COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
 };
 
+// Same size as medium Icon.
 const avatarStyles = {
-  width: 32,
-  height: 32
+  margin: '5px',
+  width: 24,
+  height: 24,
+  fontSize: 16
 };
 
 export const ShareButton = ({ onClick }: { onClick: () => void }) => {

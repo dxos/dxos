@@ -4,5 +4,7 @@
 
 import { Bot } from './proto/gen/dxos/bot';
 
-export * from './bot-factory-client';
 export { Bot };
+
+export * from './client';
+export * from './handle';

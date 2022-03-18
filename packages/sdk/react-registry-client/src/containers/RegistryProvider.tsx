@@ -13,16 +13,20 @@ import { createRegistryContext, RegistryConfigProvider } from './config';
 const log = debug('dxos:react-registry-client:error');
 
 interface RegistryProviderProps {
-  children?: ReactNode
   config?: RegistryConfigProvider
   registry?: IRegistryClient
+  children?: ReactNode
 }
 
 /**
  * Initializes and provides a DXNS registry instance given a config object or config generator.
  * To be used with `useRegistry` hook.
  */
-export const RegistryProvider = ({ children, config = {}, registry }: RegistryProviderProps) => {
+export const RegistryProvider = ({
+  config = {},
+  registry,
+  children
+}: RegistryProviderProps) => {
   const [value, setValue] = useState<RegistryContext | undefined>(registry && { registry });
   const [error, setError] = useState<undefined | Error>(undefined);
   if (error) {
