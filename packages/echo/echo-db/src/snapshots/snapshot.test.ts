@@ -92,7 +92,7 @@ describe('snapshot', () => {
     expect(echo.isOpen).toBe(false);
   });
 
-  test.only('restore from snapshot', async () => {
+  test('restore from snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
     let data;
