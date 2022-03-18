@@ -98,7 +98,7 @@ export class ItemManager {
     parentId?: ItemID,
     initProps?: any // TODO(burdon): Remove/change to array of mutations.
   ): Promise<Item<Model<unknown>>> {
-    assert(this._writeStream);
+    assert(this._writeStream); // TODO(burdon): Throw ReadOnlyError();
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
@@ -188,7 +188,8 @@ export class ItemManager {
     modelType, itemId, snapshot
   }: ModelConstructionOptions): Promise<StateManager<Model>> {
     // Convert model-specific outbound mutation to outbound envelope message.
-    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({ itemId, mutation }), this._writeStream);
+    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(
+      mutation => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
     return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
@@ -197,6 +198,7 @@ export class ItemManager {
   /**
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
    */
+  // TODO(burdon): Parent not used.
   private _addEntity (entity: Entity<any>, parent?: Item<any> | null) {
     assert(!this._entities.has(entity.id));
     this._entities.set(entity.id, entity);
@@ -217,19 +219,12 @@ export class ItemManager {
 
   /**
    * Constructs an item with the appropriate model.
-   * @param itemId
-   * @param modelType
-   * @param itemType
-   * @param readStream - Inbound mutation stream (from multiplexer).
-   * @param [parentId] - ItemID of the parent of this Item (optional).
-   * @param initialMutations
-   * @param modelSnapshot
    */
   @timed(5_000)
   async constructItem ({
     itemId,
-    modelType,
     itemType,
+    modelType,
     parentId,
     snapshot
   }: ItemConstructionOptions): Promise<Item<any>> {
@@ -259,14 +254,12 @@ export class ItemManager {
 
   /**
    * Constructs an item with the appropriate model.
-   * @param readStream - Inbound mutation stream (from multiplexer).
-   * @param parentId - ItemID of the parent of this Item (optional).
    */
   @timed(5_000)
   async constructLink ({
-    itemId,
-    modelType,
+    itemId, // TODO(burdon): linkId?
     itemType,
+    modelType,
     snapshot,
     source,
     target

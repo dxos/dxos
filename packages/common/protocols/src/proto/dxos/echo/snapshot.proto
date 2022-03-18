@@ -29,18 +29,18 @@ message PartySnapshot {
   DatabaseSnapshot database = 12;
 }
 
-message DatabaseSnapshot {
-  repeated ItemSnapshot items = 1;
-}
-
 // TODO(dmaretskyi): Rename to HaloSnapshot.
 // For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
 message HaloStateSnapshot {
   repeated dxos.CredentialsMessage messages = 1;
 }
 
+message DatabaseSnapshot {
+  repeated ItemSnapshot items = 1;
+}
+
 message ItemSnapshot {
-  string itemId = 1;
+  string itemId = 1; // TODO(burdon): Rename id.
 
   string itemType = 2;
   string modelType = 3;
@@ -57,6 +57,7 @@ message ItemSnapshot {
  * The snapshots make consist of a custom snapshot object and/or a list of mutations
  * that are applied to the snapshot or the initial state.
  */
+// TODO(burdon): Rename?
 message ModelSnapshot {
   /**
    * Encoded model snapshot (defined by the model's codec).
