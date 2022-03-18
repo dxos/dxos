@@ -20,8 +20,6 @@ jobs:
           node-version: 16.14
       - name: Setup
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use
-
           # Needed for dependencies to install (playwright/robotjs)
           sudo apt-get install libxtst-dev libpng++-dev
 
@@ -45,7 +43,6 @@ jobs:
           pushd packages/wallet/wallet-extension/dist/ && zip -r $ROOT_CWD/artifacts/wallet.zip . && popd
       - name: Publish to DXNS
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use
           export PATH="$PATH:$(yarn global bin)"
           ./common/scripts/publish-artifacts.sh ${GITHUB_REF##*/}
         env:
