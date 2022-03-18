@@ -70,15 +70,12 @@ describe('Party Test Cases', () => {
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
         await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
-
         await bob.checkTaskListIsCreated(listName)
-
         await bob.createTask(listName, taskName)
       })
 
       it('I should be able to see tasks created by others on the party', async () => {
         await alice.checkTaskListIsCreated(listName)
-
         await alice.checkTaskIsCreated(taskName)
       });
     });
@@ -86,9 +83,7 @@ describe('Party Test Cases', () => {
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
         await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
-
         await bob.checkTaskListIsCreated(listName)
-
         await bob.createTask(listName, taskName)
       })
 
@@ -98,11 +93,8 @@ describe('Party Test Cases', () => {
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
         await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
-
         await bob.checkTaskListIsCreated(listName)
-
         await bob.createTask(listName, taskName)
-
         await bob.swapTaskState(taskName)
       })
 
@@ -112,9 +104,7 @@ describe('Party Test Cases', () => {
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
         await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
-
         await bob.checkTaskListIsCreated(listName)
-
         await bob.createTask(listName, taskName)
       })
 
@@ -124,11 +114,8 @@ describe('Party Test Cases', () => {
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
         await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
-
         await bob.checkTaskListIsCreated(listName)
-
         await bob.createTask(listName, taskName)
-
         await bob.removeTask(taskName)
       });
 

@@ -10,7 +10,7 @@ import {
   Contacts as AddressIcon,
   Adb as BotIcon
 } from '@mui/icons-material';
-import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { InvitationRequest, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
@@ -99,6 +99,10 @@ export const SharingDialog = ({
       maxWidth='sm'
       content={(
         <>
+          <Typography variant='body2' sx={{ marginBottom: 2 }}>
+            {`Add collaborators ${onCreateBotInvitation && 'and bots'} to the party.`}
+          </Typography>
+
           <Box sx={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -110,6 +114,7 @@ export const SharingDialog = ({
                 <ToggleButtonGroup
                   exclusive
                   size='small'
+                  color='primary'
                   value={memberType}
                   onChange={(_, value) => setMemberType(value)}
                 >
