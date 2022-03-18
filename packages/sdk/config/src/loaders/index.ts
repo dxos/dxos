@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import path from 'path';
 
 import { mapFromKeyValues } from '../config';
-import { ConfigObject } from '../types';
+import { ConfigObject } from '../proto';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 

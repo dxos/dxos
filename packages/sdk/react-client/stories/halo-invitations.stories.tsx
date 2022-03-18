@@ -4,9 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  Box, Button, Divider, Paper, TextField, Toolbar
-} from '@mui/material';
+import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
 import { Invitation, InvitationDescriptor } from '@dxos/client';
 

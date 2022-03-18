@@ -6,7 +6,7 @@ import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
-import { Config, ConfigObject } from '@dxos/config';
+import { ConfigProvider } from '@dxos/config';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util';
 
 import { printBanner } from '../banner';
@@ -15,8 +15,6 @@ import { ClientContext } from '../hooks';
 const log = debug('dxos:react-client');
 
 export type ClientProvider = MaybeFunction<MaybePromise<Client>>
-
-export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigObject>>
 
 export interface ClientProviderProps {
   children?: ReactNode

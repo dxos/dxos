@@ -2,10 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Config as ConfigObject } from './proto/gen/dxos/config';
+import { MaybeFunction, MaybePromise } from '@dxos/util';
 
-// TODO(burdon): Rename ConfigType.
-export type { ConfigObject };
+import { Config } from './config';
+import type { ConfigObject } from './proto';
+
+export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigObject>>
 
 type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
 

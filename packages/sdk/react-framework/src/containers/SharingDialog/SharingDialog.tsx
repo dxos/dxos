@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import urlJoin from 'url-join';
 
-import { Box, Button, Popover } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { InvitationRequest, Party, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
@@ -58,7 +58,7 @@ export const SharingDialog = ({
   onCancelInvitation,
   onClose
 }: SharingDialogProps) => {
-  const [botPopover, setBotPopover] = useState<HTMLButtonElement | null>(null);
+  const [showBotSelector, setShowBotSelector] = useState(false);
 
   return (
     <Dialog
@@ -67,7 +67,7 @@ export const SharingDialog = ({
       title={title}
       content={(
         <>
-          <Box>
+          <Box sx={{ display: 'flex' }}>
             <Button
               variant='outlined'
               onClick={onCreateInvitation}
@@ -75,39 +75,28 @@ export const SharingDialog = ({
               Invite User
             </Button>
 
-            {party && onCreateBotInvitation && (
+            {/* TODO(burdon): Advanced panel reveals bot selector? */}
+            {party && (
               <>
                 <Button
                   variant='outlined'
-                  onClick={event => setBotPopover(event.currentTarget)}
-                  sx={{ marginLeft: 1 }}
+                  onClick={() => setShowBotSelector(true)}
+                  sx={{ marginLeft: 1, marginRight: 2 }}
                 >
                   Invite Bot
                 </Button>
-                <Popover
-                  open={Boolean(botPopover)}
-                  onClose={() => setBotPopover(null)}
-                  anchorEl={botPopover}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left'
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left'
-                  }}
-                >
-                  <Box sx={{ width: 400, padding: 2 }}>
+                {showBotSelector && (
+                  <Box sx={{ width: 400 }}>
                     <SpawnBotPanel
                       party={party}
                       onClose={() => {
                         setTimeout(() => {
-                          setBotPopover(null);
+                          setShowBotSelector(false);
                         }, 500);
                       }}
                     />
                   </Box>
-                </Popover>
+                )}
               </>
             )}
           </Box>

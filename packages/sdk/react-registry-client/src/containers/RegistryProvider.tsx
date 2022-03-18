@@ -5,15 +5,16 @@
 import debug from 'debug';
 import React, { useState, useEffect, ReactNode } from 'react';
 
+import { ConfigProvider } from '@dxos/config';
 import { IRegistryClient } from '@dxos/registry-client';
 
 import { RegistryContext } from '../hooks';
-import { createRegistryContext, RegistryConfigProvider } from './config';
+import { createRegistryContext } from './config';
 
 const log = debug('dxos:react-registry-client:error');
 
 interface RegistryProviderProps {
-  config?: RegistryConfigProvider
+  config?: ConfigProvider
   registry?: IRegistryClient
   children?: ReactNode
 }

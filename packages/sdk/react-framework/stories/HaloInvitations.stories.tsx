@@ -2,15 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Party } from '@dxos/client';
 import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { defs } from '@dxos/config';
-import {
-  ClientProvider, ConfigProvider, ProfileInitializer, useParties, useProfile
-} from '@dxos/react-client';
+import { ConfigProvider, defs } from '@dxos/config';
+import { ClientProvider, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src';

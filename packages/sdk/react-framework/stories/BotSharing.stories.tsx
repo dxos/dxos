@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
@@ -17,10 +17,9 @@ import {
 import { BotFactoryClientProvider } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
-import { IRegistryClient } from '@dxos/registry-client';
 
 import { ErrorBoundary, PartySharingDialog } from '../src';
-import { Column, createMockRegistryWithBots } from './helpers';
+import { Column } from './helpers';
 
 export default {
   title: 'react-framework/BotSharing'
@@ -84,23 +83,22 @@ const Sender = () => {
  * https://github.com/dxos/protocols/tree/main/packages/bot
  */
 export const Primary = () => {
-  const mockRegistry = useMemo<IRegistryClient>(createMockRegistryWithBots, []);
   const config: ConfigObject = {
     runtime: {
       client: {
         debug: 'dxos:bot-factory-client'
       },
       services: {
-        // TODO(burdon): Is the signal server required?
-        // `npx @dxos/signal`
-        // `dx signal install`
-        // `dx signal start`
+        dxns: {
+          server: 'wss://dxns1.kube.dxos.network/dxns/ws'
+        },
+        // TODO(burdon): Configure CLI (`dx bot factory start --dev`).
         signal: {
-          server: 'ws://localhost:4000'
+          server: 'wss://enterprise.kube.dxos.network/dxos/signal'
         },
         // TODO(burdon): In-memory simulator? `dx bot factory start`
         bot: {
-          topic: 'f476b52ee394ab85233842661795999f4b3a3f45f6bbc6bf2cde67b38965681b'
+          topic: '3bcdff506034e818e3ad20df52faa5955dcb862e6e01c3001b4925d3d23bd433'
         }
       }
     }
@@ -109,7 +107,7 @@ export const Primary = () => {
   return (
     <FullScreen>
       <ErrorBoundary>
-        <RegistryProvider registry={mockRegistry}>
+        <RegistryProvider config={config}>
           <ClientProvider config={config}>
             <BotFactoryClientProvider>
               <ProfileInitializer>
