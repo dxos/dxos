@@ -16,6 +16,7 @@ import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
 import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
 import { InvalidConfigurationError } from '../interfaces/errors';
+import { DXOS_VERSION } from '../version';
 import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
 import { ClientServiceHost } from './service-host';
@@ -50,8 +51,7 @@ export interface ClientOptions {
  * An entrypoint to ECHO, HALO, MESH, and DXNS.
  */
 export class Client {
-  // TODO(burdon): Update version from package.
-  public readonly version = '1.0.0';
+  public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;
