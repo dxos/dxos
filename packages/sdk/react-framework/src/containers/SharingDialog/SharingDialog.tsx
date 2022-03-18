@@ -69,8 +69,8 @@ export const SharingDialog = ({
   const [memberType, setMemberType] = useState(MemberType.ONLINE);
   const [bot, setBot] = useState<Resource>();
 
-  const active = memberType === MemberType.ONLINE
-    || (memberType === MemberType.BOT && bot);
+  const active = memberType === MemberType.ONLINE ||
+    (memberType === MemberType.BOT && bot);
 
   const handleInvitation = () => {
     switch (memberType) {
@@ -89,7 +89,7 @@ export const SharingDialog = ({
         break;
       }
     }
-  }
+  };
 
   return (
     <Dialog

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { MouseEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Clear as CancelIcon, QrCode2 as QRCodeIcon } from '@mui/icons-material';
 import { Box, IconButton, Popover, Typography } from '@mui/material';

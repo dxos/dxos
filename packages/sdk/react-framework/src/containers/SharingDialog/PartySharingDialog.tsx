@@ -2,15 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Resource } from '@dxos/registry-client';
 import React from 'react';
 
 import type { PublicKey } from '@dxos/crypto';
 import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
+import { Resource } from '@dxos/registry-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export interface PartySharingDialogProps extends SharingDialogProps {
+export interface PartySharingDialogProps extends Omit<SharingDialogProps,
+  'title' | 'members' | 'onCreateInvitation' | 'onCancelInvitation' | 'onCreateBotInvitation'> {
   partyKey: PublicKey
 }
 
@@ -25,7 +26,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
 
   const handleInvitation = async () => {
     await party!.createInvitation();
-  }
+  };
 
   const handleBotInvitation = botClient ? async (resource: Resource) => {
     await botClient!.spawn({ dxn: resource.id.toString() }, party!);

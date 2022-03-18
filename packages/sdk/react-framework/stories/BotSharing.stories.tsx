@@ -6,10 +6,9 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import { ConfigObject } from '@dxos/config';
-import { ClientProvider, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
-import { BotFactoryClientProvider } from '@dxos/react-client';
+import { PublicKey } from '@dxos/crypto';
+import { ClientProvider, ProfileInitializer, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
