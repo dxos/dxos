@@ -32,7 +32,9 @@ describe('SnapshotStore', () => {
         }],
         links: [{
           linkId: createId(),
-          linkType: 'example:test'
+          linkType: 'example:test',
+          source: '',
+          target: ''
         }]
       }
     };

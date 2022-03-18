@@ -45,22 +45,22 @@ message DatabaseSnapshot {
 }
 
 message ItemSnapshot {
-  string itemId = 1;
-  string itemType = 2;
-  string modelType = 3;
-  string modelVersion = 4;
-  string parentId = 5;
-  ModelSnapshot model = 6;
+  optional string itemId = 1;
+  optional string itemType = 2;
+  optional string modelType = 3;
+  optional string modelVersion = 4;
+  optional string parentId = 5;
+  optional ModelSnapshot model = 6;
 }
 
 message LinkSnapshot {
-  string linkId = 1;
-  string linkType = 2;
-  string modelType = 3;
-  string modelVersion = 4;
-  string source = 5;
-  string target = 6;
-  ModelSnapshot model = 7;
+  optional string linkId = 1;
+  optional string linkType = 2;
+  optional string modelType = 3;
+  optional string modelVersion = 4;
+  required string source = 5;
+  required string target = 6;
+  optional ModelSnapshot model = 7;
 }
 
 /**
