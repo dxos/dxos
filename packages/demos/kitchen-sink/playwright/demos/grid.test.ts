@@ -22,7 +22,14 @@ describe('Grid demo', function () {
   const marginTop = 24; // OSX toolbar.
   const { width, height } = robot.getScreenSize();
   const minSize = { width: 750, height: 500 };
-  const [rows, columns] = [Math.floor(height / minSize.height), Math.floor(width / minSize.width)];
+
+  let [columns, rows] = [0, 0];
+  if (process.env.GRID) {
+    // Example: `GRID=2,1 rushx demo:grid`
+    [columns, rows] = process.env.GRID!.split(',').map(i => parseInt(i));
+  } else {
+    [columns, rows] = [Math.floor(width / minSize.width), Math.floor(height / minSize.height)];
+  }
 
   /**
    * Create positioned launcher.
