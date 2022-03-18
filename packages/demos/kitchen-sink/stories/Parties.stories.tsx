@@ -7,9 +7,11 @@ import React, { useState } from 'react';
 import { Box, Button, ButtonProps } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
+
+import { createMockPartyData } from './helpers';
 
 export default {
   title: 'KitchenSink/Parties'
@@ -27,7 +29,7 @@ const StyledButton = (props: ButtonProps) => {
   )
 };
 
-const InvitationDialogPartyStory = () => {
+const ImportStory = () => {
   const [party, setParty] = useState<Party | null>();
   const partySerializer = usePartySerializer();
 
@@ -39,26 +41,18 @@ const InvitationDialogPartyStory = () => {
 
   return (
     <FullScreen>
-      <Box display='flex' justifyContent='space-around'>
-        <Box>
-          <input
-            style={{ display: 'none' }}
-            id='raised-button-file'
-            type='file'
-            onChange={e => handleImportParty(e.currentTarget.files)}
-          />
-          <label htmlFor='raised-button-file'>
-            <StyledButton component='span'>
-              Import Party
-            </StyledButton>
-          </label>
-        </Box>
-        <StyledButton disabled={!party}>
-          Export Party
-        </StyledButton>
-        <StyledButton>
-          Create Random Party
-        </StyledButton>
+      <Box>
+        <input
+          style={{ display: 'none' }}
+          id='raised-button-file'
+          type='file'
+          onChange={e => handleImportParty(e.currentTarget.files)}
+        />
+        <label htmlFor='raised-button-file'>
+          <StyledButton component='span'>
+            Import Party
+          </StyledButton>
+        </label>
       </Box>
       {party && (
         <Box sx={{
@@ -79,8 +73,60 @@ export const ImportParty = () => {
   return (
     <ClientProvider>
       <ProfileInitializer>
-        <InvitationDialogPartyStory />
+        <ImportStory />
       </ProfileInitializer>
     </ClientProvider>
   );
 };
+
+const ExportStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party | null>();
+  const partySerializer = usePartySerializer();
+
+  const handleCreateRandomParty = async () => {
+    const newParty = await client.echo.createParty();
+    await createMockPartyData(newParty);
+    setParty(newParty);
+  };
+
+  const handleExportParty = async () => {
+    if (party) {
+      await partySerializer.exportParty(party);
+    }
+  };
+
+  return (
+    <FullScreen>
+      <Box display='flex' justifyContent='space-around'>
+        <StyledButton onClick={handleCreateRandomParty}>
+          Create Random Party
+        </StyledButton>
+        <StyledButton disabled={!party} onClick={handleExportParty}>
+          Export Party
+        </StyledButton>
+      </Box>
+      {party && (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          fontSize: 20
+        }}>
+          <span>Party was created. Party key: </span>
+          <span>{party.key.toHex()}</span>
+        </Box>
+      )}
+    </FullScreen>
+  );
+};
+
+export const ExportParty = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <ExportStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+}

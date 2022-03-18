@@ -16,6 +16,7 @@ import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { ItemAdapter, ItemMeta, TestType } from '../../src';
+import { Party } from '@dxos/client';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {
@@ -85,4 +86,28 @@ export const itemAdapter: ItemAdapter = {
   },
 
   meta: (type: string) => typeMeta[type]
+};
+
+export const createMockPartyData = async (party: Party) => {
+  const rootItem = await party.database.createItem({
+    model: ObjectModel,
+    type: 'mock-item-type',
+    props: {}
+  });
+
+  const items = await Promise.all(Array.from({ length: 10 }).map(async () => {
+    return await party.database.createItem({
+      model: ObjectModel,
+      type: 'mock-item-type',
+      parent: rootItem.id,
+      props: {}
+    });
+  }));
+
+  Array.from({ length: 3 }).forEach(async (_, i) => {
+    await party.database.createLink({
+      source: items[i],
+      target: items[i + 3]
+    });
+  });
 };
