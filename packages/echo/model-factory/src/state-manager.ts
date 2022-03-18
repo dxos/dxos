@@ -211,8 +211,8 @@ export class StateManager<M extends Model> {
    */
   processMessage (meta: MutationMetaWithTimeframe, mutation: Uint8Array) {
     // Remove optimistic mutation from the queue.
-    const optimisticIndex = this._optimisticMutations.findIndex(m =>
-      m.receipt && PublicKey.equals(m.receipt.feedKey, meta.feedKey) && m.receipt.seq === meta.seq
+    const optimisticIndex = this._optimisticMutations.findIndex(message =>
+      message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq
     );
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
