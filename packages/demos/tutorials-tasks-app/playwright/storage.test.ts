@@ -6,12 +6,11 @@ import { firefox } from 'playwright';
 
 import { baseUrl, Browser, TaskApp } from './utils';
 
-describe('Storage Test Cases', () => {
+describe.skip('Storage Test Cases', () => {
   let alice: TaskApp;
 
   before(async () => {
     alice = new TaskApp(new Browser());
-
     await alice.browser.launch(firefox, baseUrl);
 
     alice.browser.getPage().on('dialog', dialog => {
@@ -25,18 +24,19 @@ describe('Storage Test Cases', () => {
 
   after(() => alice.browser.get().close());
 
-  [
+  const tasks = [
     { profileName: 'Alice 1', listName: 'My Example List 1', taskName: 'Clone the repo 1', },
     { profileName: 'Alice 2', listName: 'My Example List 2', taskName: 'Clone the repo 2', },
     { profileName: 'Alice 3', listName: 'My Example List 3', taskName: 'Clone the repo 3', },
     { profileName: 'Alice 4', listName: 'My Example List 4', taskName: 'Clone the repo 4', },
-    { profileName: 'Alice 5', listName: 'My Example List 5', taskName: 'Clone the repo 5', },
-  ].map(({ profileName, listName, taskName }) => describe(`As a user ${profileName} with a profile and items created then`, () => {
+    { profileName: 'Alice 5', listName: 'My Example List 5', taskName: 'Clone the repo 5', }
+  ];
+
+  tasks.map(({ profileName, listName, taskName }) => describe(`As a user ${profileName} with a profile and items created then`, () => {
     beforeEach(async () => {
       await alice.profile.create(profileName).then(() => alice.checkAppIsLoaded());
 
       await alice.createTaskList(listName);
-
       await alice.createTask(listName, taskName);
     });
 

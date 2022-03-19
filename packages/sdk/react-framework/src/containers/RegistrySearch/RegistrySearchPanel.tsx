@@ -51,7 +51,7 @@ export const RegistrySearchPanel = ({
 
       <SearchAutocomplete
         model={model}
-        groupBy='type'
+        groupBy={types?.length ? 'type' : undefined}
         onSelect={handleSelect}
       />
     </Box>

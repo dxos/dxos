@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
@@ -19,7 +23,6 @@ export class TaskApp extends AppSimulator {
 
   async checkAppIsLoaded() {
     const header = await this.browser.getPage().waitForSelector('text="Tasks App"', { timeout: 5000 });
-
     expect(header).toBeDefined();
   }
 
@@ -27,15 +30,12 @@ export class TaskApp extends AppSimulator {
     await this.browser.getPage().click('button[title="Create list"]');
 
     const createListModal = await this.browser.getPage().waitForSelector('h2 :text("Create List")');
-
     expect(createListModal).toBeDefined();
 
     await this.browser.getPage().fill('input:above(:text("Create"))', listName);
-
     await this.browser.getPage().click('button:has-text("Create")');
 
     const createdList = await this.browser.getPage().waitForSelector(`text="${listName}"`)
-
     expect(createdList).toBeDefined();
   }
 
@@ -45,7 +45,6 @@ export class TaskApp extends AppSimulator {
 
   async checkTaskListIsCreated(listName: string) {
     const createdList = await this.browser.getPage().waitForSelector(`text="${listName}"`)
-
     expect(createdList).toBeDefined();
 
     return Boolean(createdList)
@@ -54,9 +53,7 @@ export class TaskApp extends AppSimulator {
 
   async createTask(listName: string, taskName: string) {
     await this.browser.getPage().click(`li :text("${listName}")`);
-
     await this.browser.getPage().fill("//input[@type='text']", taskName);
-
     await this.browser.getPage().click('[aria-label="create"]');
 
     await waitForExpect(async () => {
@@ -66,23 +63,19 @@ export class TaskApp extends AppSimulator {
 
   async checkTaskIsCreated(taskName: string) {
     const createdTask = await this.browser.getPage().waitForSelector(`text="${taskName}"`);
-
     expect(createdTask).toBeDefined();
   }
 
   async swapTaskState(taskName: string) {
     const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"), 100)`);
-
     expect(taskCheckbox).toBeTruthy();
 
     await taskCheckbox?.click();
-
     await waitForExpect(async () => {
       await this.checkTaskState(taskName, true);
     });
 
     await taskCheckbox?.click();
-
     await waitForExpect(async () => {
       await this.checkTaskState(taskName, false);
     });
@@ -90,7 +83,6 @@ export class TaskApp extends AppSimulator {
 
   async checkTaskState(taskName: string, expectedResult: boolean) {
     const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"), 100)`);
-
     expect(taskCheckbox).toBeTruthy();
 
     await waitForExpect(async () => {
@@ -101,11 +93,9 @@ export class TaskApp extends AppSimulator {
 
   async removeTask(taskName: string) {
     const taskTrash = await this.browser.getPage().waitForSelector(`button:right-of(:text("${taskName}"))`);
-
     expect(taskTrash).toBeTruthy();
 
     await taskTrash?.click();
-
     await waitForExpect(async () => {
       await this.checkTaskExistence(taskName);
     });
@@ -113,8 +103,6 @@ export class TaskApp extends AppSimulator {
 
   async checkTaskExistence(taskName: string) {
     const task = await this.browser.getPage().waitForSelector(`text="${taskName}"`, { timeout: 5000, state: 'detached' });
-
     expect(task).toBeNull();
   }
-
 }

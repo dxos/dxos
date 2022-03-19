@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
@@ -14,12 +14,14 @@ import {
   useParties
 } from '@dxos/react-client';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
+import { IRegistryClient } from '@dxos/registry-client';
 
 import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
-import { Column } from './helpers';
+import { Column, createMockRegistryWithBots } from './helpers';
 
 export default {
-  title: 'react-framework/PartyInvitations'
+  title: 'react-framework/PartySharing'
 };
 
 const Parties = () => {
@@ -60,14 +62,14 @@ const Sender = () => {
         <Button onClick={() => setOpen(true)}>Open</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      {open && (
-        <PartySharingDialog
-          partyKey={partyKey}
-          open={open}
-          onClose={() => setOpen(false)}
-          modal={false}
-        />
-      )}
+
+      <PartySharingDialog
+        open={open}
+        partyKey={partyKey}
+        onClose={() => setOpen(false)}
+        modal={false}
+      />
+
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
@@ -83,6 +85,7 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
+
       <JoinPartyDialog
         open={open}
         invitationCode={invitationCode}
@@ -91,6 +94,7 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
         closeOnSuccess={true}
         modal={false}
       />
+
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
@@ -99,6 +103,8 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
 };
 
 export const Primary = () => {
+  const mockRegistry = useMemo<IRegistryClient>(createMockRegistryWithBots, []);
+
   return (
     <FullScreen>
       <ErrorBoundary>
@@ -107,11 +113,13 @@ export const Primary = () => {
           justifyContent: 'space-around'
         }}>
           <ClientProvider>
-            <ProfileInitializer>
-              <Column>
-                <Sender />
-              </Column>
-            </ProfileInitializer>
+            <RegistryProvider registry={mockRegistry}>
+              <ProfileInitializer>
+                <Column>
+                  <Sender />
+                </Column>
+              </ProfileInitializer>
+            </RegistryProvider>
           </ClientProvider>
 
           <ClientProvider>
@@ -127,6 +135,9 @@ export const Primary = () => {
   );
 };
 
+/**
+ * Headless sender.
+ */
 const AutoInvitationGenerator = ({
   onInvite
 }: {

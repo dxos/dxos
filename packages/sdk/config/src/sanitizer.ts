@@ -5,8 +5,7 @@
 import { Enum, Type } from 'protobufjs';
 
 import { InvalidConfigError } from './errors';
-import { schema } from './proto/gen';
-import { Config as ConfigObject } from './proto/gen/dxos/config';
+import { schema, ConfigObject } from './proto';
 
 const configRootType = schema.getCodecForType('dxos.config.Config');
 

@@ -7,24 +7,44 @@ import yaml from 'js-yaml';
 import path from 'path';
 
 import { mapFromKeyValues } from '../config';
-import { ConfigObject } from '../types';
+import { ConfigObject } from '../proto';
+import { FILE_DEFAULTS, FILE_ENVS } from '../types';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
-/* NOTE: we need to export LocalStorage and Dynamics
- * for typescript to typecheck browser code.
- * See `ConfigPlugin.js:33`.
- */
-
-export const LocalStorage = <T = ConfigObject>(): T => ({} as T);
-
-export const Dynamics = <T = ConfigObject>(): T => ({} as T);
-
-export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
-  const content = yaml.load(fs.readFileSync(path.resolve(basePath, 'envs-map.yml'), { encoding: 'utf8' }));
-  return mapFromKeyValues(content, process.env) as T;
+const maybeLoadFile = (file: string): any => {
+  try {
+    return yaml.load(fs.readFileSync(file, { encoding: 'utf8' }));
+  } catch (err: any) {
+    // Ignored.
+  }
 };
 
+//
+// NOTE: Export LocalStorage and Dynamics for typescript to typecheck browser code (see ConfigPlugin).
+//
+
+/**
+ * File storage.
+ */
+export const LocalStorage = <T = ConfigObject>(): T => ({} as T);
+
+/**
+ * Provided dynamically by server.
+ */
+export const Dynamics = <T = ConfigObject>(): T => ({} as T);
+
+/**
+ * ENV variable (key/value) map
+ */
+export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
+  const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
+  return content ? mapFromKeyValues(content, process.env) as T : {} as T;
+};
+
+/**
+ * JSON config.
+ */
 export const Defaults = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
-  return yaml.load(fs.readFileSync(path.resolve(basePath, 'defaults.yml'), { encoding: 'utf8' }));
+  return maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;
 };

@@ -7,15 +7,16 @@ import yaml from 'js-yaml';
 import { resolve } from 'path';
 import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 
-import { mapFromKeyValues } from './config';
+import { mapFromKeyValues } from '../config';
+import { FILE_DEFAULTS, FILE_DYNAMICS, FILE_ENVS } from '../types';
 
 // TODO(wittjosiah): Update config file path to align with esbuild-plugin.
 const DEFAULT_PATH = resolve(process.cwd(), 'config');
 
 const KEYS_TO_FILE = {
-  __CONFIG_DEFAULTS__: 'defaults.yml',
-  __CONFIG_ENVS__: 'envs-map.yml',
-  __CONFIG_DYNAMICS__: 'config.yml'
+  __CONFIG_DEFAULTS__: FILE_DEFAULTS,
+  __CONFIG_ENVS__: FILE_ENVS,
+  __CONFIG_DYNAMICS__: FILE_DYNAMICS
 };
 
 export class ConfigPlugin {
@@ -53,7 +54,9 @@ export class ConfigPlugin {
         ...prev,
         [key]: JSON.stringify(content)
       };
-    }, { __DXOS_CONFIG__: JSON.stringify({ dynamic: this._dynamic, publicUrl: compiler.options.output.publicPath }) });
+    }, {
+      __DXOS_CONFIG__: JSON.stringify({ dynamic: this._dynamic, publicUrl: compiler.options.output.publicPath })
+    });
 
     new DefinePlugin(definitions).apply(compiler);
     new NormalModuleReplacementPlugin(/[/\\]loaders[/\\]index.js/, './browser.js').apply(compiler);

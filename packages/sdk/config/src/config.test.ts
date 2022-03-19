@@ -7,8 +7,8 @@ import { it as test } from 'mocha';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import { Runtime } from './proto/gen/dxos/config';
-import envmap from './testing/env_map.json';
-import defaults from './testing/test.json';
+import defaults from './testing/defaults.json';
+import envmap from './testing/envs-map.json';
 
 test('Empty config', () => {
   const config = new Config({});

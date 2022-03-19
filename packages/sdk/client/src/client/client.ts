@@ -18,6 +18,7 @@ import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout }
 import { InvalidConfigurationError } from '../interfaces/errors';
 import { Runtime } from '../proto/gen/dxos/config';
 import { createWindowMessagePort, isNode } from '../util';
+import { DXOS_VERSION } from '../version';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
 
@@ -50,8 +51,7 @@ export interface ClientOptions {
  * An entrypoint to ECHO, HALO, MESH, and DXNS.
  */
 export class Client {
-  // TODO(burdon): Update version from package.
-  public readonly version = '1.0.0';
+  public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;

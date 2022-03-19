@@ -5,25 +5,20 @@
 import React from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { Dialog } from '@dxos/react-components';
-import { IRegistryClient, Resource } from '@dxos/registry-client';
+import { useRegistry } from '@dxos/react-registry-client';
+import { Resource } from '@dxos/registry-client';
 
 import { createTypeFilter, useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
 
 interface SpawnBotDialogProps {
-  registry: IRegistryClient
-  open: boolean
-  onClose: () => void
   onSelect: (resource: Resource) => void
 }
 
-// TODO(burdon): Panel (with invite).
-export const SpawnBotDialog = ({
-  registry,
-  open,
-  onClose,
+export const SpawnBotPanel = ({
   onSelect
 }: SpawnBotDialogProps) => {
+  const registry = useRegistry();
+
   // TODO(burdon): Create hook to create pre-filtered model.
   const model = useRegistrySearchModel(registry);
   useAsyncEffect(async () => {
@@ -36,15 +31,9 @@ export const SpawnBotDialog = ({
   }, []);
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      content={(
-        <RegistrySearchPanel
-          model={model}
-          onSelect={onSelect}
-        />
-      )}
+    <RegistrySearchPanel
+      model={model}
+      onSelect={onSelect}
     />
   );
 };
