@@ -6,7 +6,7 @@ import { firefox } from 'playwright';
 
 import { baseUrl, Browser, TaskApp } from './utils';
 
-describe('Party Test Cases', () => {
+describe.skip('Party Test Cases', () => {
   let chocolatesCounter = 1
   let listName = 'My Party List';
   let taskName = `Buy ${chocolatesCounter} chocolate(s) for the team`;

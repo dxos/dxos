@@ -120,7 +120,6 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
     }
 
     const snapshot = await party.createSnapshot();
-
     const blob = new Blob([proto.schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot)]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -135,7 +134,6 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
 
   return (
     <div className={classes.fillVertically}>
-
       <div className={classes.container}>
         {/* Create task. */}
         <List dense className={classes.list}>
