@@ -148,7 +148,7 @@ export const SharingDialog = ({
               disabled={!active}
               onClick={handleInvitation}
             >
-              Send Invite
+              {memberType === MemberType.ONLINE ? 'Create invitation' : 'Send invitation'}
             </Button>
           </Box>
 
