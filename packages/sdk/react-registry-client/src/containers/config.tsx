@@ -2,39 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
+import { ConfigProvider } from '@dxos/config';
 import { AccountClient, createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
-import { MaybePromise } from '@dxos/util';
+import { getAsyncValue } from '@dxos/util';
 
 import { RegistryContext } from '../hooks';
 
-// TODO(burdon): Move to @dxos/util.
-type AsyncProvider<T> = T | (() => MaybePromise<T>);
-const resolveAsyncProvider = async <T, >(provider: AsyncProvider<T>): Promise<T> => {
-  return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
-};
-
-// TODO(burdon): Get from global config definition?
-interface RegistryClientConfig {
-  services?: {
-    dxns? : {
-      server: string, // TODO(burdon): Required.
-      uri?: string
-    }
-  }
-}
-
-export type RegistryConfigProvider = AsyncProvider<RegistryClientConfig>
-
 export const createRegistryContext = async (
-  configProvider: RegistryConfigProvider,
+  configProvider: ConfigProvider,
   signFn?: SignTxFunction
 ): Promise<RegistryContext> => {
-  const config = await resolveAsyncProvider(configProvider);
-  if (!config.services?.dxns) {
-    throw new Error('Config missing DXNS endpoint.');
+  const config = await getAsyncValue(configProvider);
+  const server = config.runtime?.services?.dxns?.server;
+  if (!server) {
+    throw new Error('Missing DXNS endpoint.');
   }
 
-  const apiPromise = await createApiPromise(config.services.dxns.server);
+  const apiPromise = await createApiPromise(server);
   const registry = new RegistryClient(apiPromise, signFn);
   const accounts = new AccountClient(apiPromise, signFn);
 

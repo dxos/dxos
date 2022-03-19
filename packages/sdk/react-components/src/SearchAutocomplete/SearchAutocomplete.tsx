@@ -50,6 +50,7 @@ export const SearchAutocomplete = ({
       autoHighlight
       clearOnEscape
       options={results}
+      noOptionsText='No matches'
       isOptionEqualToValue={(a, b) => a.id === b.id}
       groupBy={groupBy ? option => (option as any)[groupBy] : undefined}
       getOptionLabel={option => option.text}

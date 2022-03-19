@@ -15,6 +15,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/util": "workspace:*",

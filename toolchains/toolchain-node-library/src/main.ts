@@ -14,7 +14,8 @@ import { execCommand, execJest, execTool, execLint, execMocha, execScript } from
 
 const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
-// TODO(burdon): Replace console.log with process.stdout.write.
+const log = (str: string) => process.stdout.write(str);
+const err = (str: string) => process.stderr.write(str);
 
 export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
 
@@ -28,14 +29,14 @@ export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
 export function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
   return async function (argv: Arguments<T>) {
     const t = timeout && setTimeout(() => {
-      process.stderr.write(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+      err(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
       process.exit(1);
     }, PACKAGE_TIMEOUT);
 
     const start = Date.now();
-    verbose && console.log(chalk`\n{green.bold ${title} started}`);
+    verbose && log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    verbose && console.log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
+    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
 
     t && clearTimeout(t);
   };
@@ -57,7 +58,7 @@ export async function execBuild (config: Config, options: BuildOptions = {}) {
     fs.rmSync(join(project.packageRoot, config.protobuf.output), { recursive: true, force: true });
     fs.rmSync(join(project.packageRoot, config.tsc.output), { recursive: true, force: true });
   } catch (err: any) {
-    process.stderr.write(err.message);
+    err(err.message);
   }
 
   if (options.verbose) {
@@ -130,8 +131,8 @@ export async function execBuildBook (config: Config, options: BuildOptions = {})
 /**
  * Runs the storybook for the current package.
  */
-export async function execBook () {
-  await execTool('esbuild-server', ['book']);
+export async function execBook (userArgs?: string[]) {
+  await execTool('esbuild-server', ['book', ...userArgs ?? []]);
 }
 
 /**
@@ -144,14 +145,11 @@ export async function execStart () {
 
 /**
  * Mocha/Jest tests.
- * @param config
- * @param userArgs
  */
 export async function execTest (config: Config, userArgs?: string[]) {
   const project = Project.load(config);
-
   if (project.packageJsonContents.jest) {
-    process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored.\n`);
+    err(chalk`{yellow warn}: jest config in package.json is ignored.\n`);
   }
 
   const forceClose = project.toolchainConfig.forceCloseTests ?? false;
@@ -225,7 +223,7 @@ export const setupCoreCommands = (yargs: Argv) => (
         // Additional test steps execution placed here to allow to run tests without additional steps.
         // Additional test steps are executed by default only when build:test is run.
         for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-          console.log(chalk`\n{green.bold ${step}}`);
+          log(chalk`\n{green.bold ${step}}`);
           await execScript(project, step, []);
         }
       }, true)
@@ -253,10 +251,9 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'book',
       'Run the storybook for the package.',
-      yargs => yargs
-        .strict(),
-      async () => {
-        await execBook();
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      async ({ _ }) => {
+        await execBook(_.slice(1).map(String));
       }
     )
 

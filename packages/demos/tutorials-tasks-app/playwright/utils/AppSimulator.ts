@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import { Browser } from './Browser';
 
 export class AppSimulator {

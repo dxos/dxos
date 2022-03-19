@@ -8,20 +8,22 @@ export * from './client';
 export * from './devtools/devtools-context';
 export * from './devtools/devtools-host-events';
 export * from './util';
+export * from './version';
+
 export * as proto from './proto/gen';
 
 export {
+  PARTY_ITEM_TYPE,
   Entity,
   Item,
   Link,
   Database,
   Selection,
   SelectionResult,
+  ItemFilterDeleted,
   InvitationDescriptor,
   InvitationDescriptorType,
   OpenProgress,
   PartyMember,
-  ResultSet,
-  PARTY_ITEM_TYPE,
-  ItemFilterDeleted
+  ResultSet
 } from '@dxos/echo-db';
