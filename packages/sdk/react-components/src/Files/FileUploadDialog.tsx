@@ -32,7 +32,7 @@ export const FileUploadDialog = ({
 
     return () => {
       document.body.removeEventListener('focus', listener);
-    }
+    };
   }, [open]);
 
   // TODO(burdon): Drag files.

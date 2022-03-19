@@ -9,7 +9,7 @@ import { Box, Button, TextField } from '@mui/material';
 import { FileUploadDialog, useFileDownload } from '../src';
 
 export default {
-  title: 'react-components/FileUploadDialog',
+  title: 'react-components/FileUploadDialog'
 };
 
 export const Primary = () => {

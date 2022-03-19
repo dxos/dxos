@@ -30,4 +30,4 @@ export const useFileDownload = (): [RefObject<HTMLAnchorElement>, Callback] => {
   };
 
   return [ref, handleDownload];
-}
+};
