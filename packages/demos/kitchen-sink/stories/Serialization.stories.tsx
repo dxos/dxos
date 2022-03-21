@@ -25,7 +25,7 @@ const ImportStory = () => {
   const handleImportParty = async (files: File[]) => {
     if (files.length) {
       const partyFile = files[0];
-      const importedParty = await partySerializer.importParty(partyFile);
+      const importedParty = await partySerializer.deserializeParty(partyFile);
       setParty(importedParty);
     }
   };
@@ -81,7 +81,7 @@ const ExportStory = () => {
   };
 
   const handleExportParty = async () => {
-    const blob = await partySerializer.exportParty(party!);
+    const blob = await partySerializer.serializeParty(party!);
     download(blob, `${party!.getProperty('title') ?? 'Downloaded_Party'}.party`);
   };
 

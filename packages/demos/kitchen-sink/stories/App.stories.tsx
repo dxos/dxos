@@ -69,7 +69,7 @@ export const Secondary = () => {
     };
 
     const handleImportParty = async (partyFile: File) => {
-      const importedParty = await partySerializer.importParty(partyFile);
+      const importedParty = await partySerializer.deserializeParty(partyFile);
       setParty(importedParty);
     };
 
