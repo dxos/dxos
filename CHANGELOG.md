@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.7](https://www.github.com/dxos/protocols/compare/v2.28.6...v2.28.7) (2022-03-21)
+
+
+### Bug Fixes
+
+* Added links in snapshot creation ([#1061](https://www.github.com/dxos/protocols/issues/1061)) ([7ae4894](https://www.github.com/dxos/protocols/commit/7ae4894371bbe402b0e4eceef35ef0f98c46c20e))
+* move running bots out of cwd & ipfs fix. ([#1069](https://www.github.com/dxos/protocols/issues/1069)) ([1dc18be](https://www.github.com/dxos/protocols/commit/1dc18bee136b00f6a728119ed290cdd98758774c))
+
 ### [2.28.6](https://www.github.com/dxos/protocols/compare/v2.28.5...v2.28.6) (2022-03-19)
 
 
