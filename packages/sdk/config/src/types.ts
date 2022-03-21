@@ -2,10 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Config as ConfigObject } from './proto/gen/dxos/config';
+import { MaybeFunction, MaybePromise } from '@dxos/util';
 
-// TODO(burdon): Rename ConfigType.
-export type { ConfigObject };
+import { Config } from './config';
+import type { ConfigObject } from './proto';
+
+export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigObject>>
+
+export const FILE_DEFAULTS = 'defaults.yml';
+export const FILE_ENVS = 'envs-map.yml';
+export const FILE_DYNAMICS = 'config.yml';
 
 type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
 
@@ -27,8 +33,7 @@ type DotNestedKeys<T> = (
  *
  * Example: 'services.signal.server' -> ['services', 'signal', 'server'].
  */
-export type ParseKey<K extends string> =
-  K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>] : [K]
+export type ParseKey<K extends string> = K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>] : [K]
 
 /**
  * Array of types that can act as an object key.

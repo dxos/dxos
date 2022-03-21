@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import { InvitationDescriptor } from '@dxos/client';
 import assert from 'assert';
 import expect from 'expect';

@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';
@@ -5,7 +9,6 @@ import { AppSimulator } from './AppSimulator';
 export class ProfileModule extends AppSimulator {
   async checkCreationIsPrompted() {
     const createProfileModal = await this.browser.getPage().$('text="Create Profile"');
-
     expect(createProfileModal).toBeDefined();
   }
 
@@ -13,11 +16,9 @@ export class ProfileModule extends AppSimulator {
     await this.browser.getPage().fill('input:below(:text("Create Profile"))', username);
 
     const submitButton = await this.browser.getPage().$('button:has-text("Create")');
-
     expect(submitButton).toBeDefined();
 
     const isButtonEnabled = await submitButton?.isEnabled();
-
     expect(isButtonEnabled).toBeTruthy();
 
     await submitButton?.click();
@@ -30,9 +31,8 @@ export class ProfileModule extends AppSimulator {
     await moreButton?.click();
 
     const resetStorage = await this.browser.getPage().$('button[title="Reset Storage Button"]');
-
     expect(resetStorage).toBeDefined();
-    
+
     await resetStorage?.click();
   }
 }

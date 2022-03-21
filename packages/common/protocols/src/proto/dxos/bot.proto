@@ -1,15 +1,17 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+
 import "./client.proto";
 import "./config.proto";
 import "./echo/invitation.proto";
 
 package dxos.bot;
 
+// TODO(burdon): Rename.
 message BotPackageSpecifier {
   oneof kind {
-    string dxn = 1;
+    string dxn = 1; // TODO(burdon): name.
     string ipfs_cid = 2;
     string local_path = 3;
   }
@@ -85,16 +87,16 @@ service BotFactoryService {
   rpc GetBots(google.protobuf.Empty) returns (GetBotsResponse);
 
   rpc SpawnBot(SpawnBotRequest) returns (Bot);
- 
+
   // TODO(dmaretskyi): Invitations.
 
   rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
   rpc Remove(Bot) returns (google.protobuf.Empty);
   rpc GetLogs(GetLogsRequest) returns (stream GetLogsResponse);
- 
+
   // TODO(dmaretskyi): querying metrics/state.
- 
+
   rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
 
   rpc RemoveAll(google.protobuf.Empty) returns (google.protobuf.Empty);

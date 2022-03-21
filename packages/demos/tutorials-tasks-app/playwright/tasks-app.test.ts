@@ -6,8 +6,7 @@ import { firefox } from 'playwright';
 
 import { baseUrl, Browser, TaskApp } from './utils';
 
-describe('Tasks App Test Cases', () => {
-
+describe.skip('Tasks App Test Cases', () => {
   let alice: TaskApp;
 
   before(() => {
@@ -41,7 +40,6 @@ describe('Tasks App Test Cases', () => {
 
     beforeEach(async () => {
       await alice.createTaskList(listName);
-
       await alice.createTask(listName, taskName);
     });
 
@@ -54,11 +52,9 @@ describe('Tasks App Test Cases', () => {
 
     beforeEach(async () => {
       await alice.createTaskList(listName);
-
       await alice.createTask(listName, taskName);
     });
 
     it('I should be able to remove a task from the list', () => alice.removeTask(taskName))
   });
-
 });
