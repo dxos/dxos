@@ -6,6 +6,7 @@ import debug from 'debug';
 import download from 'download';
 import fetch from 'node-fetch';
 import path from 'path';
+import { URL } from 'url';
 
 const DOWNLOAD_TIMEOUT = 10000;
 
@@ -26,7 +27,7 @@ export class IPFSContentLoader implements ContentLoader {
 
   async download (ipfsCid: string, dir: string): Promise<string> {
     const url = `${this._ipfsEndpoint}/${ipfsCid}/`;
-    const files = await (await fetch(this._ipfsEndpoint.replace('/ipfs/', `/api/v0/ls?arg=${ipfsCid}`))).json();
+    const files = await (await fetch(`${new URL(this._ipfsEndpoint).origin}/api/v0/ls?arg=${ipfsCid}`, { method: 'POST' })).json();
     for await (const file of files.Objects[0].Links) {
       const path = url + file.Name;
       log(`Downloading: ${path}`);

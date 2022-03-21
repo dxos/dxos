@@ -10,6 +10,7 @@ import { Config } from '@dxos/config';
 import { keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
+import { BOT_OUT_DIR } from '../config';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import { BotHandle } from './bot-handle';
 import type { ContentResolver } from './dxns-content-resolver';
@@ -87,7 +88,7 @@ export class BotFactory implements BotFactoryService {
 
       const handle = new BotHandle(
         id,
-        join(process.cwd(), 'bots', id),
+        join(BOT_OUT_DIR, id),
         this._botContainer,
         {
           config: this._config,
