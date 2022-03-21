@@ -54,7 +54,6 @@ jobs:
           repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
           allow-repeats: false # This is the default
 
-
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25

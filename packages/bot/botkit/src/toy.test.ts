@@ -34,10 +34,7 @@ describe('In-Memory', () => {
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
-      const botFactory = new BotFactory({
-        botContainer,
-        config: new Config({})
-      });
+      const botFactory = new BotFactory({ config: new Config({}), botContainer });
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);

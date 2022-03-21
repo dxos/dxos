@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.6](https://www.github.com/dxos/protocols/compare/v2.28.5...v2.28.6) (2022-03-19)
+
+
+### Features
+
+* file upload/download. ([#1063](https://www.github.com/dxos/protocols/issues/1063)) ([73979ec](https://www.github.com/dxos/protocols/commit/73979ec45f86584aa4d617a887b9f179c7660842))
+* Sharing dialog with bot invitations. ([#1058](https://www.github.com/dxos/protocols/issues/1058)) ([50c5d54](https://www.github.com/dxos/protocols/commit/50c5d54b459f1c31ff1c78fd61e8c99ad7c874c7))
+
 ### [2.28.5](https://www.github.com/dxos/protocols/compare/v2.28.4...v2.28.5) (2022-03-16)
 
 

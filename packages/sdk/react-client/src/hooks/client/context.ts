@@ -10,7 +10,4 @@ interface ClientContextProps {
   client: Client
 }
 
-/**
- * https://reactjs.org/docs/context.html#reactcreatecontext
- */
 export const ClientContext = createContext<ClientContextProps | undefined>(undefined);

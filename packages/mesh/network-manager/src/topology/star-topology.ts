@@ -13,24 +13,26 @@ const log = debug('dxos:network-manager:topology:star');
 
 export class StarTopology implements Topology {
   private _controller?: SwarmController;
-
   private _intervalId?: NodeJS.Timeout;
 
   constructor (
     private readonly _centralPeer: PublicKey
   ) {}
 
-  init (controller: SwarmController): void {
-    assert(!this._controller, 'Already initialized');
-    this._controller = controller;
+  toString () {
+    return `StarTopology(${this._centralPeer})`;
+  }
 
+  init (controller: SwarmController): void {
+    assert(!this._controller, 'Already initialized.');
+    this._controller = controller;
     this._intervalId = setInterval(() => {
       controller.lookup();
     }, 10_000);
   }
 
   update (): void {
-    assert(this._controller, 'Not initialized');
+    assert(this._controller, 'Not initialized.');
     const { candidates, connected, ownPeerId } = this._controller.getState();
     if (!ownPeerId.equals(this._centralPeer)) {
       log('As leaf peer dropping all connections apart from central peer.');
@@ -42,6 +44,7 @@ export class StarTopology implements Topology {
         }
       }
     }
+
     for (const peer of candidates) {
       // Connect to central peer.
       if (peer.equals(this._centralPeer) || ownPeerId.equals(this._centralPeer)) {
@@ -52,7 +55,7 @@ export class StarTopology implements Topology {
   }
 
   async onOffer (peer: PublicKey): Promise<boolean> {
-    assert(this._controller, 'Not initialized');
+    assert(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
     log(`Offer from ${peer} isCentral=${peer.equals(this._centralPeer)} isSelfCentral=${ownPeerId.equals(this._centralPeer)}`);
     return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
@@ -62,9 +65,5 @@ export class StarTopology implements Topology {
     if (this._intervalId !== undefined) {
       clearInterval(this._intervalId);
     }
-  }
-
-  toString () {
-    return `StarTopology(${this._centralPeer})`;
   }
 }

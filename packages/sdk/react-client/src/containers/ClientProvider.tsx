@@ -6,7 +6,7 @@ import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
-import { Config, ConfigObject } from '@dxos/config';
+import { ConfigProvider } from '@dxos/config';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util';
 
 import { printBanner } from '../banner';
@@ -15,9 +15,6 @@ import { ClientContext } from '../hooks';
 const log = debug('dxos:react-client');
 
 export type ClientProvider = MaybeFunction<MaybePromise<Client>>
-
-// TODO(burdon): Why defs?
-export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigObject>>
 
 export interface ClientProviderProps {
   children?: ReactNode
@@ -76,7 +73,6 @@ export const ClientProvider = ({
         printBanner(client);
       };
 
-      // TODO(burdon): Error handling.
       setImmediate(async () => {
         if (clientProvider) {
           // Asynchornously request client.
@@ -93,6 +89,8 @@ export const ClientProvider = ({
     }
   }, []);
 
+  // Console debug access.
+  // TODO(burdon): Debug only.
   useEffect(() => {
     if (client) {
       (window as any).__DXOS__ = client.getDevtoolsContext();

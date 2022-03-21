@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-rpc",
-  "version": "2.28.5",
+  "version": "2.28.6",
   "description": "Protocol plugin to be used with @dxos/rpc",
   "license": "MIT",
   "author": "DXOS.org",
