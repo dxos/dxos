@@ -51,7 +51,7 @@ const ImportStory = () => {
           alignItems: 'center',
           fontSize: 20
         }}>
-          <span>{`Party imported: ${party.getProperty('title')} - ${party.key.toHex()}`}</span>
+          <span>{`Party imported: ${party.getProperty('title') ?? ''} - ${party.key.toHex()}`}</span>
         </Box>
       )}
     </FullScreen>
