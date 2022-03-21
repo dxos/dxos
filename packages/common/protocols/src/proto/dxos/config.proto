@@ -16,12 +16,14 @@ message Config {
   // Deploy configuration.
   //
 
+  // TODO(wittjosiah): Make repeated.
   Module module = 2;
 
   //
   // Build configuration.
   //
 
+  // TODO(wittjosiah): Remove. Have build per module.
   Build build = 3;
 
   //
@@ -34,6 +36,7 @@ message Config {
 message Module {
   // Specific to record type.
   message Record {
+    // TODO(wittjosiah): This should come from actual app record proto definitions.
     message App {
       repeated string content_type = 1;
     }
@@ -43,6 +46,7 @@ message Module {
 
   // Current build.
   message Build {
+    // TODO(wittjosiah): Why is version here and in module?
     string version = 1;
     string commit_hash = 2;
     google.protobuf.Timestamp timestamp = 3;
@@ -52,13 +56,14 @@ message Module {
   string type = 2;
   string version = 3;
 
+  // TODO(wittjosiah): Factor out (other than name/description/keywords). These should be shared by all modules.
   string author = 4;
   string license = 5;
   string description = 6;
   string repository = 7;
   string repository_version = 8;
   repeated string keywords = 9;
-  string display_name = 10;
+  string display_name = 10; // TODO(wittjosiah): Why aren't we using this, where does it go?
   string npm_url = 11;
 
   Build build = 101;
