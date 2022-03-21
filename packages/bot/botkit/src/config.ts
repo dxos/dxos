@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { join } from 'path';
 import { homedir } from 'os';
+import { join } from 'path';
 
 import { Config, mapFromKeyValues } from '@dxos/config';
 
