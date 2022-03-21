@@ -13,13 +13,7 @@ export class PartySerializer {
   }
 
   async exportParty (party: Party) {
-    const blob = await this._serializeParty(party);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${party.key.toHex()}.party`;
-    a.click();
-    document.body.removeChild(a);
+    return await this._serializeParty(party);
   }
 
   async importParty (partyFileToImport: File) {

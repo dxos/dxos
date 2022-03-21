@@ -8,7 +8,7 @@ import { Box, Button } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
 import { createMockPartyData } from './helpers';
@@ -18,37 +18,32 @@ export default {
 };
 
 const ImportStory = () => {
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [party, setParty] = useState<Party | null>();
   const partySerializer = usePartySerializer();
 
-  const handleImportParty = async (files: FileList | null) => {
-    if (!files) {
-      return;
+  const handleImportParty = async (files: File[]) => {
+    if (files.length) {
+      const partyFile = files[0];
+      const importedParty = await partySerializer.importParty(partyFile);
+      setParty(importedParty);
     }
-    const partyFile = files[0];
-    const importedParty = await partySerializer.importParty(partyFile);
-    setParty(importedParty);
   };
 
   return (
     <FullScreen>
-      <Box>
-        <input
-          style={{ display: 'none' }}
-          id='raised-button-file'
-          type='file'
-          onChange={e => handleImportParty(e.currentTarget.files)}
-        />
-        <label htmlFor='raised-button-file'>
-          <Button
-            variant='contained'
-            color='primary'
-            component='span'
-          >
-            Import Party
-          </Button>
-        </label>
-      </Box>
+      <FileUploadDialog
+        open={uploadDialogOpen}
+        onClose={() => setUploadDialogOpen(false)}
+        onUpload={handleImportParty}
+      />
+      <Button
+        variant='contained'
+        color='primary'
+        onClick={() => setUploadDialogOpen(true)}
+      >
+        Import Party
+      </Button>
       {party && (
         <Box sx={{
           display: 'flex',
@@ -78,6 +73,7 @@ const ExportStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party | null>();
   const partySerializer = usePartySerializer();
+  const [ref, download] = useFileDownload();
 
   const handleCreateRandomParty = async () => {
     const newParty = await client.echo.createParty();
@@ -86,11 +82,13 @@ const ExportStory = () => {
   };
 
   const handleExportParty = async () => {
-    await partySerializer.exportParty(party!);
+    const blob = await partySerializer.exportParty(party!);
+    download(blob, `${party!.getProperty('title') ?? 'Downloaded_Party'}.party`);
   };
 
   return (
     <FullScreen>
+      <a ref={ref} />
       <Box display='flex' justifyContent='space-around'>
         <Button
          variant='contained'
@@ -115,7 +113,7 @@ const ExportStory = () => {
           alignItems: 'center',
           fontSize: 20
         }}>
-          <span>Created: {party.key.toHex()}</span>
+          <span>Created: {party.getProperty('title')} - {party.key.toHex()}</span>
         </Box>
       )}
     </FullScreen>

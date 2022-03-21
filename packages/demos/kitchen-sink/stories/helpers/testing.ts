@@ -3,6 +3,7 @@
 //
 
 import { css } from '@emotion/css';
+import faker from 'faker';
 
 import {
   Business as OrgIcon,
@@ -89,6 +90,8 @@ export const itemAdapter: ItemAdapter = {
 };
 
 export const createMockPartyData = async (party: Party) => {
+  await party.setProperty('title', faker.lorem.word());
+
   const rootItem = await party.database.createItem({
     model: ObjectModel,
     type: 'mock-item-type',
