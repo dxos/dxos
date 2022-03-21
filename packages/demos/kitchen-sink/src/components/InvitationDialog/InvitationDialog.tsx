@@ -17,6 +17,7 @@ import {
 
 import { FileUploadDialog } from '@dxos/react-components';
 
+const log = debug('dxos:kitchen-sink');
 interface InvitationDialogProps {
   open: boolean
   title?: string
@@ -52,7 +53,7 @@ export const InvitationDialog = ({
     try {
       await onImportParty(partyFileToImport);
     } catch (error: any) {
-      console.error(error);
+      log(error);
       setError(error);
     } finally {
       setInProgress(false);
