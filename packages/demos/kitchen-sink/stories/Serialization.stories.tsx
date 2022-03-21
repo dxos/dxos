@@ -7,11 +7,11 @@ import React, { useState } from 'react';
 import { Box, Button } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
-import { createMockPartyData } from './helpers';
+import { useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/Serialization'
@@ -69,16 +69,9 @@ export const ImportParty = () => {
 };
 
 const ExportStory = () => {
-  const client = useClient();
-  const [party, setParty] = useState<Party | null>();
+  const party = useTestParty();
   const partySerializer = usePartySerializer();
   const [ref, download] = useFileDownload();
-
-  const handleCreateRandomParty = async () => {
-    const newParty = await client.echo.createParty();
-    await createMockPartyData(newParty);
-    setParty(newParty);
-  };
 
   const handleExportParty = async () => {
     const blob = await partySerializer.serializeParty(party!);
@@ -88,23 +81,14 @@ const ExportStory = () => {
   return (
     <FullScreen>
       <a ref={ref} />
-      <Box display='flex' justifyContent='space-around'>
-        <Button
-         variant='contained'
-         color='primary'
-         onClick={handleCreateRandomParty}
-        >
-          Create Random Party
-        </Button>
-        <Button
-          variant='contained'
-          color='primary'
-          disabled={!party}
-          onClick={handleExportParty}
-        >
-          Export Party
-        </Button>
-      </Box>
+      <Button
+        variant='contained'
+        color='primary'
+        disabled={!party}
+        onClick={handleExportParty}
+      >
+        Export Randomly Created Party
+      </Button>
       {party && (
         <Box sx={{
           display: 'flex',
@@ -112,7 +96,7 @@ const ExportStory = () => {
           alignItems: 'center',
           fontSize: 20
         }}>
-          <span>Created: {party.getProperty('title')} - {party.key.toHex()}</span>
+          <span>Party to export: {party.getProperty('title')} - {party.key.toHex()}</span>
         </Box>
       )}
     </FullScreen>

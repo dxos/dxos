@@ -3,7 +3,6 @@
 //
 
 import { css } from '@emotion/css';
-import faker from 'faker';
 
 import {
   Business as OrgIcon,
@@ -13,7 +12,6 @@ import {
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
-import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -87,30 +85,4 @@ export const itemAdapter: ItemAdapter = {
   },
 
   meta: (type: string) => typeMeta[type]
-};
-
-export const createMockPartyData = async (party: Party) => {
-  await party.setProperty('title', faker.lorem.word());
-
-  const rootItem = await party.database.createItem({
-    model: ObjectModel,
-    type: 'mock-item-type',
-    props: {}
-  });
-
-  const items = await Promise.all(Array.from({ length: 10 }).map(async () => {
-    return await party.database.createItem({
-      model: ObjectModel,
-      type: 'mock-item-type',
-      parent: rootItem.id,
-      props: {}
-    });
-  }));
-
-  Array.from({ length: 3 }).forEach(async (_, i) => {
-    await party.database.createLink({
-      source: items[i],
-      target: items[i + 3]
-    });
-  });
 };

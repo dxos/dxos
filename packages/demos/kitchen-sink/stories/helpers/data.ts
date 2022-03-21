@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Party } from '@dxos/client';
@@ -11,6 +12,7 @@ import { useClient, useSelection } from '@dxos/react-client';
 
 import { EchoGraphModel, OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
 import { itemAdapter } from './testing';
+
 
 // TODO(burdon): Accidentally test types are naturally alphabetical.
 export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
@@ -81,6 +83,7 @@ export const useTestParty = (): Party | undefined => {
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
+      await party.setTitle(faker.lorem.word());
       setParty(party);
     });
   }, []);
