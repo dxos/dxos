@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, ButtonTypeMap, ExtendButtonBase } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
