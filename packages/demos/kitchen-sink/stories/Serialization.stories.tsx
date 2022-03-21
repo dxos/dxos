@@ -14,7 +14,7 @@ import { usePartySerializer } from '@dxos/react-framework';
 import { createMockPartyData } from './helpers';
 
 export default {
-  title: 'KitchenSink/Parties'
+  title: 'KitchenSink/Serialization'
 };
 
 const ImportStory = () => {
@@ -86,9 +86,7 @@ const ExportStory = () => {
   };
 
   const handleExportParty = async () => {
-    if (party) {
-      await partySerializer.exportParty(party);
-    }
+    await partySerializer.exportParty(party!);
   };
 
   return (
@@ -117,8 +115,7 @@ const ExportStory = () => {
           alignItems: 'center',
           fontSize: 20
         }}>
-          <span>Party was created. Party key: </span>
-          <span>{party.key.toHex()}</span>
+          <span>Created: {party.key.toHex()}</span>
         </Box>
       )}
     </FullScreen>
