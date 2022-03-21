@@ -22,9 +22,9 @@ const log = debug('dxos:kitchen-sink');
 interface InvitationDialogProps {
   open: boolean
   title?: string
-  onCreate: () => void,
-  onJoin: (invitationCode: string) => void
-  onImportParty: (partyFile: File) => void
+  onCreate?: () => void,
+  onJoin?: (invitationCode: string) => void
+  onImportParty?: (partyFile: File) => void
 }
 
 /**
@@ -43,7 +43,7 @@ export const InvitationDialog = ({
   const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
 
   const handleImportParty = async (files: File[] | null) => {
-    if (!files || !onImportParty) {
+    if (!files) {
       return;
     }
 
@@ -52,7 +52,7 @@ export const InvitationDialog = ({
     setInProgress(true);
     setError(undefined);
     try {
-      await onImportParty(partyFileToImport);
+      await onImportParty!(partyFileToImport);
     } catch (error: any) {
       log(error);
       setError(error);
@@ -85,52 +85,60 @@ export const InvitationDialog = ({
         {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
-        <FileUploadDialog
-          open={fileUploadDialogOpen}
-          onClose={() => setFileUploadDialogOpen(false)}
-          onUpload={handleImportParty}
-        />
-        <Button
-          data-id='test-button-import'
-          color='primary'
-          variant='outlined'
-          disabled={inProgress}
-          onClick={() => setFileUploadDialogOpen(true)}
-        >
-          Import Party
-        </Button>
-        <Button
-          data-id='test-button-join'
-          color='secondary'
-          variant='contained'
-          onClick={async () => {
-            setInProgress(true);
-            setError(undefined);
-            try {
-              await onJoin(invitationCode);
-            } catch (error: any) {
-              console.error(error);
-              setError(error);
-            } finally {
-              setInProgress(false);
-            }
-          }}
-          disabled={!invitationCode || inProgress}
-        >
-          Join Party
-        </Button>
-        <Button
-          data-id='test-button-create'
-          color='primary'
-          variant='contained'
-          onClick={() => {
-            setInProgress(true);
-            onCreate();
-          }}
-          disabled={inProgress}
-        >
-          Create Party
-        </Button>
+        {onImportParty && (
+          <>
+            <FileUploadDialog
+              open={fileUploadDialogOpen}
+              onClose={() => setFileUploadDialogOpen(false)}
+              onUpload={handleImportParty}
+            />
+            <Button
+              data-id='test-button-import'
+              color='primary'
+              variant='outlined'
+              disabled={inProgress}
+              onClick={() => setFileUploadDialogOpen(true)}
+            >
+              Import Party
+            </Button>
+          </>
+        )}
+        {onJoin && (
+          <Button
+            data-id='test-button-join'
+            color='secondary'
+            variant='contained'
+            onClick={async () => {
+              setInProgress(true);
+              setError(undefined);
+              try {
+                await onJoin!(invitationCode);
+              } catch (error: any) {
+                log(error);
+                setError(error);
+              } finally {
+                setInProgress(false);
+              }
+            }}
+            disabled={!invitationCode || inProgress}
+          >
+            Join Party
+          </Button>
+        )}
+        {onCreate && (
+          <Button
+            data-id='test-button-create'
+            color='primary'
+            variant='contained'
+            onClick={() => {
+              setInProgress(true);
+              onCreate!();
+            }}
+            disabled={inProgress}
+          >
+            Create Party
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

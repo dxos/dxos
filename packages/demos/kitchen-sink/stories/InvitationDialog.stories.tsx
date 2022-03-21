@@ -22,9 +22,9 @@ const App = () => {
       <InvitationDialog
         open
         title='Kitchen Sink'
-        onCreate={() => {}}
-        onJoin={(invitationCode: string) => {}}
-        onImportParty={() => {}}
+        onCreate={() => console.log('Party creation')}
+        onJoin={(invitationCode: string) => ('Party joining')}
+        onImportParty={() => console.log('Party importing')}
       />
     </FullScreen>
   );
