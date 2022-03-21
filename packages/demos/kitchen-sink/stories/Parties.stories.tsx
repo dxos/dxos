@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, ButtonProps } from '@mui/material';
+import { Box, Button, ButtonTypeMap, ExtendButtonBase } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
@@ -17,23 +17,14 @@ export default {
   title: 'KitchenSink/Parties'
 };
 
-const StyledButton = (props: ButtonProps) => {
-  return (
-    <Button
-      variant='contained'
-      color='primary'
-      {...props}
-    >
-      {props.children}
-    </Button>
-  );
-};
-
 const ImportStory = () => {
   const [party, setParty] = useState<Party | null>();
   const partySerializer = usePartySerializer();
 
-  const handleImportParty = async (files: FileList) => {
+  const handleImportParty = async (files: FileList | null) => {
+    if (!files) {
+      return;
+    }
     const partyFile = files[0];
     const importedParty = await partySerializer.importParty(partyFile);
     setParty(importedParty);
@@ -49,9 +40,13 @@ const ImportStory = () => {
           onChange={e => handleImportParty(e.currentTarget.files)}
         />
         <label htmlFor='raised-button-file'>
-          <StyledButton component='span'>
+          <Button
+            variant='contained'
+            color='primary'
+            component='span'
+          >
             Import Party
-          </StyledButton>
+          </Button>
         </label>
       </Box>
       {party && (
@@ -99,12 +94,21 @@ const ExportStory = () => {
   return (
     <FullScreen>
       <Box display='flex' justifyContent='space-around'>
-        <StyledButton onClick={handleCreateRandomParty}>
+        <Button
+         variant='contained'
+         color='primary'
+         onClick={handleCreateRandomParty}
+        >
           Create Random Party
-        </StyledButton>
-        <StyledButton disabled={!party} onClick={handleExportParty}>
+        </Button>
+        <Button
+          variant='contained'
+          color='primary'
+          disabled={!party}
+          onClick={handleExportParty}
+        >
           Export Party
-        </StyledButton>
+        </Button>
       </Box>
       {party && (
         <Box sx={{
