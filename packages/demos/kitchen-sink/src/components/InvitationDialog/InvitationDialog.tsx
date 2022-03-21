@@ -14,6 +14,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+
 import { FileUploadDialog } from '@dxos/react-components';
 
 interface InvitationDialogProps {
