@@ -35,21 +35,32 @@ message HaloStateSnapshot {
   repeated dxos.CredentialsMessage messages = 1;
 }
 
+//
+// Database Snapshot
+//
+
 message DatabaseSnapshot {
   repeated ItemSnapshot items = 1;
+  repeated LinkSnapshot links = 2;
 }
 
 message ItemSnapshot {
-  string itemId = 1; // TODO(burdon): Rename id.
+  optional string itemId = 1;
+  optional string itemType = 2;
+  optional string modelType = 3;
+  optional string modelVersion = 4;
+  optional string parentId = 5;
+  optional ModelSnapshot model = 6;
+}
 
-  string itemType = 2;
-  string modelType = 3;
-  string modelVersion = 4;
-
-  string parentId = 5;
-
-  // TODO(burdon): = 10 (make room for other meta?)
-  ModelSnapshot model = 6;
+message LinkSnapshot {
+  optional string linkId = 1;
+  optional string linkType = 2;
+  optional string modelType = 3;
+  optional string modelVersion = 4;
+  required string source = 5;
+  required string target = 6;
+  optional ModelSnapshot model = 7;
 }
 
 /**
@@ -84,6 +95,3 @@ message ModelMutationMeta {
   required int32 seq = 2;
   required bytes memberKey = 3;
 }
-
-
-
