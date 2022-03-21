@@ -14,6 +14,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import { FileUploadDialog } from '@dxos/react-components';
 
 interface InvitationDialogProps {
   open: boolean
@@ -36,8 +37,9 @@ export const InvitationDialog = ({
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
+  const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
 
-  const handleImportParty = async (files: FileList | null) => {
+  const handleImportParty = async (files: File[] | null) => {
     if (!files || !onImportParty) {
       return;
     }
@@ -80,25 +82,20 @@ export const InvitationDialog = ({
         {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
-        <>
-          <input
-            style={{ display: 'none' }}
-            id='raised-button-file'
-            type='file'
-            onChange={e => handleImportParty(e.currentTarget.files)}
-          />
-          <label htmlFor='raised-button-file'>
-            <Button
-              data-id='test-button-import'
-              color='primary'
-              variant='outlined'
-              component='span'
-              disabled={inProgress}
-            >
-              Import Party
-            </Button>
-          </label>
-        </>
+        <FileUploadDialog
+          open={fileUploadDialogOpen}
+          onClose={() => setFileUploadDialogOpen(false)}
+          onUpload={handleImportParty}
+        />
+        <Button
+          data-id='test-button-import'
+          color='primary'
+          variant='outlined'
+          disabled={inProgress}
+          onClick={() => setFileUploadDialogOpen(true)}
+        >
+          Import Party
+        </Button>
         <Button
           data-id='test-button-join'
           color='secondary'
