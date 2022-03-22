@@ -13,7 +13,6 @@ import { useClient, useSelection } from '@dxos/react-client';
 import { EchoGraphModel, OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
 import { itemAdapter } from './testing';
 
-
 // TODO(burdon): Accidentally test types are naturally alphabetical.
 export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
   if (a.type! < b.type!) {
