@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
 import { InvitationDialog, PartyBuilder } from '../src';
@@ -52,6 +53,7 @@ export const Secondary = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
     const partySerializer = usePartySerializer();
+    const [downloadRef, download] = useFileDownload();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
@@ -68,7 +70,12 @@ export const Secondary = () => {
       setParty(party);
     };
 
-    const handleImportParty = async (partyFile: File) => {
+    const handleExport = async () => {
+      const blob = await partySerializer.serializeParty(party!);
+      download(blob, `${party?.key.toHex()}.party`);
+    };
+
+    const handleImport = async (partyFile: File) => {
       const importedParty = await partySerializer.deserializeParty(partyFile);
       setParty(importedParty);
     };
@@ -82,12 +89,17 @@ export const Secondary = () => {
       console.log(text); // Required for playwright tests.
     };
 
+
     if (party) {
       return (
-        <App
-          party={party}
-          onInvite={handleInvite}
-        />
+        <>
+          <a ref={downloadRef} />
+          <App
+            party={party}
+            onInvite={handleInvite}
+            onExport={handleExport}
+          />
+        </>
       );
     }
 
