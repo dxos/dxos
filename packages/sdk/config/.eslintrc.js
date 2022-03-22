@@ -3,7 +3,7 @@ module.exports = {
     'plugin:@dxos/recomended'
   ],
   ignorePatterns: [
-    'ConfigPlugin.js',
-    'esbuild-plugin.js'
+    'esbuild-plugin.js',
+    'webpack-plugin.js'
   ]
 };
