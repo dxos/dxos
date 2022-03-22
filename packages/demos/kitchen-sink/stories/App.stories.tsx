@@ -89,7 +89,6 @@ export const Secondary = () => {
       console.log(text); // Required for playwright tests.
     };
 
-
     if (party) {
       return (
         <>
