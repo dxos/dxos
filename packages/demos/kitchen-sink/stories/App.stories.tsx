@@ -96,7 +96,7 @@ export const Secondary = () => {
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
-        onImportParty={handleImportParty}
+        onImport={handleImport}
       />
     );
   };

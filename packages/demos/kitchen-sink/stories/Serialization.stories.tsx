@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Toolbar } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
@@ -37,21 +37,18 @@ const ImportStory = () => {
         onClose={() => setUploadDialogOpen(false)}
         onUpload={handleImportParty}
       />
-      <Button
-        variant='contained'
-        color='primary'
-        onClick={() => setUploadDialogOpen(true)}
-      >
-        Import Party
-      </Button>
+      <Toolbar>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => setUploadDialogOpen(true)}
+        >
+          Import
+        </Button>
+      </Toolbar>
       {party && (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          fontSize: 20
-        }}>
-          <span>{`Party imported: ${party.getProperty('title') ?? ''} - ${party.key.toHex()}`}</span>
+        <Box sx={{ padding: 2 }}>
+          Party: {party.key.toHex()}
         </Box>
       )}
     </FullScreen>
@@ -75,28 +72,25 @@ const ExportStory = () => {
 
   const handleExportParty = async () => {
     const blob = await partySerializer.serializeParty(party!);
-    download(blob, `${party!.getProperty('title') ?? 'Downloaded_Party'}.party`);
+    download(blob, `${party!.key.toHex()}.party`);
   };
 
   return (
     <FullScreen>
       <a ref={ref} />
-      <Button
-        variant='contained'
-        color='primary'
-        disabled={!party}
-        onClick={handleExportParty}
-      >
-        Export Randomly Created Party
-      </Button>
+      <Toolbar>
+        <Button
+          variant='contained'
+          color='primary'
+          disabled={!party}
+          onClick={handleExportParty}
+        >
+          Export
+        </Button>
+      </Toolbar>
       {party && (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          fontSize: 20
-        }}>
-          <span>Party to export: {party.getProperty('title')} - {party.key.toHex()}</span>
+        <Box sx={{ padding: 2 }}>
+          Party: {party.key.toHex()}
         </Box>
       )}
     </FullScreen>
