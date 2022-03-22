@@ -8,8 +8,8 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "ConfigPlugin.js",
-    "esbuild-plugin.js"
+    "esbuild-plugin.js",
+    "webpack-plugin.js"
   ],
   "scripts": {
     "build": "toolchain build",
