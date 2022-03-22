@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-physik",
-  "version": "2.2.1-beta.10",
+  "version": "2.2.1-beta.11",
   "description": "Gem Physik.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -36,7 +36,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/gem-core": "2.2.1-beta.10",
+    "@dxos/gem-core": "2.2.1-beta.11",
     "debug": "^4.1.1",
     "matter-js": "^0.18.0",
     "use-resize-observer": "^8.0.0"
