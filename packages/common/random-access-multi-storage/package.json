@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-multi-storage",
-  "version": "2.28.8",
+  "version": "2.28.9",
   "description": "Multiple random storage types.",
   "license": "MIT",
   "author": "DXOS.org",
