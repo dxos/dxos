@@ -24,7 +24,7 @@ const App = () => {
         title='Kitchen Sink'
         onCreate={() => console.log('Party creation')}
         onJoin={(invitationCode: string) => ('Party joining')}
-        onImportParty={() => console.log('Party importing')}
+        onImport={() => console.log('Party importing')}
       />
     </FullScreen>
   );

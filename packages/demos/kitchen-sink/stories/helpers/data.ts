@@ -71,10 +71,12 @@ export const useGraphModel = (party?: Party): EchoGraphModel => {
   return model;
 };
 
+type TestPartyCallback = (builder: PartyBuilder) => Promise<void>;
+
 /**
  * Generate test party.
  */
-export const useTestParty = (): Party | undefined => {
+export const useTestParty = (callback: TestPartyCallback = buildTestParty): Party | undefined => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const builder = usePartyBuilder(party);
@@ -90,7 +92,7 @@ export const useTestParty = (): Party | undefined => {
   useEffect(() => {
     if (builder) {
       setImmediate(async () => {
-        await buildTestParty(builder);
+        await callback(builder);
       }, []);
     }
   }, [builder, party]);
@@ -102,7 +104,7 @@ export const useTestParty = (): Party | undefined => {
  * Build the party.
  * @param builder
  */
-export const buildTestParty = async (builder: PartyBuilder) => {
+export const buildTestParty: TestPartyCallback = async (builder: PartyBuilder) => {
   await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople([3, 10]);
     await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {
