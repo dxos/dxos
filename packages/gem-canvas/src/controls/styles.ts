@@ -57,6 +57,8 @@ export const elementStyles = {
 
 export const canvasStyles = css`
   // TODO(burdon): Scope by element.
+  height: inherit;
+
   marker {
     path.arrow {
       stroke: #111;
