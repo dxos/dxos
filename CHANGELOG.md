@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.28.8](https://www.github.com/dxos/protocols/compare/v2.28.7...v2.28.8) (2022-03-22)
+
+
+### Features
+
+* **kitchen-sink:** Add party import export. ([#1060](https://www.github.com/dxos/protocols/issues/1060)) ([54f6fa7](https://www.github.com/dxos/protocols/commit/54f6fa7b40735cfe4199b2c0ea4c00f16303e5d2))
+
+
+### Bug Fixes
+
+* Config loading ([#1071](https://www.github.com/dxos/protocols/issues/1071)) ([8f80020](https://www.github.com/dxos/protocols/commit/8f800207e0024e379a7683d51f16b7022b85a74f))
+
 ### [2.28.7](https://www.github.com/dxos/protocols/compare/v2.28.6...v2.28.7) (2022-03-21)
 
 
