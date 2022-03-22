@@ -8,23 +8,24 @@ package dxos.config;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
+// TODO(wittjosiah): Import registry record type proto definitions.
 
 message Config {
   int32 version = 1;
 
   //
+  // Module metatdata.
+  //
+
+  Meta meta = 2;
+
+  //
   // Deploy configuration.
   //
 
-  // TODO(wittjosiah): Make repeated.
-  Module module = 2;
-
-  //
-  // Build configuration.
-  //
-
-  // TODO(wittjosiah): Remove. Have build per module.
-  Build build = 3;
+  // TODO(wittjosiah): Also allow single still?
+  // Module module = 3;
+  repeated Module modules = 3;
 
   //
   // Runtime configuration.
@@ -33,46 +34,42 @@ message Config {
   Runtime runtime = 4;
 }
 
+message Meta {
+  string author = 1;
+  string license = 2;
+  string repository = 3;
+  string repository_version = 4;
+  string npm_url = 5;
+}
+
 message Module {
   // Specific to record type.
   message Record {
-    // TODO(wittjosiah): This should come from actual app record proto definitions.
-    message App {
-      repeated string content_type = 1;
-    }
-
+    // TODO(wittjosiah): This should come from actual record proto definitions.
     App app = 1;
+
+    // TODO(wittjosiah): Allow for custom type config.
+    Record.Extension extension = 100;
   }
 
   // Current build.
   message Build {
-    // TODO(wittjosiah): Why is version here and in module?
-    string version = 1;
-    string commit_hash = 2;
-    google.protobuf.Timestamp timestamp = 3;
+    string command = 1;
+    string out = 2;
   }
 
   string name = 1;
   string type = 2;
   string version = 3;
+  string tag = 4;
 
-  // TODO(wittjosiah): Factor out (other than name/description/keywords). These should be shared by all modules.
-  string author = 4;
-  string license = 5;
+  string display_name = 5;
   string description = 6;
-  string repository = 7;
-  string repository_version = 8;
-  repeated string keywords = 9;
-  string display_name = 10; // TODO(wittjosiah): Why aren't we using this, where does it go?
-  string npm_url = 11;
+  repeated string keywords = 7;
 
-  Build build = 101;
-  Record record = 102;
-}
-
-message Build {
-  string command = 1;
-  string out = 2;
+  Meta meta = 101;
+  Build build = 102;
+  Record record = 103;
 }
 
 message Runtime {

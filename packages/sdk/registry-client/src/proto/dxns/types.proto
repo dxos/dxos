@@ -27,8 +27,8 @@ message App {
   string repository = 3;
   string repository_version = 4;
   string license = 5;
-  repeated string keywords = 6;
-  string display_name = 7;
+  repeated string keywords = 6; // TODO(wittjosiah): Include in base record?
+  string display_name = 7; // TODO(wittjosiah): Include in base record?
 
   // TODO(burdon): Frame-specific or references complete schema of related types?
   // For frames, types of items the frame supports.
