@@ -10,8 +10,8 @@ import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/regist
 
 export type SearchFilter = (resource: Resource) => boolean
 
-export const useRegistrySearchModel = (registry: IRegistryClient) => {
-  return useMemo(() => new RegistrySearchModel(registry), []);
+export const useRegistrySearchModel = (registry: IRegistryClient, filters: SearchFilter[] = []) => {
+  return useMemo(() => new RegistrySearchModel(registry, filters), []);
 };
 
 export const getTypeName = (type: RegistryTypeRecord) => {
@@ -33,10 +33,10 @@ export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => 
 // TODO(burdon): Create tests.
 // TODO(burdon): Move to registry-client?
 export class RegistrySearchModel implements SearchModel<Resource> {
-  _update = new Event<SearchResult<Resource>[]>();
-  _results: SearchResult<Resource>[] = [];
-  _text?: string = undefined;
-  _types: RegistryTypeRecord[] = [];
+  private readonly _update = new Event<SearchResult<Resource>[]>();
+  private _results: SearchResult<Resource>[] = [];
+  private _text?: string = undefined;
+  private _types: RegistryTypeRecord[] = [];
 
   constructor (
     private readonly _registry: IRegistryClient,
