@@ -39,6 +39,7 @@ export interface ConfigPluginOpts {
   publicUrl?: string
 }
 
+// TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
 export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
   dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
@@ -47,7 +48,7 @@ export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginO
     name: 'dxos-config',
     setup: ({ onResolve, onLoad }) => {
       onResolve(
-        { filter: /loaders\/index$/ },
+        { filter: /loaders$/ },
         args => ({ path: require.resolve('./loaders/browser-esbuild', { paths: [args.resolveDir] }) })
       );
 
