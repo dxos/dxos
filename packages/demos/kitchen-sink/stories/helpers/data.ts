@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Party } from '@dxos/client';
@@ -81,6 +82,7 @@ export const useTestParty = (): Party | undefined => {
   useEffect(() => {
     setImmediate(async () => {
       const party = await client.echo.createParty();
+      await party.setTitle(faker.lorem.word());
       setParty(party);
     });
   }, []);
