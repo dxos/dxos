@@ -24,7 +24,7 @@ interface InvitationDialogProps {
   title?: string
   onCreate?: () => void,
   onJoin?: (invitationCode: string) => void
-  onImportParty?: (partyFile: File) => void
+  onImport?: (file: File) => void
 }
 
 /**
@@ -35,24 +35,24 @@ export const InvitationDialog = ({
   title = 'Demo',
   onCreate,
   onJoin,
-  onImportParty
+  onImport
 }: InvitationDialogProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
 
-  const handleImportParty = async (files: File[] | null) => {
+  const handleImport = async (files: File[] | null) => {
     if (!files) {
       return;
     }
 
-    const partyFileToImport = files[0];
+    const file = files[0];
 
     setInProgress(true);
     setError(undefined);
     try {
-      await onImportParty!(partyFileToImport);
+      await onImport!(file);
     } catch (error: any) {
       log(error);
       setError(error);
@@ -85,12 +85,12 @@ export const InvitationDialog = ({
         {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
-        {onImportParty && (
+        {onImport && (
           <>
             <FileUploadDialog
               open={fileUploadDialogOpen}
               onClose={() => setFileUploadDialogOpen(false)}
-              onUpload={handleImportParty}
+              onUpload={handleImport}
             />
             <Button
               data-id='test-button-import'
