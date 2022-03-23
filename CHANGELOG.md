@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.10](https://www.github.com/dxos/protocols/compare/v2.28.9...v2.28.10) (2022-03-23)
+
+
+### Bug Fixes
+
+* SharingDialog message & registry client config ([#1077](https://www.github.com/dxos/protocols/issues/1077)) ([ec8ff7b](https://www.github.com/dxos/protocols/commit/ec8ff7bcf557fb37730dcb6a69512b430deb74fb))
+
 ### [2.28.9](https://www.github.com/dxos/protocols/compare/v2.28.8...v2.28.9) (2022-03-22)
 
 
