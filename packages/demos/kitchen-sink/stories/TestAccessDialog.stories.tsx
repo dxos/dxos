@@ -7,11 +7,10 @@ import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
-
-import { InvitationDialog } from '../src';
+import { TestInvitationDialog } from '@dxos/react-framework';
 
 export default {
-  title: 'KitchenSink/InvitationDialog'
+  title: 'KitchenSink/TestInvitationDialog'
 };
 
 faker.seed(100);
@@ -19,7 +18,7 @@ faker.seed(100);
 const App = () => {
   return (
     <FullScreen>
-      <InvitationDialog
+      <TestInvitationDialog
         open
         title='Kitchen Sink'
         onCreate={() => console.log('Party creation')}
