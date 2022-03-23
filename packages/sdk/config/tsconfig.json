@@ -20,6 +20,9 @@
     },
     {
       "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/util"
     }
   ]
 }
