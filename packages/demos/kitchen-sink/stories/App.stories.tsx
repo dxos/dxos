@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
 import { useFileDownload } from '@dxos/react-components';
-import { usePartySerializer } from '@dxos/react-framework';
+import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
 
-import { InvitationDialog, PartyBuilder } from '../src';
+import { PartyBuilder } from '../src';
 import {
   ONLINE_CONFIG,
   buildTestParty,
@@ -103,7 +103,7 @@ export const Secondary = () => {
     }
 
     return (
-      <InvitationDialog
+      <TestInvitationDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
