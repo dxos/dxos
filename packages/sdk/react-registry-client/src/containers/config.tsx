@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ConfigProvider } from '@dxos/config';
+import { Config, ConfigProvider } from '@dxos/config';
 import { AccountClient, createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
 import { getAsyncValue } from '@dxos/util';
 
@@ -12,8 +12,9 @@ export const createRegistryContext = async (
   configProvider: ConfigProvider,
   signFn?: SignTxFunction
 ): Promise<RegistryContext> => {
-  const config = await getAsyncValue(configProvider);
-  const server = config.runtime?.services?.dxns?.server;
+  const configValue = await getAsyncValue(configProvider);
+  const config = (configValue instanceof Config) ? configValue : new Config(configValue);
+  const server = config.values.runtime?.services?.dxns?.server;
   if (!server) {
     throw new Error('Missing DXNS endpoint.');
   }
