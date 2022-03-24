@@ -1,5 +1,19 @@
 # Change Log
 
+### [2.28.10](https://www.github.com/dxos/protocols/compare/v2.28.9...v2.28.10) (2022-03-23)
+
+
+### Bug Fixes
+
+* SharingDialog message & registry client config ([#1077](https://www.github.com/dxos/protocols/issues/1077)) ([ec8ff7b](https://www.github.com/dxos/protocols/commit/ec8ff7bcf557fb37730dcb6a69512b430deb74fb))
+
+### [2.28.9](https://www.github.com/dxos/protocols/compare/v2.28.8...v2.28.9) (2022-03-22)
+
+
+### Features
+
+* Kitchen sink export party  ([#1073](https://www.github.com/dxos/protocols/issues/1073)) ([0b19adb](https://www.github.com/dxos/protocols/commit/0b19adb4ed26f981d9effc7f6d3f414c4010b588))
+
 ### [2.28.8](https://www.github.com/dxos/protocols/compare/v2.28.7...v2.28.8) (2022-03-22)
 
 
