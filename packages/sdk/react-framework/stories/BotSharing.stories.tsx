@@ -82,16 +82,16 @@ export const Primary = () => {
         debug: 'dxos:bot*'
       },
       services: {
+        // Must match values from current CLI config (`dx profile config`).
         dxns: {
           server: 'wss://node1.devnet.dxos.network/dxns/ws'
         },
-        // TODO(burdon): Configure CLI (`dx bot factory start --dev`).
         signal: {
           server: 'wss://demo.kube.dxos.network/dxos/signal'
         },
         // TODO(burdon): In-memory simulator? `dx bot factory start`
         bot: {
-          topic: '4a202269d2735906d764d9dbf71c95d033738ac6a4dc7bd85598719776d3ab49'
+          topic: '3084b2359ef10a8b578706c9748ad41a05ac75ce992ea3b0686448e452749ce3'
         }
       }
     }

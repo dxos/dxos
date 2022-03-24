@@ -65,10 +65,11 @@ export class BotFactoryClient {
       });
     });
 
+    // TODO(burdon): Retry.
     // TODO(yivlad): Convert promiseTimeout to typescript.
-    const port = await promiseTimeout(portPromise, 10000, new Error('Timeout on connecting to bot factory.'));
+    const port = await promiseTimeout(portPromise, 30_000, new Error('Timeout on connecting to bot factory.'));
     const service = schema.getService('dxos.bot.BotFactoryService');
-    this._rpc = createRpcClient(service, { port, timeout: 60000 });
+    this._rpc = createRpcClient(service, { port, timeout: 60_000 });
     await this._rpc.open();
   }
 
@@ -83,7 +84,11 @@ export class BotFactoryClient {
 
   // TODO(burdon): Auto-start?
   async spawn (spec: BotPackageSpecifier, party: Party) {
-    assert(this._rpc, 'Not started.');
+    if (!this._rpc) {
+      await this.start(party.key);
+      assert(this._rpc, 'Not started.');
+    }
+
     const invitation = await party.createInvitation();
     const { id } = await this._rpc.rpc.spawnBot({
       package: spec,
