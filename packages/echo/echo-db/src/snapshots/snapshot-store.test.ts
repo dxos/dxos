@@ -29,7 +29,8 @@ describe('SnapshotStore', () => {
         items: [{
           itemId: createId(),
           itemType: 'example:test'
-        }]
+        }],
+        links: []
       }
     };
 

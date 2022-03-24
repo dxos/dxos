@@ -100,7 +100,7 @@ export const SharingDialog = ({
       content={(
         <>
           <Typography variant='body2' sx={{ marginBottom: 2 }}>
-            {`Add collaborators ${onCreateBotInvitation && 'and bots'} to the party.`}
+            {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the party.`}
           </Typography>
 
           <Box sx={{

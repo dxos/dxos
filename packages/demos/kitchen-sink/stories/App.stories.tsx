@@ -6,8 +6,10 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { useFileDownload } from '@dxos/react-components';
+import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
 
-import { InvitationDialog, PartyBuilder } from '../src';
+import { PartyBuilder } from '../src';
 import {
   ONLINE_CONFIG,
   buildTestParty,
@@ -49,7 +51,9 @@ export const Primary = () => {
 export const Secondary = () => {
   const Story = () => {
     const client = useClient();
-    const [party, setParty] = useState<Party>();
+    const [party, setParty] = useState<Party | null>();
+    const partySerializer = usePartySerializer();
+    const download = useFileDownload();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
@@ -66,6 +70,16 @@ export const Secondary = () => {
       setParty(party);
     };
 
+    const handleExport = async () => {
+      const blob = await partySerializer.serializeParty(party!);
+      download(blob, `${party?.key.toHex()}.party`);
+    };
+
+    const handleImport = async (partyFile: File) => {
+      const importedParty = await partySerializer.deserializeParty(partyFile);
+      setParty(importedParty);
+    };
+
     const handleInvite = async () => {
       const invitation = await party!.createInvitation();
       const encodedInvitation = invitation.descriptor.encode();
@@ -77,18 +91,22 @@ export const Secondary = () => {
 
     if (party) {
       return (
-        <App
-          party={party}
-          onInvite={handleInvite}
-        />
+        <>
+          <App
+            party={party}
+            onInvite={handleInvite}
+            onExport={handleExport}
+          />
+        </>
       );
     }
 
     return (
-      <InvitationDialog
+      <TestInvitationDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
+        onImport={handleImport}
       />
     );
   };

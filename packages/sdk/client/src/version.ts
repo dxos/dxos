@@ -1,1 +1,1 @@
-export const DXOS_VERSION = "2.28.5";
+export const DXOS_VERSION = "2.28.10";

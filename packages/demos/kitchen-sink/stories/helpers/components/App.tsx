@@ -20,6 +20,7 @@ import { ViewType } from './ViewSelector';
 interface AppProps {
   party: Party
   onInvite?: () => void
+  onExport?: () => void
 }
 
 /**
@@ -30,7 +31,8 @@ interface AppProps {
  */
 export const App = ({
   party,
-  onInvite
+  onInvite,
+  onExport
 }: AppProps) => {
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
@@ -90,6 +92,7 @@ export const App = ({
         <AppBar
           view={view}
           onInvite={onInvite}
+          onExport={onExport}
           onSearch={handleSearch}
           onSelection={handleSelection}
           onChangeView={(view: string) => setView(view)}

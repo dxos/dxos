@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "2.28.5",
+  "version": "2.28.10",
   "description": "Config utilities",
   "license": "MIT",
   "author": "DXOS.org",
@@ -8,8 +8,8 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "ConfigPlugin.js",
-    "esbuild-plugin.js"
+    "esbuild-plugin.js",
+    "webpack-plugin.js"
   ],
   "scripts": {
     "build": "toolchain build",
