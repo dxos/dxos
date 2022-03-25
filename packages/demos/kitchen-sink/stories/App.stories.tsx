@@ -53,7 +53,7 @@ export const Secondary = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
     const partySerializer = usePartySerializer();
-    const [downloadRef, download] = useFileDownload();
+    const download = useFileDownload();
 
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
@@ -92,7 +92,6 @@ export const Secondary = () => {
     if (party) {
       return (
         <>
-          <a ref={downloadRef} />
           <App
             party={party}
             onInvite={handleInvite}

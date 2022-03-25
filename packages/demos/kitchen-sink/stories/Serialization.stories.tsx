@@ -68,7 +68,7 @@ export const ImportParty = () => {
 const ExportStory = () => {
   const party = useTestParty();
   const partySerializer = usePartySerializer();
-  const [ref, download] = useFileDownload();
+  const download = useFileDownload();
 
   const handleExportParty = async () => {
     const blob = await partySerializer.serializeParty(party!);
@@ -77,7 +77,6 @@ const ExportStory = () => {
 
   return (
     <FullScreen>
-      <a ref={ref} />
       <Toolbar>
         <Button
           variant='contained'
