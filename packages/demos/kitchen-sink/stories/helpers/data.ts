@@ -2,11 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import { useEffect, useMemo } from 'react';
+
 import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection } from '@dxos/react-client';
 import { itemAdapter } from '@dxos/react-client-testing';
+import { EchoGraphModel } from '@dxos/react-components';
 
 // TODO(burdon): Accidentally test types are naturally alphabetical.
 export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
@@ -51,7 +54,7 @@ export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => 
 /**
  * Create model.
  */
- export const useGraphModel = (party?: Party): EchoGraphModel => {
+export const useGraphModel = (party?: Party): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
   const items = useSelection(party?.select()) ?? [];
 
