@@ -48,7 +48,7 @@ export class RegistrySearchModel implements SearchModel<Resource> {
   }
 
   get results () {
-    return [];
+    return this._results;
   }
 
   subscribe (callback: (results: SearchResult<Resource>[]) => void) {

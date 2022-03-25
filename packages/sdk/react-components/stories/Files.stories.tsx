@@ -9,13 +9,13 @@ import { Box, Button, TextField } from '@mui/material';
 import { FileUploadDialog, useFileDownload } from '../src';
 
 export default {
-  title: 'react-components/FileUploadDialog'
+  title: 'react-components/Files'
 };
 
 export const Primary = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [data, setData] = useState('Hello World');
-  const [ref, download] = useFileDownload();
+  const download = useFileDownload();
 
   const handleClose = () => setShowUpload(false);
 
@@ -35,7 +35,6 @@ export const Primary = () => {
 
   return (
     <Box>
-      <a ref={ref} />
       <FileUploadDialog
         open={showUpload}
         onClose={handleClose}
