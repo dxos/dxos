@@ -517,8 +517,8 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/esbuild-server': ~2.28.4
-      '@dxos/gem-core': ~2.2.1-beta.8
-      '@dxos/gem-spore': ~2.2.1-beta.8
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -559,8 +559,8 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -615,11 +615,12 @@ importers:
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/esbuild-server': ~2.28.4
       '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/gem-core': ~2.2.1-beta.8
-      '@dxos/gem-spore': ~2.2.1-beta.8
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/util': workspace:*
@@ -665,10 +666,11 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
       '@dxos/util': link:../../common/util
@@ -990,8 +992,8 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/gem-core': ~2.2.1-beta.8
-      '@dxos/gem-spore': ~2.2.1-beta.8
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -1018,8 +1020,8 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
@@ -2319,7 +2321,7 @@ importers:
       react-test-renderer: 17.0.2_react@17.0.2
       typescript: 4.5.3
 
-  ../../packages/sdk/react-components:
+  ../../packages/sdk/react-client-testing:
     specifiers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
@@ -2328,10 +2330,15 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
+      '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
+      '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.4.2
@@ -2364,6 +2371,9 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/gem-core': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+      '@dxos/gem-spore': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
@@ -2377,10 +2387,108 @@ importers:
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.28.4
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client': link:../react-client
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
+      '@mui/lab': 5.0.0-alpha.69_3dbd8f7a3f715159251f1a8d08e97be5
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/lodash.isplainobject': 4.0.6
+      '@types/qrcode.react': 1.0.2
+      '@types/react': 17.0.37
+      '@types/react-copy-to-clipboard': 5.0.2
+      '@types/string-hash': 1.1.1
+      '@types/url-join': 4.0.1
+      babel-plugin-add-module-exports: 1.0.4
+      eslint: 7.32.0
+      faker: 5.5.3
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.3
+
+  ../../packages/sdk/react-components:
+    specifiers:
+      '@babel/core': ~7.13.15
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
+      '@dxos/esbuild-plugins': ~2.28.4
+      '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@mui/icons-material': ^5.4.2
+      '@mui/lab': ^5.0.0-alpha.69
+      '@mui/material': ^5.4.2
+      '@mui/system': ^5.4.2
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.1
+      '@types/lodash.isplainobject': ^4.0.6
+      '@types/qrcode.react': ^1.0.2
+      '@types/react': ^17.0.24
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/string-hash': ^1.1.1
+      '@types/url-join': ~4.0.1
+      babel-plugin-add-module-exports: ^1.0.4
+      clsx: ^1.1.0
+      debug: ^4.3.3
+      eslint: ^7.12.1
+      faker: ^5.1.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.isplainobject: ^4.0.6
+      qrcode.react: ~1.0.1
+      react: ^17.0.2
+      react-copy-to-clipboard: ~5.0.3
+      react-dom: ^17.0.2
+      react-json-view: ~1.21.3
+      string-hash: ~1.1.3
+      typescript: ^4.5.2
+      url-join: ^4.0.1
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      debug: 4.3.3
+      lodash.defaultsdeep: 4.6.1
+      lodash.isplainobject: 4.0.6
+      qrcode.react: 1.0.1_react@17.0.2
+      react-copy-to-clipboard: 5.0.4_react@17.0.2
+      react-json-view: 1.21.3_5539cae010396b202b015f3568914e95
+      string-hash: 1.1.3
+      url-join: 4.0.1
+    devDependencies:
+      '@babel/core': 7.13.16
+      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
+      '@dxos/client': link:../client
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/esbuild-plugins': 2.28.4
+      '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
+      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/react-client': link:../react-client
+      '@dxos/react-client-testing': link:../react-client-testing
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
@@ -2396,6 +2504,7 @@ importers:
       '@types/string-hash': 1.1.1
       '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
+      clsx: 1.1.1
       eslint: 7.32.0
       faker: 5.5.3
       react: 17.0.2
@@ -5492,8 +5601,8 @@ packages:
       - supports-color
     dev: true
 
-  /@dxos/gem-core/2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-SwciFaTYiNFvQFN2A892P+TYWlzkV9gTwQs+y8wZfZStFqJGowkImlvTWtc0QrVqVryvEmfBvxCivTr99gWvUw==}
+  /@dxos/gem-core/2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -5513,20 +5622,68 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/gem-spore/2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f:
-    resolution: {integrity: sha512-0e6maFkeoACebbL4oMfxphZlKKzi0LJKn+m+nS2ZgsKmg+WzJWS32wrg3OZher42aHKKe01IePzdDMwyTd50ow==}
+  /@dxos/gem-core/2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
       react: '*'
       react-dom: '*'
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.8_3f3895dcf7ed96cd12c4ac345221265f
       '@emotion/css': 11.7.1_@babel+core@7.13.16
-      '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      assert: 2.0.0
       csstype: 3.0.10
       d3: 7.3.0
       debug: 4.3.3
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@dxos/gem-spore/2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f:
+    resolution: {integrity: sha512-YIPVo8zIS/AyOQwDvt5pnI0RbiwMK1N3PP0bnnlTvLsDcuHpd8CwWF1Vu9N5vKx/fHOPB1ZI+ZyRH1309L5GjA==}
+    peerDependencies:
+      '@emotion/css': '>=11.0.0'
+      '@emotion/react': '>=11.0.0'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
+      clsx: 1.1.1
+      csstype: 3.0.10
+      d3: 7.3.0
+      d3-force: 3.0.0
+      debug: 4.3.3
+      immutability-helper: 3.1.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@dxos/gem-spore/2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61:
+    resolution: {integrity: sha512-YIPVo8zIS/AyOQwDvt5pnI0RbiwMK1N3PP0bnnlTvLsDcuHpd8CwWF1Vu9N5vKx/fHOPB1ZI+ZyRH1309L5GjA==}
+    peerDependencies:
+      '@emotion/css': '>=11.0.0'
+      '@emotion/react': '>=11.0.0'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@dxos/gem-core': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      clsx: 1.1.1
+      csstype: 3.0.10
+      d3: 7.3.0
+      d3-force: 3.0.0
+      debug: 4.3.3
+      immutability-helper: 3.1.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
@@ -5594,7 +5751,7 @@ packages:
       '@emotion/cache': 11.7.1
       '@emotion/serialize': 1.0.2
       '@emotion/sheet': 1.1.0
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
     dev: false
 
   /@emotion/hash/0.8.0:
@@ -5686,6 +5843,30 @@ packages:
       react: 17.0.2
     dev: false
 
+  /@emotion/react/11.8.2_c8f47004f4d29cd7909f1411b83f7eb5:
+    resolution: {integrity: sha512-+1bcHBaNJv5nkIIgnGKVsie3otS0wF9f1T1hteF3WeVvMNQEtfZ4YyFpnphGoot3ilU/wWMgP2SgIDuHLE/wAA==}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+      '@types/react': '*'
+      react: '>=16.8.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/core': 7.13.16
+      '@babel/runtime': 7.17.2
+      '@emotion/babel-plugin': 11.7.1_@babel+core@7.13.16
+      '@emotion/cache': 11.7.1
+      '@emotion/serialize': 1.0.2
+      '@emotion/utils': 1.1.0
+      '@emotion/weak-memoize': 0.2.5
+      '@types/react': 17.0.37
+      hoist-non-react-statics: 3.3.2
+      react: 17.0.2
+    dev: true
+
   /@emotion/serialize/1.0.2:
     resolution: {integrity: sha512-95MgNJ9+/ajxU7QIAruiOAdYNjxZX7G2mhgrtDWswA21VviYIRP1R5QilZ/bDY42xiKsaktP4egJb3QdYQZi1A==}
     dependencies:
@@ -5717,7 +5898,7 @@ packages:
       '@emotion/is-prop-valid': 1.1.1
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/serialize': 1.0.2
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
       '@types/react': 17.0.37
       react: 17.0.2
 
@@ -5740,9 +5921,33 @@ packages:
       '@emotion/is-prop-valid': 1.1.1
       '@emotion/react': 11.8.2_@babel+core@7.16.5+react@17.0.2
       '@emotion/serialize': 1.0.2
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
       react: 17.0.2
     dev: false
+
+  /@emotion/styled/11.6.0_de158b52dac32a8515143eb5b616f4ac:
+    resolution: {integrity: sha512-mxVtVyIOTmCAkFbwIp+nCjTXJNgcz4VWkOYQro87jE2QBTydnkiYusMrRGFtzuruiGK4dDaNORk4gH049iiQuw==}
+    peerDependencies:
+      '@babel/core': ^7.0.0
+      '@emotion/react': ^11.0.0-rc.0
+      '@types/react': '*'
+      react: '>=16.8.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/core': 7.13.16
+      '@babel/runtime': 7.17.2
+      '@emotion/babel-plugin': 11.7.1_@babel+core@7.13.16
+      '@emotion/is-prop-valid': 1.1.1
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/serialize': 1.0.2
+      '@emotion/utils': 1.1.0
+      '@types/react': 17.0.37
+      react: 17.0.2
+    dev: true
 
   /@emotion/styled/11.6.0_ff551d50dbb5888d6ba92a318aa79009:
     resolution: {integrity: sha512-mxVtVyIOTmCAkFbwIp+nCjTXJNgcz4VWkOYQro87jE2QBTydnkiYusMrRGFtzuruiGK4dDaNORk4gH049iiQuw==}
@@ -5763,7 +5968,7 @@ packages:
       '@emotion/is-prop-valid': 1.1.1
       '@emotion/react': 11.8.2_23551ae5df81be1ad77d4e4acd306532
       '@emotion/serialize': 1.0.2
-      '@emotion/utils': 1.0.0
+      '@emotion/utils': 1.1.0
       '@types/react': 17.0.37
       react: 17.0.2
     dev: true
@@ -6349,7 +6554,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.17.2
-      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
       '@types/react': 17.0.37
       react: 17.0.2
 
@@ -6389,7 +6594,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       moment: 2.29.1
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6399,6 +6604,52 @@ packages:
       - '@emotion/react'
       - '@emotion/styled'
     dev: false
+
+  /@mui/lab/5.0.0-alpha.69_3dbd8f7a3f715159251f1a8d08e97be5:
+    resolution: {integrity: sha512-VrTcmXTS9UlTsp40nIZ/R/HBHOvxP2lvgSY9zLSn5XPhMQEMD1H0wTJ68mEuCm18cnl1sbcUOCMfWx9io/u5zg==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@mui/material': ^5.0.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      date-fns: ^2.25.0
+      dayjs: ^1.10.7
+      luxon: ^1.28.0 || ^2.0.0
+      moment: ^2.29.1
+      react: ^17.0.0
+      react-dom: ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      date-fns:
+        optional: true
+      dayjs:
+        optional: true
+      luxon:
+        optional: true
+      moment:
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@date-io/date-fns': 2.13.1
+      '@date-io/dayjs': 2.13.1
+      '@date-io/luxon': 2.13.1
+      '@date-io/moment': 2.13.1
+      '@mui/base': 5.0.0-alpha.69_5539cae010396b202b015f3568914e95
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
+      '@mui/utils': 5.4.2_react@17.0.2
+      '@types/react': 17.0.37
+      clsx: 1.1.1
+      prop-types: 15.8.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+      react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
+      rifm: 0.12.1_react@17.0.2
+    transitivePeerDependencies:
+      - '@emotion/react'
+      - '@emotion/styled'
+    dev: true
 
   /@mui/lab/5.0.0-alpha.69_84b4b9670a6fb5a5b5566d79c2335561:
     resolution: {integrity: sha512-VrTcmXTS9UlTsp40nIZ/R/HBHOvxP2lvgSY9zLSn5XPhMQEMD1H0wTJ68mEuCm18cnl1sbcUOCMfWx9io/u5zg==}
@@ -6435,7 +6686,7 @@ packages:
       '@mui/utils': 5.4.2_react@17.0.2
       '@types/react': 17.0.37
       clsx: 1.1.1
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6472,11 +6723,47 @@ packages:
       clsx: 1.1.1
       csstype: 3.0.10
       hoist-non-react-statics: 3.3.2
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
       react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
+
+  /@mui/material/5.4.2_9906e7abeab8a15232123e32b30bbfb4:
+    resolution: {integrity: sha512-jmeLWEO6AA6g7HErhI3MXVGaMZtqDZjDwcHCg24WY954wO38Xn0zJ53VfpFc44ZTJLV9Ejd7ci9fLlG/HmJCeg==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.5.0
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.0
+      react-dom: ^17.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      '@mui/base': 5.0.0-alpha.69_5539cae010396b202b015f3568914e95
+      '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
+      '@mui/types': 7.1.2_@types+react@17.0.37
+      '@mui/utils': 5.4.2_react@17.0.2
+      '@types/react': 17.0.37
+      '@types/react-transition-group': 4.4.4
+      clsx: 1.1.1
+      csstype: 3.0.10
+      hoist-non-react-statics: 3.3.2
+      prop-types: 15.8.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+      react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
+    dev: true
 
   /@mui/material/5.4.2_fa2645acd9a035406d0184711710de51:
     resolution: {integrity: sha512-jmeLWEO6AA6g7HErhI3MXVGaMZtqDZjDwcHCg24WY954wO38Xn0zJ53VfpFc44ZTJLV9Ejd7ci9fLlG/HmJCeg==}
@@ -6507,7 +6794,7 @@ packages:
       clsx: 1.1.1
       csstype: 3.0.10
       hoist-non-react-statics: 3.3.2
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
@@ -6548,6 +6835,27 @@ packages:
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       prop-types: 15.8.1
       react: 17.0.2
+
+  /@mui/styled-engine/5.4.2_c2c49bec25675b8acb9310c233b2dcc0:
+    resolution: {integrity: sha512-tz9p3aRtzXHKAg7x3BgP0hVQEoGKaxNCFxsJ+d/iqEHYvywWFSs6oxqYAvDHIRpvMlUZyPNoTrkcNnbdMmH/ng==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      react: ^17.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/cache': 11.7.1
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      prop-types: 15.8.1
+      react: 17.0.2
+    dev: true
 
   /@mui/styled-engine/5.4.2_react@17.0.2:
     resolution: {integrity: sha512-tz9p3aRtzXHKAg7x3BgP0hVQEoGKaxNCFxsJ+d/iqEHYvywWFSs6oxqYAvDHIRpvMlUZyPNoTrkcNnbdMmH/ng==}
@@ -6598,6 +6906,36 @@ packages:
       react: 17.0.2
     dev: false
 
+  /@mui/system/5.4.2_4c9308aed161217ce971345b6d35c11d:
+    resolution: {integrity: sha512-QegBVu6fxUNov1X9bWc1MZUTeV3A5g9PIpli7d0kzkGfq6JzrJWuPlhSPZ+6hlWmWky+bbAXhU65Qz8atWxDGw==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.5.0
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.17.2
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      '@mui/private-theming': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
+      '@mui/styled-engine': 5.4.2_c2c49bec25675b8acb9310c233b2dcc0
+      '@mui/types': 7.1.2_@types+react@17.0.37
+      '@mui/utils': 5.4.2_react@17.0.2
+      '@types/react': 17.0.37
+      clsx: 1.1.1
+      csstype: 3.0.10
+      prop-types: 15.8.1
+      react: 17.0.2
+    dev: true
+
   /@mui/system/5.4.2_cfedea9b3ed0faf0dded75c187406c5e:
     resolution: {integrity: sha512-QegBVu6fxUNov1X9bWc1MZUTeV3A5g9PIpli7d0kzkGfq6JzrJWuPlhSPZ+6hlWmWky+bbAXhU65Qz8atWxDGw==}
     engines: {node: '>=12.0.0'}
@@ -6622,7 +6960,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       csstype: 3.0.10
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
 
   /@mui/system/5.4.2_ef966af889ffc4849e7222692314a033:
@@ -6651,7 +6989,7 @@ packages:
       '@types/react': 17.0.37
       clsx: 1.1.1
       csstype: 3.0.10
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
 
   /@mui/types/7.1.2_@types+react@17.0.37:
@@ -20963,7 +21301,7 @@ packages:
       react: ^15.5.3 || ^16.0.0 || ^17.0.0
     dependencies:
       loose-envify: 1.4.0
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       qr.js: 0.0.0
       react: 17.0.2
     dev: false
@@ -21178,7 +21516,7 @@ packages:
       react: ^15.3.0 || ^16.0.0 || ^17.0.0
     dependencies:
       copy-to-clipboard: 3.3.1
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
     dev: false
 
