@@ -261,6 +261,7 @@ message SwarmEvent {
     message Data {
         dxos.halo.keys.PubKey peer_id = 1;
         bytes data = 2;
+        bool is_broadcast = 3;
     }
 
     oneof kind {

@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { promiseTimeout, sleep, waitForCondition } from '@dxos/async';
+import { promiseTimeout, sleep, trigger, waitForCondition } from '@dxos/async';
 import { ConfigObject } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase, PublicKey } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
@@ -306,6 +306,56 @@ describe('Client', () => {
         });
         await port.send(Buffer.from('ping'));
         await promiseTimeout(pong, 100, new Error('Timeout'));
+      });
+
+      test('broadcast', async () => {
+        const topic = PublicKey.random();
+
+        const centralPeer = await createClient();
+        await centralPeer.initialize();
+        afterTest(() => centralPeer.destroy());
+        centralPeer.network.joinSwam({
+          topic,
+          peerId: topic,
+          topology: {
+            type: 'star',
+            centralPeer: topic
+          },
+        });
+
+        const peer1 = await createClient();
+        await peer1.initialize();
+        afterTest(() => peer1.destroy());
+        
+        const [dataReceived, setDataReceived] = trigger<Uint8Array>()
+        peer1.network.joinSwam({
+          topic,
+          topology: {
+            type: 'star',
+            centralPeer: topic
+          },
+          onBroadcast: (peerId, data) => {
+            setDataReceived(data)
+          }
+        });
+
+        const peer2 = await createClient();
+        await peer2.initialize();
+        afterTest(() => peer2.destroy());
+
+        const swarm = peer2.network.joinSwam({
+          topic,
+          topology: {
+            type: 'star',
+            centralPeer: topic
+          },
+        });
+
+        const data = Uint8Array.from([1, 2, 3, 4, 5]);
+        await swarm.broadcast(data);
+        const receivedData = await promiseTimeout(dataReceived(), 100, new Error('Timeout'));
+
+        expect(receivedData).toEqual(data);
       });
     });
   }

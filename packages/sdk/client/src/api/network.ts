@@ -22,7 +22,8 @@ export interface JoinSwarmOptions {
     type: 'star'
     centralPeer: PublicKey
   },
-  onConnection: (connection: Connection) => void | (() => void)
+  onBroadcast?: (peerId: PublicKey, data: Uint8Array) => void,
+  onConnection?: (connection: Connection) => void | (() => void),
 }
 
 export interface Connection {
@@ -33,8 +34,13 @@ export interface Connection {
 
 export class JoinedSwarm {
   constructor (
-    private readonly _onLeave: () => void
+    private readonly _onLeave: () => void,
+    private readonly _onBroadcast: (data: Uint8Array) => void
   ) {}
+
+  broadcast(data: Uint8Array) {
+    this._onBroadcast(data);
+  }
 
   leave () {
     this._onLeave();
@@ -87,7 +93,7 @@ export class NetworkProxy {
             },
             subscribe: (cb) => received.on(cb)
           };
-          const cleanup = options.onConnection({
+          const cleanup = options.onConnection?.({
             ownPeerId,
             remotePeerId: msg.peerConnected.peerId!,
             port
@@ -101,7 +107,11 @@ export class NetworkProxy {
         } else if (msg.data) {
           assert(msg.data.peerId, 'Peer Id is required');
           assert(msg.data.data, 'data is required');
-          ports.get(msg.data.peerId!)?.emit(msg.data.data);
+          if(msg.data.isBroadcast) {
+            options.onBroadcast?.(msg.data.peerId, msg.data.data);
+          } else {
+            ports.get(msg.data.peerId!)?.emit(msg.data.data);
+          }
         }
       },
       err => {
@@ -115,10 +125,18 @@ export class NetworkProxy {
         console.error(err);
       }
     );
-    return new JoinedSwarm(() => {
-      stream.close();
-      void this._serviceProvider.services.NetworkService.leaveSwarm({ topic: options.topic });
-    });
+    return new JoinedSwarm(
+      () => {
+        stream.close();
+        void this._serviceProvider.services.NetworkService.leaveSwarm({ topic: options.topic });
+      },
+      data => {
+        void this._serviceProvider.services.NetworkService.sendData({
+          data,
+          topic: options.topic,
+        });
+      }
+    );
   }
 
   async dial (topic: PublicKey): Promise<Connection> {

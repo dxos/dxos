@@ -2090,6 +2090,7 @@ importers:
   ../../packages/sdk/client:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2098,6 +2099,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/mesh-protocol': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -2135,6 +2137,7 @@ importers:
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/broadcast': link:../../mesh/broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
@@ -2143,6 +2146,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/feed-store': link:../../echo/feed-store
+      '@dxos/mesh-protocol': link:../../mesh/protocol
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
