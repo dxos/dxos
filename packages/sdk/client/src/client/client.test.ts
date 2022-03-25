@@ -308,7 +308,7 @@ describe('Client', () => {
         await promiseTimeout(pong, 100, new Error('Timeout'));
       });
 
-      test('broadcast', async () => {
+      test.only('broadcast', async () => {
         const topic = PublicKey.random();
 
         const centralPeer = await createClient();

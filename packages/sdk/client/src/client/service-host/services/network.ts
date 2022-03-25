@@ -56,7 +56,6 @@ export class NetworkServiceProvider implements NetworkService {
 
   async sendData(request: SendDataRequest) {
     assert(request.topic, 'Topic is required');
-    assert(request.destinationPeerId, 'Peer Id is required');
     assert(request.data, 'Data is required');
 
     const swarm = this._swarms.get(request.topic) ?? raise(new Error('Connection not found'));
@@ -190,6 +189,7 @@ export class BroadcastPlugin {
 
     const middleware: Middleware<BroadcastPeer> = {
       lookup: async () => {
+        log('lookup')
         return Array.from(this._peers.values()).map((peer) => {
           const { peerId } = peer.getSession() ?? {};
 
@@ -200,9 +200,11 @@ export class BroadcastPlugin {
         });
       },
       send: async (packet, peer) => {
+        log('send', peer)
         await peer.protocol.getExtension(BroadcastPlugin.EXTENSION_NAME)!.send(packet);
       },
       subscribe: (onPacket) => {
+        log('subscribe')
         this._commandHandler = (protocol, chunk) => {
           const packet = onPacket(chunk.data);
           return this._onMessage(protocol, packet?.data ?? chunk.data);
@@ -252,7 +254,8 @@ export class BroadcastPlugin {
    * Broadcast message to peers.
    */
   async broadcastMessage(message: Uint8Array) {
-    await this._broadcast.publish(message);
+    log('broadcastMessage')
+    await this._broadcast.publish(Buffer.from(message));
   }
 
   /**
