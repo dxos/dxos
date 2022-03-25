@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.28.11](https://www.github.com/dxos/protocols/compare/v2.28.10...v2.28.11) (2022-03-25)
+
+
+### Features
+
+* BotFactory timeout. ([#1081](https://www.github.com/dxos/protocols/issues/1081)) ([679a148](https://www.github.com/dxos/protocols/commit/679a1489189c9e5974960a0179bdebd095c2386e))
+
+
+### Bug Fixes
+
+* **react-framework:** add modal prop to TestInvitationDialog ([#1079](https://www.github.com/dxos/protocols/issues/1079)) ([fe0dd0d](https://www.github.com/dxos/protocols/commit/fe0dd0d24bc56fcc99a14393bdec7a651e38200f))
+
 ### [2.28.10](https://www.github.com/dxos/protocols/compare/v2.28.9...v2.28.10) (2022-03-23)
 
 
