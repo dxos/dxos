@@ -87,13 +87,11 @@ export const Secondary = () => {
 
     if (party) {
       return (
-        <>
-          <App
-            party={party}
-            onInvite={handleInvite}
-            onExport={handleExport}
-          />
-        </>
+        <App
+          party={party}
+          onInvite={handleInvite}
+          onExport={handleExport}
+        />
       );
     }
 
