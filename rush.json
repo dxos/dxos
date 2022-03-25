@@ -586,6 +586,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-client-testing",
+      "projectFolder": "packages/sdk/react-client-testing",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-components",
       "projectFolder": "packages/sdk/react-components",
       "shouldPublish": true,
