@@ -14,7 +14,6 @@ type TestPartyCallback = (builder: PartyBuilder) => Promise<void>;
 /**
  * Generate test party.
  */
-
 export const useTestParty = (callback: TestPartyCallback = buildTestParty): Party | undefined => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
