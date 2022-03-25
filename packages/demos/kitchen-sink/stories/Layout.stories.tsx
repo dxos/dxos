@@ -6,10 +6,11 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { EchoGraph, FullScreen, useGraphModel } from '@dxos/react-components';
 
-import { EchoGraph, EchoGrid, Layout } from '../src';
-import { itemAdapter, graphStyles, tableStyles, useGraphModel, useTestParty } from './helpers';
+import { EchoGrid, Layout } from '../src';
+import { graphStyles, tableStyles } from './helpers';
 
 export default {
   title: 'KitchenSink/Layout'

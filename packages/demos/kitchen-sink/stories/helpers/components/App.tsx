@@ -7,11 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { Party } from '@dxos/client';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { FullScreen } from '@dxos/react-components';
+import { execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
+import { FullScreen, useGraphModel } from '@dxos/react-components';
 
-import { execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
-import { useGraphModel, useQuery } from '../data';
-import { itemAdapter } from '../testing';
+import { ThemeProvider } from '../../../src';
+import { useQuery } from '../data';
 import { AppBar } from './AppBar';
 import { CreateItemButton } from './CreateItemButton';
 import { ViewContainer } from './ViewContainer';

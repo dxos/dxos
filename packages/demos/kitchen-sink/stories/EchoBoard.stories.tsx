@@ -8,10 +8,10 @@ import React from 'react';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
+import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoBoard } from '../src';
-import { itemAdapter, useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoBoard'

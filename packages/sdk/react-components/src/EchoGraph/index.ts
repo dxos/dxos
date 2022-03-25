@@ -4,3 +4,4 @@
 
 export * from './EchoGraph';
 export * from './model';
+export * from './useGraphModel';

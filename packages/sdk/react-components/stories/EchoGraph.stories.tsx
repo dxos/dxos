@@ -5,20 +5,25 @@
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, css } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { execSelection, itemAdapter, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
 
-import { BoxContainer, EchoGraph, execSelection, SelectionEditor, usePartyBuilder } from '../src';
-import { itemAdapter, graphStyles, useGraphModel, useTestParty, defaultSelectionText } from './helpers';
+import { BoxContainer, EchoGraph, FullScreen, SelectionEditor, useGraphModel } from '../src';
+import { defaultSelectionText } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoGraph'
 };
 
 faker.seed(100);
+
+const graphStyles = css`
+  ${Object.keys(typeMeta).map(
+    type => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[100]}; } }`)}
+`;
 
 const App = () => {
   const party = useTestParty();

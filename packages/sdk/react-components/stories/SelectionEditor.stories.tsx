@@ -7,9 +7,10 @@ import React, { useState } from 'react';
 import { Box } from '@mui/material';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { execSelection, useTestParty } from '@dxos/react-client-testing';
 
-import { execSelection, SelectionEditor } from '../src';
-import { defaultSelectionText, useTestParty } from './helpers';
+import { SelectionEditor } from '../src';
+import { defaultSelectionText } from './helpers';
 
 export default {
   title: 'KitchenSink/SelectionEditor'

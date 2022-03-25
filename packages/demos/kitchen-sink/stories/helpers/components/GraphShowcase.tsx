@@ -6,9 +6,10 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { EchoGraph, useGraphModel } from '@dxos/react-components';
 
-import { useTestParty, useGraphModel, itemAdapter, graphStyles } from '../';
-import { EchoGraph } from '../../../src';
+import { graphStyles } from '../';
 
 faker.seed(100);
 

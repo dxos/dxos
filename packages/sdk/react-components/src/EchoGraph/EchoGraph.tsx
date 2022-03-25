@@ -12,10 +12,10 @@ import { ItemID } from '@dxos/echo-protocol';
 import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { useUpdatedRef } from '../../util';
-import { ItemAdapter } from '../adapter';
 import { EchoGraphModel } from './model';
+import { useUpdatedRef } from './utils';
 
 export interface EchoGraphProps {
   model?: EchoGraphModel

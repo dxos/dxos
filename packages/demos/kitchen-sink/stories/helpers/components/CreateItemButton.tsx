@@ -7,8 +7,9 @@ import React, { MouseEvent, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
 
-import { CreateItemDialog, TestType } from '../../../src';
-import { itemAdapter } from '../testing';
+import { itemAdapter, TestType } from '@dxos/react-client-testing';
+
+import { CreateItemDialog } from '../../../src';
 import { TypeSelector } from './TypeSelector';
 
 interface CreateItemButtonProps {

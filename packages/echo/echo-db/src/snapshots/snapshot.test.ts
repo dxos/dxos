@@ -157,4 +157,27 @@ describe('snapshot', () => {
     await itemDemuxer.restoreFromSnapshot({});
     expect(true).toBeTruthy();
   });
+
+  // test('imported snapshot mutations are applied to corresponding party', async () => {
+  //   const partyService = createPartyService();
+  //   const echo = new EchoProxy();
+  //   const echo1 = await createTestInstance({ initialize: true });
+  //   const echo2 = await createTestInstance({ initialize: true });
+  //   const partyOriginal = await echo1.createParty();
+
+  //   await partyOriginal.database.createItem({
+  //     model: ObjectModel,
+  //     props: { title: 'Item1 - Original Party' }
+  //   });
+
+  //   const snapshot = partyOriginal.createSnapshot();
+
+  //   const partyImported = await echo2.cloneParty(snapshot);
+
+  //   const [item] = partyImported.select().
+
+  //   // Modify item1 and make sure
+  //   item.model.setProperty('title', 'Item1 - In imported Party');
+  //   expect().toBeTruthy();
+  // });
 });

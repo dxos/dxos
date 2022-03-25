@@ -10,9 +10,9 @@ import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Ty
 import { Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
 import { CreateItemDialog } from '../CreateItemDialog';
-import { ItemAdapter } from '../adapter';
 
 export interface EchoChildListProps {
   item: Item<ObjectModel>
