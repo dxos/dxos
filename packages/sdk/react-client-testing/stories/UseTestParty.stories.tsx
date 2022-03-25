@@ -28,7 +28,6 @@ const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
 
 const Story = () => {
   const party = useTestParty();
-
   const items = useSelection(party?.select().filter(item => !item.parent), []) ?? [];
 
   return (
