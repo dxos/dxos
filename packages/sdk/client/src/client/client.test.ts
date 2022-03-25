@@ -269,7 +269,7 @@ describe('Client', () => {
       });
     });
 
-    describe('networking', () => {
+    describe.only('networking', () => {
       test('client calls an RPC on the other client', async () => {
         const topic = PublicKey.random();
 
