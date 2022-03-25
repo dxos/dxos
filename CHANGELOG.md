@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.12](https://www.github.com/dxos/protocols/compare/v2.28.11...v2.28.12) (2022-03-25)
+
+
+### Bug Fixes
+
+* RegistrySearchModel results getter ([#1082](https://www.github.com/dxos/protocols/issues/1082)) ([6ac5478](https://www.github.com/dxos/protocols/commit/6ac5478a9a5f98353b804320760ca52841a1a119))
+
 ### [2.28.11](https://www.github.com/dxos/protocols/compare/v2.28.10...v2.28.11) (2022-03-25)
 
 
