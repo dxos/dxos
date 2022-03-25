@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export const DXOS_VERSION = '2.28.10';
+export const DXOS_VERSION = '2.28.12';
