@@ -18,6 +18,7 @@ const log = debug('dxos:kitchen-sink');
 interface InvitationDialogProps {
   open: boolean
   title?: string
+  modal?: boolean
   onCreate?: () => void,
   onJoin?: (invitationCode: string) => void
   onImport?: (file: File) => void
@@ -29,6 +30,7 @@ interface InvitationDialogProps {
 export const TestInvitationDialog = ({
   open,
   title = 'Demo',
+  modal = false,
   onCreate,
   onJoin,
   onImport
@@ -140,6 +142,7 @@ export const TestInvitationDialog = ({
   return (
     <Dialog
       open={open}
+      modal={modal}
       fullWidth
       maxWidth='sm'
       title={title}

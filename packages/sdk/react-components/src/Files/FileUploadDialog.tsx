@@ -2,24 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, useEffect, useRef } from 'react';
-
-export interface FileUploadDialogProps {
-  open?: boolean
-  onClose: () => void
-  onUpload: (files: File[]) => void
-}
+import React, { FC, ChangeEvent, useEffect, useRef } from 'react';
 
 /**
  * FileUploadDialog
  */
-export const FileUploadDialog = ({
+export const FileUploadDialog: FC<{
+  open?: boolean
+  onClose: () => void
+  onUpload: (files: File[]) => void
+}> = ({
   open = false,
   onClose,
   onUpload
-}: FileUploadDialogProps) => {
+}) => {
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     const listener = () => {
       onClose();
