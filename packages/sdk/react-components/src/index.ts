@@ -20,4 +20,5 @@ export * from './Searchbar';
 export * from './SelectionEditor';
 export * from './SlidingDrawer';
 export * from './Toolbar';
+export * from './useGraphModel';
 export * from './VirtualTable';
