@@ -17,7 +17,6 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 
 import { EchoGraphModel } from './model';
 
-
 export interface EchoGraphProps {
   model?: EchoGraphModel
   selected?: Set<ItemID>
