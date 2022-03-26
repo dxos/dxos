@@ -2423,6 +2423,7 @@ importers:
       '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client-testing': link:../react-client-testing
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2443,7 +2444,6 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client': link:../react-client
-      '@dxos/react-client-testing': link:../react-client-testing
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416

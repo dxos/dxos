@@ -9,9 +9,9 @@ import { Box, Button, css } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { execSelection, itemAdapter, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
+import { execSelection, itemAdapter, SelectionEditor, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
 
-import { BoxContainer, EchoGraph, FullScreen, SelectionEditor, useGraphModel } from '../src';
+import { BoxContainer, EchoGraph, FullScreen, useGraphModel } from '../src';
 import { defaultSelectionText } from './helpers';
 
 export default {
