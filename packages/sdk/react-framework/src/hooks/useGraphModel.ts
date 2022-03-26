@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { EchoGraphModel } from './EchoGraph';
+import { EchoGraphModel } from '../components';
 
 /**
  * Create model.

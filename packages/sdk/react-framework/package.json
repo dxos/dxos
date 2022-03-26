@@ -19,8 +19,11 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@emotion/css": "^11.7.1",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/gem-core": "~2.2.1-beta.11",
+    "@dxos/gem-spore": "~2.2.1-beta.11",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
     "assert": "^2.0.0",
@@ -47,6 +50,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-client-testing": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@emotion/react": "^11.4.1",
@@ -64,6 +68,7 @@
     "@types/url-join": "~4.0.1",
     "@types/uuid": "~8.3.3",
     "babel-plugin-add-module-exports": "^1.0.4",
+    "clsx": "^1.1.0",
     "eslint": "^7.12.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

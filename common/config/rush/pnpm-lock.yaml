@@ -2481,13 +2481,17 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-registry-client': workspace:*
       '@dxos/registry-client': workspace:*
+      '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.4.2
@@ -2504,6 +2508,7 @@ importers:
       '@types/uuid': ~8.3.3
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
+      clsx: ^1.1.0
       debug: ^4.3.3
       eslint: ^7.12.1
       lodash.defaultsdeep: ^4.6.1
@@ -2518,8 +2523,11 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../react-registry-client
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
       assert: 2.0.0
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2543,6 +2551,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client': link:../react-client
+      '@dxos/react-client-testing': link:../react-client-testing
       '@dxos/react-components': link:../react-components
       '@dxos/registry-client': link:../registry-client
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
@@ -2560,6 +2569,7 @@ importers:
       '@types/url-join': 4.0.1
       '@types/uuid': 8.3.3
       babel-plugin-add-module-exports: 1.0.4
+      clsx: 1.1.1
       eslint: 7.32.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -6464,7 +6474,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.17.2
-      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
       '@types/react': 17.0.37
       react: 17.0.2
 

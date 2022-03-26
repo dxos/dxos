@@ -8,7 +8,8 @@ import { Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
-import { BoxContainer, EchoGraph, EchoGraphModel } from '@dxos/react-components';
+import { BoxContainer } from '@dxos/react-components';
+import { EchoGraph, EchoGraphModel } from '@dxos/react-framework';
 
 import { EchoBoard, EchoList } from '../../../src';
 import { graphStyles } from '../testing';

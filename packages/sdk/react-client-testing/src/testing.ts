@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TestType } from '@dxos/react-client-testing';
+import { TestType } from './builder';
 
 const format = (text: string) => text.replace(/\)\./g, ')\n  .');
 

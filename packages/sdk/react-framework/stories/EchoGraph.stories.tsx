@@ -2,23 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import faker from 'faker';
 import React, { useState } from 'react';
 
 import { Box, Button, css } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { execSelection, itemAdapter, SelectionEditor, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
+import { defaultSelectionText, execSelection, itemAdapter, SelectionEditor, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
+import { BoxContainer, FullScreen } from '@dxos/react-components';
 
-import { BoxContainer, EchoGraph, FullScreen, useGraphModel } from '../src';
-import { defaultSelectionText } from './helpers';
+import { EchoGraph, useGraphModel } from '../src';
 
 export default {
   title: 'KitchenSink/EchoGraph'
 };
-
-faker.seed(100);
 
 const graphStyles = css`
   ${Object.keys(typeMeta).map(

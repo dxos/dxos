@@ -3,4 +3,5 @@
 //
 
 export * from './useErrors';
+export * from './useGraphModel';
 export * from './usePartySerializer';
