@@ -8,6 +8,7 @@ import { Box, Button, css } from '@mui/material';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+// TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
 import { defaultSelectionText, execSelection, itemAdapter, SelectionEditor, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
 import { BoxContainer, FullScreen } from '@dxos/react-components';
 
