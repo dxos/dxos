@@ -2383,6 +2383,7 @@ importers:
       '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
       '@emotion/css': ^11.7.1
@@ -2421,6 +2422,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
+      '@dxos/react-async': link:../../common/react-async
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1

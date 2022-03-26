@@ -15,7 +15,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 import { EchoGraphModel } from './model';
-import { useUpdatedRef } from './utils';
+import { useDynamicRef } from '@dxos/react-async';
 
 export interface EchoGraphProps {
   model?: EchoGraphModel
@@ -44,7 +44,7 @@ export const EchoGraph = ({
   }), []);
 
   // TODO(burdon): Hack for stale callback.
-  const selectedRef = useUpdatedRef<Set<ItemID> | undefined>(selected);
+  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;
     return {
