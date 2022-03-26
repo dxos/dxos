@@ -22,6 +22,7 @@ export const useGraphModel = (party?: Party): EchoGraphModel => {
       .filter(item => item.type?.startsWith('example:'));
 
     model.update(filteredItems);
+    // TODO(kaplanski): Check for array prop changes.
   }, [items.length]);
 
   return model;
