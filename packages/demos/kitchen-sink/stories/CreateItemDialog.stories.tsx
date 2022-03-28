@@ -4,10 +4,11 @@
 
 import React from 'react';
 
+import { itemAdapter, TestType } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
-import { CreateItemDialog, TestType } from '../src';
-import { CreateItemButton, itemAdapter } from './helpers';
+import { CreateItemDialog } from '../src';
+import { CreateItemButton } from './helpers';
 
 export default {
   title: 'KitchenSink/CreateItemDialog'

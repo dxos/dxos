@@ -3,5 +3,4 @@
 //
 
 export * from './components';
-export * from './testing';
 export * from './util';

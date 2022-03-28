@@ -6,14 +6,12 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
 
-import { PartyBuilder } from '../src';
 import {
   ONLINE_CONFIG,
-  buildTestParty,
-  useTestParty,
   App
 } from './helpers';
 
@@ -52,14 +50,12 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
+    const testParty = useTestParty();
     const partySerializer = usePartySerializer();
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
-      const party = await client.echo.createParty();
-      const builder = new PartyBuilder(party);
-      await buildTestParty(builder!);
-      setParty(party);
+      setParty(testParty);
     };
 
     const handleJoinParty = async (invitationText: string) => {
@@ -91,13 +87,11 @@ export const Secondary = () => {
 
     if (party) {
       return (
-        <>
-          <App
-            party={party}
-            onInvite={handleInvite}
-            onExport={handleExport}
-          />
-        </>
+        <App
+          party={party}
+          onInvite={handleInvite}
+          onExport={handleExport}
+        />
       );
     }
 

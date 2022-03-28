@@ -12,7 +12,9 @@ import {
 } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
-import { Searchbar, SelectionEditor } from '../../../src';
+import { SelectionEditor } from '@dxos/react-client-testing';
+
+import { Searchbar } from '../../../src';
 import { ViewSelector } from './ViewSelector';
 
 interface AppBarProps {

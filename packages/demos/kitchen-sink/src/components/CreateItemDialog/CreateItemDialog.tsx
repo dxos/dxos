@@ -6,7 +6,7 @@ import React, { ReactNode, useState } from 'react';
 
 import { Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography } from '@mui/material';
 
-import { ItemAdapter } from '../adapter';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
 interface CreateItemDialogProps {
   open: boolean
