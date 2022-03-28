@@ -17,19 +17,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/crypto"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../client"
     },
     {
       "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
     },
     {
       "path": "../react-client"
