@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "2.28.12",
+  "version": "2.28.13",
   "description": "ECHO protocol definitions and utilities.",
   "license": "MIT",
   "main": "dist/src/index.js",
