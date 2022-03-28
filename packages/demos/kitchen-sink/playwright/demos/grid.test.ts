@@ -5,7 +5,8 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { TestType } from '../../src/testing'; // NOTE: Must explicitly include /testing dir.
+import { TestType } from '@dxos/react-client-testing';
+
 import { Launcher } from '../util';
 
 const config = {

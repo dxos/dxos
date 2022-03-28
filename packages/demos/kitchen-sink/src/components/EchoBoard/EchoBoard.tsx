@@ -9,8 +9,8 @@ import { Box, Grid } from '@mui/material';
 import { Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { ItemAdapter } from '../adapter';
 import { EchoCard } from './EchoCard';
 import { EchoSubList } from './EchoSubList';
 

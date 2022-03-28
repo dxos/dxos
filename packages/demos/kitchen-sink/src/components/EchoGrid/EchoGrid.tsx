@@ -14,8 +14,7 @@ import {
 import { truncateString } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-
-import { ItemAdapter } from '../adapter';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
 const defaultStyles = css`
   .monospace {
