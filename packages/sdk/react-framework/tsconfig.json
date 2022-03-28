@@ -47,6 +47,9 @@
       "path": "../../echo/echo-db"
     },
     {
+      "path": "../../echo/echo-protocol"
+    },
+    {
       "path": "../../echo/object-model"
     },
     {
