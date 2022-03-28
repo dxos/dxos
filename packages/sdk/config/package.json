@@ -21,6 +21,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
     "js-yaml": "^3.13.1",
@@ -28,8 +29,7 @@
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "node-fetch": "^2.6.0",
-    "protobufjs": "^6.9.0",
-    "@dxos/util": "workspace:*"
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.27",
