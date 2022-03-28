@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.13](https://www.github.com/dxos/protocols/compare/v2.28.12...v2.28.13) (2022-03-28)
+
+
+### Features
+
+* Created react-client-testing package && useTestParty hook ([#1084](https://www.github.com/dxos/protocols/issues/1084)) ([44a074d](https://www.github.com/dxos/protocols/commit/44a074deee72b6f0728ef5203a1a9ca619214764))
+* EchoGraph relocation to react-components ([#1086](https://www.github.com/dxos/protocols/issues/1086)) ([457366f](https://www.github.com/dxos/protocols/commit/457366f790ea0dfc36d9b7006f0582b6904079b0))
+
 ### [2.28.12](https://www.github.com/dxos/protocols/compare/v2.28.11...v2.28.12) (2022-03-25)
 
 
