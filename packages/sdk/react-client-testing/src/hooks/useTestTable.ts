@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Item, Party } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
+import { useAsyncEffect } from '@dxos/react-async';
 
 import { TableBuilder, useTableBuilder } from '../builders';
 
@@ -21,30 +22,26 @@ export const useTestTable = (party?: Party, callback: TestTableCallback = buildT
   const [table, setTable] = useState<Item<ObjectModel>>();
   const builder = useTableBuilder(party, table);
 
-  useEffect(() => {
-    setImmediate(async () => {
-      if (party) {
-        const baseItem = await party.database.createItem({
-          model: ObjectModel,
-          type: TYPE_TABLE_BASE
-        });
+  useAsyncEffect(async () => {
+    if (party) {
+      const baseItem = await party.database.createItem({
+        model: ObjectModel,
+        type: TYPE_TABLE_BASE
+      });
 
-        const tableItem = await party.database.createItem({
-          model: ObjectModel,
-          type: TYPE_TABLE_TABLE,
-          parent: baseItem.id
-        });
+      const tableItem = await party.database.createItem({
+        model: ObjectModel,
+        type: TYPE_TABLE_TABLE,
+        parent: baseItem.id
+      });
 
-        setTable(tableItem);
-      }
-    });
+      setTable(tableItem);
+    }
   }, [party]);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (builder) {
-      setImmediate(async () => {
-        await callback(builder);
-      }, []);
+      await callback(builder);
     }
   }, [builder, party]);
 
