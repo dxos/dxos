@@ -26,6 +26,7 @@
     "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
