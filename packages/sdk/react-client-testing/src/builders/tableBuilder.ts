@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { Item, Party } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Num, num } from '../utils';
+import { NumberRange, getNumber } from '../utils';
 
 // TODO(kaplanski): Discuss where we should obtain this from.
 export const TYPE_TABLE_COLUMN = 'dxos:type.table.column';
@@ -30,7 +30,7 @@ export class ColumnBuilder {
 }
 
 /**
- * Table builder.
+ * Class containing methods for building a table, with columns and rows. Used for testing.
  */
 export class TableBuilder {
   constructor (
@@ -62,13 +62,13 @@ export class TableBuilder {
     });
   }
 
-  async createColumns (n: Num = 1) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createColumns (n: NumberRange = 1) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       return await this.createColumn();
     }));
   }
 
-  async createRow (fieldIds: string[], n:Num = 1) {
+  async createRow (fieldIds: string[], n: NumberRange = 1) {
     return await Promise.all(Array.from(new Array(n)).map(() => {
       const rowProps = fieldIds.map((fieldId: string) => ({ [fieldId]: faker.lorem.word() })).flat();
       const row = Object.assign({}, { id: faker.datatype.uuid() }, ...rowProps);
@@ -81,8 +81,8 @@ export class TableBuilder {
     }));
   }
 
-  async createRows (fieldIds: string[], n:Num = 1) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createRows (fieldIds: string[], n: NumberRange = 1) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       return await this.createRow(fieldIds, n);
     }));
   }

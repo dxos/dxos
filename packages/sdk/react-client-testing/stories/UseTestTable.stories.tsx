@@ -14,7 +14,7 @@ import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dx
 
 import { useTestTable } from '../src';
 
-const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
+const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
   const children = useSelection(item.select().children(), []);
 
   return (

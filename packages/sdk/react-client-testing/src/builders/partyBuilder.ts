@@ -9,7 +9,7 @@ import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { capitalize, Num, num } from '../utils';
+import { capitalize, NumberRange, getNumber } from '../utils';
 
 export enum TestType {
   Org = 'example:type.org',
@@ -57,8 +57,8 @@ export class ProjectBuilder {
     return this._project;
   }
 
-  async createTasks (n: Num = 1, people?: Item<ObjectModel>[]) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createTasks (n: NumberRange = 1, people?: Item<ObjectModel>[]) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const task = await this._builder.createTask(this._project);
       if (people) {
         await this._builder.createLink(task, faker.random.arrayElement(people));
@@ -77,14 +77,14 @@ export class OrgBuilder {
     return this._org;
   }
 
-  async createPeople (n: Num = 1) {
+  async createPeople (n: NumberRange = 1) {
     return await Promise.all(Array.from({ length: num(n) }).map(async () => {
       return await this._builder.createPerson(this._org);
     }));
   }
 
-  async createProjects (n: Num = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createProjects (n: NumberRange = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const project = await this._builder.createProject(this._org);
       await callback?.(new ProjectBuilder(this._builder, this._org, project));
       return project;
@@ -105,8 +105,8 @@ export class PartyBuilder {
     return this._party;
   }
 
-  async createOrgs (n: Num = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createOrgs (n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const org = await this.createOrg();
       await callback?.(new OrgBuilder(this, org));
       return org;
