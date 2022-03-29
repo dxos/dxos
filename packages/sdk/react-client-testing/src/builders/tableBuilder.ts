@@ -10,6 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Num, num } from '../utils';
 
+// TODO(kaplanski): Discuss where we should obtain this from.
 export const TYPE_TABLE_COLUMN = 'dxos:type.table.column';
 export const TYPE_TABLE_ROW = 'dxos:type.table.row';
 export const TYPE_TABLE_COLUMN_LINK = 'dxos:type.table.column-link';
