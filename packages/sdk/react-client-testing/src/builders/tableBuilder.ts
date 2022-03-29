@@ -91,6 +91,6 @@ export class TableBuilder {
  * @param party
  * @param table
  */
-export const useTableBuilder = (party: Party, table?: Item<ObjectModel>) => {
-  return useMemo(() => table ? new TableBuilder(party, table) : undefined, [table?.id]);
+export const useTableBuilder = (party?: Party, table?: Item<ObjectModel>) => {
+  return useMemo(() => (party && table) ? new TableBuilder(party, table) : undefined, [table?.id]);
 };

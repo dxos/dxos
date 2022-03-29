@@ -17,24 +17,26 @@ export const TYPE_TABLE_TABLE = 'dxos:type.table.table';
 /**
  * Generate test table.
  */
-export const useTestTable = (party: Party, callback: TestTableCallback = buildTestTable): Item<ObjectModel> | undefined => {
+export const useTestTable = (party?: Party, callback: TestTableCallback = buildTestTable): Item<ObjectModel> | undefined => {
   const [table, setTable] = useState<Item<ObjectModel>>();
   const builder = useTableBuilder(party, table);
 
   useEffect(() => {
     setImmediate(async () => {
-      const baseItem = await party.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_BASE
-      });
+      if (party) {
+        const baseItem = await party.database.createItem({
+          model: ObjectModel,
+          type: TYPE_TABLE_BASE
+        });
 
-      const tableItem = await party.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_TABLE,
-        parent: baseItem.id
-      });
+        const tableItem = await party.database.createItem({
+          model: ObjectModel,
+          type: TYPE_TABLE_TABLE,
+          parent: baseItem.id
+        });
 
-      setTable(tableItem);
+        setTable(tableItem);
+      }
     });
   }, [party]);
 
