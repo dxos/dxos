@@ -38,8 +38,14 @@ message Record {
   /// Record creation timetstamp.
   google.protobuf.Timestamp created = 1;
 
+  /// Optional human-readable name of record.
+  string display_name = 2;
+
   /// Optional record description.
-  string description = 2;
+  string description = 3;
+
+  /// Optional record tags.
+  string tags = 4;
 
   oneof kind {
     /// Type record variant.

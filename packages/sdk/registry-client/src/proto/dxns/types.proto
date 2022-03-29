@@ -17,23 +17,45 @@ package dxos.type;
 //
 message App {
   /**
+   * Type of application (ex. web app, android apk, etc.)
+   * Should align with types of files in the bundle.
+   */
+  string type = 1;
+
+  /**
    * Optional **semver 2.0** compliant record version.
    * Should conform to the semver regex (see https://semver.org/).
    */
-  string version = 1;
+  string version = 2;
 
   /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes hash = 2; // TODO(wittjosiah): Rename bundleCID?
+  bytes bundleCID = 2;
   string repository = 3;
-  string repository_version = 4;
+  string repository_version = 4; // TODO(wittjosiah): Align with config?
   string license = 5;
-  repeated string keywords = 6; // TODO(wittjosiah): Include in base record?
-  string display_name = 7; // TODO(wittjosiah): Include in base record?
 
-  // TODO(burdon): Frame-specific or references complete schema of related types?
-  // For frames, types of items the frame supports.
-  // Content-Type is represented as ECHO item type DXN.
-  repeated string content_type = 8;
+  Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.app.web`.
+//
+message WebApp {
+  /// Optional app root path, defaults to index.html.
+  string root = 1;
+
+  Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.app.frame`.
+//
+message Frame {
+  /// Optional relative path in bundle to frame entrypoint, defaults to frame.js.
+  string module = 1;
+
+  /// Optional default item type which frame loads and creates, defaults to name of the frame.
+  string item = 2;
 
   Record.Extension extension = 100;
 }
@@ -49,21 +71,22 @@ message Bot {
   string version = 1;
 
   /// Bot bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes hash = 2; // TODO(burdon): Rename bundle.
+  bytes bundleCID = 2;
   string repository = 3;
   string repository_version = 4;
   string license = 5;
-  repeated string keywords = 6;
-  /// Only for spawning bots that are expected to be vendored with bot-factory. This would be the path to the bot executable in bot-factory's file-system.
-  string local_path = 7;
+
+  /// Only for spawning bots that are expected to be vendored with bot-factory.
+  /// This would be the path to the bot executable in bot-factory's file-system.
+  string local_path = 6;
 
   Record.Extension extension = 100;
 }
 
 //
-// Registered as `type.state-machiene`.
+// Registered as `type.state-machine`.
 //
-message StateMachiene {
+message StateMachine {
   /// Set of protobuf messages encoded in JSON.
   string mutation_protobuf_defs = 1;
 
@@ -100,7 +123,7 @@ message KUBE {
 // Registered as `type.service`.
 //
 message Service {
-  // TODO(dmaretskyi): How are service type's defined.
+  // TODO(dmaretskyi): How are service type's defined?
   string type = 1;
 
   // KUBE record's CID that hosts this service.

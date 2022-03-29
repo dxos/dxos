@@ -6,15 +6,11 @@ syntax = "proto3";
 
 package dxos.config;
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/descriptor.proto";
-// TODO(wittjosiah): Import registry record type proto definitions.
-
 message Config {
   int32 version = 1;
 
   //
-  // Module metatdata.
+  // Module metadata.
   //
 
   Meta meta = 2;
@@ -23,8 +19,6 @@ message Config {
   // Deploy configuration.
   //
 
-  // TODO(wittjosiah): Also allow single still?
-  // Module module = 3;
   repeated Module modules = 3;
 
   //
@@ -34,42 +28,39 @@ message Config {
   Runtime runtime = 4;
 }
 
+// TODO(wittjosiah): Banned word, rename.
 message Meta {
+  message Repo {
+    // TODO(wittjosiah): Enum?
+    string type = 1;
+    string url = 2;
+    string version = 3;
+  }
+
   string author = 1;
   string license = 2;
-  string repository = 3;
-  string repository_version = 4;
-  string npm_url = 5;
+  repeated Repo = 3;
 }
 
 message Module {
-  // Specific to record type.
-  message Record {
-    // TODO(wittjosiah): This should come from actual record proto definitions.
-    App app = 1;
-
-    // TODO(wittjosiah): Allow for custom type config.
-    Record.Extension extension = 100;
-  }
-
-  // Current build.
   message Build {
     string command = 1;
     string out = 2;
+    string version = 3;
+    string tag = 4;
   }
 
   string name = 1;
   string type = 2;
-  string version = 3;
-  string tag = 4;
-
-  string display_name = 5;
-  string description = 6;
-  repeated string keywords = 7;
+  string display_name = 3;
+  string description = 4;
+  repeated string tags = 5;
 
   Meta meta = 101;
   Build build = 102;
-  Record record = 103;
+
+  /// Generic record data which will be validated based on the type when being published.
+  bytes record = 103;
 }
 
 message Runtime {
