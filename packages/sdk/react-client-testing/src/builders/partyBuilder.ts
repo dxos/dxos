@@ -9,6 +9,8 @@ import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { capitalize, Num, num } from '../utils';
+
 export enum TestType {
   Org = 'example:type.org',
   Project = 'example:type.project',
@@ -20,12 +22,6 @@ export enum TestType {
 export function enumFromString<T> (enm: { [s: string]: T}, value: string): T | undefined {
   return (Object.values(enm) as unknown as string[]).includes(value) ? value as unknown as T : undefined;
 }
-
-type Num = [min: number, max: number] | number
-
-const num = (n: Num) => typeof n === 'number' ? n : faker.datatype.number({ min: n[0], max: n[1] });
-
-const capitalize = (text: string) => text.length ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 
 /*
 // TODO(burdon): Experimental -- define graph shape.
