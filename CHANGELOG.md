@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.14](https://www.github.com/dxos/protocols/compare/v2.28.13...v2.28.14) (2022-03-30)
+
+
+### Features
+
+* useTestTable and tableBuilder ([#1088](https://www.github.com/dxos/protocols/issues/1088)) ([14f4b2e](https://www.github.com/dxos/protocols/commit/14f4b2e9e43075adc74a8a93a32006da1c170ca9))
+
 ### [2.28.13](https://www.github.com/dxos/protocols/compare/v2.28.12...v2.28.13) (2022-03-28)
 
 
