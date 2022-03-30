@@ -56,6 +56,9 @@
       "path": "../react-client"
     },
     {
+      "path": "../react-client-testing"
+    },
+    {
       "path": "../react-components"
     },
     {
