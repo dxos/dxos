@@ -15,7 +15,7 @@ import { colors } from '@mui/material';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { TestType } from './builder';
+import { TestType } from './builders';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {
