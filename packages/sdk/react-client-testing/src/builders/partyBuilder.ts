@@ -78,7 +78,7 @@ export class OrgBuilder {
   }
 
   async createPeople (n: NumberRange = 1) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       return await this._builder.createPerson(this._org);
     }));
   }
