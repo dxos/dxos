@@ -53,7 +53,7 @@ export const useTestTable = (party?: Party, callback: TestTableCallback = buildT
  * @param builder
  */
 export const buildTestTable: TestTableCallback = async (builder: TableBuilder) => {
-  const columns = await builder.createColumns([3, 7]);
-  const fieldIds = columns.map(column => column.id);
-  await builder.createRows(fieldIds, [3, 10]);
+  const columns = await builder.createColumns([5, 7]);
+  const fieldIds = columns.map(column => ({ columnId: column.id }));
+  await builder.createRows(fieldIds, [30, 40]);
 };

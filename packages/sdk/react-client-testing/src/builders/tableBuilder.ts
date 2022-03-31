@@ -15,6 +15,13 @@ export const TYPE_TABLE_COLUMN = 'dxos:type.table.column';
 export const TYPE_TABLE_ROW = 'dxos:type.table.row';
 export const TYPE_TABLE_COLUMN_LINK = 'dxos:type.table.column-link';
 
+type FieldGenerator = () => string;
+type Field = {
+  columnId: string
+  fieldName?: string
+  generator?: FieldGenerator
+}
+
 /**
  * Table column builder.
  */
@@ -46,8 +53,8 @@ export class TableBuilder {
     return this._table;
   }
 
-  async createColumn () {
-    const field = faker.database.column();
+  async createColumn (customField?: string) {
+    const field = customField ?? faker.database.column();
     return this._party.database.createItem({
       model: ObjectModel,
       type: TYPE_TABLE_COLUMN,
@@ -62,28 +69,36 @@ export class TableBuilder {
     });
   }
 
-  async createColumns (n: NumberRange = 1) {
+  async createColumns (n: NumberRange = 1, customFields?: string[]) {
+    if (customFields && customFields.length) {
+      return await Promise.all(customFields.map(async (customField) => {
+        return await this.createColumn(customField);
+      }));
+    }
+
     return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       return await this.createColumn();
     }));
   }
 
-  async createRow (fieldIds: string[], n: NumberRange = 1) {
-    return await Promise.all(Array.from(new Array(n)).map(() => {
-      const rowProps = fieldIds.map((fieldId: string) => ({ [fieldId]: faker.lorem.word() })).flat();
-      const row = Object.assign({}, { id: faker.datatype.uuid() }, ...rowProps);
-      return this._party.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_ROW,
-        parent: this._table.id,
-        props: row
-      });
-    }));
+  async createRow (fields: Field[]) {
+    const rowProps = fields.map((field) => {
+      return {
+        [field.columnId]: field.generator ? field.generator() : faker.lorem.word()
+      };
+    }).flat();
+    const row = Object.assign({}, { id: faker.datatype.uuid() }, ...rowProps);
+    return await this._party.database.createItem({
+      model: ObjectModel,
+      type: TYPE_TABLE_ROW,
+      parent: this._table.id,
+      props: row
+    });
   }
 
-  async createRows (fieldIds: string[], n: NumberRange = 1) {
+  async createRows (fields: Field[], n: NumberRange = 1) {
     return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
-      return await this.createRow(fieldIds, n);
+      return await this.createRow(fields);
     }));
   }
 }
