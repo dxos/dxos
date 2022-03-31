@@ -12,7 +12,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
 
-import { useTestTable } from '../src';
+export default {
+  title: 'react-client-testing/TestTable'
+};
 
 const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
   const children = useSelection(item.select().children(), []);

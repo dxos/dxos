@@ -13,6 +13,10 @@ import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-cl
 
 import { useTestParty } from '../src';
 
+export default {
+  title: 'react-client-testing/TestParty'
+};
+
 // TODO(kaplanski): Factor out this component from devtools.
 const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
   const children = item.select().children().query().entities;
