@@ -5,7 +5,7 @@
     "jsx": "react",
     "lib": [
       "DOM",
-      "es2019"
+      "ESNext"
     ]
   },
   "include": [
