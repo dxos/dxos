@@ -604,6 +604,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-gem-components",
+      "projectFolder": "packages/sdk/react-gem-components",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-registry-client",
       "projectFolder": "packages/sdk/react-registry-client",
       "shouldPublish": true,
