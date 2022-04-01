@@ -11,7 +11,7 @@ import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { defaultSelectionText, execSelection, SelectionEditor, useTestParty } from '../src';
 
 export default {
-  title: 'KitchenSink/SelectionEditor'
+  title: 'react-client-testing/SelectionEditor'
 };
 
 const App = () => {
