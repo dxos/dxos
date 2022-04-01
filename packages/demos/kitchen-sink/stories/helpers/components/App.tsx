@@ -9,7 +9,7 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
-import { useGraphModel } from '@dxos/react-framework';
+import { useGraphModel } from '@dxos/react-gem-components';
 
 import { ThemeProvider } from '../../../src';
 import { useQuery } from '../data';

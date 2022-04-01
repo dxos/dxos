@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
-import { EchoGraph, useGraphModel } from '@dxos/react-framework';
+import { EchoGraph, useGraphModel } from '@dxos/react-gem-components';
 
 import { graphStyles } from '../';
 
