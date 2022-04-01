@@ -623,6 +623,7 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/react-gem-components': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
@@ -673,6 +674,7 @@ importers:
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-gem-components': link:../../sdk/react-gem-components
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
@@ -2483,8 +2485,6 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.28.4
       '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/gem-core': ~2.2.1-beta.11
-      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -2510,7 +2510,6 @@ importers:
       '@types/uuid': ~8.3.3
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
-      clsx: ^1.1.0
       debug: ^4.3.3
       eslint: ^7.12.1
       lodash.defaultsdeep: ^4.6.1
@@ -2525,8 +2524,6 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../react-registry-client
       '@emotion/css': 11.7.1_@babel+core@7.13.16
@@ -2571,8 +2568,72 @@ importers:
       '@types/url-join': 4.0.1
       '@types/uuid': 8.3.3
       babel-plugin-add-module-exports: 1.0.4
+      eslint: 7.32.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.3
+
+  ../../packages/sdk/react-gem-components:
+    specifiers:
+      '@babel/core': ~7.13.15
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
+      '@dxos/esbuild-plugins': ~2.28.4
+      '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-spore': ~2.2.1-beta.11
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-components': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@mui/icons-material': ^5.4.2
+      '@mui/lab': ^5.0.0-alpha.69
+      '@mui/material': ^5.4.2
+      '@mui/system': ^5.4.2
+      '@types/faker': ^5.5.1
+      '@types/react': ^17.0.24
+      clsx: ^1.1.0
+      eslint: ^7.12.1
+      faker: ^5.1.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.5.2
+    dependencies:
+      '@dxos/gem-core': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+      '@dxos/gem-spore': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+    devDependencies:
+      '@babel/core': 7.13.16
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../client
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/esbuild-plugins': 2.28.4
+      '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
+      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../react-client
+      '@dxos/react-client-testing': link:../react-client-testing
+      '@dxos/react-components': link:../react-components
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
+      '@mui/lab': 5.0.0-alpha.69_3dbd8f7a3f715159251f1a8d08e97be5
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
+      '@types/faker': 5.5.9
+      '@types/react': 17.0.37
       clsx: 1.1.1
       eslint: 7.32.0
+      faker: 5.5.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       typescript: 4.5.3
@@ -5589,6 +5650,27 @@ packages:
       - supports-color
     dev: false
 
+  /@dxos/gem-core/2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
+    peerDependencies:
+      '@emotion/css': '>=11.0.0'
+      '@emotion/react': '>=11.0.0'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      assert: 2.0.0
+      csstype: 3.0.10
+      d3: 7.3.0
+      debug: 4.3.3
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@dxos/gem-spore/2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f:
     resolution: {integrity: sha512-YIPVo8zIS/AyOQwDvt5pnI0RbiwMK1N3PP0bnnlTvLsDcuHpd8CwWF1Vu9N5vKx/fHOPB1ZI+ZyRH1309L5GjA==}
     peerDependencies:
@@ -5600,6 +5682,30 @@ packages:
       '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
+      clsx: 1.1.1
+      csstype: 3.0.10
+      d3: 7.3.0
+      d3-force: 3.0.0
+      debug: 4.3.3
+      immutability-helper: 3.1.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@dxos/gem-spore/2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61:
+    resolution: {integrity: sha512-YIPVo8zIS/AyOQwDvt5pnI0RbiwMK1N3PP0bnnlTvLsDcuHpd8CwWF1Vu9N5vKx/fHOPB1ZI+ZyRH1309L5GjA==}
+    peerDependencies:
+      '@emotion/css': '>=11.0.0'
+      '@emotion/react': '>=11.0.0'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@dxos/gem-core': 2.2.1-beta.11_f5687c5c6e20dd442b404662e33c2f61
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
       clsx: 1.1.1
       csstype: 3.0.10
       d3: 7.3.0
@@ -5674,7 +5780,6 @@ packages:
       '@emotion/serialize': 1.0.2
       '@emotion/sheet': 1.1.0
       '@emotion/utils': 1.1.0
-    dev: false
 
   /@emotion/hash/0.8.0:
     resolution: {integrity: sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow==}

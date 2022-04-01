@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './EchoGraph';
 export * from './ErrorIndicator';
 export * from './ErrorView';
 export * from './ExportDialog';
