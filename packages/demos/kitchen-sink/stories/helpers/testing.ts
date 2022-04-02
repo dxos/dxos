@@ -67,11 +67,11 @@ export const graphStyles = css`
  */
 export const itemAdapter: ItemAdapter = {
   title: (item: Item<ObjectModel>) => {
-    return item.model.getProperty('title');
+    return item.model.get('title');
   },
 
   description: (item: Item<ObjectModel>) => {
-    return item.model.getProperty('description');
+    return item.model.get('description');
   },
 
   linkedTypes: (item: Item<ObjectModel>) => {

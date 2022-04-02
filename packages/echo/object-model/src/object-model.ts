@@ -11,6 +11,9 @@ import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 
+/**
+ * Processes object mutations.
+ */
 class ObjectModelStateMachine implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
   private _object = {};
 
@@ -58,21 +61,28 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   /**
    * Returns an immutable object.
    */
-  // TODO(burdon): Rename getProperties.
   toObject () {
     return cloneDeep(this._getState());
   }
 
-  /**
-   * Returns the value at `path` of the object.
-   * Similar to: https://lodash.com/docs/4.17.15#get
-   * @param path
-   * @param [defaultValue]
-   */
-  getProperty (path: string, defaultValue: any = undefined): any {
-    return cloneDeep(get(this._getState(), path, defaultValue));
+  get (key: string, defaultValue: any = undefined) {
+    return this.getProperty(key, defaultValue);
   }
 
+  async set (key: string, value: any) {
+    return this.setProperty(key, value);
+  }
+
+  /**
+   * @deprecated
+   */
+  getProperty (key: string, defaultValue: any = undefined): any {
+    return cloneDeep(get(this._getState(), key, defaultValue));
+  }
+
+  /**
+   * @deprecated
+   */
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [
@@ -85,6 +95,10 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
     });
   }
 
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Array of key/values?
   async setProperties (properties: any) {
     await this._makeMutation({
       mutations: createMultiFieldMutationSet(properties)

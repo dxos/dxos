@@ -102,7 +102,7 @@ describe('In-Memory', () => {
       });
 
       const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
-      const payload = item.model.getProperty('payload');
+      const payload = item.model.get('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
       await botFactoryClient.botFactory.removeAll();
@@ -180,7 +180,7 @@ describe('Node', () => {
           result
             .update.on(async result => {
               for (const item of result.entities) {
-                const payload = item.model.getProperty('payload');
+                const payload = item.model.get('payload');
                 if (PublicKey.from(payload).toString() === PublicKey.from(command).toString()) {
                   resolve(true);
                 }

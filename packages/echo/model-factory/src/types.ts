@@ -10,8 +10,10 @@ import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-prot
 import { Model } from './model';
 import { StateMachine } from './state-machine';
 
-export type ModelType = string // TODO(burdon): Replace with DXN.
+// TODO(burdon): Replace with DXN.
+export type ModelType = string
 
+// TODO(burdon): Refactor.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 

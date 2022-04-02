@@ -139,7 +139,7 @@ export class PartyInternal {
 
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
-    await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
+    await item.model.set(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
   }
 

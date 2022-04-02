@@ -31,9 +31,9 @@ describe('snapshot', () => {
       const item = await party.database.createItem({ model: ObjectModel });
       itemId = item.id;
       for (let i = 0; i < 1_000; i++) {
-        await item.model.setProperty('foo', i);
+        await item.model.set('foo', i);
       }
-      await item.model.setProperty('foo', 'done');
+      await item.model.set('foo', 'done');
 
       await echo.close();
     }
@@ -46,7 +46,7 @@ describe('snapshot', () => {
 
       await waitForCondition(() => {
         const item = party!.database.getItem(itemId);
-        return item!.model.getProperty('foo') === 'done';
+        return item!.model.get('foo') === 'done';
       });
 
       await echo.close();
@@ -60,7 +60,7 @@ describe('snapshot', () => {
     const echo = await createTestInstance({ initialize: true });
     const party = await echo.createParty();
     const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'foo' } });
-    await item.model.setProperty('foo', 'bar');
+    await item.model.set('foo', 'bar');
 
     const snapshot = party.createSnapshot();
     expect(snapshot.database?.items).toHaveLength(2);

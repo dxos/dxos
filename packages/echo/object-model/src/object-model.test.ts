@@ -13,18 +13,16 @@ describe('ObjectModel', () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
-    await model.setProperty('foo', 'bar');
-
-    expect(model.getProperty('foo')).toEqual('bar');
+    await model.set('foo', 'bar');
+    expect(model.get('foo')).toEqual('bar');
   });
 
-  it.skip('property updates are optimistically applied', async () => {
+  it('property updates are optimistically applied', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
-    const promise = model.setProperty('foo', 'bar');
-
-    expect(model.getProperty('foo')).toEqual('bar');
+    const promise = model.set('foo', 'bar');
+    expect(model.get('foo')).toEqual('bar');
 
     await promise;
   });
@@ -35,8 +33,7 @@ describe('ObjectModel', () => {
 
     expect(peer.timeframe.get(peer.key)).toEqual(undefined);
 
-    await peer.model.setProperty('foo', 'bar');
-
+    await peer.model.set('foo', 'bar');
     expect(peer.timeframe.get(peer.key)).toEqual(0);
   });
 
@@ -45,10 +42,9 @@ describe('ObjectModel', () => {
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
-    await peer1.model.setProperty('foo', 'bar');
+    await peer1.model.set('foo', 'bar');
     await rig.waitForReplication();
-
-    expect(peer2.model.getProperty('foo')).toEqual('bar');
+    expect(peer2.model.get('foo')).toEqual('bar');
   });
 
   it('consistency', async () => {
@@ -58,13 +54,13 @@ describe('ObjectModel', () => {
 
     rig.configureReplication(false);
 
-    await peer1.model.setProperty('title', 'DXOS');
-    await peer2.model.setProperty('title', 'Braneframe');
+    await peer1.model.set('title', 'DXOS');
+    await peer2.model.set('title', 'Braneframe');
 
     rig.configureReplication(true);
     await rig.waitForReplication();
 
     // Peer states have converged to a single value.
-    expect(peer1.model.getProperty('title')).toEqual(peer2.model.getProperty('title'));
+    expect(peer1.model.get('title')).toEqual(peer2.model.get('title'));
   });
 });

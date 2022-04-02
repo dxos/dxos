@@ -180,13 +180,13 @@ export class Party {
   async setProperty (key: string, value?: any) {
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
     const item = this.getPropertiesItem();
-    await item.model.setProperty(key, value);
+    await item.model.set(key, value);
     return this;
   }
 
   getProperty (key: string) {
     const item = this.getPropertiesItem();
-    return item?.model.getProperty(key);
+    return item?.model.get(key);
   }
 
   private getPropertiesItem () {

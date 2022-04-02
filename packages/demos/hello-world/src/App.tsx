@@ -64,7 +64,7 @@ export const App = () => {
       <List>
         {items.map(item => (
           <ListItem key={item.id}>
-            <ListItemText primary={item.model.getProperty('title')} />
+            <ListItemText primary={item.model.get('title')} />
           </ListItem>
         ))}
       </List>
