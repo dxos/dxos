@@ -27,7 +27,6 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
 
   /**
    * A way to initialize the model upon item creation.
-   *
    * Must return a mutation that will initialize the model.
    * This mutation will be applied in the same processing step as the item creation.
    *

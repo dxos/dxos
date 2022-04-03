@@ -76,13 +76,18 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   /**
    * @deprecated
    */
+  // TODO(burdon): Remove.
   getProperty (key: string, defaultValue: any = undefined): any {
     return cloneDeep(get(this._getState(), key, defaultValue));
   }
 
+  // TODO(burdon): Batch/builder API.
+  // E.g., model.batch().set().set().commit().
+
   /**
    * @deprecated
    */
+  // TODO(burdon): Remove.
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [
@@ -98,7 +103,7 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   /**
    * @deprecated
    */
-  // TODO(burdon): Array of key/values?
+  // TODO(burdon): Remove.
   async setProperties (properties: any) {
     await this._makeMutation({
       mutations: createMultiFieldMutationSet(properties)
@@ -142,7 +147,6 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   }
 
   private async _makeMutation (mutation: ObjectMutationSet) {
-    // Process the mutations.
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
   }
