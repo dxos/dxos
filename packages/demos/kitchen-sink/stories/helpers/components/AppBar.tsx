@@ -5,18 +5,22 @@
 import React, { useState } from 'react';
 
 import {
+  Download as DownloadIcon,
   ExpandMore as OpenIcon,
   ExpandLess as CloseIcon,
   Share as ShareIcon
 } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
-import { Searchbar, SelectionEditor } from '../../../src';
+import { SelectionEditor } from '@dxos/react-client-testing';
+
+import { Searchbar } from '../../../src';
 import { ViewSelector } from './ViewSelector';
 
 interface AppBarProps {
   view: string
   onInvite?: () => void
+  onExport?: () => void
   onSearch?: (search: string) => void
   onSelection?: (selection: string) => void
   onChangeView: (view: string) => void
@@ -25,6 +29,7 @@ interface AppBarProps {
 export const AppBar = ({
   view,
   onInvite,
+  onExport,
   onSearch,
   onSelection,
   onChangeView
@@ -78,16 +83,29 @@ export const AppBar = ({
             onChange={(view: string) => onChangeView(view)}
           />
 
-          {onInvite && (
-            <IconButton
-              data-id='test-button-share'
-              size='small'
-              sx={{ marginLeft: 2 }}
-              onClick={onInvite}
-            >
-              <ShareIcon />
-            </IconButton>
-          )}
+          <Box sx={{
+            marginLeft: 2
+          }}>
+            {onExport && (
+              <IconButton
+                data-id='test-button-export'
+                size='small'
+                onClick={onExport}
+              >
+                <DownloadIcon />
+              </IconButton>
+            )}
+
+            {onInvite && (
+              <IconButton
+                data-id='test-button-share'
+                size='small'
+                onClick={onInvite}
+              >
+                <ShareIcon />
+              </IconButton>
+            )}
+          </Box>
         </Toolbar>
       </MuiAppBar>
 

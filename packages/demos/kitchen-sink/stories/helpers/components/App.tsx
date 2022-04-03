@@ -7,11 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { Party } from '@dxos/client';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
+import { execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
+import { useGraphModel } from '@dxos/react-gem-components';
 
-import { execSelection, ThemeProvider, usePartyBuilder } from '../../../src';
-import { useGraphModel, useQuery } from '../data';
-import { itemAdapter } from '../testing';
+import { ThemeProvider } from '../../../src';
+import { useQuery } from '../data';
 import { AppBar } from './AppBar';
 import { CreateItemButton } from './CreateItemButton';
 import { ViewContainer } from './ViewContainer';
@@ -20,6 +21,7 @@ import { ViewType } from './ViewSelector';
 interface AppProps {
   party: Party
   onInvite?: () => void
+  onExport?: () => void
 }
 
 /**
@@ -30,7 +32,8 @@ interface AppProps {
  */
 export const App = ({
   party,
-  onInvite
+  onInvite,
+  onExport
 }: AppProps) => {
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
@@ -90,6 +93,7 @@ export const App = ({
         <AppBar
           view={view}
           onInvite={onInvite}
+          onExport={onExport}
           onSearch={handleSearch}
           onSelection={handleSelection}
           onChangeView={(view: string) => setView(view)}

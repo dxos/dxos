@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
-
 import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { useClient, useSelection } from '@dxos/react-client';
-
-import { EchoGraphModel, OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
-import { itemAdapter } from './testing';
+import { useSelection } from '@dxos/react-client';
+import { itemAdapter } from '@dxos/react-client-testing';
 
 // TODO(burdon): Accidentally test types are naturally alphabetical.
 export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
@@ -50,67 +46,4 @@ export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => 
 
   items.sort(sortItems);
   return items;
-};
-
-/**
- * Create model.
- */
-export const useGraphModel = (party?: Party): EchoGraphModel => {
-  const model = useMemo(() => new EchoGraphModel(), []);
-  const items = useSelection(party?.select()) ?? [];
-
-  useEffect(() => {
-    // TODO(burdon): API should filter out root item.
-    const filteredItems = items
-      .filter(item => item.type?.startsWith('example:'));
-
-    model.update(filteredItems);
-  }, [items.length]);
-
-  return model;
-};
-
-/**
- * Generate test party.
- */
-export const useTestParty = (): Party | undefined => {
-  const client = useClient();
-  const [party, setParty] = useState<Party>();
-  const builder = usePartyBuilder(party);
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const party = await client.echo.createParty();
-      setParty(party);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (builder) {
-      setImmediate(async () => {
-        await buildTestParty(builder);
-      }, []);
-    }
-  }, [builder, party]);
-
-  return party;
-};
-
-/**
- * Build the party.
- * @param builder
- */
-export const buildTestParty = async (builder: PartyBuilder) => {
-  await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
-    await orgBuilder.createPeople([3, 10]);
-    await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {
-      const result = await orgBuilder.org
-        .select()
-        .children()
-        .filter({ type: TestType.Person })
-        .query();
-
-      await projectBuilder.createTasks([2, 5], result.entities);
-    });
-  });
 };

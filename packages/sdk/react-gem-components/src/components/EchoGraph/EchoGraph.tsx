@@ -12,9 +12,9 @@ import { ItemID } from '@dxos/echo-protocol';
 import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
+import { useDynamicRef } from '@dxos/react-async';
+import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { useUpdatedRef } from '../../util';
-import { ItemAdapter } from '../adapter';
 import { EchoGraphModel } from './model';
 
 export interface EchoGraphProps {
@@ -44,7 +44,7 @@ export const EchoGraph = ({
   }), []);
 
   // TODO(burdon): Hack for stale callback.
-  const selectedRef = useUpdatedRef<Set<ItemID> | undefined>(selected);
+  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;
     return {

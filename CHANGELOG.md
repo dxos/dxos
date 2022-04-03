@@ -1,5 +1,89 @@
 # Change Log
 
+### [2.28.15](https://www.github.com/dxos/protocols/compare/v2.28.14...v2.28.15) (2022-04-01)
+
+
+### Features
+
+* Moved gem components from react-framework to react-gem-components ([#1091](https://www.github.com/dxos/protocols/issues/1091)) ([55d77c6](https://www.github.com/dxos/protocols/commit/55d77c60a390535aabc1552c47e85c3d8942b89b))
+* TableBuilder supports custom fields ([#1092](https://www.github.com/dxos/protocols/issues/1092)) ([04a2f93](https://www.github.com/dxos/protocols/commit/04a2f93bd8db6d1e10da697bb32ff7ed8e2dddb1))
+
+### [2.28.14](https://www.github.com/dxos/protocols/compare/v2.28.13...v2.28.14) (2022-03-30)
+
+
+### Features
+
+* useTestTable and tableBuilder ([#1088](https://www.github.com/dxos/protocols/issues/1088)) ([14f4b2e](https://www.github.com/dxos/protocols/commit/14f4b2e9e43075adc74a8a93a32006da1c170ca9))
+
+### [2.28.13](https://www.github.com/dxos/protocols/compare/v2.28.12...v2.28.13) (2022-03-28)
+
+
+### Features
+
+* Created react-client-testing package && useTestParty hook ([#1084](https://www.github.com/dxos/protocols/issues/1084)) ([44a074d](https://www.github.com/dxos/protocols/commit/44a074deee72b6f0728ef5203a1a9ca619214764))
+* EchoGraph relocation to react-components ([#1086](https://www.github.com/dxos/protocols/issues/1086)) ([457366f](https://www.github.com/dxos/protocols/commit/457366f790ea0dfc36d9b7006f0582b6904079b0))
+
+### [2.28.12](https://www.github.com/dxos/protocols/compare/v2.28.11...v2.28.12) (2022-03-25)
+
+
+### Bug Fixes
+
+* RegistrySearchModel results getter ([#1082](https://www.github.com/dxos/protocols/issues/1082)) ([6ac5478](https://www.github.com/dxos/protocols/commit/6ac5478a9a5f98353b804320760ca52841a1a119))
+
+### [2.28.11](https://www.github.com/dxos/protocols/compare/v2.28.10...v2.28.11) (2022-03-25)
+
+
+### Features
+
+* BotFactory timeout. ([#1081](https://www.github.com/dxos/protocols/issues/1081)) ([679a148](https://www.github.com/dxos/protocols/commit/679a1489189c9e5974960a0179bdebd095c2386e))
+
+
+### Bug Fixes
+
+* **react-framework:** add modal prop to TestInvitationDialog ([#1079](https://www.github.com/dxos/protocols/issues/1079)) ([fe0dd0d](https://www.github.com/dxos/protocols/commit/fe0dd0d24bc56fcc99a14393bdec7a651e38200f))
+
+### [2.28.10](https://www.github.com/dxos/protocols/compare/v2.28.9...v2.28.10) (2022-03-23)
+
+
+### Bug Fixes
+
+* SharingDialog message & registry client config ([#1077](https://www.github.com/dxos/protocols/issues/1077)) ([ec8ff7b](https://www.github.com/dxos/protocols/commit/ec8ff7bcf557fb37730dcb6a69512b430deb74fb))
+
+### [2.28.9](https://www.github.com/dxos/protocols/compare/v2.28.8...v2.28.9) (2022-03-22)
+
+
+### Features
+
+* Kitchen sink export party  ([#1073](https://www.github.com/dxos/protocols/issues/1073)) ([0b19adb](https://www.github.com/dxos/protocols/commit/0b19adb4ed26f981d9effc7f6d3f414c4010b588))
+
+### [2.28.8](https://www.github.com/dxos/protocols/compare/v2.28.7...v2.28.8) (2022-03-22)
+
+
+### Features
+
+* **kitchen-sink:** Add party import export. ([#1060](https://www.github.com/dxos/protocols/issues/1060)) ([54f6fa7](https://www.github.com/dxos/protocols/commit/54f6fa7b40735cfe4199b2c0ea4c00f16303e5d2))
+
+
+### Bug Fixes
+
+* Config loading ([#1071](https://www.github.com/dxos/protocols/issues/1071)) ([8f80020](https://www.github.com/dxos/protocols/commit/8f800207e0024e379a7683d51f16b7022b85a74f))
+
+### [2.28.7](https://www.github.com/dxos/protocols/compare/v2.28.6...v2.28.7) (2022-03-21)
+
+
+### Bug Fixes
+
+* Added links in snapshot creation ([#1061](https://www.github.com/dxos/protocols/issues/1061)) ([7ae4894](https://www.github.com/dxos/protocols/commit/7ae4894371bbe402b0e4eceef35ef0f98c46c20e))
+* move running bots out of cwd & ipfs fix. ([#1069](https://www.github.com/dxos/protocols/issues/1069)) ([1dc18be](https://www.github.com/dxos/protocols/commit/1dc18bee136b00f6a728119ed290cdd98758774c))
+
+### [2.28.6](https://www.github.com/dxos/protocols/compare/v2.28.5...v2.28.6) (2022-03-19)
+
+
+### Features
+
+* file upload/download. ([#1063](https://www.github.com/dxos/protocols/issues/1063)) ([73979ec](https://www.github.com/dxos/protocols/commit/73979ec45f86584aa4d617a887b9f179c7660842))
+* Sharing dialog with bot invitations. ([#1058](https://www.github.com/dxos/protocols/issues/1058)) ([50c5d54](https://www.github.com/dxos/protocols/commit/50c5d54b459f1c31ff1c78fd61e8c99ad7c874c7))
+
 ### [2.28.5](https://www.github.com/dxos/protocols/compare/v2.28.4...v2.28.5) (2022-03-16)
 
 

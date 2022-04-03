@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
+import { useTestParty } from '@dxos/react-client-testing';
+import { useFileDownload } from '@dxos/react-components';
+import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
 
-import { InvitationDialog, PartyBuilder } from '../src';
 import {
   ONLINE_CONFIG,
-  buildTestParty,
-  useTestParty,
   App
 } from './helpers';
 
@@ -49,13 +49,13 @@ export const Primary = () => {
 export const Secondary = () => {
   const Story = () => {
     const client = useClient();
-    const [party, setParty] = useState<Party>();
+    const [party, setParty] = useState<Party | null>();
+    const testParty = useTestParty();
+    const partySerializer = usePartySerializer();
+    const download = useFileDownload();
 
     const handleCreateParty = async () => {
-      const party = await client.echo.createParty();
-      const builder = new PartyBuilder(party);
-      await buildTestParty(builder!);
-      setParty(party);
+      setParty(testParty);
     };
 
     const handleJoinParty = async (invitationText: string) => {
@@ -64,6 +64,16 @@ export const Secondary = () => {
       invitation.authenticate(Buffer.from(secret));
       const party = await invitation.getParty();
       setParty(party);
+    };
+
+    const handleExport = async () => {
+      const blob = await partySerializer.serializeParty(party!);
+      download(blob, `${party?.key.toHex()}.party`);
+    };
+
+    const handleImport = async (partyFile: File) => {
+      const importedParty = await partySerializer.deserializeParty(partyFile);
+      setParty(importedParty);
     };
 
     const handleInvite = async () => {
@@ -80,15 +90,17 @@ export const Secondary = () => {
         <App
           party={party}
           onInvite={handleInvite}
+          onExport={handleExport}
         />
       );
     }
 
     return (
-      <InvitationDialog
+      <TestInvitationDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
+        onImport={handleImport}
       />
     );
   };

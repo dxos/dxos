@@ -8,12 +8,10 @@
 
 import fetch from 'node-fetch';
 
-import { FILE_DYNAMICS } from '../types';
-
 // Fix a bug making fetch not being properly bound with webpack.
 const fetchBound = fetch;
 
-const CONFIG_ENDPOINT = `/config/${FILE_DYNAMICS}`;
+const CONFIG_ENDPOINT = '/config/config.json';
 
 export const LocalStorage = (item = 'options') => {
   return JSON.parse(window.localStorage.getItem(item) || '{}');

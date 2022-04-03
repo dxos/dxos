@@ -4,8 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { typeMeta } from '@dxos/react-client-testing';
+
 import { IconRadio, IconRadioGroup } from '../../../src';
-import { typeMeta } from '../testing';
 
 // TODO(burdon): Use ToggleButtonGroup
 
