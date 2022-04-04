@@ -5,7 +5,7 @@
     "jsx": "react",
     "lib": [
       "DOM",
-      "es2019"
+      "ESNext"
     ]
   },
   "include": [
@@ -26,10 +26,22 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../react-client-testing"
+    },
+    {
       "path": "../client"
     },
     {
       "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/object-model"
     },
     {
       "path": "../react-client"

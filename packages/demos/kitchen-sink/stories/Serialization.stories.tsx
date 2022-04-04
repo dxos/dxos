@@ -8,10 +8,9 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { useTestParty } from '@dxos/react-client-testing';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
-
-import { useTestParty } from './helpers';
 
 export default {
   title: 'KitchenSink/Serialization'
@@ -68,7 +67,7 @@ export const ImportParty = () => {
 const ExportStory = () => {
   const party = useTestParty();
   const partySerializer = usePartySerializer();
-  const [ref, download] = useFileDownload();
+  const download = useFileDownload();
 
   const handleExportParty = async () => {
     const blob = await partySerializer.serializeParty(party!);
@@ -77,7 +76,6 @@ const ExportStory = () => {
 
   return (
     <FullScreen>
-      <a ref={ref} />
       <Toolbar>
         <Button
           variant='contained'

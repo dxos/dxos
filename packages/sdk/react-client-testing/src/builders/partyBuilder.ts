@@ -9,6 +9,8 @@ import { Party } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { capitalize, NumberRange, getNumber } from '../utils';
+
 export enum TestType {
   Org = 'example:type.org',
   Project = 'example:type.project',
@@ -20,12 +22,6 @@ export enum TestType {
 export function enumFromString<T> (enm: { [s: string]: T}, value: string): T | undefined {
   return (Object.values(enm) as unknown as string[]).includes(value) ? value as unknown as T : undefined;
 }
-
-type Num = [min: number, max: number] | number
-
-const num = (n: Num) => typeof n === 'number' ? n : faker.datatype.number({ min: n[0], max: n[1] });
-
-const capitalize = (text: string) => text.length ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 
 /*
 // TODO(burdon): Experimental -- define graph shape.
@@ -61,8 +57,8 @@ export class ProjectBuilder {
     return this._project;
   }
 
-  async createTasks (n: Num = 1, people?: Item<ObjectModel>[]) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createTasks (n: NumberRange = 1, people?: Item<ObjectModel>[]) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const task = await this._builder.createTask(this._project);
       if (people) {
         await this._builder.createLink(task, faker.random.arrayElement(people));
@@ -81,14 +77,14 @@ export class OrgBuilder {
     return this._org;
   }
 
-  async createPeople (n: Num = 1) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createPeople (n: NumberRange = 1) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       return await this._builder.createPerson(this._org);
     }));
   }
 
-  async createProjects (n: Num = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createProjects (n: NumberRange = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const project = await this._builder.createProject(this._org);
       await callback?.(new ProjectBuilder(this._builder, this._org, project));
       return project;
@@ -109,8 +105,8 @@ export class PartyBuilder {
     return this._party;
   }
 
-  async createOrgs (n: Num = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
-    return await Promise.all(Array.from({ length: num(n) }).map(async () => {
+  async createOrgs (n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
+    return await Promise.all(Array.from({ length: getNumber(n) }).map(async () => {
       const org = await this.createOrg();
       await callback?.(new OrgBuilder(this, org));
       return org;

@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+export * from './BoxContainer';
 export * from './Clipboard';
 export * from './CustomTextField';
 export * from './Dialog';

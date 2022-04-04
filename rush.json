@@ -586,6 +586,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-client-testing",
+      "projectFolder": "packages/sdk/react-client-testing",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-components",
       "projectFolder": "packages/sdk/react-components",
       "shouldPublish": true,
@@ -594,6 +600,12 @@
     {
       "packageName": "@dxos/react-framework",
       "projectFolder": "packages/sdk/react-framework",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/react-gem-components",
+      "projectFolder": "packages/sdk/react-gem-components",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

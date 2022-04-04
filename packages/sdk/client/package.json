@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.28.10",
+  "version": "2.28.15",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

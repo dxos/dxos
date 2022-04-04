@@ -6,10 +6,11 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
+import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoGrid } from '../src';
-import { itemAdapter, tableStyles, useTestParty } from './helpers';
+import { tableStyles } from './helpers';
 
 export default {
   title: 'KitchenSink/EchoGrid'
