@@ -9,6 +9,7 @@ import { useSelection } from '@dxos/react-client';
 
 import { EchoGraphModel } from '../components';
 
+// TODO(kaplanski): Separate selection api filters from post query filters?
 /**
  * Create model.
  */
