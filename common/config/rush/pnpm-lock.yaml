@@ -2379,17 +2379,11 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.28.5
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
-      '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -2426,8 +2420,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-client-testing': link:../react-client-testing
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2441,13 +2433,9 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/client': link:../client
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.28.5
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
-      '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/react-client': link:../react-client
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
@@ -6583,7 +6571,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.17.2
-      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
       '@types/react': 17.0.37
       react: 17.0.2
 
