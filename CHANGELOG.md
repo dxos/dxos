@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.15](https://www.github.com/dxos/protocols/compare/v2.28.14...v2.28.15) (2022-04-01)
+
+
+### Features
+
+* Moved gem components from react-framework to react-gem-components ([#1091](https://www.github.com/dxos/protocols/issues/1091)) ([55d77c6](https://www.github.com/dxos/protocols/commit/55d77c60a390535aabc1552c47e85c3d8942b89b))
+* TableBuilder supports custom fields ([#1092](https://www.github.com/dxos/protocols/issues/1092)) ([04a2f93](https://www.github.com/dxos/protocols/commit/04a2f93bd8db6d1e10da697bb32ff7ed8e2dddb1))
+
 ### [2.28.14](https://www.github.com/dxos/protocols/compare/v2.28.13...v2.28.14) (2022-03-30)
 
 
