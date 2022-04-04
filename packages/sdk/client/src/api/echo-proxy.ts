@@ -81,7 +81,7 @@ export class EchoProxy {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
           const partyProxy = new Party(this._serviceProvider, this._modelFactory, party, this._haloProxy.profile!.publicKey);
-          await partyProxy.init();
+          await partyProxy.initialize();
           this._parties.set(partyProxy.key, partyProxy);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
@@ -160,8 +160,10 @@ export class EchoProxy {
         partyReceived();
       }
     };
+
     this._partiesChanged.on(handler);
     handler();
+
     await partyReceivedPromise;
     this._partiesChanged.off(handler);
 
