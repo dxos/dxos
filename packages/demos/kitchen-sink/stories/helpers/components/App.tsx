@@ -38,7 +38,7 @@ export const App = ({
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
-  const model = useGraphModel(party);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
   const items = useQuery(party, search);
   const builder = usePartyBuilder(party);
 
