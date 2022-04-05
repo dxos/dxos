@@ -84,16 +84,12 @@ describe('In-Memory', () => {
         botContainer,
         config: new Config({})
       });
+
       const botController = new BotController(botFactory, nm1);
       await botController.start(topic);
       const botFactoryClient = new BotFactoryClient(nm2);
       await botFactoryClient.start(topic);
-
-      const botHandle = await botFactoryClient.spawn(
-        {},
-        party
-      );
-
+      const botHandle = await botFactoryClient.spawn({}, party);
       const command = PublicKey.random().asUint8Array();
       await botHandle.sendCommand(command);
 

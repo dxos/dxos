@@ -40,7 +40,8 @@ describe('DXN', () => {
     [
       'x',
       'dxos',
-      'dxos.prime',
+      'foo.bar',
+      'foo/bar',
       'a.b.c.d',
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A123'
     ].forEach(resource => expect(DXN.validateResource(resource), resource).length.greaterThanOrEqual(1));
@@ -58,8 +59,11 @@ describe('DXN', () => {
       'foo.-bar',
       'foo-.bar',
       '.dxos',
+      '/dxos',
       'dxos.',
+      'dxos/',
       'foo..bar',
+      'foo//bar',
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234',
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
     ].forEach(resource => expect(() => DXN.validateResource(resource), resource).to.throw());

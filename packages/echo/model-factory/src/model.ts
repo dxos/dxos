@@ -15,14 +15,15 @@ export abstract class Model<TState = any, TMutation = any> {
   public readonly update = new Event<Model<TState, TMutation>>();
 
   /**
-   * @param meta
-   * @param itemId Parent item.
-   * @param writeStream Output mutation stream (unless read-only).
+   * @param _meta
+   * @param _itemId Parent item.
+   * @param _getState Retrieves state.
+   * @param _mutationWriter Output mutation stream (unless read-only).
    */
   constructor (
     private readonly _meta: ModelMeta,
     private readonly _itemId: ItemID,
-    protected readonly _getState: () => TState,
+    protected readonly _getState: () => TState, // TODO(burdon): Comment.
     private readonly _mutationWriter?: MutationWriter<TMutation>
   ) {}
 

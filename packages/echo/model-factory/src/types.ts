@@ -17,7 +17,6 @@ export type ModelType = string
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
-  // TODO(burdon): Rename.
   // TODO(marik-d): Specify generic type param here to match model's expected message type.
   mutation: Codec<TMutation>
 

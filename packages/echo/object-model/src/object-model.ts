@@ -11,14 +11,23 @@ import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 
+export type ObjectModelState = Record<string, any>
+
 /**
  * Processes object mutations.
  */
-class ObjectModelStateMachine implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
-  private _object = {};
+class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
+  private _object: ObjectModelState = {};
 
-  getState (): Record<string, any> {
+  getState (): ObjectModelState {
     return this._object;
+  }
+
+  reset (snapshot: ObjectSnapshot): void {
+    assert(snapshot.root);
+    const object: any = {};
+    ValueUtil.applyValue(object, 'root', snapshot.root);
+    this._object = object.root;
   }
 
   process (mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
@@ -30,19 +39,13 @@ class ObjectModelStateMachine implements StateMachine<Record<string, any>, Objec
       root: ValueUtil.createMessage(this._object)
     };
   }
-
-  reset (snapshot: ObjectSnapshot): void {
-    const obj: any = {};
-    assert(snapshot.root);
-    ValueUtil.applyValue(obj, 'root', snapshot.root);
-    this._object = obj.root;
-  }
 }
 
 /**
  * Object mutation model.
  */
-export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
+// TODO(burdon): Make generic (separate model?)
+export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
