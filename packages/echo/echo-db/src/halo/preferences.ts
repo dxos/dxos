@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
-import defaultsDeep from 'lodash.defaultsDeep';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';

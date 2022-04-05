@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import unionWith from 'lodash.unionWith';
+import unionWith from 'lodash.unionwith';
 
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
