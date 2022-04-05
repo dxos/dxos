@@ -2217,6 +2217,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/js-yaml': ^3.12.5
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
       '@types/lodash.set': ^4.3.6
       '@types/mocha': ~8.2.2
@@ -2251,6 +2252,7 @@ importers:
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/js-yaml': 3.12.7
+      '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
       '@types/lodash.set': 4.3.6
       '@types/mocha': 8.2.3
