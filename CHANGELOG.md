@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.16](https://www.github.com/dxos/protocols/compare/v2.28.15...v2.28.16) (2022-04-04)
+
+
+### Bug Fixes
+
+* spawn bots by version/tag. ([#1097](https://www.github.com/dxos/protocols/issues/1097)) ([fc8618d](https://www.github.com/dxos/protocols/commit/fc8618d7dfd70b350dfbd0335854c1965772102e))
+
 ### [2.28.15](https://www.github.com/dxos/protocols/compare/v2.28.14...v2.28.15) (2022-04-01)
 
 
