@@ -67,10 +67,18 @@ export class MutationBuilder {
 }
 
 /**
+ * Defines generic object accessor.
+ */
+export interface ObjectProperties {
+  get (key: string, defaultValue?: any): any
+  set (key: string, value: any): Promise<void>
+}
+
+/**
  * Object mutation model.
  */
 // TODO(burdon): Make generic (separate model?) With read/write validation.
-export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
+export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
@@ -93,16 +101,16 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
     return cloneDeep(this._getState());
   }
 
+  builder () {
+    return new MutationBuilder(this);
+  }
+
   get (key: string, defaultValue: any = undefined) {
     return this.getProperty(key, defaultValue);
   }
 
   async set (key: string, value: any) {
-    return this.setProperty(key, value);
-  }
-
-  builder () {
-    return new MutationBuilder(this);
+    await this.setProperty(key, value);
   }
 
   /**
@@ -112,9 +120,6 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
   getProperty (key: string, defaultValue: any = undefined): any {
     return cloneDeep(get(this._getState(), key, defaultValue));
   }
-
-  // TODO(burdon): Batch/builder API.
-  // E.g., model.batch().set().set().commit().
 
   /**
    * @deprecated

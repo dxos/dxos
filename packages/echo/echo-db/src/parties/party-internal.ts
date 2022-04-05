@@ -23,7 +23,8 @@ import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
-export const PARTY_TITLE_PROPERTY = 'title';
+
+export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not be special).
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {

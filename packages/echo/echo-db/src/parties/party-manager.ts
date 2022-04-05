@@ -264,12 +264,10 @@ export class PartyManager {
     }
 
     const identity = this._identityProvider();
-
     const item = await party.getPropertiesItem();
     const currentTitle = item.model.get(PARTY_TITLE_PROPERTY);
     const storedTitle = identity.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
-      log(`Updating stored name from ${storedTitle} to ${currentTitle} for Party ${party.key.toHex()}`);
       await identity.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }

@@ -9,7 +9,7 @@ import {
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
@@ -133,28 +133,38 @@ export class Party {
     });
   }
 
-  get properties () {
+  get properties (): ObjectProperties {
     return this._item!.model;
   }
 
   /**
-   * @deprecated
+   * @deprecated Use party.properties.
    */
-  // TODO(burdon): Replace with get/set below (or party.properties.get?)
   async setTitle (title: string) {
     await this.setProperty(PARTY_TITLE_PROPERTY, title);
     return this;
   }
 
+  /**
+   * @deprecated Use party.properties.
+   */
+  getTitle () {
+    return this.getProperty(PARTY_TITLE_PROPERTY);
+  }
+
+  /**
+   * @deprecated Use party.properties.
+   */
   async setProperty (key: string, value?: any) {
-    // TODO(burdon): Do we need to wait here?
-    await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    await this._item!.model.set(key, value);
+    await this.properties.set(key, value);
     return this;
   }
 
-  getProperty (key: string) {
-    return this._item!.model.get(key);
+  /**
+   * @deprecated Use party.properties.
+   */
+  getProperty (key: string, defaultValue?: any) {
+    return this.properties.get(key, defaultValue);
   }
 
   /**
