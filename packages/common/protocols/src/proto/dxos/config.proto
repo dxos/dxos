@@ -10,42 +10,35 @@ message Config {
   int32 version = 1;
 
   //
-  // Module metadata.
+  // Package definition.
   //
 
-  Meta meta = 2;
-
-  //
-  // Deploy configuration.
-  //
-
-  repeated Module modules = 3;
+  Package package = 2;
 
   //
   // Runtime configuration.
   //
 
-  Runtime runtime = 4;
+  Runtime runtime = 3;
 }
 
-// TODO(wittjosiah): Banned word, rename.
-message Meta {
-  message Repo {
-    // TODO(wittjosiah): Enum?
-    string type = 1;
-    string url = 2;
-    string version = 3;
-  }
+message Package {
+  string license = 1;
+  repeated Repo repos = 2;
+  repeated Module modules = 3;
+}
 
-  string author = 1;
-  string license = 2;
-  repeated Repo = 3;
+// TODO(wittjosiah): Shared with registry types. Factor out?
+message Repo {
+  string name = 1;
+  string url = 2;
+  string version = 3;
 }
 
 message Module {
   message Build {
     string command = 1;
-    string out = 2;
+    string outDir = 2;
     string version = 3;
     string tag = 4;
   }
@@ -56,11 +49,11 @@ message Module {
   string description = 4;
   repeated string tags = 5;
 
-  Meta meta = 101;
-  Build build = 102;
+  Build build = 100;
 
-  /// Generic record data which will be validated based on the type when being published.
-  bytes record = 103;
+  /// Data which will be included as apart of DXNS record.
+  /// The data will be validated based on the type when being published.
+  bytes record = 200;
 }
 
 message Runtime {

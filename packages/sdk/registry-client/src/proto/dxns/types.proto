@@ -8,6 +8,13 @@ import "registry.proto";
 
 package dxos.type;
 
+// TODO(wittjosiah): Shared with config. Factor out?
+message Repo {
+  string name = 1;
+  string url = 2;
+  string version = 3;
+}
+
 //
 // Records
 //
@@ -17,47 +24,31 @@ package dxos.type;
 //
 message App {
   /**
-   * Type of application (ex. web app, android apk, etc.)
-   * Should align with types of files in the bundle.
-   */
-  string type = 1;
-
-  /**
    * Optional **semver 2.0** compliant record version.
    * Should conform to the semver regex (see https://semver.org/).
    */
-  string version = 2;
+  string version = 1;
 
-  /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes bundleCID = 3;
-  string repository = 4;
-  string repository_version = 5; // TODO(wittjosiah): Align with config?
-  string license = 6;
+  string license = 2;
 
-  Record.Extension extension = 100;
-}
+  repeated Repo repos = 3;
 
-//
-// Registered as `type.app.web`.
-//
-message WebApp {
-  /// Optional app root path, defaults to index.html.
-  string root = 1;
+  message Web {
+    /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
+    bytes bundle = 1;
+  
+    /// Optional relative path in resource to entrypoint, defaults to index.html.
+    string index_file = 2;
+  
+    /// Optional relative path in resource to entrypoint, defaults to main.js.
+    string entry_point = 3;
+  }
 
-  Record.Extension extension = 100;
-}
+  oneof kind {
+    Web web = 100;
+  }
 
-//
-// Registered as `type.app.frame`.
-//
-message Frame {
-  /// Optional relative path in bundle to frame entrypoint, defaults to frame.js.
-  string module = 1;
-
-  /// Optional default item type which frame loads and creates, defaults to name of the frame.
-  string item = 2;
-
-  Record.Extension extension = 100;
+  Record.Extension extension = 200;
 }
 
 //
@@ -70,15 +61,16 @@ message Bot {
    */
   string version = 1;
 
+  string license = 2;
+
+  repeated Repo repos = 3;
+
   /// Bot bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes bundleCID = 2;
-  string repository = 3;
-  string repository_version = 4;
-  string license = 5;
+  bytes bundle = 4;
 
   /// Only for spawning bots that are expected to be vendored with bot-factory.
   /// This would be the path to the bot executable in bot-factory's file-system.
-  string local_path = 6;
+  string local_path = 5;
 
   Record.Extension extension = 100;
 }

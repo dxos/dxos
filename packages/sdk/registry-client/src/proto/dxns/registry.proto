@@ -45,7 +45,7 @@ message Record {
   string description = 3;
 
   /// Optional record tags.
-  string tags = 4;
+  repeated string tags = 4;
 
   oneof kind {
     /// Type record variant.
