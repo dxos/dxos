@@ -25,7 +25,7 @@ const graphStyles = css`
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
 
   return (
     <EchoGraph
@@ -38,7 +38,7 @@ const App = () => {
 
 const AppWithEditor = () => {
   const party = useTestParty();
-  const model = useGraphModel(party);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
   const builder = usePartyBuilder(party);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
   if (!party) {

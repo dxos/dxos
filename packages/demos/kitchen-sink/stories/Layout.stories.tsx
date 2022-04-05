@@ -26,7 +26,7 @@ faker.seed(100);
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
 
   return (
     <FullScreen>
