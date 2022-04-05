@@ -17,6 +17,22 @@ describe('ObjectModel', () => {
     expect(model.get('foo')).toEqual('bar');
   });
 
+  // TODO(burdon): Test setting undefined removes property.
+
+  it('can set multiple properties using the builder pattern', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = rig.createPeer();
+
+    await model
+      .builder()
+      .set('foo', 100)
+      .set('bar', true)
+      .commit();
+
+    expect(model.get('foo')).toEqual(100);
+    expect(model.get('bar')).toEqual(true);
+  })
+
   it('property updates are optimistically applied', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();

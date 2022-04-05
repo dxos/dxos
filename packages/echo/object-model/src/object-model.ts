@@ -42,6 +42,31 @@ class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMu
 }
 
 /**
+ * Batch mutation builder.
+ */
+export class MutationBuilder {
+  _mutations: ObjectMutation[] = [];
+
+  constructor (
+    private readonly _model: ObjectModel
+  ) {}
+
+  set (key: string, value: any) {
+    this._mutations.push({
+      operation: ObjectMutation.Operation.SET,
+      key,
+      value: ValueUtil.createMessage(value)
+    });
+
+    return this;
+  }
+
+  async commit () {
+    return this._model._makeMutation({ mutations: this._mutations });
+  }
+}
+
+/**
  * Object mutation model.
  */
 // TODO(burdon): Make generic (separate model?)
@@ -74,6 +99,10 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
 
   async set (key: string, value: any) {
     return this.setProperty(key, value);
+  }
+
+  builder () {
+    return new MutationBuilder(this);
   }
 
   /**
@@ -149,7 +178,10 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
     });
   }
 
-  private async _makeMutation (mutation: ObjectMutationSet) {
+  /**
+   * @internal
+   */
+  async _makeMutation (mutation: ObjectMutationSet) {
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
   }
