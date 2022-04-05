@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button, List, ListItem, ListItemText, TextField } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { ObjectModel } from '@dxos/object-model';
 import { useClient, useSelection } from '@dxos/react-client';
 import { JoinPartyDialog, PartySharingDialog } from '@dxos/react-framework';
 
