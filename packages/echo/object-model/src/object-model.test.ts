@@ -31,7 +31,7 @@ describe('ObjectModel', () => {
 
     expect(model.get('foo')).toEqual(100);
     expect(model.get('bar')).toEqual(true);
-  })
+  });
 
   it('property updates are optimistically applied', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);

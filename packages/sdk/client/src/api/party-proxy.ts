@@ -133,6 +133,10 @@ export class Party {
     });
   }
 
+  get properties () {
+    return this._item!.model;
+  }
+
   /**
    * @deprecated
    */
@@ -143,6 +147,7 @@ export class Party {
   }
 
   async setProperty (key: string, value?: any) {
+    // TODO(burdon): Do we need to wait here?
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
     await this._item!.model.set(key, value);
     return this;
