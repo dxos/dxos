@@ -69,7 +69,7 @@ export class MutationBuilder {
 /**
  * Object mutation model.
  */
-// TODO(burdon): Make generic (separate model?)
+// TODO(burdon): Make generic (separate model?) With read/write validation.
 export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
