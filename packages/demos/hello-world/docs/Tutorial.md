@@ -27,7 +27,7 @@ export const App = () => {
   const client = useClient();
 
   return (
-    <div>Config=${JSON.stringify(client.config)}</div>
+    <div>Config={JSON.stringify(client.config)}</div>
   );
 };
 
@@ -66,17 +66,17 @@ export const App = () => {
 
 ```tsx
 import { Party } from '@dxos/client';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 export const App = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useMemo<Party>();
-  const party = useParty(partyKey);
+  const [party, setParty] = useMemo<Party>();
 
   useEffect(() => {
     void (async () => {
       const party = await client.echo.createParty({ title: 'New Party' });
-      setPartyKey(party.key);
+      setParty(party);
     })();
   }, []);
   
