@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "2.28.15",
+  "version": "2.28.16",
   "description": "Protobuf definitions for DXOS protocols.",
   "license": "MIT",
   "author": "DXOS.org",
