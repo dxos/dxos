@@ -19,7 +19,7 @@ interface AppProps {
 
 const App = ({ grid }: AppProps) => {
   const party = useTestParty();
-  const model = useGraphModel(party);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
 
   return (
     <EchoGraph
