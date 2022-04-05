@@ -12,7 +12,6 @@ import { MetadataStore } from './metadata-store';
 describe('MetadataStore in-memory', () => {
   it('Creates party and adds feeds to it', async () => {
     const store = new MetadataStore(createRamStorage());
-
     await store.load();
     expect(store.parties?.length).toBe(0);
 
@@ -35,7 +34,6 @@ describe('MetadataStore in-memory', () => {
 
   it('Creates party when adding feed', async () => {
     const store = new MetadataStore(createRamStorage());
-
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -48,7 +46,6 @@ describe('MetadataStore in-memory', () => {
 
   it('Doesn\'t add same feed twice', async () => {
     const store = new MetadataStore(createRamStorage());
-
     await store.load();
 
     const partyKey = PublicKey.random();

@@ -74,7 +74,7 @@ export class Party {
    */
   async initialize () {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database.init();
+      await this._database.initialize();
     }
 
     // Root item for properties.

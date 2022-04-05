@@ -35,7 +35,6 @@ export const App = () => {
   // 2. Create item.
   const handleClick = () => {
     void party!.database.createItem({
-      model: ObjectModel,
       props: {
         title: inputRef.current!.value
       }

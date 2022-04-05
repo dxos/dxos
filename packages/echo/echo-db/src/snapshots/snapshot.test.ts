@@ -16,9 +16,8 @@ import { ItemDemuxer, ItemManager } from '../database';
 import { createTestInstance } from '../testing';
 
 const log = debug('dxos:snapshot:test');
-debug.enable('dxos:echo-db:*');
+// debug.enable('dxos:echo-db:*');
 
-// TODO(burdon): Remove "foo", etc from tests.
 describe('snapshot', () => {
   test.skip('loading large party', async () => {
     const echo = await createTestInstance({ initialize: true });
