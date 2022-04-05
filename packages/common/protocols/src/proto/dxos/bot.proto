@@ -11,9 +11,10 @@ package dxos.bot;
 // TODO(burdon): Rename.
 message BotPackageSpecifier {
   oneof kind {
-    string dxn = 1; // TODO(burdon): name.
+    string dxn = 1; // TODO(burdon): Deprecate.
     string ipfs_cid = 2;
     string local_path = 3;
+    string name = 4;
   }
 }
 

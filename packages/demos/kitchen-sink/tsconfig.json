@@ -61,6 +61,9 @@
       "path": "../../sdk/react-framework"
     },
     {
+      "path": "../../sdk/react-gem-components"
+    },
+    {
       "path": "../../common/util"
     },
     {

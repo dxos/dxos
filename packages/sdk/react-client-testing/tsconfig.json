@@ -26,6 +26,9 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../react-client"
     }
   ]
