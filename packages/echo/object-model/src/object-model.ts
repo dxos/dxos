@@ -3,8 +3,8 @@
 //
 
 import assert from 'assert';
-import cloneDeep from 'lodash/cloneDeep';
-import get from 'lodash/get';
+import cloneDeep from 'lodash.cloneDeep';
+import get from 'lodash.get';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 

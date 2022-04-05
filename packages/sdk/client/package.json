@@ -55,7 +55,7 @@
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
-    "@types/lodash": "^4.14.181",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "@types/readable-stream": "^2.3.9",

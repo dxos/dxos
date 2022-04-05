@@ -26,7 +26,7 @@
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
-    "@types/lodash": "^4.14.181",
+    "@types/lodash.times": "^4.3.6",
     "@types/mocha": "~8.2.2",
     "abstract-leveldown": "~7.0.0",
     "eslint": "^7.12.1",
