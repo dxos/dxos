@@ -33,15 +33,15 @@ message App {
 
   repeated Repo repos = 3;
 
+  /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
+  bytes bundle = 4;
+
   message Web {
-    /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-    bytes bundle = 1;
-  
     /// Optional relative path in resource to entrypoint, defaults to index.html.
-    string index_file = 2;
+    string index_file = 1;
   
     /// Optional relative path in resource to entrypoint, defaults to main.js.
-    string entry_point = 3;
+    string entry_point = 2;
   }
 
   oneof kind {
@@ -97,7 +97,7 @@ message File {
   string file_name = 2;
 
   /// File content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes hash = 3;
+  bytes bundle = 3;
 
   Record.Extension extension = 100;
 }
