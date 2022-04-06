@@ -50,6 +50,7 @@ message Module {
   repeated string tags = 5;
 
   Build build = 100;
+  repeated Repo repo = 101;
 
   /// Data which will be included as apart of DXNS record.
   /// The data will be validated based on the type when being published.
