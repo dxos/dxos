@@ -44,3 +44,29 @@ export const Primary = () => {
     </RegistryProvider>
   );
 };
+
+export const WithVersions = () => {
+  const registry = useMemo(() => createMockRegistry(), []);
+  const model = useRegistrySearchModel(registry);
+  const [selected, setSelected] = useState<string>();
+
+  useAsyncEffect(async () => {
+    await model.initialize();
+  }, []);
+
+  return (
+    <RegistryProvider registry={registry}>
+      <Box sx={{ margin: 2 }}>
+        <RegistrySearchPanel
+          model={model}
+          versions
+          onSelect={(resource, version) => setSelected(`${resource.id.toString()}@${version}`)}
+        />
+
+        <Box sx={{ marginTop: 2 }}>
+          {selected}
+        </Box>
+      </Box>
+    </RegistryProvider>
+  );
+};
