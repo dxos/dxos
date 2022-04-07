@@ -4,12 +4,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Box, Button, List, ListItem, ListItemText, TextField } from '@mui/material';
+import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Item, Party } from '@dxos/client';
 import { useClient, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
 import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-framework';
+
+import { ObjectModel } from '../../echo/object-model/src';
 
 /**
  * @constructor
@@ -28,6 +30,11 @@ export const App = () => {
 
   // 3. Select items.
   const items = useSelection(party?.select().filter({ type: 'task' })) ?? [];
+  items.sort((item1: Item<ObjectModel>, item2: Item<ObjectModel>) => {
+    const checked1 = item1.model.get('done');
+    const checked2 = item2.model.get('done');
+    return checked1 === checked2 ? 0 : checked1 ? 1 : -1;
+  });
 
   // 6. Serialize.
   const serializer = usePartySerializer();
@@ -53,13 +60,17 @@ export const App = () => {
     inputRef.current!.focus();
   };
 
+  const handleTaskChecked = (item: Item<ObjectModel>, checked: boolean) => {
+    void item.model.set('done', checked);
+  };
+
   const handleExport = async () => {
     const blob = await serializer.serializeParty(party!);
     download(blob, `${party?.key.toHex()}.party`);
   };
 
-  const handleImport = async (file: File) => {
-    const party = await serializer.deserializeParty(file);
+  const handleImport = async (files: File[]) => {
+    const party = await serializer.deserializeParty(files[0]);
     setParty(party);
   };
 
@@ -70,6 +81,7 @@ export const App = () => {
           inputRef={inputRef}
           autoFocus
           fullWidth
+          placeholder='Enter task.'
           autoComplete='off'
           spellCheck={false}
           onKeyDown={event => event.key === 'Enter' && handleCreateTask()}
@@ -78,19 +90,27 @@ export const App = () => {
         <Button onClick={handleCreateTask}>Add</Button>
       </Box>
 
-      <List>
+      <List sx={{ my: 2 }}>
         {items.map(item => (
-          <ListItem key={item.id}>
+          <ListItemButton key={item.id} disableRipple>
+            <ListItemIcon>
+              <Checkbox
+                checked={item.model.get('done') ?? false}
+                onChange={event => {
+                  handleTaskChecked(item, event.target.checked);
+                }}
+              />
+            </ListItemIcon>
             <ListItemText primary={item.model.get('title')} />
-          </ListItem>
+          </ListItemButton>
         ))}
       </List>
 
       <Box>
-        <Button onClick={() => setAction('share')}>Share</Button>
-        <Button onClick={() => setAction('join')}>Join</Button>
-        <Button onClick={handleExport}>Export</Button>
-        <Button onClick={() => setAction('import')}>Import</Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('share')}>Share</Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('join')}>Join</Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={handleExport}>Export</Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('import')}>Import</Button>
       </Box>
 
       {/* 4. Sharing. */}
