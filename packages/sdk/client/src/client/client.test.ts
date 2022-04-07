@@ -234,9 +234,9 @@ describe('Client', () => {
         const party = await client.echo.createParty();
 
         const item = await party.database.createItem({ model: ObjectModel });
-        await item.model.setProperty('foo', 'bar');
+        await item.model.set('foo', 'bar');
 
-        expect(item.model.getProperty('foo')).toEqual('bar');
+        expect(item.model.get('foo')).toEqual('bar');
       });
 
       test('set party properties', async () => {
@@ -261,11 +261,11 @@ describe('Client', () => {
         const party = await client.echo.createParty();
 
         const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
-        await item1.model.setProperty('prop1', 'x');
+        await item1.model.set('prop1', 'x');
         const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
-        await item2.model.setProperty('prop1', 'y');
+        await item2.model.set('prop1', 'y');
 
-        expect(item1.model.getProperty('prop1')).toEqual('x');
+        expect(item1.model.get('prop1')).toEqual('x');
       });
     });
   }
@@ -316,7 +316,7 @@ describe('Client', () => {
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
       const item = await party.database.createItem({ model: TestModel, type: 'test' });
-      await item.model.setProperty('prop', 'value1');
+      await item.model.set('prop', 'value1');
 
       await client.destroy();
     }
@@ -334,10 +334,10 @@ describe('Client', () => {
       await result.update.waitForCondition(() => result.entities.length > 0);
       const item = result.expectOne();
 
-      expect(item.model.getProperty('prop')).toEqual('value1');
+      expect(item.model.get('prop')).toEqual('value1');
 
-      await item.model.setProperty('prop', 'value2');
-      expect(item.model.getProperty('prop')).toEqual('value2');
+      await item.model.set('prop', 'value2');
+      expect(item.model.get('prop')).toEqual('value2');
 
       await client.destroy();
     }

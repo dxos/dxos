@@ -8,8 +8,6 @@ import { DomainKey } from './domain-key';
  * Decentralized Name.
  * Example: dxn://example:foo.bar
  */
-// TODO(burdon): dxn:// prefix?
-// TODO(burdon): Dots or slashes?
 export class DXN {
   /**
    * Lower-case.
@@ -38,17 +36,19 @@ export class DXN {
    * Starts with a letter.
    * Min 3 and max 64 characters.
    * Must not have multiple periods in a row or end with a period or hyphen.
-   * TODO(burdon): Allow slashes? (URL representation?)
    * @param resource
    */
+  // TODO(burdon): Change to slashes (not dots). Encode URLs with dot. (example:foo/bar => example:foo.bar)
+  //   Make equivalent?
   static validateResource (resource: string) {
     resource = resource.trim().toLowerCase();
-    if (!resource.match(/^[a-z][a-z0-9-.]{0,63}$/)) {
+    if (!resource.match(/^[a-z][a-z0-9-./]{0,63}$/)) {
       throw new Error(`Invalid resource: ${resource}`);
     }
 
-    resource.split(/[.-]/).forEach(word => {
-      if (word.length === 0 || word.endsWith('-') || word.endsWith('.')) {
+    // Prohibit repeated or trailing delimiters.
+    resource.split(/[./-]/).forEach(word => {
+      if (word.length === 0 || word.endsWith('-') || word.endsWith('.') || word.endsWith('/')) {
         throw new Error(`Invalid resource: ${resource}`);
       }
     });

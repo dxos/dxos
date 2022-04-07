@@ -9,9 +9,8 @@ export interface MutationProcessMeta {
 }
 
 export interface StateMachine<TState, TMutation, TSnapshot> {
-  getState(): TState;
-  process(mutation: TMutation, meta: MutationProcessMeta): void;
-
-  snapshot(): TSnapshot;
-  reset(snapshot: TSnapshot): void;
+  getState(): TState
+  reset(snapshot: TSnapshot): void
+  process(mutation: TMutation, meta: MutationProcessMeta): void
+  snapshot(): TSnapshot
 }

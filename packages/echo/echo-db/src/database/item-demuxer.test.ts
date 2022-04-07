@@ -78,7 +78,7 @@ describe('Item demuxer', () => {
       onUpdate();
     });
 
-    await model.setProperty('title', 'Hello');
+    await model.set('title', 'Hello');
 
     //
     // Wait for model mutation to propagate.

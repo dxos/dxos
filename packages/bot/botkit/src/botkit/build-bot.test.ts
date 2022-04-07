@@ -67,7 +67,7 @@ describe('Build bot', () => {
     });
 
     const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
-    const payload = item.model.getProperty('payload');
+    const payload = item.model.get('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
     botContainer.killAll();
