@@ -50,7 +50,7 @@ const items = [
   }
 ];
 
-describe('text-index', () => {
+describe('TextIndex', () => {
   test('indexer query', async () => {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });

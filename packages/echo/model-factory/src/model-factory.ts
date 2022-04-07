@@ -24,13 +24,23 @@ export class ModelFactory {
     return this.getModel(modelType) !== undefined;
   }
 
+  getModels () {
+    return Array.from(this._models.values());
+  }
+
   getModel (modelType: ModelType) {
     assert(modelType);
     return this._models.get(modelType);
   }
 
-  getModels () {
-    return Array.from(this._models.values());
+  // TODO(burdon): Remove?
+  getModelMeta (modelType: ModelType): ModelMeta {
+    if (!this._models.has(modelType)) {
+      throw new Error(`Invalid model type: ${modelType}`);
+    }
+
+    const { meta } = this._models.get(modelType)!;
+    return meta;
   }
 
   // TODO(burdon): Test if already registered.
@@ -49,21 +59,16 @@ export class ModelFactory {
    * @param snapshot Snapshot defining the intial state. `{}` can be provided for empty state.
    * @param memberKey IDENTITY key of the member authoring the model's mutations.
    * @param writeStream Stream for outbound messages.
-   * @returns
    */
-  createModel<M extends Model> (modelType: ModelType, itemId: ItemID, snapshot: ModelSnapshot, memberKey: PublicKey, writeStream?: FeedWriter<Uint8Array>): StateManager<M> {
+  createModel<M extends Model> (
+    modelType: ModelType,
+    itemId: ItemID,
+    snapshot: ModelSnapshot,
+    memberKey: PublicKey,
+    writeStream?: FeedWriter<Uint8Array>
+  ): StateManager<M> {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;
-
     return new StateManager(modelType, constructor, itemId, snapshot, memberKey, writeStream ?? null);
-  }
-
-  getModelMeta (modelType: ModelType): ModelMeta {
-    if (!this._models.has(modelType)) {
-      throw new Error(`Invalid model type: ${modelType}`);
-    }
-
-    const { meta } = this._models.get(modelType)!;
-    return meta;
   }
 }

@@ -36,16 +36,16 @@ export class StoryBot extends Bot {
 
       let counter = 0;
       result.entities.forEach(item => {
-        const textItem = item.model.getProperty('text');
+        const textItem = item.model.get('text');
         if (typeof textItem === 'string') {
           log(`Found text item: ${textItem}`);
           counter += textItem.match(/DXOS/g)?.length ?? 0;
         }
       });
 
-      if (counter !== counterItem.model.getProperty('counter')) {
+      if (counter !== counterItem.model.get('counter')) {
         log(`Updating counter with value ${counter}`);
-        await counterItem.model.setProperty('counter', counter);
+        await counterItem.model.set('counter', counter);
       }
     });
   }

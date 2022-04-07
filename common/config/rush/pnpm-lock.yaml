@@ -154,7 +154,7 @@ importers:
       '@types/assert': ^1.5.4
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
-      '@types/lodash.merge': ~4.6.6
+      '@types/lodash.merge': ^4.6.6
       '@types/node': ^14.0.9
       assert: ^2.0.0
       debug: ^4.3.3
@@ -507,97 +507,51 @@ importers:
   ../../packages/demos/hello-world:
     specifiers:
       '@babel/core': ~7.13.15
-      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-protocol': workspace:*
-      '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.28.5
       '@dxos/esbuild-server': ~2.28.5
-      '@dxos/gem-core': ~2.2.1-beta.11
-      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
-      '@dxos/util': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.4.2
-      '@mui/lab': ^5.0.0-alpha.69
       '@mui/material': ^5.4.2
-      '@mui/styles': ^5.4.2
-      '@mui/system': ^5.4.2
-      '@mui/x-data-grid': ^5.5.1
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
-      buffer: ^6.0.3
-      clsx: ^1.1.0
-      debug: ^4.3.3
-      dotenv: ^8.2.0
+      '@types/react-dom': ^17.0.9
       expect: ~27.0.2
-      faker: ^5.1.0
       mocha: ~8.4.0
       playwright: ^1.7.0
       react: ^17.0.2
       react-dom: ^17.0.2
-      robotjs: ~0.6.0
       ts-node: ^9.1.1
       typescript: ^4.5.2
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/echo-protocol': link:../../echo/echo-protocol
-      '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
-      '@dxos/util': link:../../common/util
-      '@emotion/css': 11.7.1_@babel+core@7.13.16
-      '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
-      '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
-      '@mui/lab': 5.0.0-alpha.69_84b4b9670a6fb5a5b5566d79c2335561
-      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
-      '@mui/styles': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
-      '@mui/system': 5.4.2_ef966af889ffc4849e7222692314a033
-      '@mui/x-data-grid': 5.5.1_60e3b6939b08a32bfd667b9c952f7bcc
-      clsx: 1.1.1
-      debug: 4.3.3
+      '@mui/material': 5.4.2_5539cae010396b202b015f3568914e95
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/async': link:../../common/async
-      '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': 2.28.5
       '@dxos/esbuild-server': 2.28.5_@types+react@17.0.37
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
-      buffer: 6.0.3
-      dotenv: 8.6.0
+      '@types/react-dom': 17.0.11
       expect: 27.0.6
-      faker: 5.5.3
       mocha: 8.4.0
       playwright: 1.17.1
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      robotjs: 0.6.0
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
 
@@ -1076,7 +1030,8 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/json-stable-stringify': ^1.0.32
-      '@types/lodash': ^4.14.175
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.unionwith': ^4.6.6
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -1087,7 +1042,8 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       json-stable-stringify: ^1.0.1
-      lodash: 4.17.21
+      lodash.defaultsdeep: ^4.6.1
+      lodash.unionwith: ^4.6.0
       memdown: ^5.1.0
       mocha: ~8.4.0
       pify: ~5.0.0
@@ -1109,26 +1065,28 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/json-stable-stringify': 1.0.33
-      '@types/lodash': 4.14.178
-      '@types/node': 14.18.0
       base-x: 3.0.9
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
       json-stable-stringify: 1.0.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.unionwith: 4.6.0
       pify: 5.0.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
+      '@types/debug': 4.1.7
+      '@types/json-stable-stringify': 1.0.33
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.unionwith': 4.6.6
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.3
+      '@types/node': 14.18.0
       '@types/pify': 3.0.2
       eslint: 7.32.0
       expect: 27.0.6
-      lodash: 4.17.21
       memdown: 5.1.0
       mocha: 8.4.0
       typescript: 4.5.3
@@ -1198,14 +1156,14 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
-      '@types/lodash': ^4.14.175
+      '@types/lodash.times': ^4.3.6
       '@types/mocha': ~8.2.2
       abstract-leveldown: ~7.0.0
       eslint: ^7.12.1
       expect: ~27.0.2
       faker: ^5.1.0
       jsondown: dxos/jsondown#main
-      lodash: 4.17.21
+      lodash.times: ^4.3.2
       ts-node: ^9.1.1
       typescript: ^4.5.2
     dependencies:
@@ -1213,14 +1171,14 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/object-model': link:../object-model
       faker: 5.5.3
-      lodash: 4.17.21
+      lodash.times: 4.3.2
     devDependencies:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@types/faker': 5.5.9
       '@types/jest': 26.0.24
-      '@types/lodash': 4.14.178
+      '@types/lodash.times': 4.3.6
       '@types/mocha': 8.2.3
       abstract-leveldown: 7.0.0
       eslint: 7.32.0
@@ -1366,13 +1324,17 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      '@types/lodash': ^4.14.175
+      '@types/lodash.clonedeep': ^4.5.6
+      '@types/lodash.get': ^4.4.6
+      '@types/lodash.set': ^4.3.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
-      lodash: 4.17.21
+      lodash.clonedeep: ^4.5.0
+      lodash.get: ^4.4.2
+      lodash.set: ^4.3.2
       minisearch: ^3.0.2
       typescript: ^4.5.2
     dependencies:
@@ -1381,16 +1343,20 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/lodash': 4.14.178
-      '@types/node': 14.18.0
       debug: 4.3.3
-      lodash: 4.17.21
+      lodash.clonedeep: 4.5.0
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
       minisearch: 3.2.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
+      '@types/lodash.clonedeep': 4.5.6
+      '@types/lodash.get': 4.4.6
+      '@types/lodash.set': 4.3.6
       '@types/mocha': 8.2.3
+      '@types/node': 14.18.0
       eslint: 7.32.0
       expect: 27.0.6
       typescript: 4.5.3
@@ -2003,8 +1969,8 @@ importers:
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
-      '@types/lodash.debounce': ~4.0.6
-      '@types/lodash.pick': ~4.4.6
+      '@types/lodash.debounce': ^4.0.6
+      '@types/lodash.pick': ^4.4.6
       '@types/pify': ^3.0.2
       '@types/yargs': ~16.0.1
       buffer-json-encoding: ^1.0.2
@@ -2207,7 +2173,7 @@ importers:
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
-      '@types/lodash.set': ~4.3.6
+      '@types/lodash.set': ^4.3.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       boolean: ^3.0.1
@@ -2393,6 +2359,7 @@ importers:
       '@mui/system': ^5.4.2
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
       '@types/qrcode.react': ^1.0.2
       '@types/react': ^17.0.24
@@ -2444,6 +2411,7 @@ importers:
       '@mui/system': 5.4.2_ef966af889ffc4849e7222692314a033
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.isplainobject': 4.0.6
       '@types/qrcode.react': 1.0.2
       '@types/react': 17.0.37
@@ -2638,7 +2606,6 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      '@types/lodash': ^4.14.175
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       assert: ^2.0.0
@@ -2661,7 +2628,6 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
-      '@types/lodash': 4.14.178
       '@types/node': 14.18.0
       '@types/react': 17.0.37
       eslint: 7.32.0
@@ -8515,6 +8481,7 @@ packages:
 
   /@types/json-stable-stringify/1.0.33:
     resolution: {integrity: sha512-qEWiQff6q2tA5gcJGWwzplQcXdJtm+0oy6IHGHzlOf3eFAkGE/FIPXZK9ofWgNSHVp8AFFI33PJJshS0ei3Gvw==}
+    dev: true
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha1-7ihweulOEdK4J7y+UnC86n8+ce4=}
@@ -8546,56 +8513,75 @@ packages:
       '@types/node': 14.18.0
     dev: true
 
+  /@types/lodash.clonedeep/4.5.6:
+    resolution: {integrity: sha512-cE1jYr2dEg1wBImvXlNtp0xDoS79rfEdGozQVgliDZj1uERH4k+rmEMTudP9b4VQ8O6nRb5gPqft0QzEQGMQgA==}
+    dependencies:
+      '@types/lodash': 4.14.181
+    dev: true
+
   /@types/lodash.debounce/4.0.6:
     resolution: {integrity: sha512-4WTmnnhCfDvvuLMaF3KV4Qfki93KebocUF45msxhYyjMttZDQYzHkO639ohhk8+oco2cluAFL3t5+Jn4mleylQ==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.defaultsdeep/4.6.6:
     resolution: {integrity: sha512-k3bXTg1/54Obm6uFEtSwvDm2vCyK9jSROv0V9X3gFFNPu7eKmvqqadPSXx0SkVVixSilR30BxhFlnIj8OavXOA==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.get/4.4.6:
     resolution: {integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.isplainobject/4.0.6:
     resolution: {integrity: sha512-8G41YFhmOl8Ck6NrwLK5hhnbz6ADfuDJP+zusDnX3PoYhfC60+H/rQE6zmdO4yFzPCPJPY4oGZK2spbXm6gYEA==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.matches/4.6.6:
     resolution: {integrity: sha512-rs1P/R+4ExqZdmIlw6CcIeHUvyQVY/lDP8RiQVw9RnFK5GAQyZ2fLSvPwUtAp2fgqlCY0TOGT4Av69eIgu5HQg==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.merge/4.6.6:
     resolution: {integrity: sha512-IB90krzMf7YpfgP3u/EvZEdXVvm4e3gJbUvh5ieuI+o+XqiNEt6fCzqNRaiLlPVScLI59RxIGZMQ3+Ko/DJ8vQ==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.pick/4.4.6:
     resolution: {integrity: sha512-u8bzA16qQ+8dY280z3aK7PoWb3fzX5ATJ0rJB6F+uqchOX2VYF02Aqa+8aYiHiHgPzQiITqCgeimlyKFy4OA6g==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
   /@types/lodash.set/4.3.6:
     resolution: {integrity: sha512-ZeGDDlnRYTvS31Laij0RsSaguIUSBTYIlJFKL3vm3T2OAZAQj2YpSvVWJc0WiG4jqg9fGX6PAPGvDqBcHfSgFg==}
     dependencies:
-      '@types/lodash': 4.14.178
+      '@types/lodash': 4.14.181
     dev: true
 
-  /@types/lodash/4.14.178:
-    resolution: {integrity: sha512-0d5Wd09ItQWH1qFbEyQ7oTQ3GZrMfth5JkbN3EvTKLXcHLRDSXeLnlvlOn0wvxVIwK5o2M8JzP/OWz7T3NRsbw==}
+  /@types/lodash.times/4.3.6:
+    resolution: {integrity: sha512-+LSWHXpMIfZlQjyTaUWAH2FpMZmDV3yuy6+QWASl3ahjA1LkDhdFtnjsMAp5fs37jTn8B9CTmtt4evvdifGONQ==}
+    dependencies:
+      '@types/lodash': 4.14.181
+    dev: true
+
+  /@types/lodash.unionwith/4.6.6:
+    resolution: {integrity: sha512-KyF2s7HCVf9Wd+QTlXrMBE4iSQPHAuIy3sE+ZERjD4Nr5YJd2vBOHrzLL8NatQLgeTs68dWTkgZ25yWHbSiq1w==}
+    dependencies:
+      '@types/lodash': 4.14.181
+    dev: true
+
+  /@types/lodash/4.14.181:
+    resolution: {integrity: sha512-n3tyKthHJbkiWhDZs3DkhkCzt2MexYHXlX0td5iMplyfwketaOeKboEVBqzceH7juqvEg3q5oUoBFxSLu7zFag==}
+    dev: true
 
   /@types/long/4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
@@ -17914,6 +17900,10 @@ packages:
     resolution: {integrity: sha1-DM8tiRZq8Ds2Y8eWU4t1rG4RTZ0=}
     dev: false
 
+  /lodash.clonedeep/4.5.0:
+    resolution: {integrity: sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=}
+    dev: false
+
   /lodash.curry/4.1.1:
     resolution: {integrity: sha1-JI42By7ekGUB11lmIAqG2riyMXA=}
     dev: false
@@ -18007,12 +17997,20 @@ packages:
       lodash._reinterpolate: 3.0.0
     dev: false
 
+  /lodash.times/4.3.2:
+    resolution: {integrity: sha1-Ph8lZcQxdU1Uq1fy7RdBk5KFyh0=}
+    dev: false
+
   /lodash.truncate/4.4.2:
     resolution: {integrity: sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=}
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha1-SLtQiECfFvGCFmZkHETdGqrjzYg=}
     dev: true
+
+  /lodash.unionwith/4.6.0:
+    resolution: {integrity: sha1-dNFAtcqBRubGQ8NyT1FSU42awfA=}
+    dev: false
 
   /lodash.uniq/4.5.0:
     resolution: {integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=}

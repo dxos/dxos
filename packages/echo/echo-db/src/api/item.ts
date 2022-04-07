@@ -51,16 +51,17 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
   /**
    * Items are constructed by the `Database` object.
-   * @param {ItemID} itemId       - Addressable ID.
-   * @param {ItemType} itemType   - User defined type (DXN).
-   * @param {Model} model         - Data model (provided by `ModelFactory`).
-   * @param [_writeStream]        - Write stream (if not read-only).
-   * @param {Item<any>} [parent]  - Parent Item (if not a root Item).
+   * @param itemManager
+   * @param itemId        Addressable ID.
+   * @param itemType      User defined type (DXN).
+   * @param stateManager  Data model (provided by `ModelFactory`).
+   * @param _writeStream  Write stream (if not read-only).
+   * @param parent        Parent Item (if not a root Item).
    */
   constructor (
     itemManager: ItemManager,
     itemId: ItemID,
-    itemType: ItemType | undefined, // TODO(burdon): Why undefined?
+    itemType: ItemType | undefined, // TODO(burdon): Why allow undefined?
     stateManager: StateManager<NonNullable<M>>,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null

@@ -211,8 +211,8 @@ describe('ECHO', () => {
 
     const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'bar', baz: 123 } });
 
-    expect(item.model.getProperty('foo')).toEqual('bar');
-    expect(item.model.getProperty('baz')).toEqual(123);
+    expect(item.model.get('foo')).toEqual('bar');
+    expect(item.model.get('baz')).toEqual(123);
   });
 
   test('open and close', async () => {
@@ -510,7 +510,7 @@ describe('ECHO', () => {
 
     await partyA.setTitle('A');
     expect(partyA.title).toBe('A');
-    expect((await partyA.getPropertiesItem()).model.getProperty('title')).toBe('A');
+    expect((await partyA.getPropertiesItem()).model.get('title')).toBe('A');
 
     await partyA.deactivate({ global: true });
     expect(partyA.isOpen).toBe(false);
@@ -522,7 +522,7 @@ describe('ECHO', () => {
     expect(partyA.isActive).toBe(true);
     expect(partyA.title).toBe('A');
 
-    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'A', 4000);
+    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.get('title') === 'A', 4000);
   });
 
   test('Deactivating and activating party, setting properties after', async () => {
@@ -713,13 +713,13 @@ describe('ECHO', () => {
     await partyA.setTitle('Test');
 
     for (const party of [partyA, partyB, partyC]) {
-      await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'Test', 3000);
+      await waitForCondition(async () => (await partyA.getPropertiesItem()).model.get('title') === 'Test', 3000);
       await waitForCondition(() => party.title === 'Test', 3000);
       expect(party.title).toEqual('Test');
     }
 
     // For the other member of the party, title propagates correctly as well.
-    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.getProperty('title') === 'Test', 3000);
+    await waitForCondition(async () => (await partyA.getPropertiesItem()).model.get('title') === 'Test', 3000);
     await waitForCondition(() => partyD.title === 'Test', 3000);
     expect(partyD.title).toEqual('Test'); // However this does not.
   }).retries(1);

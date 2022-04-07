@@ -14,13 +14,13 @@ import { DatabaseBackend, DataServiceHost, ItemManager } from '../database';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { Selection, createSelector, RootFilter } from './selection';
+import { RootFilter, Selection, createSelector } from './selection';
 
 export interface ItemCreationOptions<M extends Model> {
-  model: ModelConstructor<M>
+  model?: ModelConstructor<M>
   type?: ItemType
   parent?: ItemID
-  props?: any // TODO(marik-d): Type this better.
+  props?: any // TODO(marik-d): Type this better. Rename properties?
 }
 
 export interface LinkCreationOptions<M extends Model, L extends Model, R extends Model> {
@@ -47,7 +47,7 @@ export class Database {
   private _state = State.INITIAL;
 
   /**
-   * Creates a new database instance. `database.init()` must be called afterwards to complete the initialization.
+   * Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
@@ -79,7 +79,7 @@ export class Database {
   }
 
   @synchronized
-  async init () {
+  async initialize () {
     if (this._state !== State.INITIAL) {
       throw new Error('Invalid state: database was already initialized.');
     }
@@ -101,12 +101,10 @@ export class Database {
   /**
    * Creates a new item with the given queryable type and model.
    */
-  // TODO(burdon): Get modelType from somewhere other than `ObjectModel.meta.type`.
   async createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
     this._assertInitialized();
-
     if (!options.model) {
-      throw new TypeError('Missing model class.');
+      options.model = ObjectModel as any as ModelConstructor<M>;
     }
 
     validateModelClass(options.model);
@@ -119,7 +117,10 @@ export class Database {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
-    return this._itemManager.createItem(options.model.meta.type, options.type, options.parent, options.props) as any;
+    // TODO(burdon): Get modelType from somewhere other than `ObjectModel.meta.type`.
+    const item = await this._itemManager.createItem(
+      options.model.meta.type, options.type, options.parent, options.props) as any;
+    return item;
   }
 
   async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (

@@ -111,7 +111,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   };
 
   const handleToggleComplete = item => async (event) => {
-    await item.model.setProperty('complete', event.target.checked);
+    await item.model.set('complete', event.target.checked);
   };
 
   const handleDownload = async () => {
@@ -171,12 +171,12 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
                     <Checkbox
                       edge="start"
                       tabIndex={-1}
-                      checked={item.model.getProperty('complete') || false}
+                      checked={item.model.get('complete') || false}
                       onChange={handleToggleComplete(item)}
                     />
                   </ListItemIcon>
                   <ListItemText
-                    primary={item.model.getProperty('title')}
+                    primary={item.model.get('title')}
                   />
                   <ListItemSecondaryAction>
                     <IconButton

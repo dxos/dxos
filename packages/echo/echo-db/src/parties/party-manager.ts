@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import unionWith from 'lodash/unionWith';
+import unionWith from 'lodash.unionwith';
 
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
@@ -264,12 +264,10 @@ export class PartyManager {
     }
 
     const identity = this._identityProvider();
-
     const item = await party.getPropertiesItem();
-    const currentTitle = item.model.getProperty(PARTY_TITLE_PROPERTY);
+    const currentTitle = item.model.get(PARTY_TITLE_PROPERTY);
     const storedTitle = identity.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
-      log(`Updating stored name from ${storedTitle} to ${currentTitle} for Party ${party.key.toHex()}`);
       await identity.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
@@ -305,12 +303,12 @@ export class PartyManager {
         if (memberInfo && contact.displayName !== memberInfo.displayName) {
           log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
           contact.displayName = memberInfo.displayName;
-          await contactListItem.model.setProperty(hexKey, memberInfo);
+          await contactListItem.model.set(hexKey, memberInfo);
         }
       } else {
         const displayName = memberInfo?.displayName ?? hexKey;
         log(`Creating contact ${hexKey} to ${displayName}`);
-        await contactListItem.model.setProperty(hexKey, { publicKey, displayName });
+        await contactListItem.model.set(hexKey, { publicKey, displayName });
       }
     }
   }

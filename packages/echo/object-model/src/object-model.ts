@@ -3,19 +3,31 @@
 //
 
 import assert from 'assert';
-import cloneDeep from 'lodash/cloneDeep';
-import get from 'lodash/get';
+import cloneDeep from 'lodash.clonedeep';
+import get from 'lodash.get';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 
-class ObjectModelStateMachine implements StateMachine<Record<string, any>, ObjectMutationSet, ObjectSnapshot> {
-  private _object = {};
+export type ObjectModelState = Record<string, any>
 
-  getState (): Record<string, any> {
+/**
+ * Processes object mutations.
+ */
+class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
+  private _object: ObjectModelState = {};
+
+  getState (): ObjectModelState {
     return this._object;
+  }
+
+  reset (snapshot: ObjectSnapshot): void {
+    assert(snapshot.root);
+    const object: any = {};
+    ValueUtil.applyValue(object, 'root', snapshot.root);
+    this._object = object.root;
   }
 
   process (mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
@@ -27,19 +39,46 @@ class ObjectModelStateMachine implements StateMachine<Record<string, any>, Objec
       root: ValueUtil.createMessage(this._object)
     };
   }
+}
 
-  reset (snapshot: ObjectSnapshot): void {
-    const obj: any = {};
-    assert(snapshot.root);
-    ValueUtil.applyValue(obj, 'root', snapshot.root);
-    this._object = obj.root;
+/**
+ * Batch mutation builder.
+ */
+export class MutationBuilder {
+  _mutations: ObjectMutation[] = [];
+
+  constructor (
+    private readonly _model: ObjectModel
+  ) {}
+
+  set (key: string, value: any) {
+    this._mutations.push({
+      operation: ObjectMutation.Operation.SET,
+      key,
+      value: ValueUtil.createMessage(value)
+    });
+
+    return this;
   }
+
+  async commit () {
+    return this._model._makeMutation({ mutations: this._mutations });
+  }
+}
+
+/**
+ * Defines generic object accessor.
+ */
+export interface ObjectProperties {
+  get (key: string, defaultValue?: any): any
+  set (key: string, value: any): Promise<void>
 }
 
 /**
  * Object mutation model.
  */
-export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
+// TODO(burdon): Make generic (separate model?) With read/write validation.
+export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
@@ -58,21 +97,34 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
   /**
    * Returns an immutable object.
    */
-  // TODO(burdon): Rename getProperties.
   toObject () {
     return cloneDeep(this._getState());
   }
 
-  /**
-   * Returns the value at `path` of the object.
-   * Similar to: https://lodash.com/docs/4.17.15#get
-   * @param path
-   * @param [defaultValue]
-   */
-  getProperty (path: string, defaultValue: any = undefined): any {
-    return cloneDeep(get(this._getState(), path, defaultValue));
+  builder () {
+    return new MutationBuilder(this);
   }
 
+  get (key: string, defaultValue: any = undefined) {
+    return this.getProperty(key, defaultValue);
+  }
+
+  async set (key: string, value: any) {
+    await this.setProperty(key, value);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
+  getProperty (key: string, defaultValue: any = undefined): any {
+    return cloneDeep(get(this._getState(), key, defaultValue));
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   async setProperty (key: string, value: any) {
     await this._makeMutation({
       mutations: [
@@ -85,6 +137,10 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
     });
   }
 
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   async setProperties (properties: any) {
     await this._makeMutation({
       mutations: createMultiFieldMutationSet(properties)
@@ -127,8 +183,10 @@ export class ObjectModel extends Model<Record<string, any>, ObjectMutationSet> {
     });
   }
 
-  private async _makeMutation (mutation: ObjectMutationSet) {
-    // Process the mutations.
+  /**
+   * @internal
+   */
+  async _makeMutation (mutation: ObjectMutationSet) {
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
   }
