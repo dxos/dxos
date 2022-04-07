@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.19](https://www.github.com/dxos/protocols/compare/v2.28.18...v2.28.19) (2022-04-07)
+
+
+### Bug Fixes
+
+* **echo-graph:** Height in resize container ([#1106](https://www.github.com/dxos/protocols/issues/1106)) ([3a602d2](https://www.github.com/dxos/protocols/commit/3a602d22f0e550f65fe906390592376eb7969108))
+
 ### [2.28.18](https://www.github.com/dxos/protocols/compare/v2.28.17...v2.28.18) (2022-04-07)
 
 
