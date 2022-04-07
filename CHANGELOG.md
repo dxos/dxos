@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.18](https://www.github.com/dxos/protocols/compare/v2.28.17...v2.28.18) (2022-04-07)
+
+
+### Bug Fixes
+
+* **echo-graph:** Height in embedded mode ([#1104](https://www.github.com/dxos/protocols/issues/1104)) ([470a327](https://www.github.com/dxos/protocols/commit/470a327e503d0e91871e03a535176dceae181a65))
+
 ### [2.28.17](https://www.github.com/dxos/protocols/compare/v2.28.16...v2.28.17) (2022-04-07)
 
 
