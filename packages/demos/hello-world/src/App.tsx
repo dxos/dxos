@@ -7,11 +7,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
 import { Item, Party } from '@dxos/client';
+import { ObjectModel } from '@dxos/object-model';
 import { useClient, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
 import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-framework';
-
-import { ObjectModel } from '../../echo/object-model/src';
 
 /**
  * @constructor

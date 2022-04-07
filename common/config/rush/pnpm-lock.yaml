@@ -511,6 +511,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/esbuild-plugins': ~2.28.5
       '@dxos/esbuild-server': ~2.28.5
+      '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -531,6 +532,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
