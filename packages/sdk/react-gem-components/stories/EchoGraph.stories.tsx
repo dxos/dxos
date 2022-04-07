@@ -106,3 +106,31 @@ export const Secondary = () => {
     </ClientProvider>
   );
 };
+
+const embedStyles = {
+  boxSizing: 'border-box',
+  margin: '0.5em auto',
+  padding: '0 40px',
+  width: '100%',
+  maxWidth: '900px',
+  position: 'relative',
+  transition: '0.3s ease-out',
+  borderLeft: '3px solid transparent',
+  borderRight: '3px solid transparent',
+  resize: 'vertical',
+  overflow: 'auto'
+};
+
+export const Embedded = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <FullScreen>
+          <Box sx={embedStyles}>
+            <App />
+          </Box>
+        </FullScreen>
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
