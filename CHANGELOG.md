@@ -1,5 +1,32 @@
 # Change Log
 
+### [2.28.19](https://www.github.com/dxos/protocols/compare/v2.28.18...v2.28.19) (2022-04-07)
+
+
+### Bug Fixes
+
+* **echo-graph:** Height in resize container ([#1106](https://www.github.com/dxos/protocols/issues/1106)) ([3a602d2](https://www.github.com/dxos/protocols/commit/3a602d22f0e550f65fe906390592376eb7969108))
+
+### [2.28.18](https://www.github.com/dxos/protocols/compare/v2.28.17...v2.28.18) (2022-04-07)
+
+
+### Bug Fixes
+
+* **echo-graph:** Height in embedded mode ([#1104](https://www.github.com/dxos/protocols/issues/1104)) ([470a327](https://www.github.com/dxos/protocols/commit/470a327e503d0e91871e03a535176dceae181a65))
+
+### [2.28.17](https://www.github.com/dxos/protocols/compare/v2.28.16...v2.28.17) (2022-04-07)
+
+
+### Features
+
+* update model API. ([#1095](https://www.github.com/dxos/protocols/issues/1095)) ([e18b5d1](https://www.github.com/dxos/protocols/commit/e18b5d13f13b05d7f0617a4d5a64a3b4af99031e))
+* useGraphModel supports filters ([#1099](https://www.github.com/dxos/protocols/issues/1099)) ([54db876](https://www.github.com/dxos/protocols/commit/54db876cd2cde18aaadbaa1d9d620992bc59c8cf))
+
+
+### Bug Fixes
+
+* add back IMAGE file for bot-factory. ([a63833a](https://www.github.com/dxos/protocols/commit/a63833aa7463301834a31d8eab98879417502deb))
+
 ### [2.28.16](https://www.github.com/dxos/protocols/compare/v2.28.15...v2.28.16) (2022-04-04)
 
 

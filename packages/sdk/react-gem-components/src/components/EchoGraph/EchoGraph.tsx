@@ -60,7 +60,8 @@ export const EchoGraph = ({
       sx={{
         display: 'flex',
         flex: 1,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        height: '100%'
       }}
     >
       <SVGContextProvider>
