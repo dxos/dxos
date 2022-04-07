@@ -3,7 +3,7 @@
 //
 
 import faker from 'faker';
-import times from 'lodash/times';
+import times from 'lodash.times';
 
 import { Database, Item } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';

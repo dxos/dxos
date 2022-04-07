@@ -60,9 +60,9 @@ describe('DataMirror', () => {
     // Mutate model
     await Promise.all([
       promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
-      item.model.setProperty('foo', 'bar')
+      item.model.set('foo', 'bar')
     ]);
 
-    expect(item.model.getProperty('foo')).toEqual('bar');
+    expect(item.model.get('foo')).toEqual('bar');
   });
 });

@@ -16,9 +16,8 @@ import { ItemDemuxer, ItemManager } from '../database';
 import { createTestInstance } from '../testing';
 
 const log = debug('dxos:snapshot:test');
-debug.enable('dxos:echo-db:*');
+// debug.enable('dxos:echo-db:*');
 
-// TODO(burdon): Remove "foo", etc from tests.
 describe('snapshot', () => {
   test.skip('loading large party', async () => {
     const echo = await createTestInstance({ initialize: true });
@@ -32,9 +31,9 @@ describe('snapshot', () => {
       const item = await party.database.createItem({ model: ObjectModel });
       itemId = item.id;
       for (let i = 0; i < 1_000; i++) {
-        await item.model.setProperty('foo', i);
+        await item.model.set('foo', i);
       }
-      await item.model.setProperty('foo', 'done');
+      await item.model.set('foo', 'done');
 
       await echo.close();
     }
@@ -47,7 +46,7 @@ describe('snapshot', () => {
 
       await waitForCondition(() => {
         const item = party!.database.getItem(itemId);
-        return item!.model.getProperty('foo') === 'done';
+        return item!.model.get('foo') === 'done';
       });
 
       await echo.close();
@@ -61,9 +60,9 @@ describe('snapshot', () => {
     const echo = await createTestInstance({ initialize: true });
     const party = await echo.createParty();
     const item1 = await party.database.createItem({ model: ObjectModel, props: { title: 'Item1 - Creation' } });
-    await item1.model.setProperty('title', 'Item1 - Modified');
+    await item1.model.set('title', 'Item1 - Modified');
     const item2 = await party.database.createItem({ model: ObjectModel, props: { title: 'Item2 - Creation' } });
-    await item2.model.setProperty('title', 'Item2 - Modified');
+    await item2.model.set('title', 'Item2 - Modified');
 
     const link = await party.database.createLink({ source: item1, target: item2 });
 

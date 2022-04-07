@@ -16,12 +16,13 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
+// TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(x => x.toHex())
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex())
+
+  private readonly _replicationFinished = new Trigger();
 
   private _replicating = true;
-
-  private _replicationFinished = new Trigger();
 
   constructor (
     private readonly _modelFactory: ModelFactory,
@@ -40,8 +41,9 @@ export class TestRig<M extends Model<any>> {
   }
 
   async waitForReplication () {
-    log('Waiting for replication');
+    log('Waiting for replication...');
     await this._replicationFinished.wait();
+    log('Replications started.');
   }
 
   createPeer (): TestPeer<M> {
@@ -77,6 +79,7 @@ export class TestRig<M extends Model<any>> {
       },
       mutation
     };
+
     peer.mutations.push(message);
 
     // Process this mutation locally immediately.
@@ -88,7 +91,7 @@ export class TestRig<M extends Model<any>> {
     }
 
     this._replicationFinished.reset();
-    log('Reset replication lock');
+    log('Reset replication lock.');
 
     return {
       feedKey: peerKey,
@@ -115,12 +118,12 @@ export class TestRig<M extends Model<any>> {
     }
 
     this._replicationFinished.wake();
-    log('Wake replication lock');
+    log('Wake replication lock.');
   }
 }
 
 export class TestPeer<M extends Model> {
-  public timeframe = new Timeframe()
+  public timeframe = new Timeframe();
 
   public mutations: ModelMessage<Uint8Array>[] = [];
 
@@ -135,7 +138,7 @@ export class TestPeer<M extends Model> {
 
   processMutation (message: ModelMessage<Uint8Array>) {
     this.stateManager.processMessage(message.meta, message.mutation);
-
-    this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]]));
+    this.timeframe = Timeframe.merge(
+      this.timeframe, new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]]));
   }
 }

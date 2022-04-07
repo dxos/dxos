@@ -71,7 +71,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     const root = await party.database.createItem({
       model: ObjectModel, type: 'example:type.root'
     });
-    await root.model.setProperty('title', 'root');
+    await root.model.set('title', 'root');
 
     // Objects.
     await party.database.createItem({

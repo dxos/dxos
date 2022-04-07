@@ -23,7 +23,7 @@ void (async () => {
 
   const party = await echo.createParty();
   const person = await party.database.createItem({ model: ObjectModel, type: 'dxos:item.person', props: { firstName: 'Edith', lastName: 'Finch' } });
-  await person.model.setProperty('lastName', 'Smith');
+  await person.model.set('lastName', 'Smith');
 
   // TODO(dmaretskyi): Invitations do not work.
   // const otherPeer = new ECHO();

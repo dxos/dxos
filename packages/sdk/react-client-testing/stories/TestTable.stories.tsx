@@ -32,7 +32,7 @@ const ItemNode = ({ item, onSelect }: { item: Item<ObjectModel>, onSelect?: (ite
   );
 };
 
-const UseTestTableStory = () => {
+const TestTableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const table = useTestTable(party);
@@ -66,7 +66,7 @@ export const Primary = () => {
   return (
     <ClientProvider>
       <ProfileInitializer>
-        <UseTestTableStory />
+        <TestTableStory />
       </ProfileInitializer>
     </ClientProvider>
   );
@@ -83,7 +83,7 @@ const customFields = [
   }
 ];
 
-const UseTableBuilderStory = () => {
+const TableBuilderStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [table, setTable] = useState<Item<ObjectModel>>();
@@ -104,7 +104,7 @@ const UseTableBuilderStory = () => {
   const buildCustomTestTable = async (builder: TableBuilder) => {
     const columns = await builder.createColumns(undefined, customFields.map(field => field.fieldName));
     const fields = customFields.map((field) => {
-      const columnId = columns.find(column => column.model.getProperty('field') === field.fieldName)?.id ?? '';
+      const columnId = columns.find(column => column.model.get('field') === field.fieldName)?.id ?? '';
       return {
         ...field,
         columnId
@@ -142,12 +142,14 @@ const UseTableBuilderStory = () => {
           />
         )}
       </TreeView>
+
+      {/* TODO(burdon): Use Mui Table. */}
       {selected && (
         <Box sx={{
+          width: '70%',
           '& td': {
             verticalAlign: 'top'
-          },
-          width: '70%'
+          }
         }}>
           <table>
             <tbody>
@@ -169,7 +171,7 @@ export const Secondary = () => {
   return (
     <ClientProvider>
       <ProfileInitializer>
-        <UseTableBuilderStory />
+        <TableBuilderStory />
       </ProfileInitializer>
     </ClientProvider>
   );

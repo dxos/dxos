@@ -47,9 +47,9 @@ describe('Client - nonpersistent', () => {
     const party = await client.echo.createParty();
 
     const item = await party.database.createItem({ model: ObjectModel });
-    await item.model.setProperty('foo', 'bar');
+    await item.model.set('foo', 'bar');
 
-    expect(item.model.getProperty('foo')).toEqual('bar');
+    expect(item.model.get('foo')).toEqual('bar');
 
     await client.destroy();
   });
@@ -69,7 +69,7 @@ describe('Client - nonpersistent', () => {
 
     const party = await client.echo.createParty();
     const item = await party.database.createItem({ model: ObjectModel, type: 'example:item/test' });
-    await item.model.setProperty('foo', 'bar');
+    await item.model.set('foo', 'bar');
 
     const otherClient = new Client(defaultTestingConfig);
     await otherClient.initialize();
@@ -82,7 +82,7 @@ describe('Client - nonpersistent', () => {
     const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
 
     const otherItem = otherParty.database.select({ type: 'example:item/test' }).query().entities[0];
-    expect(otherItem.model.getProperty('foo')).toEqual('bar');
+    expect(otherItem.model.get('foo')).toEqual('bar');
 
     await client.destroy();
     await otherClient.destroy();

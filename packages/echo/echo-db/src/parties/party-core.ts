@@ -151,7 +151,7 @@ export class PartyCore {
       this._memberKey
     );
 
-    await this._database.init();
+    await this._database.initialize();
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));

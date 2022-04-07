@@ -12,7 +12,7 @@ import { Predicate, Query } from './proto';
 // TODO(burdon): Nested properties?
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
-describe('matcher', () => {
+describe('Matcher', () => {
   test('Basic queries', () => {
     const queries: Query[] = [
       {
@@ -20,7 +20,7 @@ describe('matcher', () => {
           op: Predicate.Operation.EQUALS,
           key: 'name',
           value: {
-            string: 'xxx'
+            string: 'DXOS'
           }
         }
       },
@@ -206,7 +206,7 @@ describe('matcher', () => {
     const results = queries.map(query => matcher.matchItems(query, items));
 
     results.forEach((result, i) => {
-    // eslint-disable-next-line jest/valid-expect
+      // eslint-disable-next-line jest/valid-expect
       expect(result).toEqual(expected[i]);
     });
   });

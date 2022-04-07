@@ -21,7 +21,7 @@ test('generator', async () => {
   const result = party.database.select({ type: OBJECT_PERSON }).query();
   expect(result.entities).toHaveLength(3);
 
-  const names = result.entities.map(item => item.model.getProperty('name'));
+  const names = result.entities.map(item => item.model.get('name'));
   expect(names).toHaveLength(3);
 
   await echo.close();
@@ -44,7 +44,7 @@ test('filter', async () => {
       }
     }
   };
-  const matcher = new Matcher({ getter: (item: any, key: string) => item.model.getProperty(key) });
+  const matcher = new Matcher({ getter: (item: any, key: string) => item.model.get(key) });
   const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).query();
   expect(queryResult.entities).toHaveLength(1);
 

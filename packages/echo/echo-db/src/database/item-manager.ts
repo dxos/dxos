@@ -154,7 +154,7 @@ export class ItemManager {
     if (initProps) {
       const meta = this._modelFactory.getModelMeta(modelType);
       if (!meta.getInitMutation) {
-        throw new Error('Tried to provide initialization params to a model with no initializer');
+        throw new Error('Tried to provide initialization params to a model with no initializer.');
       }
       mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
     }

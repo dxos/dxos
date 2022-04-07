@@ -9,7 +9,7 @@ import { Model } from '../model';
 import { StateMachine, MutationProcessMeta } from '../state-machine';
 import { ModelMeta } from '../types';
 
-class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
+class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();
 
   getState (): Map<any, any> {
@@ -33,15 +33,12 @@ class TestModelStateMachiene implements StateMachine<Map<any, any>, TestItemMuta
   }
 }
 
-/**
- * Test model.
- */
 export class TestModel extends Model<Map<any, any>, TestItemMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test',
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.testing.TestItemSnapshot'),
-    stateMachine: () => new TestModelStateMachiene()
+    stateMachine: () => new TestModelStateMachine()
   };
 
   get keys () {
@@ -52,15 +49,16 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
     return Object.fromEntries(this._getState());
   }
 
-  getProperty (key: string) {
+  get (key: string) {
     return this._getState().get(key);
   }
 
-  async setProperty (key: string, value: string) {
+  async set (key: string, value: string) {
     const receipt = await this.write(checkType<TestItemMutation>({
       key,
       value
     }));
+
     await receipt.waitToBeProcessed();
   }
 }
