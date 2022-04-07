@@ -23,7 +23,8 @@ import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
-export const PARTY_TITLE_PROPERTY = 'title';
+
+export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not be special).
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {
@@ -139,7 +140,7 @@ export class PartyInternal {
 
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
-    await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
+    await item.model.set(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
   }
 

@@ -55,10 +55,10 @@ describe('Database', () => {
       // Mutate model
       await Promise.all([
         item!.model.update.waitForCount(1),
-        backendItem.model.setProperty('foo', 'bar')
+        backendItem.model.set('foo', 'bar')
       ]);
 
-      expect(item!.model.getProperty('foo')).toEqual('bar');
+      expect(item!.model.get('foo')).toEqual('bar');
     });
 
     test('gets items synced from backend that were created before frontend was connected', async () => {
@@ -88,21 +88,21 @@ describe('Database', () => {
       const { frontend: database } = await setup();
 
       const item = await database.createItem({ model: ObjectModel });
-      expect(item.model.getProperty('foo')).toBeUndefined();
+      expect(item.model.get('foo')).toBeUndefined();
 
-      await item.model.setProperty('foo', 'bar');
-      expect(item.model.getProperty('foo')).toEqual('bar');
+      await item.model.set('foo', 'bar');
+      expect(item.model.get('foo')).toEqual('bar');
     });
 
     test('creates two items with ObjectModel', async () => {
       const { frontend: database } = await setup();
 
       const item1 = await database.createItem({ model: ObjectModel, type: 'test' });
-      await item1.model.setProperty('prop1', 'x');
+      await item1.model.set('prop1', 'x');
       const item2 = await database.createItem({ model: ObjectModel, type: 'test' });
-      await item2.model.setProperty('prop1', 'y');
+      await item2.model.set('prop1', 'y');
 
-      expect(item1.model.getProperty('prop1')).toEqual('x');
+      expect(item1.model.get('prop1')).toEqual('x');
     });
 
     test('parent & child items', async () => {

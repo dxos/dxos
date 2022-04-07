@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Model } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { range } from '@dxos/util';
 
 import { Item, ItemCreationOptions } from '../api';
@@ -57,7 +58,7 @@ export const createModelTestBench = async<M extends Model<any>> (
 ): Promise<{ peers: ECHO[], items: WithTestMeta<Item<M>>[] }> => {
   const { peers, parties } = await createParties(options.peerCount ?? 2);
   for (const party of parties) {
-    const { model } = options;
+    const { model = ObjectModel } = options;
     const { modelFactory } = party.testMeta; // TODO(burdon): Remove.
     if (!modelFactory.hasModel(model.meta.type)) {
       modelFactory.registerModel(model);

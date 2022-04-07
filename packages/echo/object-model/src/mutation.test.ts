@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation } from './proto';
 
-describe('Mutation', () => {
+describe('Mutations', () => {
   test('ValueUtil', () => {
     {
       const message = ValueUtil.createMessage(null);

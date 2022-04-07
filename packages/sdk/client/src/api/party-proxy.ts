@@ -5,10 +5,11 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, RemoteDatabaseBackend
+  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, Item, RemoteDatabaseBackend
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
 import { ClientServiceHost } from '../client/service-host';
 import { ClientServiceProxy } from '../client/service-proxy';
@@ -32,6 +33,7 @@ export class Party {
   private _key: PartyKey;
   private _isOpen: boolean;
   private _isActive: boolean;
+  private _item?: Item<ObjectModel>;
 
   /**
    * @internal
@@ -67,28 +69,25 @@ export class Party {
     return this._invitationProxy;
   }
 
-  async init () {
+  /**
+   * Called by EchoProxy open.
+   */
+  async initialize () {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database.init();
+      await this._database.initialize();
     }
 
-    await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
+    // Root item for properties.
+    this._item = await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
   }
 
+  /**
+   * Called by EchoProxy close.
+   */
   async destroy () {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
-  }
-
-  /**
-   * Called by EchoProxy to update this party instance.
-   * @internal
-   */
-  _processPartyUpdate (party: PartyProto) {
-    this._key = party.publicKey;
-    this._isOpen = party.isOpen;
-    this._isActive = party.isActive;
   }
 
   get key () {
@@ -103,12 +102,9 @@ export class Party {
     return this._isActive;
   }
 
-  /**
-   * Database instance of the current party.
-   */
   get database (): Database {
     if (!this._database) {
-      throw Error('Party not open');
+      throw Error('Party not open.');
     }
 
     return this._database;
@@ -118,6 +114,7 @@ export class Party {
     return this.setOpen(true);
   }
 
+  // TODO(burdon): Requires comment.
   async setOpen (open: boolean) {
     await this._serviceProvider.services.PartyService.setPartyState({
       partyKey: this.key,
@@ -125,6 +122,7 @@ export class Party {
     });
   }
 
+  // TODO(burdon): Requires comment.
   async setActive (active: boolean, options: ActivationOptions) {
     const activeGlobal = options.global ? active : undefined;
     const activeDevice = options.device ? active : undefined;
@@ -133,6 +131,40 @@ export class Party {
       activeGlobal,
       activeDevice
     });
+  }
+
+  get properties (): ObjectProperties {
+    return this._item!.model;
+  }
+
+  /**
+   * @deprecated Use party.properties.
+   */
+  async setTitle (title: string) {
+    await this.setProperty(PARTY_TITLE_PROPERTY, title);
+    return this;
+  }
+
+  /**
+   * @deprecated Use party.properties.
+   */
+  getTitle () {
+    return this.getProperty(PARTY_TITLE_PROPERTY);
+  }
+
+  /**
+   * @deprecated Use party.properties.
+   */
+  async setProperty (key: string, value?: any) {
+    await this.properties.set(key, value);
+    return this;
+  }
+
+  /**
+   * @deprecated Use party.properties.
+   */
+  getProperty (key: string, defaultValue?: any) {
+    return this.properties.get(key, defaultValue);
   }
 
   /**
@@ -147,6 +179,17 @@ export class Party {
    */
   get reduce (): Database['reduce'] {
     return this.database.reduce.bind(this.database);
+  }
+
+  /**
+   * Return set of party members.
+   */
+  // TODO(burdon): Don't expose result object and provide type.
+  queryMembers () {
+    return streamToResultSet(
+      this._serviceProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
+      (response) => response?.members ?? []
+    );
   }
 
   /**
@@ -165,36 +208,17 @@ export class Party {
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 
-  queryMembers () {
-    return streamToResultSet(
-      this._serviceProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
-      (response) => response?.members ?? []
-    );
-  }
-
-  async setTitle (title: string) {
-    await this.setProperty(PARTY_TITLE_PROPERTY, title);
-    return this;
-  }
-
-  async setProperty (key: string, value?: any) {
-    await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    const item = this.getPropertiesItem();
-    await item.model.setProperty(key, value);
-    return this;
-  }
-
-  getProperty (key: string) {
-    const item = this.getPropertiesItem();
-    return item?.model.getProperty(key);
-  }
-
-  private getPropertiesItem () {
-    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().entities;
-    return items[0];
-  }
-
   createSnapshot () {
     return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
+  }
+
+  /**
+   * Called by EchoProxy to update this party instance.
+   * @internal
+   */
+  _processPartyUpdate (party: PartyProto) {
+    this._key = party.publicKey;
+    this._isOpen = party.isOpen;
+    this._isActive = party.isActive;
   }
 }

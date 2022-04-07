@@ -25,12 +25,14 @@ export const typeMeta: { [i: string]: ItemMeta } = {
     color: colors.brown,
     childTypes: [TestType.Person, TestType.Project]
   },
+
   [TestType.Person]: {
     icon: PersonIcon,
     label: 'Person',
     plural: 'People',
     color: colors.indigo
   },
+
   [TestType.Project]: {
     icon: ProjectIcon,
     label: 'Project',
@@ -38,6 +40,7 @@ export const typeMeta: { [i: string]: ItemMeta } = {
     color: colors.blue,
     childTypes: [TestType.Task]
   },
+
   [TestType.Task]: {
     icon: DefaultIcon,
     label: 'Task',
@@ -67,11 +70,11 @@ export interface ItemAdapter {
  */
 export const itemAdapter: ItemAdapter = {
   title: (item: Item<ObjectModel>) => {
-    return item.model.getProperty('title');
+    return item.model.get('title');
   },
 
   description: (item: Item<ObjectModel>) => {
-    return item.model.getProperty('description');
+    return item.model.get('description');
   },
 
   linkedTypes: (item: Item<ObjectModel>) => {

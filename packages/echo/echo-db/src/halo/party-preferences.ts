@@ -70,6 +70,7 @@ export class PartyPreferences {
     }
   }
 
+  // TODO(burdon): Currently HALO Party stores other party titles? Move to local storage.
   getLastKnownTitle () {
     return this._preferences.getGlobalPartyPreference(this._party.key, PARTY_TITLE_PROPERTY);
   }

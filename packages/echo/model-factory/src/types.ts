@@ -10,12 +10,13 @@ import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-prot
 import { Model } from './model';
 import { StateMachine } from './state-machine';
 
-export type ModelType = string // TODO(burdon): Replace with DXN.
+// TODO(burdon): Replace with DXN.
+export type ModelType = string
 
+// TODO(burdon): Refactor.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
-  // TODO(burdon): Rename.
   // TODO(marik-d): Specify generic type param here to match model's expected message type.
   mutation: Codec<TMutation>
 
@@ -25,7 +26,6 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
 
   /**
    * A way to initialize the model upon item creation.
-   *
    * Must return a mutation that will initialize the model.
    * This mutation will be applied in the same processing step as the item creation.
    *

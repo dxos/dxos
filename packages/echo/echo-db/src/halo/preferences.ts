@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
-import defaultsDeep from 'lodash/defaultsDeep';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
@@ -86,7 +86,7 @@ export class Preferences {
       return null;
     }
     const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query().entities;
-    return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
+    return deviceItems.find(item => this._deviceKey.equals(item.model.get('publicKey')));
   }
 
   public getGlobalPartyPreference (partyKey: PublicKey, key: string) {
@@ -116,23 +116,23 @@ export class Preferences {
   // TODO(burdon): DO NOT USE THE PARTY KEY AS A TOP-LEVEL KEY!
   public _getPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string) {
     const path = partyKey.toHex();
-    const partyPrefs = preferences.model.getProperty(path, {});
+    const partyPrefs = preferences.model.get(path, {});
     return partyPrefs[key];
   }
 
   // TODO(burdon): DO NOT USE THE PARTY KEY AS A TOP-LEVEL KEY!
   public async _setPartyPreference (preferences: Item<any>, party: PartyInternal, key: string, value: any) {
     const path = party.key.toHex();
-    const partyPrefs = preferences.model.getProperty(path, {});
+    const partyPrefs = preferences.model.get(path, {});
     partyPrefs[key] = value;
-    await preferences.model.setProperty(party.key.toHex(), partyPrefs);
+    await preferences.model.set(party.key.toHex(), partyPrefs);
     party.update.emit(); // TODO(burdon): Should subscribe to database changes only?
   }
 
   async recordPartyJoining (joinedParty: JoinedParty) {
     const [partyDesc] = this._party.database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
-      .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')))
+      .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.get('publicKey')))
       .query().entities;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
@@ -151,8 +151,8 @@ export class Preferences {
     const converter = (partyDesc: Item<any>) => {
       // TODO(burdon): Define type.
       return {
-        partyKey: PublicKey.from(partyDesc.model.getProperty('publicKey')),
-        keyHints: Object.values(partyDesc.model.getProperty('hints')).map((hint: any) => ({
+        partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
+        keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
           ...hint,
           publicKey: PublicKey.from(hint.publicKey)
         } as KeyHint))

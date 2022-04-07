@@ -83,9 +83,9 @@ describe('PartyCore', () => {
     const { party } = await setup();
 
     const item = await party.database.createItem({ model: ObjectModel });
-    await item.model.setProperty('foo', 'bar');
+    await item.model.set('foo', 'bar');
 
-    expect(item.model.getProperty('foo')).toEqual('bar');
+    expect(item.model.get('foo')).toEqual('bar');
   });
 
   test('create item with parent and then reload', async () => {

@@ -5,6 +5,8 @@
 import { Codec } from '@dxos/codec-protobuf';
 import { FeedWriter, ItemID, ItemType, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
 
+// TODO(burdon): Remove.
+
 // TODO(burdon): Move.
 export type DXN = string;
 

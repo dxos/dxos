@@ -34,7 +34,7 @@ export const useSearchSelection = (party: Party, search: any) => {
     }
 
     // TODO(burdon): Generalize.
-    const text = item.model.getProperty('name');
+    const text = item.model.get('name');
     return match(search, text);
   }), [search]);
 };
