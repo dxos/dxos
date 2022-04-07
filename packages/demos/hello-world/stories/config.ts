@@ -10,11 +10,11 @@ export const ONLINE_CONFIG: ConfigObject = {
   runtime: {
     services: {
       signal: {
-        server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+        server: 'wss://demo.kube.dxos.network/dxos/signal'
       },
       ice: [
         {
-          urls: 'turn:apollo3.kube.moon.dxos.network:3478',
+          urls: 'turn:demo.kube.moon.dxos.network:3478',
           username: 'dxos',
           credential: 'dxos'
         }
