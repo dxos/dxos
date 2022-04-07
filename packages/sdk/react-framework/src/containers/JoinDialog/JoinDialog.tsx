@@ -160,7 +160,7 @@ export const JoinDialog = ({
     const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={() => handleProcessInvitation(invitationCode)}>Process</Button>
+        <Button onClick={() => handleProcessInvitation(invitationCode)}>Accept</Button>
       </>
     );
 

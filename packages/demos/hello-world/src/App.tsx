@@ -8,43 +8,63 @@ import { Box, Button, List, ListItem, ListItemText, TextField } from '@mui/mater
 
 import { Party } from '@dxos/client';
 import { useClient, useSelection } from '@dxos/react-client';
-import { JoinPartyDialog, PartySharingDialog } from '@dxos/react-framework';
+import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
+import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-framework';
 
+/**
+ * @constructor
+ */
 export const App = () => {
-  const inputRef = useRef<HTMLInputElement>();
-
-  const [sharing, setSharing] = useState(false);
-  const [joining, setJoining] = useState(false);
-
   const client = useClient();
   const [party, setParty] = useState<Party>();
 
-  // 3. Select items.
-  const items = useSelection(party?.select()) ?? [];
+  const inputRef = useRef<HTMLInputElement>();
+  const [action, setAction] = useState<string>();
 
   // 1. Create party.
   useEffect(() => {
     void client.echo.createParty().then(party => setParty(party));
   }, []);
 
+  // 3. Select items.
+  const items = useSelection(party?.select().filter({ type: 'task' })) ?? [];
+
+  // 6. Serialize.
+  const serializer = usePartySerializer();
+  const download = useFileDownload();
+
   if (!party) {
     return null;
   }
 
   // 2. Create item.
-  const handleClick = () => {
-    void party!.database.createItem({
-      props: {
-        title: inputRef.current!.value
-      }
-    });
+  const handleCreateTask = () => {
+    const title = inputRef.current!.value.trim();
+    if (title) {
+      void party!.database.createItem({
+        type: 'task',
+        props: {
+          title
+        }
+      });
+    }
 
     inputRef.current!.value = '';
     inputRef.current!.focus();
   };
 
+  const handleExport = async () => {
+    const blob = await serializer.serializeParty(party!);
+    download(blob, `${party?.key.toHex()}.party`);
+  };
+
+  const handleImport = async (file: File) => {
+    const party = await serializer.deserializeParty(file);
+    setParty(party);
+  };
+
   return (
-    <Box sx={{ padding: 1 }}>
+    <Box sx={{ padding: 2, width: 800, margin: 'auto', marginTop: 2, border: '1px solid #CCC' }}>
       <Box sx={{ display: 'flex' }}>
         <TextField
           inputRef={inputRef}
@@ -52,11 +72,10 @@ export const App = () => {
           fullWidth
           autoComplete='off'
           spellCheck={false}
+          onKeyDown={event => event.key === 'Enter' && handleCreateTask()}
         />
 
-        <Button onClick={handleClick}>Add</Button>
-        <Button onClick={() => setSharing(true)}>Share</Button>
-        <Button onClick={() => setJoining(true)}>Join</Button>
+        <Button onClick={handleCreateTask}>Add</Button>
       </Box>
 
       <List>
@@ -67,19 +86,33 @@ export const App = () => {
         ))}
       </List>
 
+      <Box>
+        <Button onClick={() => setAction('share')}>Share</Button>
+        <Button onClick={() => setAction('join')}>Join</Button>
+        <Button onClick={handleExport}>Export</Button>
+        <Button onClick={() => setAction('import')}>Import</Button>
+      </Box>
+
       {/* 4. Sharing. */}
       <PartySharingDialog
-        open={sharing}
-        onClose={() => setSharing(false)}
+        open={action === 'share'}
+        onClose={() => setAction(undefined)}
         partyKey={party.key}
       />
 
       {/* 5. Joining. */}
       <JoinPartyDialog
-        open={joining}
+        open={action === 'join'}
         onJoin={party => setParty(party)}
-        onClose={() => setJoining(false)}
+        onClose={() => setAction(undefined)}
         closeOnSuccess={true}
+      />
+
+      {/* 6. Import. */}
+      <FileUploadDialog
+        open={action === 'import'}
+        onClose={() => setAction(undefined)}
+        onUpload={handleImport}
       />
     </Box>
   );

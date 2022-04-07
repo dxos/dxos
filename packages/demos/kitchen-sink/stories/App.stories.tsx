@@ -72,8 +72,8 @@ export const Secondary = () => {
     };
 
     const handleImport = async (partyFile: File) => {
-      const importedParty = await partySerializer.deserializeParty(partyFile);
-      setParty(importedParty);
+      const party = await partySerializer.deserializeParty(partyFile);
+      setParty(party);
     };
 
     const handleInvite = async () => {
