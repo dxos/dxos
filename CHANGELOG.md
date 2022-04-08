@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.20](https://www.github.com/dxos/protocols/compare/v2.28.19...v2.28.20) (2022-04-08)
+
+
+### Features
+
+* Add basic support for versions to RegistrySearchPanel ([#1103](https://www.github.com/dxos/protocols/issues/1103)) ([a9556b2](https://www.github.com/dxos/protocols/commit/a9556b2eeb990a04faf576e92ec584c284609340))
+
 ### [2.28.19](https://www.github.com/dxos/protocols/compare/v2.28.18...v2.28.19) (2022-04-07)
 
 

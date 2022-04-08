@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.28.19",
+  "version": "2.28.20",
   "description": "A consistent store for your hypercore feeds.",
   "license": "MIT",
   "main": "dist/src/index.js",
