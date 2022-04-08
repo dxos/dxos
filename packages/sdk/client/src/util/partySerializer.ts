@@ -18,8 +18,13 @@ export class PartySerializer {
     return new Blob([partyCodec.encode(snapshot)]);
   }
 
-  async deserializeParty (partyFileToImport: File) {
-    const data = await new Uint8Array(await partyFileToImport.arrayBuffer());
+  async deserializeParty (partyToImport: File | Uint8Array) {
+    let data;
+    if (partyToImport instanceof File) {
+      data = await new Uint8Array(await partyToImport.arrayBuffer());
+    } else {
+      data = partyToImport;
+    }
     return await this._client.echo.cloneParty(partyCodec.decode(data));
   }
 }
