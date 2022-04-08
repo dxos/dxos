@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.21](https://www.github.com/dxos/protocols/compare/v2.28.20...v2.28.21) (2022-04-08)
+
+
+### Features
+
+* **party-serialization:** Now supports raw Uint8Array ([#1111](https://www.github.com/dxos/protocols/issues/1111)) ([c4a1b22](https://www.github.com/dxos/protocols/commit/c4a1b220067fd187982dec5ac251e7332aa946c8))
+
 ### [2.28.20](https://www.github.com/dxos/protocols/compare/v2.28.19...v2.28.20) (2022-04-08)
 
 
