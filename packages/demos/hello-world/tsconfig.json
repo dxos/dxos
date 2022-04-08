@@ -34,18 +34,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../echo/echo-protocol"
-    },
-    {
-      "path": "../../echo/echo-testing"
-    },
-    {
       "path": "../../echo/object-model"
     },
     {
@@ -56,15 +44,6 @@
     },
     {
       "path": "../../sdk/react-framework"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     }
   ]
 }
