@@ -10,6 +10,7 @@ import { SearchModel, SearchResult } from './SearchModel';
 
 export interface SearchAutocompleteProps<T> {
   model: SearchModel<T>
+  clearOnSelect?: boolean
   onSelect: (value: SearchResult<T>) => void
   groupBy?: string
 }
@@ -19,6 +20,7 @@ export interface SearchAutocompleteProps<T> {
  */
 export const SearchAutocomplete = ({
   model,
+  clearOnSelect,
   onSelect,
   groupBy
 }: SearchAutocompleteProps<any>) => {
@@ -42,6 +44,7 @@ export const SearchAutocomplete = ({
 
   const handleChange = (value: any) => {
     onSelect(value);
+    clearOnSelect && model.setText('');
   };
 
   return (
