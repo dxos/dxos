@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { MemoryRouter, NavLink, Switch, Route } from 'react-router-dom';
+import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
@@ -169,15 +169,15 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
               <NavLink to='/'>Signal</NavLink>
               <NavLink to='/swarms'>Swarms</NavLink>
             </div>
-            <Switch>
-              <Route exact path='/'>
+            <Routes>
+              <Route path='/'>
                 <SignalStatus status={signalStatus} />
                 <SignalTrace trace={signalTrace} />
               </Route>
               <Route path='/swarms'>
                 <SwarmDetails swarms={swarmInfo} />
               </Route>
-            </Switch>
+            </Routes>
           </MemoryRouter>
         </div>
       </div>

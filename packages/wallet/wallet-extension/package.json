@@ -34,12 +34,11 @@
     "react": "^17.0.2",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^5.1.2",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.5",
+    "@dxos/esbuild-plugins": "~2.28.7",
     "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
@@ -48,7 +47,6 @@
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.9",
-    "@types/react-router-dom": "~5.1.7",
     "@types/uuid": "~8.3.3",
     "@types/webextension-polyfill": "^0.8.0",
     "@types/webpack-env": "^1.16.0",
