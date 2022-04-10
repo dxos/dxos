@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Autocomplete, Box, TextField } from '@mui/material';
 
 import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
 import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
@@ -15,18 +15,29 @@ import { RegistryTypeFilter } from './RegistryTypeFilter';
 export interface RegistrySearchPanelProps {
   model: RegistrySearchModel
   types?: RegistryTypeRecord[]
-  onSelect: (resource: Resource) => void
+  versions?: boolean
+  clearOnSelect?: boolean
+  onSelect: (resource: Resource, version?: string) => void
 }
 
 /**
  * Registry search with optional filters.
  */
+// TODO(wittjosiah): Integrate second step (versions) into SearchModel.
 export const RegistrySearchPanel = ({
   model,
   types = [],
+  versions,
+  clearOnSelect,
   onSelect
 }: RegistrySearchPanelProps) => {
   const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
+  const [resource, setResource] = useState<Resource>();
+
+  const resourceVersions = Object.keys({
+    ...resource?.tags,
+    ...resource?.versions
+  });
 
   const handleTypeSelect = (types: CID[]) => {
     setSelectedTypes(types);
@@ -35,8 +46,20 @@ export const RegistrySearchPanel = ({
     ]);
   };
 
-  const handleSelect = (selected: SearchResult<Resource>) => {
-    onSelect(selected?.value);
+  const handleResourceSelect = (selected: SearchResult<Resource>) => {
+    if (!versions) {
+      onSelect(selected?.value);
+      return;
+    }
+
+    setResource(selected?.value);
+  };
+
+  const handleVersionSelect = (selected: string) => {
+    if (resource) {
+      onSelect(resource, selected);
+      setResource(undefined);
+    }
   };
 
   return (
@@ -49,11 +72,36 @@ export const RegistrySearchPanel = ({
         />
       )}
 
-      <SearchAutocomplete
-        model={model}
-        groupBy={types?.length ? 'type' : undefined}
-        onSelect={handleSelect}
-      />
+      {(!versions || !resource) && (
+        <SearchAutocomplete
+          model={model}
+          groupBy={types?.length ? 'type' : undefined}
+          clearOnSelect={versions ?? clearOnSelect}
+          onSelect={handleResourceSelect}
+        />
+      )}
+
+      {(versions && resource) && (
+        <Autocomplete
+          fullWidth
+          autoHighlight
+          clearOnEscape
+          openOnFocus
+          options={resourceVersions}
+          noOptionsText='No matches'
+          onChange={(event, value) => value && handleVersionSelect(value)}
+          renderInput={params => (
+            <TextField
+              {...params}
+              autoFocus
+              autoComplete='off'
+              spellCheck={false}
+              variant='standard'
+              placeholder='Select version'
+            />
+          )}
+        />
+      )}
     </Box>
   );
 };
