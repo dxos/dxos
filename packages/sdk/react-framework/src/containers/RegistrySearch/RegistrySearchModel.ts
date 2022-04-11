@@ -10,8 +10,12 @@ import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/regist
 
 export type SearchFilter = (resource: Resource) => boolean
 
-export const useRegistrySearchModel = (registry: IRegistryClient, filters: SearchFilter[] = []) => {
-  return useMemo(() => new RegistrySearchModel(registry, filters), []);
+export const useRegistrySearchModel = (
+  registry: IRegistryClient,
+  filters: SearchFilter[] = [],
+  deps: any[] = []
+) => {
+  return useMemo(() => new RegistrySearchModel(registry, filters), deps);
 };
 
 export const getTypeName = (type: RegistryTypeRecord) => {
