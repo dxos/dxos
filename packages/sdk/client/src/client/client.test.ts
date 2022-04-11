@@ -16,8 +16,10 @@ import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
+import { TextModel } from '@dxos/text-model';
 
 import { clientServiceBundle } from '../interfaces';
+import { PartySerializer } from '../util';
 import { Client } from './client';
 
 describe('Client', () => {
@@ -266,6 +268,52 @@ describe('Client', () => {
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
+      });
+
+      test.only('Properly exports a party and reimports it as a new one', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+        await client.halo.createProfile();
+
+        const originalTitle = 'Item - Creation';
+        const modifiedTitle = 'Item - Modified';
+        const party1 = await client.echo.createParty();
+        const documentItem = await party1.database.createItem({
+          model: ObjectModel,
+          type: 'dxos:type.editor.document'
+        });
+
+        const contentItem = await party1.database.createItem({
+          model: TextModel,
+          type: 'dxos:type.editor.content',
+          parent: documentItem.id
+        });
+
+        const originalItem = await party1.database.createItem({
+          model: ObjectModel,
+          props: { title: originalTitle }
+        });
+
+        // Link item1 as a block to contentItem ?
+        // TODO
+
+        // Export original party.
+        const partySerializer = new PartySerializer(client);
+        const party1Blob = await partySerializer.serializeParty(party1);
+        const party1File = new File([party1Blob], 'party1');
+
+        // Import party.
+        const party2 = await partySerializer.deserializeParty(party1File);
+        const [importedItem] = party2
+          .select()
+          .filter(item => item.model.get('title') === originalTitle)
+          .query()
+          .entities;
+        await importedItem?.model.setProperty('title', modifiedTitle);
+
+        expect(originalItem.model.get('title')).toBe(originalTitle);
+        expect(importedItem.model.get('title')).toBe(modifiedTitle);
       });
     });
   }
