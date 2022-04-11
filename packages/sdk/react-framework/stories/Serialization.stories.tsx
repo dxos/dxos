@@ -14,7 +14,7 @@ import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-compo
 import { usePartySerializer } from '../src';
 
 export default {
-  title: 'KitchenSink/Serialization'
+  title: 'react-framework/Serialization'
 };
 
 const ImportStory = () => {
