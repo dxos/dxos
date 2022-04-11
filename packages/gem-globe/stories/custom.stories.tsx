@@ -13,9 +13,8 @@ import useResizeObserver from 'use-resize-observer';
 import { Knobs, KnobsProvider, useButton, useNumber, useSelect } from '@dxos/esbuild-book-knobs';
 import { FullScreen, useStateRef } from '@dxos/gem-core';
 
-import CitiesData from '../data/cities.json';
 import TopologyData from '../data/110m.json';
-
+import CitiesData from '../data/cities.json';
 import { Globe, Versor } from '../src';
 
 const log = debug('dxos:gem-spore:globe');
@@ -122,11 +121,19 @@ const useRotator = (initial, duration = 1000) => {
  * @param [delta]
  * @return {[function, function]}
  */
-const useSpinner = (callback, delta = [.002, 0, 0]): [
+const useSpinner = (callback, delta = [0.002, 0, 0]): [
   (initial) => void,
   () => void
 ] => {
   const timer = useRef(null);
+
+  const stop = () => {
+    if (timer.current) {
+      log('stopping spinner...');
+      timer.current.stop();
+      timer.current = undefined;
+    }
+  };
 
   const start = (initial) => {
     stop();
@@ -141,7 +148,7 @@ const useSpinner = (callback, delta = [.002, 0, 0]): [
       const rotation = [
         lastRotation[0] + (delta[0] * dt),
         lastRotation[1] + (delta[1] * dt),
-        lastRotation[2] + (delta[2] * dt),
+        lastRotation[2] + (delta[2] * dt)
       ];
 
       lastRotation = rotation;
@@ -149,14 +156,6 @@ const useSpinner = (callback, delta = [.002, 0, 0]): [
 
       callback(rotation);
     });
-  };
-
-  const stop = () => {
-    if (timer.current) {
-      log('stopping spinner...');
-      timer.current.stop();
-      timer.current = undefined;
-    }
   };
 
   return [start, stop];
@@ -185,7 +184,7 @@ const globeStyles = {
 
     land: {
       fillStyle: '#032153'
-    },
+    }
   },
 
   green: {
@@ -199,7 +198,7 @@ const globeStyles = {
 
     land: {
       fillStyle: '#2A554D'
-    },
+    }
   },
 
   light: {
@@ -224,12 +223,12 @@ const globeStyles = {
 
     graticule: {
       strokeStyle: '#CCC',
-      strokeWidth: 1,
+      strokeWidth: 1
     },
 
     line: {
       strokeStyle: 'darkred',
-      strokeWidth: 1,
+      strokeWidth: 1
     },
 
     point: {
@@ -255,7 +254,7 @@ const globeStyles = {
 
     line: {
       strokeStyle: '#FFF',
-      strokeWidth: 1,
+      strokeWidth: 1
     },
 
     point: {
@@ -264,7 +263,7 @@ const globeStyles = {
       strokeWidth: 1,
       radius: 1
     }
-  },
+  }
 };
 
 const locations = {
@@ -282,17 +281,69 @@ const Story = () => {
   const styles = useSelect('style', globeStyles);
   const tilt = useNumber('tilt', { min: -45, max: 45, step: 5 }, 25);
 
-  log(':::::::', styles); // TODO(burdon): !!!
+  const [scale,,, zoom, stopScaler] = useScaler(0.9, 500);
+  const [rotation, setRotation, rotationRef, rotate, stopRotator] =
+    useRotator(Versor.coordinatesToAngles(locations.LONDON, tilt));
+  const [startSpinner, stopSpinner] = useSpinner(rotation => setRotation(rotation));
+
+  // Generate features.
+  const animationInterval = useRef(null);
+
+  const stopAnimation = () => {
+    if (animationInterval.current) {
+      log('stopping animation...');
+      animationInterval.current.stop();
+      animationInterval.current = undefined;
+    }
+  };
+
+  const startAnimation = () => {
+    stopAnimation();
+
+    log('starting animation...');
+    animationInterval.current = d3.interval(() => {
+      // Add point.
+      // TODO(burdon): Select near-by point going east.
+      const { properties: { name }, geometry: { coordinates } } = faker.random.arrayElement(CitiesData.features);
+      const point = { lat: coordinates[1], lng: coordinates[0] };
+
+      // Add feature.
+      // TODO(burdon): Pulse points.
+      const maxLines = 2;
+      const { lines, points } = featuresRef.current;
+
+      // TODO(burdon): Remove points (not part of current paths).
+      const updateSpec = Object.assign({
+        points: {
+          '$push': [point]
+        }
+      }, points.length && {
+        lines: {
+          $splice: [[0, Math.max(0, 1 + lines.length - maxLines)]],
+          $push: [{
+            source: points[points.length - 1],
+            target: point
+          }]
+        }
+      });
+
+      setFeatures(update<any>(featuresRef.current, updateSpec as any));
+
+      rotate(canvas.current, Versor.coordinatesToAngles(point, tilt), () => {
+        setInfo({
+          name,
+          coordinates: { lat: coordinates[1], lng: coordinates[0] }
+        });
+      });
+
+      zoom(canvas.current, Math.random() + 0.5);
+    }, 3000);
+  };
 
   useEffect(() => {
     stopSpinner();
     stopAnimation();
   }, [tilt]);
-
-  const [scale,,, zoom, stopScaler] = useScaler(.9, 500);
-  const [rotation, setRotation, rotationRef, rotate, stopRotator] =
-    useRotator(Versor.coordinatesToAngles(locations.LONDON, tilt));
-  const [startSpinner, stopSpinner] = useSpinner(rotation => setRotation(rotation));
 
   // Projection updates.
   const projectionType = useSelect('projection', projectionValues);
@@ -341,60 +392,6 @@ const Story = () => {
     });
   }, []);
 
-  // Generate features.
-  const animationInterval = useRef(null);
-  const startAnimation = () => {
-    stopAnimation();
-
-    log('starting animation...');
-    animationInterval.current = d3.interval(() => {
-
-      // Add point.
-      // TODO(burdon): Select near-by point going east.
-      const { properties: { name }, geometry: { coordinates } } = faker.random.arrayElement(CitiesData.features);
-      const point = { lat: coordinates[1], lng: coordinates[0] };
-
-      // Add feature.
-      // TODO(burdon): Pulse points.
-      const maxLines = 2;
-      const { lines, points } = featuresRef.current;
-
-      // TODO(burdon): Remove points (not part of current paths).
-      const updateSpec = Object.assign({
-        points: {
-          '$push': [point],
-        }
-      }, points.length && {
-        lines: {
-          $splice: [[0, Math.max(0, 1 + lines.length - maxLines)]],
-          $push: [{
-            source: points[points.length - 1],
-            target: point
-          }]
-        }
-      });
-
-      setFeatures(update<any>(featuresRef.current, updateSpec));
-
-      rotate(canvas.current, Versor.coordinatesToAngles(point, tilt), () => {
-        setInfo({
-          name,
-          coordinates: { lat: coordinates[1], lng: coordinates[0] }
-        });
-      });
-
-      zoom(canvas.current, Math.random() + .5);
-    }, 3000);
-  };
-
-  const stopAnimation = () => {
-    if (animationInterval.current) {
-      log('stopping animation...');
-      animationInterval.current.stop();
-      animationInterval.current = undefined;
-    }
-  };
-
   return (
     <div
       ref={resizeRef}
@@ -442,5 +439,5 @@ export const Primary = () => {
         <Knobs floating='top-right' />
       </KnobsProvider>
     </FullScreen>
-  )
+  );
 };

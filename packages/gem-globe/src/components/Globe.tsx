@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import { geoInertiaDrag } from 'd3-inertia';
 import React, { MutableRefObject, forwardRef, useEffect, useRef } from 'react';
 
-import { createLayers, renderLayers, } from '../util';
+import { createLayers, renderLayers } from '../util';
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 const defaultStyles = {
@@ -24,14 +24,14 @@ const defaultStyles = {
 
   line: {
     strokeStyle: '#111',
-    strokeWidth: .5,
+    strokeWidth: 0.5
   },
 
   point: {
     fillStyle: '#111',
     strokeStyle: '#111',
     strokeWidth: 1,
-    radius: .5
+    radius: 0.5
   }
 };
 
@@ -89,7 +89,7 @@ export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((
   // Init.
   //
 
-  const geoPath = useRef(null);
+  const geoPath = useRef();
 
   // NOTE: The d3 projection object is a function, which cannot be used directly as a state object.
   const projectionRef = useRef(projection());
@@ -98,10 +98,12 @@ export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((
   useEffect(() => {
     projectionRef.current = projection();
 
-    // https://github.com/d3/d3-geo#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    const context = canvasRef.current.getContext('2d');
+
+    // https://github.com/d3/d3-geo#geoPath
     geoPath.current = d3.geoPath()
-      .context(canvasRef.current.getContext('2d'))
+      .context(context)
       .projection(projectionRef.current);
 
     // https://github.com/Fil/d3-inertia
@@ -133,7 +135,7 @@ export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((
 
     projectionRef.current
       // https://github.com/d3/d3-geo#projection_translate
-      .translate([ center.x, center.y ])
+      .translate([center.x, center.y])
 
       // https://github.com/d3/d3-geo#projection_scale
       .scale((Math.min(width, height) / 2) * scale)
@@ -145,6 +147,10 @@ export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((
   }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
 
   return (
-    <canvas ref={canvasRef} width={width} height={height} />
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+    />
   );
 });

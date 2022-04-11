@@ -11,7 +11,7 @@ importers:
       '@dxos/esbuild-plugins': ^2.19.2
       '@dxos/esbuild-server': ^2.2.5
       '@dxos/eslint-plugin': ~1.0.10
-      '@dxos/gem-core': 2.2.1-beta.10
+      '@dxos/gem-core': 2.2.1-beta.11
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.7.1
       '@mui/icons-material': ^5.3.1
@@ -35,7 +35,7 @@ importers:
       ts-jest: ^27.1.2
       typescript: ~4.5.4
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.10_f4b1408d0a03a62bb459506c44cdfedb
+      '@dxos/gem-core': 2.2.1-beta.11_f4b1408d0a03a62bb459506c44cdfedb
       clsx: 1.1.1
       csstype: 3.0.10
       d3: 7.3.0
@@ -124,8 +124,8 @@ importers:
       '@dxos/esbuild-book-knobs': ^2.2.5
       '@dxos/esbuild-server': ^2.2.5
       '@dxos/eslint-plugin': ~1.0.10
-      '@dxos/gem-core': 2.2.1-beta.10
-      '@dxos/gem-spore': 2.2.1-beta.10
+      '@dxos/gem-core': 2.2.1-beta.11
+      '@dxos/gem-spore': 2.2.1-beta.11
       '@emotion/css': ^11.7.1
       '@types/d3': ^6.3.0
       '@types/faker': ^5.5.9
@@ -160,8 +160,8 @@ importers:
       '@dxos/esbuild-book-knobs': 2.2.5_047b9a24b83afbb1643940d790b09e4b
       '@dxos/esbuild-server': 2.2.5
       '@dxos/eslint-plugin': 1.0.24_551fc94c036cf4601f85729afb1bcaa2
-      '@dxos/gem-core': 2.2.1-beta.10_047b9a24b83afbb1643940d790b09e4b
-      '@dxos/gem-spore': 2.2.1-beta.10_047b9a24b83afbb1643940d790b09e4b
+      '@dxos/gem-core': 2.2.1-beta.11_047b9a24b83afbb1643940d790b09e4b
+      '@dxos/gem-spore': 2.2.1-beta.11_047b9a24b83afbb1643940d790b09e4b
       '@emotion/css': 11.7.1
       '@types/d3': 6.7.5
       '@types/faker': 5.5.9
@@ -180,7 +180,7 @@ importers:
       '@dxos/esbuild-plugins': ^2.19.2
       '@dxos/esbuild-server': ^2.2.5
       '@dxos/eslint-plugin': ~1.0.10
-      '@dxos/gem-core': 2.2.1-beta.10
+      '@dxos/gem-core': 2.2.1-beta.11
       '@types/d3': ^7.1.0
       '@types/node': ^14.0.9
       d3: ^7.2.1
@@ -201,7 +201,7 @@ importers:
       typescript: ~4.5.4
       use-resize-observer: ^8.0.0
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.10_react-dom@17.0.2+react@17.0.2
+      '@dxos/gem-core': 2.2.1-beta.11_react-dom@17.0.2+react@17.0.2
       d3: 7.3.0
       d3-geo-projection: 4.0.0
       d3-inertia: 0.4.0
@@ -234,7 +234,7 @@ importers:
       '@dxos/esbuild-plugins': ^2.19.2
       '@dxos/esbuild-server': ^2.2.5
       '@dxos/eslint-plugin': ~1.0.10
-      '@dxos/gem-core': 2.2.1-beta.10
+      '@dxos/gem-core': 2.2.1-beta.11
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.7.1
       '@types/debug': ^4.1.5
@@ -253,7 +253,7 @@ importers:
       typescript: ~4.5.4
       use-resize-observer: ^8.0.0
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.10_f4b1408d0a03a62bb459506c44cdfedb
+      '@dxos/gem-core': 2.2.1-beta.11_f4b1408d0a03a62bb459506c44cdfedb
       debug: 4.3.3
       matter-js: 0.18.0
       use-resize-observer: 8.0.0_react-dom@17.0.2+react@17.0.2
@@ -285,7 +285,7 @@ importers:
       '@dxos/esbuild-plugins': ^2.19.2
       '@dxos/esbuild-server': ^2.2.5
       '@dxos/eslint-plugin': ~1.0.10
-      '@dxos/gem-core': 2.2.1-beta.10
+      '@dxos/gem-core': 2.2.1-beta.11
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.7.1
       '@types/d3': ^7.1.0
@@ -310,7 +310,7 @@ importers:
       typescript: ~4.5.4
       use-resize-observer: ^8.0.0
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.10_f4b1408d0a03a62bb459506c44cdfedb
+      '@dxos/gem-core': 2.2.1-beta.11_f4b1408d0a03a62bb459506c44cdfedb
       clsx: 1.1.1
       csstype: 3.0.10
       d3: 7.3.0
@@ -902,8 +902,8 @@ packages:
       - supports-color
     dev: true
 
-  /@dxos/gem-core/2.2.1-beta.10_047b9a24b83afbb1643940d790b09e4b:
-    resolution: {integrity: sha512-FwTidxaR64gjvyxuXoRmcPESecM7c8UttJwQnyqrpr5T/o6J4IjxGov8uu6gQbh/dmKznkhgtMlUhWmLBSAR0w==}
+  /@dxos/gem-core/2.2.1-beta.11_047b9a24b83afbb1643940d790b09e4b:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -922,8 +922,8 @@ packages:
       - supports-color
     dev: true
 
-  /@dxos/gem-core/2.2.1-beta.10_f4b1408d0a03a62bb459506c44cdfedb:
-    resolution: {integrity: sha512-FwTidxaR64gjvyxuXoRmcPESecM7c8UttJwQnyqrpr5T/o6J4IjxGov8uu6gQbh/dmKznkhgtMlUhWmLBSAR0w==}
+  /@dxos/gem-core/2.2.1-beta.11_f4b1408d0a03a62bb459506c44cdfedb:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -943,8 +943,8 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/gem-core/2.2.1-beta.10_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-FwTidxaR64gjvyxuXoRmcPESecM7c8UttJwQnyqrpr5T/o6J4IjxGov8uu6gQbh/dmKznkhgtMlUhWmLBSAR0w==}
+  /@dxos/gem-core/2.2.1-beta.11_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-6Y963BY9YhJ+GbOh43Vb18RHNhPrlK1SIUFWp8pTsOz1pnHRKwpuIQmP5HsItIZ/v8VdvslHhMoIJhzYk+bpHw==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
@@ -962,15 +962,15 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/gem-spore/2.2.1-beta.10_047b9a24b83afbb1643940d790b09e4b:
-    resolution: {integrity: sha512-9i9bH1HQaCdOFF38gINPJqFf9458rFWX0TMGLxYxacn5SylQW0/Pq03VwNFCet/sVQ7/4b8BAyxiW0SUv1x96w==}
+  /@dxos/gem-spore/2.2.1-beta.11_047b9a24b83afbb1643940d790b09e4b:
+    resolution: {integrity: sha512-YIPVo8zIS/AyOQwDvt5pnI0RbiwMK1N3PP0bnnlTvLsDcuHpd8CwWF1Vu9N5vKx/fHOPB1ZI+ZyRH1309L5GjA==}
     peerDependencies:
       '@emotion/css': '>=11.0.0'
       '@emotion/react': '>=11.0.0'
       react: '*'
       react-dom: '*'
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.10_047b9a24b83afbb1643940d790b09e4b
+      '@dxos/gem-core': 2.2.1-beta.11_047b9a24b83afbb1643940d790b09e4b
       '@emotion/css': 11.7.1
       clsx: 1.1.1
       csstype: 3.0.10

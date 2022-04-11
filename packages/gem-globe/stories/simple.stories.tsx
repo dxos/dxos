@@ -3,12 +3,11 @@
 //
 
 import * as d3 from 'd3';
-import React, { useRef, useEffect, useState } from 'react';
 import EventEmitter from 'events';
+import React, { useRef, useEffect, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import TopologyData from '../data/110m.json';
-
 import { Globe } from '../src';
 
 export default {
@@ -22,7 +21,7 @@ const globeStyles = {
 
   land: {
     fillStyle: '#666'
-  },
+  }
 };
 
 const startingPoint = [-126.41086746853892, 40.22010998677698, -35.05062057458603];
@@ -30,6 +29,13 @@ const drift = [-0.001, 0.001, 0];
 
 const useSpinner = (callback, delta = drift) => {
   const timer = useRef(null);
+
+  const stop = () => {
+    if (timer.current) {
+      timer.current.stop();
+      timer.current = undefined;
+    }
+  };
 
   const start = (initial = [0, 0, 0]) => {
     stop();
@@ -51,13 +57,6 @@ const useSpinner = (callback, delta = drift) => {
 
       callback(rotation);
     });
-  };
-
-  const stop = () => {
-    if (timer.current) {
-      timer.current.stop();
-      timer.current = undefined;
-    }
   };
 
   return [start, stop];

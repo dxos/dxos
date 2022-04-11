@@ -15,7 +15,7 @@
     "book": "esbuild-server book",
     "build": "npm run clean && tsc --build",
     "clean": "rm -rf ./dist",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
+    "lint": "eslint --format codeframe './+(src|stories)/**/*.[j|t]s[x]'",
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
   },
   "eslintConfig": {
