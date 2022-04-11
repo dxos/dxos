@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.28.22](https://www.github.com/dxos/protocols/compare/v2.28.21...v2.28.22) (2022-04-11)
+
+
+### Features
+
+* Support hook deps on useRegistrySearchModel ([#1113](https://www.github.com/dxos/protocols/issues/1113)) ([15ca7e0](https://www.github.com/dxos/protocols/commit/15ca7e0542a8db3a204951d17ceaee42a9eaab53))
+
 ### [2.28.21](https://www.github.com/dxos/protocols/compare/v2.28.20...v2.28.21) (2022-04-08)
 
 
