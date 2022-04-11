@@ -8,7 +8,7 @@ import fs from 'fs';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout } from '@dxos/async';
+import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
@@ -18,6 +18,9 @@ import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
 import { InvitationDescriptor } from '../proto/gen/dxos/echo/invitation';
+
+const MAX_ATTEMPTS = 3;
+const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
   config?: Config,
@@ -55,8 +58,10 @@ export class BotHandle {
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
+      desiredState: Bot.Status.RUNNING,
       packageSpecifier,
-      partyKey
+      partyKey,
+      attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);
 
@@ -80,6 +85,11 @@ export class BotHandle {
       } catch (err) {
         this._log(`Failed to kill bot: ${id}`);
       }
+    });
+
+    // Keep bot in the desired state.
+    this.update.on(async () => {
+      await this.onStatusChange();
     });
   }
 
@@ -137,6 +147,35 @@ export class BotHandle {
   }
 
   async start (): Promise<Bot> {
+    if (this.bot.status === Bot.Status.STOPPED) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      this.bot.desiredState = Bot.Status.RUNNING;
+      this.update.emit();
+    } else {
+      this._log(`Can not start bot in ${this.bot.status} state.`);
+    }
+    return this.bot;
+  }
+
+  async stop (): Promise<Bot> {
+    if (this.bot.status === Bot.Status.RUNNING) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      this.bot.desiredState = Bot.Status.STOPPED;
+      this.update.emit();
+    } else {
+      this._log(`Can not stop bot in ${this.bot.status} state.`);
+    }
+    return this.bot;
+  }
+
+  async remove () {
+    if (this.bot.status === Bot.Status.RUNNING) {
+      await this._doStop();
+    }
+    await this._clearFiles();
+  }
+
+  private async _doStart (): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._start();
@@ -144,7 +183,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async stop (): Promise<Bot> {
+  private async _doStop (): Promise<Bot> {
     try {
       await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (error: any) {
@@ -154,13 +193,6 @@ export class BotHandle {
     await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     this._log('Bot stopped');
     return this.bot;
-  }
-
-  async remove () {
-    if (this.bot.status === Bot.Status.RUNNING) {
-      await this.stop();
-    }
-    await this._clearFiles();
   }
 
   private async _spawn (): Promise<void> {
@@ -212,6 +244,28 @@ export class BotHandle {
 
   toString () {
     return `BotHandle: ${this._bot.id}`;
+  }
+
+  async onStatusChange (): Promise<void> {
+    if (this.bot.status === this.bot.desiredState) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      return;
+    }
+
+    if (this.bot.attemptsToAchieveDesiredState! < MAX_ATTEMPTS) {
+      if (this.bot.status === Bot.Status.RUNNING && this.bot.desiredState === Bot.Status.STOPPED) {
+        await this._waitForNextAttemp();
+        await this._doStop();
+      } else if (this.bot.status === Bot.Status.STOPPED && this.bot.desiredState === Bot.Status.RUNNING) {
+        await this._waitForNextAttemp();
+        await this._doStart();
+      }
+    }
+  }
+
+  private async _waitForNextAttemp (): Promise<void> {
+    const timeout = this.bot.attemptsToAchieveDesiredState!++ * ATTEMPT_DELAY;
+    return sleep(timeout);
   }
 
   /**
