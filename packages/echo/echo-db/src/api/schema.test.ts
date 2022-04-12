@@ -108,20 +108,29 @@ describe.only('Schema', () => {
       }
     });
 
+    await party.database.createItem({
+      model: ObjectModel,
+      type: TYPE_SCHEMA_PERSON,
+      props: {
+        title: 'Josiah',
+        role: 'Develoepr'
+      }
+    });
+
     const schemas = party.database
       .select({ type: TYPE_SCHEMA })
       .query()
       .entities;
 
-    const schemaItems: any = await Promise.all(schemas.map(async (schema) => {
+    const schemaItemList: any = await Promise.all(schemas.map(async (schema) => {
       return {
         schema,
         items: await party.database.select({ type: schema.model.get('schema') }).query().entities
       };
     }));
 
-    schemaItems.forEach((schemaItemList: any) => {
-      console.log(`Schema: ${schemaItemList.schema.model.get('schema')}`, schemaItemList.items.map(i => i.model.toObject()));
+    schemaItemList.forEach((schema: any) => {
+      console.log(`Schema: ${schema.schema.model.get('schema')}`, schema.items.map(i => i.model.toObject()));
     });
     expect(true).toEqual(true);
     await echo.close();
