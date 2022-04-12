@@ -2,15 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import { CID } from 'ipfs-http-client';
 import { useMemo } from 'react';
 
 import { Party } from '@dxos/client';
 
 import { useSelection } from '../echo-selections';
-
-const log = debug('dxos:react-framework:use-ipfs-files');
 
 export type IPFSFile = {
   filename?: string
@@ -39,8 +36,6 @@ export const useIpfsFiles = (party: Party | undefined, type: string) => {
 
 export const uploadFilesToIpfs = async (ipfsClient: any, files: File[], onError?: (error: Error) => void) => {
   return await Promise.all(files.map(async (file) => {
-    log(`Uploading ${file.name}`);
-
     // https://docs.ipfs.io/reference/js/api
     // https://github.com/ipfs/js-ipfs/tree/master/packages/ipfs-http-client
     try {

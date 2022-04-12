@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import { CID, create } from 'ipfs-http-client';
 import path from 'path';
 import { useMemo } from 'react';
-
-const log = debug('dxos:react-framework:use-ipfs-client');
 
 /**
  * Return URL to IPFS resource on local gateway.
@@ -34,7 +31,6 @@ export const useIpfsClient = (url?: string) => {
     }
 
     const client = create({ url });
-    log(`IPFS endpoint: ${JSON.stringify(client.getEndpointConfig())}`);
     return client;
   }, [url]);
 };
