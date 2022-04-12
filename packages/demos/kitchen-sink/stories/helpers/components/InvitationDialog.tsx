@@ -5,16 +5,12 @@
 import debug from 'debug';
 import React, { useState } from 'react';
 
-import {
-  Button,
-  LinearProgress,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Button, LinearProgress, TextField, Typography } from '@mui/material';
 
 import { FileUploadDialog, Dialog } from '@dxos/react-components';
 
 const log = debug('dxos:kitchen-sink');
+
 interface InvitationDialogProps {
   open: boolean
   title?: string
@@ -27,10 +23,10 @@ interface InvitationDialogProps {
 /**
  * Home page.
  */
-export const TestInvitationDialog = ({
+export const InvitationDialog = ({
   open,
-  title = 'Demo',
-  modal = false,
+  title = 'Kitchen Sink',
+  modal = true,
   onCreate,
   onJoin,
   onImport
@@ -100,6 +96,7 @@ export const TestInvitationDialog = ({
           </Button>
         </>
       )}
+
       {onJoin && (
         <Button
           data-id='test-button-join'
@@ -122,6 +119,7 @@ export const TestInvitationDialog = ({
           Join Party
         </Button>
       )}
+
       {onCreate && (
         <Button
           data-id='test-button-create'
@@ -148,7 +146,6 @@ export const TestInvitationDialog = ({
       title={title}
       content={content}
       actions={actions}
-    >
-    </Dialog>
+    />
   );
 };

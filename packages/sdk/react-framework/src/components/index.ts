@@ -8,5 +8,4 @@ export * from './ExportDialog';
 export * from './ImportDialog';
 export * from './ProfileDialog';
 export * from './RegistrationDialog';
-export * from './TestInvitationDialog';
 export * from './Theme';

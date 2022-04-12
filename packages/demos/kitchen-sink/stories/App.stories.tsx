@@ -8,12 +8,9 @@ import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
 import { useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
-import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
+import { usePartySerializer } from '@dxos/react-framework';
 
-import {
-  ONLINE_CONFIG,
-  App
-} from './helpers';
+import { ONLINE_CONFIG, App, InvitationDialog } from './helpers';
 
 export default {
   title: 'KitchenSink/App'
@@ -96,7 +93,7 @@ export const Secondary = () => {
     }
 
     return (
-      <TestInvitationDialog
+      <InvitationDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
