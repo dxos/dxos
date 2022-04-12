@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 import EventEmitter from 'events';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { ReactNode, useRef, useEffect, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import TopologyData from '../data/110m.json';
@@ -62,34 +62,43 @@ const useSpinner = (callback, delta = drift) => {
   return [start, stop];
 };
 
+const Container = ({ children }: { children: ReactNode }) => (
+  <div style={{
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    display: 'flex',
+    flexDirection: 'column-reverse',
+    backgroundColor: '#111'
+  }}>
+    {children}
+  </div>
+);
+
 export const Primary = () => {
   const canvas = useRef(null);
   const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
 
   return (
-    <div
-      ref={resizeRef}
-      style={{
-        display: 'flex',
-        overflow: 'hidden',
-        position: 'relative',
-        height: 400
-      }}
-    >
-      <Globe
-        ref={canvas}
-        drag={true}
-        topology={TopologyData}
-        offset={{ x: 0, y: 200 }}
-        scale={1.8}
-        width={width}
-        height={height}
-      />
-    </div>
+    <Container>
+      <div style={{ display: 'flex', width: '100%', height: 400 }} ref={resizeRef}>
+        <Globe
+          ref={canvas}
+          drag={true}
+          topology={TopologyData}
+          offset={{ x: 0, y: 200 }}
+          scale={1.8}
+          width={width}
+          height={height}
+        />
+      </div>
+    </Container>
   );
 };
 
-export const Flat = () => {
+export const Secondary = () => {
   const canvas = useRef(null);
   const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
   const [rotation, setRotation] = useState(startingPoint);
@@ -125,27 +134,21 @@ export const Flat = () => {
   }, []);
 
   return (
-    <div
-      ref={resizeRef}
-      style={{
-        display: 'flex',
-        overflow: 'hidden',
-        position: 'relative',
-        height: 400
-      }}
-    >
-      <Globe
-        ref={canvas}
-        events={eventEmitter.current}
-        drag={true}
-        styles={globeStyles}
-        topology={TopologyData}
-        rotation={rotation}
-        projection={d3.geoMercator}
-        scale={1.8}
-        width={width}
-        height={height}
-      />
-    </div>
+    <Container>
+      <div style={{ display: 'flex', width: '100%', height: 400 }} ref={resizeRef}>
+        <Globe
+          ref={canvas}
+          events={eventEmitter.current}
+          drag={true}
+          styles={globeStyles}
+          topology={TopologyData}
+          rotation={rotation}
+          projection={d3.geoMercator}
+          scale={1.8}
+          width={width}
+          height={height}
+        />
+      </div>
+    </Container>
   );
 };

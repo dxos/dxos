@@ -3,7 +3,7 @@
   "version": "2.2.1-beta.11",
   "description": "GEM experimental components.",
   "repository": "https://github.com/dxos/gem",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

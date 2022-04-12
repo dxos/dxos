@@ -41,8 +41,8 @@ export interface GlobeProps {
   events?: any
   topology?: any
   features?: any
-  offset?: any
-  rotation?: any
+  offset?: { x: number, y: number }
+  rotation?: [number, number, number]
   scale?: number
   drag?: boolean
   width: number
@@ -52,7 +52,7 @@ export interface GlobeProps {
 /**
  * Basic globe renderer.
  */
-// TODO(burdon): Factor out canvas.
+// TODO(burdon): Factor out canvas, container, useCanvas, etc.
 // eslint-disable-next-line react/display-name
 export const Globe = forwardRef<HTMLCanvasElement, GlobeProps>((
   props: GlobeProps,

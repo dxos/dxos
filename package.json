@@ -1,0 +1,18 @@
+{
+  "description": "Graphical Elemental Modules.",
+  "homepage": "https://github.com/dxos/gem",
+  "bugs": {
+    "url": "https://github.com/dxos/gem/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/gem.git"
+  },
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "preinstall": "echo 'This project is using the Rush Stack. More details in the README.' && false"
+  }
+}

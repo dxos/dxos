@@ -3,7 +3,7 @@
   "version": "2.2.1-beta.11",
   "description": "Gem Globe.",
   "repository": "https://github.com/dxos/gem",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
