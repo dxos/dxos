@@ -306,9 +306,9 @@ export class SelectionResult<T extends Entity, R = any> {
     return this._root;
   }
 
-  /**
-   * @deprecated
-   */
+  // /**
+  //  * @deprecated
+  //  */
   // TODO(burdon): Remove.
   // get result () {
   //   return this.entities;
