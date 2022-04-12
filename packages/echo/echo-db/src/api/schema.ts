@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ObjectModel } from '@dxos/object-model';
-
 type DataDef = 'string' | 'number' | 'boolean'
 export type FieldDef = {
   key: string,
@@ -37,10 +35,3 @@ export class Schema {
     this._fields.set(field, value);
   }
 }
-
-// Schema: string -> name of the schema
-// Fields: map of fields
-
-// type field --> same field as the schema field
-// Does our query sintax support finding items of type schema (well yes).
-// UseSelection find schemas and items of that type/schema
