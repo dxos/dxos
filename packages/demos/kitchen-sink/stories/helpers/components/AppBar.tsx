@@ -106,8 +106,8 @@ export const AppBar = ({
                   anchorEl={exportMenuAnchorEl}
                   onClose={() => setExportMenuAnchorEl(undefined)}
                 >
-                  <MenuItem onClick={() => handleExport(false)}>Locally</MenuItem>
-                  <MenuItem onClick={() => handleExport(true)}>IPFS</MenuItem>
+                  <MenuItem onClick={() => handleExport(false)}>Export to File</MenuItem>
+                  <MenuItem onClick={() => handleExport(true)}>Export to IPFS</MenuItem>
                 </Menu>
               </>
             )}
