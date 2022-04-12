@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import React, { useState } from 'react';
 
 import {
@@ -14,7 +13,6 @@ import {
 
 import { FileUploadDialog, Dialog } from '@dxos/react-components';
 
-const log = debug('dxos:kitchen-sink');
 interface InvitationDialogProps {
   open: boolean
   title?: string
@@ -52,7 +50,6 @@ export const TestInvitationDialog = ({
     try {
       await onImport!(file);
     } catch (error: any) {
-      log(error);
       setError(error);
     } finally {
       setInProgress(false);
@@ -111,7 +108,6 @@ export const TestInvitationDialog = ({
             try {
               await onJoin!(invitationCode);
             } catch (error: any) {
-              log(error);
               setError(error);
             } finally {
               setInProgress(false);
