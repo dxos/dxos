@@ -19,7 +19,7 @@ interface InvitationDialogProps {
   modal?: boolean
   onCreate?: () => void,
   onJoin?: (invitationCode: string) => void
-  onImport?: (file: File) => void
+  onImport?: (file: File | string) => void
 }
 
 /**
@@ -33,22 +33,24 @@ export const TestInvitationDialog = ({
   onJoin,
   onImport
 }: InvitationDialogProps) => {
-  const [invitationCode, setInvitationCode] = useState('');
+  const [invitationCodeOrIpfsCid, setInvitationCodeOrIpfsCid] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
 
-  const handleImport = async (files: File[] | null) => {
+  const handleImport = async (files: File[] | string | null) => {
     if (!files) {
       return;
     }
 
-    const file = files[0];
-
     setInProgress(true);
     setError(undefined);
     try {
-      await onImport!(file);
+      if (typeof files === 'string') {
+        await onImport!(files);
+      } else {
+        await onImport!(files[0]);
+      }
     } catch (error: any) {
       setError(error);
     } finally {
@@ -60,10 +62,10 @@ export const TestInvitationDialog = ({
     <>
       <TextField
         fullWidth
-        value={invitationCode}
-        onChange={event => setInvitationCode(event.target.value)}
+        value={invitationCodeOrIpfsCid}
+        onChange={event => setInvitationCodeOrIpfsCid(event.target.value)}
         variant='outlined'
-        label='Invitation code'
+        label='Invitation code or IPFS CID'
         autoComplete='off'
         spellCheck={false}
         inputProps={{
@@ -93,7 +95,13 @@ export const TestInvitationDialog = ({
             disabled={inProgress}
             onClick={() => setFileUploadDialogOpen(true)}
           >
-            Import Party
+            Import Local Party
+          </Button>
+          <Button
+            disabled={inProgress}
+            onClick={() => handleImport(invitationCodeOrIpfsCid)}
+          >
+            Import IPFS Party
           </Button>
         </>
       )}
@@ -106,14 +114,14 @@ export const TestInvitationDialog = ({
             setInProgress(true);
             setError(undefined);
             try {
-              await onJoin!(invitationCode);
+              await onJoin!(invitationCodeOrIpfsCid);
             } catch (error: any) {
               setError(error);
             } finally {
               setInProgress(false);
             }
           }}
-          disabled={!invitationCode || inProgress}
+          disabled={!invitationCodeOrIpfsCid || inProgress}
         >
           Join Party
         </Button>

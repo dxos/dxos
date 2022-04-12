@@ -20,7 +20,7 @@ import { ViewSelector } from './ViewSelector';
 interface AppBarProps {
   view: string
   onInvite?: () => void
-  onExport?: () => void
+  onExport?: (ipfs?: boolean) => void
   onSearch?: (search: string) => void
   onSelection?: (selection: string) => void
   onChangeView: (view: string) => void
