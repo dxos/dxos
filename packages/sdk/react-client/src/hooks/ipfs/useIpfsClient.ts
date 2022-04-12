@@ -17,6 +17,7 @@ export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
   return path.join(gateway, String(cid), '?', args.join('&'));
 };
 
+// TODO(kaplanski): Factor out IPFS related functionality to its own package.
 /**
  * https://www.npmjs.com/package/ipfs-http-client#example
  * NOTE: We need to run our own servers to enable CORS.
