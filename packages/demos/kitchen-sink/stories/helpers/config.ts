@@ -14,7 +14,7 @@ export const ONLINE_CONFIG: ConfigObject = {
       },
       ice: [
         {
-          urls: 'turn:demo.kube.moon.dxos.network:3478',
+          urls: 'turn:demo.kube.dxos.network:3478',
           username: 'dxos',
           credential: 'dxos'
         }
