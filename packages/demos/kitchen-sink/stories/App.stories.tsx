@@ -6,13 +6,12 @@ import all from 'it-all';
 import React, { useState } from 'react';
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
-import { ContentCopy as ContentCopyIcon } from '@mui/icons-material';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Snackbar } from '@mui/material';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, uploadFilesToIpfs, useClient, useIpfsClient } from '@dxos/react-client';
 import { TestInvitationDialog, useTestParty } from '@dxos/react-client-testing';
-import { Dialog, useFileDownload } from '@dxos/react-components';
+import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
 import {
@@ -55,7 +54,7 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
-    const [exportedCid, setExportedCid] = useState<string | undefined>();
+    const [exportedToIpfs, setExportedToIpfs] = useState(false);
     const testParty = useTestParty();
     const partySerializer = usePartySerializer();
     const ipfsClient = useIpfsClient('https://ipfs-pub1.kube.dxos.network');
@@ -78,7 +77,10 @@ export const Secondary = () => {
       if (ipfs) {
         const file = new File([blob], `${party!.key.toHex()}.party`);
         const [ipfsFile] = await uploadFilesToIpfs(ipfsClient, [file]);
-        setExportedCid(ipfsFile?.cid);
+        if (ipfsFile) {
+          await navigator.clipboard.writeText(ipfsFile.cid);
+          setExportedToIpfs(true);
+        }
       } else {
         download(blob, `${party!.key.toHex()}.party`);
       }
@@ -114,27 +116,12 @@ export const Secondary = () => {
             onInvite={handleInvite}
             onExport={handleExport}
           />
-          {exportedCid && (
-            <Dialog
-              open={Boolean(exportedCid)}
-              onClose={() => setExportedCid(undefined)}
-              maxWidth='lg'
-              content={(
-                <>
-                  <Typography variant='h6'>Exported Party CID:</Typography>
-                  <Box display='flex' alignItems='center'>
-                    <Typography variant='subtitle1'>{exportedCid}</Typography>
-                    <IconButton onClick={async () => {
-                      await navigator.clipboard.writeText(exportedCid);
-                      setExportedCid(undefined);
-                    }}>
-                      <ContentCopyIcon />
-                    </IconButton>
-                  </Box>
-                </>
-              )}
-            />
-          )}
+          <Snackbar
+            open={exportedToIpfs}
+            autoHideDuration={3000}
+            onClose={() => setExportedToIpfs(false)}
+            message='CID copied to clipboard'
+          />
         </>
       );
     }
