@@ -130,7 +130,7 @@ describe.only('Schema', () => {
     }));
 
     schemaItemList.forEach((schema: any) => {
-      console.log(`Schema: ${schema.schema.model.get('schema')}`, schema.items.map(i => i.model.toObject()));
+      console.log(`Schema: ${schema.schema.model.get('schema')}`, schema.items.map((i: any) => i.model.toObject()));
     });
     expect(true).toEqual(true);
     await echo.close();
