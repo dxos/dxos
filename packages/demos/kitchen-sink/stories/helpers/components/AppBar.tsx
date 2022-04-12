@@ -37,6 +37,11 @@ export const AppBar = ({
   const [advanced, setAdvanced] = useState<boolean>(false);
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<HTMLElement | undefined>();
 
+  const handleExport = (ipfs: boolean) => {
+    onExport!(ipfs);
+    setExportMenuAnchorEl(undefined);
+  };
+
   return (
     <>
       <MuiAppBar>
@@ -101,8 +106,8 @@ export const AppBar = ({
                   anchorEl={exportMenuAnchorEl}
                   onClose={() => setExportMenuAnchorEl(undefined)}
                 >
-                  <MenuItem onClick={() => onExport(false)}>Locally</MenuItem>
-                  <MenuItem onClick={() => onExport(true)}>IPFS</MenuItem>
+                  <MenuItem onClick={() => handleExport(false)}>Locally</MenuItem>
+                  <MenuItem onClick={() => handleExport(true)}>IPFS</MenuItem>
                 </Menu>
               </>
             )}
