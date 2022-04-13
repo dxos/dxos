@@ -66,7 +66,7 @@ export const InvitationDialog = ({
         autoComplete='off'
         spellCheck={false}
         inputProps={{
-          'data-id': 'test-input-join'
+          'data-id': 'test-input-join-party'
         }}
       />
       <div style={{ height: 8, marginTop: 16 }}>
@@ -86,7 +86,7 @@ export const InvitationDialog = ({
             onUpload={handleImport}
           />
           <Button
-            data-id='test-button-import'
+            data-id='test-button-import-party'
             color='primary'
             variant='outlined'
             disabled={inProgress}
@@ -99,7 +99,7 @@ export const InvitationDialog = ({
 
       {onJoin && (
         <Button
-          data-id='test-button-join'
+          data-id='test-button-join-party'
           color='secondary'
           variant='contained'
           onClick={async () => {
@@ -122,14 +122,14 @@ export const InvitationDialog = ({
 
       {onCreate && (
         <Button
-          data-id='test-button-create'
+          data-id='test-button-create-party'
           color='primary'
           variant='contained'
+          disabled={inProgress}
           onClick={() => {
             setInProgress(true);
             onCreate!();
           }}
-          disabled={inProgress}
         >
           Create Party
         </Button>

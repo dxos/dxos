@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
-import { useTestParty } from '@dxos/react-client-testing';
+import { PartyBuilder, buildTestParty, useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
@@ -47,12 +47,15 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
-    const testParty = useTestParty();
+
     const partySerializer = usePartySerializer();
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
-      setParty(testParty);
+      const party = await client.echo.createParty();
+      const builder = new PartyBuilder(party);
+      await buildTestParty(builder); // TODO(burdon): Rename.
+      setParty(party);
     };
 
     const handleJoinParty = async (invitationText: string) => {
@@ -63,17 +66,17 @@ export const Secondary = () => {
       setParty(party);
     };
 
-    const handleExport = async () => {
+    const handleExportParty = async () => {
       const blob = await partySerializer.serializeParty(party!);
       download(blob, `${party?.key.toHex()}.party`);
     };
 
-    const handleImport = async (partyFile: File) => {
+    const handleImportParty = async (partyFile: File) => {
       const party = await partySerializer.deserializeParty(partyFile);
       setParty(party);
     };
 
-    const handleInvite = async () => {
+    const handleInviteParty = async () => {
       const invitation = await party!.createInvitation();
       const encodedInvitation = invitation.descriptor.encode();
       const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
@@ -86,8 +89,8 @@ export const Secondary = () => {
       return (
         <App
           party={party}
-          onInvite={handleInvite}
-          onExport={handleExport}
+          onInvite={handleInviteParty}
+          onExport={handleExportParty}
         />
       );
     }
@@ -97,7 +100,7 @@ export const Secondary = () => {
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
-        onImport={handleImport}
+        onImport={handleImportParty}
       />
     );
   };

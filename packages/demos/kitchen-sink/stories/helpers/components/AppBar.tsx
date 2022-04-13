@@ -88,7 +88,7 @@ export const AppBar = ({
           }}>
             {onExport && (
               <IconButton
-                data-id='test-button-export'
+                data-id='test-button-export-party'
                 size='small'
                 onClick={onExport}
               >
@@ -98,7 +98,7 @@ export const AppBar = ({
 
             {onInvite && (
               <IconButton
-                data-id='test-button-share'
+                data-id='test-button-share-party'
                 size='small'
                 onClick={onInvite}
               >
