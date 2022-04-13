@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CID } from 'ipfs-http-client';
+import { CID, IPFSHTTPClient } from 'ipfs-http-client';
 import { useMemo } from 'react';
 
 import { Party } from '@dxos/client';
@@ -34,7 +34,12 @@ export const useIpfsFiles = (party: Party | undefined, type: string) => {
   return files;
 };
 
-export const uploadFilesToIpfs = async (ipfsClient: any, files: File[], onError?: (error: Error) => void) => {
+// TODO(wittjosiah): This is not returning IPFSFiles.
+export const uploadFilesToIpfs = async (
+  ipfsClient: IPFSHTTPClient,
+  files: File[],
+  onError?: (error: Error) => void
+) => {
   return await Promise.all(files.map(async (file) => {
     // https://docs.ipfs.io/reference/js/api
     // https://github.com/ipfs/js-ipfs/tree/master/packages/ipfs-http-client

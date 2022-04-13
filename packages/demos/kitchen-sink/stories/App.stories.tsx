@@ -74,7 +74,7 @@ export const Secondary = () => {
 
     const handleExport = async (ipfs?: boolean) => {
       const blob = await partySerializer.serializeParty(party!);
-      if (ipfs) {
+      if (ipfs && ipfsClient) {
         const file = new File([blob], `${party!.key.toHex()}.party`);
         const [ipfsFile] = await uploadFilesToIpfs(ipfsClient, [file]);
         if (ipfsFile) {
@@ -120,7 +120,7 @@ export const Secondary = () => {
             open={exportedToIpfs}
             autoHideDuration={3000}
             onClose={() => setExportedToIpfs(false)}
-            message='CID copied to clipboard'
+            message='Published. CID copied to clipbaord.'
           />
         </>
       );
