@@ -21,7 +21,7 @@ import { ViewType } from './ViewSelector';
 interface AppProps {
   party: Party
   onInvite?: () => void
-  onExport?: () => void
+  onExport?: (ipfs?: boolean) => void
 }
 
 /**
