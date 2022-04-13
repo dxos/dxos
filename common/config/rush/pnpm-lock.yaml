@@ -1312,7 +1312,6 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/model-factory': workspace:*
@@ -1337,7 +1336,6 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util

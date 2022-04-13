@@ -7,5 +7,4 @@ export * from './entity';
 export * from './item';
 export * from './link';
 export * from './result-set';
-export * from './schema';
 export * from './selection';
