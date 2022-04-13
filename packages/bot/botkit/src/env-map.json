@@ -5,6 +5,14 @@
   "DX_BOT_TOPIC": {
     "path": "runtime.services.bot.topic"
   },
+  "DX_BOT_PERSISTENT": {
+    "path": "runtime.services.bot.persistent",
+    "type": "boolean"
+  },
+  "DX_BOT_RETRY_ATTEMPTS": {
+    "path": "runtime.services.bot.retryAttempts",
+    "type": "number"
+  },
   "DX_ICE_ENDPOINTS": {
     "path": "runtime.services.ice",
     "type": "json"
