@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Item } from '@dxos/echo-db';
+import { Item, PARTY_ITEM_TYPE } from '@dxos/echo-db';
 import { GraphData, GraphModel } from '@dxos/gem-spore';
 
 /**
@@ -30,6 +30,7 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
   }
 
   update (items: Item<any>[]) {
+    const partyItem = items.find(item => item.type === PARTY_ITEM_TYPE);
     this._graph.nodes = items;
     this._graph.links = [];
 
@@ -39,6 +40,12 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
         this._graph.links.push({
           id: `${parent.id}-${item.id}`,
           source: parent.id,
+          target: item.id
+        });
+      } else if (partyItem) {
+        this._graph.links.push({
+          id: `${partyItem.id}-${item.id}`,
+          source: partyItem.id,
           target: item.id
         });
       }
