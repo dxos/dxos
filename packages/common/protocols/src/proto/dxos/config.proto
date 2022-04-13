@@ -233,6 +233,7 @@ message Runtime {
 
     message BotFactory {
       string topic = 1;
+      bool persistent = 2;
     }
 
     Kube kube = 1;

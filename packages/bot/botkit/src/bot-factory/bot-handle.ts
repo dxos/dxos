@@ -121,7 +121,7 @@ export class BotHandle {
   async initializeDirectories () {
     await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
-    await fs.promises.mkdir(this.logsDir);
+    await fs.promises.mkdir(this.logsDir, { recursive: true });
     this._config = new Config(
       {
         version: 1,
@@ -170,12 +170,12 @@ export class BotHandle {
 
   async remove () {
     if (this.bot.status === Bot.Status.RUNNING) {
-      await this._doStop();
+      await this.forceStop();
     }
     await this._clearFiles();
   }
 
-  private async _doStart (): Promise<Bot> {
+  async forceStart (): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._start();
@@ -183,7 +183,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  private async _doStop (): Promise<Bot> {
+  async forceStop (): Promise<Bot> {
     try {
       await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (error: any) {
@@ -254,11 +254,13 @@ export class BotHandle {
 
     if (this.bot.attemptsToAchieveDesiredState! < MAX_ATTEMPTS) {
       if (this.bot.status === Bot.Status.RUNNING && this.bot.desiredState === Bot.Status.STOPPED) {
+        this._log(`Desired state for bot ${this.bot.id} is STOPPED, stopping the bot.`);
         await this._waitForNextAttemp();
-        await this._doStop();
+        await this.forceStop();
       } else if (this.bot.status === Bot.Status.STOPPED && this.bot.desiredState === Bot.Status.RUNNING) {
+        this._log(`Desired state for bot ${this.bot.id} is RUNNING, starting the bot.`);
         await this._waitForNextAttemp();
-        await this._doStart();
+        await this.forceStart();
       }
     }
   }
