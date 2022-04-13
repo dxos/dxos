@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { createTestInstance } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-const TYPE_SCHEMA = 'dxos:type/schema';
+const TYPE_SCHEMA = 'dxos:type.schema';
 const TYPE_SCHEMA_ORGANIZATION = 'dxos:type.schema.organization';
 const TYPE_SCHEMA_PERSON = 'dxos:type.schema.person';
 
