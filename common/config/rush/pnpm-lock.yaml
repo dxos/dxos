@@ -1312,12 +1312,14 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/model-factory': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.1
       '@types/lodash.clonedeep': ^4.5.6
       '@types/lodash.get': ^4.4.6
       '@types/lodash.set': ^4.3.6
@@ -1326,6 +1328,7 @@ importers:
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
+      faker: ^5.1.0
       lodash.clonedeep: ^4.5.0
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
@@ -1334,6 +1337,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util
@@ -1346,6 +1350,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
       '@types/lodash.clonedeep': 4.5.6
       '@types/lodash.get': 4.4.6
       '@types/lodash.set': 4.3.6
@@ -1353,6 +1358,7 @@ importers:
       '@types/node': 14.18.0
       eslint: 7.32.0
       expect: 27.0.6
+      faker: 5.5.3
       typescript: 4.5.3
 
   ../../packages/echo/text-model:
