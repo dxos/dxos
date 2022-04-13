@@ -23,14 +23,14 @@ describe('Grid demo', function () {
   const invitation = process.env.INVITATION;
 
   const spacing = 8;
-  const marginTop = 24; // OSX toolbar.
+  const marginTop = 40; // OSX toolbar.
   const { width, height } = robot.getScreenSize();
   const minSize = { width: 750, height: 500 };
 
   let [columns, rows] = [0, 0];
   if (process.env.GRID) {
     // Example: `GRID=2,1 rushx demo:grid`
-    [columns, rows] = process.env.GRID!.split(',').map(i => parseInt(i));
+    [columns = 2, rows = 1] = process.env.GRID!.split(',').map(i => parseInt(i));
   } else {
     [columns, rows] = [Math.floor(width / minSize.width), Math.floor(height / minSize.height)];
   }
