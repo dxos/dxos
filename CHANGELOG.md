@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.28.23](https://www.github.com/dxos/protocols/compare/v2.28.22...v2.28.23) (2022-04-13)
+
+
+### Features
+
+* **echo-graph:** Party Item is now top level item ([#1119](https://www.github.com/dxos/protocols/issues/1119)) ([ac434ee](https://www.github.com/dxos/protocols/commit/ac434ee2b81bc4234edbfd8864e60d6fc96da5c0))
+* ipfs import export ([#1118](https://www.github.com/dxos/protocols/issues/1118)) ([82df209](https://www.github.com/dxos/protocols/commit/82df209169b032e6a6174e48c5e2471d54576865))
+
 ### [2.28.22](https://www.github.com/dxos/protocols/compare/v2.28.21...v2.28.22) (2022-04-11)
 
 
