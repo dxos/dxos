@@ -36,7 +36,9 @@ message Bot {
   Status status = 2; // TODO: Rename to state.
 
   /// The state that the bot aims to be in. Can be only either RUNNING or STOPPED.
-  Status desired_state = 55; // TODO: Fix numbering.
+  Status desired_state = 55;
+  int32 attempts_to_achieve_desired_state = 56;
+
   BotPackageSpecifier package_specifier = 3;
   Timestamp last_start = 4;
   dxos.halo.keys.PubKey party_key = 5;
