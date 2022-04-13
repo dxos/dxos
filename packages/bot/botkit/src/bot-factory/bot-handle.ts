@@ -19,7 +19,7 @@ import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
 import { InvitationDescriptor } from '../proto/gen/dxos/echo/invitation';
 
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
@@ -37,6 +37,7 @@ export class BotHandle {
   private readonly _log = debug(`dxos:botkit:bot-handle:${this.id}`);
   private _config: Config;
   private _startTimestamps: Date[] = [];
+  private readonly _retryAttempts: Number;
   localPath: string | undefined;
 
   readonly update = new Event();
@@ -64,6 +65,8 @@ export class BotHandle {
       attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);
+
+    this._retryAttempts = this._config.get('runtime.services.bot.retryAttempts') ?? MAX_ATTEMPTS;
 
     this._botContainer.exited.on(([id, status]) => {
       if (id !== this.id) {
@@ -151,6 +154,7 @@ export class BotHandle {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.RUNNING;
       this.update.emit();
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.RUNNING);
     } else {
       this._log(`Can not start bot in ${this.bot.status} state.`);
     }
@@ -162,6 +166,7 @@ export class BotHandle {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.STOPPED;
       this.update.emit();
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     } else {
       this._log(`Can not stop bot in ${this.bot.status} state.`);
     }
@@ -169,6 +174,7 @@ export class BotHandle {
   }
 
   async remove () {
+    this.bot.desiredState = Bot.Status.STOPPED;
     if (this.bot.status === Bot.Status.RUNNING) {
       await this.forceStop();
     }
@@ -252,7 +258,7 @@ export class BotHandle {
       return;
     }
 
-    if (this.bot.attemptsToAchieveDesiredState! < MAX_ATTEMPTS) {
+    if (this.bot.attemptsToAchieveDesiredState! < this._retryAttempts) {
       if (this.bot.status === Bot.Status.RUNNING && this.bot.desiredState === Bot.Status.STOPPED) {
         this._log(`Desired state for bot ${this.bot.id} is STOPPED, stopping the bot.`);
         await this._waitForNextAttemp();
