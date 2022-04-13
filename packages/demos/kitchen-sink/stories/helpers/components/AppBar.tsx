@@ -10,7 +10,7 @@ import {
   ExpandLess as CloseIcon,
   Share as ShareIcon
 } from '@mui/icons-material';
-import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
+import { AppBar as MuiAppBar, Box, IconButton, Menu, MenuItem, ToggleButton, Toolbar } from '@mui/material';
 
 import { SelectionEditor } from '@dxos/react-client-testing';
 
@@ -20,7 +20,7 @@ import { ViewSelector } from './ViewSelector';
 interface AppBarProps {
   view: string
   onInvite?: () => void
-  onExport?: () => void
+  onExport?: (ipfs?: boolean) => void
   onSearch?: (search: string) => void
   onSelection?: (selection: string) => void
   onChangeView: (view: string) => void
@@ -35,6 +35,12 @@ export const AppBar = ({
   onChangeView
 }: AppBarProps) => {
   const [advanced, setAdvanced] = useState<boolean>(false);
+  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<HTMLElement | undefined>();
+
+  const handleExport = (ipfs: boolean) => {
+    onExport!(ipfs);
+    setExportMenuAnchorEl(undefined);
+  };
 
   return (
     <>
@@ -87,13 +93,23 @@ export const AppBar = ({
             marginLeft: 2
           }}>
             {onExport && (
-              <IconButton
-                data-id='test-button-export'
-                size='small'
-                onClick={onExport}
-              >
-                <DownloadIcon />
-              </IconButton>
+              <>
+                <IconButton
+                  data-id='test-button-export'
+                  size='small'
+                  onClick={(e) => setExportMenuAnchorEl(e.currentTarget)}
+                >
+                  <DownloadIcon />
+                </IconButton>
+                <Menu
+                  open={Boolean(exportMenuAnchorEl)}
+                  anchorEl={exportMenuAnchorEl}
+                  onClose={() => setExportMenuAnchorEl(undefined)}
+                >
+                  <MenuItem onClick={() => handleExport(false)}>Export to File</MenuItem>
+                  <MenuItem onClick={() => handleExport(true)}>Export to IPFS</MenuItem>
+                </Menu>
+              </>
             )}
 
             {onInvite && (

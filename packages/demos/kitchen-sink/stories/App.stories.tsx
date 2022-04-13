@@ -2,13 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import all from 'it-all';
 import React, { useState } from 'react';
+import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
+
+import { Snackbar } from '@mui/material';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
-import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
-import { useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider, ProfileInitializer, uploadFilesToIpfs, useClient, useIpfsClient } from '@dxos/react-client';
+import { TestInvitationDialog, useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
-import { usePartySerializer, TestInvitationDialog } from '@dxos/react-framework';
+import { usePartySerializer } from '@dxos/react-framework';
 
 import {
   ONLINE_CONFIG,
@@ -50,8 +54,10 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
+    const [exportedToIpfs, setExportedToIpfs] = useState(false);
     const testParty = useTestParty();
     const partySerializer = usePartySerializer();
+    const ipfsClient = useIpfsClient('https://ipfs-pub1.kube.dxos.network');
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
@@ -66,14 +72,31 @@ export const Secondary = () => {
       setParty(party);
     };
 
-    const handleExport = async () => {
+    const handleExport = async (ipfs?: boolean) => {
       const blob = await partySerializer.serializeParty(party!);
-      download(blob, `${party?.key.toHex()}.party`);
+      if (ipfs && ipfsClient) {
+        const file = new File([blob], `${party!.key.toHex()}.party`);
+        const [ipfsFile] = await uploadFilesToIpfs(ipfsClient, [file]);
+        if (ipfsFile) {
+          await navigator.clipboard.writeText(ipfsFile.cid);
+          setExportedToIpfs(true);
+        }
+      } else {
+        download(blob, `${party!.key.toHex()}.party`);
+      }
     };
 
-    const handleImport = async (partyFile: File) => {
-      const party = await partySerializer.deserializeParty(partyFile);
-      setParty(party);
+    const handleImport = async (fileOrCID: File | string) => {
+      let data;
+      if (!(fileOrCID instanceof File)) {
+        if (!ipfsClient) {
+          return null;
+        }
+        data = uint8ArrayConcat(await all(ipfsClient.cat(fileOrCID)));
+      } else {
+        data = fileOrCID;
+      }
+      setParty(await partySerializer.deserializeParty(data));
     };
 
     const handleInvite = async () => {
@@ -87,11 +110,19 @@ export const Secondary = () => {
 
     if (party) {
       return (
-        <App
-          party={party}
-          onInvite={handleInvite}
-          onExport={handleExport}
-        />
+        <>
+          <App
+            party={party}
+            onInvite={handleInvite}
+            onExport={handleExport}
+          />
+          <Snackbar
+            open={exportedToIpfs}
+            autoHideDuration={3000}
+            onClose={() => setExportedToIpfs(false)}
+            message='Published. CID copied to clipbaord.'
+          />
+        </>
       );
     }
 

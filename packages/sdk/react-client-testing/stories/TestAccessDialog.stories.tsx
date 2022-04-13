@@ -7,7 +7,8 @@ import React from 'react';
 
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
-import { TestInvitationDialog } from '@dxos/react-framework';
+
+import { TestInvitationDialog } from '../src';
 
 export default {
   title: 'KitchenSink/TestInvitationDialog'
