@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "2.28.22",
+  "version": "2.28.23",
   "private": true,
   "description": "Comprehensive set of demos.",
   "license": "MIT",
@@ -53,7 +53,9 @@
     "clsx": "^1.1.0",
     "debug": "^4.3.3",
     "immutability-helper": "^3.0.2",
+    "it-all": "1.0.6",
     "mobile-detect": "~1.4.5",
+    "uint8arrays": "3.0.0",
     "url-join": "^4.0.1"
   },
   "devDependencies": {

@@ -5,16 +5,18 @@
 import React, { FC, ChangeEvent, useEffect, useRef } from 'react';
 
 /**
- * FileUploadDialog
+ * Standard file upload dialog.
  */
 export const FileUploadDialog: FC<{
   open?: boolean
   onClose: () => void
   onUpload: (files: File[]) => void
+  multiple?: false
 }> = ({
   open = false,
   onClose,
-  onUpload
+  onUpload,
+  multiple = false
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -56,9 +58,9 @@ export const FileUploadDialog: FC<{
       id='input'
       ref={inputRef}
       type='file'
-      multiple
       onChange={handleUpload}
       style={{ display: 'none' }}
+      multiple={multiple}
     />
   );
 };

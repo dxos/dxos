@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ExportAction } from '@dxos/react-client-testing/src';
 import React, { useState } from 'react';
 
 import {
-  Download as DownloadIcon,
   ExpandMore as OpenIcon,
   ExpandLess as CloseIcon,
   Share as ShareIcon
 } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
-import { SelectionEditor } from '@dxos/react-client-testing';
+import { ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
 
 import { Searchbar } from '../../../src';
 import { ViewSelector } from './ViewSelector';
@@ -20,7 +20,7 @@ import { ViewSelector } from './ViewSelector';
 interface AppBarProps {
   view: string
   onInvite?: () => void
-  onExport?: () => void
+  onExport?: (type: ExportAction) => void
   onSearch?: (search: string) => void
   onSelection?: (selection: string) => void
   onChangeView: (view: string) => void
@@ -87,13 +87,9 @@ export const AppBar = ({
             marginLeft: 2
           }}>
             {onExport && (
-              <IconButton
-                data-id='test-button-export-party'
-                size='small'
-                onClick={onExport}
-              >
-                <DownloadIcon />
-              </IconButton>
+              <ExportMenu
+                onExport={onExport}
+              />
             )}
 
             {onInvite && (

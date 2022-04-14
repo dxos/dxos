@@ -8,7 +8,7 @@ import fs from 'fs';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout } from '@dxos/async';
+import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
@@ -18,6 +18,9 @@ import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
 import { Bot, BotPackageSpecifier, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
 import { InvitationDescriptor } from '../proto/gen/dxos/echo/invitation';
+
+const MAX_ATTEMPTS = 1;
+const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
   config?: Config,
@@ -34,6 +37,7 @@ export class BotHandle {
   private readonly _log = debug(`dxos:botkit:bot-handle:${this.id}`);
   private _config: Config;
   private _startTimestamps: Date[] = [];
+  private readonly _retryAttempts: Number;
   localPath: string | undefined;
 
   readonly update = new Event();
@@ -55,10 +59,14 @@ export class BotHandle {
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
+      desiredState: Bot.Status.RUNNING,
       packageSpecifier,
-      partyKey
+      partyKey,
+      attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);
+
+    this._retryAttempts = this._config.get('runtime.services.bot.retryAttempts') ?? MAX_ATTEMPTS;
 
     this._botContainer.exited.on(([id, status]) => {
       if (id !== this.id) {
@@ -80,6 +88,11 @@ export class BotHandle {
       } catch (err) {
         this._log(`Failed to kill bot: ${id}`);
       }
+    });
+
+    // Keep bot in the desired state.
+    this.update.on(async () => {
+      await this.onStatusChange();
     });
   }
 
@@ -111,7 +124,7 @@ export class BotHandle {
   async initializeDirectories () {
     await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
     await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
-    await fs.promises.mkdir(this.logsDir);
+    await fs.promises.mkdir(this.logsDir, { recursive: true });
     this._config = new Config(
       {
         version: 1,
@@ -137,6 +150,38 @@ export class BotHandle {
   }
 
   async start (): Promise<Bot> {
+    if (this.bot.status === Bot.Status.STOPPED) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      this.bot.desiredState = Bot.Status.RUNNING;
+      this.update.emit();
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.RUNNING);
+    } else {
+      this._log(`Can not start bot in ${this.bot.status} state.`);
+    }
+    return this.bot;
+  }
+
+  async stop (): Promise<Bot> {
+    if (this.bot.status === Bot.Status.RUNNING) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      this.bot.desiredState = Bot.Status.STOPPED;
+      this.update.emit();
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
+    } else {
+      this._log(`Can not stop bot in ${this.bot.status} state.`);
+    }
+    return this.bot;
+  }
+
+  async remove () {
+    this.bot.desiredState = Bot.Status.STOPPED;
+    if (this.bot.status === Bot.Status.RUNNING) {
+      await this.forceStop();
+    }
+    await this._clearFiles();
+  }
+
+  async forceStart (): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._start();
@@ -144,7 +189,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async stop (): Promise<Bot> {
+  async forceStop (): Promise<Bot> {
     try {
       await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (error: any) {
@@ -154,13 +199,6 @@ export class BotHandle {
     await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     this._log('Bot stopped');
     return this.bot;
-  }
-
-  async remove () {
-    if (this.bot.status === Bot.Status.RUNNING) {
-      await this.stop();
-    }
-    await this._clearFiles();
   }
 
   private async _spawn (): Promise<void> {
@@ -212,6 +250,30 @@ export class BotHandle {
 
   toString () {
     return `BotHandle: ${this._bot.id}`;
+  }
+
+  async onStatusChange (): Promise<void> {
+    if (this.bot.status === this.bot.desiredState) {
+      this.bot.attemptsToAchieveDesiredState = 0;
+      return;
+    }
+
+    if (this.bot.attemptsToAchieveDesiredState! < this._retryAttempts) {
+      if (this.bot.status === Bot.Status.RUNNING && this.bot.desiredState === Bot.Status.STOPPED) {
+        this._log(`Desired state for bot ${this.bot.id} is STOPPED, stopping the bot.`);
+        await this._waitForNextAttemp();
+        await this.forceStop();
+      } else if (this.bot.status === Bot.Status.STOPPED && this.bot.desiredState === Bot.Status.RUNNING) {
+        this._log(`Desired state for bot ${this.bot.id} is RUNNING, starting the bot.`);
+        await this._waitForNextAttemp();
+        await this.forceStart();
+      }
+    }
+  }
+
+  private async _waitForNextAttemp (): Promise<void> {
+    const timeout = this.bot.attemptsToAchieveDesiredState!++ * ATTEMPT_DELAY;
+    return sleep(timeout);
   }
 
   /**

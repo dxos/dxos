@@ -19,6 +19,7 @@ const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
 
+  // TODO(burdon): Not working.
   // Invitation to join existing party.
   const invitation = process.env.INVITATION;
 

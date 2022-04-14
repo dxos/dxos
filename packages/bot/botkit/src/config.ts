@@ -12,7 +12,11 @@ import envmap from './env-map.json';
 
 export const BOT_CONFIG_FILENAME = 'bot.yml';
 
-export const BOT_OUT_DIR = join(homedir(), '.dx', 'bots', 'out');
+export const BOT_BASE_DIR = join(homedir(), '.dx', 'bots');
+export const BOT_OUT_DIR = join(BOT_BASE_DIR, 'out');
+export const BOT_SNAPSHOT_DIR = join(BOT_BASE_DIR, 'snapshots');
+
+export const BOT_FACTORY_DEFAULT_PERSISTENT = false;
 
 /**
  * Get config from default or specified .yml file.

@@ -2,15 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import all from 'it-all';
 import React, { useState } from 'react';
+import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
+
+import { Snackbar } from '@mui/material';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
-import { ClientProvider, ProfileInitializer, useClient } from '@dxos/react-client';
-import { PartyBuilder, buildTestParty, useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider, ProfileInitializer, uploadFilesToIpfs, useClient, useIpfsClient } from '@dxos/react-client';
+import {
+  CreatePartyDialog, ExportAction, PartyBuilder, buildTestParty, useTestParty
+} from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
-import { ONLINE_CONFIG, App, InvitationDialog } from './helpers';
+import { ONLINE_CONFIG, App } from './helpers';
 
 export default {
   title: 'KitchenSink/App'
@@ -47,8 +53,9 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
-
+    const [snackbarMessage, setSnackbarMessage] = useState<string | undefined>();
     const partySerializer = usePartySerializer();
+    const ipfsClient = useIpfsClient('https://ipfs-pub1.kube.dxos.network'); // TODO(burdon): Config.
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
@@ -66,14 +73,41 @@ export const Secondary = () => {
       setParty(party);
     };
 
-    const handleExportParty = async () => {
+    const handleExportParty = async (action: ExportAction) => {
       const blob = await partySerializer.serializeParty(party!);
-      download(blob, `${party?.key.toHex()}.party`);
+      switch (action) {
+        case ExportAction.EXPORT_IPFS: {
+          const file = new File([blob], `${party!.key.toHex()}.party`);
+          const [ipfsFile] = await uploadFilesToIpfs(ipfsClient!, [file]);
+          if (ipfsFile) {
+            await navigator.clipboard.writeText(ipfsFile.cid);
+            setSnackbarMessage('CID copied to clipbaord.');
+          }
+          break;
+        }
+
+        case ExportAction.EXPORT_FILE: {
+          download(blob, `${party!.key.toHex()}.party`);
+          break;
+        }
+      }
     };
 
-    const handleImportParty = async (partyFile: File) => {
-      const party = await partySerializer.deserializeParty(partyFile);
-      setParty(party);
+    const handleImportParty = async (fileOrCID: File | string) => {
+      let data;
+      if (!(fileOrCID instanceof File)) {
+        // TODO(burdon): Assert.
+        if (!ipfsClient) {
+          return null;
+        }
+
+        // TODO(burdon): Why not Promise.all? Wrap in util?
+        data = uint8ArrayConcat(await all(ipfsClient.cat(fileOrCID)));
+      } else {
+        data = fileOrCID;
+      }
+
+      setParty(await partySerializer.deserializeParty(data));
     };
 
     const handleInviteParty = async () => {
@@ -87,16 +121,26 @@ export const Secondary = () => {
 
     if (party) {
       return (
-        <App
-          party={party}
-          onInvite={handleInviteParty}
-          onExport={handleExportParty}
-        />
+        <>
+          <App
+            party={party}
+            onInvite={handleInviteParty}
+            onExport={handleExportParty}
+          />
+
+          <Snackbar
+            open={Boolean(snackbarMessage)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            autoHideDuration={1000}
+            message={snackbarMessage}
+            onClose={() => setSnackbarMessage(undefined)}
+          />
+        </>
       );
     }
 
     return (
-      <InvitationDialog
+      <CreatePartyDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}

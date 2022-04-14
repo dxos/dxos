@@ -2,56 +2,51 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import React, { useState } from 'react';
 
-import { Button, LinearProgress, TextField, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, TextField, Typography } from '@mui/material';
 
-import { FileUploadDialog, Dialog } from '@dxos/react-components';
+import { useMounted } from '@dxos/react-async';
+import { Dialog } from '@dxos/react-components';
 
-const log = debug('dxos:kitchen-sink');
+import { ImportMenu } from './ImportMenu';
 
-interface InvitationDialogProps {
+export interface CreatePartyDialogProps {
   open: boolean
   title?: string
   modal?: boolean
   onCreate?: () => void,
   onJoin?: (invitationCode: string) => void
-  onImport?: (file: File) => void
+  onImport?: (file: File | string) => void
 }
 
 /**
- * Home page.
+ * Dialog to create, join, or import party.
  */
-export const InvitationDialog = ({
+export const CreatePartyDialog = ({
   open,
-  title = 'Kitchen Sink',
+  title = 'New Party',
   modal = true,
   onCreate,
   onJoin,
   onImport
-}: InvitationDialogProps) => {
-  const [invitationCode, setInvitationCode] = useState('');
+}: CreatePartyDialogProps) => {
+  const [invitationCodeOrIpfsCid, setInvitationCodeOrIpfsCid] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
-  const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
+  const isMounted = useMounted();
 
-  const handleImport = async (files: File[] | null) => {
-    if (!files) {
-      return;
-    }
-
-    const file = files[0];
-
+  const handleImport = async (file: File | string) => {
     setInProgress(true);
     setError(undefined);
     try {
       await onImport!(file);
     } catch (error: any) {
-      log(error);
       setError(error);
     } finally {
-      setInProgress(false);
+      if (isMounted()) {
+        setInProgress(false);
+      }
     }
   };
 
@@ -59,8 +54,8 @@ export const InvitationDialog = ({
     <>
       <TextField
         fullWidth
-        value={invitationCode}
-        onChange={event => setInvitationCode(event.target.value)}
+        value={invitationCodeOrIpfsCid}
+        onChange={event => setInvitationCodeOrIpfsCid(event.target.value)}
         variant='outlined'
         label='Invitation code'
         autoComplete='off'
@@ -80,20 +75,11 @@ export const InvitationDialog = ({
     <>
       {onImport && (
         <>
-          <FileUploadDialog
-            open={fileUploadDialogOpen}
-            onClose={() => setFileUploadDialogOpen(false)}
-            onUpload={handleImport}
+          <ImportMenu
+            onImport={handleImport}
           />
-          <Button
-            data-id='test-button-import-party'
-            color='primary'
-            variant='outlined'
-            disabled={inProgress}
-            onClick={() => setFileUploadDialogOpen(true)}
-          >
-            Import Party
-          </Button>
+
+          <Box sx={{ flex: 1 }} />
         </>
       )}
 
@@ -102,19 +88,18 @@ export const InvitationDialog = ({
           data-id='test-button-join-party'
           color='secondary'
           variant='contained'
+          disabled={!invitationCodeOrIpfsCid || inProgress}
           onClick={async () => {
             setInProgress(true);
             setError(undefined);
             try {
-              await onJoin!(invitationCode);
+              await onJoin!(invitationCodeOrIpfsCid);
             } catch (error: any) {
-              log(error);
               setError(error);
             } finally {
               setInProgress(false);
             }
           }}
-          disabled={!invitationCode || inProgress}
         >
           Join Party
         </Button>
@@ -141,8 +126,8 @@ export const InvitationDialog = ({
     <Dialog
       open={open}
       modal={modal}
-      fullWidth
       maxWidth='sm'
+      fullWidth
       title={title}
       content={content}
       actions={actions}

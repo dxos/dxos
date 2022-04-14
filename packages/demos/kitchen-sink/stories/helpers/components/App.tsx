@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ExportAction } from '@dxos/react-client-testing/src';
 import React, { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
@@ -21,7 +22,7 @@ import { ViewType } from './ViewSelector';
 interface AppProps {
   party: Party
   onInvite?: () => void
-  onExport?: () => void
+  onExport?: (action: ExportAction) => void
 }
 
 /**

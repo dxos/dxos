@@ -10,8 +10,8 @@ import { NetworkManager } from '@dxos/network-manager';
 import { createApiPromise, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';
-import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader } from './bot-factory';
-import { getConfig } from './config';
+import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';
+import { BOT_SNAPSHOT_DIR, getConfig } from './config';
 
 const log = debug('dxos:botkit:bot-factory:main');
 
@@ -39,11 +39,14 @@ const main = async () => {
     contentLoader = new IPFSContentLoader(ipfsGateway);
   }
 
+  const botSnapshotStorage = new FSBotSnapshotStorage(BOT_SNAPSHOT_DIR);
+
   const botFactory = new BotFactory({
     botContainer,
     config,
     contentResolver,
-    contentLoader
+    contentLoader,
+    botSnapshotStorage
   });
 
   const signal = config.get('runtime.services.signal.server');
@@ -57,6 +60,8 @@ const main = async () => {
   const topic = PublicKey.from(topicString);
   const controller = new BotController(botFactory, networkManager);
   await controller.start(topic);
+
+  await botFactory.init();
 
   log(`Listening on ${topic}`);
 };
