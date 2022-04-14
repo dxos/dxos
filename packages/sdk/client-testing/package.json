@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/client",
+  "name": "@dxos/client-testing",
   "version": "2.28.23",
   "license": "MIT",
   "author": "DXOS.org",
@@ -10,7 +10,6 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build": "npm run prebuild && toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
@@ -19,6 +18,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
