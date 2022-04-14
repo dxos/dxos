@@ -36,7 +36,7 @@ export function handler <T> (title: string, handler: Handler<T>, timeout = false
     const start = Date.now();
     verbose && log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
+    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
 
     t && clearTimeout(t);
   };
