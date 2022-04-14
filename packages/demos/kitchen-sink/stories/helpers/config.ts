@@ -9,6 +9,9 @@ export const ONLINE_CONFIG: ConfigObject = {
   version: 1,
   runtime: {
     services: {
+      ipfs: {
+        server: 'https://ipfs-pub1.kube.dxos.network'
+      },
       signal: {
         server: 'wss://demo.kube.dxos.network/dxos/signal'
       },

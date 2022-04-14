@@ -55,7 +55,7 @@ export const Secondary = () => {
     const [party, setParty] = useState<Party | null>();
     const [snackbarMessage, setSnackbarMessage] = useState<string | undefined>();
     const partySerializer = usePartySerializer();
-    const ipfsClient = useIpfsClient('https://ipfs-pub1.kube.dxos.network'); // TODO(burdon): Config.
+    const ipfsClient = useIpfsClient(client.config.get('runtime.services.ipfs.server'));
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
