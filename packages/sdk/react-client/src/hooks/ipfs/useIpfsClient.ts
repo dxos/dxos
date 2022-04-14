@@ -17,7 +17,6 @@ export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
   return path.join(gateway, String(cid), '?', args.join('&'));
 };
 
-// TODO(kaplanski): Factor out IPFS related functionality to its own package.
 /**
  * https://www.npmjs.com/package/ipfs-http-client#example
  * NOTE: We need to run our own servers to enable CORS.
@@ -25,13 +24,13 @@ export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
  * - 8001 Gateway
  * - 5001 API
  */
+// TODO(kaplanski): Factor out IPFS related functionality to its own package.
 export const useIpfsClient = (url?: string) => {
   return useMemo(() => {
     if (!url) {
       return undefined;
     }
 
-    const client = create({ url });
-    return client;
+    return create({ url });
   }, [url]);
 };

@@ -19,15 +19,19 @@ const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
 
+  // TODO(burdon): Not working.
+  // Invitation to join existing party.
+  const invitation = process.env.INVITATION;
+
   const spacing = 8;
-  const marginTop = 24; // OSX toolbar.
+  const marginTop = 40; // OSX toolbar.
   const { width, height } = robot.getScreenSize();
   const minSize = { width: 750, height: 500 };
 
   let [columns, rows] = [0, 0];
   if (process.env.GRID) {
     // Example: `GRID=2,1 rushx demo:grid`
-    [columns, rows] = process.env.GRID!.split(',').map(i => parseInt(i));
+    [columns = 2, rows = 1] = process.env.GRID!.split(',').map(i => parseInt(i));
   } else {
     [columns, rows] = [Math.floor(width / minSize.width), Math.floor(height / minSize.height)];
   }
@@ -57,12 +61,12 @@ describe('Grid demo', function () {
   /**
    * Create and process invitation.
    */
-  const invite = async (inviter: Launcher, invitee: Launcher) => {
-    await inviter.page.click('button[data-id=test-button-share]');
+  const invite = async (inviter: Launcher, invited: Launcher) => {
+    await inviter.page.click('button[data-id=test-button-share-party]');
+    const invitation: string = await inviter.page.evaluate(() => navigator.clipboard.readText());
 
-    const invitation = await inviter.page.evaluate(() => navigator.clipboard.readText());
-    await invitee.page.fill('input[data-id=test-input-join]', invitation);
-    await invitee.page.click('button[data-id=test-button-join]');
+    await invited.page.fill('input[data-id=test-input-join-party]', invitation);
+    await invited.page.click('button[data-id=test-button-join-party]');
   };
 
   /**
@@ -88,17 +92,28 @@ describe('Grid demo', function () {
   }
 
   it('Opens grid', async () => {
-    const promises = createGrid('/Secondary', [rows, columns]);
+    const grid = createGrid('/Secondary', [rows, columns]);
 
     let page = 0;
     let graph: Launcher | undefined;
     let previous: Launcher | undefined;
-    for await (const launcher of promises) {
+    for await (const launcher of grid) {
       page++;
+
       if (!previous) {
-        await launcher.page.click('button[data-id=test-button-create]');
+        if (invitation) {
+          // Join existing party.
+          console.log('Joining existing party...');
+          await launcher.page.fill('input[data-id=test-input-join-party]', invitation);
+          await launcher.page.click('button[data-id=test-button-join-party]');
+        } else {
+          // First launcher creates the party.
+          console.log('Creating party...');
+          await launcher.page.click('button[data-id=test-button-create-party]');
+        }
       } else {
-        // Do invitation.
+        // Start invitation flow.
+        console.log('Joining party...');
         await invite(previous, launcher);
 
         // Select view.
@@ -131,7 +146,7 @@ describe('Grid demo', function () {
           clearInterval(interval);
         } else {
           // Generate data.
-          await graph!.page.click('button[data-id=test-button-create]', { modifiers: ['Meta'] });
+          await graph!.page.click('button[data-id=test-button-create-item]', { modifiers: ['Meta'] });
 
           // NOTE: May lose focus when other window opens.
           const text = lines[i++];

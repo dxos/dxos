@@ -11,6 +11,7 @@ import { Selection } from '@dxos/echo-db';
  * @param party
  * @param text
  */
+// TODO(burdon): Create utility class.
 export const execSelection = (party: Party, text: string): Selection<any> | undefined => {
   try {
     // eslint-disable-next-line no-new-func

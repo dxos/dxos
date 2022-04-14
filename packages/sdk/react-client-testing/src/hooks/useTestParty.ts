@@ -1,6 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
+
 import faker from 'faker';
 import { useEffect, useState } from 'react';
 
@@ -42,6 +43,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
  * Build the party.
  * @param builder
  */
+// TODO(burdon): Rename (or remove -- too specific).
 export const buildTestParty: TestPartyCallback = async (builder: PartyBuilder) => {
   await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople([3, 10]);
