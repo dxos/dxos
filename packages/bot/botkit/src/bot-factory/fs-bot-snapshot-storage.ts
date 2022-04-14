@@ -75,6 +75,8 @@ export class FSBotSnapshotStorage implements BotSnapshotStorage {
   }
 
   async reset (): Promise<void> {
-    await fs.promises.rmdir(this._dir, { recursive: true });
+    if (fs.existsSync(this._dir)) {
+      await fs.promises.rmdir(this._dir, { recursive: true });
+    }
   }
 }
