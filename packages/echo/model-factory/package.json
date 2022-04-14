@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "2.29.0",
+  "version": "2.29.1",
   "description": "ECHO model factory.",
   "license": "MIT",
   "main": "dist/src/index.js",
