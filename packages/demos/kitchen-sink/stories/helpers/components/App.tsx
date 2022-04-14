@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExportAction } from '@dxos/react-client-testing/src';
 import React, { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
+import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-gem-components';
 

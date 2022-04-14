@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ExportAction } from '@dxos/react-client-testing/src';
 import React, { useState } from 'react';
 
 import {
@@ -12,7 +11,7 @@ import {
 } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
-import { ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
+import { ExportAction, ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
 
 import { Searchbar } from '../../../src';
 import { ViewSelector } from './ViewSelector';
