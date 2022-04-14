@@ -91,5 +91,5 @@ export const ImportMenu = ({
         onImport={handleImport}
       />
     </>
-  )
+  );
 };

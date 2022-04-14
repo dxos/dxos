@@ -17,7 +17,7 @@ interface ExportMenuProps {
 }
 
 export const ExportMenu = ({
-  onExport,
+  onExport
 }: ExportMenuProps) => {
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<HTMLElement | undefined>();
 
