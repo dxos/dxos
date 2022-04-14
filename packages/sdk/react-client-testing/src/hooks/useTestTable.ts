@@ -2,18 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Item, Party } from '@dxos/client';
+import { TableBuilder } from '@dxos/client-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
-
-import { TableBuilder, useTableBuilder } from '../builders';
 
 type TestTableCallback = (builder: TableBuilder) => Promise<void>;
 
 export const TYPE_TABLE_BASE = 'dxos:type.table.base';
 export const TYPE_TABLE_TABLE = 'dxos:type.table.table';
+
+/**
+ * @param party
+ * @param table
+ */
+export const useTableBuilder = (party?: Party, table?: Item<ObjectModel>) => {
+  return useMemo(() => (party && table) ? new TableBuilder(party, table) : undefined, [table?.id]);
+};
 
 /**
  * Generate test table.

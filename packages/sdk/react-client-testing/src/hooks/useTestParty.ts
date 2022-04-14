@@ -3,12 +3,11 @@
 //
 
 import faker from 'faker';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Party } from '@dxos/client';
+import { OrgBuilder, PartyBuilder, ProjectBuilder, TestType } from '@dxos/client-testing';
 import { useClient } from '@dxos/react-client';
-
-import { OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
 
 type TestPartyCallback = (builder: PartyBuilder) => Promise<void>;
 
@@ -22,6 +21,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 
   useEffect(() => {
     setImmediate(async () => {
+      // TODO(burdon): Use PartyBuidler.
       const party = await client.echo.createParty();
       await party.setTitle(faker.lorem.word());
       setParty(party);
@@ -57,4 +57,11 @@ export const buildTestParty: TestPartyCallback = async (builder: PartyBuilder) =
       await projectBuilder.createTasks([2, 5], result.entities);
     });
   });
+};
+
+/**
+ * @param party
+ */
+export const usePartyBuilder = (party?: Party) => {
+  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key]);
 };

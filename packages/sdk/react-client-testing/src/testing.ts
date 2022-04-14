@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TestType } from './builders';
+import { TestType } from '@dxos/client-testing';
 
 const format = (text: string) => text.replace(/\)\./g, ')\n  .');
 

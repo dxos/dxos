@@ -10,11 +10,12 @@ import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
 import { Item, Party } from '@dxos/client';
+import { TableBuilder } from '@dxos/client-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
 
-import { TableBuilder, useTableBuilder, useTestTable } from '../src';
+import { useTableBuilder, useTestTable } from '../src';
 
 export default {
   title: 'react-client-testing/TestTable'
@@ -72,6 +73,7 @@ export const Primary = () => {
   );
 };
 
+// TODO(burdon): Remove (use schema).
 const customFields = [
   {
     fieldName: 'Name',

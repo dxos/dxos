@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { TestType } from '@dxos/react-client-testing';
+import { TestType } from '@dxos/client-testing';
 
 import { Launcher } from '../util';
 

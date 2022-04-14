@@ -265,12 +265,10 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
     partyB.database.select({ type: 'example:item/test' }).query()
       .update.on(result => {
-        if (result.entities.length) {
-          const [itemB] = result.entities;
-          if (itemA && itemA.id === itemB.id) {
-            log(`B has ${itemB.id}`);
-            onUpdate();
-          }
+        const [itemB] = result.entities;
+        if (itemA && itemA.id === itemB.id) {
+          log(`B has ${itemB.id}`);
+          onUpdate();
         }
       });
 

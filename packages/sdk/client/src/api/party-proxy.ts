@@ -69,6 +69,26 @@ export class Party {
     return this._invitationProxy;
   }
 
+  get key () {
+    return this._key;
+  }
+
+  get isOpen () {
+    return this._isOpen;
+  }
+
+  get isActive () {
+    return this._isActive;
+  }
+
+  get database (): Database {
+    if (!this._database) {
+      throw Error('Party not open.');
+    }
+
+    return this._database;
+  }
+
   /**
    * Called by EchoProxy open.
    */
@@ -88,26 +108,6 @@ export class Party {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
-  }
-
-  get key () {
-    return this._key;
-  }
-
-  get isOpen () {
-    return this._isOpen;
-  }
-
-  get isActive () {
-    return this._isActive;
-  }
-
-  get database (): Database {
-    if (!this._database) {
-      throw Error('Party not open.');
-    }
-
-    return this._database;
   }
 
   async open () {

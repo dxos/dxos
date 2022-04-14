@@ -14,16 +14,16 @@ import { DatabaseBackend, DataServiceHost, ItemManager } from '../database';
 import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { RootFilter, Selection, createSelector } from './selection';
+import { RootFilter, Selection, createSelection } from './selection';
 
-export interface ItemCreationOptions<M extends Model> {
+export interface CreateItemOption<M extends Model> {
   model?: ModelConstructor<M>
   type?: ItemType
   parent?: ItemID
   props?: any // TODO(marik-d): Type this better. Rename properties?
 }
 
-export interface LinkCreationOptions<M extends Model, L extends Model, R extends Model> {
+export interface CreateLinkOptions<M extends Model, L extends Model, R extends Model> {
   model?: ModelConstructor<M>
   type?: ItemType
   source: Item<L>
@@ -31,20 +31,19 @@ export interface LinkCreationOptions<M extends Model, L extends Model, R extends
   props?: any // TODO(marik-d): Type this better.
 }
 
-enum State {
-  INITIAL = 'INITIAL',
-  OPEN = 'OPEN',
+export enum State {
+  NULL = 'NULL',
+  INITIALIZED = 'INITIALIZED',
   DESTROYED = 'DESTROYED',
 }
 
 /**
- * Represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
+ * Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
  */
 export class Database {
   private readonly _itemManager: ItemManager;
 
-  private _state = State.INITIAL;
+  private _state = State.NULL;
 
   /**
    * Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
@@ -55,6 +54,10 @@ export class Database {
     memberKey: PublicKey
   ) {
     this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
+  }
+
+  get state () {
+    return this._state;
   }
 
   get isReadOnly () {
@@ -71,26 +74,26 @@ export class Database {
 
   /**
    * Fired immediately after any update in the entities.
-   *
    * If the information about which entity got updated is not required prefer using `update`.
    */
+  // TODO(burdon): Unused?
   get entityUpdate (): Event<Entity<any>> {
     return this._itemManager.update;
   }
 
   @synchronized
   async initialize () {
-    if (this._state !== State.INITIAL) {
+    if (this._state !== State.NULL) {
       throw new Error('Invalid state: database was already initialized.');
     }
 
     await this._backend.open(this._itemManager, this._modelFactory);
-    this._state = State.OPEN;
+    this._state = State.INITIALIZED;
   }
 
   @synchronized
   async destroy () {
-    if (this._state === State.DESTROYED || this._state === State.INITIAL) {
+    if (this._state === State.DESTROYED || this._state === State.NULL) {
       return;
     }
 
@@ -101,7 +104,7 @@ export class Database {
   /**
    * Creates a new item with the given queryable type and model.
    */
-  async createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
+  async createItem <M extends Model<any>> (options: CreateItemOption<M> = {}): Promise<Item<M>> {
     this._assertInitialized();
     if (!options.model) {
       options.model = ObjectModel as any as ModelConstructor<M>;
@@ -109,22 +112,21 @@ export class Database {
 
     validateModelClass(options.model);
 
-    if (options.type && typeof options.type !== 'string') {
+    if (options.type && typeof options.type !== 'string' as ItemType) {
       throw new TypeError('Invalid type.');
     }
 
-    if (options.parent && typeof options.parent !== 'string') {
+    if (options.parent && typeof options.parent !== 'string' as ItemID) {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
     // TODO(burdon): Get modelType from somewhere other than `ObjectModel.meta.type`.
-    const item = await this._itemManager.createItem(
+    return await this._itemManager.createItem(
       options.model.meta.type, options.type, options.parent, options.props) as any;
-    return item;
   }
 
   async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
-    options: LinkCreationOptions<M, S, T>
+    options: CreateLinkOptions<M, S, T>
   ): Promise<Link<M, S, T>> {
     this._assertInitialized();
 
@@ -135,15 +137,12 @@ export class Database {
 
     validateModelClass(model);
 
-    if (options.type && typeof options.type !== 'string') {
+    if (options.type && typeof options.type !== 'string' as ItemType) {
       throw new TypeError('Invalid type.');
     }
 
-    assert(options.source instanceof Item);
-    assert(options.target instanceof Item);
-
-    return this._itemManager
-      .createLink(model.meta.type, options.type, options.source.id, options.target.id, options.props);
+    return this._itemManager.createLink(
+      model.meta.type, options.type, options.source.id, options.target.id, options.props);
   }
 
   /**
@@ -171,7 +170,7 @@ export class Database {
    * @param filter
    */
   select (filter?: RootFilter): Selection<Item<any>> {
-    return createSelector<void>(
+    return createSelection<void>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
       this,
@@ -186,7 +185,7 @@ export class Database {
    * @param filter
    */
   reduce<R> (result: R, filter?: RootFilter): Selection<Item<any>, R> {
-    return createSelector<R>(
+    return createSelection<R>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
       this,
@@ -205,7 +204,7 @@ export class Database {
   }
 
   private _assertInitialized () {
-    if (this._state !== State.OPEN) {
+    if (this._state !== State.INITIALIZED) {
       throw new Error('Database not initialized.');
     }
   }

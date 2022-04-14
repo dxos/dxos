@@ -11,10 +11,11 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Entity } from './entity';
-import { Item } from './item';
-import { Link } from './link';
-import { RootFilter, createSelector } from './selection';
+import { Entity } from '../entity';
+import { Item } from '../item';
+import { Link } from '../link';
+import { RootFilter } from './queries';
+import { createSelection } from './selection';
 
 // Use to prevent ultra-long diffs.
 const ids = (entities: Entity[]) => entities.map(entity => entity.id);
@@ -23,8 +24,9 @@ const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
 const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
 
-const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
-  new Item(null as any, id, type, createModel(id), undefined, parent);
+const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) => {
+  return new Item(null as any, id, type, createModel(id), undefined, parent);
+};
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
   const link = new Link(null as any, id, type, createModel(id), {
@@ -40,11 +42,11 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   return link;
 };
 
-const createRootSelector = (filter?: RootFilter) =>
-  createSelector<void>(() => items, () => new Event(), null as any, filter, undefined);
+const createRootSelection = (filter?: RootFilter) =>
+  createSelection<void>(() => items, () => new Event(), null as any, filter, undefined);
 
 const createReducer = <R>(result: R) =>
-  createSelector<R>(() => items, () => new Event(), null as any, undefined, result);
+  createSelection<R>(() => items, () => new Event(), null as any, undefined, result);
 
 // TODO(burdon): Use more complex data set (org, person, project, task).
 
@@ -90,34 +92,34 @@ describe('Selection', () => {
   describe('root', () => {
     test('all', () => {
       expect(
-        createRootSelector()
-          .query().entities
+        createRootSelection()
+          .exec().entities
       ).toHaveLength(items.length);
     });
 
     test('by id', () => {
       expect(
-        createRootSelector({ id: org1.id })
-          .query().entities
+        createRootSelection({ id: org1.id })
+          .exec().entities
       ).toEqual([org1]);
 
       expect(
-        createRootSelector({ id: org2.id })
-          .query().entities
+        createRootSelection({ id: org2.id })
+          .exec().entities
       ).toEqual([org2]);
     });
 
     test('single type', () => {
       expect(
-        createRootSelector({ type: ITEM_PROJECT })
-          .query().entities
+        createRootSelection({ type: ITEM_PROJECT })
+          .exec().entities
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
-        createRootSelector({ type: [ITEM_ORG, ITEM_PROJECT] })
-          .query().entities
+        createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] })
+          .exec().entities
       ).toHaveLength(5);
     });
   });
@@ -125,33 +127,33 @@ describe('Selection', () => {
   describe('filter', () => {
     test('invalid', () => {
       expect(
-        createRootSelector()
+        createRootSelection()
           .filter({ type: 'dxos:type.invalid' })
-          .query().entities
+          .exec().entities
       ).toHaveLength(0);
     });
 
     test('single type', () => {
       expect(
-        createRootSelector()
+        createRootSelection()
           .filter({ type: ITEM_PROJECT })
-          .query().entities
+          .exec().entities
       ).toHaveLength(3);
     });
 
     test('multiple types', () => {
       expect(
-        createRootSelector()
+        createRootSelection()
           .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
-          .query().entities
+          .exec().entities
       ).toHaveLength(5);
     });
 
     test('by function', () => {
       expect(
-        createRootSelector()
+        createRootSelection()
           .filter(item => item.type === ITEM_ORG)
-          .query().entities
+          .exec().entities
       ).toHaveLength(2);
     });
   });
@@ -159,10 +161,10 @@ describe('Selection', () => {
   describe('children', () => {
     test('from multiple items', () => {
       expect(ids(
-        createRootSelector()
+        createRootSelection()
           .filter({ type: ITEM_ORG })
           .children({ type: ITEM_PROJECT })
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         project1,
         project2,
@@ -172,9 +174,9 @@ describe('Selection', () => {
 
     test('from single item', () => {
       expect(ids(
-        createRootSelector({ id: org1.id })
+        createRootSelection({ id: org1.id })
           .children()
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         project1,
         project2,
@@ -187,10 +189,10 @@ describe('Selection', () => {
   describe('parent', () => {
     test('from multiple items', () => {
       expect(ids(
-        createRootSelector()
+        createRootSelection()
           .filter({ type: ITEM_PROJECT })
           .parent()
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         org1,
         org2
@@ -199,9 +201,9 @@ describe('Selection', () => {
 
     test('from single item', () => {
       expect(ids(
-        createRootSelector({ id: project1.id })
+        createRootSelection({ id: project1.id })
           .parent()
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         org1
       ]));
@@ -209,9 +211,9 @@ describe('Selection', () => {
 
     test('is empty', () => {
       expect(
-        createRootSelector({ id: org1.id })
+        createRootSelection({ id: org1.id })
           .parent()
-          .query().entities
+          .exec().entities
       ).toEqual([]);
     });
   });
@@ -219,10 +221,10 @@ describe('Selection', () => {
   describe('links', () => {
     test('links from single item', () => {
       expect(ids(
-        createRootSelector({ id: project1.id })
+        createRootSelection({ id: project1.id })
           .links()
           .target()
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         person1,
         person2
@@ -231,18 +233,18 @@ describe('Selection', () => {
 
     test('links from multiple items', () => {
       expect(
-        createRootSelector({ type: ITEM_PROJECT })
+        createRootSelection({ type: ITEM_PROJECT })
           .links()
-          .query().entities
+          .exec().entities
       ).toHaveLength(links.length);
     });
 
     test('sources', () => {
       expect(ids(
-        createRootSelector({ type: ITEM_PERSON })
+        createRootSelection({ type: ITEM_PERSON })
           .refs()
           .source()
-          .query().entities
+          .exec().entities
       )).toStrictEqual(ids([
         project1,
         project2
@@ -252,7 +254,7 @@ describe('Selection', () => {
 
   describe('reducer', () => {
     test('simple reducer', () => {
-      const query = createReducer(0).call((items, count) => count + items.length).query();
+      const query = createReducer(0).call((items, count) => count + items.length).exec();
       expect(query.value).toEqual(items.length);
     });
 
@@ -272,7 +274,7 @@ describe('Selection', () => {
           return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
         })
         .target()
-        .query();
+        .exec();
 
       expect(query.value).toEqual({ numItems: 5, numLinks: 4, stage: 'c' });
     });
@@ -282,9 +284,9 @@ describe('Selection', () => {
     test('events get filtered correctly', async () => {
       const update = new Event<Entity[]>();
 
-      const query = createSelector<void>(() => items, () => update, null as any, { type: ITEM_ORG }, undefined)
+      const query = createSelection<void>(() => items, () => update, null as any, { type: ITEM_ORG }, undefined)
         .children()
-        .query();
+        .exec();
 
       {
         const promise = query.update.waitForCount(1);

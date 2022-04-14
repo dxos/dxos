@@ -12,10 +12,9 @@ import {
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
+import { TestType } from '@dxos/client-testing';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-
-import { TestType } from './builders';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {
@@ -68,6 +67,7 @@ export interface ItemAdapter {
 /**
  * Get related data from items.
  */
+// TODO(burdon): Is this general purpose?
 export const itemAdapter: ItemAdapter = {
   title: (item: Item<ObjectModel>) => {
     return item.model.get('title');

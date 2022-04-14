@@ -10,7 +10,7 @@ import { Model, StateManager } from '@dxos/model-factory';
 import { ItemManager } from '../database';
 import { Entity } from './entity';
 import type { Link } from './link';
-import { Selection, createItemSelector } from './selection';
+import { Selection, createItemSelection } from './selection';
 
 const log = debug('dxos:echo-db:item');
 
@@ -102,7 +102,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
   select (): Selection<Item<any>> {
-    return createItemSelector(this as Item, this._itemManager.debouncedUpdate, undefined);
+    return createItemSelection(this as Item, this._itemManager.debouncedUpdate, undefined);
   }
 
   /**

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { itemAdapter, TestType } from '@dxos/react-client-testing';
+import { TestType } from '@dxos/client-testing';
+import { itemAdapter } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { CreateItemDialog } from '../src';

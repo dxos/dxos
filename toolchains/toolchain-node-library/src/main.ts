@@ -217,7 +217,7 @@ export const setupCoreCommands = (yargs: Argv) => (
       handler('Tests', async () => {
         const project = Project.load(defaults);
         await execBuild(defaults);
-        await execLint(project);
+        await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 
         // Additional test steps execution placed here to allow to run tests without additional steps.
