@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.29.0](https://www.github.com/dxos/protocols/compare/v2.28.23...v2.29.0) (2022-04-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* bots respawn. (#1116)
+
+### Bug Fixes
+
+* bots respawn. ([#1116](https://www.github.com/dxos/protocols/issues/1116)) ([7a8bb1c](https://www.github.com/dxos/protocols/commit/7a8bb1c302776de6ce19bd1e17b3e72460ed9b28))
+
 ### [2.28.23](https://www.github.com/dxos/protocols/compare/v2.28.22...v2.28.23) (2022-04-13)
 
 
