@@ -4,16 +4,14 @@
 
 import React, { useState } from 'react';
 
-import {
-  Button,
-  LinearProgress,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Box, Button, LinearProgress, TextField, Typography } from '@mui/material';
 
-import { FileUploadDialog, Dialog } from '@dxos/react-components';
+import { useMounted } from '@dxos/react-async';
+import { Dialog } from '@dxos/react-components';
 
-interface InvitationDialogProps {
+import { ImportMenu } from './ImportMenu';
+
+export interface CreatePartyDialogProps {
   open: boolean
   title?: string
   modal?: boolean
@@ -23,38 +21,32 @@ interface InvitationDialogProps {
 }
 
 /**
- * Home page.
+ * Dialog to create, join, or import party.
  */
-export const TestInvitationDialog = ({
+export const CreatePartyDialog = ({
   open,
-  title = 'Demo',
-  modal = false,
+  title = 'New Party',
+  modal = true,
   onCreate,
   onJoin,
   onImport
-}: InvitationDialogProps) => {
+}: CreatePartyDialogProps) => {
   const [invitationCodeOrIpfsCid, setInvitationCodeOrIpfsCid] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
-  const [fileUploadDialogOpen, setFileUploadDialogOpen] = useState(false);
+  const isMounted = useMounted();
 
-  const handleImport = async (files: File[] | string | null) => {
-    if (!files) {
-      return;
-    }
-
+  const handleImport = async (file: File | string) => {
     setInProgress(true);
     setError(undefined);
     try {
-      if (typeof files === 'string') {
-        await onImport!(files);
-      } else {
-        await onImport!(files[0]);
-      }
+      await onImport!(file);
     } catch (error: any) {
       setError(error);
     } finally {
-      setInProgress(false);
+      if (isMounted()) {
+        setInProgress(false);
+      }
     }
   };
 
@@ -65,11 +57,11 @@ export const TestInvitationDialog = ({
         value={invitationCodeOrIpfsCid}
         onChange={event => setInvitationCodeOrIpfsCid(event.target.value)}
         variant='outlined'
-        label='Invitation code or IPFS CID'
+        label='Invitation code'
         autoComplete='off'
         spellCheck={false}
         inputProps={{
-          'data-id': 'test-input-join'
+          'data-id': 'test-input-join-party'
         }}
       />
       <div style={{ height: 8, marginTop: 16 }}>
@@ -83,33 +75,20 @@ export const TestInvitationDialog = ({
     <>
       {onImport && (
         <>
-          <FileUploadDialog
-            open={fileUploadDialogOpen}
-            onClose={() => setFileUploadDialogOpen(false)}
-            onUpload={handleImport}
+          <ImportMenu
+            onImport={handleImport}
           />
-          <Button
-            data-id='test-button-import'
-            color='primary'
-            variant='outlined'
-            disabled={inProgress}
-            onClick={() => setFileUploadDialogOpen(true)}
-          >
-            Import Local Party
-          </Button>
-          <Button
-            disabled={inProgress}
-            onClick={() => handleImport(invitationCodeOrIpfsCid)}
-          >
-            Import IPFS Party
-          </Button>
+
+          <Box sx={{ flex: 1 }} />
         </>
       )}
+
       {onJoin && (
         <Button
-          data-id='test-button-join'
+          data-id='test-button-join-party'
           color='secondary'
           variant='contained'
+          disabled={!invitationCodeOrIpfsCid || inProgress}
           onClick={async () => {
             setInProgress(true);
             setError(undefined);
@@ -121,21 +100,21 @@ export const TestInvitationDialog = ({
               setInProgress(false);
             }
           }}
-          disabled={!invitationCodeOrIpfsCid || inProgress}
         >
           Join Party
         </Button>
       )}
+
       {onCreate && (
         <Button
-          data-id='test-button-create'
+          data-id='test-button-create-party'
           color='primary'
           variant='contained'
+          disabled={inProgress}
           onClick={() => {
             setInProgress(true);
             onCreate!();
           }}
-          disabled={inProgress}
         >
           Create Party
         </Button>
@@ -147,12 +126,11 @@ export const TestInvitationDialog = ({
     <Dialog
       open={open}
       modal={modal}
-      fullWidth
       maxWidth='sm'
+      fullWidth
       title={title}
       content={content}
       actions={actions}
-    >
-    </Dialog>
+    />
   );
 };

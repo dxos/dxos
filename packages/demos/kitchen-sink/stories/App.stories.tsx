@@ -10,14 +10,13 @@ import { Snackbar } from '@mui/material';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
 import { ClientProvider, ProfileInitializer, uploadFilesToIpfs, useClient, useIpfsClient } from '@dxos/react-client';
-import { TestInvitationDialog, useTestParty } from '@dxos/react-client-testing';
+import {
+  CreatePartyDialog, ExportAction, PartyBuilder, buildTestParty, useTestParty
+} from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
-import {
-  ONLINE_CONFIG,
-  App
-} from './helpers';
+import { ONLINE_CONFIG, App } from './helpers';
 
 export default {
   title: 'KitchenSink/App'
@@ -54,14 +53,16 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
-    const [exportedToIpfs, setExportedToIpfs] = useState(false);
-    const testParty = useTestParty();
+    const [snackbarMessage, setSnackbarMessage] = useState<string | undefined>();
     const partySerializer = usePartySerializer();
-    const ipfsClient = useIpfsClient('https://ipfs-pub1.kube.dxos.network');
+    const ipfsClient = useIpfsClient(client.config.get('runtime.services.ipfs.server'));
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
-      setParty(testParty);
+      const party = await client.echo.createParty();
+      const builder = new PartyBuilder(party);
+      await buildTestParty(builder); // TODO(burdon): Rename.
+      setParty(party);
     };
 
     const handleJoinParty = async (invitationText: string) => {
@@ -72,34 +73,44 @@ export const Secondary = () => {
       setParty(party);
     };
 
-    const handleExport = async (ipfs?: boolean) => {
+    const handleExportParty = async (action: ExportAction) => {
       const blob = await partySerializer.serializeParty(party!);
-      if (ipfs && ipfsClient) {
-        const file = new File([blob], `${party!.key.toHex()}.party`);
-        const [ipfsFile] = await uploadFilesToIpfs(ipfsClient, [file]);
-        if (ipfsFile) {
-          await navigator.clipboard.writeText(ipfsFile.cid);
-          setExportedToIpfs(true);
+      switch (action) {
+        case ExportAction.EXPORT_IPFS: {
+          const file = new File([blob], `${party!.key.toHex()}.party`);
+          const [ipfsFile] = await uploadFilesToIpfs(ipfsClient!, [file]);
+          if (ipfsFile) {
+            await navigator.clipboard.writeText(ipfsFile.cid);
+            setSnackbarMessage('CID copied to clipbaord.');
+          }
+          break;
         }
-      } else {
-        download(blob, `${party!.key.toHex()}.party`);
+
+        case ExportAction.EXPORT_FILE: {
+          download(blob, `${party!.key.toHex()}.party`);
+          break;
+        }
       }
     };
 
-    const handleImport = async (fileOrCID: File | string) => {
+    const handleImportParty = async (fileOrCID: File | string) => {
       let data;
       if (!(fileOrCID instanceof File)) {
+        // TODO(burdon): Assert.
         if (!ipfsClient) {
           return null;
         }
+
+        // TODO(burdon): Why not Promise.all? Wrap in util?
         data = uint8ArrayConcat(await all(ipfsClient.cat(fileOrCID)));
       } else {
         data = fileOrCID;
       }
+
       setParty(await partySerializer.deserializeParty(data));
     };
 
-    const handleInvite = async () => {
+    const handleInviteParty = async () => {
       const invitation = await party!.createInvitation();
       const encodedInvitation = invitation.descriptor.encode();
       const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
@@ -113,25 +124,27 @@ export const Secondary = () => {
         <>
           <App
             party={party}
-            onInvite={handleInvite}
-            onExport={handleExport}
+            onInvite={handleInviteParty}
+            onExport={handleExportParty}
           />
+
           <Snackbar
-            open={exportedToIpfs}
-            autoHideDuration={3000}
-            onClose={() => setExportedToIpfs(false)}
-            message='Published. CID copied to clipbaord.'
+            open={Boolean(snackbarMessage)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            autoHideDuration={1000}
+            message={snackbarMessage}
+            onClose={() => setSnackbarMessage(undefined)}
           />
         </>
       );
     }
 
     return (
-      <TestInvitationDialog
+      <CreatePartyDialog
         open
         onCreate={handleCreateParty}
         onJoin={handleJoinParty}
-        onImport={handleImport}
+        onImport={handleImportParty}
       />
     );
   };

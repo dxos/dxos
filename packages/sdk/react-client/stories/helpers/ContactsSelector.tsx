@@ -25,7 +25,7 @@ export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
         labelId='contact-select-label'
         onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
       >
-        <MenuItem value=''>-</MenuItem>
+        <MenuItem value='' />
         {contacts.map(contact => (
           <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
             {contact.displayName}
