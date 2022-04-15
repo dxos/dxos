@@ -330,7 +330,7 @@ describe('Client', () => {
       client.registerModel(TestModel);
 
       const party = client.echo.queryParties().first;
-      const result = party.database.select({ type: 'test' }).query();
+      const result = party.database.select({ type: 'test' }).exec();
       await result.update.waitForCondition(() => result.entities.length > 0);
       const item = result.expectOne();
 

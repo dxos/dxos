@@ -96,7 +96,7 @@ const TableBuilderStory = () => {
     const party = await client.echo.createParty();
     const tableItem = await party.database.createItem({
       model: ObjectModel,
-      type: 'dxos:type.table.table'
+      type: 'example:type/table/table'
     });
 
     setParty(party);

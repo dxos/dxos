@@ -84,7 +84,7 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   }
 };
 
-export const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> =>{
+export const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> => {
   return link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 };
 

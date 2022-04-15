@@ -11,10 +11,10 @@ import { ObjectModel } from '@dxos/object-model';
 import { NumberRange, capitalize, getNumber } from '../util';
 
 export enum TestType {
-  Org = 'example:type.org',
-  Project = 'example:type.project',
-  Person = 'example:type.person',
-  Task = 'example:type.task'
+  Org = 'example:type/org',
+  Project = 'example:type/project',
+  Person = 'example:type/person',
+  Task = 'example:type/task'
 }
 
 /*
@@ -104,10 +104,6 @@ export class PartyBuilder {
 
   get party () {
     return this._party;
-  }
-
-  async createLink (source: Item<ObjectModel>, target: Item<ObjectModel>) {
-    await this._party.database.createLink({ source, target });
   }
 
   async createOrgs (n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
@@ -205,12 +201,19 @@ export class PartyBuilder {
       // Random parent.
       const result = this.party.select()
         .filter(item => item.type === TestType.Org || item.type === TestType.Project)
-        .query();
+        .exec();
 
       parent = faker.random.arrayElement(result.entities);
       if (parent) {
         await this.createRandomItem(parent);
       }
     }
+  }
+
+  async createLink (source: Item<ObjectModel>, target: Item<ObjectModel>) {
+    await this._party.database.createLink({
+      source,
+      target
+    });
   }
 }

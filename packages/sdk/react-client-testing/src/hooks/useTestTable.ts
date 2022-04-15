@@ -11,8 +11,8 @@ import { useAsyncEffect } from '@dxos/react-async';
 
 type TestTableCallback = (builder: TableBuilder) => Promise<void>;
 
-export const TYPE_TABLE_BASE = 'dxos:type.table.base';
-export const TYPE_TABLE_TABLE = 'dxos:type.table.table';
+export const TYPE_TABLE_BASE = 'example:type/table/base';
+export const TYPE_TABLE_TABLE = 'example:type/table/table';
 
 /**
  * @param party

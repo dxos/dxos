@@ -2,11 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import chalk from 'chalk';
+import columnify from 'columnify';
 import expect from 'expect';
+import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { Client, Party } from '@dxos/client';
+import { truncate, truncateKey } from '@dxos/debug';
 import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
+
+import { TestType } from './builders';
 
 // TODO(burdon): Move builder here.
 // TODO(burdon): Used for stress testing.
@@ -24,7 +30,7 @@ const createParty = async () => {
   const party = await client.echo.createParty();
   expect(party.isOpen).toBeTruthy();
 
-  return { client, party }
+  return { client, party };
 };
 
 const destroyParty = async (client: Client, party: Party) => {
@@ -36,7 +42,7 @@ const destroyParty = async (client: Client, party: Party) => {
 
   await client.destroy();
   expect(client.initialized).toBeFalsy();
-}
+};
 
 const handler = async (f: (client: Client, Party: Party) => Promise<void>) => {
   const { client, party } = await createParty();
@@ -54,16 +60,31 @@ describe('Schema', () => {
   });
 
   test('Create items.', async () => handler(async (client, party) => {
-    const count = 100;
+    const count = 16;
     await Promise.all(Array.from({ length: count }).map(async () => {
-      await party.database.createItem();
+      await party.database.createItem({
+        type: faker.random.arrayElement([TestType.Org, TestType.Project, TestType.Person, TestType.Task]),
+        props: {
+          title: faker.lorem.sentence()
+        }
+      });
     }));
 
-    // TODO(burdon): Exclude party.
     const { entities } = await party.database.select()
+      // TODO(burdon): Exclude party (and other system types) by default.
       .filter(({ type }) => type !== PARTY_ITEM_TYPE)
       .exec();
 
     expect(entities).toHaveLength(count);
-  }))
+
+    const rows = columnify(entities.map(item => ({
+      id: chalk.blue(truncateKey(item.id, 8)),
+      type: chalk.magenta(item.type),
+      title: chalk.green(truncate(item.model.get('title'), 32))
+    })), {
+      columns: ['id', 'type', 'title']
+    });
+
+    console.log(rows);
+  }));
 });

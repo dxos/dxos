@@ -52,7 +52,7 @@ export const buildTestParty: TestPartyCallback = async (builder: PartyBuilder) =
         .select()
         .children()
         .filter({ type: TestType.Person })
-        .query();
+        .exec();
 
       await projectBuilder.createTasks([2, 5], result.entities);
     });

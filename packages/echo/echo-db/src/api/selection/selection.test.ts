@@ -128,7 +128,7 @@ describe('Selection', () => {
     test('invalid', () => {
       expect(
         createRootSelection()
-          .filter({ type: 'dxos:type.invalid' })
+          .filter({ type: 'dxos:type/invalid' })
           .exec().entities
       ).toHaveLength(0);
     });

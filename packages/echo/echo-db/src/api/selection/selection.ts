@@ -63,7 +63,7 @@ export const createItemSelection = <R>(
   value: R
 ): Selection<Item<any>, R> => {
   return new Selection(() => [[root], value], update, root, value !== undefined);
-}
+};
 
 /**
  * Selections are used to construct database subscriptions.

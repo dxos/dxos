@@ -18,7 +18,7 @@ test('generator', async () => {
     numPeople: 3
   });
 
-  const result = party.database.select({ type: OBJECT_PERSON }).query();
+  const result = party.database.select({ type: OBJECT_PERSON }).exec();
   expect(result.entities).toHaveLength(3);
 
   const names = result.entities.map(item => item.model.get('name'));
@@ -45,7 +45,7 @@ test('filter', async () => {
     }
   };
   const matcher = new Matcher({ getter: (item: any, key: string) => item.model.get(key) });
-  const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).query();
+  const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).exec();
   expect(queryResult.entities).toHaveLength(1);
 
   await echo.close();

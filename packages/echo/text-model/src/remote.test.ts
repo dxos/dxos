@@ -18,7 +18,7 @@ describe('With remote database', () => {
     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
     const text = await frontend.createItem({
-      model: TextModel, type: 'example:type.text'
+      model: TextModel, type: 'example:type/text'
     });
     await text.model.insert(0, 'Hello world');
 
@@ -36,7 +36,7 @@ describe('With remote database', () => {
 
     const text = await frontend.createItem({
       model: TextModel,
-      type: 'example:type.text',
+      type: 'example:type/text',
       parent: parent.id
     });
     await text.model.insert(0, 'Hello world');

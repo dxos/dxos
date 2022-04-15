@@ -66,13 +66,13 @@ describe('ECHO', () => {
       // TODO(burdon): Update currently called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const result1 = party.database.select().query();
+        const result1 = party.database.select().exec();
         result1.entities.forEach(item => {
           log('Item:', String(item));
         });
 
         // TODO(burdon): Check item mutations.
-        const result2 = party.database.select({ type: 'dxos:item/document' }).query();
+        const result2 = party.database.select({ type: 'example:item/document' }).exec();
         expect(result2.entities).toHaveLength(2);
         onUpdate();
       });
@@ -87,9 +87,9 @@ describe('ECHO', () => {
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     // TODO(burdon): Test item mutations.
-    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'dxos:item/kanban' });
+    await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'example:item/kanban' });
 
     await updated;
     unsubscribe();
@@ -108,12 +108,12 @@ describe('ECHO', () => {
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = party.database.select().query().entities;
+        const items = party.database.select().exec().entities;
         items.forEach(item => {
           log('Item:', String(item));
         });
 
-        const item = party.database.select({ type: 'dxos:item/document' }).query().entities[0];
+        const item = party.database.select({ type: 'example:item/document' }).exec().entities[0];
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -129,7 +129,7 @@ describe('ECHO', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parent = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
+    const parent = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
 
     await updated;
@@ -151,12 +151,12 @@ describe('ECHO', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parentA = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
+    const parentA = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });
     expect(parentA.children).toHaveLength(1);
     expect(parentA.children[0].id).toEqual(childA.id);
 
-    const parentB = await party.database.createItem({ model: ObjectModel, type: 'dxos:item/document' });
+    const parentB = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     const childB = await party.database.createItem({ model: ObjectModel, parent: parentB.id });
     expect(parentB.children).toHaveLength(1);
     expect(parentB.children[0].id).toEqual(childB.id);
@@ -199,7 +199,7 @@ describe('ECHO', () => {
     assert(party);
     log('Initialized party');
 
-    const items = party.database.select().query().entities;
+    const items = party.database.select().exec().entities;
     await waitForCondition(() => items.length > 0);
     expect(items.length).toBeGreaterThan(0);
   });
@@ -301,7 +301,7 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = partyB.database.select({ type: 'example:item/test' }).query()
+      const updated = partyB.database.select({ type: 'example:item/test' }).exec()
         .update.waitFor(result => !!itemA && !!result.entities.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
@@ -398,7 +398,7 @@ describe('ECHO', () => {
     // Empty across the board.
     for (const node of [a1, a2, b1, b2]) {
       const [party] = node.queryParties().value;
-      expect(party.database.select({ type: 'example:item/test' }).query().entities.length).toBe(0);
+      expect(party.database.select({ type: 'example:item/test' }).exec().entities.length).toBe(0);
     }
 
     for await (const node of [a1, a2, b1, b2]) {
@@ -409,7 +409,7 @@ describe('ECHO', () => {
       for (const otherNode of [a1, a2, b1, b2].filter(x => x !== node)) {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
-        otherParty.database.select({ type: 'example:item/test' }).query()
+        otherParty.database.select({ type: 'example:item/test' }).exec()
           .update.on(result => {
             if (result.entities.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
@@ -460,8 +460,8 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = b.queryParties().value[0].database.select({ type: 'example:item/test' })
-        .query().update.waitFor(items => !!itemA && !!items.entities.find(item => item.id === itemA?.id));
+      const result = b.queryParties().value[0].database.select({ type: 'example:item/test' }).exec();
+      const updated = result.update.waitFor(items => !!itemA && !!items.entities.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await a.queryParties().value[0].database
@@ -592,7 +592,7 @@ describe('ECHO', () => {
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
 
-    partyA.database.select({ type: 'example:item/test' }).query()
+    partyA.database.select({ type: 'example:item/test' }).exec()
       .update.on(result => {
         if (result.entities.length) {
           const [receivedItem] = result.entities;
@@ -605,7 +605,7 @@ describe('ECHO', () => {
     itemA = await partyA.database.createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
     await updated; // Wait for update.
 
-    expect(partyA.database.select({ type: 'example:item/test' }).query().entities.length).toEqual(1);
+    expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length).toEqual(1);
 
     await partyA.deactivate({ global: true });
     await partyA.activate({ global: true });
@@ -615,9 +615,9 @@ describe('ECHO', () => {
 
     await partyA.database
       .select({ type: 'example:item/test' })
-      .query()
+      .exec()
       .update.waitFor(result => result.entities.length > 0);
-    expect(partyA.database.select({ type: 'example:item/test' }).query().entities.length).toEqual(1);
+    expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length).toEqual(1);
   }).timeout(10_000);
 
   test('Deactivate Party - multi device', async () => {

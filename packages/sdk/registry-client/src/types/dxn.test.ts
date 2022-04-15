@@ -81,7 +81,7 @@ describe('DXN', () => {
   it('parse', () => {
     // Valid.
     [
-      'dxos:foo.bar',
+      'example:foo/bar',
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo.bar'
     ].forEach(dxn => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
 
@@ -90,7 +90,7 @@ describe('DXN', () => {
       '',
       'dxos',
       'dxos:',
-      'dxos::foo.bar'
+      'example::foo.bar'
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 });

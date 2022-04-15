@@ -186,7 +186,7 @@ export class PartyInternal {
     await this._protocol.start();
 
     // Issue an 'update' whenever the properties change.
-    this.database.select({ type: PARTY_ITEM_TYPE }).query().update.on(() => this.update.emit());
+    this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());
 
     this.update.emit();
     return this;
@@ -246,7 +246,7 @@ export class PartyInternal {
     assert(this.isOpen, 'Party not open.');
 
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    const items = this.database.select({ type: PARTY_ITEM_TYPE }).query().entities;
+    const items = this.database.select({ type: PARTY_ITEM_TYPE }).exec().entities;
     assert(items.length === 1, 'Party properties missing.');
     return items[0] as Item<ObjectModel>;
   }
@@ -256,7 +256,7 @@ export class PartyInternal {
    */
   getPropertiesSet () {
     assert(this.isOpen, 'Party not open.');
-    return this.database.select({ type: PARTY_ITEM_TYPE }).query();
+    return this.database.select({ type: PARTY_ITEM_TYPE }).exec();
   }
 
   /**

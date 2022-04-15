@@ -2174,11 +2174,14 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
+      '@types/columnify': ^1.5.1
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
       '@types/mocha': ~8.2.2
       assert: ^2.0.0
+      chalk: ^4.1.0
+      columnify: ^1.6.0
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
@@ -2204,10 +2207,13 @@ importers:
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/testutils': link:../../common/testutils
+      '@types/columnify': 1.5.1
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/jest': 26.0.24
       '@types/mocha': 8.2.3
+      chalk: 4.1.2
+      columnify: 1.6.0
       eslint: 7.32.0
       expect: 27.0.6
       mocha: 8.4.0
@@ -8205,6 +8211,10 @@ packages:
     resolution: {integrity: sha512-QJCVXSVRse+mMvzWQ8vH6AcKxtqCgHPHf5abAdGn86DEeQdUpSJnKAeCa1+hZuohaUF3l4RhigC9akRx82Bwig==}
     dev: true
 
+  /@types/columnify/1.5.1:
+    resolution: {integrity: sha512-pXWQTEvwcO7GAwFvSvaMOIktLcJ2ajIAUyMR93KDZZVWN2G7uieEDBPJskEmXb0Qv8JMPHhaRA52azCPfiFmQA==}
+    dev: true
+
   /@types/crypto-js/4.0.2:
     resolution: {integrity: sha512-sCVniU+h3GcGqxOmng11BRvf9TfN9yIs8KKjB8C8d75W69cpTfZG80gau9yTx5SxF3gvHGbJhdESzzvnjtf3Og==}
     dev: true
@@ -11268,6 +11278,14 @@ packages:
     resolution: {integrity: sha1-Rzfd8ce2mop8NAVweC6UfuyOeLs=}
     dependencies:
       strip-ansi: 3.0.1
+      wcwidth: 1.0.1
+    dev: true
+
+  /columnify/1.6.0:
+    resolution: {integrity: sha512-lomjuFZKfM6MSAnV9aCZC9sc0qGbmZdfygNv+nCpqVkSKdCxCklLtd16O0EILGkImHw9ZpHkAnHaB+8Zxq5W6Q==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      strip-ansi: 6.0.1
       wcwidth: 1.0.1
     dev: true
 

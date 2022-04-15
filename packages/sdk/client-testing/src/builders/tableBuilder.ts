@@ -10,9 +10,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { NumberRange, getNumber } from '../util';
 
 // TODO(kaplanski): Discuss where we should obtain this from.
-export const TYPE_TABLE_COLUMN = 'dxos:type.table.column';
-export const TYPE_TABLE_ROW = 'dxos:type.table.row';
-export const TYPE_TABLE_COLUMN_LINK = 'dxos:type.table.column-link';
+export const TYPE_TABLE_COLUMN = 'dxos:type/table/column';
+export const TYPE_TABLE_ROW = 'dxos:type/table/row';
+export const TYPE_TABLE_COLUMN_LINK = 'dxos:type/table/column-link';
 
 type FieldGenerator = () => string;
 type Field = {
