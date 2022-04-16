@@ -86,5 +86,12 @@ describe('Schema', () => {
     });
 
     console.log(rows);
+
+    // TODO(burdon): Tree view util.
+    // https://waylonwalker.com/drawing-ascii-boxes/#connectors
+    console.log('X ╍─┬───╍ A');
+    console.log('    ├─┬─╍ B');
+    console.log('    │ ╰─╍ C');
+    console.log('    ╰───╍ D');
   }));
 });
