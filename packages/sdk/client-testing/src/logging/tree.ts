@@ -3,6 +3,7 @@
 //
 
 import chalk from 'chalk';
+
 import { truncateKey } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 
@@ -53,7 +54,7 @@ export const treeLogger = (ancestors: [TreeNode, number][], node: TreeNode, rows
           parts.push(childFirst ? '├' : '│');
         }
       }
-    })
+    });
 
     parts.push(`─(${name(node)})`);
     rows.push(parts.join(''));

@@ -236,6 +236,11 @@ export const defaultTestOptions: Options = {
   numTasks: [2, 5]
 };
 
+/**
+ * Create populated test party.
+ * @param builder
+ * @param options
+ */
 export const buildTestParty = async (builder: PartyBuilder, options: Options = defaultTestOptions) => {
   await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople(options.numPeople);

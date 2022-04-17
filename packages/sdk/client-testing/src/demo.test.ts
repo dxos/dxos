@@ -11,13 +11,8 @@ import { Client, Party } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
 
-import { TreeRoot, treeLogger } from './logging';
-
 import { buildTestParty, PartyBuilder } from './builders';
-
-// TODO(burdon): Move builder here.
-// TODO(burdon): Used for stress testing.
-// TODO(burdon): Used for SDK testing.
+import { TreeRoot, treeLogger } from './logging';
 
 const createParty = async () => {
   const client = new Client();
