@@ -8,7 +8,7 @@ import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { range } from '@dxos/util';
 
-import { Item, ItemCreationOptions } from '../api';
+import { Item, CreateItemOption } from '../api';
 import { ECHO } from '../echo';
 import { PartyInternal } from '../parties';
 import { createTestInstance, inviteTestPeer } from './testing';
@@ -54,7 +54,7 @@ const createParties = async (peerCount = 2): Promise<{ peers: ECHO[], parties: W
  * @returns Item instances from each of the peers.
  */
 export const createModelTestBench = async<M extends Model<any>> (
-  options: ItemCreationOptions<M> & { peerCount?: number}
+  options: CreateItemOption<M> & { peerCount?: number}
 ): Promise<{ peers: ECHO[], items: WithTestMeta<Item<M>>[] }> => {
   const { peers, parties } = await createParties(options.peerCount ?? 2);
   for (const party of parties) {
@@ -72,7 +72,7 @@ export const createModelTestBench = async<M extends Model<any>> (
       return;
     }
 
-    await party.database.select().query().update.waitFor(() => !!party.database.getItem(item.id));
+    await party.database.select().exec().update.waitFor(() => !!party.database.getItem(item.id));
   }));
 
   const items = parties

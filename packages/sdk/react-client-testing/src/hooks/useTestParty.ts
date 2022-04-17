@@ -3,12 +3,11 @@
 //
 
 import faker from 'faker';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Party } from '@dxos/client';
+import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { useClient } from '@dxos/react-client';
-
-import { OrgBuilder, PartyBuilder, ProjectBuilder, TestType, usePartyBuilder } from '../../src';
 
 type TestPartyCallback = (builder: PartyBuilder) => Promise<void>;
 
@@ -22,6 +21,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 
   useEffect(() => {
     setImmediate(async () => {
+      // TODO(burdon): Use PartyBuidler.
       const party = await client.echo.createParty();
       await party.setTitle(faker.lorem.word());
       setParty(party);
@@ -40,21 +40,8 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 };
 
 /**
- * Build the party.
- * @param builder
+ * @param party
  */
-// TODO(burdon): Rename (or remove -- too specific).
-export const buildTestParty: TestPartyCallback = async (builder: PartyBuilder) => {
-  await builder.createOrgs([3, 7], async (orgBuilder: OrgBuilder) => {
-    await orgBuilder.createPeople([3, 10]);
-    await orgBuilder.createProjects([2, 7], async (projectBuilder: ProjectBuilder) => {
-      const result = await orgBuilder.org
-        .select()
-        .children()
-        .filter({ type: TestType.Person })
-        .query();
-
-      await projectBuilder.createTasks([2, 5], result.entities);
-    });
-  });
+export const usePartyBuilder = (party?: Party) => {
+  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key]);
 };

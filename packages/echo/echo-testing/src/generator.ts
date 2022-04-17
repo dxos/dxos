@@ -20,6 +20,8 @@ export const LINK_ASSIGNED = 'example:link/assigned';
 
 export const labels = ['low', 'high', 'extra', 'medium'];
 
+// TODO(burdon): See @dxos/client-testing generators.
+
 const generators = {
   [OBJECT_ORG]: () => ({
     name: faker.company.companyName(),

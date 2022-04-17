@@ -9,10 +9,9 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 import { Snackbar } from '@mui/material';
 
 import { Party, InvitationDescriptor } from '@dxos/client';
+import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, ProfileInitializer, uploadFilesToIpfs, useClient, useIpfsClient } from '@dxos/react-client';
-import {
-  CreatePartyDialog, ExportAction, PartyBuilder, buildTestParty, useTestParty
-} from '@dxos/react-client-testing';
+import { CreatePartyDialog, ExportAction, useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { usePartySerializer } from '@dxos/react-framework';
 
@@ -61,7 +60,7 @@ export const Secondary = () => {
     const handleCreateParty = async () => {
       const party = await client.echo.createParty();
       const builder = new PartyBuilder(party);
-      await buildTestParty(builder); // TODO(burdon): Rename.
+      await buildTestParty(builder);
       setParty(party);
     };
 

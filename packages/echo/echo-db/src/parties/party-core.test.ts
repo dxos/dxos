@@ -107,9 +107,9 @@ describe('PartyCore', () => {
     await party.open();
 
     {
-      await party.database.select().query().update.waitFor(result => result.entities.length === 2);
-      const parent = party.database.select({ type: 'parent' }).query().entities[0];
-      const child = party.database.select({ type: 'child' }).query().entities[0];
+      await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
+      const parent = party.database.select({ type: 'parent' }).exec().entities[0];
+      const child = party.database.select({ type: 'child' }).exec().entities[0];
 
       expect(child.parent).toEqual(parent);
       expect(parent.children).toContain(child);

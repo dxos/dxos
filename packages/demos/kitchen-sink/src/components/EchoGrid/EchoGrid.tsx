@@ -11,7 +11,7 @@ import {
   DataGrid, GridCellParams, GridColDef, GridSelectionModel, GridValueGetterParams
 } from '@mui/x-data-grid';
 
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
@@ -28,7 +28,7 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => {
       field: 'id',
       headerName: 'ID',
       width: 120,
-      valueGetter: (params: GridValueGetterParams) => truncateString(params.row.id, 4),
+      valueGetter: (params: GridValueGetterParams) => truncateKey(params.row.id, 4),
       cellClassName: () => 'monospace'
     },
     {

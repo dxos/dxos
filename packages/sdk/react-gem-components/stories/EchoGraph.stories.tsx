@@ -50,7 +50,7 @@ const AppWithEditor = () => {
 
   const handleSelection = (text: string) => {
     const selection = execSelection(party, text);
-    const result = selection?.query();
+    const result = selection?.exec();
     const selected = new Set<ItemID>();
     result?.entities.forEach(item => selected.add(item.id));
     setSelected(selected);

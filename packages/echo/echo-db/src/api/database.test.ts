@@ -80,7 +80,7 @@ describe('Database', () => {
       expect(item.id).not.toBeUndefined();
       expect(item.model).toBeInstanceOf(ObjectModel);
 
-      const result = database.select().query();
+      const result = database.select().exec();
       expect(result.expectOne()).toBeTruthy();
     });
 
@@ -111,7 +111,7 @@ describe('Database', () => {
       const parent = await database.createItem({ model: ObjectModel });
       const child = await database.createItem({ model: ObjectModel, parent: parent.id });
 
-      const result = database.select().query();
+      const result = database.select().exec();
       expect(result.entities).toHaveLength(2);
       expect(result.entities).toEqual([parent, child]);
 
@@ -203,14 +203,14 @@ describe('Database', () => {
         const database = await setupBackend(modelFactory);
 
         {
-          const waiting = database.waitForItem({ type: 'example:type.test' });
-          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test' });
+          const waiting = database.waitForItem({ type: 'example:type/test-1' });
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type/test-1' });
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
         {
-          const item = await database.createItem({ model: ObjectModel, type: 'example:type.test-2' });
-          const waiting = database.waitForItem({ type: 'example:type.test-2' });
+          const item = await database.createItem({ model: ObjectModel, type: 'example:type/test-2' });
+          const waiting = database.waitForItem({ type: 'example:type/test-2' });
           expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
       });
@@ -223,7 +223,7 @@ describe('Database', () => {
           database.createItem({ model: TestListModel })
         ));
 
-        const result = database.select().query();
+        const result = database.select().exec();
         const items = result.entities;
         expect(items).toHaveLength(10);
 
@@ -232,17 +232,17 @@ describe('Database', () => {
         await update;
 
         {
-          const result = database.select().query();
+          const result = database.select().exec();
           expect(result.entities).toHaveLength(9);
         }
 
         {
-          const result = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED });
           expect(result.entities).toHaveLength(10);
         }
 
         {
-          const result = database.select().query({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(result.entities).toHaveLength(1);
         }
       });
@@ -255,7 +255,7 @@ describe('Database', () => {
         const item2 = await database.createItem({ model: ObjectModel });
 
         // 1. Create a query
-        const query = database.select().query();
+        const query = database.select().exec();
         const update = query.update.waitForCount(1);
 
         // 2. Create a link
@@ -277,7 +277,7 @@ describe('Database', () => {
 
         const parentItem = await database.createItem({ model: ObjectModel });
 
-        const query = database.select({ id: parentItem.id }).query();
+        const query = database.select({ id: parentItem.id }).exec();
         const update = query.update.waitForCount(1);
 
         const childItem = await database.createItem({
@@ -295,7 +295,7 @@ describe('Database', () => {
         const database = await setupBackend(modelFactory);
 
         await Promise.all(Array.from({ length: 8 }).map(() => database.createItem({ model: ObjectModel })));
-        const { value } = database.reduce(0).call((items) => items.length).query();
+        const { value } = database.reduce(0).call((items) => items.length).exec();
         expect(value).toBe(8);
       });
     });

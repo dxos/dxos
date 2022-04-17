@@ -15,7 +15,7 @@ export const modelTypes: { [index: string]: any } = {
     createItem: (party: Party) => {
       return party.database.createItem({
         model: ObjectModel,
-        type: 'example:type.object'
+        type: 'example:type/object'
       });
     }
   },
@@ -24,7 +24,7 @@ export const modelTypes: { [index: string]: any } = {
     createItem: (party: Party) => {
       return party.database.createItem({
         model: MessengerModel,
-        type: 'example:type.messenger'
+        type: 'example:type/messenger'
       });
     }
   },
@@ -33,7 +33,7 @@ export const modelTypes: { [index: string]: any } = {
     createItem: (party: Party) => {
       return party.database.createItem({
         model: TextModel,
-        type: 'example:type.text'
+        type: 'example:type/text'
       });
     }
   }

@@ -48,10 +48,10 @@ test('Basic config', () => {
 test('Runtime and module config', () => {
   const config = new Config({
     module: {
-      name: 'dxos:app.tasks',
+      name: 'example:app/tasks',
       record: {
         app: {
-          contentType: ['dxos:type.chess.board']
+          contentType: ['example:type/chess/board']
         }
       }
     }
@@ -68,10 +68,10 @@ test('Runtime and module config', () => {
   expect(config.values).toEqual({
     version: 1,
     module: {
-      name: 'dxos:app.tasks',
+      name: 'example:app/tasks',
       record: {
         app: {
-          contentType: ['dxos:type.chess.board']
+          contentType: ['example:type/chess/board']
         }
       }
     },
