@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import os from 'os';
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
@@ -24,7 +25,7 @@ describe('Grid demo', function () {
   const invitation = process.env.INVITATION;
 
   const spacing = 8;
-  const marginTop = 40; // OSX toolbar.
+  const marginTop = parseInt(process.env.MENUBAR ?? '24'); // Menubar with OSX notch is 40.
   const { width, height } = robot.getScreenSize();
   const minSize = { width: 750, height: 500 };
 
