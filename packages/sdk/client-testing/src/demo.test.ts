@@ -62,7 +62,7 @@ describe('Schema', () => {
   });
 
   test('Create items.', async () => handler(async (client, party) => {
-    const count = 8;
+    const count = 16;
 
     // TODO(burdon): Use builder.
     faker.seed(100);
@@ -117,6 +117,7 @@ describe('Schema', () => {
     console.log(rows);
     console.log();
 
+    // TODO(burdon): Use logUpdate to show changing in real time (in CLI).
     const output = treeLogger([], new TreeRoot(party.key.toHex(), entities));
     console.log(output);
   }));
