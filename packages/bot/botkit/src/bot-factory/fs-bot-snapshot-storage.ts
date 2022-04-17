@@ -71,10 +71,14 @@ export class FSBotSnapshotStorage implements BotSnapshotStorage {
 
   async deleteBackupedBot (id: string): Promise<void> {
     const botStorage = join(this._dir, id);
-    await fs.promises.unlink(botStorage);
+    if (fs.existsSync(botStorage)) {
+      await fs.promises.unlink(botStorage);
+    }
   }
 
   async reset (): Promise<void> {
-    await fs.promises.rmdir(this._dir, { recursive: true });
+    if (fs.existsSync(this._dir)) {
+      await fs.promises.rmdir(this._dir, { recursive: true });
+    }
   }
 }

@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.29.1](https://www.github.com/dxos/protocols/compare/v2.29.0...v2.29.1) (2022-04-14)
+
+
+### Features
+
+* update config ([#1102](https://www.github.com/dxos/protocols/issues/1102)) ([cce9ff5](https://www.github.com/dxos/protocols/commit/cce9ff56ab7e2544965e29829349cce4eec37f2a))
+
+
+### Bug Fixes
+
+* minor BF err fix. ([5f1e343](https://www.github.com/dxos/protocols/commit/5f1e343550a7eaa6211d6d29ea30af955cca447a))
+
 ## [2.29.0](https://www.github.com/dxos/protocols/compare/v2.28.23...v2.29.0) (2022-04-13)
 
 
