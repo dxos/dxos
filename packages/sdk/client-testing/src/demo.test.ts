@@ -62,7 +62,7 @@ describe('Schema', () => {
   });
 
   test('Create items.', async () => handler(async (client, party) => {
-    const count = 16;
+    const count = 8;
 
     // TODO(burdon): Use builder.
     faker.seed(100);
