@@ -3,4 +3,5 @@
 //
 
 export * from './builders';
+export * from './logging';
 export * from './util';

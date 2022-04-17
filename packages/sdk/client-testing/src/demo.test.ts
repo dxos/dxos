@@ -12,6 +12,8 @@ import { Client, Party } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
 
+import { TreeRoot, treeLogger } from './logging';
+
 import { TestType } from './builders';
 
 // TODO(burdon): Move builder here.
@@ -60,38 +62,62 @@ describe('Schema', () => {
   });
 
   test('Create items.', async () => handler(async (client, party) => {
-    const count = 16;
+    const count = 8;
+
+    // TODO(burdon): Use builder.
+    faker.seed(100);
     await Promise.all(Array.from({ length: count }).map(async () => {
-      await party.database.createItem({
-        type: faker.random.arrayElement([TestType.Org, TestType.Project, TestType.Person, TestType.Task]),
+      const item = await party.database.createItem({
+        type: TestType.Org,
         props: {
           title: faker.lorem.sentence()
         }
       });
+
+      await Promise.all(Array.from({ length: faker.datatype.number({ min: 0, max: 3 }) }).map(async () => {
+        const project = await party.database.createItem({
+          type: TestType.Project,
+          parent: item.id,
+          props: {
+            title: faker.lorem.sentence()
+          }
+        });
+
+        await Promise.all(Array.from({ length: faker.datatype.number({ min: 0, max: 5 }) }).map(async () => {
+          return await party.database.createItem({
+            type: TestType.Task,
+            parent: project.id,
+            props: {
+              title: faker.lorem.sentence()
+            }
+          });
+        }));
+
+        return project;
+      }));
     }));
 
     const { entities } = await party.database.select()
       // TODO(burdon): Exclude party (and other system types) by default.
       .filter(({ type }) => type !== PARTY_ITEM_TYPE)
+      .filter(({ parent }) => !parent)
       .exec();
 
     expect(entities).toHaveLength(count);
 
     const rows = columnify(entities.map(item => ({
-      id: chalk.blue(truncateKey(item.id, 8)),
+      id: chalk.blue(truncateKey(item.id, 4)),
       type: chalk.magenta(item.type),
       title: chalk.green(truncate(item.model.get('title'), 32))
     })), {
       columns: ['id', 'type', 'title']
     });
 
+    console.log();
     console.log(rows);
+    console.log();
 
-    // TODO(burdon): Tree view util.
-    // https://waylonwalker.com/drawing-ascii-boxes/#connectors
-    console.log('X ╍─┬───╍ A');
-    console.log('    ├─┬─╍ B');
-    console.log('    │ ╰─╍ C');
-    console.log('    ╰───╍ D');
+    const output = treeLogger([], new TreeRoot(party.key.toHex(), entities));
+    console.log(output);
   }));
 });
