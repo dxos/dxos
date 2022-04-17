@@ -5,7 +5,6 @@
 import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
-import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { Client, Party } from '@dxos/client';
@@ -14,7 +13,7 @@ import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
 
 import { TreeRoot, treeLogger } from './logging';
 
-import { TestType } from './builders';
+import { buildTestParty, PartyBuilder } from './builders';
 
 // TODO(burdon): Move builder here.
 // TODO(burdon): Used for stress testing.
@@ -61,49 +60,14 @@ describe('Schema', () => {
     await destroyParty(client, party);
   });
 
-  test('Create items.', async () => handler(async (client, party) => {
-    const count = 8;
-
-    // TODO(burdon): Use builder.
-    faker.seed(100);
-    await Promise.all(Array.from({ length: count }).map(async () => {
-      const item = await party.database.createItem({
-        type: TestType.Org,
-        props: {
-          title: faker.lorem.sentence()
-        }
-      });
-
-      await Promise.all(Array.from({ length: faker.datatype.number({ min: 0, max: 3 }) }).map(async () => {
-        const project = await party.database.createItem({
-          type: TestType.Project,
-          parent: item.id,
-          props: {
-            title: faker.lorem.sentence()
-          }
-        });
-
-        await Promise.all(Array.from({ length: faker.datatype.number({ min: 0, max: 5 }) }).map(async () => {
-          return await party.database.createItem({
-            type: TestType.Task,
-            parent: project.id,
-            props: {
-              title: faker.lorem.sentence()
-            }
-          });
-        }));
-
-        return project;
-      }));
-    }));
+  test('Log tree.', async () => handler(async (client, party) => {
+    await buildTestParty(new PartyBuilder(party));
 
     const { entities } = await party.database.select()
       // TODO(burdon): Exclude party (and other system types) by default.
       .filter(({ type }) => type !== PARTY_ITEM_TYPE)
       .filter(({ parent }) => !parent)
       .exec();
-
-    expect(entities).toHaveLength(count);
 
     const rows = columnify(entities.map(item => ({
       id: chalk.blue(truncateKey(item.id, 4)),
@@ -120,5 +84,6 @@ describe('Schema', () => {
     // TODO(burdon): Use logUpdate to show changing in real time (in CLI).
     const output = treeLogger([], new TreeRoot(party.key.toHex(), entities));
     console.log(output);
+    console.log();
   }));
 });

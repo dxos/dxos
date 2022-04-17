@@ -43,7 +43,6 @@ const schemas = {
 /**
  * Project
  */
-// TODO(burdon): Rename generator.
 export class ProjectBuilder {
   constructor (
     private readonly _builder: PartyBuilder,
@@ -96,6 +95,7 @@ export class OrgBuilder {
 /**
  * Party builder.
  */
+// TODO(burdon): Rename generator.
 // TODO(burdon): Configure generator to treat all references as links (e.g., for table).
 export class PartyBuilder {
   constructor (
@@ -161,6 +161,10 @@ export class PartyBuilder {
     });
   }
 
+  async createParty () {
+
+  }
+
   async createRandomItem (parent?: Item<ObjectModel>) {
     if (parent) {
       switch (parent.type) {
@@ -217,3 +221,32 @@ export class PartyBuilder {
     });
   }
 }
+
+export type Options = {
+  numOrgs?: NumberRange
+  numProjects?: NumberRange
+  numPeople?: NumberRange
+  numTasks?: NumberRange
+}
+
+export const defaultTestOptions: Options = {
+  numOrgs: [3, 7],
+  numProjects: [2, 7],
+  numPeople: [3, 10],
+  numTasks: [2, 5]
+};
+
+export const buildTestParty = async (builder: PartyBuilder, options: Options = defaultTestOptions) => {
+  await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
+    await orgBuilder.createPeople(options.numPeople);
+    await orgBuilder.createProjects(options.numProjects, async (projectBuilder: ProjectBuilder) => {
+      const result = await orgBuilder.org
+        .select()
+        .children()
+        .filter({ type: TestType.Person })
+        .exec();
+
+      await projectBuilder.createTasks(options.numTasks, result.entities);
+    });
+  });
+};

@@ -25,6 +25,7 @@ export const useTableBuilder = (party?: Party, table?: Item<ObjectModel>) => {
 /**
  * Generate test table.
  */
+// TODO(burdon): Remove.
 export const useTestTable = (party?: Party, callback: TestTableCallback = buildTestTable): Item<ObjectModel> | undefined => {
   const [table, setTable] = useState<Item<ObjectModel>>();
   const builder = useTableBuilder(party, table);
