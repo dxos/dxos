@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Factor out polkadot deps (plugin?)
 import PolkadotKeyring from '@polkadot/keyring';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import assert from 'assert';
@@ -59,11 +60,11 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
+  // TODO(burdon): Factor out polkadot deps (plugin?)
   private async polkadotSign (key: KeyRecord, payload: Uint8Array): Promise<SignResponse> {
     await cryptoWaitReady();
 
     assert(key.secretKey, 'Secret key is missing.');
-
     const keyring = new PolkadotKeyring({ type: 'sr25519' });
     const keypair = keyring.addFromUri(key.secretKey.toString());
 
@@ -72,6 +73,7 @@ export class HaloService implements IHaloService {
     };
   }
 
+  // TODO(burdon): Factor out polkadot deps (plugin?)
   async sign (request: SignRequest): Promise<SignResponse> {
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
@@ -80,7 +82,8 @@ export class HaloService implements IHaloService {
       assert(request.payload, 'No payload to sign.');
       return this.polkadotSign(key, request.payload);
     }
-    throw new Error('Only DXNS Address key signing is supported.');
+
+    throw new Error('Only DXNS address key signing is supported.');
   }
 
   async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {

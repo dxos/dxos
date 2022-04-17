@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import robot from 'robotjs';
 
-import { TestType } from '@dxos/react-client-testing';
+import { TestType } from '@dxos/client-testing';
 
 import { Launcher } from '../util';
 
@@ -24,7 +24,7 @@ describe('Grid demo', function () {
   const invitation = process.env.INVITATION;
 
   const spacing = 8;
-  const marginTop = 40; // OSX toolbar.
+  const marginTop = parseInt(process.env.MENUBAR ?? '24'); // Menubar with OSX notch is 40.
   const { width, height } = robot.getScreenSize();
   const minSize = { width: 750, height: 500 };
 

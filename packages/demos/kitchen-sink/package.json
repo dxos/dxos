@@ -27,6 +27,7 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/client-testing": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",

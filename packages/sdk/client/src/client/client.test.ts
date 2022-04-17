@@ -313,11 +313,11 @@ describe('Client', () => {
       const client = new Client(config);
       await client.initialize();
       client.registerModel(TestModel);
+      // TODO(burdon): Better error if halo is not created.
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
       const item = await party.database.createItem({ model: TestModel, type: 'test' });
       await item.model.set('prop', 'value1');
-
       await client.destroy();
     }
 
@@ -330,7 +330,7 @@ describe('Client', () => {
       client.registerModel(TestModel);
 
       const party = client.echo.queryParties().first;
-      const result = party.database.select({ type: 'test' }).query();
+      const result = party.database.select({ type: 'test' }).exec();
       await result.update.waitForCondition(() => result.entities.length > 0);
       const item = result.expectOne();
 

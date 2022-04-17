@@ -69,27 +69,27 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     // Create party.
     const party = await client.echo.createParty();
     const root = await party.database.createItem({
-      model: ObjectModel, type: 'example:type.root'
+      model: ObjectModel, type: 'example:type/root'
     });
     await root.model.set('title', 'root');
 
     // Objects.
     await party.database.createItem({
-      model: ObjectModel, type: 'example:type.object', parent: root.id
+      model: ObjectModel, type: 'example:type/object', parent: root.id
     });
     const child = await party.database.createItem({
-      model: ObjectModel, type: 'example:type.object', parent: root.id
+      model: ObjectModel, type: 'example:type/object', parent: root.id
     });
 
     // Test.
     const text = await party.database.createItem({
-      model: TextModel, type: 'example:type.text', parent: child.id
+      model: TextModel, type: 'example:type/text', parent: child.id
     });
     await text.model.insert(0, 'Hello world');
 
     // Messenger.
     const messenger = await party.database.createItem({
-      model: MessengerModel, type: 'example:type.messenger', parent: child.id
+      model: MessengerModel, type: 'example:type/messenger', parent: child.id
     });
     await messenger.model.sendMessage({
       text: 'Hello world',

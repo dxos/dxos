@@ -263,14 +263,12 @@ describe('Party manager', () => {
     expect(partyB).toBeDefined();
 
     const [updated, onUpdate] = latch();
-    partyB.database.select({ type: 'example:item/test' }).query()
+    partyB.database.select({ type: 'example:item/test' }).exec()
       .update.on(result => {
-        if (result.entities.length) {
-          const [itemB] = result.entities;
-          if (itemA && itemA.id === itemB.id) {
-            log(`B has ${itemB.id}`);
-            onUpdate();
-          }
+        const [itemB] = result.entities;
+        if (itemA && itemA.id === itemB.id) {
+          log(`B has ${itemB.id}`);
+          onUpdate();
         }
       });
 
@@ -318,7 +316,7 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
-    partyB.database.select({ type: 'example:item/test' }).query()
+    partyB.database.select({ type: 'example:item/test' }).exec()
       .update.on(result => {
         if (result.entities.length) {
           const [itemB] = result.entities;
@@ -399,7 +397,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select({ type: 'example:item/test' }).query()
+    partyB.database.select({ type: 'example:item/test' }).exec()
       .update.on(result => {
         if (result.entities.length) {
           const [itemB] = result.entities;
@@ -458,7 +456,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.select({ type: 'example:item/test' }).query()
+    partyB.database.select({ type: 'example:item/test' }).exec()
       .update.on(result => {
         if (result.entities.length) {
           const [itemB] = result.entities;

@@ -8,7 +8,7 @@ import { DXN, RegistryDataRecord, Resource } from '@dxos/registry-client';
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
-const BOT_TYPE_DXN = DXN.parse('dxos:type.bot');
+const BOT_TYPE_DXN = DXN.parse('dxos:type/bot');
 
 export interface BotData {
   dxn: DXN,

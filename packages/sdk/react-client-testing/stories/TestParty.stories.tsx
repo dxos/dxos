@@ -19,7 +19,7 @@ export default {
 
 // TODO(kaplanski): Factor out this component from devtools.
 const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
-  const children = item.select().children().query().entities;
+  const children = item.select().children().exec().entities;
 
   return (
     <TreeItem nodeId={item.id} label={item.type}>

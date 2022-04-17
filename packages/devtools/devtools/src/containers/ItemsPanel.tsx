@@ -9,7 +9,7 @@ import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
 import { Party, Item } from '@dxos/client';
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -96,7 +96,7 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
       <tbody>
         <tr>
           <td style={{ width: 100 }}>ID</td>
-          <td>{truncateString(item.id, 8)}</td>
+          <td>{truncateKey(item.id, 8)}</td>
         </tr>
         <tr>
           <td>Model</td>

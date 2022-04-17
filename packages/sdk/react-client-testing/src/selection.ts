@@ -3,6 +3,7 @@
 //
 
 import { Party } from '@dxos/client';
+import { TestType } from '@dxos/client-testing';
 import { Selection } from '@dxos/echo-db';
 
 /**
@@ -24,3 +25,9 @@ export const execSelection = (party: Party, text: string): Selection<any> | unde
     // Ignore.
   }
 };
+
+const format = (text: string) => text.replace(/\)\./g, ')\n  .');
+
+export const defaultSelectionText = format(
+  `select().filter({ type: '${TestType.Org}' }).children().filter({ type: '${TestType.Project}' })`
+);

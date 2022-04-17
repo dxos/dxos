@@ -9,8 +9,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "update:saved-state": "ts-node --transpile-only ./scripts/update-saved-state.ts"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",

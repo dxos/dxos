@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/client-testing",
+  "version": "2.28.23",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3",
+    "faker": "^5.1.0"
+  },
+  "devDependencies": {
+    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/testutils": "workspace:*",
+    "@types/columnify": "^1.5.1",
+    "@types/debug": "^4.1.7",
+    "@types/faker": "^5.5.1",
+    "@types/jest": "^26.0.7",
+    "@types/mocha": "~8.2.2",
+    "chalk": "^4.1.0",
+    "columnify": "^1.6.0",
+    "eslint": "^7.12.1",
+    "expect": "~27.0.2",
+    "mocha": "~8.4.0",
+    "typescript": "^4.5.2",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
+  }
+}

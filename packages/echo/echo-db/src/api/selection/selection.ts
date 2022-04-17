@@ -2,82 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Event } from '@dxos/async';
-import { ItemID } from '@dxos/echo-protocol';
 
-import { Database } from './database';
-import { Entity } from './entity';
-import { Item } from './item';
-import { Link } from './link';
-
-export type OneOrMultiple<T> = T | T[]
-
-//
-// Filters
-//
-
-export type ItemIdFilter = {
-  id: ItemID
-}
-
-export type ItemFilter = {
-  type?: OneOrMultiple<string>
-  parent?: ItemID | Item
-}
-
-export type LinkFilter = {
-  type?: OneOrMultiple<string>;
-}
-
-export type Predicate<T extends Entity> = (entity: T) => boolean;
-
-export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>
-
-export type RootSelector<R = void> = (filter?: RootFilter) => Selection<Item<any>, R>
-
-/**
- * Controls how deleted items are filtered.
- */
-export enum ItemFilterDeleted {
-  /**
-   * Do not return deleted items. Default behaviour.
-   */
-  HIDE_DELETED = 0,
-  /**
-   * Return deleted and regular items.
-   */
-  SHOW_DELETED = 1,
-  /**
-   * Return only deleted items.
-   */
-  SHOW_DELETED_ONLY = 2
-}
-
-export type QueryOptions = {
-  /**
-   * Controls how deleted items are filtered.
-   */
-  deleted?: ItemFilterDeleted
-}
-
-/**
- * Represents where the selection has started.
- */
-export type SelectionRoot = Database | Entity;
-
-/**
- * Returned from each stage of the visitor.
- */
-export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R]
-
-/**
- * Visitor callback.
- * The visitor is passed the current entities and result (accumulator),
- * which may be modified and returned.
- */
-export type Callable<T extends Entity, R> = (entities: T[], result: R) => R
+import { Entity } from '../entity';
+import { Item } from '../item';
+import { Link } from '../link';
+import {
+  createQueryOptionsFilter,
+  filterToPredicate,
+  linkFilterToPredicate,
+  Callable,
+  ItemFilter,
+  LinkFilter,
+  Predicate,
+  QueryOptions,
+  RootFilter
+} from './queries';
+import { SelectionContext, SelectionResult, SelectionRoot } from './result';
 
 /**
  * Factory for selector that provides a root set of items.
@@ -87,7 +28,7 @@ export type Callable<T extends Entity, R> = (entities: T[], result: R) => R
  * @param filter
  * @param value Initial reducer value.
  */
-export const createSelector = <R>(
+export const createSelection = <R>(
   // Provider is called each time the query is executed.
   itemsProvider: () => Item[],
   // TODO(burdon): Replace with direct event handler.
@@ -97,6 +38,8 @@ export const createSelector = <R>(
   value: R
 ): Selection<Item<any>, R> => {
   const predicate = filter ? filterToPredicate(filter) : () => true;
+
+  // TODO(burdon): Option to filter out system types.
   const visitor = (options: QueryOptions): SelectionContext<any, any> => {
     const items = itemsProvider()
       .filter(createQueryOptionsFilter(options))
@@ -114,11 +57,13 @@ export const createSelector = <R>(
  * @param update
  * @param value Initial reducer value.
  */
-export const createItemSelector = <R>(
+export const createItemSelection = <R>(
   root: Item<any>,
   update: Event<Entity[]>,
   value: R
-): Selection<Item<any>, R> => new Selection(() => [[root], value], update, root, value !== undefined);
+): Selection<Item<any>, R> => {
+  return new Selection(() => [[root], value], update, root, value !== undefined);
+};
 
 /**
  * Selections are used to construct database subscriptions.
@@ -155,7 +100,14 @@ export class Selection<T extends Entity<any>, R = void> {
   /**
    * Finish the selection and return the result.
    */
-  // TODO(burdon): Rename exec.
+  exec (options: QueryOptions = {}): SelectionResult<T, R> {
+    return this.query(options);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   query (options: QueryOptions = {}): SelectionResult<T, R> {
     return new SelectionResult<T, R>(() => this._visitor(options), this._update, this._root, this._reducer);
   }
@@ -254,156 +206,3 @@ export class Selection<T extends Entity<any>, R = void> {
     ]);
   }
 }
-
-/**
- * Query subscription.
- * Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
- */
-export class SelectionResult<T extends Entity, R = any> {
-  /**
-   * Fired when there are updates in the selection.
-   * Only update that are relevant to the selection cause the update.
-   */
-  readonly update = new Event<SelectionResult<T>>(); // TODO(burdon): Result result object.
-
-  private _lastResult: SelectionContext<T, R> = [[]];
-
-  constructor (
-    private readonly _execute: () => SelectionContext<T, R>,
-    private readonly _update: Event<Entity[]>,
-    private readonly _root: SelectionRoot,
-    private readonly _reducer: boolean
-  ) {
-    this.refresh();
-
-    // Re-run if deps change.
-    this.update.addEffect(() => _update.on(currentEntities => {
-      const [previousEntities] = this._lastResult;
-
-      this.refresh();
-
-      // Filters mutation events only if selection (since we can't reason about deps of call methods).
-      const set = new Set([...previousEntities, ...this._lastResult![0]]);
-      if (this._reducer || currentEntities.some(entity => set.has(entity as any))) {
-        this.update.emit(this);
-      }
-    }));
-  }
-
-  /**
-   * Re-run query.
-   */
-  refresh () {
-    const [entities, result] = this._execute();
-    this._lastResult = [dedupe(entities), result];
-    return this;
-  }
-
-  /**
-   * The root of the selection. Either a database or an item. Must be a stable reference.
-   */
-  get root (): SelectionRoot {
-    return this._root;
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  // get result () {
-  //   return this.entities;
-  // }
-
-  /**
-   * Get the result of this selection.
-   */
-  get entities (): T[] {
-    if (!this._lastResult) {
-      this.refresh();
-    }
-
-    const [entities] = this._lastResult!;
-    return entities;
-  }
-
-  /**
-   * Returns the selection or reducer result.
-   */
-  get value (): R extends void ? T[] : R {
-    if (!this._lastResult) {
-      this.refresh();
-    }
-
-    const [entities, value] = this._lastResult!;
-    return (this._reducer ? value : entities) as any;
-  }
-
-  /**
-   * Return the first element if the set has exactly one element.
-   */
-  expectOne (): T {
-    const entities = this.entities;
-    assert(entities.length === 1, `Expected one result; got ${entities.length}`);
-    return entities[0];
-  }
-}
-
-//
-// Utils
-//
-
-const dedupe = <T>(values: T[]) => Array.from(new Set(values));
-
-const coerceToId = (item: Item | ItemID): ItemID => {
-  if (typeof item === 'string') {
-    return item;
-  }
-
-  return item.id;
-};
-
-const testOneOrMultiple = <T>(expected: OneOrMultiple<T>, value: T) => {
-  if (Array.isArray(expected)) {
-    return expected.includes(value);
-  } else {
-    return expected === value;
-  }
-};
-
-const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> => {
-  if (typeof filter === 'function') {
-    return filter;
-  }
-
-  return itemFilterToPredicate(filter);
-};
-
-const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item> => {
-  if ('id' in filter) {
-    return item => item.id === filter.id;
-  } else {
-    return item =>
-      (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
-      (!filter.parent || item.parent?.id === coerceToId(filter.parent));
-  }
-};
-
-const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> =>
-  link => (!filter.type || testOneOrMultiple(filter.type, link.type));
-
-const createQueryOptionsFilter = ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity> => {
-  return entity => {
-    if (entity.model === null) {
-      return false;
-    }
-
-    switch (deleted) {
-      case ItemFilterDeleted.HIDE_DELETED:
-        return !(entity instanceof Item) || !entity.deleted;
-      case ItemFilterDeleted.SHOW_DELETED:
-        return true;
-      case ItemFilterDeleted.SHOW_DELETED_ONLY:
-        return entity instanceof Item && entity.deleted;
-    }
-  };
-};

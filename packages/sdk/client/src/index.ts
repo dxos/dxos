@@ -13,7 +13,7 @@ export * from './version';
 export * as proto from './proto/gen';
 
 export {
-  PARTY_ITEM_TYPE,
+  PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   Entity,
   Item,
   Link,

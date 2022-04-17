@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 
 import { keyToString } from '@dxos/crypto';
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { JsonTreeView } from '@dxos/react-components';
 
@@ -111,7 +111,7 @@ export const MessageTable = ({
                   style={{ color: colorHash.hex(key) }}
                   title={key}
                 >
-                  {truncateString(key, 8)}
+                  {truncateKey(key, 8)}
                 </TableCell>
 
                 {/* Number. */}

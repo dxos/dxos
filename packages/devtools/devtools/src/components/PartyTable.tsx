@@ -6,7 +6,7 @@ import React from 'react';
 
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
 import { CopyText, HashIcon } from '@dxos/react-components';
 
@@ -19,7 +19,7 @@ const TimeFrame = ({ value }: { value: Timeframe }) => {
     <div>
       {value.frames().map(([key, seq]) => (
         <div key={key.toHex()}>
-          <span>{truncateString(key.toHex(), 8)}</span>&nbsp;
+          <span>{truncateKey(key.toHex(), 8)}</span>&nbsp;
           <span>[{seq}]</span>
         </div>
       ))}

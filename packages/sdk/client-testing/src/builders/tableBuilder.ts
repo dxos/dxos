@@ -3,17 +3,16 @@
 //
 
 import faker from 'faker';
-import { useMemo } from 'react';
 
 import { Item, Party } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
 
-import { NumberRange, getNumber } from '../utils';
+import { NumberRange, getNumber } from '../util';
 
 // TODO(kaplanski): Discuss where we should obtain this from.
-export const TYPE_TABLE_COLUMN = 'dxos:type.table.column';
-export const TYPE_TABLE_ROW = 'dxos:type.table.row';
-export const TYPE_TABLE_COLUMN_LINK = 'dxos:type.table.column-link';
+export const TYPE_TABLE_COLUMN = 'dxos:type/table/column';
+export const TYPE_TABLE_ROW = 'dxos:type/table/row';
+export const TYPE_TABLE_COLUMN_LINK = 'dxos:type/table/column-link';
 
 type FieldGenerator = () => string;
 type Field = {
@@ -39,6 +38,7 @@ export class ColumnBuilder {
 /**
  * Class containing methods for building a table, with columns and rows. Used for testing.
  */
+// TODO(burdon): Remove (table specific).
 export class TableBuilder {
   constructor (
     private readonly _party: Party,
@@ -102,11 +102,3 @@ export class TableBuilder {
     }));
   }
 }
-
-/**
- * @param party
- * @param table
- */
-export const useTableBuilder = (party?: Party, table?: Item<ObjectModel>) => {
-  return useMemo(() => (party && table) ? new TableBuilder(party, table) : undefined, [table?.id]);
-};
