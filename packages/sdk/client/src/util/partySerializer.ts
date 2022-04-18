@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Party } from '../api';
-import { Client } from '../client';
+import { Client, Party } from '../api';
 import { schema } from '../proto/gen/';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
+/**
+ * Import/export party.
+ */
+// TODO(burdon): Move to api?
 export class PartySerializer {
   constructor (
     private readonly _client: Client
@@ -25,6 +28,7 @@ export class PartySerializer {
     } else {
       data = partyToImport;
     }
+
     return await this._client.echo.cloneParty(partyCodec.decode(data));
   }
 }

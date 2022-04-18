@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/crypto';
 import {
   AccountClient, AuctionsClient, createApiPromise,
   createKeyring,
-  DxosClientSigner,
+  ClientSigner,
   RegistryClient,
   SignTxFunction
 } from '../../src';
@@ -35,7 +35,7 @@ export const setup = async () => {
     type: KeyType.DXNS_ADDRESS
   });
 
-  const signer = new DxosClientSigner(client, alice.address, apiPromise.registry);
+  const signer = new ClientSigner(client, alice.address, apiPromise.registry);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
   const accountsApi = new AccountClient(apiPromise, signTx);

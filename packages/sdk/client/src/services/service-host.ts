@@ -3,18 +3,22 @@
 //
 
 import { Config } from '@dxos/config';
-import * as debug from '@dxos/debug'; // TODO(burdon): Why import *?
+import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 
-import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../../devtools';
-import { ClientServiceProvider, ClientServices } from '../../interfaces';
-import { DevtoolsHost } from '../../proto/gen/dxos/devtools';
-import { createServices } from './services';
+import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
+import { DevtoolsHost } from '../proto/gen/dxos/devtools';
+import { ClientServiceProvider, ClientServices } from '../types';
+import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 
+/**
+ * Remote service implementation.
+ */
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
   private readonly _echo: ECHO;
+  private readonly _services: ClientServices;
 
   constructor (
     private readonly _config: Config
@@ -30,7 +34,8 @@ export class ClientServiceHost implements ClientServiceProvider {
       snapshotStorage,
       metadataStorage,
       networkManagerOptions: {
-        signal: this._config.get('runtime.services.signal.server') ? [this._config.get('runtime.services.signal.server')!] : undefined,
+        signal: this._config.get('runtime.services.signal.server')
+          ? [this._config.get('runtime.services.signal.server')!] : undefined,
         ice: this._config.get('runtime.services.ice'),
         log: true
       },
@@ -38,13 +43,15 @@ export class ClientServiceHost implements ClientServiceProvider {
       snapshotInterval: this._config.get('runtime.client.snapshotInterval')
     });
 
-    this.services = {
+    this._services = {
       ...createServices({ config: this._config, echo: this._echo }),
       DevtoolsHost: this._createDevtoolsService()
     };
   }
 
-  readonly services: ClientServices;
+  get services () {
+    return this._services;
+  }
 
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     await this._echo.open(onProgressCallback);
@@ -71,7 +78,7 @@ export class ClientServiceHost implements ClientServiceProvider {
       networkManager: this._echo.networkManager,
       modelFactory: this._echo.modelFactory,
       keyring: this._echo.halo.keyring,
-      debug
+      debug // Export debug lib.
     };
 
     return createDevtoolsHost(dependencies, this._devtoolsEvents);

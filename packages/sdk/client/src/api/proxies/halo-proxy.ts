@@ -7,9 +7,11 @@ import { KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceProvider } from '../interfaces';
-import { Profile, SignRequest } from '../proto/gen/dxos/client';
-import { Invitation, InvitationProxy, InvitationRequest } from './invitations';
+import { Profile, SignRequest } from '../../proto/gen/dxos/client';
+import { ClientServiceProvider } from '../../types';
+import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
+
+// TODO(burdon): Separate typedef form implementation.
 
 /**
  * Client proxy to local/remote HALO service.

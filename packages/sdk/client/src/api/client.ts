@@ -12,15 +12,15 @@ import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
-import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
-import { InvalidConfigurationError } from '../interfaces/errors';
 import { Runtime } from '../proto/gen/dxos/config';
+import {
+  ClientServiceProvider, ClientServices, InvalidConfigurationError, RemoteServiceConnectionTimeout
+} from '../types';
 import { createWindowMessagePort, isNode } from '../util';
 import { DXOS_VERSION } from '../version';
-import { ClientServiceHost } from './service-host';
-import { ClientServiceProxy } from './service-proxy';
+import { ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
+import { EchoProxy, HaloProxy } from './proxies';
 
 const log = debug('dxos:client');
 
@@ -44,6 +44,11 @@ export interface ClientOptions {
    * Only used when remote=true.
    */
   rpcPort?: RpcPort;
+
+  /**
+   *
+   */
+  signer?: HaloSigner
 }
 
 /**

@@ -11,12 +11,11 @@ import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
-import { ClientServiceHost } from '../client/service-host';
-import { ClientServiceProxy } from '../client/service-proxy';
-import { ClientServiceProvider } from '../interfaces';
-import { Party as PartyProto } from '../proto/gen/dxos/client';
-import { streamToResultSet } from '../util';
-import { InvitationRequest, InvitationProxy } from './invitations';
+import { Party as PartyProto } from '../../proto/gen/dxos/client';
+import { ClientServiceHost, ClientServiceProxy } from '../../services';
+import { ClientServiceProvider } from '../../types';
+import { streamToResultSet } from '../../util';
+import { InvitationRequest, InvitationProxy } from '../invitations';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey

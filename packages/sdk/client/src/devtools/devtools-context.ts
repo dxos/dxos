@@ -9,8 +9,8 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { Client } from '../client';
-import { ClientServiceProvider } from '../interfaces';
+import { Client } from '../api';
+import { ClientServiceProvider } from '../types';
 
 /**
  * A hook bound to window.__DXOS__.

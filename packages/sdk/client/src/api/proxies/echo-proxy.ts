@@ -13,10 +13,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost } from '../client/service-host';
-import { ClientServiceProvider } from '../interfaces';
+import { ClientServiceHost } from '../../services';
+import { ClientServiceProvider } from '../../types';
+import { Invitation, InvitationProxy } from '../invitations';
 import { HaloProxy } from './halo-proxy';
-import { Invitation, InvitationProxy } from './invitations';
 import { Party } from './party-proxy';
 
 export class PartyInvitation extends Invitation<Party> {
@@ -27,6 +27,8 @@ export class PartyInvitation extends Invitation<Party> {
     return this.wait();
   }
 }
+
+// TODO(burdon): Separate typedef form implementation.
 
 /**
  * Client proxy to local/remote ECHO service.

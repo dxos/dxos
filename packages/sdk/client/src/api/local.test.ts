@@ -11,9 +11,7 @@ import { ConfigObject } from '@dxos/config';
 import { Client } from './client';
 
 describe('Client', () => {
-  describe('Local-only tests', () => {
-
-  });
+  describe('Local-only tests', () => {});
 
   describe('With persistent storage', () => {
     test('persistent storage', async () => {
@@ -32,11 +30,8 @@ describe('Client', () => {
       {
         const client = new Client(config);
         await client.initialize();
-
         await client.halo.createProfile({ username: 'test-user' });
-
         expect(client.halo.profile).toBeDefined();
-
         await client.destroy();
       }
 
@@ -44,7 +39,6 @@ describe('Client', () => {
         const client = new Client(config);
         await client.initialize();
         await waitForCondition(() => !!client.halo.profile);
-
         expect(client.halo.profile).toBeDefined();
         await client.destroy();
       }

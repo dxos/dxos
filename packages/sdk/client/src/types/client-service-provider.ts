@@ -36,6 +36,5 @@ export interface ClientServiceProvider {
   services: ClientServices
 
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
-
   close(): Promise<void>
 }

@@ -26,16 +26,21 @@ import {
   SubscribeMembersRequest,
   Party,
   CreateSnaspotRequest
-} from '../../../proto/gen/dxos/client';
-import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
-import { PartySnapshot } from '../../../proto/gen/dxos/echo/snapshot';
-import { resultSetToStream } from '../../../util';
-import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
+} from '../../proto/gen/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '../../proto/gen/dxos/echo/invitation';
+import { PartySnapshot } from '../../proto/gen/dxos/echo/snapshot';
+import { resultSetToStream } from '../../util';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
+/**
+ * Party service implementation.
+ */
 class PartyService implements IPartyService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  constructor (private echo: ECHO) {}
+  constructor (
+    private readonly echo: ECHO
+  ) {}
 
   subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
     const update = (next: (message: SubscribePartyResponse) => void) => {

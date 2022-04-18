@@ -2,16 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './api';
-export * from './interfaces';
-export * from './client';
-export * from './devtools/devtools-context';
-export * from './devtools/devtools-host-events';
-export * from './util';
-export * from './version';
-
-export * as proto from './proto/gen';
-
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   Entity,
@@ -27,3 +17,10 @@ export {
   PartyMember,
   ResultSet
 } from '@dxos/echo-db';
+
+export * as proto from './proto/gen';
+
+export * from './api';
+export * from './devtools/api';
+export * from './util';
+export * from './version';

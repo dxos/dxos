@@ -2085,9 +2085,6 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
-      '@polkadot/keyring': 6.11.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
@@ -2127,9 +2124,6 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
-      '@polkadot/keyring': 6.11.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       debug: 4.3.3
