@@ -5,92 +5,108 @@ import expect from 'expect';
 import faker from 'faker';
 import { it as test } from 'mocha';
 
-import { createTestInstance } from '@dxos/echo-db';
+import { createTestInstance, PartyInternal } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 const TYPE_SCHEMA = 'dxos:type.schema';
 const TYPE_SCHEMA_ORGANIZATION = 'dxos:type.schema.organization';
 const TYPE_SCHEMA_PERSON = 'dxos:type.schema.person';
 
-type DataDef = 'string' | 'number' | 'boolean'
-type FieldDef = {
+type Type = 'string' | 'number' | 'boolean' | 'link'
+type SchemaLink = {
+  schema: string
+  field: string
+}
+type SchemaField = {
   key: string
-  type: DataDef
+  type?: Type
   required: boolean
+  link?: SchemaLink
+}
+type Schema = {
+  schema: string
+  fields: SchemaField[]
 }
 
-const initialOrganizationSchemaFields: FieldDef[] = [
-  {
-    key: 'title',
-    type: 'string',
-    required: true
+const schemas = {
+  organization: {
+    schema: TYPE_SCHEMA_ORGANIZATION,
+    fields: [
+      {
+        key: 'title',
+        type: 'string',
+        required: true
+      },
+      {
+        key: 'website',
+        type: 'string',
+        required: true
+      },
+      {
+        key: 'based',
+        type: 'string',
+        required: false
+      }
+    ]
   },
-  {
-    key: 'website',
-    type: 'string',
-    required: true
-  },
-  {
-    key: 'based',
-    type: 'string',
-    required: false
+  person: {
+    schema: TYPE_SCHEMA_PERSON,
+    fields: [
+      {
+        key: 'title',
+        type: 'string',
+        required: true
+      },
+      {
+        key: 'role',
+        type: 'string',
+        required: true
+      }
+    ]
   }
-];
+};
 
-const initialPersonSchemaFields: FieldDef[] = [
-  {
-    key: 'title',
-    type: 'string',
-    required: true
+const generators: any = {
+  organization: {
+    title: faker.company.companyName,
+    website: faker.internet.url,
+    based: faker.address.cityName
   },
-  {
-    key: 'role',
-    type: 'string',
-    required: true
+  person: {
+    title: faker.name.firstName,
+    role: faker.name.jobTitle
   }
-];
+};
+
+const createSchemas = async (party: PartyInternal) => {
+  await Promise.all(Object.entries(schemas).map(([schema, schemaDef]) => party.database.createItem({
+    model: ObjectModel,
+    type: TYPE_SCHEMA,
+    props: {
+      schema: schemaDef.schema,
+      fields: schemaDef.fields
+    }
+  })));
+};
+
+const createData = async (party: PartyInternal) => {
+  await Promise.all(Object.entries(schemas).map(async ([schema, schemaDef]) => {
+    return await Promise.all(Array.from({ length: 5 }).map(async () => {
+      const fields = schemaDef.fields.map(field => ({ [field.key]: generators[schema][field.key]() }));
+      return await party.database.createItem({
+        type: schemaDef.schema,
+        props: Object.assign({}, {}, ...fields)
+      });
+    }));
+  }));
+};
 
 const setup = async () => {
   const echo = await createTestInstance({ initialize: true });
   const party = await echo.createParty();
 
-  await party.database.createItem({
-    model: ObjectModel,
-    type: TYPE_SCHEMA,
-    props: {
-      schema: TYPE_SCHEMA_ORGANIZATION,
-      fields: initialOrganizationSchemaFields
-    }
-  });
-
-  await Promise.all(Array.from({ length: 5 }).map(async () => {
-    return await party.database.createItem({
-      type: TYPE_SCHEMA_ORGANIZATION,
-      props: {
-        title: faker.company.companyName(),
-        website: faker.internet.url(),
-        nonSchemaField: faker.lorem.word() // This causes the test to fail
-      }
-    });
-  }));
-
-  await party.database.createItem({
-    type: TYPE_SCHEMA,
-    props: {
-      schema: TYPE_SCHEMA_PERSON,
-      fields: initialPersonSchemaFields
-    }
-  });
-
-  await Promise.all(Array.from({ length: 10 }).map(async () => {
-    await party.database.createItem({
-      type: TYPE_SCHEMA_PERSON,
-      props: {
-        title: faker.name.firstName(),
-        role: faker.name.jobTitle()
-      }
-    });
-  }));
+  await createSchemas(party);
+  await createData(party);
 
   return { echo, party };
 };
@@ -100,21 +116,21 @@ describe.only('Schema', () => {
   test('Use schema to validate the fields of an item', async () => {
     const { echo, party } = await setup();
 
-    const [organizationSchema] = party.database
+    const [schema] = party.database
       .select({ type: TYPE_SCHEMA })
       .filter(item => item.model.get('schema') === TYPE_SCHEMA_ORGANIZATION)
       .query()
       .entities;
 
-    const organizationItems = party.database
+    const items = party.database
       .select({ type: TYPE_SCHEMA_ORGANIZATION })
       .query()
       .entities;
 
-    const organizationSchemaFields: FieldDef[] = Object.values(organizationSchema.model.get('fields'));
-    organizationItems.forEach(orgItem => {
-      organizationSchemaFields.forEach(field => {
-        const fieldValue = orgItem.model.get(field.key);
+    const fields: SchemaField[] = Object.values(schema.model.get('fields'));
+    items.forEach(organization => {
+      fields.forEach(field => {
+        const fieldValue = organization.model.get(field.key);
         if (field.required) {
           expect(fieldValue).toBeTruthy();
         }
@@ -130,22 +146,22 @@ describe.only('Schema', () => {
   test('Check if item is using schema entirely', async () => {
     const { echo, party } = await setup();
 
-    const [organizationSchema] = party.database
+    const [schema] = party.database
       .select({ type: TYPE_SCHEMA })
       .filter(item => item.model.get('schema') === TYPE_SCHEMA_ORGANIZATION)
       .query()
       .entities;
 
-    const organizationItems = party.database
+    const items = party.database
       .select({ type: TYPE_SCHEMA_ORGANIZATION })
       .query()
       .entities;
 
-    const organizationSchemaFields: FieldDef[] = Object.values(organizationSchema.model.get('fields'));
-    organizationItems.forEach(orgItem => {
-      const itemFields = Object.entries(orgItem.model.toObject());
+    const fields: SchemaField[] = Object.values(schema.model.get('fields'));
+    items.forEach(organization => {
+      const itemFields = Object.entries(organization.model.toObject());
       itemFields.forEach(([key, value]) => {
-        const schemaField = organizationSchemaFields.find(schemaField => schemaField.key === key);
+        const schemaField = fields.find(schemaField => schemaField.key === key);
         expect(schemaField).toBeTruthy();
         expect(typeof value).toBe(schemaField?.type);
       });
