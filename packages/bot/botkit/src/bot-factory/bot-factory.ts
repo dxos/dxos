@@ -7,7 +7,7 @@ import { debug } from 'debug';
 import { join } from 'path';
 
 import { Config } from '@dxos/config';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { PublicKey, keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
 import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config';
@@ -87,7 +87,8 @@ export class BotFactory implements BotFactoryService {
           const handle = new BotHandle(botId, join(BOT_OUT_DIR, botId), this._botContainer, {
             config: this._config,
             packageSpecifier: bot.packageSpecifier,
-            partyKey: bot.partyKey
+            // TODO(egorgripasov): Restore properly from snapshot storage.
+            partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
           });
           handle.startTimestamp = new Date();
           handle.localPath = localPath;
