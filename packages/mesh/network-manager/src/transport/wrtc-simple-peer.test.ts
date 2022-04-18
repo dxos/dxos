@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import wrtc from '@koush/wrtc';
 import { it as test } from 'mocha';
 import SimplePeerConstructor from 'simple-peer';
-import wrtc from 'wrtc';
 
 import { sleep } from '@dxos/async';
 
