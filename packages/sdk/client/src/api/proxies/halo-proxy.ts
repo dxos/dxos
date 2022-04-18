@@ -12,24 +12,33 @@ import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client'
 import { ClientServiceProvider } from '../../types';
 import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
 
+/**
+ * HALO API.
+ */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Halo {
-  info: () => { key?: PublicKey }
+  info (): { key?: PublicKey }
 
-  profile?: Profile
-  createProfile: (options?: CreateProfileOptions) => Promise<Profile>
-  recoverProfile: (seedPhrase: string) => Promise<Profile>
-  queryContacts: () => ResultSet<Contact>
-  createInvitation: () => Promise<InvitationRequest>
-  acceptInvitation: (invitationDescriptor: InvitationDescriptor) => Invitation
+  get profile (): Profile | undefined
+  createProfile (options?: CreateProfileOptions): Promise<Profile>
+  recoverProfile (seedPhrase: string): Promise<Profile>
 
-  addKeyRecord: (keyRecord: KeyRecord) => Promise<void>
-  sign: (request: SignRequest) => Promise<SignResponse>
+  /**
+   * @deprecated
+   */
+  subscribeToProfile (callback: (profile: Profile) => void): void
 
-  setGlobalPreference: (key: string, value: string) => Promise<void>
-  getGlobalPreference: (key: string) => Promise<string | undefined>
-  setDevicePreference: (key: string, value: string) => Promise<void>
-  getDevicePreference: (key: string) => Promise<string | undefined>
+  queryContacts (): ResultSet<Contact>
+  createInvitation (): Promise<InvitationRequest>
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation
+
+  addKeyRecord (keyRecord: KeyRecord): Promise<void>
+  sign (request: SignRequest): Promise<SignResponse>
+
+  setGlobalPreference (key: string, value: string): Promise<void>
+  getGlobalPreference (key: string): Promise<string | undefined>
+  setDevicePreference (key: string, value: string): Promise<void>
+  getDevicePreference (key: string): Promise<string | undefined>
 }
 
 /**

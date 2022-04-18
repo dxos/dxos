@@ -28,6 +28,9 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
+/**
+ * Party API.
+ */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Party {
   get key (): PublicKey
@@ -38,31 +41,28 @@ export interface Party {
   get select (): Database['select']
   get reduce (): Database['reduce']
 
-  initialize: () => Promise<void>
-  destroy: () => Promise<void>
+  initialize (): Promise<void>
+  destroy (): Promise<void>
 
-  // TODO(burdon): Remove?
-  // async open ()
-  // async setOpen (open: boolean)
+  open (): Promise<void>
+  close (): Promise<void>
+  setActive (active: boolean, options: ActivationOptions): Promise<void>
 
-  setActive: (active: boolean, options: ActivationOptions) => Promise<void>
-
-  setTitle: (title: string) => Promise<void>
-  getTitle: () => string
+  setTitle (title: string): Promise<void>
+  getTitle (): string
 
   get properties (): ObjectProperties
-
   /**
    * @deprecated
    */
-  setProperty: (key: string, value?: any) => Promise<void>
+  setProperty (key: string, value?: any): Promise<void>
   /**
    * @deprecated
    */
-  getProperty: (key: string, defaultValue?: any) => any
+  getProperty (key: string, defaultValue?: any): any
 
-  queryMembers: () => ResultSet<PartyMember>
-  createInvitation: (options?: CreationInvitationOptions) => Promise<InvitationRequest>
+  queryMembers (): ResultSet<PartyMember>
+  createInvitation (options?: CreationInvitationOptions): Promise<InvitationRequest>
 }
 
 /**
@@ -168,18 +168,20 @@ export class PartyProxy implements Party {
     }
   }
 
-  // TODO(burdon): Requires comment. Remove?
-  // async open () {
-  //   return this.setOpen(true);
-  // }
+  async open () {
+    await this._setOpen(true);
+  }
 
-  // TODO(burdon): Requires comment. Remove?
-  // async setOpen (open: boolean) {
-  //   await this._serviceProvider.services.PartyService.setPartyState({
-  //     partyKey: this.key,
-  //     open
-  //   });
-  // }
+  async close () {
+    await this._setOpen(false);
+  }
+
+  async _setOpen (open: boolean) {
+    await this._serviceProvider.services.PartyService.setPartyState({
+      partyKey: this.key,
+      open
+    });
+  }
 
   // TODO(burdon): Requires comment.
   async setActive (active: boolean, options: ActivationOptions) {
@@ -251,6 +253,9 @@ export class PartyProxy implements Party {
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 
+  /**
+   * Implementation method.
+   */
   createSnapshot () {
     return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }

@@ -11,9 +11,12 @@ import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import {
-  AccountClient, AuctionsClient, createApiPromise,
+  AccountClient,
+  AuctionsClient,
+  createApiPromise,
   createKeyring,
   ClientSigner,
+  ClientSignerPlugin,
   RegistryClient,
   SignTxFunction
 } from '../../src';
@@ -27,7 +30,9 @@ export const setup = async () => {
   const alice = (await createKeyring()).addFromUri('//Alice');
   const bob = (await createKeyring()).addFromUri('//Bob');
 
-  const client = new Client();
+  const client = new Client({}, {
+    signer: new ClientSignerPlugin()
+  });
   await client.initialize();
   await client.halo.addKeyRecord({
     publicKey: PublicKey.from(decodeAddress(alice.address)),
@@ -35,7 +40,7 @@ export const setup = async () => {
     type: KeyType.DXNS_ADDRESS
   });
 
-  const signer = new ClientSigner(client, alice.address, apiPromise.registry);
+  const signer = new ClientSigner(client, apiPromise.registry, alice.address);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
   const accountsApi = new AccountClient(apiPromise, signTx);

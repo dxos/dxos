@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
 import PolkadotKeyring from '@polkadot/keyring';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
+import assert from 'assert';
 
 import { Client, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
 import { KeyRecord, KeyType } from '@dxos/credentials';
@@ -43,8 +42,8 @@ export class ClientSigner implements Partial<Signer> {
 
   constructor (
     private client: Client,
-    address: string, // TODO(burdon): Change order.
-    private registry: Registry
+    private registry: Registry,
+    address: string
   ) {
     this.publicKey = PublicKey.from(decodeAddress(address));
   }

@@ -28,14 +28,17 @@ export class PartyInvitation extends Invitation<Party> {
   }
 }
 
+/**
+ * ECHO API.
+ */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Echo {
-  info: () => { parties: number }
-  createParty: () => Promise<Party>
-  cloneParty: (snapshot: PartySnapshot) => Promise<Party>
-  getParty: (partyKey: PartyKey) => Party | undefined
-  queryParties: () => ResultSet<Party>
-  acceptInvitation: (invitationDescriptor: InvitationDescriptor) => PartyInvitation
+  info (): { parties: number }
+  createParty (): Promise<Party>
+  cloneParty (snapshot: PartySnapshot): Promise<Party>
+  getParty (partyKey: PartyKey): Party | undefined
+  queryParties (): ResultSet<Party>
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation
 }
 
 /**
@@ -65,6 +68,7 @@ export class EchoProxy implements Echo {
     if (this._serviceProvider instanceof ClientServiceHost) {
       return this._serviceProvider.echo.networkManager;
     }
+
     throw new Error('Network Manager not available in service proxy.');
   }
 

@@ -74,6 +74,7 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
+  // TODO(burdon): Remove or factor out default config?
   constructor (config: ConfigObject | Config = { version: 1 }, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');

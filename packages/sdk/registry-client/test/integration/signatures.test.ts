@@ -101,7 +101,7 @@ describe('Signatures', () => {
   it('Can send transactions with external signer using Client', async () => {
     const signTxFunction: SignTxFunction = async (tx) => {
       return await tx.signAsync(keypair.address, {
-        signer: new ClientSigner(client, keypair.address, apiPromise.registry)
+        signer: new ClientSigner(client, apiPromise.registry, keypair.address)
       });
     };
 
