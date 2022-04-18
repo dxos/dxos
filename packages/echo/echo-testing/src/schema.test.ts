@@ -163,7 +163,12 @@ describe.only('Schema', () => {
       itemFields.forEach(([key, value]) => {
         const schemaField = fields.find(schemaField => schemaField.key === key);
         expect(schemaField).toBeTruthy();
-        expect(typeof value).toBe(schemaField?.type);
+        if (schemaField?.required) {
+          expect(value).toBeTruthy();
+        }
+        if (schemaField?.type) {
+          expect(typeof value).toBe(schemaField?.type);
+        }
       });
     });
 
