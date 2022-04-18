@@ -4,19 +4,38 @@
 
 import { Event } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Profile, SignRequest } from '../../proto/gen/dxos/client';
+import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';
 import { ClientServiceProvider } from '../../types';
 import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
 
-// TODO(burdon): Separate typedef form implementation.
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Halo {
+  info: () => { key?: PublicKey }
+
+  profile?: Profile
+  createProfile: (options?: CreateProfileOptions) => Promise<Profile>
+  recoverProfile: (seedPhrase: string) => Promise<Profile>
+  queryContacts: () => ResultSet<Contact>
+  createInvitation: () => Promise<InvitationRequest>
+  acceptInvitation: (invitationDescriptor: InvitationDescriptor) => Invitation
+
+  addKeyRecord: (keyRecord: KeyRecord) => Promise<void>
+  sign: (request: SignRequest) => Promise<SignResponse>
+
+  setGlobalPreference: (key: string, value: string) => Promise<void>
+  getGlobalPreference: (key: string) => Promise<string | undefined>
+  setDevicePreference: (key: string, value: string) => Promise<void>
+  getDevicePreference: (key: string) => Promise<string | undefined>
+}
 
 /**
  * Client proxy to local/remote HALO service.
  */
-export class HaloProxy {
+export class HaloProxy implements Halo {
   private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new SubscriptionGroup();
 
@@ -51,9 +70,12 @@ export class HaloProxy {
     return this._profile;
   }
 
-  // TODO(burdon): Should be part of profile object. Or use standard Result object.
-  subscribeToProfile (cb: () => void): () => void {
-    return this.profileChanged.on(cb);
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove and expose event handler?
+  subscribeToProfile (callback: (profile: Profile) => void): () => void {
+    return this.profileChanged.on(() => callback(this._profile!));
   }
 
   /**
@@ -67,18 +89,18 @@ export class HaloProxy {
   }
 
   /**
-   * Query for contacts. Contacts represent member keys across all known Parties.
-   */
-  queryContacts (): ResultSet<Contact> {
-    return new ResultSet(this._contactsChanged, () => this._contacts);
-  }
-
-  /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile (seedPhrase: string) {
     this._profile = await this._serviceProvider.services.ProfileService.recoverProfile({ seedPhrase });
     return this._profile;
+  }
+
+  /**
+   * Query for contacts. Contacts represent member keys across all known Parties.
+   */
+  queryContacts (): ResultSet<Contact> {
+    return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
   /**

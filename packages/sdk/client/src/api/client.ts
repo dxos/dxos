@@ -14,13 +14,13 @@ import { RpcPort } from '@dxos/rpc';
 
 import { DevtoolsHook } from '../devtools';
 import { Runtime } from '../proto/gen/dxos/config';
+import { ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
 import {
   ClientServiceProvider, ClientServices, InvalidConfigurationError, RemoteServiceConnectionTimeout
 } from '../types';
 import { createWindowMessagePort, isNode } from '../util';
 import { DXOS_VERSION } from '../version';
-import { ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
-import { EchoProxy, HaloProxy } from './proxies';
+import { Echo, EchoProxy, Halo, HaloProxy } from './proxies';
 
 const log = debug('dxos:client');
 
@@ -50,6 +50,8 @@ export interface ClientOptions {
    */
   signer?: HaloSigner
 }
+
+// TODO(burdon): Separate public API form implementation (hide impl methods: e.g., services).
 
 /**
  * The main DXOS client API.
@@ -118,7 +120,7 @@ export class Client {
   /**
    * ECHO database.
    */
-  get echo (): EchoProxy {
+  get echo (): Echo {
     assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
@@ -126,23 +128,26 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo (): HaloProxy {
+  get halo (): Halo {
     assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
 
-  /**
-   * Client services that can be proxied.
-   */
-  get services (): ClientServices {
-    return this._serviceProvider.services;
-  }
+  // TODO(burdon): Expose mesh for messaging?
 
   /**
    * Returns true if client is connected to a remote services protvider.
    */
   get isRemote (): boolean {
     return this._serviceProvider instanceof ClientServiceProxy;
+  }
+
+  /**
+   * Client services that can be proxied.
+   */
+  // TODO(burdon): Remove from API?
+  get services (): ClientServices {
+    return this._serviceProvider.services;
   }
 
   /**
@@ -245,7 +250,7 @@ export class Client {
    * Registers a new ECHO model.
    */
   registerModel (constructor: ModelConstructor<any>): this {
-    this.echo.modelFactory.registerModel(constructor);
+    this._echo.modelFactory.registerModel(constructor);
     return this;
   }
 

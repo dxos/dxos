@@ -10,6 +10,7 @@ import { schema } from '../proto/gen';
 import { PartyService, ProfileService, SystemService, HaloService } from '../proto/gen/dxos/client';
 import { DevtoolsHost, TracingService } from '../proto/gen/dxos/devtools';
 
+// TODO(burdon): Change to lowercase?
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
 export interface ClientServices {
   SystemService: SystemService;
@@ -26,6 +27,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   ProfileService: schema.getService('dxos.client.ProfileService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   HaloService: schema.getService('dxos.client.HaloService'),
+  // TODO(burdon): Rename ECHOService?
   // DataService is provided and implemented internally in ECHO so we import it from there.
   DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),

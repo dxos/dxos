@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client, Party } from '../api';
-import { schema } from '../proto/gen/';
+import { Client, Party, PartyProxy } from '../api';
+import { schema } from '../proto/gen';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
@@ -17,7 +17,7 @@ export class PartySerializer {
   ) {}
 
   async serializeParty (party: Party) {
-    const snapshot = await party.createSnapshot();
+    const snapshot = await (party as PartyProxy).createSnapshot();
     return new Blob([partyCodec.encode(snapshot)]);
   }
 

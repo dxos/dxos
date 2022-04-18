@@ -5,7 +5,14 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, Item, RemoteDatabaseBackend
+  PARTY_ITEM_TYPE,
+  PARTY_TITLE_PROPERTY,
+  ActivationOptions,
+  Database,
+  Item,
+  RemoteDatabaseBackend,
+  ResultSet,
+  PartyMember
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -21,11 +28,48 @@ export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Party {
+  get key (): PublicKey
+  get isOpen (): boolean
+  get isActive (): boolean
+
+  get database (): Database
+  get select (): Database['select']
+  get reduce (): Database['reduce']
+
+  initialize: () => Promise<void>
+  destroy: () => Promise<void>
+
+  // TODO(burdon): Remove?
+  // async open ()
+  // async setOpen (open: boolean)
+
+  setActive: (active: boolean, options: ActivationOptions) => Promise<void>
+
+  setTitle: (title: string) => Promise<void>
+  getTitle: () => string
+
+  get properties (): ObjectProperties
+
+  /**
+   * @deprecated
+   */
+  setProperty: (key: string, value?: any) => Promise<void>
+  /**
+   * @deprecated
+   */
+  getProperty: (key: string, defaultValue?: any) => any
+
+  queryMembers: () => ResultSet<PartyMember>
+  createInvitation: (options?: CreationInvitationOptions) => Promise<InvitationRequest>
+}
+
 /**
  * Main public Party API.
  * Proxies requests to local/remove services.
  */
-export class Party {
+export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new InvitationProxy();
 
@@ -64,6 +108,7 @@ export class Party {
     }
   }
 
+  // TODO(burdon): Getter require by react hook.
   get invitationProxy () {
     return this._invitationProxy;
   }
@@ -89,6 +134,20 @@ export class Party {
   }
 
   /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get select (): Database['select'] {
+    return this.database.select.bind(this.database);
+  }
+
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get reduce (): Database['reduce'] {
+    return this.database.reduce.bind(this.database);
+  }
+
+  /**
    * Called by EchoProxy open.
    */
   async initialize () {
@@ -109,17 +168,18 @@ export class Party {
     }
   }
 
-  async open () {
-    return this.setOpen(true);
-  }
+  // TODO(burdon): Requires comment. Remove?
+  // async open () {
+  //   return this.setOpen(true);
+  // }
 
-  // TODO(burdon): Requires comment.
-  async setOpen (open: boolean) {
-    await this._serviceProvider.services.PartyService.setPartyState({
-      partyKey: this.key,
-      open
-    });
-  }
+  // TODO(burdon): Requires comment. Remove?
+  // async setOpen (open: boolean) {
+  //   await this._serviceProvider.services.PartyService.setPartyState({
+  //     partyKey: this.key,
+  //     open
+  //   });
+  // }
 
   // TODO(burdon): Requires comment.
   async setActive (active: boolean, options: ActivationOptions) {
@@ -141,7 +201,6 @@ export class Party {
    */
   async setTitle (title: string) {
     await this.setProperty(PARTY_TITLE_PROPERTY, title);
-    return this;
   }
 
   /**
@@ -156,7 +215,6 @@ export class Party {
    */
   async setProperty (key: string, value?: any) {
     await this.properties.set(key, value);
-    return this;
   }
 
   /**
@@ -164,20 +222,6 @@ export class Party {
    */
   getProperty (key: string, defaultValue?: any) {
     return this.properties.get(key, defaultValue);
-  }
-
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   */
-  get select (): Database['select'] {
-    return this.database.select.bind(this.database);
-  }
-
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   */
-  get reduce (): Database['reduce'] {
-    return this.database.reduce.bind(this.database);
   }
 
   /**
