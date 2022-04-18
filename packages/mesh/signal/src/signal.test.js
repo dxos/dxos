@@ -3,10 +3,10 @@
 //
 
 import swarm from '@geut/discovery-swarm-webrtc';
+import wrtc from '@koush/wrtc';
 import crypto from 'crypto';
 import debug from 'debug';
 import pEvent from 'p-event';
-import wrtc from 'wrtc';
 
 import { createBroker } from './broker';
 

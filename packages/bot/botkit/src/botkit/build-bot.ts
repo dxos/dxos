@@ -18,17 +18,17 @@ export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
     format: 'cjs',
     platform: 'node',
     external: [
+      '@koush/wrtc',
+      'avsc',
+      'bip32',
+      'electron',
       'fatfs',
       'runtimejs',
-      'wrtc',
-      'bip32',
-      'typeforce',
-      'sodium-universal',
       'sodium-native',
-      'ws',
-      'avsc',
+      'sodium-universal',
       'thrift',
-      'electron'
+      'typeforce',
+      'ws'
     ]
   });
 };

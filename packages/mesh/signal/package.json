@@ -70,6 +70,7 @@
     "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
+    "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/jest": "^26.0.7",
@@ -82,8 +83,7 @@
     "graphology-shortest-path": "^1.3.4",
     "graphology-types": "^0.23.0",
     "jest": "^26.6.3",
-    "typescript": "^4.5.2",
-    "wrtc": "^0.4.7"
+    "typescript": "^4.5.2"
   },
   "publishConfig": {
     "access": "public"
