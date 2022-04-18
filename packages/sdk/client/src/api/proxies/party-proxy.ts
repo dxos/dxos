@@ -19,8 +19,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
 import { Party as PartyProto } from '../../proto/gen/dxos/client';
-import { ClientServiceHost, ClientServiceProxy } from '../../services';
-import { ClientServiceProvider } from '../../types';
+import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../services';
 import { streamToResultSet } from '../../util';
 import { InvitationRequest, InvitationProxy } from '../invitations';
 

@@ -2700,6 +2700,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2733,6 +2734,7 @@ importers:
       typescript: ^4.5.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/util': link:../../common/util

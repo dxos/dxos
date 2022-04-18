@@ -17,7 +17,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { clientServiceBundle } from '../types';
+import { clientServiceBundle } from '../services';
 import { Client } from './client';
 
 describe('Client', () => {

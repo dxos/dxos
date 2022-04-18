@@ -9,7 +9,7 @@ import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, Resul
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';
-import { ClientServiceProvider } from '../../types';
+import { ClientServiceProvider } from '../../services';
 import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
 
 /**

@@ -14,14 +14,19 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { Client } from '@dxos/client';
+import { ConfigObject } from '@dxos/config';
 import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import {
-  AuctionsClient, createApiPromise, SignTxFunction,
-  createKeyring, registryTypes, ClientSigner
+  AuctionsClient,
+  ClientSigner,
+  SignTxFunction,
+  createApiPromise,
+  createKeyring,
+  registryTypes
 } from '../../src';
-import { DEFAULT_DOT_ENDPOINT } from './test-config';
+import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
@@ -56,13 +61,24 @@ describe('Signatures', () => {
   });
 
   beforeEach(async () => {
-    apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
+    apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
     const keyring = await createKeyring();
     const uri = '//Alice';
     keypair = keyring.addFromUri(uri);
 
-    client = new Client({ version: 1, runtime: { services: { dxns: { server: DEFAULT_DOT_ENDPOINT } } } });
+    const config: ConfigObject = {
+      version: 1,
+      runtime: {
+        services: {
+          dxns: {
+            server: DEFAULT_DXNS_ENDPOINT
+          }
+        }
+      }
+    };
+
+    client = new Client(config);
     await client.initialize();
     await client.halo.createProfile();
     await client.halo.addKeyRecord({

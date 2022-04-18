@@ -8,7 +8,7 @@ import { ECHO, OpenProgress } from '@dxos/echo-db';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import { DevtoolsHost } from '../proto/gen/dxos/devtools';
-import { ClientServiceProvider, ClientServices } from '../types';
+import { ClientServiceProvider, ClientServices } from '../services';
 import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 

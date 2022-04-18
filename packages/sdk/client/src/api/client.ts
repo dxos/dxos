@@ -14,12 +14,10 @@ import { RpcPort } from '@dxos/rpc';
 
 import { DevtoolsHook } from '../devtools';
 import { Runtime } from '../proto/gen/dxos/config';
-import { ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
-import {
-  ClientServiceProvider, ClientServices, InvalidConfigurationError, RemoteServiceConnectionTimeout
-} from '../types';
+import { ClientServiceProvider, ClientServices, ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
 import { createWindowMessagePort, isNode } from '../util';
 import { DXOS_VERSION } from '../version';
+import { InvalidConfigurationError, RemoteServiceConnectionTimeout } from './errors';
 import { Echo, EchoProxy, Halo, HaloProxy } from './proxies';
 
 const log = debug('dxos:client');

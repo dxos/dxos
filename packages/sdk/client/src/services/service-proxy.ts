@@ -6,7 +6,8 @@ import { promiseTimeout } from '@dxos/async';
 import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../types';
+import { RemoteServiceConnectionTimeout } from '../api';
+import { clientServiceBundle, ClientServiceProvider, ClientServices } from './client-service';
 
 /**
  * Implements services that are not local to the app.

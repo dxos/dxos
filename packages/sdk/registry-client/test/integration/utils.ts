@@ -20,13 +20,14 @@ import {
   RegistryClient,
   SignTxFunction
 } from '../../src';
-import { DEFAULT_DOT_ENDPOINT } from './test-config';
+import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
 export const setup = async () => {
-  const apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
+  const apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
+  // TODO(burdon): Change to array of accounts (are these special for testing?)
   const alice = (await createKeyring()).addFromUri('//Alice');
   const bob = (await createKeyring()).addFromUri('//Bob');
 

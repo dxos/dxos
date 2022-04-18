@@ -13,8 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost } from '../../services';
-import { ClientServiceProvider } from '../../types';
+import { ClientServiceHost, ClientServiceProvider } from '../../services';
 import { Invitation, InvitationProxy } from '../invitations';
 import { HaloProxy } from './halo-proxy';
 import { Party, PartyProxy } from './party-proxy';

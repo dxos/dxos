@@ -12,16 +12,17 @@ import { DevtoolsHost, TracingService } from '../proto/gen/dxos/devtools';
 
 // TODO(burdon): Change to lowercase?
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
-export interface ClientServices {
-  SystemService: SystemService;
-  ProfileService: ProfileService;
-  HaloService: HaloService;
-  PartyService: PartyService;
-  DataService: DataService;
-  DevtoolsHost: DevtoolsHost;
-  TracingService: TracingService;
+export type ClientServices = {
+  SystemService: SystemService
+  ProfileService: ProfileService
+  HaloService: HaloService
+  PartyService: PartyService
+  DataService: DataService
+  DevtoolsHost: DevtoolsHost
+  TracingService: TracingService
 }
 
+// TODO(burdon): Required by devtools?
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.SystemService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
@@ -36,7 +37,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
 export interface ClientServiceProvider {
   services: ClientServices
-
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
   close(): Promise<void>
 }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServices } from '../../types';
+import { ClientServices } from '../../services';
 import { createHaloService } from './halo';
 import { createPartyService } from './party';
 import { createProfileService } from './profile';

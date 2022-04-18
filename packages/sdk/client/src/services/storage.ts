@@ -10,7 +10,7 @@ import { defs } from '@dxos/config';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
 import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
-import { InvalidConfigurationError } from '../types';
+import { InvalidConfigurationError } from '../api';
 import { isNode } from '../util';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
