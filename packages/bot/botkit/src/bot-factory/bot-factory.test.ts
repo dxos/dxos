@@ -21,7 +21,9 @@ describe('BotFactory', () => {
       });
 
       const bot = await botFactory.spawnBot({
-        package: { localPath: require.resolve('../bots/failing-bot') }
+        package: {
+          localPath: require.resolve('../bots/failing-bot')
+        }
       });
 
       void botFactory.sendCommand({
