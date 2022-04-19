@@ -8,9 +8,9 @@ import { it as test } from 'mocha';
 import { createTestInstance, PartyInternal } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-const TYPE_SCHEMA = 'dxos:type.schema';
-const TYPE_SCHEMA_ORGANIZATION = 'dxos:type.schema.organization';
-const TYPE_SCHEMA_PERSON = 'dxos:type.schema.person';
+const TYPE_SCHEMA = 'example:type/schema';
+const TYPE_SCHEMA_ORGANIZATION = 'example:type/schema/organization';
+const TYPE_SCHEMA_PERSON = 'example:type/schema/person';
 
 type Type = 'string' | 'number' | 'boolean' | 'link'
 type SchemaLink = {
@@ -61,6 +61,15 @@ const schemas = {
         key: 'role',
         type: 'string',
         required: true
+      },
+      {
+        key: 'organization',
+        type: 'link',
+        required: false,
+        link: {
+          schema: TYPE_SCHEMA_ORGANIZATION,
+          field: 'title'
+        }
       }
     ]
   }
@@ -90,9 +99,49 @@ const createSchemas = async (party: PartyInternal) => {
 };
 
 const createData = async (party: PartyInternal) => {
+  // Creation of items without linked fields
   await Promise.all(Object.entries(schemas).map(async ([schema, schemaDef]) => {
     return await Promise.all(Array.from({ length: 5 }).map(async () => {
-      const fields = schemaDef.fields.map(field => ({ [field.key]: generators[schema][field.key]() }));
+      if (schemaDef.fields.some(field => field.link)) {
+        return undefined;
+      }
+      const fields = schemaDef.fields.map(field => {
+        return {
+          [field.key]: generators[schema][field.key]()
+        };
+      }).filter(item => item && Object.values(item).every(field => field));
+      return await party.database.createItem({
+        type: schemaDef.schema,
+        props: Object.assign({}, {}, ...fields)
+      });
+    }));
+  }));
+
+  // Creation of items with linked fields
+  await Promise.all(Object.entries(schemas).map(async ([schemaName, schemaDef]) => {
+    // const targetedFields = Array.from(targetedSchemaFields.values()).find(schema => Boolean(schema[schemaName]))?.[schemaName];
+
+    return await Promise.all(Array.from({ length: 5 }).map(async () => {
+      if (schemaDef.fields.every(field => !field.link)) {
+        return undefined;
+      }
+      const fields = schemaDef.fields.map(field => {
+        if (!field.link) {
+          const value = generators[schemaName][field.key]();
+          return {
+            [field.key]: value
+          };
+        } else {
+          const possibleItemsToLink = party.database.select().filter({ type: field.link.schema }).query().entities.map(item => item.id);
+          return {
+            [field.key]: {
+              schema: schemaName,
+              field: field.key,
+              referencedItemId: possibleItemsToLink[Math.floor(Math.random() * possibleItemsToLink.length)]
+            }
+          };
+        }
+      }).filter(item => item && Object.values(item).every(field => field));
       return await party.database.createItem({
         type: schemaDef.schema,
         props: Object.assign({}, {}, ...fields)
@@ -111,63 +160,47 @@ const setup = async () => {
   return { echo, party };
 };
 
-// TODO(kaplanski): Factor out into ObjectModel.
 describe.only('Schema', () => {
   test('Use schema to validate the fields of an item', async () => {
     const { echo, party } = await setup();
 
-    const [schema] = party.database
+    const [personSchema] = party.database
       .select({ type: TYPE_SCHEMA })
-      .filter(item => item.model.get('schema') === TYPE_SCHEMA_ORGANIZATION)
+      .filter(item => item.model.get('schema') === TYPE_SCHEMA_PERSON)
       .query()
       .entities;
+    const personFields = Object.values(personSchema.model.get('fields')) as SchemaField[];
 
-    const items = party.database
+    const orgItems = party.database
       .select({ type: TYPE_SCHEMA_ORGANIZATION })
       .query()
       .entities;
 
-    const fields: SchemaField[] = Object.values(schema.model.get('fields'));
-    items.forEach(organization => {
-      fields.forEach(field => {
-        const fieldValue = organization.model.get(field.key);
+    const items = party.database
+      .select({ type: TYPE_SCHEMA_PERSON })
+      .query()
+      .entities;
+
+    items.forEach(person => {
+      personFields.forEach(field => {
+        const fieldValue = person.model.get(field.key);
         if (field.required) {
-          expect(fieldValue).toBeTruthy();
+          if (field.link) {
+            expect(fieldValue.schema).toBeTruthy();
+            expect(fieldValue.field).toBeTruthy();
+            expect(fieldValue.referencedItemId).toBeTruthy();
+          } else {
+            expect(fieldValue).toBeTruthy();
+          }
         }
-        if (fieldValue) {
-          expect(typeof fieldValue).toBe(field.type);
-        }
-      });
-    });
-
-    await echo.close();
-  });
-
-  test('Check if item is using schema entirely', async () => {
-    const { echo, party } = await setup();
-
-    const [schema] = party.database
-      .select({ type: TYPE_SCHEMA })
-      .filter(item => item.model.get('schema') === TYPE_SCHEMA_ORGANIZATION)
-      .query()
-      .entities;
-
-    const items = party.database
-      .select({ type: TYPE_SCHEMA_ORGANIZATION })
-      .query()
-      .entities;
-
-    const fields: SchemaField[] = Object.values(schema.model.get('fields'));
-    items.forEach(organization => {
-      const itemFields = Object.entries(organization.model.toObject());
-      itemFields.forEach(([key, value]) => {
-        const schemaField = fields.find(schemaField => schemaField.key === key);
-        expect(schemaField).toBeTruthy();
-        if (schemaField?.required) {
-          expect(value).toBeTruthy();
-        }
-        if (schemaField?.type) {
-          expect(typeof value).toBe(schemaField?.type);
+        if (field.link) {
+          expect(typeof fieldValue).toBe('object');
+          const existingItems = orgItems.map(org => org.id);
+          expect(existingItems).toContain(fieldValue.referencedItemId);
+        } else {
+          if (fieldValue) {
+            expect(typeof fieldValue).toBe(field.type);
+          }
         }
       });
     });
