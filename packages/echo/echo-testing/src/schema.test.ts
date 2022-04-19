@@ -28,7 +28,7 @@ type Schema = {
   fields: SchemaField[]
 }
 
-const schemas: { [key: string]: Schema} = {
+const schemas: { [key: string]: Schema } = {
   organization: {
     schema: TYPE_SCHEMA_ORGANIZATION,
     fields: [
