@@ -2,15 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
+import chalk from 'chalk';
+import columnify from 'columnify';
+import debug from 'debug';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { it as test } from 'mocha';
 
 import { buildTestParty, PartyBuilder, TestType } from './builders';
 import { treeLogger, TreeRoot } from './logging';
-import { Builder } from './testing';
+import { Builder, handler } from './testing';
 
-// TODO(burdon): Use debug for logging.
+import { truncate, truncateKey } from '@dxos/debug';
+
+const log = debug('dxos:client-testing');
+debug.enable('dxos:client-testing');
 
 type DataType = {
   org: {
@@ -27,7 +33,34 @@ type DataType = {
   }[]
 }
 
-describe('Import/export', async () => {
+describe('Builders', async () => {
+  test('Sanity.', async () => {
+    const builder = new Builder();
+    await builder.initialize();
+    const party = await builder.createParty();
+    await builder.destroyParty(party);
+  });
+
+  test('Tree logger.', () => handler(async (client, party) => {
+    await buildTestParty(new PartyBuilder(party));
+
+    const { entities } = await party.database.select()
+      .filter(({ type }) => type === TestType.Org)
+      .exec();
+
+    {
+      log('Party:', party.key.toHex());
+      const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
+      log(output, '\n');
+    }
+
+    {
+      log('Item:', entities[0].id);
+      const output = treeLogger(entities[0]);
+      log(output, '\n');
+    }
+  }));
+
   test('Import/export.', async () => {
     const dir = `/tmp/dxos/testing/${Date.now()}`
     fs.mkdirSync(dir, { recursive: true });
@@ -67,7 +100,7 @@ describe('Import/export', async () => {
 
       const text = yaml.dump(data, { sortKeys: true });
       fs.writeFileSync(filename, text);
-      console.log(`Output: ${filename}`);
+      log(`Output: ${filename}`);
 
       await builder.destroyParty(party);
     }
@@ -102,16 +135,46 @@ describe('Import/export', async () => {
         });
       }
 
-      await builder.destroyParty(party);
-
       {
         const { entities } = await party.database.select()
           .filter(({ type }) => type === TestType.Org)
           .exec();
 
+        // Log tree.
         const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
-        console.log(output, '\n');
+        log(output, '\n');
+
+        // Log table.
+        const rows = columnify(entities.map(item => ({
+          id: chalk.blue(truncateKey(item.id, 4)),
+          type: chalk.magenta(truncate(item.type, 24, true)),
+          title: chalk.green(truncate(item.model.get('title'), 32, true))
+        })), {
+          columns: ['id', 'type', 'title']
+        });
+
+        log('\n' + rows + '\n');
       }
+
+      {
+        const { entities } = await party.database.select()
+          .filter(({ type }) => type === TestType.Person)
+          .exec();
+
+        // Log table.
+        const rows = columnify(entities.map(item => ({
+          id: chalk.blue(truncateKey(item.id, 4)),
+          type: chalk.magenta(truncate(item.type, 24, true)),
+          title: chalk.green(truncate(item.model.get('title'), 32, true)),
+          org: chalk.red(item.parent?.model.get('title'))
+        })), {
+          columns: ['id', 'type', 'title', 'org']
+        });
+
+        log('\n' + rows + '\n');
+      }
+
+      await builder.destroyParty(party);
     }
   });
 });

@@ -49,12 +49,14 @@ export class Builder {
   }
 }
 
-export const handler = async (f: (client: Client, Party: Party) => Promise<void>) => {
+type Callback = (client: Client, Party: Party) => Promise<void>
+
+export const handler = async (callback: Callback) => {
   const builder = new Builder();
   await builder.initialize();
   const party = await builder.createParty();
   try {
-    await f(builder.client, party);
+    await callback(builder.client, party);
   } finally {
     await builder.destroyParty(party);
   }
