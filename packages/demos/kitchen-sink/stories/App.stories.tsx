@@ -92,19 +92,13 @@ export const Secondary = () => {
       }
     };
 
-    // TODO(burdon): Uint8Array?
     const handleImportParty = async (fileOrCID: File | string) => {
       let data;
-      if (!(fileOrCID instanceof File)) {
-        // TODO(burdon): Assert.
-        if (!ipfsClient) {
-          return null;
-        }
-
-        // TODO(burdon): Why not Promise.all? Wrap in util?
-        data = uint8ArrayConcat(await all(ipfsClient.cat(fileOrCID)));
+      if (fileOrCID instanceof File) {
+        data = await new Uint8Array(await fileOrCID.arrayBuffer());
       } else {
-        data = fileOrCID;
+        // TODO(burdon): Why not Promise.all? Wrap in util?
+        data = uint8ArrayConcat(await all(ipfsClient!.cat(fileOrCID)));
       }
 
       setParty(await partySerializer.deserializeParty(data));
@@ -115,7 +109,6 @@ export const Secondary = () => {
       const encodedInvitation = invitation.descriptor.encode();
       const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
       await navigator.clipboard.writeText(text);
-
       console.log(text); // Required for playwright tests.
     };
 
