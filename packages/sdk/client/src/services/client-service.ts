@@ -10,22 +10,25 @@ import { schema } from '../proto/gen';
 import { PartyService, ProfileService, SystemService, HaloService } from '../proto/gen/dxos/client';
 import { DevtoolsHost, TracingService } from '../proto/gen/dxos/devtools';
 
+// TODO(burdon): Change to lowercase?
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
-export interface ClientServices {
-  SystemService: SystemService;
-  ProfileService: ProfileService;
-  HaloService: HaloService;
-  PartyService: PartyService;
-  DataService: DataService;
-  DevtoolsHost: DevtoolsHost;
-  TracingService: TracingService;
+export type ClientServices = {
+  SystemService: SystemService
+  ProfileService: ProfileService
+  HaloService: HaloService
+  PartyService: PartyService
+  DataService: DataService
+  DevtoolsHost: DevtoolsHost
+  TracingService: TracingService
 }
 
+// TODO(burdon): Required by devtools?
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.SystemService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   HaloService: schema.getService('dxos.client.HaloService'),
+  // TODO(burdon): Rename ECHOService?
   // DataService is provided and implemented internally in ECHO so we import it from there.
   DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
@@ -34,8 +37,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
 export interface ClientServiceProvider {
   services: ClientServices
-
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
-
   close(): Promise<void>
 }

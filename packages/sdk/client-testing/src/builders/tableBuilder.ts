@@ -37,6 +37,7 @@ export class ColumnBuilder {
 
 /**
  * Class containing methods for building a table, with columns and rows. Used for testing.
+ * @deprecated
  */
 // TODO(burdon): Remove (table specific).
 export class TableBuilder {

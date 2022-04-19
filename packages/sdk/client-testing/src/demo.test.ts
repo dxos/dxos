@@ -76,9 +76,16 @@ describe('Schema', () => {
     console.log(rows);
     console.log();
 
-    // TODO(burdon): Use logUpdate to show changing in real time (in CLI).
-    const output = treeLogger([], new TreeRoot(party.key.toHex(), entities));
-    console.log(output);
-    console.log();
+    {
+      const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
+      console.log(output);
+      console.log();
+    }
+
+    {
+      const output = treeLogger(entities[0]);
+      console.log(output);
+      console.log();
+    }
   }));
 });

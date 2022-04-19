@@ -11,15 +11,28 @@ import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 
 import {
-  AuthenticateInvitationRequest, CreateProfileRequest, InvitationRequest, InvitationState, Profile, ProfileService as IProfileService, RecoverProfileRequest, RedeemedInvitation, SubscribeProfileResponse
-} from '../../../proto/gen/dxos/client';
-import { InvitationDescriptor as InvitationDescriptorProto } from '../../../proto/gen/dxos/echo/invitation';
-import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './interfaces';
+  AuthenticateInvitationRequest,
+  CreateProfileRequest,
+  InvitationRequest,
+  InvitationState,
+  Profile,
+  ProfileService as IProfileService,
+  RecoverProfileRequest,
+  RedeemedInvitation,
+  SubscribeProfileResponse
+} from '../../proto/gen/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '../../proto/gen/dxos/echo/invitation';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
+/**
+ * Profile service implementation.
+ */
 export class ProfileService implements IProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  constructor (private echo: ECHO) {}
+  constructor (
+    private readonly echo: ECHO
+  ) {}
 
   subscribeProfile (): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {

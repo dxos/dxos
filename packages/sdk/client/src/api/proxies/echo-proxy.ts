@@ -13,11 +13,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost } from '../client/service-host';
-import { ClientServiceProvider } from '../interfaces';
+import { ClientServiceHost, ClientServiceProvider } from '../../services';
+import { Invitation, InvitationProxy } from '../invitations';
 import { HaloProxy } from './halo-proxy';
-import { Invitation, InvitationProxy } from './invitations';
-import { Party } from './party-proxy';
+import { Party, PartyProxy } from './party-proxy';
 
 export class PartyInvitation extends Invitation<Party> {
   /**
@@ -29,10 +28,23 @@ export class PartyInvitation extends Invitation<Party> {
 }
 
 /**
+ * ECHO API.
+ */
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Echo {
+  info (): { parties: number }
+  createParty (): Promise<Party>
+  cloneParty (snapshot: PartySnapshot): Promise<Party>
+  getParty (partyKey: PartyKey): Party | undefined
+  queryParties (): ResultSet<Party>
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation
+}
+
+/**
  * Client proxy to local/remote ECHO service.
  */
-export class EchoProxy {
-  private readonly _parties = new ComplexMap<PublicKey, Party>(key => key.toHex());
+export class EchoProxy implements Echo {
+  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
   private readonly _modelFactory: ModelFactory;
@@ -41,8 +53,8 @@ export class EchoProxy {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory = _serviceProvider instanceof ClientServiceHost
-      ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory =
+      _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
@@ -55,6 +67,7 @@ export class EchoProxy {
     if (this._serviceProvider instanceof ClientServiceHost) {
       return this._serviceProvider.echo.networkManager;
     }
+
     throw new Error('Network Manager not available in service proxy.');
   }
 
@@ -80,7 +93,7 @@ export class EchoProxy {
         if (!this._parties.has(party.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
-          const partyProxy = new Party(this._serviceProvider, this._modelFactory, party, this._haloProxy.profile!.publicKey);
+          const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party, this._haloProxy.profile!.publicKey);
           await partyProxy.initialize();
           this._parties.set(partyProxy.key, partyProxy);
 
@@ -139,8 +152,10 @@ export class EchoProxy {
         partyReceived();
       }
     };
+
     this._partiesChanged.on(handler);
     handler();
+
     await partyReceivedPromise;
     this._partiesChanged.off(handler);
 
@@ -177,8 +192,11 @@ export class EchoProxy {
     return this._parties.get(partyKey);
   }
 
+  /**
+   *
+   */
   queryParties (): ResultSet<Party> {
-    return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
+    return new ResultSet<Party>(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
   /**

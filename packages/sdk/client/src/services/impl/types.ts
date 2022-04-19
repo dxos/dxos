@@ -3,19 +3,32 @@
 //
 
 import { Config } from '@dxos/config';
+import { KeyRecord } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
 
-export interface CreateServicesOpts {
-  config: Config,
-  echo: ECHO
+import { SignRequest, SignResponse } from '../../proto/gen/dxos/client';
+
+/**
+ * Signer plugin.
+ */
+export interface HaloSigner {
+  sign: (request: SignRequest, key: KeyRecord) => Promise<SignResponse>
 }
 
+export type CreateServicesOpts = {
+  config: Config
+  echo: ECHO
+  signer?: HaloSigner
+}
+
+// TODO(burdon): Change to type def.
 export interface InviterInvitation {
   // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
   invitationCode: string
   secret: Uint8Array | undefined
 }
 
+// TODO(burdon): Change to type def (if able to remove callback from data structure).
 export interface InviteeInvitation {
   secret?: Uint8Array | undefined // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void // Is triggered after supplying the secret.

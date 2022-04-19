@@ -5,28 +5,72 @@
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY, ActivationOptions, Database, Item, RemoteDatabaseBackend
+  PARTY_ITEM_TYPE,
+  PARTY_TITLE_PROPERTY,
+  ActivationOptions,
+  Database,
+  Item,
+  RemoteDatabaseBackend,
+  ResultSet,
+  PartyMember
 } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
-import { ClientServiceHost } from '../client/service-host';
-import { ClientServiceProxy } from '../client/service-proxy';
-import { ClientServiceProvider } from '../interfaces';
-import { Party as PartyProto } from '../proto/gen/dxos/client';
-import { streamToResultSet } from '../util';
-import { InvitationRequest, InvitationProxy } from './invitations';
+import { Party as PartyProto } from '../../proto/gen/dxos/client';
+import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../services';
+import { streamToResultSet } from '../../util';
+import { InvitationRequest, InvitationProxy } from '../invitations';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
 }
 
 /**
+ * Party API.
+ */
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Party {
+  get key (): PublicKey
+  get isOpen (): boolean
+  get isActive (): boolean
+
+  get database (): Database
+  get select (): Database['select']
+  get reduce (): Database['reduce']
+
+  initialize (): Promise<void>
+  destroy (): Promise<void>
+
+  open (): Promise<void>
+  close (): Promise<void>
+  setActive (active: boolean, options: ActivationOptions): Promise<void>
+
+  setTitle (title: string): Promise<void>
+  getTitle (): string
+
+  get properties (): ObjectProperties
+  /**
+   * @deprecated
+   */
+  setProperty (key: string, value?: any): Promise<void>
+  /**
+   * @deprecated
+   */
+  getProperty (key: string, defaultValue?: any): any
+
+  queryMembers (): ResultSet<PartyMember>
+  createInvitation (options?: CreationInvitationOptions): Promise<InvitationRequest>
+
+  createSnapshot (): Promise<PartySnapshot>
+}
+
+/**
  * Main public Party API.
  * Proxies requests to local/remove services.
  */
-export class Party {
+export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new InvitationProxy();
 
@@ -65,6 +109,7 @@ export class Party {
     }
   }
 
+  // TODO(burdon): Getter require by react hook.
   get invitationProxy () {
     return this._invitationProxy;
   }
@@ -90,6 +135,20 @@ export class Party {
   }
 
   /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get select (): Database['select'] {
+    return this.database.select.bind(this.database);
+  }
+
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   */
+  get reduce (): Database['reduce'] {
+    return this.database.reduce.bind(this.database);
+  }
+
+  /**
    * Called by EchoProxy open.
    */
   async initialize () {
@@ -111,11 +170,14 @@ export class Party {
   }
 
   async open () {
-    return this.setOpen(true);
+    await this._setOpen(true);
   }
 
-  // TODO(burdon): Requires comment.
-  async setOpen (open: boolean) {
+  async close () {
+    await this._setOpen(false);
+  }
+
+  async _setOpen (open: boolean) {
     await this._serviceProvider.services.PartyService.setPartyState({
       partyKey: this.key,
       open
@@ -142,7 +204,6 @@ export class Party {
    */
   async setTitle (title: string) {
     await this.setProperty(PARTY_TITLE_PROPERTY, title);
-    return this;
   }
 
   /**
@@ -157,7 +218,6 @@ export class Party {
    */
   async setProperty (key: string, value?: any) {
     await this.properties.set(key, value);
-    return this;
   }
 
   /**
@@ -165,20 +225,6 @@ export class Party {
    */
   getProperty (key: string, defaultValue?: any) {
     return this.properties.get(key, defaultValue);
-  }
-
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   */
-  get select (): Database['select'] {
-    return this.database.select.bind(this.database);
-  }
-
-  /**
-   * Returns a selection context, which can be used to traverse the object graph.
-   */
-  get reduce (): Database['reduce'] {
-    return this.database.reduce.bind(this.database);
   }
 
   /**
@@ -208,6 +254,9 @@ export class Party {
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 
+  /**
+   * Implementation method.
+   */
   createSnapshot () {
     return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
