@@ -9,3 +9,4 @@ export * from './client';
 export * from './errors';
 export * from './invitations';
 export * from './proxies';
+export * from './serializer';

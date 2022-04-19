@@ -14,7 +14,7 @@ import {
   ResultSet,
   PartyMember
 } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
@@ -62,6 +62,8 @@ export interface Party {
 
   queryMembers (): ResultSet<PartyMember>
   createInvitation (options?: CreationInvitationOptions): Promise<InvitationRequest>
+
+  createSnapshot (): Promise<PartySnapshot>
 }
 
 /**

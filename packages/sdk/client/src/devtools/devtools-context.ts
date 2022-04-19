@@ -17,17 +17,16 @@ import { ClientServiceProvider } from '../services';
  */
 export interface DevtoolsHook {
   // TODO(marik-d): Reduce to just exporting ClientServices.
-
-  serviceHost: ClientServiceProvider,
-  client: Client,
+  serviceHost: ClientServiceProvider
+  client: Client
 }
 
 export interface DevtoolsServiceDependencies {
-  echo: ECHO,
-  feedStore: FeedStore,
-  networkManager: NetworkManager,
-  modelFactory: ModelFactory,
-  keyring: Keyring,
   debug: any
   config: Config
+  feedStore: FeedStore
+  networkManager: NetworkManager
+  keyring: Keyring
+  echo: ECHO
+  modelFactory: ModelFactory
 }

@@ -92,6 +92,7 @@ export const Secondary = () => {
       }
     };
 
+    // TODO(burdon): Uint8Array?
     const handleImportParty = async (fileOrCID: File | string) => {
       let data;
       if (!(fileOrCID instanceof File)) {

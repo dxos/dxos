@@ -16,7 +16,7 @@ import {
   createApiPromise,
   createKeyring,
   ClientSigner,
-  ClientSignerPlugin,
+  ClientSignerAdapter,
   RegistryClient,
   SignTxFunction
 } from '../../src';
@@ -32,7 +32,7 @@ export const setup = async () => {
   const bob = (await createKeyring()).addFromUri('//Bob');
 
   const client = new Client({}, {
-    signer: new ClientSignerPlugin()
+    signer: new ClientSignerAdapter()
   });
   await client.initialize();
   await client.halo.addKeyRecord({

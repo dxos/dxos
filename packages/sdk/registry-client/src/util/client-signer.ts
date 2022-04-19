@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/crypto';
 /**
  * Plugin to sign HALO messages.
  */
-export class ClientSignerPlugin implements HaloSigner {
+export class ClientSignerAdapter implements HaloSigner {
   async sign (request: SignRequest, key: KeyRecord): Promise<SignResponse> {
     await cryptoWaitReady();
 
