@@ -6,7 +6,6 @@ import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { createTestInstance, PartyInternal } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 
 const TYPE_SCHEMA = 'dxos:type/schema';
 export enum TestType {
@@ -93,7 +92,6 @@ const generators: any = {
 
 const createSchemas = async (party: PartyInternal) => {
   await Promise.all(Object.entries(schemas).map(([schema, schemaDef]) => party.database.createItem({
-    model: ObjectModel,
     type: TYPE_SCHEMA,
     props: {
       schema: schemaDef.schema,
