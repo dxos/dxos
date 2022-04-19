@@ -19,7 +19,7 @@ const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
 
 type DataType = {
-  org: {
+  org: { // TODO(burdon): Use TestType.
     id: string
     type?: string
     title?: string
