@@ -41,6 +41,7 @@
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@dxos/react-gem-components": "workspace:*",
+    "@dxos/react-ipfs": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.4.1",
