@@ -3,4 +3,3 @@
 //
 
 export * from './useTestParty';
-export * from './useTestTable';

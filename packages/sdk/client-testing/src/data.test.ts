@@ -9,23 +9,23 @@ import fs from 'fs';
 import yaml from 'js-yaml';
 import { it as test } from 'mocha';
 
+import { truncate, truncateKey } from '@dxos/debug';
+
 import { buildTestParty, PartyBuilder, TestType } from './builders';
 import { treeLogger, TreeRoot } from './logging';
 import { Builder, handler } from './testing';
-
-import { truncate, truncateKey } from '@dxos/debug';
 
 const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
 
 type DataType = {
-  org: { // TODO(burdon): Use TestType.
+  [TestType.Org]: {
     id: string
     type?: string
     title?: string
   }[],
 
-  person: {
+  [TestType.Person]: {
     id: string
     type?: string
     org?: string
@@ -62,7 +62,7 @@ describe('Builders', async () => {
   }));
 
   test('Import/export.', async () => {
-    const dir = `/tmp/dxos/testing/${Date.now()}`
+    const dir = `/tmp/dxos/testing/${Date.now()}`;
     fs.mkdirSync(dir, { recursive: true });
     const filename = `${dir}/data.yml`;
 
@@ -84,13 +84,13 @@ describe('Builders', async () => {
         .exec();
 
       const data: DataType = {
-        org: orgs.map(item => ({
+        [TestType.Org]: orgs.map(item => ({
           id: item.id,
           type: item.type,
           title: item.model.get('title')
         })),
 
-        person: people.map(item => ({
+        [TestType.Person]: people.map(item => ({
           id: item.id,
           type: item.type,
           title: item.model.get('title'),
@@ -114,7 +114,7 @@ describe('Builders', async () => {
       const data: DataType = yaml.load(raw) as DataType;
 
       const orgs = new Map();
-      for (const org of data.org) {
+      for (const org of data[TestType.Org]) {
         const item = await party.database.createItem({
           type: org.type,
           props: {
@@ -125,7 +125,7 @@ describe('Builders', async () => {
         orgs.set(org.id, item.id);
       }
 
-      for (const person of data.person) {
+      for (const person of data[TestType.Person]) {
         await party.database.createItem({
           type: person.type,
           parent: orgs.get(person.org),
@@ -148,7 +148,7 @@ describe('Builders', async () => {
         const rows = columnify(entities.map(item => ({
           id: chalk.blue(truncateKey(item.id, 4)),
           type: chalk.magenta(truncate(item.type, 24, true)),
-          title: chalk.green(truncate(item.model.get('title'), 32, true))
+          title: chalk.green(truncate(item.model.get('title'), 24, true))
         })), {
           columns: ['id', 'type', 'title']
         });
@@ -165,7 +165,7 @@ describe('Builders', async () => {
         const rows = columnify(entities.map(item => ({
           id: chalk.blue(truncateKey(item.id, 4)),
           type: chalk.magenta(truncate(item.type, 24, true)),
-          title: chalk.green(truncate(item.model.get('title'), 32, true)),
+          title: chalk.green(truncate(item.model.get('title'), 24, true)),
           org: chalk.red(item.parent?.model.get('title'))
         })), {
           columns: ['id', 'type', 'title', 'org']
