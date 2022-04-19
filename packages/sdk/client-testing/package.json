@@ -27,6 +27,7 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
+    "js-yaml": "^4.1.0",
     "faker": "^5.1.0"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
+    "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
