@@ -9,8 +9,12 @@ import { createTestInstance, PartyInternal } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 const TYPE_SCHEMA = 'dxos:type/schema';
-const TYPE_SCHEMA_ORGANIZATION = 'example:type/schema/organization';
-const TYPE_SCHEMA_PERSON = 'example:type/schema/person';
+export enum TestType {
+  Org = 'example:type/schema/org',
+  Project = 'example:type/schema/project',
+  Person = 'example:type/schema/person',
+  Task = 'example:type/schema/task'
+}
 
 type Type = 'string' | 'number' | 'boolean' | 'link'
 type SchemaLink = {
@@ -29,8 +33,8 @@ type Schema = {
 }
 
 const schemas: { [key: string]: Schema } = {
-  organization: {
-    schema: TYPE_SCHEMA_ORGANIZATION,
+  [TestType.Org]: {
+    schema: TestType.Org,
     fields: [
       {
         key: 'title',
@@ -49,8 +53,8 @@ const schemas: { [key: string]: Schema } = {
       }
     ]
   },
-  person: {
-    schema: TYPE_SCHEMA_PERSON,
+  [TestType.Person]: {
+    schema: TestType.Person,
     fields: [
       {
         key: 'title',
@@ -67,7 +71,7 @@ const schemas: { [key: string]: Schema } = {
         type: 'link',
         required: false,
         link: {
-          schema: TYPE_SCHEMA_ORGANIZATION,
+          schema: TestType.Org,
           field: 'title'
         }
       }
@@ -76,12 +80,12 @@ const schemas: { [key: string]: Schema } = {
 };
 
 const generators: any = {
-  organization: {
+  [TestType.Org]: {
     title: faker.company.companyName,
     website: faker.internet.url,
     based: faker.address.cityName
   },
-  person: {
+  [TestType.Person]: {
     title: faker.name.firstName,
     role: faker.name.jobTitle
   }
@@ -119,8 +123,6 @@ const createData = async (party: PartyInternal) => {
 
   // Creation of items with linked fields
   await Promise.all(Object.entries(schemas).map(async ([schemaName, schemaDef]) => {
-    // const targetedFields = Array.from(targetedSchemaFields.values()).find(schema => Boolean(schema[schemaName]))?.[schemaName];
-
     return await Promise.all(Array.from({ length: 5 }).map(async () => {
       if (schemaDef.fields.every(field => !field.link)) {
         return undefined;
@@ -166,18 +168,18 @@ describe.only('Schema', () => {
 
     const [personSchema] = party.database
       .select({ type: TYPE_SCHEMA })
-      .filter(item => item.model.get('schema') === TYPE_SCHEMA_PERSON)
+      .filter(item => item.model.get('schema') === TestType.Person)
       .query()
       .entities;
     const personFields = Object.values(personSchema.model.get('fields')) as SchemaField[];
 
     const orgItems = party.database
-      .select({ type: TYPE_SCHEMA_ORGANIZATION })
+      .select({ type: TestType.Org })
       .query()
       .entities;
 
     const items = party.database
-      .select({ type: TYPE_SCHEMA_PERSON })
+      .select({ type: TestType.Person })
       .query()
       .entities;
 
