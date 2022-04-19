@@ -246,7 +246,6 @@ export class HALO {
 
     const keyPair = publicKey ? { publicKey: Buffer.from(publicKey), secretKey: Buffer.from(secretKey!) } : createKeyPair();
     await this.createIdentity(keyPair);
-
     await this.create(username);
 
     const profile = this.getProfile();
@@ -270,7 +269,7 @@ export class HALO {
   }
 
   // TODO(burdon): Should be part of profile object. Or use standard Result object.
-  subscribeToProfile (cb: () => void): () => void {
-    return this.identityReady.on(cb);
+  subscribeToProfile (callback: () => void): () => void {
+    return this.identityReady.on(callback);
   }
 }

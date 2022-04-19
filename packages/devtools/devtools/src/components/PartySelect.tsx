@@ -7,7 +7,7 @@ import React from 'react';
 import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 import { HashIcon } from '@dxos/react-components';
 
 interface PartySelectProps {
@@ -32,7 +32,7 @@ export const PartySelect = ({ parties, selected, onChange }: PartySelectProps) =
             <Box sx={{ display: 'flex' }}>
               <HashIcon value={party.key.toHex()} />
               <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
-                {truncateString(party.key.toHex(), 8)}
+                {truncateKey(party.key.toHex(), 8)}
               </Typography>
             </Box>
           </MenuItem>

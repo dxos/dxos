@@ -3,7 +3,6 @@
 //
 
 export * from './config';
-export * from './createWindowMessagePort';
-export * from './partySerializer';
+export * from './messages';
 export * from './platform';
 export * from './subscription';

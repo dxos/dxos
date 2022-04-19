@@ -18,7 +18,7 @@ export const createMockRegistryWithBots = () => {
   const records = createMockResourceRecords();
   const botTypeResourceRecord = {
     resource: {
-      id: DXN.parse('dxos:type.bot'),
+      id: DXN.parse('dxos:example/bot'),
       tags: {
         latest: botTypeRecord.cid
       },

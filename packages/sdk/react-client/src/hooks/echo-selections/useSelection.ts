@@ -84,5 +84,5 @@ export const useReducer = <T extends Entity<any>, R> (
 const coerceSelection = <T extends Entity>(
   value: Selection<T> | SelectionResult<T> | Falsy
 ): SelectionResult<T> | undefined => {
-  return !value ? undefined : value instanceof Selection ? value.query() : value;
+  return !value ? undefined : value instanceof Selection ? value.exec() : value;
 };

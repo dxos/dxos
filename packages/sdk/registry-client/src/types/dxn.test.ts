@@ -40,10 +40,9 @@ describe('DXN', () => {
     [
       'x',
       'dxos',
-      'foo.bar',
       'foo/bar',
-      'a.b.c.d',
-      'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A123'
+      'a/b/c/d',
+      'A23456789-A23456789-A23456789-A23456789-A23456789-A23456789-A123' // Max length.
     ].forEach(resource => expect(DXN.validateResource(resource), resource).length.greaterThanOrEqual(1));
 
     // Invalid.
@@ -55,17 +54,14 @@ describe('DXN', () => {
       '4chan',
       '-dxos',
       'dxos-',
+      'foo.bar',
+      'foo_bar',
       'foo--bar',
-      'foo.-bar',
-      'foo-.bar',
-      '.dxos',
       '/dxos',
-      'dxos.',
       'dxos/',
-      'foo..bar',
       'foo//bar',
-      'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234',
-      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
+      'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234', // Max length.
+      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5' // TODO(burdon): ???
     ].forEach(resource => expect(() => DXN.validateResource(resource), resource).to.throw());
   });
 
@@ -75,14 +71,14 @@ describe('DXN', () => {
   });
 
   it('fromDomainName', () => {
-    expect(DXN.fromDomainName('dxos', 'app.test').domain).not.to.be.undefined;
+    expect(DXN.fromDomainName('dxos', 'app/test').domain).not.to.be.undefined;
   });
 
   it('parse', () => {
     // Valid.
     [
-      'dxos:foo.bar',
-      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo.bar'
+      'example:foo/bar',
+      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
     ].forEach(dxn => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
 
     // Invalid.
@@ -90,7 +86,7 @@ describe('DXN', () => {
       '',
       'dxos',
       'dxos:',
-      'dxos::foo.bar'
+      'example::foo/bar'
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 });

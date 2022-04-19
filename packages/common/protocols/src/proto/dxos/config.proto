@@ -233,6 +233,9 @@ message Runtime {
 
     message BotFactory {
       string topic = 1;
+      bool persistent = 2;
+      int32 retry_attempts = 3;
+      int32 retry_interval = 4;
     }
 
     Kube kube = 1;

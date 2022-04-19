@@ -7,7 +7,8 @@ import React, { MouseEvent, useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
 
-import { itemAdapter, TestType } from '@dxos/react-client-testing';
+import { TestType } from '@dxos/client-testing';
+import { itemAdapter } from '@dxos/react-client-testing';
 
 import { CreateItemDialog } from '../../../src';
 import { TypeSelector } from './TypeSelector';
@@ -52,7 +53,7 @@ export const CreateItemButton = ({
       </CreateItemDialog>
 
       <Fab
-        data-id='test-button-create'
+        data-id='test-button-create-item'
         color='primary'
         onClick={handleClick}
         size='small'

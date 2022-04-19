@@ -36,7 +36,7 @@ export function handler <T> (title: string, handler: Handler<T>, timeout = false
     const start = Date.now();
     verbose && log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms`);
+    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
 
     t && clearTimeout(t);
   };
@@ -217,7 +217,7 @@ export const setupCoreCommands = (yargs: Argv) => (
       handler('Tests', async () => {
         const project = Project.load(defaults);
         await execBuild(defaults);
-        await execLint(project);
+        await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 
         // Additional test steps execution placed here to allow to run tests without additional steps.

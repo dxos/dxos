@@ -22,12 +22,12 @@ export class ContactManager {
   ) {}
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    return this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query().entities[0];
+    return this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec().entities[0];
   }
 
   queryContacts (): ResultSet<Contact> {
     const event = new Event();
-    const result = this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).query();
+    const result = this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec();
     result.update.on(() => {
       event.emit();
     });

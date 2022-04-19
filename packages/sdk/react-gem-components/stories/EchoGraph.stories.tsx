@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, css } from '@mui/material';
 
+import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 // TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
@@ -25,7 +26,9 @@ const graphStyles = css`
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const model = useGraphModel(party, [(item) => {
+    return Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE;
+  }]);
 
   return (
     <EchoGraph
@@ -47,7 +50,7 @@ const AppWithEditor = () => {
 
   const handleSelection = (text: string) => {
     const selection = execSelection(party, text);
-    const result = selection?.query();
+    const result = selection?.exec();
     const selected = new Set<ItemID>();
     result?.entities.forEach(item => selected.add(item.id));
     setSelected(selected);

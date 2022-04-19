@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Box, IconButton, Typography, TypographyProps } from '@mui/material';
 
-import { truncateString } from '@dxos/debug';
+import { truncateKey } from '@dxos/debug';
 
 import { CopyToClipboard } from './CopyToClipboard';
 
@@ -36,7 +36,7 @@ export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, vari
         title={value}
         {...rest}
       >
-        {length ? truncateString(value, length) : value}
+        {length ? truncateKey(value, length) : value}
       </Typography>
 
       {value && (

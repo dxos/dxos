@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import wrtc from '@koush/wrtc';
 import assert from 'assert';
 import debug from 'debug';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
-import wrtc from 'wrtc';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';

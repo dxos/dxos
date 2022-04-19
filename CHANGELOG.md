@@ -1,5 +1,36 @@
 # Change Log
 
+### [2.29.1](https://www.github.com/dxos/protocols/compare/v2.29.0...v2.29.1) (2022-04-14)
+
+
+### Features
+
+* update config ([#1102](https://www.github.com/dxos/protocols/issues/1102)) ([cce9ff5](https://www.github.com/dxos/protocols/commit/cce9ff56ab7e2544965e29829349cce4eec37f2a))
+
+
+### Bug Fixes
+
+* minor BF err fix. ([5f1e343](https://www.github.com/dxos/protocols/commit/5f1e343550a7eaa6211d6d29ea30af955cca447a))
+
+## [2.29.0](https://www.github.com/dxos/protocols/compare/v2.28.23...v2.29.0) (2022-04-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* bots respawn. (#1116)
+
+### Bug Fixes
+
+* bots respawn. ([#1116](https://www.github.com/dxos/protocols/issues/1116)) ([7a8bb1c](https://www.github.com/dxos/protocols/commit/7a8bb1c302776de6ce19bd1e17b3e72460ed9b28))
+
+### [2.28.23](https://www.github.com/dxos/protocols/compare/v2.28.22...v2.28.23) (2022-04-13)
+
+
+### Features
+
+* **echo-graph:** Party Item is now top level item ([#1119](https://www.github.com/dxos/protocols/issues/1119)) ([ac434ee](https://www.github.com/dxos/protocols/commit/ac434ee2b81bc4234edbfd8864e60d6fc96da5c0))
+* ipfs import export ([#1118](https://www.github.com/dxos/protocols/issues/1118)) ([82df209](https://www.github.com/dxos/protocols/commit/82df209169b032e6a6174e48c5e2471d54576865))
+
 ### [2.28.22](https://www.github.com/dxos/protocols/compare/v2.28.21...v2.28.22) (2022-04-11)
 
 

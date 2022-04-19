@@ -19,7 +19,7 @@ const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsRes
       items: []
     };
 
-    const queryResult = party.database.select().query();
+    const queryResult = party.database.select().exec();
     for (const item of queryResult.entities) {
       partyInfo.items.push({
         id: item.id,
@@ -48,7 +48,7 @@ export const subscribeToItems = ({ echo }: DevtoolsServiceDependencies) => {
     const unsubscribe = echo.queryParties().subscribe((parties) => {
       parties.forEach(party => {
         if (!partySubscriptions[party.key.toHex()]) {
-          const sub = party.database.select().query().update.on(() => {
+          const sub = party.database.select().exec().update.on(() => {
             // Send updates on items changes.
             update();
           });

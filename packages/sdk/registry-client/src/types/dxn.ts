@@ -32,17 +32,18 @@ export class DXN {
   }
 
   /**
-   * Lower-case.
+   * Validates and normalizes DNX.
+   * Change to lower-case.
    * Starts with a letter.
    * Min 3 and max 64 characters.
    * Must not have multiple periods in a row or end with a period or hyphen.
    * @param resource
    */
-  // TODO(burdon): Change to slashes (not dots). Encode URLs with dot. (example:foo/bar => example:foo.bar)
-  //   Make equivalent?
+  // TODO(burdon): Separate function to normalize (e.g., change to lowercase, replaces dots).
+  // TODO(burdon): Separate function to encode (e.g., change / to .).
   static validateResource (resource: string) {
     resource = resource.trim().toLowerCase();
-    if (!resource.match(/^[a-z][a-z0-9-./]{0,63}$/)) {
+    if (!resource.match(/^[a-z][a-z\d-/]{0,63}$/)) {
       throw new Error(`Invalid resource: ${resource}`);
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-testing",
-  "version": "2.28.22",
+  "version": "2.29.1",
   "description": "ECHO testing utils.",
   "license": "MIT",
   "main": "dist/src/index.js",
@@ -9,8 +9,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "update:saved-state": "ts-node --transpile-only ./scripts/update-saved-state.ts"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",

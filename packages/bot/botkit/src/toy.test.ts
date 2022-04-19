@@ -171,7 +171,7 @@ describe('Node', () => {
         const waitForNewItem = new Promise<boolean>(resolve => {
           const result = party.database
             .select({ type: TEST_ECHO_TYPE })
-            .query();
+            .exec();
 
           result
             .update.on(async result => {

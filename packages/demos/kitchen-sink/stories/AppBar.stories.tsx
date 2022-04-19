@@ -22,6 +22,7 @@ export const Primary = () => {
           view={view}
           onSearch={(text: string) => console.log('search:', text)}
           onSelection={(text: string) => console.log('selection:', text)}
+          onExport={(action) => console.log('export:', action)}
           onChangeView={(view: string) => setView(view)}
         />
       </ThemeProvider>

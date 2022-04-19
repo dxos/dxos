@@ -3,6 +3,7 @@
 //
 
 import { Party } from '@dxos/client';
+import { TestType } from '@dxos/client-testing';
 import { Selection } from '@dxos/echo-db';
 
 /**
@@ -11,6 +12,7 @@ import { Selection } from '@dxos/echo-db';
  * @param party
  * @param text
  */
+// TODO(burdon): Create utility class.
 export const execSelection = (party: Party, text: string): Selection<any> | undefined => {
   try {
     // eslint-disable-next-line no-new-func
@@ -23,3 +25,9 @@ export const execSelection = (party: Party, text: string): Selection<any> | unde
     // Ignore.
   }
 };
+
+const format = (text: string) => text.replace(/\)\./g, ')\n  .');
+
+export const defaultSelectionText = format(
+  `select().filter({ type: '${TestType.Org}' }).children().filter({ type: '${TestType.Project}' })`
+);

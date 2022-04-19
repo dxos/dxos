@@ -7,13 +7,14 @@ import { debug } from 'debug';
 import { join } from 'path';
 
 import { Config } from '@dxos/config';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { PublicKey, keyToString, randomBytes } from '@dxos/crypto';
 
 import { BotContainer } from '../bot-container';
-import { BOT_OUT_DIR } from '../config';
+import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import { BotHandle } from './bot-handle';
 import type { ContentResolver } from './dxns-content-resolver';
+import type { BotSnapshotStorage } from './fs-bot-snapshot-storage';
 import type { ContentLoader } from './ipfs-content-loader';
 
 const log = debug('dxos:botkit:bot-factory');
@@ -23,6 +24,7 @@ export interface BotFactoryOptions {
   config: Config,
   contentResolver?: ContentResolver,
   contentLoader?: ContentLoader,
+  botSnapshotStorage?: BotSnapshotStorage
 }
 
 /**
@@ -31,8 +33,10 @@ export interface BotFactoryOptions {
 export class BotFactory implements BotFactoryService {
   private readonly _contentLoader: ContentLoader | undefined;
   private readonly _contentResolver: ContentResolver | undefined;
+  private readonly _botSnapshotStorage: BotSnapshotStorage | undefined;
   private readonly _botContainer: BotContainer;
   private readonly _config: Config;
+  private readonly _persistent: Boolean | undefined;
 
   private readonly _bots = new Map<string, BotHandle>();
 
@@ -41,6 +45,9 @@ export class BotFactory implements BotFactoryService {
     this._config = options.config;
     this._contentLoader = options.contentLoader;
     this._contentResolver = options.contentResolver;
+    this._botSnapshotStorage = options.botSnapshotStorage;
+
+    this._persistent = this._config.get('runtime.services.bot.persistent', BOT_FACTORY_DEFAULT_PERSISTENT);
 
     this._botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
@@ -67,6 +74,32 @@ export class BotFactory implements BotFactoryService {
         log(`Failed to kill bot: ${id}`);
       }
     });
+  }
+
+  async init () {
+    if (this._persistent) {
+      const botsToRestore = await this._botSnapshotStorage?.listBackupedBot();
+      await Promise.all(botsToRestore!.map(async botId => {
+        const restoreInfo = await this._botSnapshotStorage?.restoreBot(botId);
+        if (restoreInfo) {
+          const { bot, localPath } = restoreInfo;
+          log(`Restoring bot: ${botId}`);
+          const handle = new BotHandle(botId, join(BOT_OUT_DIR, botId), this._botContainer, {
+            config: this._config,
+            packageSpecifier: bot.packageSpecifier,
+            // TODO(egorgripasov): Restore properly from snapshot storage.
+            partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
+          });
+          handle.startTimestamp = new Date();
+          handle.localPath = localPath;
+          await handle.initializeDirectories();
+          this._bots.set(botId, handle);
+          await handle.forceStart();
+        }
+      }));
+    } else {
+      await this._botSnapshotStorage?.reset();
+    }
   }
 
   async getBots () {
@@ -117,6 +150,7 @@ export class BotFactory implements BotFactoryService {
       this._bots.set(id, handle);
       handle.startTimestamp = new Date();
       await handle.spawn(request.invitation);
+      await this._botSnapshotStorage?.backupBot(handle.bot, handle.localPath);
       return handle.bot;
     } catch (error: any) {
       log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
@@ -130,6 +164,7 @@ export class BotFactory implements BotFactoryService {
     try {
       const bot = this._getBot(id);
       await bot.start();
+      await this._botSnapshotStorage?.backupBot(bot.bot, bot.localPath);
       return bot.bot;
     } catch (error: any) {
       log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
@@ -143,6 +178,7 @@ export class BotFactory implements BotFactoryService {
     try {
       const bot = this._getBot(request.id);
       await bot.stop();
+      await this._botSnapshotStorage?.backupBot(bot.bot, bot.localPath);
       return bot.bot;
     } catch (error: any) {
       log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
@@ -156,6 +192,7 @@ export class BotFactory implements BotFactoryService {
     try {
       const bot = this._getBot(id);
       await bot.remove();
+      await this._botSnapshotStorage?.deleteBackupedBot(id);
       this._bots.delete(id);
     } catch (error: any) {
       log(`[${id}] Failed to remove bot: ${error.stack ?? error}`);

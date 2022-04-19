@@ -47,7 +47,11 @@ export const PartyCard = ({ party }: { party: Party }) => {
   const [propertyValue, setPropertyValue] = useState('');
 
   const handlePartyOpenToggle = (party: Party) => {
-    void party.setOpen(!party.isOpen);
+    if (party.isOpen) {
+      void party.open();
+    } else {
+      void party.close();
+    }
   };
 
   const handlePartyActiveToggle = (party: Party) => {

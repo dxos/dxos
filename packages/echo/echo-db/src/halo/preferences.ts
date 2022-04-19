@@ -42,8 +42,8 @@ export class Preferences {
   }
 
   subscribeToPreferences (callback: (preferences: any) => void) {
-    const globalResults = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query();
-    const deviceResults = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query();
+    const globalResults = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec();
+    const deviceResults = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec();
 
     const event = new Event<any>();
 
@@ -77,7 +77,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const [globalItem] = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).query().entities;
+    const [globalItem] = this._party.database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec().entities;
     return globalItem;
   }
 
@@ -85,7 +85,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).query().entities;
+    const deviceItems = this._party.database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec().entities;
     return deviceItems.find(item => this._deviceKey.equals(item.model.get('publicKey')));
   }
 
@@ -133,7 +133,7 @@ export class Preferences {
     const [partyDesc] = this._party.database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.get('publicKey')))
-      .query().entities;
+      .exec().entities;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({
@@ -159,7 +159,7 @@ export class Preferences {
       };
     };
 
-    const result = this._party.database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).query();
+    const result = this._party.database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
 
     // Wrap the query event so we can have manual control.
     const event = new Event();

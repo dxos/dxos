@@ -51,10 +51,9 @@ export class PartyFactory {
   @timed(5_000)
   async createParty (): Promise<PartyInternal> {
     const identity = this._identityProvider();
-
-    assert(!this._options.readOnly, 'PartyFactory is read-only');
-    assert(identity.identityGenesis, 'IdentityGenesis must exist');
-    assert(identity.deviceKeyChain, 'Device KeyChain must exist');
+    assert(identity.identityGenesis, 'HALO not initialized.');
+    assert(identity.deviceKeyChain, 'Device KeyChain not initialized.');
+    assert(!this._options.readOnly, 'PartyFactory is read-only.');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
     const party = await this.constructParty(partyKey.publicKey);
