@@ -12,12 +12,15 @@ export const createWindowMessagePort = (): RpcPort => {
   }
 
   return {
-    send: async (msg) => window.postMessage({ payloadFromAppToContentScript: Array.from(msg) }, '*'),
-    subscribe: (cb) => {
-      const listener: EventListener = (ev) => {
-        const payload = (ev as any)?.data?.payloadFromContentScriptToApp;
+    send: async (message) => window.postMessage({
+      payloadFromAppToContentScript: Array.from(message)
+    }, '*'),
+
+    subscribe: (callback) => {
+      const listener: EventListener = (event) => {
+        const payload = (event as any)?.data?.payloadFromContentScriptToApp;
         if (payload) {
-          cb(new Uint8Array(payload));
+          callback(new Uint8Array(payload));
         }
       };
       window.addEventListener('message', listener);

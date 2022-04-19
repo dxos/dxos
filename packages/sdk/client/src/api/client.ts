@@ -12,15 +12,13 @@ import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy, HaloProxy } from '../api';
 import { DevtoolsHook } from '../devtools';
-import { ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../interfaces';
-import { InvalidConfigurationError } from '../interfaces/errors';
 import { Runtime } from '../proto/gen/dxos/config';
+import { ClientServiceProvider, ClientServices, ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
 import { createWindowMessagePort, isNode } from '../util';
 import { DXOS_VERSION } from '../version';
-import { ClientServiceHost } from './service-host';
-import { ClientServiceProxy } from './service-proxy';
+import { InvalidConfigurationError, RemoteServiceConnectionTimeout } from './errors';
+import { Echo, EchoProxy, Halo, HaloProxy } from './proxies';
 
 const log = debug('dxos:client');
 
@@ -44,6 +42,11 @@ export interface ClientOptions {
    * Only used when remote=true.
    */
   rpcPort?: RpcPort;
+
+  /**
+   *
+   */
+  signer?: HaloSigner
 }
 
 /**
@@ -67,7 +70,8 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: ConfigObject | Config = { version: 1 }, options: ClientOptions = {}) {
+  // TODO(burdon): Remove or factor out default config?
+  constructor (config: ConfigObject | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -113,7 +117,7 @@ export class Client {
   /**
    * ECHO database.
    */
-  get echo (): EchoProxy {
+  get echo (): Echo {
     assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
@@ -121,23 +125,26 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo (): HaloProxy {
+  get halo (): Halo {
     assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
 
-  /**
-   * Client services that can be proxied.
-   */
-  get services (): ClientServices {
-    return this._serviceProvider.services;
-  }
+  // TODO(burdon): Expose mesh for messaging?
 
   /**
    * Returns true if client is connected to a remote services protvider.
    */
   get isRemote (): boolean {
     return this._serviceProvider instanceof ClientServiceProxy;
+  }
+
+  /**
+   * Client services that can be proxied.
+   */
+  // TODO(burdon): Remove from API?
+  get services (): ClientServices {
+    return this._serviceProvider.services;
   }
 
   /**
@@ -240,7 +247,7 @@ export class Client {
    * Registers a new ECHO model.
    */
   registerModel (constructor: ModelConstructor<any>): this {
-    this.echo.modelFactory.registerModel(constructor);
+    this._echo.modelFactory.registerModel(constructor);
     return this;
   }
 

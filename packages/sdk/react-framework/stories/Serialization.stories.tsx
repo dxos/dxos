@@ -24,8 +24,8 @@ const ImportStory = () => {
 
   const handleImportParty = async (files: File[]) => {
     if (files.length) {
-      const partyFile = files[0];
-      const importedParty = await partySerializer.deserializeParty(partyFile);
+      const data = await new Uint8Array(await files[0].arrayBuffer());
+      const importedParty = await partySerializer.deserializeParty(data);
       setParty(importedParty);
     }
   };

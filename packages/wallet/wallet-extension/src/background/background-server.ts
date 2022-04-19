@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
+import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';

@@ -9,25 +9,24 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { Client } from '../client';
-import { ClientServiceProvider } from '../interfaces';
+import { Client } from '../api';
+import { ClientServiceProvider } from '../services';
 
 /**
  * A hook bound to window.__DXOS__.
  */
 export interface DevtoolsHook {
   // TODO(marik-d): Reduce to just exporting ClientServices.
-
-  serviceHost: ClientServiceProvider,
-  client: Client,
+  serviceHost: ClientServiceProvider
+  client: Client
 }
 
 export interface DevtoolsServiceDependencies {
-  echo: ECHO,
-  feedStore: FeedStore,
-  networkManager: NetworkManager,
-  modelFactory: ModelFactory,
-  keyring: Keyring,
   debug: any
   config: Config
+  feedStore: FeedStore
+  networkManager: NetworkManager
+  keyring: Keyring
+  echo: ECHO
+  modelFactory: ModelFactory
 }

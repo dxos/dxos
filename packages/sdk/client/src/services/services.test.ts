@@ -9,8 +9,8 @@ import { latch } from '@dxos/async';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
+import { Client } from '../api';
 import { InvitationRequest, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { Client } from './client';
 
 const setup = async () => {
   const client = new Client();

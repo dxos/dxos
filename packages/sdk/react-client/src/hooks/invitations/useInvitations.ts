@@ -11,7 +11,6 @@ export const useInvitations = (invitationProxy: InvitationProxy | undefined) => 
 
   useEffect(() => {
     setInvitations(invitationProxy?.activeInvitations ?? []);
-
     return invitationProxy?.invitationsUpdate.on(() => {
       setInvitations([...invitationProxy.activeInvitations]);
     });
