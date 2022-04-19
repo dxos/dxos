@@ -6,7 +6,7 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { Client } from '@dxos/client';
+import { Client, defaultConfig } from '@dxos/client';
 import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
@@ -31,7 +31,7 @@ export const setup = async () => {
   const alice = (await createKeyring()).addFromUri('//Alice');
   const bob = (await createKeyring()).addFromUri('//Bob');
 
-  const client = new Client({}, {
+  const client = new Client(defaultConfig, {
     signer: new ClientSignerAdapter()
   });
   await client.initialize();

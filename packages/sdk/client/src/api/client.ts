@@ -49,8 +49,6 @@ export interface ClientOptions {
   signer?: HaloSigner
 }
 
-// TODO(burdon): Separate public API form implementation (hide impl methods: e.g., services).
-
 /**
  * The main DXOS client API.
  * An entrypoint to ECHO, HALO, MESH, and DXNS.
@@ -73,7 +71,7 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   // TODO(burdon): Remove or factor out default config?
-  constructor (config: ConfigObject | Config = { version: 1 }, options: ClientOptions = {}) {
+  constructor (config: ConfigObject | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
