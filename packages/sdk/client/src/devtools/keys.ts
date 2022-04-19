@@ -15,7 +15,6 @@ import { DevtoolsServiceDependencies } from './devtools-context';
 export const subscribeToKeyringKeys = ({ keyring }: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
     next({ keys: keyring.keys });
-
     return keyring.keysUpdate.on((keys) => {
       next({ keys });
     });
@@ -40,7 +39,6 @@ export const subscribeToCredentialMessages = (
     subscriptions.push(party.processor.keyOrInfoAdded.on(() => update()));
     const { added } = party.processor.getActiveFeedSet();
     subscriptions.push(added.on(() => update()));
-
     update();
 
     return () => subscriptions.unsubscribe();

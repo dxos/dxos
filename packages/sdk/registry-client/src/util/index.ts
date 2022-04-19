@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './dxos-client-signer';
+export * from './client-signer';

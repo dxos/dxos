@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Party } from '../api';
-import { Client } from '../client';
-import { schema } from '../proto/gen/';
+import { Client, Party } from '../api';
+import { schema } from '../proto/gen';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
+/**
+ * Import/export party.
+ */
 export class PartySerializer {
   constructor (
     private readonly _client: Client
@@ -18,13 +20,7 @@ export class PartySerializer {
     return new Blob([partyCodec.encode(snapshot)]);
   }
 
-  async deserializeParty (partyToImport: File | Uint8Array) {
-    let data;
-    if (partyToImport instanceof File) {
-      data = await new Uint8Array(await partyToImport.arrayBuffer());
-    } else {
-      data = partyToImport;
-    }
+  async deserializeParty (data: Uint8Array) {
     return await this._client.echo.cloneParty(partyCodec.decode(data));
   }
 }

@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServices } from '../../../interfaces';
+import { ClientServices } from '../../services';
 import { createHaloService } from './halo';
-import { CreateServicesOpts } from './interfaces';
 import { createPartyService } from './party';
 import { createProfileService } from './profile';
 import { createSystemService } from './system';
+import { CreateServicesOpts } from './types';
 
 export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, 'DevtoolsHost'> => {
   return {
@@ -18,10 +18,10 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
     DataService: opts.echo.dataService,
     TracingService: {
       setTracingOptions: () => {
-        throw new Error('Tracing not available');
+        throw new Error('Tracing not available.');
       },
       subscribeToRpcTrace: () => {
-        throw new Error('Tracing not available');
+        throw new Error('Tracing not available.');
       }
     }
   };

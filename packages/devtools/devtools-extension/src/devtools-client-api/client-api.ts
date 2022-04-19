@@ -5,6 +5,9 @@
 import { clientServiceBundle, ClientServices } from '@dxos/client';
 import { RpcPort, createBundledRpcServer, RpcPeer } from '@dxos/rpc';
 
+/**
+ *
+ */
 export class RpcClientAPI {
   constructor (private readonly _port: RpcPort, private readonly _clientServices: ClientServices) {}
 

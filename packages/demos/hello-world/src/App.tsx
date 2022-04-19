@@ -69,7 +69,8 @@ export const App = () => {
   };
 
   const handleImport = async (files: File[]) => {
-    const party = await serializer.deserializeParty(files[0]);
+    const data = await new Uint8Array(await files[0].arrayBuffer());
+    const party = await serializer.deserializeParty(data);
     setParty(party);
   };
 

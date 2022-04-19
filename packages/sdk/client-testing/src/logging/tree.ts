@@ -7,6 +7,9 @@ import chalk from 'chalk';
 import { truncateKey } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
 
+/**
+ * Wrapper (e.g., for Party).
+ */
 export class TreeRoot {
   constructor (
     public id: string,
@@ -20,10 +23,10 @@ export type TreeNode = TreeRoot | Item
  * Create tree using depth first traversal.
  * https://waylonwalker.com/drawing-ascii-boxes/#connectors
  */
-export const treeLogger = (ancestors: [TreeNode, number][], node: TreeNode, rows: string[] = []) => {
+export const treeLogger = (node: TreeNode, ancestors: [TreeNode, number][] = [], rows: string[] = []) => {
   if (node.children?.length) {
     node.children!.forEach((child: TreeNode, i) => {
-      treeLogger([...ancestors, [node, i]], child, rows);
+      treeLogger(child, [...ancestors, [node, i]], rows);
     });
   } else {
     const len = 10;
