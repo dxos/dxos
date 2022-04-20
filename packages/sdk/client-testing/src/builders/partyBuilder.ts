@@ -119,7 +119,7 @@ export class PartyBuilder {
       model: ObjectModel,
       type: TestType.Org,
       props: {
-        title: faker.company.companyName(),
+        name: faker.company.companyName(),
         description: faker.internet.url()
       }
     });
@@ -131,7 +131,7 @@ export class PartyBuilder {
       type: TestType.Person,
       parent: org.id,
       props: {
-        title: faker.name.findName(),
+        name: faker.name.findName(),
         description: faker.name.jobDescriptor()
       }
     });
@@ -143,7 +143,7 @@ export class PartyBuilder {
       type: TestType.Project,
       parent: org.id,
       props: {
-        title: faker.commerce.productName(),
+        name: faker.commerce.productName(),
         description: faker.commerce.productDescription() + '.'
       }
     });
@@ -155,7 +155,7 @@ export class PartyBuilder {
       type: TestType.Task,
       parent: project.id,
       props: {
-        title: capitalize(faker.git.commitMessage()) + '.',
+        name: capitalize(faker.git.commitMessage()) + '.',
         description: faker.hacker.phrase()
       }
     });
