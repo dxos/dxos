@@ -138,9 +138,9 @@ export async function execBook (userArgs?: string[]) {
 /**
  * Runs a dev server for the current package.
  */
-export async function execStart () {
+export async function execStart (userArgs?: string[]) {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
-  await execTool('esbuild-server', ['dev']);
+  await execTool('esbuild-server', ['dev', ...userArgs ?? []]);
 }
 
 /**
@@ -262,8 +262,8 @@ export const setupCoreCommands = (yargs: Argv) => (
       'Run a dev server for the package.',
       yargs => yargs
         .strict(),
-      async () => {
-        await execStart();
+      async ({ _ }) => {
+        await execBook(_.slice(1).map(String));
       }
     )
 
