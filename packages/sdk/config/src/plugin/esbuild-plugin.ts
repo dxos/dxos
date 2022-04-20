@@ -61,7 +61,7 @@ export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginO
         let content = {};
 
         try {
-          content = yaml.load(readFileSync(resolve(CWD, value), 'utf-8'));
+          content = yaml.load(readFileSync(resolve(CWD, value), 'utf-8')) as any;
         } catch (error: any) {
           log(`Failed to load file ${value}:`, error);
         }

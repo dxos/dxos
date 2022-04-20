@@ -176,7 +176,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
                     />
                   </ListItemIcon>
                   <ListItemText
-                    primary={item.model.get('title')}
+                    primary={item.model.get('name')}
                   />
                   <ListItemSecondaryAction>
                     <IconButton

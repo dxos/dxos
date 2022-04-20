@@ -101,7 +101,7 @@ export const App = () => {
                 }}
               />
             </ListItemIcon>
-            <ListItemText primary={item.model.get('title')} />
+            <ListItemText primary={item.model.get('name')} />
           </ListItemButton>
         ))}
       </List>
