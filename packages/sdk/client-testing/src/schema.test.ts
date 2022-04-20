@@ -2,25 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
-import columnify from 'columnify';
 import debug from 'debug';
 import expect from 'expect';
 import faker from 'faker';
 import { it as test } from 'mocha';
 
-import { Item, Party } from '@dxos/client';
-import { truncate, truncateKey } from '@dxos/debug';
-import { ObjectModel } from '@dxos/object-model';
+import { Party } from '@dxos/client';
 
+import { TYPE_SCHEMA, Schema, renderItems, validateItem } from './schema';
 import { handler } from './testing';
 
 const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
-
-// TODO(burdon): Factor out schema utils (to ObjectModel).
-
-const TYPE_SCHEMA = 'dxos:type/schema';
 
 export enum TestType {
   Org = 'example:type/org',
@@ -29,32 +22,13 @@ export enum TestType {
   Task = 'example:type/task'
 }
 
-type Type = 'string' | 'number' | 'boolean' | 'ref'
-
-type SchemaRef = {
-  schema: string
-  field: string
-}
-
-type SchemaField = {
-  key: string
-  type?: Type
-  required: boolean
-  ref?: SchemaRef
-}
-
-type Schema = {
-  schema: string
-  fields: SchemaField[]
-}
-
-const schemaDefs: { [key: string]: Schema } = {
+const schemaDefs: { [type: string]: Schema } = {
   [TestType.Org]: {
     schema: TestType.Org,
     fields: [
       {
         key: 'name',
-        type: 'string',
+        type: 'string', // TODO(burdon): Compound types (e.g., { first, last }).
         required: true
       },
       {
@@ -91,15 +65,15 @@ const schemaDefs: { [key: string]: Schema } = {
   }
 };
 
-const generators: any = {
+const generators: { [type: string]: any } = {
   [TestType.Org]: {
-    name: faker.company.companyName,
-    website: faker.internet.url
+    name: () => faker.company.companyName(),
+    website: () => faker.internet.url()
   },
 
   [TestType.Person]: {
-    name: faker.name.firstName, // TODO(burdon): Make compound name (name.first/last).
-    role: faker.name.jobTitle
+    name: () => `${faker.name.firstName()} ${faker.name.lastName()}`,
+    role: () => faker.name.jobTitle()
   }
 };
 
@@ -107,6 +81,8 @@ const generators: any = {
  * Create schema items.
  */
 const createSchemas = async (party: Party, schemas: Schema[]) => {
+  log(`Creating schemas: [${schemas.map(({ schema }) => schema).join()}]`);
+
   return await Promise.all(schemas.map(({ schema, fields }) => party.database.createItem({
     type: TYPE_SCHEMA,
     props: {
@@ -121,7 +97,7 @@ const createSchemas = async (party: Party, schemas: Schema[]) => {
  * NOTE: Assumes that referenced items have already been constructed.
  */
 const createItems = async (party: Party, { schema, fields }: Schema, numItems: number) => {
-  log('Creating items for:', schema);
+  log(`Creating items for: ${schema}`);
 
   return await Promise.all(Array.from({ length: numItems }).map(async () => {
     const values = fields.map(field => {
@@ -161,76 +137,6 @@ const createData = async (party: Party, schemas: Schema[], options: { [key: stri
       await createItems(party, schema, count);
     }
   }
-};
-
-/**
- * Validate item matches schema.
- * @param schema
- * @param item
- * @param [party] Optionally test reference exists.
- */
-const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, party?: Party) => {
-  const fields = Object.values(schema.model.get('fields')) as SchemaField[];
-  return fields.every(field => {
-    const value = item.model.get(field.key);
-    if (field.required && value === undefined) {
-      return false;
-    }
-
-    if (field.ref && party) {
-      const item = party.database.getItem(value);
-      if (!item) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-};
-
-/**
- * Log the items for the given schema.
- * @param schema
- * @param items
- * @param [party]
- */
-const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
-  const fields = Object.values(schema.model.get('fields')) as SchemaField[];
-  const columns = fields.map(({ key }) => key);
-
-  // TODO(burdon): Config length.
-  const logString = (value: string) => truncate(value, 24, true);
-
-  const values = items.map(item => {
-    return fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
-      const value = item.model.get(key);
-      switch (type) {
-        case 'string': {
-          row[key] = chalk.green(logString(value));
-          break;
-        }
-
-        case 'ref': {
-          if (party) {
-            const { field } = ref!;
-            const item = party.database.getItem(value);
-            row[key] = chalk.red(logString(item?.model.get(field)));
-          } else {
-            row[key] = chalk.red(truncateKey(value, 4));
-          }
-          break;
-        }
-
-        default: {
-          row[key] = value;
-        }
-      }
-
-      return row;
-    }, { id: chalk.blue(truncateKey(item.id, 4)) });
-  });
-
-  return columnify(values, { columns: ['id', ...columns] });
 };
 
 describe('Schema', () => {

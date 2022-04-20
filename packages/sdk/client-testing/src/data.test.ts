@@ -22,14 +22,14 @@ type DataType = {
   [TestType.Org]: {
     id: string
     type?: string
-    title?: string
+    name?: string
   }[],
 
   [TestType.Person]: {
     id: string
     type?: string
     org?: string
-    title?: string
+    name?: string
   }[]
 }
 
@@ -87,13 +87,13 @@ describe('Builders', async () => {
         [TestType.Org]: orgs.map(item => ({
           id: item.id,
           type: item.type,
-          title: item.model.get('title')
+          name: item.model.get('name')
         })),
 
         [TestType.Person]: people.map(item => ({
           id: item.id,
           type: item.type,
-          title: item.model.get('title'),
+          name: item.model.get('name'),
           org: item.parent!.id
         }))
       };
@@ -118,7 +118,7 @@ describe('Builders', async () => {
         const item = await party.database.createItem({
           type: org.type,
           props: {
-            title: org.title
+            name: org.name
           }
         });
 
@@ -130,7 +130,7 @@ describe('Builders', async () => {
           type: person.type,
           parent: orgs.get(person.org),
           props: {
-            title: person.title
+            name: person.name
           }
         });
       }
@@ -148,9 +148,9 @@ describe('Builders', async () => {
         const rows = columnify(entities.map(item => ({
           id: chalk.blue(truncateKey(item.id, 4)),
           type: chalk.magenta(truncate(item.type, 24, true)),
-          title: chalk.green(truncate(item.model.get('title'), 24, true))
+          name: chalk.green(truncate(item.model.get('name'), 24, true))
         })), {
-          columns: ['id', 'type', 'title']
+          columns: ['id', 'type', 'name']
         });
 
         log('\n' + rows + '\n');
@@ -165,10 +165,10 @@ describe('Builders', async () => {
         const rows = columnify(entities.map(item => ({
           id: chalk.blue(truncateKey(item.id, 4)),
           type: chalk.magenta(truncate(item.type, 24, true)),
-          title: chalk.green(truncate(item.model.get('title'), 24, true)),
-          org: chalk.red(item.parent?.model.get('title'))
+          name: chalk.green(truncate(item.model.get('name'), 24, true)),
+          org: chalk.red(item.parent?.model.get('name'))
         })), {
-          columns: ['id', 'type', 'title', 'org']
+          columns: ['id', 'type', 'name', 'org']
         });
 
         log('\n' + rows + '\n');
