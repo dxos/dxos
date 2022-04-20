@@ -38,8 +38,8 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => {
       cellClassName: (params: GridCellParams<string>) => params.row.type.replace(/\W/g, '_')
     },
     {
-      field: 'title',
-      headerName: 'Title',
+      field: 'name',
+      headerName: 'Name',
       flex: 1,
       valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row)
     }
