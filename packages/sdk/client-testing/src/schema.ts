@@ -14,7 +14,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 export const TYPE_SCHEMA = 'dxos:type/schema';
 
-export type Type = 'string' | 'number' | 'boolean' | 'ref'
+export type FieldType = 'string' | 'number' | 'boolean' | 'ref'
 
 // TODO(burdon): Protobuf definitions.
 
@@ -25,7 +25,7 @@ export type SchemaFieldRef = {
 
 export type SchemaField = {
   key: string
-  type?: Type
+  type?: FieldType
   required: boolean
   ref?: SchemaFieldRef
 }
