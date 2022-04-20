@@ -43,15 +43,25 @@ export type Schema = {
  */
 export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, party?: Party) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
-  return fields.every(field => {
-    const value = item.model.get(field.key);
-    if (field.required && value === undefined) {
+  return fields.every(({ key, type, required, ref }) => {
+    const value = item.model.get(key);
+    if (required && value === undefined) {
       return false;
     }
 
-    if (field.ref && party) {
-      const item = party.database.getItem(value);
-      if (!item) {
+    if (ref) {
+      if (typeof value !== 'string') {
+        return false;
+      }
+
+      if (party) {
+        const item = party.database.getItem(value);
+        if (!item) {
+          return false;
+        }
+      }
+    } else {
+      if (typeof value !== type) {
         return false;
       }
     }
@@ -70,7 +80,7 @@ export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 
-  // TODO(burdon): Config length.
+  const logKey = (id: string) => truncateKey(id, 4);
   const logString = (value: string) => truncate(value, 24, true);
 
   const values = items.map(item => {
@@ -88,7 +98,7 @@ export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[
             const item = party.database.getItem(value);
             row[key] = chalk.red(logString(item?.model.get(field)));
           } else {
-            row[key] = chalk.red(truncateKey(value, 4));
+            row[key] = chalk.red(logKey(value));
           }
           break;
         }
@@ -99,7 +109,7 @@ export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[
       }
 
       return row;
-    }, { id: chalk.blue(truncateKey(item.id, 4)) });
+    }, { id: chalk.blue(logKey(item.id)) });
   });
 
   return columnify(values, { columns: ['id', ...columns] });

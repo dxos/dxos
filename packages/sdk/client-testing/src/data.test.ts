@@ -33,6 +33,9 @@ type DataType = {
   }[]
 }
 
+const logKey = (id: string) => truncateKey(id, 4);
+const logString = (value?: string) => truncate(value, 24, true);
+
 describe('Builders', async () => {
   test('Sanity.', async () => {
     const builder = new Builder();
@@ -146,9 +149,9 @@ describe('Builders', async () => {
 
         // Log table.
         const rows = columnify(entities.map(item => ({
-          id: chalk.blue(truncateKey(item.id, 4)),
-          type: chalk.magenta(truncate(item.type, 24, true)),
-          name: chalk.green(truncate(item.model.get('name'), 24, true))
+          id: chalk.blue(logKey(item.id)),
+          type: chalk.magenta(logString(item.type)),
+          name: chalk.green(logString(item.model.get('name')))
         })), {
           columns: ['id', 'type', 'name']
         });
@@ -163,10 +166,10 @@ describe('Builders', async () => {
 
         // Log table.
         const rows = columnify(entities.map(item => ({
-          id: chalk.blue(truncateKey(item.id, 4)),
-          type: chalk.magenta(truncate(item.type, 24, true)),
-          name: chalk.green(truncate(item.model.get('name'), 24, true)),
-          org: chalk.red(item.parent?.model.get('name'))
+          id: chalk.blue(logKey(item.id)),
+          type: chalk.magenta(logString(item.type)),
+          name: chalk.green(logString(item.model.get('name'))),
+          org: chalk.red(logString(item.parent?.model.get('name')))
         })), {
           columns: ['id', 'type', 'name', 'org']
         });
