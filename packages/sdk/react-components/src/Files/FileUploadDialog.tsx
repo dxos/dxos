@@ -2,17 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { FC, ChangeEvent, useEffect, useRef } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 
 /**
  * Standard file upload dialog.
  */
 export const FileUploadDialog: FC<{
+  accept?: string
   open?: boolean
   onClose: () => void
   onUpload: (files: File[]) => void
   multiple?: false
 }> = ({
+  accept,
   open = false,
   onClose,
   onUpload,
@@ -25,11 +27,13 @@ export const FileUploadDialog: FC<{
     };
 
     if (open) {
+      inputRef?.current?.addEventListener('change', handleUpload);
       document.body.addEventListener('focus', listener, { capture: true, once: true });
       inputRef.current!.click();
     }
 
     return () => {
+      inputRef?.current?.removeEventListener('change', handleUpload);
       document.body.removeEventListener('focus', listener);
     };
   }, [open]);
@@ -39,7 +43,7 @@ export const FileUploadDialog: FC<{
 
   // https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
   // https://developer.mozilla.org/en-US/docs/Web/API/FileList
-  const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (event: any) => {
     const { files: fileList } = event.target;
     if (!fileList) {
       return;
@@ -58,7 +62,7 @@ export const FileUploadDialog: FC<{
       id='input'
       ref={inputRef}
       type='file'
-      onChange={handleUpload}
+      accept={accept}
       style={{ display: 'none' }}
       multiple={multiple}
     />
