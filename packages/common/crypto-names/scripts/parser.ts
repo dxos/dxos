@@ -24,7 +24,7 @@ const select = (array: string[], n: number) => {
 };
 
 const parse = (source: string, target: string) => {
-  const content = yaml.load(String(fs.readFileSync(source)));
+  const content = yaml.load(String(fs.readFileSync(source))) as any;
   const { animals, adjectives } = content;
 
   const cleaned = {

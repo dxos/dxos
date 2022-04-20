@@ -3,4 +3,3 @@
 //
 
 export * from './partyBuilder';
-export * from './tableBuilder';

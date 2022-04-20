@@ -35,10 +35,10 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
   const [inProgress, setInprogress] = useState(false);
   const client = useClient();
   const party = useParty(partyKey);
-  const [title, setTitle] = useState(party ? party.getProperty('title') : '');
+  const [name, setName] = useState(party ? party.getProperty('name') : '');
 
   const handleSubmit = async () => {
-    if (!title.length) {
+    if (!name.length) {
       return;
     }
 
@@ -46,13 +46,13 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
       setInprogress(true);
       if (party) {
         // Update the party.
-        await party.setProperty('title', title);
+        await party.setProperty('name', name);
       } else {
         // Create a new party.
         // TODO(burdon): Set properties here.
         // ISSUE(rzadp): https://github.com/dxos/echo/issues/312
-        const party = await client.echo.createParty({ title });
-        await party.setProperty('title', title);
+        const party = await client.echo.createParty({ title: name });
+        await party.setProperty('name', name);
         partyKey = party.key;
       }
     } catch (e) {
@@ -61,7 +61,7 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
       setInprogress(false);
     }
 
-    
+
 
     onClose({ partyKey });
   };
@@ -78,8 +78,8 @@ export const PartySettings = ({ partyKey = undefined, onClose }) => {
           fullWidth
           autoFocus
           label="Title"
-          value={title}
-          onChange={event => setTitle(event.target.value)}
+          value={name}
+          onChange={event => setName(event.target.value)}
           onKeyPress={event => (event.key === 'Enter') && handleSubmit()}
         />
       </Content>
