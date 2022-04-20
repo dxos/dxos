@@ -84,9 +84,9 @@ export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false 
   };
 
   /**
-   * 
-   * @param {FileList} files 
-   * @returns 
+   *
+   * @param {FileList} files
+   * @returns
    */
   const handlePartyImport = async (files) => {
     if(!files) {
@@ -141,17 +141,17 @@ export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false 
               </Avatar>
             </ListItemAvatar>
             <ListItemText
-              primary={party.getProperty('title')}
+              primary={party.getProperty('name')}
               classes={{
                 primary: classes.listItemText
               }}
             />
-            <ListItemSecondaryAction className="actions">
+            <ListItemSecondaryAction className='actions'>
               <IconButton
-                size="small"
-                edge="end"
-                aria-label="settings"
-                title="Settings"
+                size='small'
+                edge='end'
+                aria-label='settings'
+                title='Settings'
                 onClick={() => setSettingsDialog({ settingsDialog: true, settingsPartyKey: party.key })}
               >
                 <SettingsIcon />
@@ -166,20 +166,20 @@ export const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false 
       </div>
       <div className={classes.actions}>
         <Fab
-          size="small"
-          color="primary"
-          aria-label="add"
-          title="Create list"
+          size='small'
+          color='primary'
+          aria-label='add'
+          title='Create list'
           onClick={handleCreateParty}
         >
           <AddIcon />
         </Fab>
         {!hideRedeem && (
           <Fab
-            size="small"
-            color="secondary"
-            aria-label="redeem"
-            title="Redeem invitation"
+            size='small'
+            color='secondary'
+            aria-label='redeem'
+            title='Redeem invitation'
             onClick={handleRedeemParty}
           >
             <RedeemIcon />

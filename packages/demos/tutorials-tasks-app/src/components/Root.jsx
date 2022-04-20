@@ -21,7 +21,7 @@ export const Root = () => {
   //   // Default Party Creation
   //   const partyDemoTitle = 'My First Party!';
   //   const party = await client.echo.createParty({ title: partyDemoTitle });
-  //   await party.setProperty('title', partyDemoTitle);
+  //   await party.setProperty('name', partyDemoTitle);
   // };
 
   if (!profile) {

@@ -216,7 +216,7 @@ importers:
       '@types/crypto-js': ~4.0.2
       '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
-      '@types/js-yaml': ^3.12.5
+      '@types/js-yaml': ^4.0.5
       '@types/node': ^14.0.9
       '@types/uniq': ^0.0.27
       binary-parser: ^2.0.2
@@ -224,7 +224,7 @@ importers:
       eslint: ^7.12.1
       faker: ^5.1.0
       hypercore-crypto: ^2.3.0
-      js-yaml: ^3.13.1
+      js-yaml: ^4.1.0
       ts-node: ^9.1.1
       typescript: ^4.5.2
       uniq: ^1.0.1
@@ -239,12 +239,12 @@ importers:
       '@types/crypto-js': 4.0.2
       '@types/faker': 5.5.9
       '@types/jest': 26.0.24
-      '@types/js-yaml': 3.12.7
+      '@types/js-yaml': 4.0.5
       '@types/node': 14.18.0
       '@types/uniq': 0.0.27
       eslint: 7.32.0
       faker: 5.5.3
-      js-yaml: 3.14.1
+      js-yaml: 4.1.0
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
       uniq: 1.0.1
@@ -2176,6 +2176,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
+      '@types/js-yaml': ^4.0.5
       '@types/mocha': ~8.2.2
       assert: ^2.0.0
       chalk: ^4.1.0
@@ -2184,6 +2185,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       faker: ^5.1.0
+      js-yaml: ^4.1.0
       mocha: ~8.4.0
       typescript: ^4.5.2
       wait-for-expect: ^3.0.2
@@ -2200,6 +2202,7 @@ importers:
       assert: 2.0.0
       debug: 4.3.3
       faker: 5.5.3
+      js-yaml: 4.1.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -2209,6 +2212,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/jest': 26.0.24
+      '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
       chalk: 4.1.2
       columnify: 1.6.0
@@ -2227,7 +2231,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      '@types/js-yaml': ^3.12.5
+      '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
       '@types/lodash.set': ^4.3.6
@@ -2238,7 +2242,7 @@ importers:
       esbuild: ^0.11.23
       eslint: ^7.12.1
       expect: ~27.0.2
-      js-yaml: ^3.13.1
+      js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
@@ -2252,7 +2256,7 @@ importers:
       '@dxos/util': link:../../common/util
       boolean: 3.1.4
       debug: 4.3.3
-      js-yaml: 3.14.1
+      js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
@@ -2262,7 +2266,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
-      '@types/js-yaml': 3.12.7
+      '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
       '@types/lodash.set': 4.3.6
@@ -7216,7 +7220,7 @@ packages:
     resolution: {integrity: sha512-rW8INl7pO6Dmaffd6Df1yAYCRWa2RmWQ0LGfJeA/M6seVIkI6J3opZqAd4q2Op+h9a7z4TESQGk8yggOEL+Csg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
 
@@ -7234,7 +7238,7 @@ packages:
     resolution: {integrity: sha512-0C6Ha2kvr42se3Gevx6UhHzv3KnPHML0N73Amjwvdr4y0HLZ1Nfw+vcm5yqpz5gpiehqz97XqFrsPRauYdcksQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
 
   /@polkadot/rpc-core/4.17.1:
     resolution: {integrity: sha512-1gqYaYuSSQsRmt3ol55jmjBP/euKyAh4PwSj94I2wu0fngK/FZwVZNDJZn/Ib68X/s38TBIgqJ6+YdUdr3z1xw==}
@@ -7303,7 +7307,7 @@ packages:
     resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/networks': 6.11.1
       '@polkadot/util': 6.11.1
       '@polkadot/wasm-crypto': 4.5.1_f80d9c849439331b28facb2e7d2e7aba
@@ -7324,7 +7328,7 @@ packages:
     resolution: {integrity: sha512-TEdCetr9rsdUfJZqQgX/vxLuV4XU8KMoKBMJdx+JuQ5EWemIdQkEtMBdL8k8udNGbgSNiYFA6rPppATeIxAScg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/x-textdecoder': 6.11.1
       '@polkadot/x-textencoder': 6.11.1
       '@types/bn.js': 4.11.6
@@ -7336,13 +7340,13 @@ packages:
     resolution: {integrity: sha512-DOdRiWhxVvmqTvp+E9z1j+Yr0zDOGsDvqnT/eNw0Dl1FVUOImsEa7FKns/urASmcxCVEE1jtUWSnij29jrORMQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
 
   /@polkadot/wasm-crypto-wasm/4.5.1:
     resolution: {integrity: sha512-hPwke85HxpgG/RAlwdCE8u5w7bThvWg399mlB+XjogXMxOUWBZSgq2XYbgzROUXx27inK9nStF4Pnc4zJnqs9A==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
 
   /@polkadot/wasm-crypto/4.5.1_f80d9c849439331b28facb2e7d2e7aba:
     resolution: {integrity: sha512-Cr21ais3Kq3aedIHZ3J1tjgeD/+K8FCiwEawr0oRywNBSJR8wyuZMePs4swR/6xm8wbBkpqoBVHz/UQHqqQJmA==}
@@ -7351,7 +7355,7 @@ packages:
       '@polkadot/util': '*'
       '@polkadot/x-randomvalues': '*'
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/util': 6.11.1
       '@polkadot/wasm-crypto-asmjs': 4.5.1
       '@polkadot/wasm-crypto-wasm': 4.5.1
@@ -7370,13 +7374,13 @@ packages:
     resolution: {integrity: sha512-lsBK/e4KbjfieyRmnPs7bTiGbP/6EoCZz7rqD/voNS5qsJAaXgB9LR+ilubun9gK/TDpebyxgO+J19OBiQPIRw==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
 
   /@polkadot/x-randomvalues/6.11.1:
     resolution: {integrity: sha512-2MfUfGZSOkuPt7GF5OJkPDbl4yORI64SUuKM25EGrJ22o1UyoBnPOClm9eYujLMD6BfDZRM/7bQqqoLW+NuHVw==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/x-global': 6.11.1
 
   /@polkadot/x-rxjs/6.11.1:
@@ -7390,14 +7394,14 @@ packages:
     resolution: {integrity: sha512-DI1Ym2lyDSS/UhnTT2e9WutukevFZ0WGpzj4eotuG2BTHN3e21uYtYTt24SlyRNMrWJf5+TkZItmZeqs1nwAfQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/x-global': 6.11.1
 
   /@polkadot/x-textencoder/6.11.1:
     resolution: {integrity: sha512-8ipjWdEuqFo+R4Nxsc3/WW9CSEiprX4XU91a37ZyRVC4e9R1bmvClrpXmRQLVcAQyhRvG8DKOOtWbz8xM+oXKg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@babel/runtime': 7.16.3
+      '@babel/runtime': 7.17.2
       '@polkadot/x-global': 6.11.1
 
   /@polkadot/x-ws/6.11.1:
@@ -8555,8 +8559,8 @@ packages:
       jest-diff: 26.6.2
       pretty-format: 26.6.2
 
-  /@types/js-yaml/3.12.7:
-    resolution: {integrity: sha512-S6+8JAYTE1qdsc9HMVsfY7+SgSuUU/Tp6TYTmITW0PZxiyIMvol3Gy//y69Wkhs0ti4py5qgR3uZH6uz/DNzJQ==}
+  /@types/js-yaml/4.0.5:
+    resolution: {integrity: sha512-FhpRzf927MNQdRZP0J5DLIdTXhjLYzeUTmLAu69mnVksLH9CJY3IuSeEgbKUki7GQZm0WqDkGzyxju2EZGD2wA==}
     dev: true
 
   /@types/json-schema/7.0.9:
@@ -15985,7 +15989,7 @@ packages:
       err-code: 3.0.1
       ipfs-core-types: 0.10.2_node-fetch@2.6.6
       ipfs-unixfs: 6.0.6
-      ipfs-utils: 9.0.6
+      ipfs-utils: 9.0.5
       it-all: 1.0.6
       it-map: 1.0.6
       it-peekable: 1.0.3
@@ -16016,7 +16020,7 @@ packages:
       err-code: 3.0.1
       ipfs-core-types: 0.10.2_node-fetch@2.6.6
       ipfs-core-utils: 0.14.2_node-fetch@2.6.6
-      ipfs-utils: 9.0.6
+      ipfs-utils: 9.0.5
       it-first: 1.0.7
       it-last: 1.0.6
       merge-options: 3.0.4
@@ -16038,8 +16042,8 @@ packages:
       protobufjs: 6.11.2
     dev: false
 
-  /ipfs-utils/9.0.6:
-    resolution: {integrity: sha512-/WfdwOIiJVb3uqfKRQ9Eo+vCEKsDgp7h4Pdc37MRwAiFciZ7xKAkEqsfXubV0VQi8x5jWTifeHn8WEPBLL451w==}
+  /ipfs-utils/9.0.5:
+    resolution: {integrity: sha512-GXWfsq/nKtwkcTI4+KGc4CU9EFXjtkWaGcFAsnm177kAhA0Fnn8aWNRaF/C0xFraUIl1wTAUTWkaGKigVyfsTw==}
     dependencies:
       any-signal: 3.0.1
       buffer: 6.0.3
@@ -17485,7 +17489,6 @@ packages:
     hasBin: true
     dependencies:
       argparse: 2.0.1
-    dev: true
 
   /jsbn/0.1.1:
     resolution: {integrity: sha1-peZUwuWi3rXyAdls77yoDA7y9RM=}

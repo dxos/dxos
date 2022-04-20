@@ -102,7 +102,7 @@ export const List = ({ key }) => {
   return (
     <ul>
       {items.map((item) => (
-        <li key={item.id}>{item.model.get('title')}</li>
+        <li key={item.id}>{item.model.get('name')}</li>
       ))}
     </ul>
   );
