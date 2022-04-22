@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { faker } from '@faker-js/faker';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -33,9 +34,8 @@ describe('TextModel', () => {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
-    // TODO: Faker data generation.
-    const text1 = 'Hello';
-    const text2 = 'World';
+    const text1 = faker.lorem.lines(1);
+    const text2 = faker.lorem.lines(1);
 
     peer1.model.insertTextNode(text1, 0);
     expect(peer1.model.content._length).toBe(1);
@@ -53,13 +53,14 @@ describe('TextModel', () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
 
-    model1.model.insert('Hello World!', 0);
+    const text = faker.lorem.lines(1);
+    model1.model.insert(text, 0);
 
     const snapshot = model1.createSnapshot();
 
     const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, PublicKey.random(), new MockFeedWriter());
 
-    expect(model2.model.textContent).toBe('Hello World!');
+    expect(model2.model.textContent).toBe(text);
   });
 
   test('conflict', async () => {
