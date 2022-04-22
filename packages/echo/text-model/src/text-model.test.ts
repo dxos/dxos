@@ -33,8 +33,9 @@ describe('TextModel', () => {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
-    const text1 = 'Hello World!';
-    const text2 = 'Hello Workd 2!';
+    // TODO: Faker data generation.
+    const text1 = 'Hello';
+    const text2 = 'World';
 
     peer1.model.insertTextNode(text1, 0);
     expect(peer1.model.content._length).toBe(1);
