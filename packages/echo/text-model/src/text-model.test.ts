@@ -29,6 +29,19 @@ describe('TextModel', () => {
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
+  test('insert a new text node', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
+    const peer1 = rig.createPeer();
+
+    peer1.model.insertTextNode(0, 'Hello World!');
+    expect(peer1.model.textContent).toBe('Hello World!');
+    expect(peer1.model.content._length).toBe(1);
+
+    peer1.model.insertTextNode(0, 'Hello World!');
+    expect(peer1.model.textContent).toBe('Hello World!\nHello World!');
+    expect(peer1.model.content._length).toBe(2);
+  });
+
   test('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
