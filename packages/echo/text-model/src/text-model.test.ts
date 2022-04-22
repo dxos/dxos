@@ -29,7 +29,7 @@ describe('TextModel', () => {
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
-  test.only('insert a new text node', async () => {
+  test('insert a new text node', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
