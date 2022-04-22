@@ -1,7 +1,6 @@
 {
   "name": "@dxos/object-model",
   "version": "2.29.1",
-  "private": false,
   "description": "ECHO object model.",
   "license": "MIT",
   "main": "dist/src/index.js",

@@ -14,7 +14,7 @@ TODO(burdon): Write up branch anaolgy.
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
 - Each peer has a writable control feed in addition to its data (ECHO) feed.
 - Control feeds can be read and processed independently from data feeds.
-- They are piped into PartyStateMachiene.
+- They are piped into PartyStateMachine.
 
 ### Epoch genesis
 
@@ -23,7 +23,7 @@ TODO(burdon): Write up branch anaolgy.
 
 ### Snapshots
 
-- Snapshots allow peers to bootstrap the ECHO state machiene from that point in time without reading feed messages before it.
+- Snapshots allow peers to bootstrap the ECHO state machine from that point in time without reading feed messages before it.
 - Snapshots are content-addressed blobs consisting of a hierarchical set of reified HALO and ECHO models.
   - HALO snapshots will be removed once control feeds are implemented.
   - Each items outputs a snapshot from its corresponding model.

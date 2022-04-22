@@ -11,7 +11,7 @@ import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } f
 import { schema } from './proto/gen';
 import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
 
-class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
+class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
   private _doc = new Doc();
 
   getState (): Doc {
@@ -43,7 +43,7 @@ class TextModelStateMachiene implements StateMachine<Doc, Mutation, Snapshot> {
 export class TextModel extends Model<Doc, Mutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/text',
-    stateMachine: () => new TextModelStateMachiene(),
+    stateMachine: () => new TextModelStateMachine(),
     mutation: schema.getCodecForType('dxos.echo.text.Mutation'),
     snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
   };

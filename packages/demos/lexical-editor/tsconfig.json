@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "node",
+      "mocha"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "ES2018",
+    "removeComments": false,
+    "strict": true
+  },
+  "include": [
+    "src",
+    "stories",
+    "playwright"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../echo/text-model"
+    }
+  ]
+}

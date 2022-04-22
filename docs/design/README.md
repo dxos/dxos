@@ -33,7 +33,7 @@ Each item or link has state-machine and a model.
 
 Represent the data types in the ECHO database.
 
-Model provides the public API for the data type, while state-machiene manages the state.
+Model provides the public API for the data type, while state-machine manages the state.
 
 The most common is the `ObjectModel` which is a key-value store.
 

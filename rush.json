@@ -795,6 +795,10 @@
       "projectFolder": "packages/demos/kitchen-sink"
     },
     {
+      "packageName": "@dxos/lexical-editor",
+      "projectFolder": "packages/demos/lexical-editor"
+    },
+    {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/demos/tutorials-tasks-app"
     },

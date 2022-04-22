@@ -28,6 +28,7 @@ export type SchemaField = {
   type?: FieldType
   required: boolean
   ref?: SchemaFieldRef
+  // TODO(burdon): Repeated.
 }
 
 export type Schema = {

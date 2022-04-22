@@ -34,11 +34,9 @@ describe('TextModel', () => {
     const model1 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
 
     model1.model.insert(0, 'Hello World!');
-
     const snapshot = model1.createSnapshot();
 
     const model2 = modelFactory.createModel<TextModel>(TextModel.meta.type, 'test', snapshot, PublicKey.random(), new MockFeedWriter());
-
     expect(model2.model.textContent).toBe('Hello World!');
   });
 
