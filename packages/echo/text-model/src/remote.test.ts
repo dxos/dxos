@@ -20,7 +20,7 @@ describe('With remote database', () => {
     const text = await frontend.createItem({
       model: TextModel, type: 'example:type/text'
     });
-    await text.model.insert(0, 'Hello world');
+    await text.model.insert('Hello world', 0);
 
     expect(text.model.textContent).toEqual('Hello world');
   });
@@ -39,7 +39,7 @@ describe('With remote database', () => {
       type: 'example:type/text',
       parent: parent.id
     });
-    await text.model.insert(0, 'Hello world');
+    await text.model.insert('Hello world', 0);
 
     expect(text.model.textContent).toEqual('Hello world');
   });
