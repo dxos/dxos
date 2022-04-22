@@ -47,6 +47,10 @@ const topic = randomBytes(32);
 createBroker(topic, opts).start();
 ```
 
+## Compatibility
+
+This package is using `@koush/wrtc` in place of `wrtc` for compatibility with M1 Macs.
+
 ## API
 
 ...
