@@ -36,10 +36,10 @@ export const useValue = trigger;
  *
  * Has two states:
  * - WAITING: promise is in pending state and will be resolved once `wake()` is called.
- * - READY: promise is already resolved, and all calls to `wait()` resolve immedeately.
+ * - READY: promise is already resolved, and all calls to `wait()` resolve immediately.
  *
  * Trigger starts in WAITING state initially.
- * Use `reset()` to swith resolved trigger back to WAITING state.
+ * Use `reset()` to switch resolved trigger back to WAITING state.
  */
 export class Trigger {
   _promise!: Promise<void>;
