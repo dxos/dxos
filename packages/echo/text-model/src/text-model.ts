@@ -142,7 +142,7 @@ export class TextModel extends Model<Doc, Mutation> {
     return this._transact(() => this._insertInner(this.content, index, text));
   }
 
-  insertTextNode (text: string, index = 0) {
+  insertTextNode (index = 0, text: string) {
     const paragraph = new XmlElement('paragraph');
     const yXmlText = new XmlText(text);
     paragraph.insert(0, [yXmlText]);
