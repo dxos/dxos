@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.29.1",
+  "version": "2.29.2",
   "description": "ECHO database.",
   "license": "MIT",
   "main": "dist/src/index.js",

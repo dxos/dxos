@@ -1,5 +1,24 @@
 # Change Log
 
+### [2.29.2](https://www.github.com/dxos/protocols/compare/v2.29.1...v2.29.2) (2022-04-22)
+
+
+### Features
+
+* Add onJoin callback to JoinHaloDialog ([#1133](https://www.github.com/dxos/protocols/issues/1133)) ([14dd126](https://www.github.com/dxos/protocols/commit/14dd126a88e9518f8de4d838c45c64c3a3f535b0))
+* Clean-up builders/generators/testing. ([#1124](https://www.github.com/dxos/protocols/issues/1124)) ([de17610](https://www.github.com/dxos/protocols/commit/de17610a578e4b3ee280492b62a87619a00d3e2e))
+* client-testing utils ([#1137](https://www.github.com/dxos/protocols/issues/1137)) ([60002bf](https://www.github.com/dxos/protocols/commit/60002bf184635176c3eeb886df09351845d39f6d))
+* insert a text node in a text model ([#1139](https://www.github.com/dxos/protocols/issues/1139)) ([9594299](https://www.github.com/dxos/protocols/commit/959429922d73561e9a2ae9ab6e906c953a589900))
+* Object Model Schema ([#1117](https://www.github.com/dxos/protocols/issues/1117)) ([40fc2ef](https://www.github.com/dxos/protocols/commit/40fc2efac3763a61f39220cafa65ec5bd6ec435d))
+* Refactor client API (extract polkadot deps.) ([#1132](https://www.github.com/dxos/protocols/issues/1132)) ([26a56a7](https://www.github.com/dxos/protocols/commit/26a56a7f2f49d6c7d66df21af39b29c251ff1fa8))
+* **toolchain-node-library:** Accept user args from start command ([#1140](https://www.github.com/dxos/protocols/issues/1140)) ([e924fb3](https://www.github.com/dxos/protocols/commit/e924fb3400c4f51ae3cf7ce42bb00cba152b436a))
+
+
+### Bug Fixes
+
+* proper party key in bot. ([71f7546](https://www.github.com/dxos/protocols/commit/71f7546eab335a2b090bcc052fcebf50de5955a6))
+* revert to node 16.14.0 ([#1134](https://www.github.com/dxos/protocols/issues/1134)) ([5bffba7](https://www.github.com/dxos/protocols/commit/5bffba7a6fd2af7d4c2e020db9ce0612663b3493))
+
 ### [2.29.1](https://www.github.com/dxos/protocols/compare/v2.29.0...v2.29.1) (2022-04-14)
 
 
