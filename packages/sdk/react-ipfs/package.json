@@ -1,38 +1,37 @@
 {
-  "name": "@dxos/async",
+  "name": "@dxos/react-ipfs",
   "version": "2.30.0",
-  "description": "Async utils.",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
+  "description": "React IPFS utils",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
+    "book": "toolchain book",
     "build": "toolchain build",
+    "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*"
+    "@dxos/client": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "ipfs-http-client": "~56.0.1"
   },
   "devDependencies": {
+    "@dxos/esbuild-plugins": "~2.28.7",
     "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
+    "@types/react": "^17.0.24",
     "eslint": "^7.12.1",
+    "node-fetch": "^2.6.0",
+    "react": "^17.0.2",
     "typescript": "^4.5.2"
+  },
+  "peerDependencies": {
+    "react": "*"
   },
   "publishConfig": {
     "access": "public"
