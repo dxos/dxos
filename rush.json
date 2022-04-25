@@ -616,6 +616,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-ipfs",
+      "projectFolder": "packages/sdk/react-ipfs",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-registry-client",
       "projectFolder": "packages/sdk/react-registry-client",
       "shouldPublish": true,

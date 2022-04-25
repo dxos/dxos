@@ -6,8 +6,7 @@ import { CID, IPFSHTTPClient } from 'ipfs-http-client';
 import { useMemo } from 'react';
 
 import { Party } from '@dxos/client';
-
-import { useSelection } from '../echo-selections';
+import { useSelection } from '@dxos/react-client';
 
 export type IPFSFile = {
   filename?: string

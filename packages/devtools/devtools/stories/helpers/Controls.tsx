@@ -85,7 +85,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
     const text = await party.database.createItem({
       model: TextModel, type: 'example:type/text', parent: child.id
     });
-    await text.model.insert(0, 'Hello world');
+    await text.model.insert('Hello world', 0);
 
     // Messenger.
     const messenger = await party.database.createItem({
