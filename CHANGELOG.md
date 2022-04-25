@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.30.1](https://www.github.com/dxos/protocols/compare/v2.30.0...v2.30.1) (2022-04-25)
+
+
+### Bug Fixes
+
+* Bad toolchain command ([#1148](https://www.github.com/dxos/protocols/issues/1148)) ([082d78b](https://www.github.com/dxos/protocols/commit/082d78bbb6d35cf22c7af142ee11bc65e611c863))
+* onChange event and add accept prop ([#1138](https://www.github.com/dxos/protocols/issues/1138)) ([321df10](https://www.github.com/dxos/protocols/commit/321df10e1402ac347a2326a0071116fe255ca814))
+
 ## [2.30.0](https://www.github.com/dxos/protocols/compare/v2.29.1...v2.30.0) (2022-04-22)
 
 
