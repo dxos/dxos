@@ -46,6 +46,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 
 import { HashtagNode } from '@lexical/hashtag';
 import { Provider, ProviderAwareness } from '@lexical/yjs';
+import { SyncModel } from '../hooks';
 
 // TODO(burdon): YJS.
 
@@ -212,7 +213,58 @@ const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
   return provider;
 };
 
+const CustomCollaborationPlugin = ({ model }: { model: SyncModel }) => {
+  // TODO(burdon): Adapt y-webrtc/y-websocket to use ECHO.
+  // import { WebrtcProvider } from 'y-webrtc'
+  // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
+  const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
+    let doc = yjsDocMap.get(id);
+    if (!doc) {
+      // doc = new Doc();
+      doc = model.doc;
+      // TODO(burdon): Plug-in TextModel?
+      // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
+      doc.on('update', (update: Uint8Array, origin: any) => {
+        console.log(origin);
+        console.log('update', update); // Send?
+      })
+      // model.onUpdate && doc.on('update', model.onUpdate);
+      yjsDocMap.set(id, model.doc);
+    }
+
+    const provider: Provider = {
+      // Ephemeral state (e.g., cursors).
+      // https://github.com/yjs/y-protocols/blob/master/awareness.js
+      awareness: new Awareness(doc),
+
+      connect: async () => {
+        console.log('connect');
+      },
+      disconnect: () => {
+        console.log('disconnect');
+      },
+      on: (type: string) => { // 'reload', 'status', 'sync'
+        console.log('on:', type);
+      },
+      off: (type: string) => {
+        console.log('off:', type);
+      }
+    };
+
+    return provider;
+  };
+
+  return (
+    <CollaborationPlugin
+      id='main'
+      shouldBootstrap={false}
+      providerFactory={providerFactory}
+    />
+  );
+};
+
 export interface EditorProps {
+  model?: SyncModel
   onDebug?: (debug: any) => void
 }
 
@@ -221,6 +273,7 @@ export interface EditorProps {
  * https://lexical.dev/docs/getting-started/quick-start
  */
 export const Editor = ({
+  model,
   onDebug
 }: EditorProps) => {
   const handleError = (error: Error) => {
@@ -258,13 +311,9 @@ export const Editor = ({
           onChange={handleChange}
         />
         */}
-        {/*
-        <CollaborationPlugin
-          id='main'
-          shouldBootstrap={false}
-          providerFactory={providerFactory}
-        />
-        */}
+        {model && (
+          <CustomCollaborationPlugin model={model} />
+        )}
         <HistoryPlugin />
         <LexicalHashtagPlugin />
 
