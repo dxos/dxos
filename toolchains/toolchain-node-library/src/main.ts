@@ -263,7 +263,7 @@ export const setupCoreCommands = (yargs: Argv) => (
       yargs => yargs
         .strict(),
       async ({ _ }) => {
-        await execBook(_.slice(1).map(String));
+        await execStart(_.slice(1).map(String));
       }
     )
 
