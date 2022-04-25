@@ -7,7 +7,6 @@ import React, { FC, useEffect, useRef } from 'react';
 /**
  * Standard file upload dialog.
  */
-// TODO(gcolotti): Use FileUploadDialog from react-components, onChange wasn't working.
 export const FileUploadDialog: FC<{
   open?: boolean
   onClose: () => void
