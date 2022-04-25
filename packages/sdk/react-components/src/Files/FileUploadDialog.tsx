@@ -7,33 +7,46 @@ import React, { FC, useEffect, useRef } from 'react';
 /**
  * Standard file upload dialog.
  */
+// TODO(gcolotti): Use FileUploadDialog from react-components, onChange wasn't working.
 export const FileUploadDialog: FC<{
-  accept?: string
   open?: boolean
   onClose: () => void
   onUpload: (files: File[]) => void
+  accept?: string
   multiple?: false
 }> = ({
-  accept,
   open = false,
   onClose,
   onUpload,
+  accept,
   multiple = false
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const listener = () => {
       onClose();
     };
 
     if (open) {
+      // The component is working perfectly in Kitchen-sink but, in the notebook-app,
+      // the onChange event is not being triggered.
+      // Some links to stackoverflow posts with discussion of users experiencing the same problem:
+      // - https://stackoverflow.com/questions/50300392/react-input-type-file-onchange-not-firing
+      // - https://stackoverflow.com/questions/65616592/react-input-onchange-not-firing-at-all
+      // - https://stackoverflow.com/questions/66077400/react-hidden-input-type-file-onchange-not-firing
+      // The most relevant fixes tried with no luck:
+      // - Verify that the id of the input is not used on any other element
+      // - Try using onInput instead of onChange
+      // - Try with onInputCapture and onChangeCapture.
+      // Adding the event listener on the 'change' event fixed the issue.
       inputRef?.current?.addEventListener('change', handleUpload);
       document.body.addEventListener('focus', listener, { capture: true, once: true });
       inputRef.current!.click();
     }
 
     return () => {
-      inputRef?.current?.removeEventListener('change', handleUpload);
+      inputRef?.current?.addEventListener('change', handleUpload);
       document.body.removeEventListener('focus', listener);
     };
   }, [open]);
@@ -62,9 +75,11 @@ export const FileUploadDialog: FC<{
       id='input'
       ref={inputRef}
       type='file'
+      // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#unique_file_type_specifiers
       accept={accept}
-      style={{ display: 'none' }}
       multiple={multiple}
+      style={{ display: 'none' }}
     />
   );
 };
