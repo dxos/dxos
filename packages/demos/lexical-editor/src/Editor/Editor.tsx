@@ -3,6 +3,7 @@
 //
 
 import { css } from '@emotion/css';
+import debug from 'debug';
 import { $getRoot, $getSelection } from 'lexical';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,9 +14,10 @@ import type { EditorState } from 'lexical';
 
 // TODO(burdon): Experiments:
 //  - YJS/TextModel
+//    - With history
 //  - scrolling
 //  - side margin "+" button (absolute position)
-//  - side margin drag (without cut/paste)
+//  - side margin drag (without cut/paste); show inline horizontal rule
 //  - "/" command menu/popup
 //  - inline blocks
 //  - inline list
@@ -182,6 +184,7 @@ const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
     doc.on('update', (update: Uint8Array, origin: any) => {
       console.log('update', update); // Send?
     })
+
     yjsDocMap.set(id, doc);
   }
 
@@ -196,6 +199,8 @@ const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
     disconnect: () => {
       console.log('disconnect');
     },
+
+    // TODO(burdon): ???
     on: (type: string) => { // 'reload', 'status', 'sync'
       console.log('on:', type);
     },
