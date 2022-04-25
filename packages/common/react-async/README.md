@@ -12,7 +12,7 @@ Add the following to `package.json`.
   }
 ```
 
-The `react-dom/test-utils` requires the `raf` (React animation frame) polyfill to run headless.
+The `react-dom/test-utils` requires the `raf` (RequestAnimationFrame) polyfill to run headless.
 
 ```ts
 import 'raf/polyfill';

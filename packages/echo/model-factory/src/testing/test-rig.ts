@@ -56,8 +56,9 @@ export class TestRig<M extends Model<any>> {
       }
     };
 
-    const stateMnager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, key, writer);
-    const peer = new TestPeer(stateMnager, key);
+    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, key, writer);
+
+    const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
 
     return peer;
@@ -123,6 +124,7 @@ export class TestRig<M extends Model<any>> {
 
 export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
+
   public mutations: ModelMessage<Uint8Array>[] = [];
 
   constructor (

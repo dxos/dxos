@@ -1,6 +1,7 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.29.1",
+  "version": "2.30.0",
+  "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
   "bugs": {
@@ -36,10 +37,12 @@
     "@dxos/eslint-plugin": "~1.0.27",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
+    "faker": "^5.1.0",
     "typescript": "^4.5.2"
   },
   "publishConfig": {
