@@ -705,10 +705,12 @@ importers:
       '@lexical/yjs': ~0.2.4
       '@mui/icons-material': ^5.4.2
       '@mui/material': ^5.4.2
+      '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
+      debug: ^4.3.3
       expect: ~27.0.2
       lexical: ~0.2.4
       mocha: ~8.4.0
@@ -733,6 +735,7 @@ importers:
       '@lexical/yjs': 0.2.4_lexical@0.2.4+yjs@13.5.22
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
       '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      debug: 4.3.3
       lexical: 0.2.4
       y-protocols: 1.0.5
       yjs: 13.5.22
@@ -745,6 +748,7 @@ importers:
       '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
       '@lexical/react': 0.2.4_407d0de1141a08f0456aac796e4445af
+      '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
@@ -10646,6 +10650,7 @@ packages:
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    requiresBuild: true
     dependencies:
       file-uri-to-path: 1.0.0
     optional: true
