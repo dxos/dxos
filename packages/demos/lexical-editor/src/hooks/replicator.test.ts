@@ -6,6 +6,9 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 import { applyUpdate, Doc } from 'yjs';
 
+import { Client } from '@dxos/client';
+import { TextModel } from '@dxos/text-model';
+
 import { Replicator } from './replicator';
 
 describe('YJS sync', () => {
@@ -43,11 +46,13 @@ describe('YJS sync', () => {
   });
 
   // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
-  test('TextModel', () => {
-    const replicator = new Replicator();
-    const { model: model1 } = replicator.createPeer('peer-1');
-    const { model: model2 } = replicator.createPeer('peer-2');
-    expect(model1.doc.clientID).not.toEqual(model2.doc.clientID);
+  test('TextModel', async () => {
+    const client = new Client({});
+    await client.halo.createProfile();
+    const party = await client.echo.createParty();
+    const item = await party.database.createItem({ model: TextModel });
+    console.log(client.config);
+    console.log(item.model);
 
     // https://docs.yjs.dev/api/delta-format
     // https://docs.yjs.dev/api/document-updates

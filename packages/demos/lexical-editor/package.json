@@ -41,7 +41,8 @@
     "lexical": "~0.2.4",
     "yjs": "^13.4.1",
     "y-protocols": "~1.0.5",
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "@dxos/text-model": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
