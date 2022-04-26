@@ -27,7 +27,6 @@ export class BackgroundServer {
 
   public async close () {
     await Promise.all(Array.from(this._connections).map(peer => peer.close()));
-
     await this._client.destroy();
   }
 
@@ -42,6 +41,7 @@ export class BackgroundServer {
 
     const handlers: ClientServices = {
       ...this._client.services,
+
       SystemService: {
         ...this._client.services.SystemService,
         reset: async () => {
@@ -50,6 +50,7 @@ export class BackgroundServer {
           window.location.reload();
         }
       },
+
       TracingService: {
         setTracingOptions: async ({ enable }) => {
           collector.setEnabled(enable ?? false);
@@ -63,6 +64,7 @@ export class BackgroundServer {
       handlers,
       port: tracer.port
     });
+
     this._connections.add(server);
     await server.open(); // This is blocks until the other client connects.
   }
