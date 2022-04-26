@@ -25,6 +25,7 @@ export class ClientSignerAdapter implements HaloSigner {
     const keyring = new PolkadotKeyring({ type: 'sr25519' });
     const keypair = keyring.addFromUri(key.secretKey.toString());
 
+    // TODO(burdon): Return signed message only?
     return {
       signed: keypair.sign(request.payload, { withType: true })
     };
