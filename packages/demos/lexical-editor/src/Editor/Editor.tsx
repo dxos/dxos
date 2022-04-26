@@ -13,6 +13,7 @@ import { Awareness } from 'y-protocols/awareness';
 import type { EditorState } from 'lexical';
 
 // TODO(burdon): Experiments:
+// https://news.ycombinator.com/item?id=31017943 (Why Lexical)
 //  - YJS/TextModel
 //    - With history
 //  - scrolling
