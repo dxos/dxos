@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.30.2](https://www.github.com/dxos/protocols/compare/v2.30.1...v2.30.2) (2022-04-26)
+
+
+### Bug Fixes
+
+* Add client signer adapter to services constructor. ([#1149](https://www.github.com/dxos/protocols/issues/1149)) ([4549652](https://www.github.com/dxos/protocols/commit/45496522d16743c2b76bfaac94f5eca59c80c5f9))
+
 ### [2.30.1](https://www.github.com/dxos/protocols/compare/v2.30.0...v2.30.1) (2022-04-25)
 
 
