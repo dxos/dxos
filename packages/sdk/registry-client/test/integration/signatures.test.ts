@@ -21,6 +21,7 @@ import { PublicKey } from '@dxos/crypto';
 import {
   AuctionsClient,
   ClientSigner,
+  ClientSignerAdapter,
   SignTxFunction,
   createApiPromise,
   createKeyring,
@@ -78,7 +79,9 @@ describe('Signatures', () => {
       }
     };
 
-    client = new Client(config);
+    client = new Client(config, {
+      signer: new ClientSignerAdapter()
+    });
     await client.initialize();
     await client.halo.createProfile();
     await client.halo.addKeyRecord({
