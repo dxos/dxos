@@ -34,7 +34,7 @@ export class HaloService implements IHaloService {
   // TODO(burdon): Rename signMessage? (in interface).
   // TODO(burdon): Why is this part of the interface? (Can it be factored out completely?)
   async sign (request: SignRequest): Promise<SignResponse> {
-    assert(this.signer, 'Signer plugin not set.');
+    assert(this.signer, 'Signer not set.');
     assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');

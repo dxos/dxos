@@ -193,7 +193,7 @@ export class Client {
 
   private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
-    this._serviceProvider = new ClientServiceHost(this._config);
+    this._serviceProvider = new ClientServiceHost(this._config, this._options);
     await this._serviceProvider.open(onProgressCallback);
   }
 
