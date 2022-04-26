@@ -15,6 +15,7 @@ import { RpcMessage } from '../proto/gen/dxos/rpc';
 import { config } from './config';
 
 export class BackgroundServer {
+  // TODO(burdon): Configure signer adapter.
   private readonly _client: Client = new Client(config);
 
   // Active and potentially closed connections.
