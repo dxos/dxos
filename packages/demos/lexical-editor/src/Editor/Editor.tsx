@@ -5,7 +5,7 @@
 import { css } from '@emotion/css';
 import debug from 'debug';
 import { $getRoot, $getSelection } from 'lexical';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Doc } from 'yjs'
 import { Awareness } from 'y-protocols/awareness';
@@ -41,11 +41,10 @@ import LexicalRichTextPlugin from '@lexical/react/LexicalRichTextPlugin';
 import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import LexicalOnChangePlugin from '@lexical/react/LexicalOnChangePlugin';
-import { CollaborationPlugin, ProviderFactory } from '@lexical/react/LexicalCollaborationPlugin';
+import { CollaborationPlugin, Provider, ProviderFactory, useCollaborationContext } from '@lexical/react/LexicalCollaborationPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 import { HashtagNode } from '@lexical/hashtag';
-import { Provider, ProviderAwareness } from '@lexical/yjs';
 import { SyncModel } from '../hooks';
 
 // TODO(burdon): YJS.
@@ -176,58 +175,72 @@ const CommandPopupPlugin = () => {
 // TODO(burdon): Adapt y-webrtc/y-websocket to use ECHO.
 // import { WebrtcProvider } from 'y-webrtc'
 // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
-const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
-  let doc = yjsDocMap.get(id);
-  if (!doc) {
-    doc = new Doc();
-    // TODO(burdon): Plug-in TextModel?
-    // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
-    doc.on('update', (update: Uint8Array, origin: any) => {
-      console.log('update', update); // Send?
-    })
+const createProviderFactory = (model: SyncModel) => {
+  return (id: string, yjsDocMap: Map<string, Doc>, x) => {
+    console.log(id, x);
 
-    yjsDocMap.set(id, doc);
-  }
+    let doc = yjsDocMap.get(id);
+    if (!doc) {
+      doc = model.doc;
 
-  const provider: Provider = {
-    // Ephemeral state (e.g., cursors).
-    // https://github.com/yjs/y-protocols/blob/master/awareness.js
-    awareness: new Awareness(doc),
+      // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
+      doc.on('update', (update: Uint8Array, origin: any) => {
+        console.log('update', origin);
+      })
 
-    connect: async () => {
-      console.log('connect');
-    },
-    disconnect: () => {
-      console.log('disconnect');
-    },
-
-    // TODO(burdon): ???
-    on: (type: string) => { // 'reload', 'status', 'sync'
-      console.log('on:', type);
-    },
-    off: (type: string) => {
-      console.log('off:', type);
+      yjsDocMap.set(id, doc);
     }
-  };
 
-  return provider;
+    const provider: Provider = {
+      // Ephemeral state (e.g., cursors).
+      // https://github.com/yjs/y-protocols/blob/master/awareness.js
+      awareness: new Awareness(doc),
+
+      connect: async () => {
+        // console.log('connect');
+      },
+      disconnect: () => {
+        // console.log('disconnect');
+      },
+
+      // TODO(burdon): ???
+      on: (type: string) => { // 'reload', 'status', 'sync'
+        // console.log('on:', type);
+      },
+      off: (type: string) => {
+        // console.log('off:', type);
+      }
+    };
+
+    return provider;
+  };
 };
 
+/*
 const CustomCollaborationPlugin = ({ model }: { model: SyncModel }) => {
+  const { clientID, ...rest } = useCollaborationContext();
+  useEffect(() => {
+    console.log(`Editor: ${clientID}`, rest);
+  }, [clientID]);
+
   // TODO(burdon): Adapt y-webrtc/y-websocket to use ECHO.
   // import { WebrtcProvider } from 'y-webrtc'
   // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
-  const providerFactory = (id: string, yjsDocMap: Map<string, Doc>) => {
+  const providerFactory = useCallback((id: string, yjsDocMap: Map<string, Doc>) => {
+    // TODO(burdon): Only called one side?
     let doc = yjsDocMap.get(id);
     if (!doc) {
+      console.log(`providerFactory: ${clientID}:${id}`);
       // doc = new Doc();
       doc = model.doc;
+
       // TODO(burdon): Plug-in TextModel?
       // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
       doc.on('update', (update: Uint8Array, origin: any) => {
-        console.log(origin);
-        console.log('update', update); // Send?
+        console.log(clientID, origin.clientID);
+        // console.log('update', update); // Send?
       })
+
       // model.onUpdate && doc.on('update', model.onUpdate);
       yjsDocMap.set(id, model.doc);
     }
@@ -238,30 +251,31 @@ const CustomCollaborationPlugin = ({ model }: { model: SyncModel }) => {
       awareness: new Awareness(doc),
 
       connect: async () => {
-        console.log('connect');
+        // console.log('connect');
       },
       disconnect: () => {
-        console.log('disconnect');
+        // console.log('disconnect');
       },
       on: (type: string) => { // 'reload', 'status', 'sync'
-        console.log('on:', type);
+        // console.log('on:', type);
       },
       off: (type: string) => {
-        console.log('off:', type);
+        // console.log('off:', type);
       }
     };
 
     return provider;
-  };
+  }, [clientID]);
 
   return (
     <CollaborationPlugin
       id='main'
-      shouldBootstrap={false}
+      shouldBootstrap={true}
       providerFactory={providerFactory}
     />
   );
 };
+*/
 
 export interface EditorProps {
   model?: SyncModel
@@ -291,6 +305,7 @@ export const Editor = ({
   return (
     <LexicalComposer
       initialConfig={{
+        namespace: 'dxos',
         theme,
         nodes: [
           HashtagNode
@@ -304,6 +319,12 @@ export const Editor = ({
           placeholder={null}
         />
         {/*
+        <LexicalRichTextPlugin
+          contentEditable={<LexicalContentEditable spellcheck={false}/>}
+          placeholder={null}
+        />
+        */}
+        {/*
         <ToolbarPlugin />
         */}
         {/*
@@ -312,12 +333,17 @@ export const Editor = ({
         />
         */}
         {model && (
-          <CustomCollaborationPlugin model={model} />
+          <CollaborationPlugin
+            id='main'
+            providerFactory={createProviderFactory(model)}
+            shouldBootstrap={true}
+          />
         )}
+        {/*
         <HistoryPlugin />
         <LexicalHashtagPlugin />
-
         <CommandPopupPlugin />
+        */}
       </div>
     </LexicalComposer>
   );
