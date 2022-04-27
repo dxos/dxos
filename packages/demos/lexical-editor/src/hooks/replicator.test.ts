@@ -12,6 +12,9 @@ import { TextModel } from '@dxos/text-model';
 import { Replicator } from './replicator';
 
 describe('YJS sync', () => {
+  // https://docs.yjs.dev/api/delta-format
+  // https://docs.yjs.dev/api/document-updates
+  // https://docs.yjs.dev/api/shared-types/y.text
   test('YJS updates', async () => {
     let count = 0;
     const docs = Array.from({ length: 3 }).map(() => {
@@ -45,19 +48,27 @@ describe('YJS sync', () => {
     console.log(count); // TODO(burdon): 18!
   });
 
-  // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
   test('TextModel', async () => {
-    const client = new Client({});
-    await client.halo.createProfile();
-    const party = await client.echo.createParty();
-    const item = await party.database.createItem({ model: TextModel });
-    console.log(client.config);
-    console.log(item.model);
+    const createPeer = async () => {
+      const config = {};
+      const client = new Client(config);
+      await client.initialize();
+      await client.halo.createProfile();
 
-    // https://docs.yjs.dev/api/delta-format
-    // https://docs.yjs.dev/api/document-updates
-    // https://docs.yjs.dev/api/shared-types/y.text
+      client.registerModel(TextModel);
+      const party = await client.echo.createParty();
+      const item = await party.database.createItem({ model: TextModel });
+      expect(item.id).toBeDefined();
 
+      return { client, item };
+    }
+
+    // TODO(burdon): Connect via memory mesh/swarm.
+    const peers = await Promise.all(Array.from({ length: 2 }).map(() => createPeer()));
+    expect(peers[0].client).toBeDefined();
+    expect(peers[1].client).toBeDefined();
+
+    // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
     // {
     //   const text = model2.doc.getText();
     //   text.applyDelta(delta);
