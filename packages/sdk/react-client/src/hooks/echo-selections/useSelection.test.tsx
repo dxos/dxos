@@ -16,6 +16,8 @@ import { ClientProvider } from '../../containers';
 import { useClient } from '../client';
 import { useSelection } from './useSelection';
 
+const count = 10;
+
 const useTestComponents = async () => {
   const config = {};
   const client = new Client(config);
@@ -23,13 +25,10 @@ const useTestComponents = async () => {
   await client.halo.createProfile();
 
   const party = await client.echo.createParty();
-  const items = await Promise.all(Array.from({ length: 10 }).map(async () => {
-    return await party.database.createItem({
-      type: 'example:type/person',
-      props: {}
-    });
+  const items = await Promise.all(Array.from({ length: count }).map(async () => {
+    return await party.database.createItem({});
   }));
-  expect(items.length).toBe(10);
+  expect(items.length).toBe(count);
 
   return { client, party };
 };
@@ -41,16 +40,11 @@ const ClientTestComponent = () => {
   );
 };
 
-const UseSelectionTestComponent = ({
-  party
-}: { party: Party}) => {
+const UseSelectionTestComponent = ({ party }: { party: Party}) => {
   const items = useSelection(party?.select(), []);
 
   useAsyncEffect(async () => {
-    await party.database.createItem({
-      type: 'example:type/person',
-      props: {}
-    });
+    await party.database.createItem({});
   }, []);
 
   return (
@@ -85,7 +79,7 @@ describe('useSelection', () => {
 
     const h1 = document.querySelector('h1');
     await waitForExpect(() => {
-      expect(h1?.textContent?.length).toBeGreaterThanOrEqual(1);
+      expect(h1?.textContent?.length).toBeTruthy();
     });
   });
 
@@ -97,7 +91,7 @@ describe('useSelection', () => {
 
     const ul = rootContainer.querySelector('ul');
     await waitForExpect(() => {
-      expect(ul.childNodes.length).toEqual(11);
+      expect(ul.childNodes.length).toEqual(count + 1);
     });
   });
 });
