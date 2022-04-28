@@ -72,7 +72,7 @@ afterEach(() => {
   rootContainer = null;
 });
 
-describe.only('useSelection', () => {
+describe('useSelection', () => {
   it('creates a client', async () => {
     const { client } = await useTestComponents();
     act(() => {
