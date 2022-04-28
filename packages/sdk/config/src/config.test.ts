@@ -47,13 +47,13 @@ test('Basic config', () => {
 
 test('Runtime and module config', () => {
   const config = new Config({
-    module: {
-      name: 'example:app/tasks',
-      record: {
-        app: {
-          contentType: ['example:type/chess/board']
-        }
-      }
+    package: {
+      modules: [{
+        name: 'example:app/tasks'
+        // record: {
+        //   foo: 'bar'
+        // }
+      }]
     }
   }, {
     runtime: {
@@ -67,13 +67,13 @@ test('Runtime and module config', () => {
 
   expect(config.values).toEqual({
     version: 1,
-    module: {
-      name: 'example:app/tasks',
-      record: {
-        app: {
-          contentType: ['example:type/chess/board']
-        }
-      }
+    package: {
+      modules: [{
+        name: 'example:app/tasks'
+        // record: {
+        //   foo: 'bar'
+        // }
+      }]
     },
     runtime: {
       services: {
