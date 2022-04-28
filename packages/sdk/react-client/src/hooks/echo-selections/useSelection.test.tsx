@@ -12,8 +12,6 @@ import waitForExpect from 'wait-for-expect';
 import { Client, Party } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import { ClientProvider } from '../../containers';
-import { useClient } from '../client';
 import { useSelection } from './useSelection';
 
 const count = 10;
@@ -31,13 +29,6 @@ const useTestComponents = async () => {
   expect(items.length).toBe(count);
 
   return { client, party };
-};
-
-const ClientTestComponent = () => {
-  const client = useClient();
-  return (
-    <h1>{client.version}</h1>
-  );
 };
 
 const UseSelectionTestComponent = ({ party }: { party: Party}) => {
@@ -67,22 +58,6 @@ afterEach(() => {
 });
 
 describe('useSelection', () => {
-  it('creates a client', async () => {
-    const { client } = await useTestComponents();
-    act(() => {
-      ReactDOM.render((
-        <ClientProvider client={client}>
-          <ClientTestComponent />
-        </ClientProvider>
-      ), rootContainer);
-    });
-
-    const h1 = document.querySelector('h1');
-    await waitForExpect(() => {
-      expect(h1?.textContent?.length).toBeTruthy();
-    });
-  });
-
   it('gets updated items selection', async () => {
     const { party } = await useTestComponents();
     act(() => {
