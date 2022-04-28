@@ -22,11 +22,11 @@ type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
 const IN_MEMORY_TRANSPORT_DELAY = 1;
 
 export class InMemoryTransport implements Transport {
-  private static readonly _connections = new ComplexMap<ConnectionKey, InMemoryTransport>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
+  private static readonly _connections = new ComplexMap<ConnectionKey, InMemoryTransport>(
+    ([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
-
   public readonly errors = new ErrorStream();
 
   private readonly _ownKey: ConnectionKey;

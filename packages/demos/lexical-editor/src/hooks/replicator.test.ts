@@ -6,10 +6,10 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 import { applyUpdate, Doc } from 'yjs';
 
-import { Client } from '@dxos/client';
+import { Client, defaultConfig } from '@dxos/client';
 import { TextModel } from '@dxos/text-model';
 
-import { Replicator } from './replicator';
+// import { Replicator } from './replicator';
 
 describe('YJS sync', () => {
   // https://docs.yjs.dev/api/delta-format
@@ -48,25 +48,40 @@ describe('YJS sync', () => {
     console.log(count); // TODO(burdon): 18!
   });
 
-  test('TextModel', async () => {
-    const createPeer = async () => {
-      const config = {};
+  test('Replication', async () => {
+    const createPeer = async (username: string) => {
+      const config = defaultConfig;
       const client = new Client(config);
       await client.initialize();
-      await client.halo.createProfile();
+      expect(client.initialized).toBeTruthy();
+
+      await client.halo.createProfile({ username });
+      expect(client.halo.profile).toBeDefined();
 
       client.registerModel(TextModel);
-      const party = await client.echo.createParty();
-      const item = await party.database.createItem({ model: TextModel });
-      expect(item.id).toBeDefined();
 
-      return { client, item };
+      const party = await client.echo.createParty();
+      expect(party.key).toBeDefined();
+      return { client, party };
     }
 
     // TODO(burdon): Connect via memory mesh/swarm.
-    const peers = await Promise.all(Array.from({ length: 2 }).map(() => createPeer()));
-    expect(peers[0].client).toBeDefined();
-    expect(peers[1].client).toBeDefined();
+    const [inviter, invitee] = await Promise.all(Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`)));
+
+    let invitation;
+    {
+      const { party } = inviter;
+      console.log('::::', party.key.toHex());
+      // const item = await party.database.createItem();
+      invitation = await party.createInvitation();
+      // expect(invitation).toBeDefined();
+    }
+
+    {
+      // const { client } = invitee;
+      // const party = await client.halo.acceptInvitation(invitation.descriptor);
+      // console.log(':::', party);
+    }
 
     // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
     // {

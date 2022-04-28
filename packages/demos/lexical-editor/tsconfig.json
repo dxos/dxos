@@ -1,8 +1,7 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "esModuleInterop": true,
-    "jsx": "react",
+    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
@@ -11,15 +10,6 @@
       "node",
       "mocha"
     ],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "target": "ES2018",
-    "removeComments": false,
-    "strict": true
   },
   "include": [
     "src",

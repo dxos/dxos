@@ -58,7 +58,6 @@ export class NetworkManager {
     this._ice = options.ice ?? [];
 
     const onOffer = async (msg: SignalApi.SignalMessage) => await this._swarms.get(msg.topic)?.onOffer(msg) ?? { accept: false };
-
     this._signal = options.signal
       ? new WebsocketSignalManager(options.signal, onOffer)
       : new InMemorySignalManager(onOffer);
@@ -102,7 +101,8 @@ export class NetworkManager {
       () => {
         this._signal.lookup(topic);
       },
-      this._signal instanceof InMemorySignalManager ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice }),
+      this._signal instanceof InMemorySignalManager ?
+        inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice }),
       options.label
     );
 
