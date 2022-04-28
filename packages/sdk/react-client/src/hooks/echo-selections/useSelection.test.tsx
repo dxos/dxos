@@ -16,7 +16,7 @@ import { ClientProvider } from '../../containers';
 import { useClient } from '../client';
 import { useSelection } from './useSelection';
 
-const useTestParty = async () => {
+const useTestComponents = async () => {
   const config = {};
   const client = new Client(config);
   await client.initialize();
@@ -74,7 +74,7 @@ afterEach(() => {
 
 describe.only('useSelection', () => {
   it('creates a client', async () => {
-    const { client } = await useTestParty();
+    const { client } = await useTestComponents();
     act(() => {
       ReactDOM.render((
         <ClientProvider client={client}>
@@ -90,7 +90,7 @@ describe.only('useSelection', () => {
   });
 
   it('gets updated items selection', async () => {
-    const { party } = await useTestParty();
+    const { party } = await useTestComponents();
     act(() => {
       ReactDOM.render(<UseSelectionTestComponent party={party} />, rootContainer);
     });
