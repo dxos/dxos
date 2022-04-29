@@ -49,10 +49,10 @@ test('Runtime and module config', () => {
   const config = new Config({
     package: {
       modules: [{
-        name: 'example:app/tasks'
-        // record: {
-        //   foo: 'bar'
-        // }
+        name: 'example:app/tasks',
+        record: {
+          foo: 'bar'
+        }
       }]
     }
   }, {
@@ -69,10 +69,10 @@ test('Runtime and module config', () => {
     version: 1,
     package: {
       modules: [{
-        name: 'example:app/tasks'
-        // record: {
-        //   foo: 'bar'
-        // }
+        name: 'example:app/tasks',
+        record: {
+          foo: 'bar'
+        }
       }]
     },
     runtime: {
