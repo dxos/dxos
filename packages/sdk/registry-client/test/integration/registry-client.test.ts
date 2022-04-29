@@ -186,6 +186,7 @@ describe('Registry Client', () => {
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
       const appData: App = {
+        repos: [],
         web: {
           entryPoint: './path/to/main.js'
         }
