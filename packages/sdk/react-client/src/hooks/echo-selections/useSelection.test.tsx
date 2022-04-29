@@ -10,11 +10,11 @@ import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
 import { Client, Party } from '@dxos/client';
-import { useAsyncEffect } from '@dxos/react-async';
 
 import { useSelection } from './useSelection';
 
 const count = 10;
+const TYPE_EXAMPLE = 'example:type/org';
 
 const useTestComponents = async () => {
   const config = {};
@@ -24,7 +24,7 @@ const useTestComponents = async () => {
 
   const party = await client.echo.createParty();
   const items = await Promise.all(Array.from({ length: count }).map(async () => {
-    return await party.database.createItem({});
+    return await party.database.createItem({ type: TYPE_EXAMPLE });
   }));
   expect(items.length).toBe(count);
 
@@ -32,14 +32,12 @@ const useTestComponents = async () => {
 };
 
 const UseSelectionTestComponent = ({ party }: { party: Party}) => {
-  const items = useSelection(party?.select(), []);
+  const items = useSelection(party?.select().filter({ type: TYPE_EXAMPLE }), []);
 
-  useAsyncEffect(async () => {
-    await party.database.createItem({});
-  }, []);
+  const addItem = async () => await party.database.createItem({ type: TYPE_EXAMPLE });
 
   return (
-    <ul>
+    <ul onClick={addItem}>
       {items?.map(item => <li key={item.id}>{item.id}</li>)}
     </ul>
   );
@@ -57,7 +55,7 @@ afterEach(() => {
   rootContainer = null;
 });
 
-describe('useSelection', () => {
+describe.only('useSelection', () => {
   it('gets updated items selection', async () => {
     const { party } = await useTestComponents();
     act(() => {
@@ -65,6 +63,10 @@ describe('useSelection', () => {
     });
 
     const ul = rootContainer.querySelector('ul');
+    await waitForExpect(() => {
+      expect(ul.childNodes.length).toEqual(count);
+    });
+    ul.click();
     await waitForExpect(() => {
       expect(ul.childNodes.length).toEqual(count + 1);
     });
