@@ -185,9 +185,9 @@ describe('Registry Client', () => {
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
       const appData: App = {
-        displayName: 'Tasks App',
-        keywords: ['tasks', 'productivity'],
-        contentType: ['braneframe:type.tasks.task']
+        web: {
+          entryPoint: './path/to/main.js'
+        }
       };
       const appCid = await registryApi.insertDataRecord(appData, appTypeCid);
 
