@@ -5,6 +5,7 @@
 import { ApiPromise } from '@polkadot/api/promise';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import console from 'console';
 import protobuf from 'protobufjs';
 
 import { AccountKey, App, CID, createCID, DomainKey, DXN, IRegistryClient, schemaJson } from '../../src';
@@ -192,6 +193,10 @@ describe('Registry Client', () => {
       const appCid = await registryApi.insertDataRecord(appData, appTypeCid);
 
       const appRecord = await registryApi.getDataRecord(appCid);
+
+      console.log('>>>>>>>>>', appTypeCid);
+      console.log('<<<<<<<<<', appRecord?.data)
+      console.log('#########', JSON.stringify(appRecord?.data));
 
       expect(appRecord?.data).to.deep.equal({
         '@type': appTypeCid,
