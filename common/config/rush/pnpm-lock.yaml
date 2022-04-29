@@ -2297,7 +2297,6 @@ importers:
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.4.2
       '@testing-library/react': ^11.0.4
@@ -2333,7 +2332,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.3
