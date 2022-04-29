@@ -5,7 +5,6 @@
 import { ApiPromise } from '@polkadot/api/promise';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import console from 'console';
 import protobuf from 'protobufjs';
 
 import { AccountKey, App, CID, createCID, DomainKey, DXN, IRegistryClient, schemaJson } from '../../src';
