@@ -194,11 +194,6 @@ describe('Registry Client', () => {
       const appCid = await registryApi.insertDataRecord(appData, appTypeCid);
 
       const appRecord = await registryApi.getDataRecord(appCid);
-
-      console.log('>>>>>>>>>', appTypeCid);
-      console.log('<<<<<<<<<', appRecord?.data)
-      console.log('#########', JSON.stringify(appRecord?.data));
-
       expect(appRecord?.data).to.deep.equal({
         '@type': appTypeCid,
         ...appData
