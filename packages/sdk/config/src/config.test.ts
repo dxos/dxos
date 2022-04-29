@@ -51,7 +51,9 @@ test('Runtime and module config', () => {
       modules: [{
         name: 'example:app/tasks',
         record: {
-          foo: 'bar'
+          web: {
+            entryPoint: 'main.js'
+          }
         }
       }]
     }
@@ -71,7 +73,9 @@ test('Runtime and module config', () => {
       modules: [{
         name: 'example:app/tasks',
         record: {
-          foo: 'bar'
+          web: {
+            entryPoint: 'main.js'
+          }
         }
       }]
     },
