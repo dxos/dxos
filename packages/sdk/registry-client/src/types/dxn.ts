@@ -6,7 +6,7 @@ import { DomainKey } from './domain-key';
 
 /**
  * Decentralized Name.
- * Example: dxn://example:foo.bar
+ * Example: dxn://example:foo/bar
  */
 export class DXN {
   /**
@@ -55,6 +55,14 @@ export class DXN {
     });
 
     return resource;
+  }
+
+  static urlencode (dxn: DXN) {
+    return dxn.toString().replace(/\//g, '.');
+  }
+
+  static urldecode (encodedDxn: string) {
+    return DXN.parse(encodedDxn.replace(/\./g, '/'));
   }
 
   static parse (dxn: string) {
