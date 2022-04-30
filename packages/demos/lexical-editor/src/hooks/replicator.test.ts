@@ -3,6 +3,7 @@
 //
 
 import expect from 'expect';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 import { applyUpdate, Doc } from 'yjs';
 
@@ -70,15 +71,19 @@ describe('YJS sync', () => {
 
     let invitation;
     {
-      const { party } = inviter;
-      console.log('::::', party.key.toHex());
+      const { client, party } = inviter;
+      const { username } = client.halo.profile!;
+      console.log(username);
       // const item = await party.database.createItem();
       invitation = await party.createInvitation();
-      // expect(invitation).toBeDefined();
+      expect(invitation).toBeDefined();
     }
 
     {
-      // const { client } = invitee;
+      // TODO(burdon): Client key?
+      const { client } = invitee;
+      const { username } = client.halo.profile!;
+      console.log(username);
       // const party = await client.halo.acceptInvitation(invitation.descriptor);
       // console.log(':::', party);
     }

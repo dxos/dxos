@@ -3,10 +3,6 @@
   "version": "2.29.1",
   "private": true,
   "description": "Lexical text editor.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {

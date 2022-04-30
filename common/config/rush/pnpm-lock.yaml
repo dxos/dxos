@@ -744,7 +744,6 @@ importers:
       '@lexical/yjs': 0.2.4_lexical@0.2.4+yjs@13.5.22
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
       '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
-      debug: 4.3.3
       lexical: 0.2.4
       y-protocols: 1.0.5
       yjs: 13.5.22
@@ -762,6 +761,7 @@ importers:
       '@types/node': 14.18.0
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
+      debug: 4.3.3
       expect: 27.0.6
       mocha: 8.4.0
       playwright: 1.17.1
