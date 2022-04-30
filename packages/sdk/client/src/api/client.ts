@@ -65,6 +65,8 @@ export class Client {
   private _echo!: EchoProxy;
   private _initialized = false;
 
+  // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
+
   /**
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.

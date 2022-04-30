@@ -36,6 +36,7 @@ export class BotController {
       ),
       topology: new StarTopology(topic)
     });
+
     log(`Listening on topic: ${topic}`);
   }
 

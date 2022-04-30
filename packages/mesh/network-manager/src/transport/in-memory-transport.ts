@@ -16,12 +16,15 @@ import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
-type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
+type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey]
 
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const IN_MEMORY_TRANSPORT_DELAY = 1;
 
+// TODO(burdon): Rename.
 export class InMemoryTransport implements Transport {
+
+  // TODO(burdon): Remove global properties.
   private static readonly _connections = new ComplexMap<ConnectionKey, InMemoryTransport>(
     ([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
 
@@ -99,7 +102,6 @@ export class InMemoryTransport implements Transport {
       this._incomingDelay.unpipe();
 
       this._remoteConnection.closed.emit();
-
       this._remoteConnection._remoteConnection = undefined;
       this._remoteConnection = undefined;
     }
@@ -109,6 +111,7 @@ export class InMemoryTransport implements Transport {
   }
 }
 
+// TODO(burdon): Remove.
 export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTransport(
   opts.ownId,
   opts.remoteId,
@@ -120,11 +123,11 @@ export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTr
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-function createStreamDelay (delay: number): NodeJS.ReadWriteStream {
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
   return new Transform({
     objectMode: true,
     transform: (chunk, enc, cb) => {
       setTimeout(() => cb(null, chunk), delay);
     }
   });
-}
+};

@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
@@ -10,7 +11,8 @@ import { applyUpdate, Doc } from 'yjs';
 import { Client, defaultConfig } from '@dxos/client';
 import { TextModel } from '@dxos/text-model';
 
-// import { Replicator } from './replicator';
+const log = debug('dxos:lexical-editor:test');
+debug.enable('dxos:lexical-editor:*');
 
 describe('YJS sync', () => {
   // https://docs.yjs.dev/api/delta-format
@@ -46,10 +48,11 @@ describe('YJS sync', () => {
       expect(match).toBeTruthy();
     });
 
-    console.log(count); // TODO(burdon): 18!
+    log(count); // TODO(burdon): Why 18?
   });
 
   test('Replication', async () => {
+    // TODO(burdon): By default Client uses an in-memory transport (ugly).
     const createPeer = async (username: string) => {
       const config = defaultConfig;
       const client = new Client(config);
@@ -61,46 +64,65 @@ describe('YJS sync', () => {
 
       client.registerModel(TextModel);
 
-      const party = await client.echo.createParty();
-      expect(party.key).toBeDefined();
-      return { client, party };
+      return client;
     }
 
-    // TODO(burdon): Connect via memory mesh/swarm.
     const [inviter, invitee] = await Promise.all(Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`)));
 
-    let invitation;
+    const TEST_TYPE = 'example:type/test';
+
+    let descriptor;
     {
-      const { client, party } = inviter;
+      const client = inviter;
+      const party = await client.echo.createParty();
+      expect(party.key).toBeDefined();
       const { username } = client.halo.profile!;
-      console.log(username);
-      // const item = await party.database.createItem();
-      invitation = await party.createInvitation();
-      expect(invitation).toBeDefined();
+      ({ descriptor } = await party.createInvitation());
+      log(`Created invitation: ${JSON.stringify({ username, party: party.key })}`);
+      expect(descriptor).toBeDefined();
     }
 
     {
-      // TODO(burdon): Client key?
-      const { client } = invitee;
+      const client = invitee;
       const { username } = client.halo.profile!;
-      console.log(username);
-      // const party = await client.halo.acceptInvitation(invitation.descriptor);
-      // console.log(':::', party);
+      const invitation = await client.echo.acceptInvitation(descriptor);
+      const party = await invitation.getParty();
+      expect(party).toBeDefined();
+      log(`Accepted invitation: ${JSON.stringify({ username, party: party.key })}`);
     }
 
     // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
-    // {
-    //   const text = model2.doc.getText();
-    //   text.applyDelta(delta);
-    //   text.insert(6, 'World');
-    //   delta = text.toDelta();
-    //   console.log(delta);
-    // }
-    //
-    // {
-    //   const text = model1.doc.getText();
-    //   text.applyDelta(delta);
-    //   console.log(text.toString());
-    // }
+    {
+      const client = inviter;
+      const { value: parties } = client.echo.queryParties();
+      const [party] = parties;
+      const item = await party.database.createItem({ model: TextModel, type: TEST_TYPE });
+      log(`Created item: ${item.id}`);
+
+      const text = item.model.doc.getText();
+      text.insert(0, 'World!');
+      text.insert(0, 'Hello');
+      text.insert(5, ' ');
+    }
+
+    {
+      const client = invitee;
+      const { value: parties } = client.echo.queryParties();
+      const [party] = parties;
+
+      // TODO(burdon): Better way to block for sync to complete.
+      // TODO(burdon): Return value from waitForExpect?
+      await waitForExpect(() => {
+        const result = party.database.select({ type: TEST_TYPE }).exec();
+        const { entities: items } = result;
+        expect(items).toHaveLength(1);
+        const [item] = items;
+        log(`Replicated item: ${item.id}`);
+
+        const text = item.model.doc.getText();
+        console.log(text.toString());
+        expect(text.toString()).toEqual('Hello World!');
+      });
+    }
   });
 });
