@@ -1,5 +1,14 @@
 # Change Log
 
+### [2.30.3](https://www.github.com/dxos/protocols/compare/v2.30.2...v2.30.3) (2022-05-01)
+
+
+### Bug Fixes
+
+* Config updates. ([#1068](https://www.github.com/dxos/protocols/issues/1068)) ([e653c1d](https://www.github.com/dxos/protocols/commit/e653c1d511bfaddb1b3c16bd2a79f749c6e58ebd))
+* DXN url encode/decode. ([#1155](https://www.github.com/dxos/protocols/issues/1155)) ([3ecfb9b](https://www.github.com/dxos/protocols/commit/3ecfb9b963c1dea849e2ffa68380e55062c9449d))
+* DXNS integration test fix. ([#1154](https://www.github.com/dxos/protocols/issues/1154)) ([ea0a40b](https://www.github.com/dxos/protocols/commit/ea0a40b39458ba9a758a935288745ec096b89f30))
+
 ### [2.30.2](https://www.github.com/dxos/protocols/compare/v2.30.1...v2.30.2) (2022-04-26)
 
 
