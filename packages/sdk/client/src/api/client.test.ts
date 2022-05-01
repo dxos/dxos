@@ -21,6 +21,9 @@ import { clientServiceBundle } from '../services';
 import { Client } from './client';
 
 describe('Client', () => {
+  //
+  // Suite is called for local and remote client configurations.
+  //
   function testSuite (createClient: () => Promise<Client>) {
     describe('initialization', () => {
       test('initialize and destroy', async () => {
@@ -49,10 +52,8 @@ describe('Client', () => {
         afterTest(() => client.destroy());
 
         const profile = await client.halo.createProfile({ username: 'test-user' });
-
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
-
         expect(client.halo.profile).toBeDefined();
       }).timeout(500);
 
@@ -77,10 +78,8 @@ describe('Client', () => {
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
         const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
-
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
-
         expect(client.halo.profile).toBeDefined();
 
         const recoveredClient = await createClient();
@@ -119,7 +118,6 @@ describe('Client', () => {
         const invitation = await party.createInvitation();
         invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
-
         expect(inviteeParty.key).toEqual(party.key);
 
         const members = party.queryMembers().value;
@@ -289,12 +287,15 @@ describe('Client', () => {
         handlers: hostClient.services,
         port: hostPort
       });
+
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
       return new Client({ }, { rpcPort: proxyPort });
     });
   });
+
+  // TODO(burdon): Factor out tests.
 
   test('late-register models after refresh', async () => {
     const config: ConfigObject = {
@@ -316,8 +317,10 @@ describe('Client', () => {
       // TODO(burdon): Better error if halo is not created.
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
+
       const item = await party.database.createItem({ model: TestModel, type: 'test' });
       await item.model.set('prop', 'value1');
+
       await client.destroy();
     }
 

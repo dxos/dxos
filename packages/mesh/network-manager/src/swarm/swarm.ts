@@ -57,6 +57,7 @@ export class Swarm {
 
   readonly errors = new ErrorStream();
 
+  // TODO(burdon): Split up properties.
   constructor (
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,

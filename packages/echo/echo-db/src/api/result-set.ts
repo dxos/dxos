@@ -8,8 +8,9 @@ import { Event, ReadOnlyEvent } from '@dxos/async';
 
 /**
  * Reactive query results.
+ * @deprecated
  */
-// TODO(burdon): Replace with Selection?
+// TODO(burdon): Replace with Selection or make type specific (e.g., currently use for items and parties).
 export class ResultSet<T> {
   private readonly _resultsUpdate = new Event<T[]>();
   private readonly _itemUpdate: ReadOnlyEvent;

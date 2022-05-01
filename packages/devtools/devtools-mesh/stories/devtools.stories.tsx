@@ -46,6 +46,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
     protocol: transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin),
     presence: presencePlugin
   });
+
   return {
     networkManager,
     swarm: networkManager.getSwarm(controlTopic)!,

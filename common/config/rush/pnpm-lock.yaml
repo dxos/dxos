@@ -691,6 +691,7 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
       '@dxos/esbuild-server': ~2.28.7
       '@dxos/object-model': workspace:*
@@ -698,6 +699,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/text-model': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -729,10 +731,12 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/text-model': link:../../echo/text-model
       '@lexical/hashtag': 0.2.4_lexical@0.2.4
       '@lexical/list': 0.2.4_lexical@0.2.4
       '@lexical/table': 0.2.4_lexical@0.2.4
@@ -740,7 +744,6 @@ importers:
       '@lexical/yjs': 0.2.4_lexical@0.2.4+yjs@13.5.22
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
       '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
-      debug: 4.3.3
       lexical: 0.2.4
       y-protocols: 1.0.5
       yjs: 13.5.22
@@ -758,6 +761,7 @@ importers:
       '@types/node': 14.18.0
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
+      debug: 4.3.3
       expect: 27.0.6
       mocha: 8.4.0
       playwright: 1.17.1

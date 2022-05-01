@@ -52,6 +52,6 @@
     "typescript": "^4.5.2"
   },
   "publishConfig": {
-    "access": "private"
+    "access": "restricted"
   }
 }

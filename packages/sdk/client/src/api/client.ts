@@ -58,19 +58,20 @@ export class Client {
 
   private readonly _config: Config;
   private readonly _options: ClientOptions;
-
   private readonly _mode: Runtime.Client.Mode;
+
   private _serviceProvider!: ClientServiceProvider;
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
-
   private _initialized = false;
+
+  // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
 
   /**
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  // TODO(burdon): Remove or factor out default config?
+  // TODO(burdon): What are the defaults if `{}` is passed?
   constructor (config: ConfigObject | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
