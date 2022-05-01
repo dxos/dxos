@@ -89,4 +89,10 @@ describe('DXN', () => {
       'example::foo/bar'
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
+
+  it('urlencode/urldecode', () => {
+    const dxn = DXN.parse('dxos:foo/bar');
+
+    expect(DXN.urldecode(DXN.urlencode(dxn)).toString()).to.equal(dxn.toString());
+  });
 });
