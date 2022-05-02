@@ -73,9 +73,7 @@ const editorStyles = css`
   }
 `;
 
-const marginStyles = css`
-  
-`;
+const marginStyles = css``;
 
 const popupStyles = css`
   position: absolute;
