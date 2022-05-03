@@ -235,6 +235,8 @@ export class RegistryClient extends BaseClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
+      tags: decoded.tags,
+      displayName: decoded.displayName,
       created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
     };
 
