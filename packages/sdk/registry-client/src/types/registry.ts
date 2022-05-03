@@ -86,6 +86,8 @@ export interface InferredRecordMetadata {
  * Record metadata provided by the user.
  */
 export interface SuppliedRecordMetadata {
+  tags?: string[]
+  displayName?: string
   description?: string
 }
 
