@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.31.1](https://www.github.com/dxos/protocols/compare/v2.31.0...v2.31.1) (2022-05-03)
+
+
+### Bug Fixes
+
+* update meta for dxns registry record. ([35bed79](https://www.github.com/dxos/protocols/commit/35bed794b1a69d01767ca4008d4e8efd541a9e8a))
+
 ## [2.31.0](https://www.github.com/dxos/protocols/compare/v2.30.2...v2.31.0) (2022-05-03)
 
 
