@@ -1032,7 +1032,9 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
+      '@types/columnify': ^1.5.1
       '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.1
       '@types/json-stable-stringify': ^1.0.32
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.unionwith': ^4.6.6
@@ -1042,9 +1044,12 @@ importers:
       '@types/pify': ^3.0.2
       base-x: ~3.0.9
       buffer-json-encoding: ^1.0.2
+      chalk: ^4.1.0
+      columnify: ^1.6.0
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
+      faker: ^5.1.0
       json-stable-stringify: ^1.0.1
       lodash.defaultsdeep: ^4.6.1
       lodash.unionwith: ^4.6.0
@@ -1081,7 +1086,9 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
+      '@types/columnify': 1.5.1
       '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
       '@types/json-stable-stringify': 1.0.33
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.unionwith': 4.6.6
@@ -1089,8 +1096,11 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/pify': 3.0.2
+      chalk: 4.1.2
+      columnify: 1.6.0
       eslint: 7.32.0
       expect: 27.0.6
+      faker: 5.5.3
       memdown: 5.1.0
       mocha: 8.4.0
       typescript: 4.5.3
