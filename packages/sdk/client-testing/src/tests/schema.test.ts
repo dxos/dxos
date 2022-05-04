@@ -124,7 +124,6 @@ describe('Schemas', () => {
       const schemaItem = schemas.find(schema => schema.model.get('schema') === item.type);
       const schema = new Schema(schemaItem!.model);
       expect(schema.validate(item.model)).toBeTruthy();
-      // expect(validateItem(schema!, item, party)).toBeTruthy();
     });
 
     // Log tables.
