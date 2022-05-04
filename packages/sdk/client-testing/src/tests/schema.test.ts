@@ -59,7 +59,7 @@ const schemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
 
 type Callback = (party: Party) => Promise<void>
 
-export const setup = async (callback: Callback) => {
+const setup = async (callback: Callback) => {
   const client = new Client();
   await client.initialize();
   await client.halo.createProfile();
