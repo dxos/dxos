@@ -1032,7 +1032,9 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
+      '@types/columnify': ^1.5.1
       '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.1
       '@types/json-stable-stringify': ^1.0.32
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.unionwith': ^4.6.6
@@ -1084,7 +1086,9 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
+      '@types/columnify': 1.5.1
       '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
       '@types/json-stable-stringify': 1.0.33
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.unionwith': 4.6.6
