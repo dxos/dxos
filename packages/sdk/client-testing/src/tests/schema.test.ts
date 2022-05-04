@@ -96,8 +96,6 @@ describe('Schemas', () => {
         expect(schema.validate(item.model)).toBeTruthy();
       });
     });
-
-    expect(true).toBeTruthy();
   }));
 
   it('Use schema to validate the fields of an item', () => setup(async (party) => {
@@ -119,7 +117,6 @@ describe('Schemas', () => {
       .select({ type: TestType.Person })
       .exec();
 
-    // Validate referential integrity.
     [...orgs, ...people].forEach(item => {
       const schemaItem = schemas.find(schema => schema.model.get('schema') === item.type);
       const schema = new Schema(schemaItem!.model);
