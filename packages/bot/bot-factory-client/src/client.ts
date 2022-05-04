@@ -24,10 +24,15 @@ const log = debug('dxos:bot-factory-client');
 export class BotFactoryClient {
   private _rpc?: ProtoRpcClient<BotFactoryService>;
   private _connectedTopic?: PublicKey;
+  private _isReady = false;
 
   constructor (
     private readonly _networkManager: NetworkManager
   ) {}
+
+  get isReady () {
+    return this._isReady;
+  }
 
   // TODO(burdon): Remove?
   get botFactory (): BotFactoryService {
@@ -71,6 +76,7 @@ export class BotFactoryClient {
     const service = schema.getService('dxos.bot.BotFactoryService');
     this._rpc = createRpcClient(service, { port, timeout: 60_000 });
     await this._rpc.open();
+    this._isReady = true;
   }
 
   async stop () {
@@ -80,6 +86,7 @@ export class BotFactoryClient {
       await this._networkManager.leaveProtocolSwarm(this._connectedTopic);
       log('Disconnected.');
     }
+    this._isReady = false;
   }
 
   // TODO(burdon): Auto-start?
