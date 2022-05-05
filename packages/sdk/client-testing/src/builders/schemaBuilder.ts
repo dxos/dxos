@@ -8,20 +8,18 @@ import faker from 'faker';
 import { Database, Schema, SchemaDef, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
+import { TestType } from './partyBuilder';
+
 export const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
 
-export type SchemaFieldWithGenerator = SchemaField & { generator: () => string }
+export type SchemaFieldWithGenerator = SchemaField & { generator?: () => string }
 export type SchemaDefWithGenerator = Omit<SchemaDef, 'fields'> & { fields: SchemaFieldWithGenerator[] };
 
-enum TestType {
-  Org = 'example:type/org',
-  Person = 'example:type/person'
-}
-
-const defaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
+const EXAMPLE_SCHEMA_ORG = 'example:type/schema/organization';
+export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
   [TestType.Org]: {
-    schema: 'example:type/schema/organization',
+    schema: EXAMPLE_SCHEMA_ORG,
     fields: [
       {
         key: 'title',
@@ -47,6 +45,14 @@ const defaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
         key: 'title',
         required: true,
         generator: () => `${faker.name.firstName()} ${faker.name.lastName()}`
+      },
+      {
+        key: 'organization',
+        required: false,
+        ref: {
+          schema: EXAMPLE_SCHEMA_ORG,
+          field: 'title'
+        }
       }
     ]
   }
@@ -58,11 +64,11 @@ export class SchemaBuilder {
   ) {}
 
   get defaultSchemas () {
-    return defaultSchemaDefs;
+    return DefaultSchemaDefs;
   }
 
   async createSchemas (customSchemas?: SchemaDefWithGenerator[]) {
-    const schemas = customSchemas ?? Object.values(defaultSchemaDefs);
+    const schemas = customSchemas ?? Object.values(DefaultSchemaDefs);
     log(`Creating schemas: [${schemas.map(({ schema }) => schema).join()}]`);
 
     const schemaItems = await Promise.all(schemas.map(({ schema, fields }) => {
@@ -104,7 +110,7 @@ export class SchemaBuilder {
           }
         } else {
           return {
-            [field.key]: field.generator()
+            [field.key]: field.generator?.() ?? ''
           };
         }
 
@@ -122,7 +128,7 @@ export class SchemaBuilder {
  * Create data for all schemas.
  */
   async createData (customSchemas?: SchemaDefWithGenerator[], options: { [key: string]: number } = {}) {
-    const schemas = customSchemas ?? Object.values(defaultSchemaDefs);
+    const schemas = customSchemas ?? Object.values(DefaultSchemaDefs);
     // Synchronous loop.
     for (const schema of schemas) {
       const count = options[schema.schema] ?? 0;
