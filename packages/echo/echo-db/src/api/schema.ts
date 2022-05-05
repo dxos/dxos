@@ -49,7 +49,7 @@ export class Schema {
 
   // TODO(kaplanski): What happens if an item has extra properties?
   validate (model: ObjectModel) {
-    this.fields.forEach(field => {
+    return this.fields.every(field => {
       const value = model.get(field.key);
       if (field.required) {
         if (!value) {
@@ -67,8 +67,8 @@ export class Schema {
         // TODO(kaplanski): Should this class have access to all items in the party to validate?
         // Or maybe possible values should be provided?
       }
+      return true;
     });
-    return true;
   }
 
   // TODO(kaplanski): Should the field be added to each item using the schema in the party? (Empty value?)
