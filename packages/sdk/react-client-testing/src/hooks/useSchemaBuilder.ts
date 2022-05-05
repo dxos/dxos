@@ -10,6 +10,6 @@ import { SchemaBuilder } from '@dxos/client-testing';
 /**
  * @param party
  */
-export const useSchemaBuilder = (party: Party) => {
+export const useSchemaBuilder = (party?: Party) => {
   return useMemo(() => party ? new SchemaBuilder(party.database) : undefined, [party?.key.toHex()]);
 };
