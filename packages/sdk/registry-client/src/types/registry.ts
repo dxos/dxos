@@ -15,9 +15,9 @@ import { DXN } from './dxn';
  * Domains are auctioned namespaces for records.
  */
 export interface Domain {
-  key: DomainKey,
-  name?: string,
-  owner: string,
+  key: DomainKey
+  name?: string
+  owner: string
 }
 
 /**
