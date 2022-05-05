@@ -1,8 +1,9 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: dxos:esbook.devtools-mesh
-
-build:
-  command: npm run build:book
+package:
+  modules:
+    - name: dxos:esbook/devtools-mesh
+      type: dxos:type/app
+      build:
+        command: npm run build:book
+        outdir: out/book

@@ -1,8 +1,9 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: dxos:esbook.react-gem-components
-
-build:
-  command: npm run build:book
+package:
+  modules:
+    - name: dxos:esbook/react-gem-components
+      type: dxos:type/app
+      build:
+        command: npm run build:book
+        outdir: out/book
