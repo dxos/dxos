@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.31.3](https://www.github.com/dxos/protocols/compare/v2.31.2...v2.31.3) (2022-05-05)
+
+
+### Bug Fixes
+
+* snake case in .proto files. ([#1160](https://www.github.com/dxos/protocols/issues/1160)) ([3960012](https://www.github.com/dxos/protocols/commit/396001279ea2a9ecef3c0fcdcc0954a98ed62e07))
+
 ### [2.31.2](https://www.github.com/dxos/protocols/compare/v2.31.1...v2.31.2) (2022-05-04)
 
 
