@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols-toolchain",
-  "version": "2.31.5",
+  "version": "2.31.6",
   "private": true,
   "bin": {
     "toolchain": "./main.js"
