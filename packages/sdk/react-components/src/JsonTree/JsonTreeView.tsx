@@ -36,7 +36,10 @@ const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) =>
 };
 
 // https://mui.com/customization/default-theme
-const DefaultValue = styled(Typography)(({ size }: { size?: Size }) => ({
+interface DefaultValueProps {
+  size?: Size
+}
+const DefaultValue = styled(Typography)<DefaultValueProps>(({ size }) => ({
   overflowX: 'hidden',
   paddingLeft: 8,
   whiteSpace: 'pre-line',
@@ -54,7 +57,11 @@ const ConstValue = styled(DefaultValue)(({ theme }) => ({
   fontFamily: 'monospace'
 }));
 
-const BooleanValue = styled(DefaultValue)(({ theme, value }: { theme?: any, value: boolean }) => ({
+interface BooleanValueProps {
+  theme?: any
+  value: boolean
+}
+const BooleanValue = styled(DefaultValue)<BooleanValueProps>(({ theme, value }) => ({
   color: value ? theme.palette.success.dark : theme.palette.error.dark,
   fontFamily: 'monospace'
 }));
