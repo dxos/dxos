@@ -5,53 +5,14 @@
 import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
-import faker from 'faker';
 
 import { truncate, truncateKey } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 
-import { createData, createSchemas, log, SchemaDefWithGenerator, setup } from '../testing';
+import { log, setup } from '../testing';
 import { Database } from './database';
 import { Item } from './item';
 import { Schema, SchemaField, TYPE_SCHEMA } from './schema';
-
-enum TestType {
-  Org = 'example:type/org',
-  Person = 'example:type/person'
-}
-
-const schemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
-  [TestType.Org]: {
-    schema: 'example:type/schema/organization',
-    fields: [
-      {
-        key: 'title',
-        required: true,
-        generator: () => faker.company.companyName()
-      },
-      {
-        key: 'website',
-        required: false,
-        generator: () => faker.internet.url()
-      },
-      {
-        key: 'collaborators',
-        required: false,
-        generator: () => faker.datatype.number().toString()
-      }
-    ]
-  },
-  [TestType.Person]: {
-    schema: 'example:type/schema/person',
-    fields: [
-      {
-        key: 'title',
-        required: true,
-        generator: () => `${faker.name.firstName()} ${faker.name.lastName()}`
-      }
-    ]
-  }
-};
 
 describe('Schemas', () => {
   it('creation of Schema', async () => setup(async (database) => {
