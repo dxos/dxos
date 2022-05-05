@@ -1,5 +1,25 @@
 # Change Log
 
+### [2.31.3](https://www.github.com/dxos/protocols/compare/v2.31.2...v2.31.3) (2022-05-05)
+
+
+### Bug Fixes
+
+* snake case in .proto files. ([#1160](https://www.github.com/dxos/protocols/issues/1160)) ([3960012](https://www.github.com/dxos/protocols/commit/396001279ea2a9ecef3c0fcdcc0954a98ed62e07))
+
+### [2.31.2](https://www.github.com/dxos/protocols/compare/v2.31.1...v2.31.2) (2022-05-04)
+
+
+### Features
+
+* **echo-db:** Schemas ([#1158](https://www.github.com/dxos/protocols/issues/1158)) ([b400b68](https://www.github.com/dxos/protocols/commit/b400b683a9e677a0a0b039c3706866eb5b55814e))
+* **react-client:** Tests for hooks ([#1152](https://www.github.com/dxos/protocols/issues/1152)) ([ab9a89e](https://www.github.com/dxos/protocols/commit/ab9a89e2bd05527b2aad096f3f3800e432101255))
+
+
+### Bug Fixes
+
+* bot-factory-client isReady. ([7538fdb](https://www.github.com/dxos/protocols/commit/7538fdb9a94c778815445926624e36e44d90bbf0))
+
 ### [2.31.1](https://www.github.com/dxos/protocols/compare/v2.31.0...v2.31.1) (2022-05-03)
 
 

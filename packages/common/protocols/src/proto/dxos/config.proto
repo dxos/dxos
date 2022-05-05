@@ -42,7 +42,7 @@ message Repo {
 message Module {
   message Build {
     string command = 1;
-    string outDir = 2;
+    string outdir = 2;
     string version = 3;
     string tag = 4;
   }
@@ -112,7 +112,7 @@ message Runtime {
     string org = 1;
     string theme = 2;
     string website = 3;
-    string publicUrl = 4 [(env) = "PUBLIC_URL"];
+    string public_url = 4 [(env) = "PUBLIC_URL"];
   }
 
   // CLI configuration
@@ -182,7 +182,7 @@ message Runtime {
       *
       * TODO(dmaretskyi): Deprecate this and move it to keyring.
       */
-      string accountUri = 2;
+      string account_uri = 2;
 
       /**
        * Public Polkadot Address.
