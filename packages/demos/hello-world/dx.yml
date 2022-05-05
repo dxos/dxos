@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/hello-world
+    - name: dxos:story/hello-world
       type: dxos:type/app
       build:
         command: npm run build

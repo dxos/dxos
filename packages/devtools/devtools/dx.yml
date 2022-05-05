@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/devtools
+    - name: dxos:story/devtools
       type: dxos:type/app
       build:
         command: npm run build:book

@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/react-framework
+    - name: dxos:story/react-framework
       type: dxos:type/app
       build:
         command: npm run build:book

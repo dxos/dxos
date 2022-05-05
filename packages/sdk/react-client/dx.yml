@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/react-client
+    - name: dxos:story/react-client
       type: dxos:type/app
       build:
         command: npm run build:book

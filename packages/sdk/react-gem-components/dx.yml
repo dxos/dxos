@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/react-gem-components
+    - name: dxos:story/react-gem-components
       type: dxos:type/app
       build:
         command: npm run build:book

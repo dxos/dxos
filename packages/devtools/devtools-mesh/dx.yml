@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:esbook/devtools-mesh
+    - name: dxos:story/devtools-mesh
       type: dxos:type/app
       build:
         command: npm run build:book
