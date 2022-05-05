@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.31.6](https://www.github.com/dxos/protocols/compare/v2.31.5...v2.31.6) (2022-05-05)
+
+
+### Features
+
+* **Schema:** useSchemaBuilder hook ([#1167](https://www.github.com/dxos/protocols/issues/1167)) ([f1c4104](https://www.github.com/dxos/protocols/commit/f1c410452124b391b30b434cd47c358f9fa020d0))
+
 ### [2.31.5](https://www.github.com/dxos/protocols/compare/v2.31.4...v2.31.5) (2022-05-05)
 
 
