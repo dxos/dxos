@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.31.4](https://www.github.com/dxos/protocols/compare/v2.31.3...v2.31.4) (2022-05-05)
+
+
+### Bug Fixes
+
+* better error handling on registry-client. ([#1163](https://www.github.com/dxos/protocols/issues/1163)) ([c5b8c4c](https://www.github.com/dxos/protocols/commit/c5b8c4c55a76e832420b03c48bed3ea308fd5808))
+
 ### [2.31.3](https://www.github.com/dxos/protocols/compare/v2.31.2...v2.31.3) (2022-05-05)
 
 
