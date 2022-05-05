@@ -6,23 +6,38 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
+import { Client } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
+import { Database, Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { log, setup } from '../testing';
-import { Database } from './database';
-import { Item } from './item';
-import { Schema, SchemaField, TYPE_SCHEMA } from './schema';
+import { log, SchemaBuilder, TestType } from './builders';
+
+type Callback = (builder: SchemaBuilder, database: Database) => Promise<void>
+
+export const setup = async (callback: Callback) => {
+  const client = new Client();
+  await client.initialize();
+  await client.halo.createProfile({ username: 'test-user' });
+  const party = await client.echo.createParty();
+  const builder = new SchemaBuilder(party.database);
+  try {
+    await callback(builder, party.database);
+  } finally {
+    await party.destroy();
+    await client.destroy();
+  }
+};
 
 describe('Schemas', () => {
-  it('creation of Schema', async () => setup(async (database) => {
-    const [schema] = await createSchemas(database, [schemaDefs[TestType.Org]]);
-    expect(schema.schema).toBe(schemaDefs[TestType.Org].schema);
+  it('creation of Schema', async () => setup(async (builder) => {
+    const [schema] = await builder.createSchemas();
+    expect(schema.schema).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   }));
 
-  it('add Schema field', async () => setup(async (database) => {
-    const [schema] = await createSchemas(database, [schemaDefs[TestType.Org]]);
+  it('add Schema field', async () => setup(async (builder) => {
+    const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
       key: 'location',
@@ -33,8 +48,8 @@ describe('Schemas', () => {
     expect(schema.getField('location')).toBeTruthy();
   }));
 
-  it('add Schema linked field', async () => setup(async (database) => {
-    const [orgSchema, personSchema] = await createSchemas(database, Object.values(schemaDefs));
+  it('add Schema linked field', async () => setup(async (builder, database) => {
+    const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
       key: 'organization',
@@ -46,9 +61,9 @@ describe('Schemas', () => {
     };
     await personSchema.addField(fieldRef);
 
-    await createData(database, Object.values(schemaDefs), {
-      [schemaDefs[TestType.Org].schema]: 8,
-      [schemaDefs[TestType.Person].schema]: 16
+    await builder.createData(undefined, {
+      [builder.defaultSchemas[TestType.Org].schema]: 8,
+      [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
     const items = await database.select().exec().entities;
@@ -60,11 +75,11 @@ describe('Schemas', () => {
     });
   }));
 
-  it('Use schema to validate the fields of an item', () => setup(async (database) => {
-    await createSchemas(database, Object.values(schemaDefs));
-    await createData(database, Object.values(schemaDefs), {
-      [schemaDefs[TestType.Org].schema]: 8,
-      [schemaDefs[TestType.Person].schema]: 16
+  it('Use schema to validate the fields of an item', () => setup(async (builder, database) => {
+    await builder.createSchemas();
+    await builder.createData(undefined, {
+      [builder.defaultSchemas[TestType.Org].schema]: 8,
+      [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
     const { entities: schemas } = database
