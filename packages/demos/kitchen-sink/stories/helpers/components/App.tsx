@@ -18,6 +18,8 @@ import { CreateItemButton } from './CreateItemButton';
 import { ViewContainer } from './ViewContainer';
 import { ViewType } from './ViewSelector';
 
+// TODO(burdon): Move to src.
+
 interface AppProps {
   party: Party
   onInvite?: () => void
@@ -28,6 +30,7 @@ interface AppProps {
  * Main application.
  * @param party
  * @param onInvite
+ * @param onExport
  * @constructor
  */
 export const App = ({

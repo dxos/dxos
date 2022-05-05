@@ -6,7 +6,7 @@ import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model
 
 import { Message, schema } from './proto';
 
-class MessengerModelStateMachiene implements StateMachine<Message[], Message, {}> {
+class MessengerModelStateMachine implements StateMachine<Message[], Message, {}> {
   private readonly _messages: Message[] = [];
 
   getState (): Message[] {
@@ -34,7 +34,7 @@ export class MessengerModel extends Model<Message[], Message> {
   static meta: ModelMeta = {
     type: 'dxos:model/messenger',
     mutation: schema.getCodecForType('dxos.model.messenger.Message'),
-    stateMachine: () => new MessengerModelStateMachiene()
+    stateMachine: () => new MessengerModelStateMachine()
   };
 
   get messages (): Message[] {

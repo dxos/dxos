@@ -35,12 +35,30 @@ const log = debug('dxos:network-manager');
  */
 export class NetworkManager {
   private readonly _ice?: any[];
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(x => x.toHex());
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(x => x.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
   private readonly _signal: SignalManager;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
+
+  constructor (options: NetworkManagerOptions = {}) {
+    this._ice = options.ice ?? [];
+
+    const onOffer = async (message: SignalApi.SignalMessage) =>
+      await this._swarms.get(message.topic)?.onOffer(message) ?? { accept: false };
+    this._signal = options.signal
+      ? new WebsocketSignalManager(options.signal, onOffer)
+      : new InMemorySignalManager(onOffer);
+
+    this._signal.peerCandidatesChanged.on(([topic, candidates]) =>
+      this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
+    this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+
+    if (options.log) {
+      this._connectionLog = new ConnectionLog();
+    }
+  }
 
   get signal () {
     return this._signal;
@@ -54,23 +72,6 @@ export class NetworkManager {
     return this._connectionLog;
   }
 
-  constructor (options: NetworkManagerOptions = {}) {
-    this._ice = options.ice ?? [];
-
-    const onOffer = async (msg: SignalApi.SignalMessage) => await this._swarms.get(msg.topic)?.onOffer(msg) ?? { accept: false };
-
-    this._signal = options.signal
-      ? new WebsocketSignalManager(options.signal, onOffer)
-      : new InMemorySignalManager(onOffer);
-
-    this._signal.peerCandidatesChanged.on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
-    this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
-
-    if (options.log) {
-      this._connectionLog = new ConnectionLog();
-    }
-  }
-
   getSwarmMap (topic: PublicKey): SwarmMapper | undefined {
     return this._maps.get(topic);
   }
@@ -80,29 +81,36 @@ export class NetworkManager {
   }
 
   joinProtocolSwarm (options: SwarmOptions) {
+    // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object', 'Incorrect arguments format.');
     const { topic, peerId, topology, protocol, presence } = options;
     assert(PublicKey.isPublicKey(topic), 'Incorrect arguments format.');
     assert(PublicKey.isPublicKey(peerId), 'Incorrect arguments format.');
     assert(topology, 'Incorrect arguments format.');
     assert(typeof protocol === 'function', 'Incorrect arguments format.');
-    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
 
+    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
     if (this._swarms.has(topic)) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(
+        GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
     }
+
+    // TODO(burdon): Bundle common transport related classes.
+    const transportFactory = this._signal instanceof InMemorySignalManager
+      ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice });
 
     const swarm = new Swarm(
       topic,
       peerId,
       topology,
       protocol,
+
+      // TODO(burdon): Merge.
       async offer => this._signal.offer(offer),
       async msg => this._signal.signal(msg),
-      () => {
-        this._signal.lookup(topic);
-      },
-      this._signal instanceof InMemorySignalManager ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice }),
+      () => this._signal.lookup(topic),
+
+      transportFactory,
       options.label
     );
 
@@ -144,10 +152,10 @@ export class NetworkManager {
     await this.topicsUpdated.emit();
   }
 
-  // TODO(marik-d): Remove.
   /**
-   * @default
+   * @deprecated
    */
+  // TODO(marik-d): Remove.
   async start () {
     console.warn('NetworkManger.start is deprecated.');
   }
@@ -159,6 +167,7 @@ export class NetworkManager {
         log(err);
       });
     }
+
     await this._signal.destroy();
   }
 }

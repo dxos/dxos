@@ -7,6 +7,7 @@
       "ESNext"
     ],
     "types": [
+      "node",
       "mocha"
     ]
   },
@@ -36,13 +37,13 @@
       "path": "../../common/rpc"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../common/random-access-multi-storage"
     },
     {
       "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"

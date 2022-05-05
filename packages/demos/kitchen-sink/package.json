@@ -15,6 +15,7 @@
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha --require ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
+    "electron": "electron .",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
@@ -88,6 +89,7 @@
     "react-dom": "^17.0.2",
     "robotjs": "~0.6.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "electron": "~18.0.4"
   }
 }

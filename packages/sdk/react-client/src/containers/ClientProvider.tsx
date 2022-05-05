@@ -21,7 +21,10 @@ export interface ClientProviderProps {
 
   /**
    * Forward reference to provide client object to outercontainer since it won't have access to the context.
+   * @deprecated
    */
+  // TODO(burdon): Currently required by ErrorBoundary provider to reset client on fatal error.
+  //  - The boundary must be outside of the provider. Replace with global action handler?
   clientRef?: MutableRefObject<Client | undefined>
 
   /**

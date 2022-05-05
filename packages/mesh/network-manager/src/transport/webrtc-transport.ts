@@ -105,7 +105,7 @@ export class WebrtcTransport implements Transport {
   }
 }
 
-export function createWebRtcTransportFactory (webrtcConfig?: any): TransportFactory {
+export const createWebRtcTransportFactory = (webrtcConfig?: any): TransportFactory => {
   return opts => new WebrtcTransport(
     opts.initiator,
     opts.stream,
@@ -116,4 +116,4 @@ export function createWebRtcTransportFactory (webrtcConfig?: any): TransportFact
     opts.sendSignal,
     webrtcConfig
   );
-}
+};
