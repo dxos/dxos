@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.31.7](https://www.github.com/dxos/protocols/compare/v2.31.6...v2.31.7) (2022-05-05)
+
+
+### Features
+
+* Lexical editor test. ([#1144](https://www.github.com/dxos/protocols/issues/1144)) ([8a34766](https://www.github.com/dxos/protocols/commit/8a34766e6af79d7684f3709dafe1f46c99bcea62))
+
+
+### Bug Fixes
+
+* **schema:** Export default schemas. Minor fixes ([#1169](https://www.github.com/dxos/protocols/issues/1169)) ([298bc8c](https://www.github.com/dxos/protocols/commit/298bc8c2ab00d73916f23097c77827ba5c09e4d8))
+
 ### [2.31.6](https://www.github.com/dxos/protocols/compare/v2.31.5...v2.31.6) (2022-05-05)
 
 
