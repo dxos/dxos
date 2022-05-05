@@ -3,3 +3,4 @@
 //
 
 export * from './partyBuilder';
+export * from './schemaBuilder';
