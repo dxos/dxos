@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.31.5](https://www.github.com/dxos/protocols/compare/v2.31.4...v2.31.5) (2022-05-05)
+
+
+### Features
+
+* **schema:** Tests. Builder. ([#1162](https://www.github.com/dxos/protocols/issues/1162)) ([c5d930e](https://www.github.com/dxos/protocols/commit/c5d930eb2e19188caf729e96d2c7ddabe5153ee7))
+
 ### [2.31.4](https://www.github.com/dxos/protocols/compare/v2.31.3...v2.31.4) (2022-05-05)
 
 
