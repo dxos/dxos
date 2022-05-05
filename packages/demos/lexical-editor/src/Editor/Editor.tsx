@@ -3,14 +3,18 @@
 //
 
 import { css } from '@emotion/css';
-import debug from 'debug';
+import { HashtagNode } from '@lexical/hashtag';
+import { CollaborationPlugin, Provider } from '@lexical/react/LexicalCollaborationPlugin';
+import LexicalComposer from '@lexical/react/LexicalComposer';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
+import LexicalRichTextPlugin from '@lexical/react/LexicalRichTextPlugin';
 import { $getRoot, $getSelection } from 'lexical';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Doc } from 'yjs'
-import { Awareness } from 'y-protocols/awareness';
-
 import type { EditorState } from 'lexical';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Awareness } from 'y-protocols/awareness';
+import { Doc } from 'yjs';
 
 // TODO(burdon): Experiments:
 // https://news.ycombinator.com/item?id=31017943 (Why Lexical)
@@ -36,16 +40,6 @@ import {
 } from '@lexical/react';
 */
 
-import LexicalHashtagPlugin from '@lexical/react/LexicalHashtagPlugin';
-import LexicalComposer from '@lexical/react/LexicalComposer';
-import LexicalRichTextPlugin from '@lexical/react/LexicalRichTextPlugin';
-import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
-import LexicalOnChangePlugin from '@lexical/react/LexicalOnChangePlugin';
-import { CollaborationPlugin, Provider, ProviderFactory, useCollaborationContext } from '@lexical/react/LexicalCollaborationPlugin';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-
-import { HashtagNode } from '@lexical/hashtag';
 import { SyncModel } from '../hooks';
 
 // TODO(burdon): YJS.
@@ -72,7 +66,7 @@ const editorStyles = css`
   }
 `;
 
-const marginStyles = css``;
+// const marginStyles = css``;
 
 const popupStyles = css`
   position: absolute;
@@ -148,7 +142,7 @@ const Popup = () => {
     window.addEventListener('keydown', keyDownHandler, true);
     return () => {
       window.removeEventListener('keydown', keyDownHandler, true);
-    }
+    };
   }, [editor]);
 
   return (
@@ -162,7 +156,7 @@ const Popup = () => {
   );
 };
 
-const CommandPopupPlugin = () => {
+const _CommandPopupPlugin = () => {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     editor.focus();
@@ -183,7 +177,7 @@ const createProviderFactory = (model: SyncModel) => {
       // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
       doc.on('update', (update: Uint8Array, origin: any) => {
         console.log('update', origin);
-      })
+      });
 
       yjsDocMap.set(id, doc);
     }
@@ -191,8 +185,7 @@ const createProviderFactory = (model: SyncModel) => {
     const provider: Provider = {
       // Ephemeral state (e.g., cursors).
       // https://github.com/yjs/y-protocols/blob/master/awareness.js
-      // @ts-ignore // TODO(burdon): Temp.
-      awareness: new Awareness(doc),
+      awareness: new Awareness(doc) as any,
 
       connect: async () => {
         // console.log('connect');
@@ -292,7 +285,7 @@ export const Editor = ({
     onDebug?.({ error });
   };
 
-  const handleChange = (state: EditorState) => {
+  const _handleChange = (state: EditorState) => {
     state.read(() => {
       const root = $getRoot();
       const selection = $getSelection();
@@ -313,7 +306,7 @@ export const Editor = ({
     >
       <div className={editorStyles}>
         <LexicalRichTextPlugin
-          contentEditable={<LexicalContentEditable spellcheck={false}/>}
+          contentEditable={<LexicalContentEditable spellcheck={false} />}
           placeholder={null}
         />
         {/*

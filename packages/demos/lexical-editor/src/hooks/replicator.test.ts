@@ -51,7 +51,7 @@ describe('YJS sync', () => {
     log(count); // TODO(burdon): Why 18?
   });
 
-  test('Replication', async () => {
+  test.skip('Replication', async () => {
     // TODO(burdon): By default Client uses an in-memory transport (ugly).
     const createPeer = async (username: string) => {
       const config = defaultConfig;
@@ -65,7 +65,7 @@ describe('YJS sync', () => {
       client.registerModel(TextModel);
 
       return client;
-    }
+    };
 
     const [inviter, invitee] = await Promise.all(Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`)));
 

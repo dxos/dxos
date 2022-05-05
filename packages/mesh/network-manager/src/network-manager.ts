@@ -96,8 +96,8 @@ export class NetworkManager {
     }
 
     // TODO(burdon): Bundle common transport related classes.
-    const transportFactory = this._signal instanceof InMemorySignalManager ?
-      inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice });
+    const transportFactory = this._signal instanceof InMemorySignalManager
+      ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice });
 
     const swarm = new Swarm(
       topic,

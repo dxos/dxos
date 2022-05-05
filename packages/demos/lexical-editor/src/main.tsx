@@ -10,7 +10,7 @@ import { Replicator, useYJSModel } from './hooks';
 
 // TODO(burdon): CSS.
 
-const Container = () => {
+const _Container = () => {
   const [debug, setDebug] = useState();
 
   return (
@@ -81,11 +81,13 @@ export const WithYJS = ({ count = 2 }) => {
       }}>
         {[...new Array(count)].map((_, index) => {
           return (
-            <div key={index} style={{
-              width: '100%',
-              height: '100%',
-              borderRight: '1px solid #EEE'
-            }}>
+            <div
+              key={index} style={{
+                width: '100%',
+                height: '100%',
+                borderRight: '1px solid #EEE'
+              }}
+            >
               <EditorWithYJS
                 id={`editor-${index}`}
                 replicator={replicator}

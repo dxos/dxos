@@ -192,25 +192,18 @@ export const JsonTreeView = ({
     // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
     let itemValue;
     if (value instanceof Uint8Array) {
-      // @ts-ignore
       itemValue = <KeyValue size={size}>{truncateKey(keyToString(value), 8)}</KeyValue>;
     } else if (value instanceof PublicKey) {
-      // @ts-ignore
       itemValue = <KeyValue size={size}>{truncateKey(value.toHex(), 8)}</KeyValue>;
     } else if (value === null) {
-      // @ts-ignore
       itemValue = <ConstValue size={size}>null</ConstValue>;
     } else if (typeof value === 'boolean') {
-      // @ts-ignore
       itemValue = <BooleanValue size={size} value={value}>{String(value)}</BooleanValue>;
     } else if (typeof value === 'number') {
-      // @ts-ignore
       itemValue = <NumberValue size={size}>{String(value)}</NumberValue>;
     } else if (typeof value === 'string') {
-      // @ts-ignore
       itemValue = <ScalarValue size={size}>{`'${value}'`}</ScalarValue>;
     } else {
-      // @ts-ignore
       itemValue = <DefaultValue size={size}>{String(value)}</DefaultValue>;
     }
 
