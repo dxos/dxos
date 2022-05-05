@@ -43,5 +43,5 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
  * @param party
  */
 export const usePartyBuilder = (party?: Party) => {
-  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key]);
+  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key.toHex()]);
 };

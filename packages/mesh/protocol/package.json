@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mesh-protocol",
-  "version": "2.31.5",
+  "version": "2.31.6",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
