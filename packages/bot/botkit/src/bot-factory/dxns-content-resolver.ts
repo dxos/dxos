@@ -29,7 +29,7 @@ export class DXNSContentResolver implements ContentResolver {
     const botDXN = DXN.parse(packageDXN);
     const botResourceRecord = await this._registry.getResourceRecord<RegistryDataRecord<Bot>>(botDXN, versionOrTag);
     assert(botResourceRecord, `Bot resource not found: ${packageDXN.toString()}@${versionOrTag}`);
-    const botIpfsCID = botResourceRecord.record.data.hash;
+    const botIpfsCID = botResourceRecord.record.data.bundle;
     const botLocalPath = botResourceRecord.record.data.localPath;
     if (!botIpfsCID && !botLocalPath) {
       throw new Error(`Unable to resolve bot content byt the provided dxn: ${packageDXN.toString()}`);

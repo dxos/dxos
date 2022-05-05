@@ -185,14 +185,14 @@ describe('Registry Client', () => {
       const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
       const appData: App = {
-        displayName: 'Tasks App',
-        keywords: ['tasks', 'productivity'],
-        contentType: ['braneframe:type.tasks.task']
+        repos: [],
+        web: {
+          entryPoint: './path/to/main.js'
+        }
       };
       const appCid = await registryApi.insertDataRecord(appData, appTypeCid);
 
       const appRecord = await registryApi.getDataRecord(appCid);
-
       expect(appRecord?.data).to.deep.equal({
         '@type': appTypeCid,
         ...appData

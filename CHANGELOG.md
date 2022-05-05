@@ -1,5 +1,68 @@
 # Change Log
 
+### [2.31.5](https://www.github.com/dxos/protocols/compare/v2.31.4...v2.31.5) (2022-05-05)
+
+
+### Features
+
+* **schema:** Tests. Builder. ([#1162](https://www.github.com/dxos/protocols/issues/1162)) ([c5d930e](https://www.github.com/dxos/protocols/commit/c5d930eb2e19188caf729e96d2c7ddabe5153ee7))
+
+### [2.31.4](https://www.github.com/dxos/protocols/compare/v2.31.3...v2.31.4) (2022-05-05)
+
+
+### Bug Fixes
+
+* better error handling on registry-client. ([#1163](https://www.github.com/dxos/protocols/issues/1163)) ([c5b8c4c](https://www.github.com/dxos/protocols/commit/c5b8c4c55a76e832420b03c48bed3ea308fd5808))
+
+### [2.31.3](https://www.github.com/dxos/protocols/compare/v2.31.2...v2.31.3) (2022-05-05)
+
+
+### Bug Fixes
+
+* snake case in .proto files. ([#1160](https://www.github.com/dxos/protocols/issues/1160)) ([3960012](https://www.github.com/dxos/protocols/commit/396001279ea2a9ecef3c0fcdcc0954a98ed62e07))
+
+### [2.31.2](https://www.github.com/dxos/protocols/compare/v2.31.1...v2.31.2) (2022-05-04)
+
+
+### Features
+
+* **echo-db:** Schemas ([#1158](https://www.github.com/dxos/protocols/issues/1158)) ([b400b68](https://www.github.com/dxos/protocols/commit/b400b683a9e677a0a0b039c3706866eb5b55814e))
+* **react-client:** Tests for hooks ([#1152](https://www.github.com/dxos/protocols/issues/1152)) ([ab9a89e](https://www.github.com/dxos/protocols/commit/ab9a89e2bd05527b2aad096f3f3800e432101255))
+
+
+### Bug Fixes
+
+* bot-factory-client isReady. ([7538fdb](https://www.github.com/dxos/protocols/commit/7538fdb9a94c778815445926624e36e44d90bbf0))
+
+### [2.31.1](https://www.github.com/dxos/protocols/compare/v2.31.0...v2.31.1) (2022-05-03)
+
+
+### Bug Fixes
+
+* update meta for dxns registry record. ([35bed79](https://www.github.com/dxos/protocols/commit/35bed794b1a69d01767ca4008d4e8efd541a9e8a))
+
+## [2.31.0](https://www.github.com/dxos/protocols/compare/v2.30.2...v2.31.0) (2022-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* proto updates.
+
+### Bug Fixes
+
+* Config updates. ([#1068](https://www.github.com/dxos/protocols/issues/1068)) ([e653c1d](https://www.github.com/dxos/protocols/commit/e653c1d511bfaddb1b3c16bd2a79f749c6e58ebd))
+* DXN url encode/decode. ([#1155](https://www.github.com/dxos/protocols/issues/1155)) ([3ecfb9b](https://www.github.com/dxos/protocols/commit/3ecfb9b963c1dea849e2ffa68380e55062c9449d))
+* DXNS integration test fix. ([#1154](https://www.github.com/dxos/protocols/issues/1154)) ([ea0a40b](https://www.github.com/dxos/protocols/commit/ea0a40b39458ba9a758a935288745ec096b89f30))
+* proto updates. ([87bf9d6](https://www.github.com/dxos/protocols/commit/87bf9d6f49362fe5f9e42395da6d1378df9b1b81))
+* update types. ([c4e7eac](https://www.github.com/dxos/protocols/commit/c4e7eac9ff4e896bab59e9f96ba1dcc389fbdc5e))
+
+### [2.30.2](https://www.github.com/dxos/protocols/compare/v2.30.1...v2.30.2) (2022-04-26)
+
+
+### Bug Fixes
+
+* Add client signer adapter to services constructor. ([#1149](https://www.github.com/dxos/protocols/issues/1149)) ([4549652](https://www.github.com/dxos/protocols/commit/45496522d16743c2b76bfaac94f5eca59c80c5f9))
+
 ### [2.30.1](https://www.github.com/dxos/protocols/compare/v2.30.0...v2.30.1) (2022-04-25)
 
 

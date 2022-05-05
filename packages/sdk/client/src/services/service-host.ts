@@ -6,6 +6,7 @@ import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 
+import { ClientOptions } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import { DevtoolsHost } from '../proto/gen/dxos/devtools';
 import { ClientServiceProvider, ClientServices } from '../services';
@@ -21,7 +22,8 @@ export class ClientServiceHost implements ClientServiceProvider {
   private readonly _services: ClientServices;
 
   constructor (
-    private readonly _config: Config
+    private readonly _config: Config,
+    private readonly _options: ClientOptions
   ) {
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
       this._config.get('runtime.client.storage', {})!,
@@ -44,7 +46,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     });
 
     this._services = {
-      ...createServices({ config: this._config, echo: this._echo }),
+      ...createServices({ config: this._config, echo: this._echo, signer: this._options.signer }),
       DevtoolsHost: this._createDevtoolsService()
     };
   }

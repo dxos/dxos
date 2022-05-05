@@ -5,7 +5,7 @@
 import { css } from '@emotion/css';
 import debug from 'debug';
 import { $getRoot, $getSelection } from 'lexical';
-import React, { useCallback, useEffect, useRef, useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Doc } from 'yjs'
 import { Awareness } from 'y-protocols/awareness';
@@ -175,9 +175,7 @@ const CommandPopupPlugin = () => {
 // import { WebrtcProvider } from 'y-webrtc'
 // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
 const createProviderFactory = (model: SyncModel) => {
-  return (id: string, yjsDocMap: Map<string, Doc>, x) => {
-    console.log(id, x);
-
+  return (id: string, yjsDocMap: Map<string, Doc>) => {
     let doc = yjsDocMap.get(id);
     if (!doc) {
       doc = model.doc;
@@ -193,6 +191,7 @@ const createProviderFactory = (model: SyncModel) => {
     const provider: Provider = {
       // Ephemeral state (e.g., cursors).
       // https://github.com/yjs/y-protocols/blob/master/awareness.js
+      // @ts-ignore // TODO(burdon): Temp.
       awareness: new Awareness(doc),
 
       connect: async () => {

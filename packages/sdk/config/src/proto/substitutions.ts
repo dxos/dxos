@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { newAnySubstitutions } from '@dxos/codec-protobuf';
+
 export default {
   'google.protobuf.Timestamp': {
     encode: (value: Date): any => {
@@ -12,5 +14,6 @@ export default {
       };
     },
     decode: (value: any): Date => new Date(parseInt(value.seconds ?? '0') * 1000 + (value.nanos ?? 0) / 1e6)
-  }
+  },
+  ...newAnySubstitutions
 };

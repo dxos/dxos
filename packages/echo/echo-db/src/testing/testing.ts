@@ -13,7 +13,7 @@ import { ECHO } from '../echo';
 import { PartyInternal } from '../parties';
 import { createRamStorage } from '../util';
 
-const log = debug('dxos:echo-db:testing');
+export const log = debug('dxos:echo-db:testing');
 
 export const messageLogger = (tag: string) => (message: any) => {
   log(tag, JSON.stringify(message, jsonReplacer, 2));

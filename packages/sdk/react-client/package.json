@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.30.1",
+  "version": "2.31.5",
   "description": "React client API",
   "license": "MIT",
   "author": "DXOS.org",
@@ -41,19 +41,23 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
     "@types/testing-library__jest-dom": "~5.9.5",
     "@types/use-subscription": "^1.0.0",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "fork-ts-checker-webpack-plugin": "~6.2.5",
     "level-js": "^5.0.2",
+    "raf": "^3.4.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-test-renderer": "^17.0.2",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "wait-for-expect": "^3.0.2"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "react-dom": "*"
   },
   "publishConfig": {
     "access": "public"

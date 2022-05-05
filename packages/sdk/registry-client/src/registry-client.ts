@@ -235,6 +235,8 @@ export class RegistryClient extends BaseClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
+      tags: decoded.tags,
+      displayName: decoded.displayName,
       created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
     };
 
@@ -326,10 +328,17 @@ export class RegistryClient extends BaseClient implements IRegistryClient {
       this.getDomains()
     ]);
 
-    const result = await Promise.all(resources.map(async resource => ({
-      id: this._decodeResourceId(resource[0], domains),
-      ...await this._decodeResourceBody(resource[1].unwrap())
-    })));
+    const result = await Promise.all(resources.map(async resource => {
+      try {
+        const res = {
+          id: this._decodeResourceId(resource[0], domains),
+          ...await this._decodeResourceBody(resource[1].unwrap())
+        };
+        return res;
+      } catch (err: any) {
+        return undefined;
+      }
+    }));
 
     return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }

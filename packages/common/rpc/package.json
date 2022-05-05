@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.30.1",
+  "version": "2.31.5",
   "description": "Tiny RPC library.",
   "license": "MIT",
   "author": "DXOS.org",
