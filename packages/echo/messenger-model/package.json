@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messenger-model",
-  "version": "2.31.3",
+  "version": "2.31.4",
   "license": "MIT",
   "main": "dist/src/index.js",
   "files": [
