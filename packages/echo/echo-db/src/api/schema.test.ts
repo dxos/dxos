@@ -29,7 +29,7 @@ const createTestSchema = async (database: Database) => {
   return new Schema(schemaItem.model);
 };
 
-describe.only('Schema', () => {
+describe('Schema', () => {
   const setup = async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const backend = await createInMemoryDatabase(modelFactory);
