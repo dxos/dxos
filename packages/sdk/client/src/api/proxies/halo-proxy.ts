@@ -48,11 +48,11 @@ export class HaloProxy implements Halo {
   private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new SubscriptionGroup();
 
+  private readonly _contactsChanged = new Event();
+  public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
+
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
-
-  private readonly _contactsChanged = new Event();
-  public readonly profileChanged = new Event();
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider

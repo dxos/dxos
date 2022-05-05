@@ -8,7 +8,7 @@ import { Model } from '../model';
 import { StateMachine, MutationProcessMeta } from '../state-machine';
 import { ModelMeta } from '../types';
 
-class TestListModelStateMachiene implements StateMachine<TestListMutation[], TestListMutation, any> {
+class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
   private _messages: TestListMutation[] = []
 
   getState (): TestListMutation[] {
@@ -35,7 +35,7 @@ export class TestListModel extends Model<TestListMutation[], TestListMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test-list',
     mutation: schema.getCodecForType('dxos.echo.testing.TestListMutation'),
-    stateMachine: () => new TestListModelStateMachiene()
+    stateMachine: () => new TestListModelStateMachine()
   };
 
   get messages () {

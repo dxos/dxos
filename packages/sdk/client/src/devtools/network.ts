@@ -80,6 +80,7 @@ export const getNetworkPeers = (hook: DevtoolsServiceDependencies, request: GetN
   if (!request.topic) {
     throw new Error('Expected a network topic');
   }
+
   const map = hook.networkManager.getSwarmMap(PublicKey.from(request.topic));
   return {
     peers: map?.peers.map(peer => ({

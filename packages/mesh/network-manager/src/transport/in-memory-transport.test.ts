@@ -32,6 +32,7 @@ function createPair () {
     topic,
     protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream
   );
+
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
@@ -44,6 +45,7 @@ function createPair () {
     topic,
     protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream
   );
+
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
