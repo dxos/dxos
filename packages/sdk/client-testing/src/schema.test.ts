@@ -6,37 +6,38 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Client } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
-import { Database, Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
+import { Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { log, SchemaBuilder, TestType } from './builders';
 
-type Callback = (builder: SchemaBuilder, database: Database) => Promise<void>
+let client: Client;
+let party: Party;
+let builder: SchemaBuilder;
 
-export const setup = async (callback: Callback) => {
-  const client = new Client();
+beforeEach(async () => {
+  client = new Client();
   await client.initialize();
   await client.halo.createProfile({ username: 'test-user' });
-  const party = await client.echo.createParty();
-  const builder = new SchemaBuilder(party.database);
-  try {
-    await callback(builder, party.database);
-  } finally {
-    await party.destroy();
-    await client.destroy();
-  }
-};
+  party = await client.echo.createParty();
+  builder = new SchemaBuilder(party.database);
+});
+
+afterEach(async () => {
+  await party.destroy();
+  await client.destroy();
+});
 
 describe('Schemas', () => {
-  it('creation of Schema', async () => setup(async (builder) => {
+  it('creation of Schema', async () => async () => {
     const [schema] = await builder.createSchemas();
     expect(schema.schema).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
-  }));
+  });
 
-  it('add Schema field', async () => setup(async (builder) => {
+  it('add Schema field', async () => async () => {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -46,9 +47,9 @@ describe('Schemas', () => {
     await schema.addField(newField);
 
     expect(schema.getField('location')).toBeTruthy();
-  }));
+  });
 
-  it('add Schema linked field', async () => setup(async (builder, database) => {
+  it('add Schema linked field', async () => async () => {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -66,31 +67,31 @@ describe('Schemas', () => {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const items = await database.select().exec().entities;
+    const items = await party.database.select().exec().entities;
 
     [orgSchema, personSchema].forEach(schema => {
       items.forEach(item => {
         expect(schema.validate(item.model)).toBeTruthy();
       });
     });
-  }));
+  });
 
-  it('Use schema to validate the fields of an item', () => setup(async (builder, database) => {
+  it('Use schema to validate the fields of an item', () => async () => {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const { entities: schemas } = database
+    const { entities: schemas } = party.database
       .select({ type: TYPE_SCHEMA })
       .exec();
 
-    const { entities: orgs } = database
+    const { entities: orgs } = party.database
       .select({ type: TestType.Org })
       .exec();
 
-    const { entities: people } = database
+    const { entities: people } = party.database
       .select({ type: TestType.Person })
       .exec();
 
@@ -103,10 +104,10 @@ describe('Schemas', () => {
     // Log tables.
     schemas.forEach(schema => {
       const type = schema.model.get('schema');
-      const { entities: items } = database.select({ type }).exec();
-      log(renderItems(schema, items, database));
+      const { entities: items } = party.database.select({ type }).exec();
+      log(renderSchemaItemsTable(schema, items, party));
     });
-  }));
+  });
 });
 
 /**
@@ -115,7 +116,7 @@ describe('Schemas', () => {
  * @param items
  * @param [party]
  */
-const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], database?: Database) => {
+const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 
@@ -132,9 +133,9 @@ const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], data
         }
 
         case 'ref': {
-          if (database) {
+          if (party) {
             const { field } = ref!;
-            const item = database.getItem(value);
+            const item = party.database.getItem(value);
             row[key] = chalk.red(logString(item?.model.get(field)));
           } else {
             row[key] = chalk.red(logKey(value));

@@ -13,10 +13,6 @@ import { createInMemoryDatabase } from '../database';
 import { Database } from './database';
 import { Schema, TYPE_SCHEMA } from './schema';
 
-// const OBJECT_ORG = 'example:object/org';
-// const OBJECT_PERSON = 'example:object/person';
-// const LINK_EMPLOYEE = 'example:link/employee';
-
 const SCHEMA = 'example:type/schema/organization';
 const createTestSchema = async (database: Database) => {
   const schemaItem = await database.createItem({
