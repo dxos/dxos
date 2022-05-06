@@ -1,8 +1,9 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: dxos:esbook.hello-world
-
-build:
-  command: npm run build
+package:
+  modules:
+    - name: dxos:story/hello-world
+      type: dxos:type/app
+      build:
+        command: npm run build
+        outdir: out/book
