@@ -28,6 +28,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../../common/crypto"
     },
     {

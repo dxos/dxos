@@ -16,34 +16,22 @@
   ],
   "references": [
     {
-      "path": "../config"
-    },
-    {
       "path": "../../common/async"
     },
     {
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../config"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/protocols"
-    },
-    {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../common/random-access-multi-storage"
-    },
-    {
-      "path": "../../common/testutils"
-    },
-    {
-      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -58,13 +46,25 @@
       "path": "../../echo/model-factory"
     },
     {
+      "path": "../../mesh/network-manager"
+    },
+    {
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../common/protocols"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/testutils"
     }
   ]
 }
