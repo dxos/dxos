@@ -2200,6 +2200,7 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
       '@types/readable-stream': ^2.3.9
       '@types/uuid': ~8.3.3
       abstract-leveldown: ~7.0.0
@@ -2254,6 +2255,7 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.3
+      '@types/node': 14.18.0
       '@types/readable-stream': 2.3.9
       '@types/uuid': 8.3.3
       eslint: 7.32.0
