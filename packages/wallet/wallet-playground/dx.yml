@@ -1,8 +1,8 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: example:app.wallet-playground
-
-build:
-  command: npm run build:bundle
+package:
+  modules:
+    - name: example:app/wallet-playground
+      type: dxos:type/app
+      build:
+        command: npm run build:bundle

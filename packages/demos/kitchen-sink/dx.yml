@@ -1,8 +1,8 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: dxos:esbook.kitchen-sink
-
-build:
-  command: npm run build:bundle
+package:
+  modules:
+    - name: dxos:app/kitchen-sink
+      type: dxos:type/app
+      build:
+        command: npm run build:bundle
