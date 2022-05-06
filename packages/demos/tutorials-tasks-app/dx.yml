@@ -1,15 +1,15 @@
 version: 1
 
-module:
-  type: dxos:type.app
-  name: example:app.tasks-tutorial
-
-build:
-  command: npm run build
+package:
+  modules:
+    - name: example:app/tasks-tutorial
+      type: dxos:type/app
+      build:
+        command: npm run build
 
 runtime:
   props:
-    title: "Tasks App"
+    title: Tasks App
 
   client:
     storage:
@@ -17,7 +17,7 @@ runtime:
 
   services:
     signal:
-      server: "wss://demo.kube.dxos.network/dxos/signal"
-      api: "https://demo.kube.dxos.network/dxos/signal/api"
+      server: wss://demo.kube.dxos.network/dxos/signal
+      api: https://demo.kube.dxos.network/dxos/signal/api
     dxns:
-      server: "wss://node1.devnet.dxos.network/dxns/ws"
+      server: wss://node1.devnet.dxos.network/dxns/ws
