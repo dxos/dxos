@@ -1,27 +1,27 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
+    "outDir": "dist",
     "paths": {
-      "sample-polkadotjs-typegen/*": [
-        "./src/*"
-      ],
       "@polkadot/api/augment": [
         "./src/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
         "./src/interfaces/augment-types.ts"
+      ],
+      "sample-polkadotjs-typegen/*": [
+        "./src/*"
       ]
     }
   },
+  "exclude": [
+    "dist"
+  ],
   "include": [
     "src",
     "test"
-  ],
-  "exclude": [
-    "dist"
   ],
   "references": [
     {
@@ -37,10 +37,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../client"
+      "path": "../../halo/credentials"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../client"
     }
   ]
 }

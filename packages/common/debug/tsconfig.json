@@ -1,21 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM"
-    ]
+    ],
+    "outDir": "dist"
   },
-  "types": [
-    "jest",
-    "node"
+  "exclude": [
+    "node_modules"
   ],
   "include": [
     "src",
     "test"
   ],
-  "exclude": [
-    "node_modules"
-  ],
-  "references": []
+  "references": [],
+  "types": [
+    "jest",
+    "node"
+  ]
 }

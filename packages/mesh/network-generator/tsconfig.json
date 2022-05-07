@@ -3,20 +3,20 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "node",
-    "jest"
-  ],
   "include": [
     "src",
-    "src/**/*.js",
-    "src/**/*.ts",
     "src/**/*.d.ts",
-    "src/**/*.json"
+    "src/**/*.js",
+    "src/**/*.json",
+    "src/**/*.ts"
   ],
   "references": [
     {
       "path": "../../common/async"
     }
+  ],
+  "types": [
+    "jest",
+    "node"
   ]
 }

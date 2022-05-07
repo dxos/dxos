@@ -3,9 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "mocha"
-  ],
   "include": [
     "src/**/*",
     "src/*.json"
@@ -20,5 +17,8 @@
     {
       "path": "../../common/crypto"
     }
+  ],
+  "types": [
+    "mocha"
   ]
 }

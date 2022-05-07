@@ -18,7 +18,7 @@
     "strict": true,
     "target": "ES2018",
     "experimentalDecorators": true,
-    "stripInternal": true,
+    "stripInternal": true
   },
   "include": [
     "**/src/**/*.ts",

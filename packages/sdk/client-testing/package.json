@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -27,8 +27,8 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "js-yaml": "^4.1.0",
-    "faker": "^5.1.0"
+    "faker": "^5.1.0",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.27",

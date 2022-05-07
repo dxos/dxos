@@ -1,15 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     "types": [
       "node",
       "mocha"
-    ],
+    ]
   },
   "include": [
     "src",
@@ -18,13 +18,13 @@
   ],
   "references": [
     {
+      "path": "../../echo/text-model"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../echo/text-model"
     }
   ]
 }

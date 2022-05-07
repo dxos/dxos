@@ -3,9 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "node"
-  ],
   "include": [
     "src"
   ],
@@ -16,5 +13,8 @@
     {
       "path": "../../common/debug"
     }
+  ],
+  "types": [
+    "node"
   ]
 }

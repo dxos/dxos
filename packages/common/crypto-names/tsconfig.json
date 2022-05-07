@@ -6,8 +6,8 @@
   },
   "include": [
     "data/**/*.json",
-    "src",
-    "scripts"
+    "scripts",
+    "src"
   ],
   "references": []
 }

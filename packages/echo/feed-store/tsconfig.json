@@ -3,28 +3,28 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "jest",
-    "node"
+  "exclude": [
+    "src/**/*.test.js"
   ],
   "include": [
     "src"
-  ],
-  "exclude": [
-    "src/**/*.test.js"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/util"
     }
+  ],
+  "types": [
+    "jest",
+    "node"
   ]
 }
