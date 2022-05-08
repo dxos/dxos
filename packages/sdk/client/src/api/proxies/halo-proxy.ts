@@ -74,7 +74,7 @@ export class HaloProxy implements Halo {
 
   /**
    * User profile info.
-  */
+   */
   get profile (): Profile | undefined {
     return this._profile;
   }

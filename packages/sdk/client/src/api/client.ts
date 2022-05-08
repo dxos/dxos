@@ -81,12 +81,12 @@ export class Client {
     this._options = options;
 
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigurationError(`Expected config version 1, got ${this._config.values.version}.`);
+      throw new InvalidConfigurationError(
+        `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`);
     }
 
-    // TODO(burdon): Default error level: 'dxos:*:error'
-    // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
-    debug.enable(this._config.values.runtime?.client?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
+    // TODO(burdon): Library should not set app-level globals.
+    // debug.enable(this._config.values.runtime?.client?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
     this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
     log(`mode=${Runtime.Client.Mode[this._mode]}`);
@@ -246,6 +246,7 @@ export class Client {
 
   /**
    * Registers a new ECHO model.
+   * @deprecated
    */
   registerModel (constructor: ModelConstructor<any>): this {
     this._echo.modelFactory.registerModel(constructor);
@@ -255,7 +256,6 @@ export class Client {
   /**
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
-   *
    * This is what gets assigned to `window.__DXOS__` global.
    */
   getDevtoolsContext (): DevtoolsHook {
