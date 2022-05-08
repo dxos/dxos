@@ -12,7 +12,6 @@ import { Client, defaultConfig } from '@dxos/client';
 import { TextModel } from '@dxos/text-model';
 
 const log = debug('dxos:lexical-editor:test');
-debug.enable('dxos:lexical-editor:*');
 
 describe('YJS sync', () => {
   // https://docs.yjs.dev/api/delta-format
@@ -62,7 +61,7 @@ describe('YJS sync', () => {
       await client.halo.createProfile({ username });
       expect(client.halo.profile).toBeDefined();
 
-      client.registerModel(TextModel);
+      client.echo.registerModel(TextModel);
 
       return client;
     };
