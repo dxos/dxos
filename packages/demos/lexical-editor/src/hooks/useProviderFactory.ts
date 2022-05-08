@@ -77,6 +77,10 @@ export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => {
       const doc = item.model.doc;
       yjsDocMap.set(id, doc);
 
+      // TODO(burdon): Initially has newlines.
+      // TODO(burdon): Typing at end of document has issues.
+      console.log('[', doc.getText().toString(), ']');
+
       return new TestProvider(id);
     }
   }, [item]);

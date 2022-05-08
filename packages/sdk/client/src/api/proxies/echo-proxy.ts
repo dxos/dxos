@@ -76,6 +76,7 @@ export class EchoProxy implements Echo {
     throw new Error('Network Manager not available in service proxy.');
   }
 
+  // TODO(burdon): Client ID?
   info () {
     return {
       parties: this._parties.size

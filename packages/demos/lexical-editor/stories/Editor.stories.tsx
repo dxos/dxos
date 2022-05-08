@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import debug from 'debug';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
-import { Item, InvitationDescriptor } from '@dxos/client';
+import { Item, InvitationDescriptor, Party } from '@dxos/client';
+import { truncateKey } from '@dxos/debug';
 import { TextModel } from '@dxos/text-model';
 import { useClient } from '@dxos/react-client';
 import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
@@ -18,6 +20,18 @@ debug.enable('dxos:lexical:*');
 export default {
   title: 'Lexical/Editor'
 };
+
+const tableStyles = css`
+  tr {
+    vertical-align: top;
+  }
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow: hidden;
+    word-break: break-all;
+  }
+`;
 
 const Container: FC<{
   children: ReactNode
@@ -63,6 +77,7 @@ const EditorContainer: FC<{
   onInvite
 }) => {
   const client = useClient();
+  const [party, setParty] = useState<Party>();
   const [item, setItem] = useState<Item<TextModel>>();
 
   useEffect(() => {
@@ -73,6 +88,7 @@ const EditorContainer: FC<{
         const invitation = await party.createInvitation();
         onInvite({ descriptor: invitation.descriptor, secret: invitation.secret.toString() });
         log(`Created: ${party.key.toHex()}`);
+        setParty(party);
 
         const item = await party.database.createItem({
           model: TextModel,
@@ -90,6 +106,7 @@ const EditorContainer: FC<{
         accept.authenticate(Buffer.from(invitation.secret));
         const party = await accept.getParty();
         log(`Joined: ${party.key.toHex()}`);
+        setParty(party);
 
         // TODO(burdon): Race condition? result.on doesn't fire.
         const result = party.database.select({ type: DOCMENT_TYPE }).exec();
@@ -107,11 +124,46 @@ const EditorContainer: FC<{
       padding: 8,
       border: '1px solid #ccc'
     }}>
-      {item && (
-        <Editor
-          id={id}
-          item={item}
-        />
+      {party && item && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          <div style={{
+            display: 'flex',
+            flex: 1
+          }}>
+            <Editor
+              id={id}
+              item={item}
+            />
+          </div>
+          <div style={{
+            display: 'flex',
+            flexShrink: 0,
+            overflow: 'hidden',
+            padding: 8,
+            fontFamily: 'monospace'
+          }}>
+            <table className={tableStyles}>
+              <tbody>
+                <tr>
+                  <td style={{ width: 60 }}>Profile</td>
+                  <td>{truncateKey(client.halo.profile!.publicKey.toHex(), 8)}</td>
+                </tr>
+                <tr>
+                  <td>Party</td>
+                  <td>{truncateKey(party.key.toHex(), 8)}</td>
+                </tr>
+                <tr>
+                  <td>Item</td>
+                  <td>{truncateKey(item.id, 8)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -77,7 +77,7 @@ export const Editor: FC<{
         <LexicalPlainTextPlugin
           placeholder={null}
           contentEditable={(
-            <LexicalContentEditable />
+            <LexicalContentEditable spellcheck={false} />
           )}
         />
         <CollaborationPlugin

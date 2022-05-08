@@ -99,7 +99,8 @@ export class Client {
   info () {
     return {
       initialized: this.initialized,
-      echo: this.echo.info()
+      echo: this.echo.info(),
+      halo: this.halo.info()
     };
   }
 
