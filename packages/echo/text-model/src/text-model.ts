@@ -62,6 +62,7 @@ export class TextModel extends Model<Doc, Mutation> {
     return this._getState().getXmlFragment('content');
   }
 
+  // TODO(burdon): How is this different?
   get textContent () {
     return this._textContentInner(this.content);
   }
@@ -123,7 +124,6 @@ export class TextModel extends Model<Doc, Mutation> {
     // TODO(marik-d): What is the type of `node` here?
     for (const childNode of (node as any).toArray()) {
       const inserted = this._insertInner(childNode as any, innerIndex, text);
-
       if (inserted === true) {
         return true;
       }

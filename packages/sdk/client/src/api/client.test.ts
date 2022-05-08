@@ -313,7 +313,7 @@ describe('Client', () => {
     {
       const client = new Client(config);
       await client.initialize();
-      client.registerModel(TestModel);
+      client.echo.registerModel(TestModel);
       // TODO(burdon): Better error if halo is not created.
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
@@ -330,7 +330,7 @@ describe('Client', () => {
       await waitForCondition(() => !!client.halo.profile);
       await sleep(10); // Make sure all events were processed.
 
-      client.registerModel(TestModel);
+      client.echo.registerModel(TestModel);
 
       const party = client.echo.queryParties().first;
       const result = party.database.select({ type: 'test' }).exec();

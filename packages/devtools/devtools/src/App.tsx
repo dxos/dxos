@@ -29,8 +29,8 @@ export const App = () => {
 
   // TODO(burdon): Factor out.
   useEffect(() => {
-    client.registerModel(TextModel);
-    client.registerModel(MessengerModel);
+    client.echo.registerModel(TextModel);
+    client.echo.registerModel(MessengerModel);
   }, [client]);
 
   useEffect(() => {

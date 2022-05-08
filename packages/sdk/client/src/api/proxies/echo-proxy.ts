@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { ModelFactory } from '@dxos/model-factory';
+import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
@@ -33,6 +33,7 @@ export class PartyInvitation extends Invitation<Party> {
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Echo {
   info (): { parties: number }
+  registerModel (constructor: ModelConstructor<any>): void
   createParty (): Promise<Party>
   cloneParty (snapshot: PartySnapshot): Promise<Party>
   getParty (partyKey: PartyKey): Party | undefined
@@ -59,6 +60,10 @@ export class EchoProxy implements Echo {
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
 
+  toString () {
+    return `EchoProxy(${JSON.stringify(this.info())})`;
+  }
+
   get modelFactory (): ModelFactory {
     return this._modelFactory;
   }
@@ -71,14 +76,16 @@ export class EchoProxy implements Echo {
     throw new Error('Network Manager not available in service proxy.');
   }
 
-  toString () {
-    return `EchoProxy(${JSON.stringify(this.info())})`;
-  }
-
+  // TODO(burdon): Client ID?
   info () {
     return {
       parties: this._parties.size
     };
+  }
+
+  registerModel (constructor: ModelConstructor<any>): this {
+    this._modelFactory.registerModel(constructor);
+    return this;
   }
 
   /**

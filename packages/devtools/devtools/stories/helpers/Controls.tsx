@@ -63,8 +63,8 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   };
 
   const handleTestData = async () => {
-    client.registerModel(TextModel);
-    client.registerModel(MessengerModel);
+    client.echo.registerModel(TextModel);
+    client.echo.registerModel(MessengerModel);
 
     // Create party.
     const party = await client.echo.createParty();
