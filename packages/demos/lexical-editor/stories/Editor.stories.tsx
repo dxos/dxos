@@ -8,9 +8,8 @@ import React, { FC, ReactNode, useEffect, useState } from 'react';
 
 import { Item, InvitationDescriptor, Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
-import { useClient } from '@dxos/react-client';
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
 
 import { Editor } from '../src';
 
@@ -20,6 +19,9 @@ debug.enable('dxos:lexical:*');
 export default {
   title: 'Lexical/Editor'
 };
+
+// TODO(burdon): Scrolling.
+// TODO(burdon): Multi items with separate editors (with drag-and-drop).
 
 const tableStyles = css`
   tr {

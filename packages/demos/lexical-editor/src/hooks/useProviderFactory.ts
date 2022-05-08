@@ -4,7 +4,7 @@
 
 import {
   ProviderAwareness, ProviderFactory, UserState
-} from "@lexical/react/LexicalCollaborationPlugin";
+} from '@lexical/react/LexicalCollaborationPlugin';
 import { Provider } from '@lexical/yjs';
 import debug from 'debug';
 import { useMemo } from 'react';
@@ -46,7 +46,7 @@ class TestAwareness implements ProviderAwareness {
 class TestProvider implements Provider {
   readonly awareness = new TestAwareness();
 
-  constructor(
+  constructor (
     private readonly id: string
   ) {}
 
@@ -82,6 +82,6 @@ export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => {
       console.log('[', doc.getText().toString(), ']');
 
       return new TestProvider(id);
-    }
+    };
   }, [item]);
 };

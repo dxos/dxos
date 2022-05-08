@@ -3,10 +3,10 @@
 //
 
 import { css } from '@emotion/css';
+import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import LexicalComposer from '@lexical/react/LexicalComposer';
-import { CollaborationPlugin } from "@lexical/react/LexicalCollaborationPlugin";
-import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import LexicalPlainTextPlugin from '@lexical/react/LexicalPlainTextPlugin';
 import React, { FC, useEffect } from 'react';
 
@@ -25,7 +25,6 @@ const theme = {
 
 const editorStyles = css`
   width: 100%;
-  border: 1px solid green;
   
   > div {
     outline: none;

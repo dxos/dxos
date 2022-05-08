@@ -13,6 +13,10 @@ import type { EditorState } from 'lexical';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
+export default {
+  title: 'Lexical/experimental'
+};
+
 // TODO(burdon): Experiments:
 // https://news.ycombinator.com/item?id=31017943 (Why Lexical)
 //  - YJS/TextModel
@@ -223,7 +227,7 @@ const CustomCollaborationPlugin = ({ model }: { model: SyncModel }) => {
  * Editor
  * https://lexical.dev/docs/getting-started/quick-start
  */
-const Editor: FC<{
+const _Editor: FC<{
   onDebug?: (debug: any) => void
 }> = ({
   onDebug
