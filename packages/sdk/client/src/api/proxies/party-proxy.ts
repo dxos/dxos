@@ -36,6 +36,7 @@ export interface Party {
   get isOpen (): boolean
   get isActive (): boolean
 
+  // TODO(burdon): Verbs should be on same interface.
   get database (): Database
   get select (): Database['select']
   get reduce (): Database['reduce']
