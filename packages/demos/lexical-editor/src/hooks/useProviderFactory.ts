@@ -21,6 +21,7 @@ const log = debug('dxos:lexical:useProviderFactory');
  */
 class TestProviderAwareness implements ProviderAwareness {
   private readonly _callbacks = new Map<string, () => void>();
+  private readonly _states: UserState[] = [];
   private _state?: UserState;
 
   constructor(
@@ -28,7 +29,7 @@ class TestProviderAwareness implements ProviderAwareness {
   ) {}
 
   getStates () {
-    return [];
+    return this._states;
   }
 
   getLocalState () {
@@ -40,19 +41,25 @@ class TestProviderAwareness implements ProviderAwareness {
     this._state = state;
   }
 
-  on (type: string, cb: () => void) {
+  on (type: 'update', cb: () => void) {
     // log('TestAwareness.on', this.id, type);
     const existing = this._callbacks.get(type);
     assert(existing === undefined || existing === cb);
     this._callbacks.set(type, cb);
   }
 
-  off (type: string, cb: () => void) {
+  off (type: 'update', cb: () => void) {
     // log('TestAwareness.off', this.id, type);
     this._callbacks.delete(type);
   }
 }
 
+/**
+ *
+ */
+// TODO(burdon): Inspect YJS defs.
+// TODO(burdon): Add to: https://github.com/yjs/yjs/blob/40196ae0a3f0ae7b1e7912befbacb3a904068e7e/README.md#who-is-using-yjs
+// TODO(burdon): https://github.com/yousefED/matrix-crdt (Yousef)
 class TestProvider implements Provider {
   private readonly _callbacks = new Map<string, (doc: Doc) => void>();
 
@@ -69,7 +76,7 @@ class TestProvider implements Provider {
     return this.item.model.doc;
   }
 
-  connect () {
+  async connect () {
     log('TestProvider.connect', this.id);
     this._callbacks.get('reload')!(this.doc);
   }
@@ -78,18 +85,24 @@ class TestProvider implements Provider {
     log('TestProvider.disconnect', this.id);
   }
 
-  on (type: string, cb: (doc: Doc) => void) {
+  // TODO(burdon): Other types.
+
+  on (type: 'reload', cb: (doc: Doc) => void) {
     // log('TestProvider.on', this.id, type);
     assert(this._callbacks.get(type) === undefined);
     this._callbacks.set(type, cb);
   }
 
-  off (type: string, cb: (doc: Doc) => void) {
+  off (type: 'reload', cb: (doc: Doc) => void) {
     // log('TestProvider.off', this.id, type);
     this._callbacks.delete(type);
   }
 }
 
+/**
+ * Retunrs a provider factory for the given item.
+ * @param item Document item.
+ */
 export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => {
   return useMemo<ProviderFactory>(() => {
     return (id: string, docMap: Map<string, Doc>): Provider => {
