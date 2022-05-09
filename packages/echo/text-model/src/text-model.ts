@@ -69,11 +69,10 @@ export class TextModel extends Model<Doc, Mutation> {
 
   private async _handleDocUpdated (update: Uint8Array, origin: any) {
     const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
-
     if (!remote) {
       await this.write({
-        update,
-        clientId: this._getState().clientID
+        clientId: this._getState().clientID,
+        update
       });
     }
   }
@@ -93,7 +92,6 @@ export class TextModel extends Model<Doc, Mutation> {
 
     const textContentNodes = [];
     const nodes = node.toArray();
-
     for (const childNode of nodes) {
       textContentNodes.push(this._textContentInner(childNode));
     }

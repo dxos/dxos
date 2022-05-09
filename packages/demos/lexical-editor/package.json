@@ -36,7 +36,8 @@
     "@lexical/yjs": "~0.2.5",
     "lexical": "~0.2.5",
     "yjs": "^13.4.1",
-    "y-protocols": "~1.0.5"
+    "y-protocols": "~1.0.5",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

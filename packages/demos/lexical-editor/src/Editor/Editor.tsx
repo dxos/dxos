@@ -8,8 +8,9 @@ import LexicalComposer from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import LexicalPlainTextPlugin from '@lexical/react/LexicalPlainTextPlugin';
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 
+import { Event } from '@dxos/async';
 import { Item } from '@dxos/client';
 import { TextModel } from '@dxos/text-model';
 
@@ -45,15 +46,29 @@ const editorStyles = css`
   }
 `;
 
-const FocusPlugin = () => {
+// TODO(burdon): Too narrow/specialized.
+const FocusPlugin: FC<{
+  eventHandler: Event
+}> = ({
+  eventHandler
+}) => {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     editor.focus();
+    return eventHandler.on(() => {
+      console.log('FocusPlugin: focus');
+      setTimeout(() => {
+        editor.focus(); // TODO(burdon): Not working.
+      });
+    });
   }, [editor]);
 
   return null;
 };
 
+/**
+ *
+ */
 export const Editor: FC<{
   id: string,
   item: Item<TextModel>
@@ -61,28 +76,46 @@ export const Editor: FC<{
   id,
   item
 }) => {
+  const eventHandler = useMemo(() => new Event(), []);
   const providerFactory = useProviderFactory(item);
 
+  const handleClick = () => {
+    eventHandler.emit();
+  }
+
+  // https://github.com/facebook/lexical
   return (
-    <div className={editorStyles}>
+    <div
+      className={editorStyles}
+      onClick={handleClick}
+    >
       <LexicalComposer
         initialConfig={{
           namespace: 'dxos',
           theme,
-          onError: () => {}
+          onError: (err) => {
+            console.error(err);
+          }
         }}
       >
-        <FocusPlugin />
         <LexicalPlainTextPlugin
           placeholder={null}
           contentEditable={(
-            <LexicalContentEditable spellcheck={false} />
+            <LexicalContentEditable
+              spellCheck={false}
+            />
           )}
         />
+
         <CollaborationPlugin
           id={id}
-          shouldBootstrap={true}
           providerFactory={providerFactory}
+          shouldBootstrap={true}
+          username={id}
+        />
+
+        <FocusPlugin
+          eventHandler={eventHandler}
         />
       </LexicalComposer>
     </div>

@@ -689,6 +689,7 @@ importers:
   ../../packages/demos/lexical-editor:
     specifiers:
       '@babel/core': ~7.13.15
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -727,6 +728,7 @@ importers:
       y-protocols: ~1.0.5
       yjs: ^13.4.1
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
