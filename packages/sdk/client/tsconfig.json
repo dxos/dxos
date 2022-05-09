@@ -1,11 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     "types": [
       "node",
       "mocha"
@@ -15,9 +15,6 @@
     "src"
   ],
   "references": [
-    {
-      "path": "../config"
-    },
     {
       "path": "../../common/async"
     },
@@ -34,10 +31,10 @@
       "path": "../../common/protocols"
     },
     {
-      "path": "../../common/rpc"
+      "path": "../../common/random-access-multi-storage"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/rpc"
     },
     {
       "path": "../../common/testutils"
@@ -65,6 +62,9 @@
     },
     {
       "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../config"
     }
   ]
 }

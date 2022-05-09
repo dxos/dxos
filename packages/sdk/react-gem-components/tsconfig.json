@@ -1,26 +1,26 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
-    ]
+    ],
+    "outDir": "dist"
   },
+  "exclude": [
+    "/node_modules/"
+  ],
   "include": [
     "src",
     "stories"
-  ],
-  "exclude": [
-    "/node_modules/"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
-      "path": "../client"
+      "path": "../../common/react-async"
     },
     {
       "path": "../../echo/echo-db"
@@ -32,7 +32,7 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../client"
     },
     {
       "path": "../react-client"

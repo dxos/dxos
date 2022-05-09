@@ -7,19 +7,19 @@
       "DOM",
       "ESNext"
     ],
-    "types": [
-      "node",
-      "mocha"
-    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
+    "removeComments": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
+    "strict": true,
     "target": "ES2018",
-    "removeComments": false,
-    "strict": true
+    "types": [
+      "node",
+      "mocha"
+    ]
   },
   "include": [
     "src",
@@ -28,13 +28,16 @@
   ],
   "references": [
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
+      "path": "../../common/async"
     },
     {
       "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -47,6 +50,12 @@
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -62,15 +71,6 @@
     },
     {
       "path": "../../sdk/react-gem-components"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     }
   ]
 }

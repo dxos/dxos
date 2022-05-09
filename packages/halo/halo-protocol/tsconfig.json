@@ -3,10 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "mocha",
-    "node"
-  ],
   "include": [
     "src"
   ],
@@ -23,5 +19,9 @@
     {
       "path": "../../common/util"
     }
+  ],
+  "types": [
+    "mocha",
+    "node"
   ]
 }

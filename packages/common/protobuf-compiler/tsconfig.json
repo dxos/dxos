@@ -3,6 +3,10 @@
   "compilerOptions": {
     "outDir": "dist"
   },
+  "include": [
+    "src",
+    "test"
+  ],
   "references": [
     {
       "path": "../codec-protobuf"
@@ -10,9 +14,5 @@
     {
       "path": "../protobuf-test"
     }
-  ],
-  "include": [
-    "src",
-    "test"
   ]
 }

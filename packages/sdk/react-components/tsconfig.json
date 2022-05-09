@@ -1,19 +1,19 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
-    ]
+    ],
+    "outDir": "dist"
   },
+  "exclude": [
+    "/node_modules/"
+  ],
   "include": [
     "src",
     "stories"
-  ],
-  "exclude": [
-    "/node_modules/"
   ],
   "references": [
     {
