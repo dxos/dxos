@@ -1,25 +1,15 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "esModuleInterop": true,
-    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     "types": [
       "node",
       "mocha"
-    ],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "target": "ES2018",
-    "removeComments": false,
-    "strict": true
+    ]
   },
   "include": [
     "src",
@@ -28,13 +18,13 @@
   ],
   "references": [
     {
+      "path": "../../echo/object-model"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../echo/object-model"
     },
     {
       "path": "../../sdk/react-client"
