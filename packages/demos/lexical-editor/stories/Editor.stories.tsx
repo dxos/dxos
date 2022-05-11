@@ -110,7 +110,7 @@ const EditorContainer: FC<{
         log(`Joined: ${party.key.toHex()}`);
         setParty(party);
 
-        // TODO(burdon): Race condition? result.on doesn't fire.
+        // TODO(burdon): Race condition? result.on doesn't fire. Option to make subscription
         const result = party.database.select({ type: DOCMENT_TYPE }).exec();
         setItem(result.expectOne());
       });

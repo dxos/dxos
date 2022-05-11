@@ -162,67 +162,6 @@ const _CommandPopupPlugin = () => {
   return createPortal(<Popup />, document.body);
 };
 
-/*
-const CustomCollaborationPlugin = ({ model }: { model: SyncModel }) => {
-  const { clientID, ...rest } = useCollaborationContext();
-  useEffect(() => {
-    console.log(`Editor: ${clientID}`, rest);
-  }, [clientID]);
-
-  // TODO(burdon): Adapt y-webrtc/y-websocket to use ECHO.
-  // import { WebrtcProvider } from 'y-webrtc'
-  // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
-  const providerFactory = useCallback((id: string, yjsDocMap: Map<string, Doc>) => {
-    // TODO(burdon): Only called one side?
-    let doc = yjsDocMap.get(id);
-    if (!doc) {
-      console.log(`providerFactory: ${clientID}:${id}`);
-      // doc = new Doc();
-      doc = model.doc;
-
-      // TODO(burdon): Plug-in TextModel?
-      // https://github.com/yjs/y-websocket/blob/master/src/y-websocket.js
-      doc.on('update', (update: Uint8Array, origin: any) => {
-        console.log(clientID, origin.clientID);
-        // console.log('update', update); // Send?
-      })
-
-      // model.onUpdate && doc.on('update', model.onUpdate);
-      yjsDocMap.set(id, model.doc);
-    }
-
-    const provider: Provider = {
-      // Ephemeral state (e.g., cursors).
-      // https://github.com/yjs/y-protocols/blob/master/awareness.js
-      awareness: new Awareness(doc),
-
-      connect: async () => {
-        // console.log('connect');
-      },
-      disconnect: () => {
-        // console.log('disconnect');
-      },
-      on: (type: string) => { // 'reload', 'status', 'sync'
-        // console.log('on:', type);
-      },
-      off: (type: string) => {
-        // console.log('off:', type);
-      }
-    };
-
-    return provider;
-  }, [clientID]);
-
-  return (
-    <CollaborationPlugin
-      id='main'
-      shouldBootstrap={true}
-      providerFactory={providerFactory}
-    />
-  );
-};
-*/
-
 /**
  * Editor
  * https://lexical.dev/docs/getting-started/quick-start

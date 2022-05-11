@@ -8,7 +8,7 @@ import LexicalComposer from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import LexicalPlainTextPlugin from '@lexical/react/LexicalPlainTextPlugin';
-import React, { FC, useEffect, useMemo } from 'react';
+import React, { FC, ReactNode, useEffect, useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/client';
@@ -71,10 +71,12 @@ const FocusPlugin: FC<{
  */
 export const Editor: FC<{
   id: string,
-  item: Item<TextModel>
+  item: Item<TextModel>,
+  children?: ReactNode
 }> = ({
   id,
-  item
+  item,
+  children
 }) => {
   const eventHandler = useMemo(() => new Event(), []);
   const providerFactory = useProviderFactory(item);
@@ -117,6 +119,8 @@ export const Editor: FC<{
         <FocusPlugin
           eventHandler={eventHandler}
         />
+
+        {children}
       </LexicalComposer>
     </div>
   );

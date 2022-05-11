@@ -54,15 +54,16 @@ class TestProviderAwareness implements ProviderAwareness {
   }
 }
 
+// TODO(burdon): Add to "who is using YJS?": https://github.com/yjs/yjs/blob/40196ae0a3f0ae7b1e7912befbacb3a904068e7e/README.md#who-is-using-yjs
+//  - E.g., https://github.com/yousefED/matrix-crdt (Yousef)
+
 /**
- *
+ * Provider is an Observable defined by YJS (e.g., @yjs/y-websocket).
  */
-// TODO(burdon): Inspect YJS defs.
-// TODO(burdon): Add to: https://github.com/yjs/yjs/blob/40196ae0a3f0ae7b1e7912befbacb3a904068e7e/README.md#who-is-using-yjs
-// TODO(burdon): https://github.com/yousefED/matrix-crdt (Yousef)
 class TestProvider implements Provider {
   private readonly _callbacks = new Map<string, (doc: Doc) => void>();
 
+  private _connected = false;
   readonly awareness: ProviderAwareness;
 
   constructor (
@@ -78,14 +79,18 @@ class TestProvider implements Provider {
 
   async connect () {
     log('TestProvider.connect', this.id);
+    console.assert(!this._connected);
     this._callbacks.get('reload')!(this.doc);
+    this._connected = true;
   }
 
   disconnect () {
     log('TestProvider.disconnect', this.id);
+    assert(this._connected);
+    this._connected = false;
   }
 
-  // TODO(burdon): Other types.
+  // TODO(burdon): Other event types (status, sync).
 
   on (type: 'reload', cb: (doc: Doc) => void) {
     // log('TestProvider.on', this.id, type);
