@@ -18,13 +18,28 @@
   ],
   "references": [
     {
-      "path": "../../echo/text-model"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-framework"
+    },
+    {
+      "path": "../../echo/text-model"
     }
   ]
 }

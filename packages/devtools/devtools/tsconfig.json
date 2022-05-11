@@ -13,7 +13,13 @@
   ],
   "references": [
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../common/crypto"
@@ -22,43 +28,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
-    },
-    {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../echo/echo-db"
+      "path": "../devtools-mesh"
     },
     {
       "path": "../../echo/echo-protocol"
     },
     {
-      "path": "../../echo/messenger-model"
-    },
-    {
       "path": "../../echo/model-factory"
     },
     {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../echo/text-model"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/react-client"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../sdk/react-components"
@@ -67,7 +46,28 @@
       "path": "../../sdk/react-framework"
     },
     {
-      "path": "../devtools-mesh"
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/messenger-model"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../echo/text-model"
     }
   ]
 }
