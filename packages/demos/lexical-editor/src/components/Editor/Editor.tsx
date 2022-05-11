@@ -3,18 +3,15 @@
 //
 
 import { css } from '@emotion/css';
-import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import LexicalComposer from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
 import LexicalPlainTextPlugin from '@lexical/react/LexicalPlainTextPlugin';
-import React, { FC, ReactNode, useEffect, useMemo } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { Item } from '@dxos/client';
 import { TextModel } from '@dxos/text-model';
-
-import { useProviderFactory } from '../hooks';
 
 // https://github.com/facebook/lexical/blob/ec7c75afe6c2db15d5bc1e9bb35df4d649e25d93/packages/lexical-website-new/docs/getting-started/theming.md
 const theme = {
@@ -72,14 +69,13 @@ const FocusPlugin: FC<{
 export const Editor: FC<{
   id: string,
   item: Item<TextModel>,
-  children?: ReactNode
+  children?: JSX.Element
 }> = ({
   id,
   item,
   children
 }) => {
   const eventHandler = useMemo(() => new Event(), []);
-  const providerFactory = useProviderFactory(item);
 
   const handleClick = () => {
     eventHandler.emit();
@@ -107,13 +103,6 @@ export const Editor: FC<{
               spellCheck={false}
             />
           )}
-        />
-
-        <CollaborationPlugin
-          id={id}
-          providerFactory={providerFactory}
-          shouldBootstrap={true}
-          username={id}
         />
 
         <FocusPlugin

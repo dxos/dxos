@@ -79,7 +79,7 @@ class TestProvider implements Provider {
 
   async connect () {
     log('TestProvider.connect', this.id);
-    console.assert(!this._connected);
+    // console.assert(!this._connected); // TODO(burdon): Called multiple times.
     this._callbacks.get('reload')!(this.doc);
     this._connected = true;
   }
