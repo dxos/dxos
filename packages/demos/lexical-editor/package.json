@@ -37,8 +37,8 @@
     "@mui/icons-material": "^5.4.2",
     "@mui/material": "^5.4.2",
     "lexical": "~0.2.5",
-    "yjs": "^13.4.1",
-    "y-protocols": "~1.0.5"
+    "y-protocols": "~1.0.5",
+    "yjs": "^13.4.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

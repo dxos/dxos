@@ -29,7 +29,13 @@
       "path": "../client"
     },
     {
+      "path": "../client-testing"
+    },
+    {
       "path": "../react-client"
+    },
+    {
+      "path": "../react-components"
     }
   ]
 }
