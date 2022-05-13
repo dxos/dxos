@@ -28,16 +28,16 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../common/crypto"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -50,12 +50,6 @@
     },
     {
       "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -71,6 +65,18 @@
     },
     {
       "path": "../../sdk/react-gem-components"
+    },
+    {
+      "path": "../../sdk/react-ipfs"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
     }
   ]
 }

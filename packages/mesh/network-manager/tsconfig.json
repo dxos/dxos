@@ -12,22 +12,13 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/testutils"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../gravity/browser-mocha"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../protocol"
@@ -36,7 +27,16 @@
       "path": "../protocol-plugin-presence"
     },
     {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../gravity/browser-mocha"
+    },
+    {
       "path": "../signal"
+    },
+    {
+      "path": "../../common/testutils"
     }
   ],
   "types": [
