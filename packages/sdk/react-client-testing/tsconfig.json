@@ -17,7 +17,10 @@
   ],
   "references": [
     {
-      "path": "../../common/react-async"
+      "path": "../client"
+    },
+    {
+      "path": "../client-testing"
     },
     {
       "path": "../../echo/echo-db"
@@ -26,10 +29,13 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../client"
+      "path": "../../common/react-async"
     },
     {
       "path": "../react-client"
+    },
+    {
+      "path": "../react-components"
     }
   ]
 }

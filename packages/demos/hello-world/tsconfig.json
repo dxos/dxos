@@ -18,13 +18,13 @@
   ],
   "references": [
     {
-      "path": "../../echo/object-model"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../echo/object-model"
     },
     {
       "path": "../../sdk/react-client"
