@@ -21,7 +21,16 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../common/crypto"
@@ -30,25 +39,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../halo/credentials"
+      "path": "../devtools"
     },
     {
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-framework"
     },
     {
-      "path": "../devtools"
+      "path": "../../common/rpc"
     }
   ]
 }
