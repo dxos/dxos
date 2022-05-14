@@ -20,7 +20,7 @@ describe('ObjectModel', () => {
     for (const key of invalid) {
       expect(() => validateKey(key)).toThrow();
     }
-  })
+  });
 
   it('can set a property', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);

@@ -60,7 +60,7 @@ export class OrderedList {
     let [left, ...rest] = values;
     for (const value of rest) {
       const key = `${this._property}.${left}`;
-      const current = this._model.get(key)
+      const current = this._model.get(key);
       await this._model.set(key, value);
       if (current) {
         await this._model.set(`${this._property}.${value}`, current);

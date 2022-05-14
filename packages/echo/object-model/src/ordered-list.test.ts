@@ -52,7 +52,7 @@ describe('OrderedList', () => {
 
     await list.clear();
     expect(list.values).toEqual([]);
-  })
+  });
 
   test('set and remove', async () => {
     const model = createTestObjectModel();

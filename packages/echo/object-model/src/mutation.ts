@@ -63,7 +63,7 @@ export const removeKey = (object: any, key: string) => {
   }
 
   return object;
-}
+};
 
 /**
  * Represents a named property value.

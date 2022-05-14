@@ -5,6 +5,7 @@
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey } from '@dxos/echo-protocol';
 import { MutationWriter } from '@dxos/model-factory';
+
 import { ObjectModel } from './object-model';
 
 /**
@@ -24,8 +25,8 @@ export const createTestObjectModel = (itemId = 'test') => {
           author: key
         });
       }
-    }
-  }
+    };
+  };
 
   return new ObjectModel(ObjectModel.meta, itemId, () => stateMachine.getState(), mutationWriter);
 };
