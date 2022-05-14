@@ -43,6 +43,8 @@ const SCALAR_TYPES = [
   Type.DATETIME
 ];
 
+// TODO(burdon): Reorganize functions.
+
 /**
  * Represents a named property value.
  */
@@ -241,12 +243,26 @@ export class MutationUtil {
 
     return object;
   }
-}
 
-export function createMultiFieldMutationSet (object: any): ObjectMutation[] {
-  return Object.entries(object).map(([key, value]) => ({
-    operation: ObjectMutation.Operation.SET,
-    key,
-    value: ValueUtil.createMessage(value)
-  }));
+  /**
+   * Create single field mutation.
+   */
+  static createFieldMutation (key: string, value: any): ObjectMutation {
+    return value === undefined ? {
+      // NOTE: `null` is a legitimate value.
+      operation: ObjectMutation.Operation.DELETE,
+      key
+    } : {
+      operation: ObjectMutation.Operation.SET,
+      key,
+      value: ValueUtil.createMessage(value)
+    };
+  };
+
+  /**
+   * Create field mutations.
+   */
+  static createMultiFieldMutation (object: any): ObjectMutation[] {
+    return Object.entries(object).map(([key, value]) => MutationUtil.createFieldMutation(key, value));
+  }
 }

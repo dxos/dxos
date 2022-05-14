@@ -8,7 +8,7 @@ import get from 'lodash.get';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
-import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
+import { MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 import { validateKey } from './util';
 
@@ -53,12 +53,7 @@ export class MutationBuilder {
   ) {}
 
   set (key: string, value: any) {
-    this._mutations.push({
-      operation: ObjectMutation.Operation.SET,
-      key,
-      value: ValueUtil.createMessage(value)
-    });
-
+    this._mutations.push(MutationUtil.createFieldMutation(key, value));
     return this;
   }
 
@@ -88,7 +83,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
       return {
-        mutations: createMultiFieldMutationSet(obj)
+        mutations: MutationUtil.createMultiFieldMutation(obj)
       };
     },
 
@@ -115,15 +110,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     validateKey(key);
     await this._makeMutation({
       mutations: [
-        // NOTE: `null` is a legitimate value.
-        value === undefined ? {
-          operation: ObjectMutation.Operation.DELETE,
-          key
-        } : {
-          operation: ObjectMutation.Operation.SET,
-          key,
-          value: ValueUtil.createMessage(value)
-        }
+        MutationUtil.createFieldMutation(key, value)
       ]
     });
   }
@@ -150,7 +137,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
   // TODO(burdon): Remove.
   async setProperties (properties: any) {
     await this._makeMutation({
-      mutations: createMultiFieldMutationSet(properties)
+      mutations: MutationUtil.createMultiFieldMutation(properties)
     });
   }
 

@@ -56,36 +56,38 @@ export class OrderedList {
   }
 
   async set (values: ItemID[]) {
-    // TODO(burdon): Create single mutation set.
     let [left, ...rest] = values;
+    const builder = this._model.builder();
     for (const value of rest) {
       const key = `${this._property}.${left}`;
       const current = this._model.get(key);
-      await this._model.set(key, value);
+      builder.set(key, value);
       if (current) {
-        await this._model.set(`${this._property}.${value}`, current);
+        builder.set(`${this._property}.${value}`, current)
       }
       left = value;
     }
 
+    await builder.commit();
     this.update();
     return this._values;
   }
 
   async remove (values: ItemID[]) {
-    // TODO(burdon): Create single mutation set.
+    const builder = this._model.builder();
     for (const value of values) {
       const map = this._model.get(this._property);
       const left = Object.keys(map).find(key => map[key] === value);
       const right = map[value];
       if (right) {
-        await this._model.set(`${this._property}.${value}`, undefined);
+        builder.set(`${this._property}.${value}`, undefined);
         if (left) {
-          await this._model.set(`${this._property}.${left}`, right);
+          builder.set(`${this._property}.${left}`, right);
         }
       }
     }
 
+    await builder.commit();
     this.update();
     return this._values;
   }

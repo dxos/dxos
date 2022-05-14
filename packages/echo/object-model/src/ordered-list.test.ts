@@ -10,7 +10,7 @@ import { createTestObjectModel } from './testing';
 
 describe('OrderedList', () => {
   test('update', async () => {
-    const model = createTestObjectModel();
+    const { model } = createTestObjectModel();
     const list = new OrderedList(model, 'order');
 
     {
@@ -40,7 +40,7 @@ describe('OrderedList', () => {
   });
 
   test('clear', async () => {
-    const model = createTestObjectModel();
+    const { model } = createTestObjectModel();
     await model.set('order', {
       'a': 'b',
       'c': 'd',
@@ -55,20 +55,24 @@ describe('OrderedList', () => {
   });
 
   test('set and remove', async () => {
-    const model = createTestObjectModel();
+    const { model, debug } = createTestObjectModel();
     const list = new OrderedList(model);
     expect(list.values).toHaveLength(0);
 
     await list.set(['a', 'b', 'c']);
     expect(list.values).toEqual(['a', 'b', 'c']);
+    expect(debug().seq).toBe(1);
 
     await list.set(['x', 'a']);
     expect(list.values).toEqual(['x', 'a', 'b', 'c']);
+    expect(debug().seq).toBe(2);
 
     await list.set(['b', 'y']);
     expect(list.values).toEqual(['x', 'a', 'b', 'y', 'c']);
+    expect(debug().seq).toBe(3);
 
     await list.remove(['x', 'y']);
     expect(list.values).toEqual(['a', 'b', 'c']);
+    expect(debug().seq).toBe(4);
   });
 });

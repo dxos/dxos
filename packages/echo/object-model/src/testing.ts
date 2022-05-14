@@ -12,6 +12,7 @@ import { ObjectMutationSet } from './proto';
 /**
  * Creates a testable model that performs mutation updates.
  */
+// TODO(burdon): Move to model-factory.
 export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID = 'test') => {
   const stateMachine = ObjectModel.meta.stateMachine();
 
@@ -28,5 +29,8 @@ export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID =
     };
   };
 
-  return new ObjectModel(ObjectModel.meta, itemId, () => stateMachine.getState(), mutationWriter);
+  return {
+    model: new ObjectModel(ObjectModel.meta, itemId, () => stateMachine.getState(), mutationWriter),
+    debug: () => ({ seq })
+  };
 };
