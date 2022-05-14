@@ -3,20 +3,20 @@
 //
 
 import { PublicKey } from '@dxos/crypto';
-import { FeedKey } from '@dxos/echo-protocol';
+import { FeedKey, ItemID } from '@dxos/echo-protocol';
 import { MutationWriter } from '@dxos/model-factory';
 
 import { ObjectModel } from './object-model';
+import { ObjectMutationSet } from './proto';
 
 /**
  * Creates a testable model that performs mutation updates.
  */
-export const createTestObjectModel = (itemId = 'test') => {
-  const key = PublicKey.random();
+export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID = 'test') => {
   const stateMachine = ObjectModel.meta.stateMachine();
 
   let seq = 0;
-  const mutationWriter: MutationWriter<any> = async (mutation: any) => {
+  const mutationWriter: MutationWriter<ObjectMutationSet> = async (mutation: ObjectMutationSet) => {
     return {
       feedKey: PublicKey.random() as FeedKey,
       seq: seq++,
