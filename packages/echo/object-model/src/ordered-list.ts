@@ -50,7 +50,7 @@ export class OrderedList {
   }
 
   async clear () {
-    await this._model.set(this._property, {}); // TODO(burdon): Allow set undefined.
+    await this._model.set(this._property, undefined);
     this.update();
     return this._values;
   }
@@ -73,7 +73,19 @@ export class OrderedList {
   }
 
   async remove (values: ItemID[]) {
-    // TODO(burdon): Create mutation.
+    // TODO(burdon): Create single mutation set.
+    for (const value of values) {
+      const map = this._model.get(this._property);
+      const left = Object.keys(map).find(key => map[key] === value);
+      const right = map[value];
+      if (right) {
+        await this._model.set(`${this._property}.${value}`, undefined);
+        if (left) {
+          await this._model.set(`${this._property}.${left}`, right);
+        }
+      }
+    }
+
     this.update();
     return this._values;
   }

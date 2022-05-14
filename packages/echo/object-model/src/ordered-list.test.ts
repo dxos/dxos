@@ -61,12 +61,7 @@ describe('OrderedList', () => {
     const values = list.values;
     expect(values).toHaveLength(0);
 
-    // TODO(burdon): Test setting multiple spans.
-
-    await list.set(['a', 'b']);
-    expect(list.values).toEqual(['a', 'b']);
-
-    await list.set(['b', 'c']);
+    await list.set(['a', 'b', 'c']);
     expect(list.values).toEqual(['a', 'b', 'c']);
 
     await list.set(['x', 'a']);
@@ -75,6 +70,7 @@ describe('OrderedList', () => {
     await list.set(['b', 'y']);
     expect(list.values).toEqual(['x', 'a', 'b', 'y', 'c']);
 
-    // TODO(burdon): Test remove.
+    await list.remove(['x', 'y']);
+    expect(list.values).toEqual(['a', 'b', 'c']);
   });
 });

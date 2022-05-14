@@ -5,6 +5,7 @@
 /* eslint-disable no-unused-vars */
 
 import assert from 'assert';
+import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
@@ -40,6 +41,29 @@ const SCALAR_TYPES = [
   Type.TIMESTAMP,
   Type.DATETIME
 ];
+
+/**
+ * Removes the potentially nested property.
+ */
+export const removeKey = (object: any, key: string) => {
+  const parts = key.split('.');
+
+  let sub = object;
+  if (parts.length > 1) {
+    for (let i = 0; i < parts.length; i++) {
+      const key = parts[i];
+      if (i === parts.length - 1) {
+        delete sub[key!];
+      } else {
+        sub = sub[key];
+      }
+    }
+  } else {
+    delete object[key];
+  }
+
+  return object;
+}
 
 /**
  * Represents a named property value.
@@ -159,22 +183,7 @@ export class ValueUtil {
 
     // Delete property.
     if (value === undefined) {
-      const parts = key.split('.');
-
-      let sub = object;
-      if (parts.length > 1) {
-        for (let i = 0; i < parts.length; i++) {
-          const key = parts[i];
-          if (i === parts.length - 1) {
-            delete sub[key!];
-          } else {
-            sub = sub[key];
-          }
-        }
-      } else {
-        delete object[key];
-      }
-      return object;
+      return removeKey(object, key);
     }
 
     // Apply object properties.
@@ -221,34 +230,35 @@ export class MutationUtil {
       }
 
       case ObjectMutation.Operation.DELETE: {
-        delete object[key!];
+        removeKey(object, key!);
         break;
       }
 
       case ObjectMutation.Operation.ARRAY_PUSH: {
-        const values = object[key!] || [];
+        const values = get(object, key!, []);
         values.push(ValueUtil.valueOf(value!));
-        object[key!] = values;
+        set(object, key!, values);
         break;
       }
 
       case ObjectMutation.Operation.SET_ADD: {
-        const set = new Set(object[key!] || []);
-        set.add(ValueUtil.valueOf(value!));
-        object[key!] = Array.from(set.values());
+        const values = new Set(get(object, key!, []));
+        values.add(ValueUtil.valueOf(value!));
+        set(object, key!, Array.from(values.values()));
         break;
       }
 
       case ObjectMutation.Operation.SET_DELETE: {
-        const set = new Set(object[key!] || []);
-        set.delete(ValueUtil.valueOf(value!));
-        object[key!] = Array.from(set.values());
+        const values = new Set(get(object, key!, []));
+        values.delete(ValueUtil.valueOf(value!));
+        set(object, key!, Array.from(values.values()));
         break;
       }
 
       // TODO(burdon): Other mutation types.
-      default:
+      default: {
         throw new Error(`Operation not implemented: ${operation}`);
+      }
     }
 
     return object;
