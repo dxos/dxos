@@ -73,7 +73,7 @@ describe('Mutations', () => {
     expect(object.title).toBe('DXOS');
   });
 
-  test('ValueUtil.applyValue dotted key', () => {
+  test('ValueUtil.applyValue nested keys', () => {
     {
       const object = ValueUtil.applyValue({}, 'foo.bar', ValueUtil.createMessage(100));
       expect(object).toEqual({ foo: { bar: 100 } });
