@@ -14,6 +14,19 @@ import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './pro
 export type ObjectModelState = Record<string, any>
 
 /**
+ * Keys must be valid object keys or dot s
+ */
+export const validateKey = (key: string) => {
+  const parts = key.split('.');
+  const valid = parts.every((part: string) => part.match(/^[a-zA-Z]\w*$/));
+  if (!valid) {
+    throw new Error(`Invalid key: ${key}`);
+  }
+
+  return key;
+};
+
+/**
  * Processes object mutations.
  */
 class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
@@ -105,12 +118,28 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     return new MutationBuilder(this);
   }
 
+  // TODO(burdon): Validate key.
+
   get (key: string, defaultValue: any = undefined) {
-    return this.getProperty(key, defaultValue);
+    validateKey(key);
+    return cloneDeep(get(this._getState(), key, defaultValue));
   }
 
   async set (key: string, value: any) {
-    await this.setProperty(key, value);
+    validateKey(key);
+    await this._makeMutation({
+      mutations: [
+        // NOTE: `null` is a legitimate value.
+        value === undefined ? {
+          operation: ObjectMutation.Operation.DELETE,
+          key
+        } : {
+          operation: ObjectMutation.Operation.SET,
+          key,
+          value: ValueUtil.createMessage(value)
+        }
+      ]
+    });
   }
 
   /**
@@ -118,7 +147,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    */
   // TODO(burdon): Remove.
   getProperty (key: string, defaultValue: any = undefined): any {
-    return cloneDeep(get(this._getState(), key, defaultValue));
+    return this.get(key, defaultValue);
   }
 
   /**
@@ -126,15 +155,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    */
   // TODO(burdon): Remove.
   async setProperty (key: string, value: any) {
-    await this._makeMutation({
-      mutations: [
-        {
-          operation: ObjectMutation.Operation.SET,
-          key,
-          value: ValueUtil.createMessage(value)
-        }
-      ]
-    });
+    await this.set(key, value);
   }
 
   /**

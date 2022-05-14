@@ -5,6 +5,7 @@
 /* eslint-disable no-unused-vars */
 
 import assert from 'assert';
+import set from 'lodash.set';
 
 import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
 
@@ -79,7 +80,7 @@ export class ValueUtil {
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
     } else {
-      throw Error(`Invalid value: ${value}`);
+      throw new Error(`Invalid value: ${value}`);
     }
   }
 
@@ -152,35 +153,50 @@ export class ValueUtil {
     return ValueUtil.applyValue(object, key!, value!);
   }
 
-  static applyValue (object: any, key: string, value: Value) {
+  static applyValue (object: any, key: string, value?: Value) {
     assert(object);
     assert(key);
-    assert(value);
 
-    // Remove property.
-    // TODO(burdon): Null should stay set; remove if undefined?
-    if (value[Type.NULL]) {
-      delete object[key];
+    // Delete property.
+    if (value === undefined) {
+      const parts = key.split('.');
+
+      let sub = object;
+      if (parts.length > 1) {
+        for (let i = 0; i < parts.length; i++) {
+          const key = parts[i];
+          if (i === parts.length - 1) {
+            delete sub[key!];
+          } else {
+            sub = sub[key];
+          }
+        }
+      } else {
+        delete object[key];
+      }
       return object;
     }
 
     // Apply object properties.
     if (value[Type.OBJECT]) {
-      object[key] = ValueUtil.getObjectValue(value[Type.OBJECT]!);
+      set(object, key, ValueUtil.getObjectValue(value[Type.OBJECT]!));
+      return object;
+    }
+
+    // Remove property.
+    if (value[Type.NULL]) {
+      set(object, key, null);
       return object;
     }
 
     // Apply scalars.
     const scalar = ValueUtil.getScalarValue(value);
     if (scalar !== undefined) {
-      object[key] = scalar;
+      set(object, key, scalar);
       return object;
     }
 
-    // Apply object.
-    // TODO(burdon): Throw or unset?
-    // code throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
-    delete object[key];
+    throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
   }
 }
 

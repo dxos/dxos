@@ -12,7 +12,6 @@ describe('Mutations', () => {
   test('ValueUtil', () => {
     {
       const message = ValueUtil.createMessage(null);
-
       expect(message).toStrictEqual({
         null: true
       });
@@ -22,8 +21,8 @@ describe('Mutations', () => {
       const message = ValueUtil.createMessage({
         name: 'DXOS',
         data: {
-          valueI: 1,
-          valueF: 2.02
+          value1: 1,
+          value2: 2.02
         }
       });
 
@@ -42,13 +41,13 @@ describe('Mutations', () => {
                 object: {
                   properties: [
                     {
-                      key: 'valueI',
+                      key: 'value1',
                       value: {
                         int: 1
                       }
                     },
                     {
-                      key: 'valueF',
+                      key: 'value2',
                       value: {
                         float: 2.02
                       }
@@ -65,13 +64,35 @@ describe('Mutations', () => {
 
   test('ValueUtil.applyValue null', () => {
     const object = ValueUtil.applyValue({ title: 'DXOS' }, 'title', ValueUtil.createMessage(null));
-    expect(object.title).toBeUndefined();
+    expect(object.title).toBe(null);
   });
 
   // TODO(burdon): Test other scalars.
   test('ValueUtil.applyValue scalars', () => {
     const object = ValueUtil.applyValue({}, 'title', ValueUtil.createMessage('DXOS'));
     expect(object.title).toBe('DXOS');
+  });
+
+  test('ValueUtil.applyValue dotted key', () => {
+    {
+      const object = ValueUtil.applyValue({}, 'foo.bar', ValueUtil.createMessage(100));
+      expect(object).toEqual({ foo: { bar: 100 } });
+    }
+
+    {
+      const object = ValueUtil.applyValue({ user: { name: 'test' } }, 'user.online', ValueUtil.createMessage(false));
+      expect(object).toEqual({ user: { name: 'test', online: false } });
+    }
+
+    {
+      const object = ValueUtil.applyValue({ user: { name: 'test', online: true } }, 'user.online', undefined);
+      expect(object).toEqual({ user: { name: 'test' } });
+    }
+
+    {
+      const object = ValueUtil.applyValue({ a: { b: { c: { d: 100 } } } }, 'a.b.c.d', undefined);
+      expect(object).toEqual({ a: { b: { c: {} } } });
+    }
   });
 
   test('ValueUtil.applyValue object', () => {

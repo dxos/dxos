@@ -47,6 +47,7 @@ export class MessengerModel extends Model<Message[], Message> {
       timestamp: Date.now().toString(),
       sender: message.sender
     });
+
     await receipt.waitToBeProcessed();
   }
 }
