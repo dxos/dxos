@@ -10,22 +10,9 @@ import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model
 
 import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
+import { validateKey } from './util';
 
 export type ObjectModelState = Record<string, any>
-
-/**
- * Keys must be valid object keys or dot s
- */
-export const validateKey = (key: string) => {
-  const parts = key.split('.');
-  // TODO(burdon): Currently used to store PublicKeys which may start with a number.
-  const valid = parts.every((part: string) => part.match(/^[a-zA-Z0-9]\w*$/));
-  if (!valid) {
-    throw new Error(`Invalid key: ${key}`);
-  }
-
-  return key;
-};
 
 /**
  * Processes object mutations.
@@ -118,8 +105,6 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
   builder () {
     return new MutationBuilder(this);
   }
-
-  // TODO(burdon): Validate key.
 
   get (key: string, defaultValue: any = undefined) {
     validateKey(key);

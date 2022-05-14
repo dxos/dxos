@@ -7,13 +7,15 @@ import expect from 'expect';
 // TODO(burdon): Rename TestRig and/or move to separate package.
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-import { ObjectModel, validateKey } from './object-model';
+import { ObjectModel } from './object-model';
+import { validateKey } from './util';
 
 describe('ObjectModel', () => {
   it('checks valid keys', () => {
     const valid = [
       'x',
       'foo',
+      'foo_bar',
       'foo.bar'
     ];
     for (const key of valid) {
@@ -24,7 +26,6 @@ describe('ObjectModel', () => {
       '',
       ' ',
       '@',
-      // '9', // TODO(burdon): Currently allowed to support PublicKeys as keys.
       'foo bar',
       '.foo',
       'foo.',

@@ -9,3 +9,4 @@ export * from './mutation';
 export * from './object-model';
 export * from './ordered-list';
 export * from './text-index';
+export * from './util';

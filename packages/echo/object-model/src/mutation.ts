@@ -9,6 +9,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
+import { removeKey } from './util';
 
 /**
  * @typedef {Object} Value
@@ -41,29 +42,6 @@ const SCALAR_TYPES = [
   Type.TIMESTAMP,
   Type.DATETIME
 ];
-
-/**
- * Removes the potentially nested property.
- */
-export const removeKey = (object: any, key: string) => {
-  const parts = key.split('.');
-
-  let sub = object;
-  if (parts.length > 1) {
-    for (let i = 0; i < parts.length; i++) {
-      const key = parts[i];
-      if (i === parts.length - 1) {
-        delete sub[key!];
-      } else {
-        sub = sub[key];
-      }
-    }
-  } else {
-    delete object[key];
-  }
-
-  return object;
-};
 
 /**
  * Represents a named property value.
