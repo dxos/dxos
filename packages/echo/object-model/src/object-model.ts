@@ -18,7 +18,8 @@ export type ObjectModelState = Record<string, any>
  */
 export const validateKey = (key: string) => {
   const parts = key.split('.');
-  const valid = parts.every((part: string) => part.match(/^[a-zA-Z]\w*$/));
+  // TODO(burdon): Currently used to store PublicKeys which may start with a number.
+  const valid = parts.every((part: string) => part.match(/^[a-zA-Z0-9]\w*$/));
   if (!valid) {
     throw new Error(`Invalid key: ${key}`);
   }

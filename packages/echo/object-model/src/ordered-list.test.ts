@@ -57,9 +57,7 @@ describe('OrderedList', () => {
   test('set and remove', async () => {
     const model = createTestObjectModel();
     const list = new OrderedList(model);
-
-    const values = list.values;
-    expect(values).toHaveLength(0);
+    expect(list.values).toHaveLength(0);
 
     await list.set(['a', 'b', 'c']);
     expect(list.values).toEqual(['a', 'b', 'c']);
