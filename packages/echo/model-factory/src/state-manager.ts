@@ -13,9 +13,16 @@ import {
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
-import { StateMachine, MutationProcessMeta } from './state-machine';
 import {
-  ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf
+  ModelConstructor,
+  ModelMessage,
+  ModelMeta,
+  ModelType,
+  MutationOf,
+  MutationWriteReceipt,
+  MutationProcessMeta,
+  StateOf,
+  StateMachine
 } from './types';
 
 const log = debug('dxos:model-factory:state-manager');
@@ -111,7 +118,7 @@ export class StateManager<M extends Model> {
     }
 
     // Construct and enqueue an optimistic mutation.
-    const mutationEncoded = this.modelMeta.mutation.encode(mutation);
+    const mutationEncoded = this._modelMeta!.mutationCodec.encode(mutation);
     const optimisticMutation: OptimisticMutation = {
       mutation: mutationEncoded,
       meta: {
@@ -139,6 +146,7 @@ export class StateManager<M extends Model> {
     );
 
     // Sanity checks.
+    // TODO(burdon): Log.
     void processed.then(() => {
       if (!optimisticMutation.receipt) {
         console.error(`Optimistic mutation was processed without being confirmed: ${this._itemId}/${mutation.type}`);
@@ -174,18 +182,20 @@ export class StateManager<M extends Model> {
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      const mutationDecoded = this.modelMeta.mutation.decode(mutation.mutation);
+      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation);
       this._stateMachine.process(mutationDecoded, { author: PublicKey.from(mutation.meta.memberKey) });
     }
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), { author: PublicKey.from(mutation.meta.memberKey) });
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), {
+        author: PublicKey.from(mutation.meta.memberKey)
+      });
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(this._modelMeta.mutation.decode(mutation.mutation), mutation.meta);
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), mutation.meta);
     }
   }
 
@@ -238,7 +248,7 @@ export class StateManager<M extends Model> {
       } else if (optimisticIndex === -1) {
         log(`Apply ${JSON.stringify(meta)}`);
         // Mutation can safely be append at the end preserving order.
-        const mutationDecoded = this.modelMeta.mutation.decode(mutation);
+        const mutationDecoded = this._modelMeta!.mutationCodec.decode(mutation);
         this._stateMachine!.process(mutationDecoded, { author: PublicKey.from(meta.memberKey) });
         this._model!.update.emit(this._model!);
       }

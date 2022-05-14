@@ -77,8 +77,8 @@ export interface ObjectProperties {
 export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
-    mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
     stateMachine: () => new ObjectModelStateMachine(),
+    mutationCodec: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
