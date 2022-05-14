@@ -14,13 +14,15 @@ import { ObjectMutationSet } from './proto';
  */
 // TODO(burdon): Move to model-factory.
 export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID = 'test') => {
-  const stateMachine = ObjectModel.meta.stateMachine();
+  const debug = {
+    seq: 0
+  };
 
-  let seq = 0;
+  const stateMachine = ObjectModel.meta.stateMachine();
   const mutationWriter: MutationWriter<ObjectMutationSet> = async (mutation: ObjectMutationSet) => {
     return {
       feedKey: PublicKey.random() as FeedKey,
-      seq: seq++,
+      seq: debug.seq++,
       waitToBeProcessed: async () => {
         stateMachine.process(mutation, {
           author: key
@@ -31,6 +33,6 @@ export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID =
 
   return {
     model: new ObjectModel(ObjectModel.meta, itemId, () => stateMachine.getState(), mutationWriter),
-    debug: () => ({ seq })
+    debug
   };
 };

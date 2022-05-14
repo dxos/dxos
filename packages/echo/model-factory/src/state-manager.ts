@@ -7,12 +7,16 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
+import {
+  FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
+} from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
 import { StateMachine, MutationProcessMeta } from './state-machine';
-import { ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf } from './types';
+import {
+  ModelConstructor, ModelMessage, ModelMeta, ModelType, MutationOf, MutationWriteReceipt, StateOf
+} from './types';
 
 const log = debug('dxos:model-factory:state-manager');
 
@@ -64,7 +68,7 @@ export class StateManager<M extends Model> {
 
   /**
    * @param modelConstructor Can be undefined if the registry currently doesn't have this model loaded,
-   *                         in which case it may be initialized later.
+   *  in which case it may be initialized later.
    */
   constructor (
     private readonly _modelType: ModelType,

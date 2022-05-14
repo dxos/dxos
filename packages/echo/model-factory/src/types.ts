@@ -10,10 +10,10 @@ import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-prot
 import { Model } from './model';
 import { StateMachine } from './state-machine';
 
-// TODO(burdon): Replace with DXN.
+// TODO(burdon): Replace with DXN (push to core protocol def).
 export type ModelType = string
 
-// TODO(burdon): Refactor.
+// TODO(burdon): Rethink this concept. Remove static field.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
@@ -36,13 +36,14 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   getInitMutation? (props: any): Promise<any | null>
 }
 
-export type ModelConstructor<M extends Model> = (new (
-  meta: ModelMeta,
-  itemId: ItemID,
-  getState: () => StateOf<M>,
-  MutationWriter?: MutationWriter<MutationOf<M>>,
-) => M) &
-  { meta: ModelMeta };
+export type ModelConstructor<M extends Model> = (
+  new (
+    meta: ModelMeta,
+    itemId: ItemID,
+    getState: () => StateOf<M>,
+    MutationWriter?: MutationWriter<MutationOf<M>>,
+  ) => M
+) & { meta: ModelMeta };
 
 export type ModelMessage<T> = {
   meta: MutationMetaWithTimeframe,
@@ -51,6 +52,7 @@ export type ModelMessage<T> = {
 
 export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
+
   // TODO(burdon): Convert to assert (too verbose).
   if (!model.meta) {
     throw new TypeError('Invalid model: missing static `meta` field.');

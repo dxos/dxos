@@ -257,7 +257,7 @@ export class MutationUtil {
       key,
       value: ValueUtil.createMessage(value)
     };
-  };
+  }
 
   /**
    * Create field mutations.

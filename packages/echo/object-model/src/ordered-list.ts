@@ -63,7 +63,7 @@ export class OrderedList {
       const current = this._model.get(key);
       builder.set(key, value);
       if (current) {
-        builder.set(`${this._property}.${value}`, current)
+        builder.set(`${this._property}.${value}`, current);
       }
       left = value;
     }

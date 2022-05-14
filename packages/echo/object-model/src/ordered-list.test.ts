@@ -61,18 +61,18 @@ describe('OrderedList', () => {
 
     await list.set(['a', 'b', 'c']);
     expect(list.values).toEqual(['a', 'b', 'c']);
-    expect(debug().seq).toBe(1);
+    expect(debug.seq).toBe(1);
 
     await list.set(['x', 'a']);
     expect(list.values).toEqual(['x', 'a', 'b', 'c']);
-    expect(debug().seq).toBe(2);
+    expect(debug.seq).toBe(2);
 
     await list.set(['b', 'y']);
     expect(list.values).toEqual(['x', 'a', 'b', 'y', 'c']);
-    expect(debug().seq).toBe(3);
+    expect(debug.seq).toBe(3);
 
     await list.remove(['x', 'y']);
     expect(list.values).toEqual(['a', 'b', 'c']);
-    expect(debug().seq).toBe(4);
+    expect(debug.seq).toBe(4);
   });
 });
