@@ -3,20 +3,19 @@
 //
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
+import { $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand, LexicalEditor } from 'lexical';
 import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
 
 export const INSERT_FRAME_COMMAND: LexicalCommand<void> = createCommand();
 
-const useFrame = (editor) => {
+const useFrame = (editor: LexicalEditor) => {
   useEffect(() => {
     // https://lexical.dev/docs/concepts/commands
     editor.registerCommand(
       INSERT_FRAME_COMMAND,
       () => {
-        // TODO(burdon): Trigger command.
         editor.update(() => {
+          // TODO(burdon): Insert ElementNode.
           const selection = $getSelection();
           console.log(selection);
           // const nodes = selection.getNodes();

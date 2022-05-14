@@ -7,9 +7,32 @@ import { $getSelection, $isRangeSelection } from 'lexical';
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
+import { INSERT_FRAME_COMMAND } from '../FramePlugin';
+
+// TODO(burdon): Config from map.
+const isInsertFrame = (event: KeyboardEvent) => {
+  const { key, metaKey } = event;
+  return metaKey && key === 'i';
+}
+
 const Menu = () => {
   const [editor] = useLexicalComposerContext();
   const divRef = useRef<HTMLDivElement | null>(null);
+
+  // Keyboard event handlers.
+  useEffect(() => {
+    const root = editor.getRootElement();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isInsertFrame(event)) {
+        editor.dispatchCommand(INSERT_FRAME_COMMAND, {});
+      }
+    };
+
+    root?.addEventListener('keydown', handleKeyDown);
+    return () => {
+      root?.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [editor]);
 
   // TODO(burdon): Show menu in sidebar.
   // TODO(burdon): Fix scrollling.
