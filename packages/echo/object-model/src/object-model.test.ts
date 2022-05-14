@@ -11,12 +11,25 @@ import { ObjectModel, validateKey } from './object-model';
 
 describe('ObjectModel', () => {
   it('checks valid keys', () => {
-    const valid = ['x', 'foo', 'foo.bar'];
+    const valid = [
+      'x',
+      'foo',
+      'foo.bar'
+    ];
     for (const key of valid) {
       expect(validateKey(key)).toEqual(key);
     }
 
-    const invalid = ['', ' ', 'foo bar', 'foo.', 'foo..bar', '$', '9'];
+    const invalid = [
+      '',
+      ' ',
+      '@',
+      // '9', // TODO(burdon): Currently allowed to support PublicKeys as keys.
+      'foo bar',
+      '.foo',
+      'foo.',
+      'foo..bar'
+    ];
     for (const key of invalid) {
       expect(() => validateKey(key)).toThrow();
     }
