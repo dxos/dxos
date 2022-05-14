@@ -54,7 +54,7 @@ export interface StateMachine<TState, TMutation, TSnapshot> {
 /**
  * Model configuration.
  */
-// TODO(burdon): Rethink this concept. Remove static field.
+// TODO(burdon): Rethink this concept. Remove static field from model.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
