@@ -7,7 +7,7 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from './object-model';
 
 /**
- *
+ * Utility class that wraps an `ObjectModel` and implements a linked list via key-values on a given property.
  */
 export class OrderedList {
   private _values: ItemID[] = [];
@@ -19,14 +19,17 @@ export class OrderedList {
     this.update();
   }
 
+  /**
+   * Get ordered values.
+   */
   get values () {
     return this._values;
   }
 
   /**
-   * Reload list from properties.
+   * Refresh list from properties.
    */
-  // TODO(burdon): More tests for edge cases.
+  // TODO(burdon): Add more tests for edge cases.
   update () {
     this._values = [];
     const properties = this._model.get(this._property) ?? {};
@@ -38,11 +41,15 @@ export class OrderedList {
         // [a, b, c] + [x, y] => [a, b, c, x, y]
         this._values.splice(this._values.length, 0, left as ItemID, right as ItemID);
       } else if (i === -1) {
-        // [a, b, c] + [x, b] => [a, x, b, c]     # i === -1 j ===  1
+        // Merge to the left.
+        // [a, b, c] + [x, b] => [a, x, b, c] (i === -1; j ===  1)
         this._values.splice(j, 1, left as ItemID, right as ItemID);
       } else if (j === -1) {
-        // [a, b, c] + [b, x] => [a, b, x, c]     # i ===  1 j === -1
+        // Merge to the right.
+        // [a, b, c] + [b, x] => [a, b, x, c] (i ===  1; j === -1)
         this._values.splice(i, 1, left as ItemID, right as ItemID);
+      } else {
+        // TODO(burdon): If both defined then may need to break existing links.
       }
     }
 
