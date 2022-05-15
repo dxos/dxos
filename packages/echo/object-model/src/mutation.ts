@@ -5,8 +5,11 @@
 /* eslint-disable no-unused-vars */
 
 import assert from 'assert';
+import get from 'lodash.get';
+import set from 'lodash.set';
 
 import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
+import { removeKey } from './util';
 
 /**
  * @typedef {Object} Value
@@ -39,6 +42,8 @@ const SCALAR_TYPES = [
   Type.TIMESTAMP,
   Type.DATETIME
 ];
+
+// TODO(burdon): Reorganize functions.
 
 /**
  * Represents a named property value.
@@ -79,7 +84,7 @@ export class ValueUtil {
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
     } else {
-      throw Error(`Invalid value: ${value}`);
+      throw new Error(`Invalid value: ${value}`);
     }
   }
 
@@ -152,35 +157,35 @@ export class ValueUtil {
     return ValueUtil.applyValue(object, key!, value!);
   }
 
-  static applyValue (object: any, key: string, value: Value) {
+  static applyValue (object: any, key: string, value?: Value) {
     assert(object);
     assert(key);
-    assert(value);
 
-    // Remove property.
-    // TODO(burdon): Null should stay set; remove if undefined?
-    if (value[Type.NULL]) {
-      delete object[key];
-      return object;
+    // Delete property.
+    if (value === undefined) {
+      return removeKey(object, key);
     }
 
     // Apply object properties.
     if (value[Type.OBJECT]) {
-      object[key] = ValueUtil.getObjectValue(value[Type.OBJECT]!);
+      set(object, key, ValueUtil.getObjectValue(value[Type.OBJECT]!));
+      return object;
+    }
+
+    // Remove property.
+    if (value[Type.NULL]) {
+      set(object, key, null);
       return object;
     }
 
     // Apply scalars.
     const scalar = ValueUtil.getScalarValue(value);
     if (scalar !== undefined) {
-      object[key] = scalar;
+      set(object, key, scalar);
       return object;
     }
 
-    // Apply object.
-    // TODO(burdon): Throw or unset?
-    // code throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
-    delete object[key];
+    throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
   }
 }
 
@@ -205,44 +210,59 @@ export class MutationUtil {
       }
 
       case ObjectMutation.Operation.DELETE: {
-        delete object[key!];
+        removeKey(object, key!);
         break;
       }
 
       case ObjectMutation.Operation.ARRAY_PUSH: {
-        const values = object[key!] || [];
+        const values = get(object, key!, []);
         values.push(ValueUtil.valueOf(value!));
-        object[key!] = values;
+        set(object, key!, values);
         break;
       }
 
       case ObjectMutation.Operation.SET_ADD: {
-        const set = new Set(object[key!] || []);
-        set.add(ValueUtil.valueOf(value!));
-        object[key!] = Array.from(set.values());
+        const values = new Set(get(object, key!, []));
+        values.add(ValueUtil.valueOf(value!));
+        set(object, key!, Array.from(values.values()));
         break;
       }
 
       case ObjectMutation.Operation.SET_DELETE: {
-        const set = new Set(object[key!] || []);
-        set.delete(ValueUtil.valueOf(value!));
-        object[key!] = Array.from(set.values());
+        const values = new Set(get(object, key!, []));
+        values.delete(ValueUtil.valueOf(value!));
+        set(object, key!, Array.from(values.values()));
         break;
       }
 
       // TODO(burdon): Other mutation types.
-      default:
+      default: {
         throw new Error(`Operation not implemented: ${operation}`);
+      }
     }
 
     return object;
   }
-}
 
-export function createMultiFieldMutationSet (object: any): ObjectMutation[] {
-  return Object.entries(object).map(([key, value]) => ({
-    operation: ObjectMutation.Operation.SET,
-    key,
-    value: ValueUtil.createMessage(value)
-  }));
+  /**
+   * Create single field mutation.
+   */
+  static createFieldMutation (key: string, value: any): ObjectMutation {
+    return value === undefined ? {
+      // NOTE: `null` is a legitimate value.
+      operation: ObjectMutation.Operation.DELETE,
+      key
+    } : {
+      operation: ObjectMutation.Operation.SET,
+      key,
+      value: ValueUtil.createMessage(value)
+    };
+  }
+
+  /**
+   * Create field mutations.
+   */
+  static createMultiFieldMutation (object: any): ObjectMutation[] {
+    return Object.entries(object).map(([key, value]) => MutationUtil.createFieldMutation(key, value));
+  }
 }

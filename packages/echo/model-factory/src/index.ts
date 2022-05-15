@@ -6,5 +6,4 @@ export * from './model';
 export * from './model-factory';
 export * from './testing';
 export * from './types';
-export * from './state-machine';
 export * from './state-manager';

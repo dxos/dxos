@@ -61,6 +61,7 @@ export abstract class Model<TState = any, TMutation = any> {
     if (!this._mutationWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
+
     return this._mutationWriter(mutation);
   }
 }
