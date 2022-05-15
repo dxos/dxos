@@ -56,12 +56,18 @@ export class OrderedList {
     return this;
   }
 
+  /**
+   * Clears the ordered set.
+   */
   async clear () {
     await this._model.set(this._property, undefined);
     this.update();
     return this._values;
   }
 
+  /**
+   * Links the ordered items, possibly linking them to existing items.
+   */
   async set (values: ItemID[]) {
     let [left, ...rest] = values;
     const builder = this._model.builder();
@@ -80,6 +86,9 @@ export class OrderedList {
     return this._values;
   }
 
+  /**
+   * Removes the given element, possibly linked currently connected items.
+   */
   async remove (values: ItemID[]) {
     const builder = this._model.builder();
     for (const value of values) {
