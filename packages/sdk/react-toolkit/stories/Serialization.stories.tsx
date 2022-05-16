@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider } from '@dxos/react-client';
+import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 
 import { usePartySerializer } from '../src';

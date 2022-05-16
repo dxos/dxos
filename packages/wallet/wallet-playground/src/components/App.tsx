@@ -8,7 +8,7 @@ import { Button } from '@mui/material';
 
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
+import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
 const App = () => {
   const client = useClient();

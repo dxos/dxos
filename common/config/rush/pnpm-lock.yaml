@@ -516,8 +516,9 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@mui/icons-material': ^5.4.2
       '@mui/material': ^5.4.2
       '@types/mocha': ~8.2.2
@@ -537,7 +538,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
       '@mui/material': 5.4.2_5539cae010396b202b015f3568914e95
       react: 17.0.2
@@ -547,6 +548,7 @@ importers:
       '@dxos/esbuild-plugins': 2.28.7
       '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
       '@types/react': 17.0.37
@@ -579,9 +581,9 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
-      '@dxos/react-gem-components': workspace:*
+      '@dxos/react-echo-graph': workspace:*
       '@dxos/react-ipfs': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
@@ -635,9 +637,9 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
-      '@dxos/react-gem-components': link:../../sdk/react-gem-components
+      '@dxos/react-echo-graph': link:../../sdk/react-echo-graph
       '@dxos/react-ipfs': link:../../sdk/react-ipfs
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
@@ -697,8 +699,9 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/text-model': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
@@ -735,7 +738,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/text-model': link:../../echo/text-model
       '@lexical/hashtag': 0.2.5_lexical@0.2.5
       '@lexical/list': 0.2.5_lexical@0.2.5
@@ -752,6 +755,7 @@ importers:
       '@dxos/esbuild-plugins': 2.28.7
       '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
@@ -784,7 +788,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.4.2
@@ -815,7 +819,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
@@ -866,7 +870,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
       '@emotion/react': ^11.4.1
@@ -902,7 +906,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
@@ -955,7 +959,7 @@ importers:
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -999,7 +1003,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
@@ -1051,7 +1055,7 @@ importers:
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -1075,7 +1079,7 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
       '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
@@ -2398,6 +2402,7 @@ importers:
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.4.2
       '@testing-library/react': ^11.0.4
@@ -2433,6 +2438,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.3
@@ -2525,8 +2531,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
       '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/gem-core': ~2.2.1-beta.11
-      '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/protocols-toolchain': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.4.1
@@ -2563,8 +2567,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
-      '@dxos/gem-spore': 2.2.1-beta.11_3f3895dcf7ed96cd12c4ac345221265f
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
       lodash.defaultsdeep: 4.6.1
@@ -2604,110 +2606,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       typescript: 4.5.3
 
-  ../../packages/sdk/react-framework:
-    specifiers:
-      '@babel/core': ~7.13.15
-      '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
-      '@dxos/bot-factory-client': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.7
-      '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-registry-client': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      '@mui/icons-material': ^5.4.2
-      '@mui/lab': ^5.0.0-alpha.69
-      '@mui/material': ^5.4.2
-      '@mui/system': ^5.4.2
-      '@types/debug': ^4.1.7
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.isplainobject': ^4.0.6
-      '@types/node': ^14.0.9
-      '@types/react': ^17.0.24
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/url-join': ~4.0.1
-      '@types/uuid': ~8.3.3
-      assert: ^2.0.0
-      babel-plugin-add-module-exports: ^1.0.4
-      debug: ^4.3.3
-      eslint: ^7.12.1
-      lodash.defaultsdeep: ^4.6.1
-      lodash.isplainobject: ^4.0.6
-      mobile-detect: ~1.4.5
-      react: ^17.0.2
-      react-copy-to-clipboard: ~5.0.3
-      react-dom: ^17.0.2
-      typescript: ^4.5.2
-      url-join: ^4.0.1
-      uuid: ^8.3.2
-    dependencies:
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-registry-client': link:../react-registry-client
-      '@emotion/css': 11.7.1_@babel+core@7.13.16
-      assert: 2.0.0
-      debug: 4.3.3
-      lodash.defaultsdeep: 4.6.1
-      lodash.isplainobject: 4.0.6
-      mobile-detect: 1.4.5
-      react-copy-to-clipboard: 5.0.4_react@17.0.2
-      url-join: 4.0.1
-      uuid: 8.3.2
-    devDependencies:
-      '@babel/core': 7.13.16
-      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
-      '@dxos/async': link:../../common/async
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
-      '@dxos/client': link:../client
-      '@dxos/config': link:../config
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/echo-protocol': link:../../echo/echo-protocol
-      '@dxos/esbuild-plugins': 2.28.7
-      '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
-      '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/react-client': link:../react-client
-      '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components': link:../react-components
-      '@dxos/registry-client': link:../registry-client
-      '@emotion/react': 11.7.1_c8f47004f4d29cd7909f1411b83f7eb5
-      '@emotion/styled': 11.6.0_47998c3e8508a45b38fb77cebaf0aa14
-      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
-      '@mui/lab': 5.0.0-alpha.69_84b4b9670a6fb5a5b5566d79c2335561
-      '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
-      '@mui/system': 5.4.2_ef966af889ffc4849e7222692314a033
-      '@types/debug': 4.1.7
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.isplainobject': 4.0.6
-      '@types/node': 14.18.0
-      '@types/react': 17.0.37
-      '@types/react-copy-to-clipboard': 5.0.2
-      '@types/url-join': 4.0.1
-      '@types/uuid': 8.3.3
-      babel-plugin-add-module-exports: 1.0.4
-      eslint: 7.32.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      typescript: 4.5.3
-
-  ../../packages/sdk/react-gem-components:
+  ../../packages/sdk/react-echo-graph:
     specifiers:
       '@babel/core': ~7.13.15
       '@dxos/async': workspace:*
@@ -2842,6 +2741,109 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       typescript: 4.5.3
 
+  ../../packages/sdk/react-toolkit:
+    specifiers:
+      '@babel/core': ~7.13.15
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
+      '@dxos/esbuild-plugins': ~2.28.7
+      '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-registry-client': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@mui/icons-material': ^5.4.2
+      '@mui/lab': ^5.0.0-alpha.69
+      '@mui/material': ^5.4.2
+      '@mui/system': ^5.4.2
+      '@types/debug': ^4.1.7
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ^4.0.6
+      '@types/node': ^14.0.9
+      '@types/react': ^17.0.24
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/url-join': ~4.0.1
+      '@types/uuid': ~8.3.3
+      assert: ^2.0.0
+      babel-plugin-add-module-exports: ^1.0.4
+      debug: ^4.3.3
+      eslint: ^7.12.1
+      lodash.defaultsdeep: ^4.6.1
+      lodash.isplainobject: ^4.0.6
+      mobile-detect: ~1.4.5
+      react: ^17.0.2
+      react-copy-to-clipboard: ~5.0.3
+      react-dom: ^17.0.2
+      typescript: ^4.5.2
+      url-join: ^4.0.1
+      uuid: ^8.3.2
+    dependencies:
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-registry-client': link:../react-registry-client
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      assert: 2.0.0
+      debug: 4.3.3
+      lodash.defaultsdeep: 4.6.1
+      lodash.isplainobject: 4.0.6
+      mobile-detect: 1.4.5
+      react-copy-to-clipboard: 5.0.4_react@17.0.2
+      url-join: 4.0.1
+      uuid: 8.3.2
+    devDependencies:
+      '@babel/core': 7.13.16
+      '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
+      '@dxos/async': link:../../common/async
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/client': link:../client
+      '@dxos/config': link:../config
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/esbuild-plugins': 2.28.7
+      '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
+      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/react-client': link:../react-client
+      '@dxos/react-client-testing': link:../react-client-testing
+      '@dxos/react-components': link:../react-components
+      '@dxos/registry-client': link:../registry-client
+      '@emotion/react': 11.8.2_c8f47004f4d29cd7909f1411b83f7eb5
+      '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
+      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
+      '@mui/lab': 5.0.0-alpha.69_3dbd8f7a3f715159251f1a8d08e97be5
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
+      '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
+      '@types/debug': 4.1.7
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.isplainobject': 4.0.6
+      '@types/node': 14.18.0
+      '@types/react': 17.0.37
+      '@types/react-copy-to-clipboard': 5.0.2
+      '@types/url-join': 4.0.1
+      '@types/uuid': 8.3.3
+      babel-plugin-add-module-exports: 1.0.4
+      eslint: 7.32.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.5.3
+
   ../../packages/sdk/registry-client:
     specifiers:
       '@dxos/client': workspace:*
@@ -2930,7 +2932,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
       '@hot-loader/react-dom': 17.0.1
@@ -2971,7 +2973,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       '@hot-loader/react-dom': 17.0.1_react@17.0.2
@@ -3018,7 +3020,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-framework': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@mui/icons-material': ^5.4.2
       '@mui/material': ^5.4.2
       '@types/react': ^17.0.24
@@ -3033,7 +3035,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-framework': link:../../sdk/react-framework
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
       '@mui/material': 5.4.2_5539cae010396b202b015f3568914e95
       react: 17.0.2
@@ -10855,13 +10857,13 @@ packages:
       fill-range: 7.0.1
 
   /brorand/1.1.0:
-    resolution: {integrity: sha1-EsJe/kCkXjwyPrhnWgoM5XsiNx8=}
+    resolution: {integrity: sha512-cKV8tMCEpQs4hK/ik71d6LrPOnpkpGBR0wzxqr68g2m/LB2GxVYQroAjMJZRVM1Y4BCjCKc3vAamxSzOY2RP+w==}
 
   /browser-mocha/1.4.8:
     resolution: {integrity: sha1-xHfIyTA7Or3stAO7qCoXxQmWQt0=}
     dependencies:
       debug: 2.6.9
-      ejs: 3.1.7
+      ejs: 3.1.8
       wd-exec: 1.1.6
     dev: true
 
@@ -10998,7 +11000,7 @@ packages:
     dev: false
 
   /buffer-xor/1.0.3:
-    resolution: {integrity: sha1-JuYe0UIvtw3ULm42cp7VHYVf6Nk=}
+    resolution: {integrity: sha512-571s0T7nZWK6vB67HI5dyUF7wXiNcfaPPPTl6zYCNApANjIvYJTg7hlud/+cJpdAhS7dVzqMLmfhfHR3rAcOjQ==}
 
   /buffer/4.9.2:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
@@ -13343,8 +13345,8 @@ packages:
     requiresBuild: true
     dev: false
 
-  /ejs/3.1.7:
-    resolution: {integrity: sha512-BIar7R6abbUxDA3bfXrO4DSgwo8I+fB5/1zgujl3HLLjwd6+9iOnrT+t3grn2qbk9vOgBubXOFwX2m9axoFaGw==}
+  /ejs/3.1.8:
+    resolution: {integrity: sha512-/sXZeMlhS0ArkfX2Aw780gJzXSMPnKjtspYZv+f3NiKLlubezAHDU5+9xz6gd3/NhG3txQCo6xlglmTS+oTGEQ==}
     engines: {node: '>=0.10.0'}
     hasBin: true
     dependencies:
@@ -22217,7 +22219,7 @@ packages:
       react: ^15.3.0 || ^16.0.0 || ^17.0.0
     dependencies:
       copy-to-clipboard: 3.3.1
-      prop-types: 15.7.2
+      prop-types: 15.8.1
       react: 17.0.2
     dev: false
 

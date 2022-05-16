@@ -7,12 +7,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
-import {
-  ClientProvider,
-  ProfileInitializer,
-  useClient,
-  useParties
-} from '@dxos/react-client';
+import { ClientProvider, useClient, useParties } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { IRegistryClient } from '@dxos/registry-client';
@@ -21,7 +17,7 @@ import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
 import { Column, createMockRegistryWithBots } from './helpers';
 
 export default {
-  title: 'react-framework/PartySharing'
+  title: 'react-toolkit/PartySharing'
 };
 
 const Parties = () => {

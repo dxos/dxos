@@ -8,7 +8,7 @@ import React, { FunctionComponent, ReactNode, useContext, useEffect } from 'reac
 import { ErrorIndicatorProps } from '../../components';
 import { ErrorContext } from '../../hooks';
 
-const error = debug('dxos:react-framework:error');
+const error = debug('dxos:react-toolkit:error');
 
 // TODO(burdon): Override if dev-only?
 const logError = (f: string, ...args: any[]) => error.enabled ? error(f, ...args) : console.error(f, ...args);

@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
-import { JoinHaloDialog, ProfileDialog } from '@dxos/react-framework';
+import { JoinHaloDialog, ProfileDialog } from '@dxos/react-toolkit';
 
 import { Main } from './Main';
 

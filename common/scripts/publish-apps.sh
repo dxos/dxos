@@ -14,7 +14,7 @@ for APP_PATH in \
   "packages/devtools/devtools-mesh" \
   "packages/sdk/react-client" \
   "packages/sdk/react-components" \
-  "packages/sdk/react-framework" \
+  "packages/sdk/react-toolkit" \
   "packages/sdk/react-registry-client" \
   "packages/wallet/wallet-playground"
 do
