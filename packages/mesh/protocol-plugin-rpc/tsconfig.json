@@ -15,25 +15,25 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/crypto"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../protocol"
     },
     {
       "path": "../../common/rpc"
     },
     {
-      "path": "../../common/testutils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../network-manager"
     },
     {
-      "path": "../protocol"
+      "path": "../../common/testutils"
     }
   ]
 }
