@@ -6,11 +6,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src",
