@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lexical-editor",
-  "version": "2.31.7",
+  "version": "2.31.8",
   "private": true,
   "description": "Lexical text editor.",
   "license": "MIT",

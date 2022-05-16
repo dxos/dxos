@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.31.8](https://www.github.com/dxos/protocols/compare/v2.31.7...v2.31.8) (2022-05-16)
+
+
+### Features
+
+* ordered list for object model. ([#1185](https://www.github.com/dxos/protocols/issues/1185)) ([37cee8c](https://www.github.com/dxos/protocols/commit/37cee8c4a15c1f2abe617bb3ca08263617452ab7))
+
+
+### Bug Fixes
+
+* demo lexical editor with text model. ([#1174](https://www.github.com/dxos/protocols/issues/1174)) ([dcd68d5](https://www.github.com/dxos/protocols/commit/dcd68d504db0b14c4836ec4d157534d3d4e273c4))
+
 ### [2.31.7](https://www.github.com/dxos/protocols/compare/v2.31.6...v2.31.7) (2022-05-05)
 
 
