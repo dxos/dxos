@@ -7,9 +7,6 @@
     "src/**/*",
     "src/proto/*.json"
   ],
-  "types": [
-    "jest"
-  ],
   "references": [
     {
       "path": "../network-generator"
@@ -17,5 +14,8 @@
     {
       "path": "../protocol"
     }
+  ],
+  "types": [
+    "jest"
   ]
 }

@@ -709,6 +709,8 @@ importers:
       '@lexical/table': ~0.2.5
       '@lexical/utils': ~0.2.5
       '@lexical/yjs': ~0.2.5
+      '@mui/icons-material': ^5.4.2
+      '@mui/material': ^5.4.2
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -740,6 +742,8 @@ importers:
       '@lexical/table': 0.2.5_lexical@0.2.5
       '@lexical/utils': 0.2.5_lexical@0.2.5
       '@lexical/yjs': 0.2.5_lexical@0.2.5+yjs@13.5.22
+      '@mui/icons-material': 5.4.2_f0e146d691e4307f4ee97de236b0b416
+      '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
       lexical: 0.2.5
       y-protocols: 1.0.5
       yjs: 13.5.22
@@ -7198,7 +7202,6 @@ packages:
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
       react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
-    dev: true
 
   /@mui/material/5.4.2_fa2645acd9a035406d0184711710de51:
     resolution: {integrity: sha512-jmeLWEO6AA6g7HErhI3MXVGaMZtqDZjDwcHCg24WY954wO38Xn0zJ53VfpFc44ZTJLV9Ejd7ci9fLlG/HmJCeg==}
@@ -7290,7 +7293,6 @@ packages:
       '@emotion/styled': 11.6.0_de158b52dac32a8515143eb5b616f4ac
       prop-types: 15.8.1
       react: 17.0.2
-    dev: true
 
   /@mui/styled-engine/5.4.2_react@17.0.2:
     resolution: {integrity: sha512-tz9p3aRtzXHKAg7x3BgP0hVQEoGKaxNCFxsJ+d/iqEHYvywWFSs6oxqYAvDHIRpvMlUZyPNoTrkcNnbdMmH/ng==}
@@ -7369,7 +7371,6 @@ packages:
       csstype: 3.0.10
       prop-types: 15.8.1
       react: 17.0.2
-    dev: true
 
   /@mui/system/5.4.2_cfedea9b3ed0faf0dded75c187406c5e:
     resolution: {integrity: sha512-QegBVu6fxUNov1X9bWc1MZUTeV3A5g9PIpli7d0kzkGfq6JzrJWuPlhSPZ+6hlWmWky+bbAXhU65Qz8atWxDGw==}
@@ -10935,7 +10936,7 @@ packages:
     resolution: {integrity: sha1-xHfIyTA7Or3stAO7qCoXxQmWQt0=}
     dependencies:
       debug: 2.6.9
-      ejs: 3.1.7
+      ejs: 3.1.8
       wd-exec: 1.1.6
     dev: true
 
@@ -13431,8 +13432,8 @@ packages:
     requiresBuild: true
     dev: false
 
-  /ejs/3.1.7:
-    resolution: {integrity: sha512-BIar7R6abbUxDA3bfXrO4DSgwo8I+fB5/1zgujl3HLLjwd6+9iOnrT+t3grn2qbk9vOgBubXOFwX2m9axoFaGw==}
+  /ejs/3.1.8:
+    resolution: {integrity: sha512-/sXZeMlhS0ArkfX2Aw780gJzXSMPnKjtspYZv+f3NiKLlubezAHDU5+9xz6gd3/NhG3txQCo6xlglmTS+oTGEQ==}
     engines: {node: '>=0.10.0'}
     hasBin: true
     dependencies:

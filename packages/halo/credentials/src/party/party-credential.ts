@@ -252,7 +252,7 @@ export const admitsKeys = (message: Message | SignedMessage): PublicKey[] => {
       break;
     }
     default:
-      throw Error(`Invalid type: ${type}`);
+      throw new Error(`Invalid type: ${type}`);
   }
 
   return keys.map(PublicKey.from);

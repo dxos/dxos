@@ -3,37 +3,37 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": [
-    "src"
-  ],
   "exclude": [
     "dist",
     "node_modules"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../protocol"
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/rpc"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/testutils"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/util"
     },
     {
       "path": "../network-manager"
     },
     {
-      "path": "../../common/testutils"
+      "path": "../protocol"
     }
   ]
 }

@@ -111,7 +111,7 @@ export class ItemManager {
       if (!meta.getInitMutation) {
         throw new Error('Model does not support initializer.');
       }
-      mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -156,7 +156,7 @@ export class ItemManager {
       if (!meta.getInitMutation) {
         throw new Error('Tried to provide initialization params to a model with no initializer.');
       }
-      mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).

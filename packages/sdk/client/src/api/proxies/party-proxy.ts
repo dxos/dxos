@@ -130,7 +130,7 @@ export class PartyProxy implements Party {
   // TODO(burdon): Invert party/database? (e.g., const db = client.connect()).
   get database (): Database {
     if (!this._database) {
-      throw Error('Party not open.');
+      throw new Error('Party not open.');
     }
 
     return this._database;
