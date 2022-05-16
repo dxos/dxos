@@ -80,7 +80,7 @@ export class HumanHasher {
   humanize (hexdigest: string, words = 4, separator = '-') {
     const pairs = hexdigest.match(/(..?)/g);
     if (!pairs) {
-      throw Error('');
+      throw new Error('');
     }
 
     const bytes = pairs.map((x) => parseInt(x, 16));

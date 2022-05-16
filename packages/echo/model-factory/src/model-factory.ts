@@ -64,7 +64,7 @@ export class ModelFactory {
     modelType: ModelType,
     itemId: ItemID,
     snapshot: ModelSnapshot,
-    memberKey: PublicKey,
+    memberKey: PublicKey, // TODO(burdon): Change to client ID?
     writeStream?: FeedWriter<Uint8Array>
   ): StateManager<M> {
     assert(itemId);

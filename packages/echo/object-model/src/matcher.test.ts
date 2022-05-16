@@ -12,6 +12,7 @@ import { Predicate, Query } from './proto';
 // TODO(burdon): Nested properties?
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
+
 describe('Matcher', () => {
   test('Basic queries', () => {
     const queries: Query[] = [
