@@ -55,6 +55,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-testing"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -71,6 +74,9 @@
     },
     {
       "path": "../../sdk/react-gem-components"
+    },
+    {
+      "path": "../../sdk/react-ipfs"
     }
   ]
 }
