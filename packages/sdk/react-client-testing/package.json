@@ -38,7 +38,7 @@
     "@mui/lab": "^5.0.0-alpha.69",
     "@mui/material": "^5.4.2",
     "@mui/system": "^5.4.2",
-    "@tanstack/react-table": "^8.0.0-alpha.67",
+    "@tanstack/react-table": "^8.0.0-alpha.82",
     "@types/faker": "^5.5.1",
     "@types/react": "^17.0.24",
     "@types/react-beautiful-dnd": "^13.0.0",
