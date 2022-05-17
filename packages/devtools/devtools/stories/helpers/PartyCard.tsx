@@ -29,7 +29,7 @@ import {
 import { Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { CopyText, HashIcon } from '@dxos/react-components';
-import { PartySharingDialog } from '@dxos/react-framework';
+import { PartySharingDialog } from '@dxos/react-toolkit';
 
 import { ModelType, modelTypes } from './models';
 

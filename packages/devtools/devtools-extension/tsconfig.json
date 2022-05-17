@@ -45,7 +45,7 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../devtools"

@@ -5,7 +5,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 
 import { App } from './App';
 

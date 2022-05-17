@@ -5,9 +5,9 @@
 import faker from 'faker';
 import React from 'react';
 
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
-import { EchoGraph, useGraphModel } from '@dxos/react-gem-components';
+import { ClientProvider } from '@dxos/react-client';
+import { itemAdapter, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
+import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
 import { graphStyles } from '../';
 
