@@ -10,9 +10,9 @@ import { DefaultSchemaDefs, TestType } from '@dxos/client-testing';
 import { Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
+import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableTable, useSchemaBuilder } from '../src';
+import { DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
