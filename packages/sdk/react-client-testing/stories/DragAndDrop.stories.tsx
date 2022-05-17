@@ -26,6 +26,7 @@ const TableStory = () => {
     .filter({ type: TYPE_TABLE_TABLE }),
   []) ?? [];
   const [orderedList, setOrderedList] = useState<OrderedList>();
+  const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
 
   const items = useSelection(party?.select()
     .filter({ type: schema?.schema }),
@@ -53,25 +54,37 @@ const TableStory = () => {
         [DefaultSchemaDefs[TestType.Person].schema]: 10
       });
       const personItems = data[1];
-      await tableItem?.model.set('order', Object.assign({}, ...personItems.map((item, i) =>
-        ({ [item.id]: personItems[i + 1]?.id })).slice(0, personItems.length - 1)));
 
-      setOrderedList(new OrderedList(tableItem!.model));
+      const newOrderedList = new OrderedList(tableItem!.model);
+      await newOrderedList.init(personItems.map(item => item.id));
+      setOrderedList(newOrderedList);
 
       setSchema(personSchema);
     }
   }, [builder]);
 
   const handleDragEnd = async (result: DropResult) => {
-    const { destination, draggableId } = result;
-    if (!destination || !orderedList) {
+    const { destination, draggableId, source } = result;
+    if (
+      !orderedList ||
+      !destination ||
+      destination.droppableId !== source.droppableId ||
+      destination.index === source.index
+    ) {
       return;
     }
 
     const id = draggableId.split('-')[1];
 
     const currentValueInIndex = orderedList.values[destination.index];
-    await orderedList.insert(id, currentValueInIndex);
+    setPreviousOrder(table.model.get('order'));
+    if (source.index < destination.index) {
+      // await orderedList.remove([id]);
+      await orderedList.insert(currentValueInIndex, id);
+    } else {
+      // await orderedList.remove([currentValueInIndex]);
+      await orderedList.insert(id, currentValueInIndex);
+    }
   };
 
   const getRows = () => {
@@ -118,6 +131,12 @@ const TableStory = () => {
     }))
   ];
 
+  const reduceKeyLength = (order: {[key: string]: string}) => {
+    return Object.assign({}, ...Object.entries(order).map(([key, value]) => ({
+      [key.substring(0, 10)]: value.substring(0, 10)
+    })));
+  };
+
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -127,7 +146,18 @@ const TableStory = () => {
           rows={getRows()}
         />
       </DragDropContext>
-      <pre>{JSON.stringify(table.model.get('order'), undefined, 2)}</pre>
+      <div style={{
+        display: 'flex'
+      }}>
+        <div>
+          Previous
+          {previousOrder && <pre>{JSON.stringify(reduceKeyLength(previousOrder), undefined, 2)}</pre>}
+        </div>
+        <div style={{ marginLeft: 8 }}>
+          Current
+          <pre>{JSON.stringify(reduceKeyLength(table.model.get('order')), undefined, 2)}</pre>
+        </div>
+      </div>
     </>
   );
 };
