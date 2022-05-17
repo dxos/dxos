@@ -24,7 +24,7 @@ const getColumns = (cols: any[]) => cols.map(col => table.createDataColumn(col.a
   cell: (info: any) => info.getValue()
 }));
 
-const DEFAULT_COLUMN_WIDTH = '200px';
+const DEFAULT_COLUMN_WIDTH = '1fr';
 const getGridCellSize = (columns: any[]) => columns.map(column => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
 
 interface DraggableTableProps {
