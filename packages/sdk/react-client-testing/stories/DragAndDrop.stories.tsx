@@ -16,7 +16,10 @@ import { DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
+
+const DEBUG_PANEL_WIDTH = 250;
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
+
 const TableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
@@ -146,15 +149,13 @@ const TableStory = () => {
           rows={getRows()}
         />
       </DragDropContext>
-      <div style={{
-        display: 'flex'
-      }}>
-        <div>
-          Previous
+      <div style={{ display: 'flex' }}>
+        <div style={{ width: DEBUG_PANEL_WIDTH }}>
+          Previous (truncated)
           {previousOrder && <pre>{JSON.stringify(reduceKeyLength(previousOrder), undefined, 2)}</pre>}
         </div>
-        <div style={{ marginLeft: 8 }}>
-          Current
+        <div style={{ marginLeft: 8, width: DEBUG_PANEL_WIDTH }}>
+          Current (truncated)
           <pre>{JSON.stringify(reduceKeyLength(table.model.get('order')), undefined, 2)}</pre>
         </div>
       </div>
