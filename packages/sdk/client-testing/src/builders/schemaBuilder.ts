@@ -129,12 +129,15 @@ export class SchemaBuilder {
  */
   async createData (customSchemas?: SchemaDefWithGenerator[], options: { [key: string]: number } = {}) {
     const schemas = customSchemas ?? Object.values(DefaultSchemaDefs);
+    const result = [];
     // Synchronous loop.
     for (const schema of schemas) {
       const count = options[schema.schema] ?? 0;
       if (count) {
-        await this.createItems(schema, count);
+        const schemaData = await this.createItems(schema, count);
+        result.push(schemaData);
       }
     }
+    return result;
   }
 }

@@ -21,6 +21,10 @@ export class OrderedList {
     this.update();
   }
 
+  get id () {
+    return this._model.itemId;
+  }
+
   /**
    * Get ordered values.
    */
