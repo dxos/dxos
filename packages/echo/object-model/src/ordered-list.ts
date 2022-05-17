@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
@@ -57,10 +59,25 @@ export class OrderedList {
   }
 
   /**
-   * Clears the ordered set.
+   * Clears the ordered set with the optional values.
    */
-  async clear () {
-    await this._model.set(this._property, undefined);
+  async init (values?: ItemID[]) {
+    const builder = this._model.builder();
+
+    // Reset.
+    await builder.set(this._property, undefined);
+
+    // Set initial order.
+    if (values && values.length >= 2) {
+      let [first, ...rest] = values!;
+      let left = first;
+      for (const value of rest) {
+        builder.set(`${this._property}.${left}`, value);
+        left = value;
+      }
+    }
+
+    await builder.commit();
     this.update();
     return this._values;
   }
@@ -68,21 +85,29 @@ export class OrderedList {
   /**
    * Links the ordered items, possibly linking them to existing items.
    */
-  async set (values: ItemID[]) {
-    let [left, ...rest] = values;
-    const builder = this._model.builder();
-    for (const value of rest) {
-      const key = `${this._property}.${left}`;
-      const current = this._model.get(key);
-      builder.set(key, value);
-      if (current) {
-        builder.set(`${this._property}.${value}`, current);
+  async insert (left: ItemID, right: ItemID) {
+    assert(left && right);
+
+    // May be undefined.
+    const next = this._model.get(`${this._property}.${left}`);
+    const last = this._model.get(`${this._property}.${right}`);
+
+    if (next !== right) {
+      const builder = this._model.builder();
+
+      // Connect directly.
+      builder.set(`${this._property}.${left}`, right);
+
+      if (next) {
+        // Insert after left.
+        builder.set(`${this._property}.${right}`, next);
+        builder.set(`${this._property}.${next}`, last);
       }
-      left = value;
+
+      await builder.commit();
+      this.update();
     }
 
-    await builder.commit();
-    this.update();
     return this._values;
   }
 
@@ -97,9 +122,9 @@ export class OrderedList {
       const right = map[value];
       if (right) {
         builder.set(`${this._property}.${value}`, undefined);
-        if (left) {
-          builder.set(`${this._property}.${left}`, right);
-        }
+      }
+      if (left) {
+        builder.set(`${this._property}.${left}`, right);
       }
     }
 
