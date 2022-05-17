@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 
 import { useClient, useParties } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-framework';
+import { JoinPartyDialog } from '@dxos/react-toolkit';
 import { proto } from '@dxos/client';
 
 import { PartySettings } from './PartySettings';

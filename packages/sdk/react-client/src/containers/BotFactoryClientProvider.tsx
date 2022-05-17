@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
+import { useAsyncEffect } from '@dxos/react-async';
 
 import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';
 
@@ -23,15 +24,13 @@ export const BotFactoryClientProvider = ({
   const config = useConfig();
   const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
 
-  useEffect(() => {
-    setImmediate(async () => {
-      const botFactoryClient = await createBotFactoryClient(config);
-      setBotFactoryClient(botFactoryClient);
+  useAsyncEffect(async () => {
+    const botFactoryClient = await createBotFactoryClient(config);
+    setBotFactoryClient(botFactoryClient);
 
-      // TODO(burdon): Rename property: 'runtime.services.bot-factory.topic'
-      const topic = config.get('runtime.services.bot.topic') ?? raise(new Error('Missing Bot factory topic.'));
-      await botFactoryClient.start(PublicKey.from(topic));
-    });
+    // TODO(burdon): Rename property: 'runtime.services.bot-factory.topic'
+    const topic = config.get('runtime.services.bot.topic') ?? raise(new Error('Missing Bot factory topic.'));
+    await botFactoryClient.start(PublicKey.from(topic));
 
     return () => {
       void botFactoryClient?.stop();

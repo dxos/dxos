@@ -10,10 +10,10 @@ import {
 
 import { PartyInvitation, InvitationDescriptor } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
+import { useAsyncEffect } from '@dxos/react-async';
 
 import {
   ClientProvider,
-  ProfileInitializer,
   useClient,
   useContacts,
   useParties,
@@ -172,6 +172,16 @@ const TestApp = () => {
   const parties = useParties();
   const profile = useProfile();
 
+  useAsyncEffect(async () => {
+    if (!profile) {
+      await client.halo.createProfile();
+    }
+  }, []);
+
+  if (!profile) {
+    return null;
+  }
+
   return (
     <Box sx={{
       display: 'flex',
@@ -200,9 +210,7 @@ export const Primary = () => {
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {[...new Array(peers)].map((_, i) => (
           <ClientProvider key={i}>
-            <ProfileInitializer>
-              <TestApp />
-            </ProfileInitializer>
+            <TestApp />
           </ClientProvider>
         ))}
       </Box>

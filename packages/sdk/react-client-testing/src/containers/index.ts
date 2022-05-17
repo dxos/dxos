@@ -3,4 +3,3 @@
 //
 
 export * from './ProfileInitializer';
-export * from './useTestPartyBootstrap';

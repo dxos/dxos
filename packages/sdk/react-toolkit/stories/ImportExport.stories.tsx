@@ -10,7 +10,7 @@ import { ImportDialog, ExportDialog } from '../src';
 import { Container } from './helpers';
 
 export default {
-  title: 'react-framework/ImportExport'
+  title: 'react-toolkit/ImportExport'
 };
 
 export const Export = () => {

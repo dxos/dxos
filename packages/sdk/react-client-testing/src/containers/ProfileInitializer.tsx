@@ -2,24 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 
-import { useClient, useProfile } from '../hooks';
+import { useAsyncEffect } from '@dxos/react-async';
+import { useClient, useProfile } from '@dxos/react-client';
 
 /**
  * Automatically creates a random DXOS profile.
- * @deprecated
  */
-// TODO(burdon): Testing-only; replace with useTestProfile();
+// TODO(burdon): Replace with useTestProfile?
 export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!profile) {
-      setImmediate(async () => {
-        await client.halo.createProfile();
-      });
+      await client.halo.createProfile();
     }
   }, []);
 

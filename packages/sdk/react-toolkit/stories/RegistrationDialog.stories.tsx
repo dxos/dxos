@@ -11,7 +11,7 @@ import { sleep } from '@dxos/async';
 import { RegistrationDialog } from '../src';
 
 export default {
-  title: 'react-framework/RegistrationDialog',
+  title: 'react-toolkit/RegistrationDialog',
   component: RegistrationDialog
 };
 
