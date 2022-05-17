@@ -23,6 +23,10 @@ export class OrderedList {
     return this._values;
   }
 
+  get id () {
+    return this._model.itemId;
+  }
+
   /**
    * Reload list from properties.
    */
@@ -58,13 +62,29 @@ export class OrderedList {
   async set (values: ItemID[]) {
     let [left, ...rest] = values;
     const builder = this._model.builder();
+    const props = this._model.get(this._property);
     for (const value of rest) {
+      if (props && Object.entries(props).some(entry => entry[0] === value || entry[1] === value)) {
+        // Existing element
+      } else {
+        // New element
+      }
       const key = `${this._property}.${left}`;
       const current = this._model.get(key);
       builder.set(key, value);
       if (current) {
         builder.set(`${this._property}.${value}`, current);
       }
+      Object.entries(this._model.get(this._property) ?? {}).forEach(([l, r]) => {
+        // if (r === value) {
+        //   builder.set(`${this._property}.${l}`, left);
+        // }
+
+        if (!current && r === left) {
+          // Remove cyclic reference
+          builder.set(`${this._property}.${l}`, undefined);
+        }
+      });
       left = value;
     }
 
@@ -83,6 +103,11 @@ export class OrderedList {
         builder.set(`${this._property}.${value}`, undefined);
         if (left) {
           builder.set(`${this._property}.${left}`, right);
+        }
+      } else {
+        // Remove last element
+        if (left) {
+          builder.set(`${this._property}.${left}`, undefined);
         }
       }
     }
