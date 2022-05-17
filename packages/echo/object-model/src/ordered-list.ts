@@ -69,7 +69,7 @@ export class OrderedList {
 
     // Set initial order.
     if (values && values.length >= 2) {
-      let [first, ...rest] = values!;
+      const [first, ...rest] = values!;
       let left = first;
       for (const value of rest) {
         builder.set(`${this._property}.${left}`, value);
