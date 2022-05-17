@@ -12,7 +12,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, ProfileInitializer, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableKanban, DraggableTable, useSchemaBuilder } from '../src';
+import { DraggableTable, useSchemaBuilder } from '../src';
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
