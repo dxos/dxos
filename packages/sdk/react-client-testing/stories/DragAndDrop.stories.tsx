@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-import { DragDropContext, DraggableLocation, DropResult } from 'react-beautiful-dnd';
+import React, { useState } from 'react';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
-import { Item, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { DefaultSchemaDefs, TestType } from '@dxos/client-testing';
-import { Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
+import { Schema } from '@dxos/echo-db';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
@@ -63,7 +63,7 @@ const TableStory = () => {
   }, [builder]);
 
   const handleDragEnd = async (result: DropResult) => {
-    const { destination, draggableId, source } = result;
+    const { destination, draggableId } = result;
     if (!destination || !orderedList) {
       return;
     }
@@ -71,11 +71,7 @@ const TableStory = () => {
     const id = draggableId.split('-')[1];
 
     const currentValueInIndex = orderedList.values[destination.index];
-    if (destination.index > source.index) {
-      await orderedList.set([currentValueInIndex, id]);
-    } else {
-      await orderedList.set([id, currentValueInIndex]);
-    }
+    await orderedList.insert(id, currentValueInIndex);
   };
 
   const getRows = () => {
@@ -123,13 +119,16 @@ const TableStory = () => {
   ];
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <DraggableTable
-        id={table.id}
-        columns={columns}
-        rows={getRows()}
-      />
-    </DragDropContext>
+    <>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <DraggableTable
+          id={table.id}
+          columns={columns}
+          rows={getRows()}
+        />
+      </DragDropContext>
+      <pre>{JSON.stringify(table.model.get('order'), undefined, 2)}</pre>
+    </>
   );
 };
 
@@ -231,9 +230,9 @@ const MultipleTableStory = () => {
     const currentValueInIndex = list.values[destination.index];
     // const before = [...list.values];
     if (destination.index > source.index) {
-      await list.set([currentValueInIndex, id]);
+      await list.insert(currentValueInIndex, id);
     } else {
-      await list.set([id, currentValueInIndex]);
+      await list.insert(id, currentValueInIndex);
     }
     // const after = [...list.values];
     // console.table(Array.from({ length: before.length }).map((_, i) => ({ before: before[i], after: after[i] })));
