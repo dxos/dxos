@@ -8,7 +8,7 @@ import { Button, Toolbar } from '@mui/material';
 import { Party } from '@dxos/client';
 import { ClientProvider, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
-import { ProfileDialog } from '@dxos/react-framework';
+import { ProfileDialog } from '@dxos/react-toolkit';
 
 import { PartySettings } from '../src';
 

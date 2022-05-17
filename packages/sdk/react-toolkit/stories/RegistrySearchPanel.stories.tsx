@@ -14,7 +14,7 @@ import { RegistrySearchPanel, useRegistrySearchModel } from '../src';
 import { createMockRegistry } from './helpers';
 
 export default {
-  title: 'react-framework/RegistrySearchPanel'
+  title: 'react-toolkit/RegistrySearchPanel'
 };
 
 export const Primary = () => {

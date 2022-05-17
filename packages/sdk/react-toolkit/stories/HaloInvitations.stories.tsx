@@ -7,14 +7,15 @@ import React, { useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigProvider, defs } from '@dxos/config';
-import { ClientProvider, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
+import { ClientProvider, useParties, useProfile } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src';
 import { Column } from './helpers';
 
 export default {
-  title: 'react-framework/HaloInvitations'
+  title: 'react-toolkit/HaloInvitations'
 };
 
 const RemoteParties = () => {

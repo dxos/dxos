@@ -64,7 +64,7 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../devtools-mesh"

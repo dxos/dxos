@@ -35,7 +35,7 @@ Now let's go to our `src/components/Root.js` file and add the code to actually c
 
 ```jsx:title=src/components/Root.js
 import { useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog } from '@dxos/react-framework';
+import { ProfileDialog } from '@dxos/react-toolkit';
 
 const Root = () => {
   const client = useClient();

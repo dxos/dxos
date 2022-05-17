@@ -70,10 +70,10 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     },
     {
-      "path": "../../sdk/react-gem-components"
+      "path": "../../sdk/react-echo-graph"
     },
     {
       "path": "../../sdk/react-ipfs"

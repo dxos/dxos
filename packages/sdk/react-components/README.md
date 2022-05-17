@@ -1,3 +1,3 @@
 # React Components
 
-Low-level material components.
+Low-level MUI components.

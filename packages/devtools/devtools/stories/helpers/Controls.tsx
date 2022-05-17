@@ -22,7 +22,7 @@ import { clientServiceBundle } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-framework';
+import { JoinPartyDialog } from '@dxos/react-toolkit';
 import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
