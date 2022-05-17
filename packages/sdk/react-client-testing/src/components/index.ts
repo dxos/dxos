@@ -3,6 +3,7 @@
 //
 
 export * from './CreatePartyDialog';
+export * from './DraggableTable';
 export * from './ExportMenu';
 export * from './ImportMenu';
 export * from './ImportIpfsDialog';
