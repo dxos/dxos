@@ -8,14 +8,15 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigObject } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
-import { ClientProvider, ProfileInitializer, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
+import { ClientProvider, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
 import { ErrorBoundary, PartySharingDialog } from '../src';
 
 export default {
-  title: 'react-framework/BotSharing'
+  title: 'react-toolkit/BotSharing'
 };
 
 const Parties = () => {

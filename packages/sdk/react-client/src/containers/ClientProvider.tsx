@@ -7,6 +7,7 @@ import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
 import { ConfigProvider } from '@dxos/config';
+import { useAsyncEffect } from '@dxos/react-async';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util';
 
 import { printBanner } from '../banner';
@@ -63,8 +64,7 @@ export const ClientProvider = ({
 }: ClientProviderProps) => {
   const [client, setClient] = useState<Client | undefined>(clientProvider instanceof Client ? clientProvider : undefined);
 
-  // Async helpers.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!client) {
       const done = async (client: Client) => {
         log(`Created client: ${client}`);
@@ -76,19 +76,17 @@ export const ClientProvider = ({
         printBanner(client);
       };
 
-      setImmediate(async () => {
-        if (clientProvider) {
-          // Asynchornously request client.
-          const client = await getAsyncValue(clientProvider);
-          await done(client);
-        } else {
-          // Asynchronously construct client (config may be undefined).
-          const config = await getAsyncValue(configProvider);
-          const client = new Client(config, options);
-          await client.initialize();
-          await done(client);
-        }
-      });
+      if (clientProvider) {
+        // Asynchornously request client.
+        const client = await getAsyncValue(clientProvider);
+        await done(client);
+      } else {
+        // Asynchronously construct client (config may be undefined).
+        const config = await getAsyncValue(configProvider);
+        const client = new Client(config, options);
+        await client.initialize();
+        await done(client);
+      }
     }
   }, []);
 

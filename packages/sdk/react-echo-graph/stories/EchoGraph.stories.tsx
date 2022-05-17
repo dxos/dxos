@@ -8,9 +8,12 @@ import { Box, Button, css } from '@mui/material';
 
 import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
 import { ItemID } from '@dxos/echo-protocol';
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 // TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
-import { defaultSelectionText, execSelection, itemAdapter, SelectionEditor, typeMeta, usePartyBuilder, useTestParty } from '@dxos/react-client-testing';
+import {
+  ProfileInitializer, SelectionEditor, defaultSelectionText, execSelection, itemAdapter,
+  typeMeta, usePartyBuilder, useTestParty
+} from '@dxos/react-client-testing';
 import { BoxContainer, FullScreen } from '@dxos/react-components';
 
 import { EchoGraph, useGraphModel } from '../src';

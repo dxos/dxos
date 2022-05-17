@@ -46,7 +46,7 @@ You should now see your app running on [http://localhost:3000](http://localhost:
 Let's start by installing the required dependencies from the DXOS Stack:
 
 ```bash
-yarn add @dxos/react-client @dxos/react-framework @dxos/config @dxos/object-model
+yarn add @dxos/react-client @dxos/react-toolkit @dxos/config @dxos/object-model
 ```
 
 Applications depend on the following libraries.
@@ -54,7 +54,7 @@ Applications depend on the following libraries.
 | Syntax                  | Description           |
 | ----------------------- | --------------------- |
 | `@dxos/react-client`    | Main API              |
-| `@dxos/react-framework` | Main React (UX) API   |
+| `@dxos/react-toolkit` | Main React (UX) API   |
 | `@dxos/config`          | Configuration support |
 | `@dxos/object-model`    | ECHO Object model     |
 

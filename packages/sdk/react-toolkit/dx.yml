@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:story/react-gem-components
+    - name: dxos:story/react-toolkit
       type: dxos:type/app
       build:
         command: npm run build:book

@@ -41,6 +41,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../config"
     }
   ]
 }

@@ -6,9 +6,9 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 
-import { defaultSelectionText, execSelection, SelectionEditor, useTestParty } from '../src';
+import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestParty } from '../src';
 
 export default {
   title: 'react-client-testing/SelectionEditor'

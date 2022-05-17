@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 
 import { useClient, useProfile } from '@dxos/react-client';
-import { HaloSharingDialog } from '@dxos/react-framework';
+import { HaloSharingDialog } from '@dxos/react-toolkit';
 
 import { PartyList } from './PartyList';
 import { TaskList } from './TaskList';
