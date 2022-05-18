@@ -33,7 +33,7 @@ afterEach(async () => {
 describe('Schemas', () => {
   it('creation of Schema', async () => async () => {
     const [schema] = await builder.createSchemas();
-    expect(schema.schema).toBe(builder.defaultSchemas[TestType.Org].schema);
+    expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
@@ -56,7 +56,7 @@ describe('Schemas', () => {
       key: 'organization',
       required: false,
       ref: {
-        schema: orgSchema.schema,
+        schema: orgSchema.name,
         field: orgSchema.fields[0].key
       }
     };

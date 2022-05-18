@@ -23,6 +23,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "~2.28.7",
     "@dxos/eslint-plugin": "~1.0.27",
