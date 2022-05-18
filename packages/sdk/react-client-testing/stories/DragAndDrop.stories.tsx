@@ -7,7 +7,7 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
 import { Party } from '@dxos/client';
 import { DefaultSchemaDefs, TestType } from '@dxos/client-testing';
-import { Schema } from '@dxos/echo-db';
+import { truncateKey } from '@dxos/debug';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
@@ -76,11 +76,11 @@ const TableStory = () => {
     ) {
       return;
     }
+    setPreviousOrder(table.model.get('order'));
 
     const id = draggableId.split('-')[1];
 
     const currentValueInIndex = orderedList.values[destination.index];
-    setPreviousOrder(table.model.get('order'));
     if (source.index < destination.index) {
       // await orderedList.remove([id]);
       await orderedList.insert(currentValueInIndex, id);
@@ -136,7 +136,7 @@ const TableStory = () => {
 
   const reduceKeyLength = (order: {[key: string]: string}) => {
     return Object.assign({}, ...Object.entries(order).map(([key, value]) => ({
-      [key.substring(0, 10)]: value.substring(0, 10)
+      [truncateKey(key, 5)]: truncateKey(value, 5)
     })));
   };
 
@@ -151,11 +151,11 @@ const TableStory = () => {
       </DragDropContext>
       <div style={{ display: 'flex' }}>
         <div style={{ width: DEBUG_PANEL_WIDTH }}>
-          Previous (truncated)
-          {previousOrder && <pre>{JSON.stringify(reduceKeyLength(previousOrder), undefined, 2)}</pre>}
+          <h4>Previous <span style={{ fontWeight: 100 }}>(truncated)</span></h4>
+          <pre>{JSON.stringify(previousOrder ? reduceKeyLength(previousOrder) : {}, undefined, 2)}</pre>
         </div>
         <div style={{ marginLeft: 8, width: DEBUG_PANEL_WIDTH }}>
-          Current (truncated)
+          <h4>Current <span style={{ fontWeight: 100 }}>(truncated)</span></h4>
           <pre>{JSON.stringify(reduceKeyLength(table.model.get('order')), undefined, 2)}</pre>
         </div>
       </div>
