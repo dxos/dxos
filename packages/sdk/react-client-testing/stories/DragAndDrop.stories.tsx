@@ -12,13 +12,115 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
+import { DragAndDropDebugPanel } from './helpers';
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
 
-const DEBUG_PANEL_WIDTH = 250;
+const TYPE_LIST = 'example:type/list';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
+
+const ListStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [schema, setSchema] = useState<Schema>();
+  const [list, setList] = useState<Item<ObjectModel>>();
+  const builder = useSchemaBuilder(party);
+  const [orderedList, setOrderedList] = useState<OrderedList>();
+  const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
+  const items = useSelection(party?.select()
+    .filter({ type: schema?.schema }),
+  [schema]) ?? [];
+
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
+    setParty(newParty);
+  }, []);
+
+  useAsyncEffect(async () => {
+    if (builder) {
+      const generatedSchemas = await builder.createSchemas();
+      const personSchema = generatedSchemas.find(schema => schema.schema === DefaultSchemaDefs[TestType.Person].schema);
+      const listItem = await party?.database.createItem({
+        model: ObjectModel,
+        type: TYPE_LIST,
+        props: {
+          schema: personSchema!.schema
+        }
+      });
+
+      const data = await builder.createData(undefined, {
+        [DefaultSchemaDefs[TestType.Org].schema]: 3,
+        [DefaultSchemaDefs[TestType.Person].schema]: 10
+      });
+      const personItems = data[1];
+
+      const newOrderedList = new OrderedList(listItem!.model);
+      await newOrderedList.init(personItems.map(item => item.id));
+      setOrderedList(newOrderedList);
+      setSchema(personSchema);
+      setList(listItem);
+    }
+  }, [builder]);
+
+  const getList = () => ({
+    id: 'example-people-list',
+    title: 'People',
+    children: items.map(item => ({ id: item.id, title: truncateKey(item.id, 5) + ' - ' + item.model.get('title') })),
+    width: '100%'
+  });
+
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, draggableId, source } = result;
+    if (
+      !orderedList ||
+      !destination ||
+      destination.droppableId !== source.droppableId ||
+      destination.index === source.index
+    ) {
+      return;
+    }
+    setPreviousOrder(list!.model.get('order'));
+
+    const id = draggableId.split('-')[1];
+
+    const currentValueInIndex = orderedList.values[destination.index];
+    if (source.index < destination.index) {
+      await orderedList.insert(currentValueInIndex, id);
+    } else {
+      await orderedList.insert(id, currentValueInIndex);
+    }
+  };
+
+  if (!list) {
+    return null;
+  }
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '40% 60%'
+    }}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <DraggableKanban lists={[getList()]} />
+      </DragDropContext>
+      <DragAndDropDebugPanel
+        previousOrder={previousOrder}
+        order={list.model.get('order')}
+      />
+    </div>
+  );
+};
+
+export const List = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <ListStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
 
 const TableStory = () => {
   const client = useClient();
