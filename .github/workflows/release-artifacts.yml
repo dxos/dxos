@@ -29,9 +29,9 @@ jobs:
           # Install dependencies
           node common/scripts/install-run-rush.js install
 
-          yarn global add @dxos/cli@v2.18.1
-          yarn global add @dxos/cli-dxns@v2.18.1
-          yarn global add @dxos/cli-ipfs@v2.18.1
+          yarn global add @dxos/cli@v2.19.0
+          yarn global add @dxos/cli-dxns@v2.19.0
+          yarn global add @dxos/cli-ipfs@v2.19.0
       - name: Build
         run: node common/scripts/install-run-rush.js build --verbose
       - name: Gather Artifacts
