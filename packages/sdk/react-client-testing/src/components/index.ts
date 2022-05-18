@@ -3,6 +3,7 @@
 //
 
 export * from './CreatePartyDialog';
+export * from './DraggableKanban';
 export * from './DraggableTable';
 export * from './ExportMenu';
 export * from './ImportMenu';
