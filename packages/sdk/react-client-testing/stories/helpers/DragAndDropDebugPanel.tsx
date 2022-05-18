@@ -7,7 +7,7 @@ import React from 'react';
 import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
-const DEBUG_PANEL_WIDTH = 400;
+const DEBUG_PANEL_WIDTH = '100%';
 
 type Order = { [key: string]: string }
 
@@ -15,7 +15,7 @@ interface DragAndDropDebugPanelProps {
   previousOrder: Order | undefined,
   order: Order
   party?: Party
-  width? : number
+  width? : number | string
 }
 
 export const DragAndDropDebugPanel = ({
