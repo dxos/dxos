@@ -12,7 +12,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DragAndDropDebugPanel } from './helpers';
+import { DraggableKanban, DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
@@ -29,7 +29,8 @@ const ListStory = () => {
   const [orderedList, setOrderedList] = useState<OrderedList>();
   const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
   const items = useSelection(party?.select()
-    .filter({ type: schema?.schema }),
+    // TODO(kaplanski): Check SelectionAPI filter predicate change from undefined.
+    .filter({ type: schema ? schema.name : ' ' }),
   [schema]) ?? [];
 
   useAsyncEffect(async () => {
@@ -40,12 +41,12 @@ const ListStory = () => {
   useAsyncEffect(async () => {
     if (builder) {
       const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.schema === DefaultSchemaDefs[TestType.Person].schema);
+      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
       const listItem = await party?.database.createItem({
         model: ObjectModel,
         type: TYPE_LIST,
         props: {
-          schema: personSchema!.schema
+          schema: personSchema!.name
         }
       });
 
@@ -99,7 +100,7 @@ const ListStory = () => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '40% 60%'
+      gridTemplateColumns: '30% 70%'
     }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <DraggableKanban lists={[getList()]} />
@@ -107,6 +108,7 @@ const ListStory = () => {
       <DragAndDropDebugPanel
         previousOrder={previousOrder}
         order={list.model.get('order')}
+        party={party}
       />
     </div>
   );
@@ -134,7 +136,7 @@ const TableStory = () => {
   const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
 
   const items = useSelection(party?.select()
-    .filter({ type: schema?.schema }),
+    .filter({ type: schema?.name }),
   [schema]) ?? [];
 
   useAsyncEffect(async () => {
@@ -145,12 +147,12 @@ const TableStory = () => {
   useAsyncEffect(async () => {
     if (builder) {
       const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.schema === DefaultSchemaDefs[TestType.Person].schema);
+      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
       const tableItem = await party?.database.createItem({
         model: ObjectModel,
         type: TYPE_TABLE_TABLE,
         props: {
-          schema: personSchema!.schema
+          schema: personSchema!.name
         }
       });
 
@@ -273,7 +275,7 @@ const MultipleTableStory = () => {
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>([]);
 
   const items = useSelection(party?.select()
-    .filter({ type: schema?.schema }),
+    .filter({ type: schema?.name }),
   []) ?? [];
 
   useAsyncEffect(async () => {
@@ -284,12 +286,12 @@ const MultipleTableStory = () => {
   useAsyncEffect(async () => {
     if (builder) {
       const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.schema === DefaultSchemaDefs[TestType.Person].schema);
+      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
       const table1 = await party?.database.createItem({
         model: ObjectModel,
         type: TYPE_TABLE_TABLE,
         props: {
-          schema: personSchema!.schema,
+          schema: personSchema!.name,
           positions: []
         }
       });
@@ -297,7 +299,7 @@ const MultipleTableStory = () => {
         model: ObjectModel,
         type: TYPE_TABLE_TABLE,
         props: {
-          schema: personSchema!.schema,
+          schema: personSchema!.name,
           positions: []
         }
       });
