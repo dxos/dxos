@@ -5,14 +5,17 @@
 import React, { useState } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
-import { Party } from '@dxos/client';
+import { Item, Party } from '@dxos/client';
 import { DefaultSchemaDefs, TestType } from '@dxos/client-testing';
 import { truncateKey } from '@dxos/debug';
+import { Schema } from '@dxos/echo-db';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { DraggableKanban, DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
+import { DragAndDropDebugPanel } from './helpers';
+
 export default {
   title: 'react-client-testing/DragAndDrop'
 };
