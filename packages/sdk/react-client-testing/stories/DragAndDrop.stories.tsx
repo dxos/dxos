@@ -236,12 +236,6 @@ const TableStory = () => {
     }))
   ];
 
-  const reduceKeyLength = (order: {[key: string]: string}) => {
-    return Object.assign({}, ...Object.entries(order).map(([key, value]) => ({
-      [truncateKey(key, 5)]: truncateKey(value, 5)
-    })));
-  };
-
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -251,16 +245,10 @@ const TableStory = () => {
           rows={getRows()}
         />
       </DragDropContext>
-      <div style={{ display: 'flex' }}>
-        <div style={{ width: DEBUG_PANEL_WIDTH }}>
-          <h4>Previous <span style={{ fontWeight: 100 }}>(truncated)</span></h4>
-          <pre>{JSON.stringify(previousOrder ? reduceKeyLength(previousOrder) : {}, undefined, 2)}</pre>
-        </div>
-        <div style={{ marginLeft: 8, width: DEBUG_PANEL_WIDTH }}>
-          <h4>Current <span style={{ fontWeight: 100 }}>(truncated)</span></h4>
-          <pre>{JSON.stringify(reduceKeyLength(table.model.get('order')), undefined, 2)}</pre>
-        </div>
-      </div>
+      <DragAndDropDebugPanel
+        previousOrder={previousOrder}
+        order={table.model.get('order')}
+      />
     </>
   );
 };
