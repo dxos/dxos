@@ -70,13 +70,13 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-toolkit"
-    },
-    {
       "path": "../../sdk/react-echo-graph"
     },
     {
       "path": "../../sdk/react-ipfs"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
     }
   ]
 }
