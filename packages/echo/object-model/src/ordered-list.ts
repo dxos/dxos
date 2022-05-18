@@ -2,12 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
 
 /**
- *
+ * Utility class that wraps an `ObjectModel` and implements a linked list via key-values on a given property.
  */
 export class OrderedList {
   private _values: ItemID[] = [];
@@ -19,14 +21,21 @@ export class OrderedList {
     this.update();
   }
 
+  get id () {
+    return this._model.itemId;
+  }
+
+  /**
+   * Get ordered values.
+   */
   get values () {
     return this._values;
   }
 
   /**
-   * Reload list from properties.
+   * Refresh list from properties.
    */
-  // TODO(burdon): More tests for edge cases.
+  // TODO(burdon): Add more tests for edge cases.
   update () {
     this._values = [];
     const properties = this._model.get(this._property) ?? {};
@@ -38,34 +47,38 @@ export class OrderedList {
         // [a, b, c] + [x, y] => [a, b, c, x, y]
         this._values.splice(this._values.length, 0, left as ItemID, right as ItemID);
       } else if (i === -1) {
-        // [a, b, c] + [x, b] => [a, x, b, c]     # i === -1 j ===  1
+        // Merge to the left.
+        // [a, b, c] + [x, b] => [a, x, b, c] (i === -1; j ===  1)
         this._values.splice(j, 1, left as ItemID, right as ItemID);
       } else if (j === -1) {
-        // [a, b, c] + [b, x] => [a, b, x, c]     # i ===  1 j === -1
+        // Merge to the right.
+        // [a, b, c] + [b, x] => [a, b, x, c] (i ===  1; j === -1)
         this._values.splice(i, 1, left as ItemID, right as ItemID);
+      } else {
+        // TODO(burdon): If both defined then may need to break existing links.
       }
     }
 
     return this;
   }
 
-  async clear () {
-    await this._model.set(this._property, undefined);
-    this.update();
-    return this._values;
-  }
-
-  async set (values: ItemID[]) {
-    let [left, ...rest] = values;
+  /**
+   * Clears the ordered set with the optional values.
+   */
+  async init (values?: ItemID[]) {
     const builder = this._model.builder();
-    for (const value of rest) {
-      const key = `${this._property}.${left}`;
-      const current = this._model.get(key);
-      builder.set(key, value);
-      if (current) {
-        builder.set(`${this._property}.${value}`, current);
+
+    // Reset.
+    await builder.set(this._property, undefined);
+
+    // Set initial order.
+    if (values && values.length >= 2) {
+      const [first, ...rest] = values!;
+      let left = first;
+      for (const value of rest) {
+        builder.set(`${this._property}.${left}`, value);
+        left = value;
       }
-      left = value;
     }
 
     await builder.commit();
@@ -73,6 +86,38 @@ export class OrderedList {
     return this._values;
   }
 
+  /**
+   * Links the ordered items, possibly linking them to existing items.
+   */
+  async insert (left: ItemID, right: ItemID) {
+    assert(left && right);
+
+    // May be undefined.
+    const next = this._model.get(`${this._property}.${left}`);
+    const last = this._model.get(`${this._property}.${right}`);
+
+    if (next !== right) {
+      const builder = this._model.builder();
+
+      // Connect directly.
+      builder.set(`${this._property}.${left}`, right);
+
+      if (next) {
+        // Insert after left.
+        builder.set(`${this._property}.${right}`, next);
+        builder.set(`${this._property}.${next}`, last);
+      }
+
+      await builder.commit();
+      this.update();
+    }
+
+    return this._values;
+  }
+
+  /**
+   * Removes the given element, possibly linked currently connected items.
+   */
   async remove (values: ItemID[]) {
     const builder = this._model.builder();
     for (const value of values) {
@@ -81,9 +126,9 @@ export class OrderedList {
       const right = map[value];
       if (right) {
         builder.set(`${this._property}.${value}`, undefined);
-        if (left) {
-          builder.set(`${this._property}.${left}`, right);
-        }
+      }
+      if (left) {
+        builder.set(`${this._property}.${left}`, right);
       }
     }
 
