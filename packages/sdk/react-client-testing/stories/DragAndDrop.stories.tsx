@@ -13,7 +13,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableKanban, DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
+import { DraggableKanban, DraggableTable, KanbanList, ProfileInitializer, useSchemaBuilder } from '../src';
 import { DragAndDropDebugPanel } from './helpers';
 
 export default {
@@ -440,3 +440,115 @@ export const MultipleTable = () => {
     </ClientProvider>
   );
 };
+
+const TYPE_KANBAN_BOARD = 'dxos:type/kanban/board';
+const TYPE_KANBAN_COLUMN = 'dxos:type/kanban/column';
+const useSchema = (party?: Party, schema?: Schema, targetFieldKey?: string) => {
+  const items = useSelection(
+    party?.select()
+      .filter({ type: schema?.name }),
+    [schema]
+  ) ?? [];
+
+  const getListChildren = (items: Item<ObjectModel>[], value: string) => items
+    .filter(row => row.model.get(targetFieldKey!) === value)
+    .map(item => ({ id: item.id, ...item.model.toObject() }));
+
+  // Gets all unique values of target field for the items using the schema from this context.
+  const uniqueRowValues = targetFieldKey ? new Set(items.map(row => row.model.get(targetFieldKey))) : new Set();
+  const lists: KanbanList[] = Array.from(uniqueRowValues.values()).map(listValue => {
+    if (!party || !schema || !targetFieldKey) {
+      return {};
+    }
+
+    let title = listValue;
+    if (schema.getField(targetFieldKey)?.ref) {
+      const item = party.select({ id: listValue }).exec().entities[0];
+      if (item) {
+        // TODO(kaplanski): Now getting first field. Should we have a default schema field? Or pass it by param
+        title = Object.values(item.model.toObject())[0];
+      }
+    }
+
+    return {
+      id: listValue,
+      title,
+      children: getListChildren(items, listValue)
+    };
+  });
+
+  useAsyncEffect(async () => {
+    if (!party || !schema || !targetFieldKey) {
+      return;
+    }
+    Array.from(uniqueRowValues.values()).forEach(async (value) => {
+      const [listColumnItem] = party.select().filter(item => item.model.get('value') === value).exec().entities;
+      if (!listColumnItem) {
+        await party.database.createItem({
+          model: ObjectModel,
+          type: TYPE_KANBAN_COLUMN,
+          props: {
+            value
+          }
+        });
+      }
+    });
+  }, [lists.map(list => list.id)]);
+
+  return lists;
+};
+
+const KanbanStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [schema, setSchema] = useState<Schema>();
+  const builder = useSchemaBuilder(party);
+  const targetFieldKey = schema?.fields[1].key;
+  const lists = useSchema(party, schema, targetFieldKey);
+
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
+    setParty(newParty);
+  }, []);
+
+  useAsyncEffect(async () => {
+    if (builder) {
+      const generatedSchemas = await builder.createSchemas();
+      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
+      await builder.createData(undefined, {
+        [DefaultSchemaDefs[TestType.Org].schema]: 3,
+        [DefaultSchemaDefs[TestType.Person].schema]: 40
+      });
+      setSchema(personSchema);
+    }
+  }, [builder]);
+
+  const handleDragEnd = async (result: DropResult) => {
+    const { draggableId, destination } = result;
+    if (!destination) {
+      return;
+    }
+    const id = draggableId.split('-')[1];
+    const item = party?.select({ id }).exec().entities[0];
+    if (item) {
+      await item.model.set(targetFieldKey, destination.droppableId);
+    }
+  };
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <DraggableKanban lists={lists} />
+    </DragDropContext>
+  );
+};
+
+export const Kanban = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <KanbanStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
+
