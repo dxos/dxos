@@ -33,7 +33,7 @@ const TableStory = () => {
 
   const items = useSelection(party?.select()
     .filter({ type: schema?.schema }),
-  []) ?? [];
+  [schema]) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
