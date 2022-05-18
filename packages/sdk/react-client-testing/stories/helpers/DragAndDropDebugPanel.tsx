@@ -39,7 +39,7 @@ export const DragAndDropDebugPanel = ({
   };
 
   return (
-    <div style={{ display: 'flex', fontSize: 14 }}>
+    <div style={{ display: 'flex' }}>
       <div style={{ width }}>
         <h3>Previous <span style={{ fontWeight: 100 }}>(truncated)</span></h3>
         <pre>{JSON.stringify(previousOrder ? reduceKeyLength(previousOrder) : {}, undefined, 2)}</pre>
