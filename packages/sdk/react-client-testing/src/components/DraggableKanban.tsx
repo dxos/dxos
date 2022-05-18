@@ -29,7 +29,7 @@ const Card = ({
 };
 
 const DEFAULT_LIST_WIDTH = 200;
-const List = ({ list }: { list: List}) => {
+const List = ({ list }: { list: KanbanList}) => {
   return (
     <div style={{
       display: 'flex',
@@ -63,7 +63,7 @@ interface Card {
   title: string
 }
 
-interface List {
+export interface KanbanList {
   id: string
   title: string
   children: Card[]
@@ -71,7 +71,7 @@ interface List {
 }
 
 interface DraggableKanbanProps {
-  lists: List[]
+  lists: KanbanList[]
 }
 
 export const DraggableKanban = ({
