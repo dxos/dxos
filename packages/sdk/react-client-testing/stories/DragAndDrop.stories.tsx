@@ -70,8 +70,14 @@ const ListStory = () => {
   const getList = () => ({
     id: 'example-people-list',
     title: 'People',
-    children: items.map(item => ({ id: item.id, title: truncateKey(item.id, 5) + ' - ' + item.model.get('title') })),
-    width: '100%'
+    width: '100%',
+    children: orderedList?.values.map(id => {
+      const item = items.find(item => item.id === id);
+      return {
+        id,
+        title: truncateKey(id, 5) + ' - ' + item?.model.get('title')
+      };
+    })
   });
 
   const handleDragEnd = async (result: DropResult) => {
@@ -88,12 +94,13 @@ const ListStory = () => {
 
     const id = draggableId.split('-')[1];
 
-    const currentValueInIndex = orderedList.values[destination.index];
-    if (source.index < destination.index) {
-      await orderedList.insert(currentValueInIndex, id);
-    } else {
-      await orderedList.insert(id, currentValueInIndex);
-    }
+    const orderWithoutId = orderedList.values.filter(el => el !== id);
+    const newOrder = [
+      ...orderWithoutId.slice(0, destination.index),
+      id,
+      ...orderWithoutId.slice(destination.index, orderedList.values.length)
+    ];
+    await orderedList.init(newOrder);
   };
 
   if (!list) {
