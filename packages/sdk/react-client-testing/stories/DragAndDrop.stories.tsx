@@ -547,6 +547,19 @@ const KanbanStory = () => {
     const item = party?.select({ id }).exec().entities[0];
     if (item) {
       await item.model.set(targetFieldKey, destination.droppableId);
+      //   const list = lists.find(list => list.id === destination.droppableId);
+
+      //   const orderWithoutId = list?.orderedList.values.filter(el => el !== id);
+      //   if (!orderWithoutId) {
+      //     return;
+      //   }
+
+      //   const newOrder = [
+      //     ...orderWithoutId.slice(0, destination.index),
+      //     id,
+      //     ...orderWithoutId.slice(destination.index, list!.orderedList.values.length)
+      //   ];
+      //   await list!.orderedList.init(newOrder);
     }
   };
 
