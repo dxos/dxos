@@ -77,7 +77,7 @@ const ListStory = () => {
         id,
         title: truncateKey(id, 5) + ' - ' + item?.model.get('title')
       };
-    })
+    }) ?? []
   });
 
   const handleDragEnd = async (result: DropResult) => {
@@ -579,4 +579,3 @@ export const Kanban = () => {
     </ClientProvider>
   );
 };
-
