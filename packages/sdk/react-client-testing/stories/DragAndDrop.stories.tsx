@@ -512,6 +512,10 @@ const KanbanStory = () => {
   const builder = useSchemaBuilder(party);
   const targetFieldKey = schema?.fields[1].key;
   const lists = useSchema(party, schema, targetFieldKey);
+  const columns = useSelection(party?.select()
+    .filter({ type: TYPE_KANBAN_COLUMN })
+    .filter(item => item.model.get('schema') === schema?.name),
+  [schema]) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -543,9 +547,26 @@ const KanbanStory = () => {
   };
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <DraggableKanban lists={lists} />
-    </DragDropContext>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-around'
+    }}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <DraggableKanban lists={lists} />
+      </DragDropContext>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        width: '100%'
+      }}>
+        {columns?.map(column => (
+          <DragAndDropDebugPanel
+            key={column.id}
+            order={column.model.get('order') ?? {}}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 
