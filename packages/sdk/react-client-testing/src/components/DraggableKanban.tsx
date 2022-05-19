@@ -12,7 +12,7 @@ const Card = ({
   index,
   selected,
   dragging
-}: { card: Card, index: number, selected: boolean, dragging: boolean }) => {
+}: { card: KanbanCard, index: number, selected: boolean, dragging: boolean }) => {
   return (
     <DraggableContainer
       id={'kanban-' + card.id}
@@ -29,7 +29,7 @@ const Card = ({
 };
 
 const DEFAULT_LIST_WIDTH = 200;
-const List = ({ list }: { list: List}) => {
+const List = ({ list }: { list: KanbanList}) => {
   return (
     <div style={{
       display: 'flex',
@@ -58,20 +58,20 @@ const List = ({ list }: { list: List}) => {
   );
 };
 
-interface Card {
+export interface KanbanCard {
   id: string
   title: string
 }
 
-interface List {
+export interface KanbanList {
   id: string
   title: string
-  children: Card[]
+  children: KanbanCard[]
   width?: number | string
 }
 
 interface DraggableKanbanProps {
-  lists: List[]
+  lists: KanbanList[]
 }
 
 export const DraggableKanban = ({

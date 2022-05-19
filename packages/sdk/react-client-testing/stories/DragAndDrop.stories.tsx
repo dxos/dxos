@@ -14,7 +14,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableKanban, DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
+import { DraggableKanban, DraggableTable, KanbanCard, KanbanList, ProfileInitializer, useSchemaBuilder } from '../src';
 import { DragAndDropDebugPanel } from './helpers';
 
 export default {
@@ -64,7 +64,7 @@ const SimpleListStory = () => {
     setCurrentOrder(newOrderedList.values);
   }, []);
 
-  const getList = () => ({
+  const getList = (): KanbanList => ({
     id: 'test-list',
     title: 'People',
     children: currentOrder.map(itemId => {
@@ -73,7 +73,7 @@ const SimpleListStory = () => {
         return { id: item.id, title: item.model.get('title') };
       }
       return null;
-    })
+    }).filter(Boolean) as KanbanCard[]
   });
 
   const handleDragEnd = async (result: DropResult) => {
