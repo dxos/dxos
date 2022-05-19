@@ -535,8 +535,12 @@ const KanbanStory = () => {
   }, [builder]);
 
   const handleDragEnd = async (result: DropResult) => {
-    const { draggableId, destination } = result;
-    if (!destination) {
+    const { draggableId, destination, source } = result;
+    if (
+      !destination ||
+      destination.droppableId !== source.droppableId ||
+      destination.index === source.index
+    ) {
       return;
     }
     const id = draggableId.split('-')[1];
