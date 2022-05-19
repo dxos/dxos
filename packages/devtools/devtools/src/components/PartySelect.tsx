@@ -14,11 +14,12 @@ interface PartySelectProps {
   parties: Party[] // TODO(burdon): Keys?
   selected: Party | undefined
   onChange: (value: Party | undefined) => void
+  style?: {[key: string]: string | number}
 }
 
-export const PartySelect = ({ parties, selected, onChange }: PartySelectProps) => {
+export const PartySelect = ({ parties, selected, onChange, style }: PartySelectProps) => {
   return (
-    <FormControl fullWidth variant='standard'>
+    <FormControl fullWidth variant='standard' style={style}>
       <InputLabel id='party-select'>Party</InputLabel>
       <Select
         id='party-select'

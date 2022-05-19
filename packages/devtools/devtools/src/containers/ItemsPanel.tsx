@@ -48,6 +48,7 @@ export const ItemsPanel = () => {
         parties={parties}
         selected={selectedParty}
         onChange={setSelectedParty}
+        style={{ height: PARTY_SELECTOR_HEIGHT }}
       />
     )}>
       <Box display='flex'>
@@ -57,7 +58,8 @@ export const ItemsPanel = () => {
           sx={{
             flex: 1,
             maxWidth: 300,
-            overflowY: 'auto'
+            overflowY: 'auto',
+            height: `calc(100vh - ${PARTY_SELECTOR_HEIGHT})`
           }}
         >
           {items.map(item => (
