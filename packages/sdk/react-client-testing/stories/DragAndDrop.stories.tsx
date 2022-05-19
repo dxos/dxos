@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import React, { useState } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
@@ -21,7 +22,96 @@ export default {
 };
 
 const TYPE_LIST = 'example:type/list';
+const TYPE_LIST_ITEM = 'example:type/list/item';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
+
+const SimpleListStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [list, setList] = useState<Item<ObjectModel>>();
+  const [orderedList, setOrderedList] = useState<OrderedList>();
+  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
+  const [currentOrder, setCurrentOrder] = useState<string[]>([]);
+  const items = useSelection(party?.select()
+    .filter({ type: TYPE_LIST_ITEM })
+    .filter({ parent: list?.id }),
+  [list, orderedList?.values]) ?? [];
+
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
+    const listItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_LIST
+    });
+
+    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 5, max: 10 }) }).map(async (_, i) => {
+      return await newParty?.database.createItem({
+        model: ObjectModel,
+        type: TYPE_LIST_ITEM,
+        parent: listItem.id,
+        props: {
+          title: faker.name.firstName()
+        }
+      });
+    }));
+
+    const newOrderedList = new OrderedList(listItem.model);
+    await newOrderedList.init(res.map(item => item.id));
+
+    setParty(newParty);
+    setList(listItem);
+    setOrderedList(newOrderedList);
+    setCurrentOrder(newOrderedList.values);
+  }, []);
+
+  const getList = () => ({
+    id: 'test-list',
+    title: 'People',
+    children: currentOrder.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, title: item.model.get('title') };
+      }
+      return null;
+    })
+  });
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!orderedList || !result.destination) {
+      return;
+    }
+    const { destination, draggableId } = result;
+    const id = draggableId.split('-')[1];
+    const currentOrderWithoutId = orderedList.values.filter(value => value !== id);
+    const newOrder = [
+      ...currentOrderWithoutId.slice(0, destination.index),
+      id,
+      ...currentOrderWithoutId.slice(destination.index, orderedList?.values.length)
+    ];
+    await orderedList.init(newOrder);
+    setCurrentOrder(newOrder);
+  };
+
+  if (!orderedList) {
+    return null;
+  }
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <DraggableKanban lists={[getList()]} />
+    </DragDropContext>
+  );
+};
+
+export const SimpleList = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <SimpleListStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
 
 const ListStory = () => {
   const client = useClient();
