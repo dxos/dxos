@@ -19,6 +19,8 @@ import { TextModel } from '@dxos/text-model';
 
 import { Panel, PartySelect } from '../components';
 
+const PARTY_SELECTOR_HEIGHT = '70px';
+
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select().children()) ?? [];
 
