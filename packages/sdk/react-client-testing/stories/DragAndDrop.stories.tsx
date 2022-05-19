@@ -31,6 +31,7 @@ const SimpleListStory = () => {
   const [list, setList] = useState<Item<ObjectModel>>();
   const [orderedList, setOrderedList] = useState<OrderedList>();
   // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
+  const [previousOrder, setPreviousOrder] = useState<{[key: string]: string}>();
   const [currentOrder, setCurrentOrder] = useState<string[]>([]);
   const items = useSelection(party?.select()
     .filter({ type: TYPE_LIST_ITEM })
@@ -80,6 +81,8 @@ const SimpleListStory = () => {
     if (!orderedList || !result.destination) {
       return;
     }
+    setPreviousOrder(list?.model.get('order'));
+
     const { destination, draggableId } = result;
     const id = draggableId.split('-')[1];
     const currentOrderWithoutId = orderedList.values.filter(value => value !== id);
@@ -97,9 +100,18 @@ const SimpleListStory = () => {
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <DraggableKanban lists={[getList()]} />
-    </DragDropContext>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-around'
+    }}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <DraggableKanban lists={[getList()]} />
+      </DragDropContext>
+      <DragAndDropDebugPanel
+        previousOrder={previousOrder}
+        order={list?.model.get('order')}
+      />
+    </div>
   );
 };
 
