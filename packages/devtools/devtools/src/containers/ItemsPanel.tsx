@@ -108,7 +108,7 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
         </tr>
         <tr>
           <td>Deleted</td>
-          <td>{item.deleted}</td>
+          <td>{item.deleted ? 'Yes' : 'No'}</td>
         </tr>
         <tr>
           <td>Properties</td>
