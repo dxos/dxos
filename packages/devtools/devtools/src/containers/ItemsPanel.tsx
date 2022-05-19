@@ -50,10 +50,9 @@ export const ItemsPanel = () => {
         parties={parties}
         selected={selectedParty}
         onChange={setSelectedParty}
-        style={{ height: PARTY_SELECTOR_HEIGHT }}
       />
     )}>
-      <Box display='flex'>
+      <Box display='flex' height='100%'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
           defaultExpandIcon={<ExpandIcon />}
@@ -61,7 +60,7 @@ export const ItemsPanel = () => {
             flex: 1,
             maxWidth: 300,
             overflowY: 'auto',
-            height: `calc(100vh - ${PARTY_SELECTOR_HEIGHT})`
+            height: '100%'
           }}
         >
           {items.map(item => (
