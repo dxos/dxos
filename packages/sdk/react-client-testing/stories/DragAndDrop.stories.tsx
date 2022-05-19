@@ -450,23 +450,55 @@ export const MultipleTable = () => {
 
 const TYPE_KANBAN_BOARD = 'dxos:type/kanban/board';
 const TYPE_KANBAN_COLUMN = 'dxos:type/kanban/column';
-const useSchema = (party?: Party, schema?: Schema, targetFieldKey?: string) => {
+type SchemaList = {
+  id: string
+  title: string
+  children: any[]
+  orderedList: OrderedList
+}
+const useSchema = (party?: Party, schema?: Schema, targetFieldKey?: string): SchemaList[] => {
+  const [orderedLists, setOrderedLists] = useState<OrderedList[]>([]);
+
+  const columns = useSelection(
+    party?.select()
+      .filter({ type: TYPE_KANBAN_COLUMN })
+      .filter(item => item.model.get('schema') === schema?.name),
+    [schema]
+  ) ?? [];
+
   const items = useSelection(
     party?.select()
       .filter({ type: schema?.name }),
     [schema]
   ) ?? [];
 
-  const getListChildren = (items: Item<ObjectModel>[], value: string) => items
-    .filter(row => row.model.get(targetFieldKey!) === value)
-    .map(item => ({ id: item.id, ...item.model.toObject() }));
+  const getListChildren = (value: string) => {
+    const column = columns.find(column => column.model.get('value') === value);
+    const order = orderedLists.find(list => list.id === column?.id);
+    return items
+      .filter(row => row.model.get(targetFieldKey!) === value)
+      .map(item => ({ id: item.id, ...item.model.toObject() }))
+      .sort((a: any, b: any) => {
+        if (!order) {
+          return 0;
+        }
+        if (order.values.indexOf(a.id) > order.values.indexOf(b.id)) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+  };
 
   // Gets all unique values of target field for the items using the schema from this context.
   const uniqueRowValues = targetFieldKey ? new Set(items.map(row => row.model.get(targetFieldKey))) : new Set();
-  const lists: KanbanList[] = Array.from(uniqueRowValues.values()).map(listValue => {
+  const lists: SchemaList[] = Array.from(uniqueRowValues.values()).map(listValue => {
     if (!party || !schema || !targetFieldKey) {
-      return {};
+      return undefined;
     }
+
+    const column = columns.find(column => column.model.get('value') === listValue);
+    const orderedList = orderedLists.find(list => list.id === column?.id) ?? {};
 
     let title = listValue;
     if (schema.getField(targetFieldKey)?.ref) {
@@ -480,27 +512,37 @@ const useSchema = (party?: Party, schema?: Schema, targetFieldKey?: string) => {
     return {
       id: listValue,
       title,
-      children: getListChildren(items, listValue)
+      children: getListChildren(listValue),
+      orderedList
     };
-  });
+  }).filter(Boolean) as SchemaList[];
 
   useAsyncEffect(async () => {
-    if (!party || !schema || !targetFieldKey) {
+    if (!party || !schema || !targetFieldKey || !columns) {
       return;
     }
-    Array.from(uniqueRowValues.values()).forEach(async (value) => {
-      const [listColumnItem] = party.select().filter(item => item.model.get('value') === value).exec().entities;
-      if (!listColumnItem) {
-        await party.database.createItem({
+
+    const listValues = Array.from(uniqueRowValues.values());
+    await Promise.all(listValues.map(async (value) => {
+      const listColumnItem = columns.find(column => column.model.get('value') === value ?? 'undefined');
+      if (value && !listColumnItem) {
+        const column = await party.database.createItem({
           model: ObjectModel,
           type: TYPE_KANBAN_COLUMN,
           props: {
-            value
+            schema: schema.name,
+            value: value ?? 'undefined'
           }
         });
+        const orderedList = new OrderedList(column.model);
+        setOrderedLists(prev => [
+          ...prev,
+          orderedList
+        ]);
+        return column;
       }
-    });
-  }, [lists.map(list => list.id)]);
+    }));
+  }, [uniqueRowValues.size]);
 
   return lists;
 };
