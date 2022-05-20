@@ -83,11 +83,10 @@ const ListStory = () => {
     setPreviousOrder(list?.model.get('order'));
 
     const { destination, draggableId } = result;
-    const id = draggableId.split('-')[1];
-    const currentOrderWithoutId = orderedList.values.filter(value => value !== id);
+    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
-      id,
+      draggableId,
       ...currentOrderWithoutId.slice(destination.index, orderedList?.values.length)
     ];
     await orderedList.init(newOrder);
@@ -205,11 +204,10 @@ const MultipleListStory = () => {
       return;
     }
 
-    const id = draggableId.split('-')[1];
-    const currentOrderWithoutId = targetList.orderedList.values.filter(value => value !== id);
+    const currentOrderWithoutId = targetList.orderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
-      id,
+      draggableId,
       ...currentOrderWithoutId.slice(destination.index, targetList.orderedList.values.length)
     ];
     await targetList.orderedList.init(newOrder);
