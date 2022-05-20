@@ -272,51 +272,41 @@ export const MultipleList = () => {
     </ClientProvider>
   );
 };
+
+const TYPE_TEST_PERSON = 'example:type/person';
 const TableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [schema, setSchema] = useState<Schema>();
-  const builder = useSchemaBuilder(party);
   const [table] = useSelection(party?.select()
     .filter({ type: TYPE_TABLE_TABLE }),
   []) ?? [];
   const [orderedList, setOrderedList] = useState<OrderedList>();
-  const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
+  const [currentOrder, setCurrentOrder] = useState<string[]>([]);
 
   const items = useSelection(party?.select()
-    .filter({ type: schema?.name }),
-  [schema]) ?? [];
+    .filter({ type: TYPE_TEST_PERSON }),
+  []) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
+    const tableItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_TABLE_TABLE
+    });
+
+    const createdItems = await Promise.all(Array.from({ length: 10 }).map(async () => await newParty?.database.createItem({
+      type: TYPE_TEST_PERSON,
+      props: {
+        title: faker.name.firstName()
+      }
+    })));
+    const newOrderedList = new OrderedList(tableItem.model);
+    await newOrderedList.init(createdItems.map(item => item.id));
+    setCurrentOrder(createdItems.map(item => item.id));
+
     setParty(newParty);
+    setOrderedList(newOrderedList);
   }, []);
-
-  useAsyncEffect(async () => {
-    if (builder) {
-      const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
-      const tableItem = await party?.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_TABLE,
-        props: {
-          schema: personSchema!.name
-        }
-      });
-
-      const data = await builder.createData(undefined, {
-        [DefaultSchemaDefs[TestType.Org].schema]: 3,
-        [DefaultSchemaDefs[TestType.Person].schema]: 10
-      });
-      const personItems = data[1];
-
-      const newOrderedList = new OrderedList(tableItem!.model);
-      await newOrderedList.init(personItems.map(item => item.id));
-      setOrderedList(newOrderedList);
-
-      setSchema(personSchema);
-    }
-  }, [builder]);
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, draggableId, source } = result;
@@ -328,48 +318,26 @@ const TableStory = () => {
     ) {
       return;
     }
-    setPreviousOrder(table.model.get('order'));
 
-    const id = draggableId.split('-')[1];
-
-    const currentValueInIndex = orderedList.values[destination.index];
-    if (source.index < destination.index) {
-      // await orderedList.remove([id]);
-      await orderedList.insert(currentValueInIndex, id);
-    } else {
-      // await orderedList.remove([currentValueInIndex]);
-      await orderedList.insert(id, currentValueInIndex);
-    }
+    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
+    const newOrder = [
+      ...currentOrderWithoutId.slice(0, destination.index),
+      draggableId,
+      ...currentOrderWithoutId.slice(destination.index, orderedList.values.length)
+    ];
+    await orderedList.init(newOrder);
+    setCurrentOrder(newOrder);
   };
 
-  const getRows = () => {
-    if (!table || !orderedList) {
-      return [];
+  const getRows = () => currentOrder.map(itemId => {
+    const item = items.find(item => item.id === itemId);
+    if (item) {
+      return { id: item.id, title: item.model.get('title') };
     }
+    return null;
+  }).filter(Boolean);
 
-    const tableRowIds = orderedList.values;
-
-    if (!tableRowIds) {
-      return [];
-    }
-
-    const rows = items.filter(item => tableRowIds.includes(item.id));
-    return rows.map(item => ({
-      id: item.id,
-      ...item.model.toObject()
-    })).sort((a: any, b: any) => {
-      if (!tableRowIds) {
-        return 0;
-      }
-      if (tableRowIds.indexOf(a.id) > tableRowIds.indexOf(b.id)) {
-        return 1;
-      } else {
-        return -1;
-      }
-    });
-  };
-
-  if (!schema || !table) {
+  if (!table) {
     return null;
   }
 
@@ -377,13 +345,13 @@ const TableStory = () => {
     {
       id: 'id',
       accessor: 'id',
-      title: 'ID'
+      title: 'Id'
     },
-    ...schema.fields.map(field => ({
-      id: field.key,
-      accessor: field.key,
-      title: field.key
-    }))
+    {
+      id: 'title',
+      accessor: 'title',
+      title: 'Title'
+    }
   ];
 
   return (
@@ -396,7 +364,6 @@ const TableStory = () => {
         />
       </DragDropContext>
       <DragAndDropDebugPanel
-        previousOrder={previousOrder}
         order={table.model.get('order')}
       />
     </>
