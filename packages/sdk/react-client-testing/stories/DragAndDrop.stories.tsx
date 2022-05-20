@@ -476,6 +476,7 @@ const MultipleTableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [tables, setTables] = useState<TableStruct[]>([]);
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
 
   const items = useSelection(party?.select()
     .filter({ type: TYPE_TEST_PERSON }),
@@ -502,7 +503,7 @@ const MultipleTableStory = () => {
     })));
 
     const itemsPerTable = Math.ceil(nItems / nTables);
-    const orderedLists = await Promise.all(tableItems.map(async (tableItem, i) => {
+    const newOrderedLists = await Promise.all(tableItems.map(async (tableItem, i) => {
       const newOrderedList = new OrderedList(tableItem.model);
       await newOrderedList.init(createdItems.slice(i * itemsPerTable, i * itemsPerTable + itemsPerTable).map(item => item.id));
       return newOrderedList;
@@ -510,7 +511,7 @@ const MultipleTableStory = () => {
 
     setParty(newParty);
     setTables(tableItems.map(tableItem => {
-      const orderedList = orderedLists.find(orderedList => orderedList.id === tableItem.id);
+      const orderedList = newOrderedLists.find(orderedList => orderedList.id === tableItem.id);
       return {
         id: tableItem.id,
         table: tableItem,
@@ -518,7 +519,10 @@ const MultipleTableStory = () => {
         currentOrder: orderedList?.values ?? []
       };
     }));
-
+    setInitialOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
   }, []);
 
   const handleDragEnd = async (result: DropResult) => {
@@ -570,6 +574,29 @@ const MultipleTableStory = () => {
       }
 
       return table;
+    }));
+  };
+
+  const handleReset = async () => {
+    if (!initialOrders) {
+      return;
+    }
+
+    await Promise.all(tables.map(async (table) => {
+      const initialOrder = initialOrders.find(order => order.id === table.id);
+      initialOrder && await table.orderedList?.init(initialOrder.values);
+    }));
+
+    // Update state to trigger rerender
+    setTables(tables.map(table => {
+      const initialOrder = initialOrders.find(order => order.id === table.id);
+      if (!initialOrder) {
+        return table;
+      }
+      return {
+        ...table,
+        currentOrder: initialOrder.values
+      };
     }));
   };
 
@@ -633,7 +660,9 @@ const MultipleTableStory = () => {
           ))}
         </div>
       </DragDropContext>
-    </>
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
   );
 };
 
