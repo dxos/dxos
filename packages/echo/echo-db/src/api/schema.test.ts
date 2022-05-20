@@ -37,7 +37,7 @@ describe('Schema', () => {
     const database = await setup();
     const schema = await createTestSchema(database);
     expect(schema).toBeTruthy();
-    expect(schema.schema).toBeTruthy();
+    expect(schema.name).toBeTruthy();
   });
 
   test('add and delete field', async () => {
@@ -80,7 +80,7 @@ describe('Schema', () => {
     await schema.addField(firstField);
     const item = await database.createItem({
       model: ObjectModel,
-      type: schema.schema
+      type: schema.name
     });
     expect(schema.validate(item.model)).toBeFalsy();
 
