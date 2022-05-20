@@ -35,6 +35,7 @@ const ListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [list, setList] = useState<ListStruct>();
+  const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const items = useSelection(party?.select()
     .filter({ type: TYPE_LIST_ITEM }),
   [list]) ?? [];
@@ -58,6 +59,7 @@ const ListStory = () => {
 
     const newOrderedList = new OrderedList(listItem.model);
     await newOrderedList.init(res.map(item => item.id));
+    setInitialOrder(newOrderedList.values);
 
     setParty(newParty);
     setList({
@@ -101,22 +103,38 @@ const ListStory = () => {
     });
   };
 
+  const handleReset = async () => {
+    if (!list) {
+      return;
+    }
+    await list.orderedList?.init(initialOrder);
+    setList({
+      ...list,
+      currentOrder: initialOrder
+    });
+  };
+
   if (!list) {
     return null;
   }
 
   return (
     <div style={{
-      display: 'flex',
-      justifyContent: 'space-around'
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 0.1fr'
     }}>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <DroppableList list={getList()} />
-      </DragDropContext>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <DroppableList list={getList()} />
+        </DragDropContext>
+      </div>
       <DragAndDropDebugPanel
         previousOrder={list.previousOrder ?? {}}
         order={list.list.model.get('order')}
       />
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
     </div>
   );
 };
