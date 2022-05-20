@@ -74,8 +74,8 @@ export const DraggableTable = ({
       >
         {instance.getRowModel().rows.map((row, i) => (
           <DraggableContainer
-            key={'table-' + row.original!.id}
-            id={'table-' + row.original!.id}
+            key={row.original!.id}
+            id={row.original!.id}
             index={i}
           >
               <div
