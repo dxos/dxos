@@ -153,6 +153,7 @@ const MultipleListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [lists, setLists] = useState<ListStruct[]>([]);
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
   const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
 
   useAsyncEffect(async () => {
@@ -191,6 +192,10 @@ const MultipleListStory = () => {
         currentOrder: orderedList?.values ?? []
       };
     }));
+    setInitialOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
   }, []);
 
   const getList = (listId: string): ListDef | undefined => {
@@ -259,6 +264,29 @@ const MultipleListStory = () => {
     }));
   };
 
+  const handleReset = async () => {
+    if (!initialOrders) {
+      return;
+    }
+
+    await Promise.all(lists.map(async (list) => {
+      const initialOrder = initialOrders.find(order => order.id === list.id);
+      initialOrder && await list.orderedList?.init(initialOrder.values);
+    }));
+
+    // Update state to trigger rerender
+    setLists(lists.map(list => {
+      const initialOrder = initialOrders.find(order => order.id === list.id);
+      if (!initialOrder) {
+        return list;
+      }
+      return {
+        ...list,
+        currentOrder: initialOrder.values
+      };
+    }));
+  };
+
   if (!party || !lists.length) {
     return null;
   }
@@ -278,6 +306,9 @@ const MultipleListStory = () => {
           </div>
         ))}
       </DragDropContext>
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
     </div>
   );
 };
