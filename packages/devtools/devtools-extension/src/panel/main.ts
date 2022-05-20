@@ -11,6 +11,7 @@ import { createDevtoolsPort } from '../utils';
 import { initPanel } from './init-panel';
 
 void (async () => {
+  console.log('[DXOS devtools] Init client API started.');
   await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
   const port = createDevtoolsPort();
   const client = new Client({
@@ -35,6 +36,7 @@ function waitToBeReady () {
       chrome.devtools.inspectedWindow.eval(
         '!!(window.__DXOS__.devtoolsReady);',
         (result, isException) => {
+          console.log('[DXOS devtools] Devtools ready check result:', { result, isException, now: new Date().toISOString() });
           if (!result || isException) {
             if (Date.now() - start > TIMEOUT) {
               reject(new Error('Timeout on waiting for client API to initialize.'));

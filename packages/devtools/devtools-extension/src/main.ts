@@ -11,6 +11,7 @@ let checkCount = 0;
 let loadCheckInterval: NodeJS.Timeout;
 
 function createPanel () {
+  console.log('[DXOS devtools] Attempting to create panel...', { now: new Date().toISOString(), panelCreated, checkCount });
   // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
     return;
@@ -20,6 +21,7 @@ function createPanel () {
   chrome.devtools.inspectedWindow.eval(
     '!!(window.__DXOS__);',
     (result, isException) => {
+      console.log('[DXOS devtools] DXOS available', { result, isException });
       // TODO(elmasse): How should we better handle this error?
       if (isException) {
         console.log('DXOS devtools:', isException);
@@ -37,7 +39,8 @@ function createPanel () {
 
       panelCreated = true;
 
-      chrome.devtools.panels.create('DXOS', '', 'main-panel.html');
+      chrome.devtools.panels.create('DXOS', '', 'panel.html');
+      console.log('[DXOS devtools] Panel created.');
     }
   );
 }

@@ -9,7 +9,6 @@ import { DevtoolsHook } from '@dxos/client';
 import { createWindowPort } from '../utils';
 import { RpcClientAPI } from './client-api';
 
-Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
 
 // eslint-disable-next-line prefer-const
@@ -27,6 +26,7 @@ const init = async () => {
     const port = createWindowPort();
     const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services);
     (window as any).__DXOS__.devtoolsReady = true;
+    console.log('[DXOS devtools] Devtools ready.', { clientReady: devtoolsContext.client.initialized, now: new Date().toISOString() });
     await clientApi.run();
     console.log('[DXOS devtools] Init client API finished.');
   } else {

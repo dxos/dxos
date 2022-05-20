@@ -11,9 +11,11 @@ const MESSAGE_ID = 'devtools';
 const createPort = (destination: string): RpcPort => {
   return {
     send: async (msg) => {
+      console.log('[DXOS devtools] send', { now: new Date().toISOString(), destination, msg });
       await Bridge.sendMessage(MESSAGE_ID, Array.from(msg), destination);
     },
     subscribe: callback => {
+      console.log('[DXOS devtools] subscribe', { now: new Date().toISOString(), destination });
       Bridge.onMessage(MESSAGE_ID, (message) => {
         callback(new Uint8Array(message.data));
       });
