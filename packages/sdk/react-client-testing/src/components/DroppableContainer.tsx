@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 import { Droppable } from 'react-beautiful-dnd';
 
 interface DroppableContainerProps {
   id: string
   children: ReactNode
-  styles?: any
+  styles?: CSSProperties
 }
 
 export const DroppableContainer = ({
