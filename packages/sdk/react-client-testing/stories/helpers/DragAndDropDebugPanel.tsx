@@ -12,7 +12,7 @@ const DEBUG_PANEL_WIDTH = '100%';
 type Order = { [key: string]: string }
 
 interface DragAndDropDebugPanelProps {
-  previousOrder: Order | undefined,
+  previousOrder?: Order | undefined,
   order: Order
   party?: Party
   width? : number | string
@@ -39,13 +39,15 @@ export const DragAndDropDebugPanel = ({
   };
 
   return (
-    <div style={{ display: 'flex' }}>
-      <div style={{ width }}>
-        <h3>Previous <span style={{ fontWeight: 100 }}>(truncated)</span></h3>
-        <pre>{JSON.stringify(previousOrder ? reduceKeyLength(previousOrder) : {}, undefined, 2)}</pre>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+      {previousOrder && (
+        <div style={{ width }}>
+          <h3>Previous</h3>
+          <pre>{JSON.stringify(previousOrder ? reduceKeyLength(previousOrder) : {}, undefined, 2)}</pre>
+        </div>
+      )}
       <div style={{ marginLeft: 16, width }}>
-        <h3>Current <span style={{ fontWeight: 100 }}>(truncated)</span></h3>
+        <h3>Current</h3>
         <pre>{JSON.stringify(reduceKeyLength(order), undefined, 2)}</pre>
       </div>
     </div>
