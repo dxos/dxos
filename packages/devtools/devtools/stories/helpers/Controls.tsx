@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import {
   AddCircleOutline as AddIcon,
@@ -21,6 +21,7 @@ import {
 import { clientServiceBundle } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
@@ -40,17 +41,15 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
   const profile = useProfile();
   const parties = useParties();
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (port) {
-      setImmediate(async () => {
-        const rpcServer = createBundledRpcServer({ // TODO(burdon): Rename "Bundled"?
-          services: clientServiceBundle,
-          handlers: client.services,
-          port
-        });
-
-        await rpcServer.open();
+      const rpcServer = createBundledRpcServer({ // TODO(burdon): Rename "Bundled"?
+        services: clientServiceBundle,
+        handlers: client.services,
+        port
       });
+
+      await rpcServer.open();
     }
   }, [port]);
 
@@ -81,7 +80,7 @@ export const Controls = ({ port }: { port?: RpcPort }) => {
       model: ObjectModel, type: 'example:type/object', parent: root.id
     });
 
-    // Test.
+    // Text.
     const text = await party.database.createItem({
       model: TextModel, type: 'example:type/text', parent: child.id
     });
