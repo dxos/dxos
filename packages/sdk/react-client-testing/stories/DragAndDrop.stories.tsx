@@ -324,14 +324,18 @@ export const MultipleList = () => {
 };
 
 const TYPE_TEST_PERSON = 'example:type/person';
+type TableStruct = {
+  id: string
+  table: Item<ObjectModel>
+  orderedList?: OrderedList
+  currentOrder?: string[]
+}
+
 const TableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [table] = useSelection(party?.select()
-    .filter({ type: TYPE_TABLE_TABLE }),
-  []) ?? [];
-  const [orderedList, setOrderedList] = useState<OrderedList>();
-  const [currentOrder, setCurrentOrder] = useState<string[]>([]);
+  const [table, setTable] = useState<TableStruct>();
+  const [initialOrder, setInitialOrder] = useState<string[]>([]);
 
   const items = useSelection(party?.select()
     .filter({ type: TYPE_TEST_PERSON }),
@@ -355,42 +359,59 @@ const TableStory = () => {
     })));
     const newOrderedList = new OrderedList(tableItem.model);
     await newOrderedList.init(createdItems.map(item => item.id));
-    setCurrentOrder(createdItems.map(item => item.id));
 
     setParty(newParty);
-    setOrderedList(newOrderedList);
+    setTable({
+      id: tableItem.id,
+      table: tableItem,
+      orderedList: newOrderedList,
+      currentOrder: newOrderedList.values
+    });
+    setInitialOrder(newOrderedList.values);
   }, []);
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, draggableId, source } = result;
     if (
-      !orderedList ||
+      !table?.orderedList ||
       !destination ||
-      destination.droppableId !== source.droppableId ||
       destination.index === source.index
     ) {
       return;
     }
 
-    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
+    const currentOrderWithoutId = table.orderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
       draggableId,
-      ...currentOrderWithoutId.slice(destination.index, orderedList.values.length)
+      ...currentOrderWithoutId.slice(destination.index, table.orderedList.values.length)
     ];
-    await orderedList.init(newOrder);
-    setCurrentOrder(newOrder);
+    await table.orderedList.init(newOrder);
+    setTable({
+      ...table,
+      currentOrder: newOrder
+    });
   };
 
-  const getRows = () => currentOrder.map(itemId => {
-    const item = items.find(item => item.id === itemId);
-    if (item) {
-      return { id: item.id, ...item.model.toObject() };
-    }
-    return null;
-  }).filter(Boolean);
+  const handleReset = async () => {
+    await table!.orderedList!.init(initialOrder);
+    setTable({
+      ...table!,
+      currentOrder: initialOrder
+    });
+  };
 
-  if (!table) {
+  const getRows = () => {
+    return table!.currentOrder!.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, ...item.model.toObject() };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
+  if (!table?.orderedList) {
     return null;
   }
 
@@ -418,7 +439,10 @@ const TableStory = () => {
   ];
 
   return (
-    <>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 0.3fr 0.1fr'
+    }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <DraggableTable
           id={table.id}
@@ -427,9 +451,12 @@ const TableStory = () => {
         />
       </DragDropContext>
       <DragAndDropDebugPanel
-        order={table.model.get('order')}
+        order={table.table.model.get('order')}
       />
-    </>
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+    </div>
   );
 };
 
@@ -442,13 +469,6 @@ export const Table = () => {
     </ClientProvider>
   );
 };
-
-type TableStruct = {
-  id: string
-  table: Item<ObjectModel>
-  orderedList?: OrderedList
-  currentOrder?: string[]
-}
 
 const MultipleTableStory = () => {
   const nTables = 2;
