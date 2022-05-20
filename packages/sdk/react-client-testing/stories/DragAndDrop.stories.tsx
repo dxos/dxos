@@ -22,18 +22,22 @@ const TYPE_LIST = 'example:type/list';
 const TYPE_LIST_ITEM = 'example:type/list/item';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
 
+type ListStruct = {
+  id: string
+  list: Item<ObjectModel>
+  orderedList: OrderedList | undefined
+  previousOrder?: {[key: string]: string}
+  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
+  currentOrder: string[]
+}
+
 const ListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [list, setList] = useState<Item<ObjectModel>>();
-  const [orderedList, setOrderedList] = useState<OrderedList>();
-  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
-  const [previousOrder, setPreviousOrder] = useState<{[key: string]: string}>();
-  const [currentOrder, setCurrentOrder] = useState<string[]>([]);
+  const [list, setList] = useState<ListStruct>();
   const items = useSelection(party?.select()
-    .filter({ type: TYPE_LIST_ITEM })
-    .filter({ parent: list?.id }),
-  [list, orderedList?.values]) ?? [];
+    .filter({ type: TYPE_LIST_ITEM }),
+  [list]) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -42,7 +46,7 @@ const ListStory = () => {
       type: TYPE_LIST
     });
 
-    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 5, max: 10 }) }).map(async (_, i) => {
+    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(async () => {
       return await newParty?.database.createItem({
         model: ObjectModel,
         type: TYPE_LIST_ITEM,
@@ -56,15 +60,18 @@ const ListStory = () => {
     await newOrderedList.init(res.map(item => item.id));
 
     setParty(newParty);
-    setList(listItem);
-    setOrderedList(newOrderedList);
-    setCurrentOrder(newOrderedList.values);
+    setList({
+      id: listItem.id,
+      list: listItem,
+      orderedList: newOrderedList,
+      currentOrder: newOrderedList.values
+    });
   }, []);
 
   const getList = (): ListDef => ({
     id: 'test-list',
     title: 'People',
-    children: currentOrder.map(itemId => {
+    children: list!.currentOrder.map(itemId => {
       const item = items.find(item => item.id === itemId);
       if (item) {
         return { id: item.id, title: item.model.get('title') };
@@ -74,23 +81,27 @@ const ListStory = () => {
   });
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!orderedList || !result.destination) {
+    if (!list?.orderedList || !result.destination) {
       return;
     }
-    setPreviousOrder(list?.model.get('order'));
+    const previousOrder = list.list.model.get('order');
 
     const { destination, draggableId } = result;
-    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
+    const currentOrderWithoutId = list.orderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
       draggableId,
-      ...currentOrderWithoutId.slice(destination.index, orderedList?.values.length)
+      ...currentOrderWithoutId.slice(destination.index, list.orderedList.values.length)
     ];
-    await orderedList.init(newOrder);
-    setCurrentOrder(newOrder);
+    await list.orderedList.init(newOrder);
+    setList({
+      ...list,
+      previousOrder,
+      currentOrder: newOrder
+    });
   };
 
-  if (!orderedList) {
+  if (!list) {
     return null;
   }
 
@@ -103,8 +114,8 @@ const ListStory = () => {
         <DroppableList list={getList()} />
       </DragDropContext>
       <DragAndDropDebugPanel
-        previousOrder={previousOrder}
-        order={list?.model.get('order')}
+        previousOrder={list.previousOrder ?? {}}
+        order={list.list.model.get('order')}
       />
     </div>
   );
@@ -119,14 +130,6 @@ export const List = () => {
     </ClientProvider>
   );
 };
-
-type ListStruct = {
-  id: string
-  list: Item<ObjectModel>
-  orderedList: OrderedList | undefined
-  previousOrder?: string[]
-  currentOrder: string[]
-}
 
 const MultipleListStory = () => {
   const client = useClient();

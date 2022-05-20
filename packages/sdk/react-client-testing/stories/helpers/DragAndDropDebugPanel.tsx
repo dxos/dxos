@@ -12,7 +12,7 @@ const DEBUG_PANEL_WIDTH = '100%';
 type Order = { [key: string]: string }
 
 interface DragAndDropDebugPanelProps {
-  previousOrder?: Order | undefined,
+  previousOrder?: Order,
   order: Order
   party?: Party
   width? : number | string

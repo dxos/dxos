@@ -38,7 +38,7 @@ export const DroppableList = ({ list }: DroppableListProps) => {
           border: '0.5px solid rgba(0,0,0,0.2)',
           padding: 8,
           maxHeight: 300,
-          overflowY: 'scroll'
+          overflowY: 'auto'
         }}
       >
         {list.children.map((card, i) => (
