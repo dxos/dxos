@@ -147,8 +147,8 @@ const MultipleListStory = () => {
     }));
 
     const newOrderedLists: OrderedList[] = [];
-    await Promise.all(listItems.map(async (listItem, i) => {
-      const items = await Promise.all(Array.from({ length: faker.datatype.number({ min: i === 0 ? 20 : 4, max: i === 0 ? 20 : 4 }) }).map(async (_, i) => {
+    await Promise.all(listItems.map(async (listItem) => {
+      const items = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
         return await newParty?.database.createItem({
           model: ObjectModel,
           type: TYPE_LIST_ITEM,
