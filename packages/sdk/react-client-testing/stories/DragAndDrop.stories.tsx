@@ -134,6 +134,7 @@ const MultipleListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [lists, setLists] = useState<ListStruct[]>([]);
+  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -147,7 +148,7 @@ const MultipleListStory = () => {
 
     const newOrderedLists: OrderedList[] = [];
     await Promise.all(listItems.map(async (listItem) => {
-      const items = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
         return await newParty?.database.createItem({
           model: ObjectModel,
           type: TYPE_LIST_ITEM,
@@ -157,7 +158,7 @@ const MultipleListStory = () => {
         });
       }));
       const newOrderedList = new OrderedList(listItem.model);
-      await newOrderedList.init(items.map(item => item.id));
+      await newOrderedList.init(createdItems.map(item => item.id));
       newOrderedLists.push(newOrderedList);
     }));
 
@@ -183,7 +184,7 @@ const MultipleListStory = () => {
       id: list.id,
       title: 'People',
       children: list.currentOrder.map(itemId => {
-        const [item] = party!.select({ id: itemId }).exec().entities ?? [];
+        const item = items.find(item => item.id === itemId);
         if (item) {
           return { id: item.id, title: item.model.get('title') };
         }
