@@ -294,10 +294,13 @@ const TableStory = () => {
       type: TYPE_TABLE_TABLE
     });
 
-    const createdItems = await Promise.all(Array.from({ length: 10 }).map(async () => await newParty?.database.createItem({
+    const createdItems = await Promise.all(Array.from({ length: 40 }).map(async () => await newParty?.database.createItem({
       type: TYPE_TEST_PERSON,
       props: {
-        title: faker.name.firstName()
+        title: faker.name.firstName(),
+        country: faker.address.country(),
+        role: faker.name.jobTitle(),
+        email: faker.internet.email()
       }
     })));
     const newOrderedList = new OrderedList(tableItem.model);
@@ -332,7 +335,7 @@ const TableStory = () => {
   const getRows = () => currentOrder.map(itemId => {
     const item = items.find(item => item.id === itemId);
     if (item) {
-      return { id: item.id, title: item.model.get('title') };
+      return { id: item.id, ...item.model.toObject() };
     }
     return null;
   }).filter(Boolean);
@@ -343,14 +346,24 @@ const TableStory = () => {
 
   const columns = [
     {
-      id: 'id',
       accessor: 'id',
       title: 'Id'
     },
     {
-      id: 'title',
       accessor: 'title',
       title: 'Title'
+    },
+    {
+      accessor: 'country',
+      title: 'Country'
+    },
+    {
+      accessor: 'role',
+      title: 'Role'
+    },
+    {
+      accessor: 'email',
+      title: 'Email'
     }
   ];
 
