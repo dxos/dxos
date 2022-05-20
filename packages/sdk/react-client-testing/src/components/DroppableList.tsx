@@ -17,10 +17,14 @@ export type List = {
 }
 
 interface DroppableListProps {
-  list: List
+  list?: List
 }
 
 export const DroppableList = ({ list }: DroppableListProps) => {
+  if (!list) {
+    return null;
+  }
+
   return (
     <div style={{
       display: 'flex',
@@ -32,7 +36,9 @@ export const DroppableList = ({ list }: DroppableListProps) => {
         styles={{
           width: list.width ?? DEFAULT_LIST_WIDTH,
           border: '0.5px solid rgba(0,0,0,0.2)',
-          padding: 8
+          padding: 8,
+          maxHeight: 300,
+          overflowY: 'scroll'
         }}
       >
         {list.children.map((card, i) => (
