@@ -136,8 +136,6 @@ const MultipleListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [lists, setLists] = useState<ListStruct[]>([]);
-  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
-  // const [currentOrder, setCurrentOrder] = useState<string[]>([]);
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -180,7 +178,6 @@ const MultipleListStory = () => {
 
   const getList = (listId: string): ListDef | undefined => {
     const list = lists.find(list => list.id === listId);
-    console.log('GET', list);
     if (!list) {
       return undefined;
     }
@@ -225,7 +222,6 @@ const MultipleListStory = () => {
         currentOrder: newOrder
       };
     }));
-    // setCurrentOrder(newOrder);
   };
 
   if (!party || !lists.length) {
