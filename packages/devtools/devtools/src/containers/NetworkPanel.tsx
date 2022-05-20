@@ -9,10 +9,11 @@ import { Box } from '@mui/material';
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 import { Autocomplete } from '../components';
-import { useAsyncEffect, useStream } from '../hooks';
+import { useStream } from '../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 interface Topic {

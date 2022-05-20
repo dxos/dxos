@@ -50,14 +50,15 @@ export const ItemsPanel = () => {
         onChange={setSelectedParty}
       />
     )}>
-      <Box display='flex'>
+      <Box display='flex' height='100%'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
           defaultExpandIcon={<ExpandIcon />}
           sx={{
             flex: 1,
             maxWidth: 300,
-            overflowY: 'auto'
+            overflowY: 'auto',
+            height: '100%'
           }}
         >
           {items.map(item => (
@@ -108,7 +109,7 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
         </tr>
         <tr>
           <td>Deleted</td>
-          <td>{item.deleted}</td>
+          <td>{item.deleted ? 'Yes' : 'No'}</td>
         </tr>
         <tr>
           <td>Properties</td>

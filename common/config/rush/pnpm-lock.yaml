@@ -868,6 +868,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
@@ -905,6 +906,7 @@ importers:
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
