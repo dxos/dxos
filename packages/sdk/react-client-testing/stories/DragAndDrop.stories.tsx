@@ -48,7 +48,6 @@ const ListStory = () => {
       return await newParty?.database.createItem({
         model: ObjectModel,
         type: TYPE_LIST_ITEM,
-        parent: listItem.id,
         props: {
           title: faker.name.firstName()
         }
@@ -152,7 +151,6 @@ const MultipleListStory = () => {
         return await newParty?.database.createItem({
           model: ObjectModel,
           type: TYPE_LIST_ITEM,
-          parent: listItem.id,
           props: {
             title: faker.name.firstName()
           }
@@ -198,10 +196,21 @@ const MultipleListStory = () => {
     if (!lists.length || !result.destination) {
       return;
     }
-    const { destination, draggableId } = result;
+    const { destination, draggableId, source } = result;
     const targetList = lists.find(list => list.id === destination.droppableId);
     if (!targetList || !targetList.orderedList) {
       return;
+    }
+
+    let newSourceOrder: string[];
+    const sourceList = lists.find(list => list.id === source.droppableId);
+    if (destination.droppableId !== source.droppableId) {
+      // Remove item from source
+      if (sourceList?.orderedList) {
+        const sourceOrderWithoutId = sourceList.orderedList.values.filter(value => value !== draggableId);
+        await sourceList.orderedList.init(sourceOrderWithoutId);
+        newSourceOrder = sourceOrderWithoutId;
+      }
     }
 
     const currentOrderWithoutId = targetList.orderedList.values.filter(value => value !== draggableId);
@@ -212,13 +221,21 @@ const MultipleListStory = () => {
     ];
     await targetList.orderedList.init(newOrder);
     setLists(prev => prev.map(list => {
-      if (list.id !== targetList.id) {
-        return list;
+      if (list.id === targetList.id) {
+        return {
+          ...targetList,
+          currentOrder: newOrder
+        };
       }
-      return {
-        ...targetList,
-        currentOrder: newOrder
-      };
+
+      if (sourceList && newSourceOrder && list.id === sourceList.id) {
+        return {
+          ...sourceList,
+          currentOrder: newSourceOrder
+        };
+      }
+
+      return list;
     }));
   };
 
