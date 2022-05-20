@@ -24,7 +24,7 @@ export const DraggableCard = ({
 }: DraggableCardProps) => {
   return (
     <DraggableContainer
-      id={'kanban-' + card.id}
+      id={card.id}
       index={index}
     >
       <div style={{
