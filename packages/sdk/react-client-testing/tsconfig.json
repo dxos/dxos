@@ -20,6 +20,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
