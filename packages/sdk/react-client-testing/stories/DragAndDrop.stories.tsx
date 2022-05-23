@@ -2,18 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import faker from 'faker';
 import React, { useState } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
 import { Item, Party } from '@dxos/client';
-import { DefaultSchemaDefs, TestType } from '@dxos/client-testing';
-import { truncateKey } from '@dxos/debug';
-import { Schema } from '@dxos/echo-db';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableKanban, DraggableTable, ProfileInitializer, useSchemaBuilder } from '../src';
+import { DraggableTable, DroppableList, Card, List as ListDef, ProfileInitializer } from '../src';
 import { DragAndDropDebugPanel } from './helpers';
 
 export default {
@@ -21,79 +19,99 @@ export default {
 };
 
 const TYPE_LIST = 'example:type/list';
+const TYPE_LIST_ITEM = 'example:type/list/item';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
+
+type ListStruct = {
+  id: string
+  list: Item<ObjectModel>
+  orderedList: OrderedList | undefined
+  previousOrder?: {[key: string]: string}
+  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
+  currentOrder: string[]
+}
 
 const ListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [schema, setSchema] = useState<Schema>();
-  const [list, setList] = useState<Item<ObjectModel>>();
-  const builder = useSchemaBuilder(party);
-  const [orderedList, setOrderedList] = useState<OrderedList>();
-  const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
+  const [list, setList] = useState<ListStruct>();
+  const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const items = useSelection(party?.select()
-    // TODO(kaplanski): Check SelectionAPI filter predicate change from undefined.
-    .filter({ type: schema ? schema.name : ' ' }),
-  [schema]) ?? [];
+    .filter({ type: TYPE_LIST_ITEM }),
+  [list]) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
-    setParty(newParty);
-  }, []);
+    const listItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_LIST
+    });
 
-  useAsyncEffect(async () => {
-    if (builder) {
-      const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
-      const listItem = await party?.database.createItem({
+    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(async () => {
+      return await newParty?.database.createItem({
         model: ObjectModel,
-        type: TYPE_LIST,
+        type: TYPE_LIST_ITEM,
         props: {
-          schema: personSchema!.name
+          title: faker.name.firstName()
         }
       });
+    }));
 
-      const data = await builder.createData(undefined, {
-        [DefaultSchemaDefs[TestType.Org].schema]: 3,
-        [DefaultSchemaDefs[TestType.Person].schema]: 10
-      });
-      const personItems = data[1];
+    const newOrderedList = new OrderedList(listItem.model);
+    await newOrderedList.init(res.map(item => item.id));
+    setInitialOrder(newOrderedList.values);
 
-      const newOrderedList = new OrderedList(listItem!.model);
-      await newOrderedList.init(personItems.map(item => item.id));
-      setOrderedList(newOrderedList);
-      setSchema(personSchema);
-      setList(listItem);
-    }
-  }, [builder]);
+    setParty(newParty);
+    setList({
+      id: listItem.id,
+      list: listItem,
+      orderedList: newOrderedList,
+      currentOrder: newOrderedList.values
+    });
+  }, []);
 
-  const getList = () => ({
-    id: 'example-people-list',
+  const getList = (): ListDef => ({
+    id: 'test-list',
     title: 'People',
-    children: items.map(item => ({ id: item.id, title: truncateKey(item.id, 5) + ' - ' + item.model.get('title') })),
-    width: '100%'
+    children: list!.currentOrder.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, title: item.model.get('title') };
+      }
+      return null;
+    }).filter(Boolean) as Card[]
   });
 
   const handleDragEnd = async (result: DropResult) => {
-    const { destination, draggableId, source } = result;
-    if (
-      !orderedList ||
-      !destination ||
-      destination.droppableId !== source.droppableId ||
-      destination.index === source.index
-    ) {
+    if (!list?.orderedList || !result.destination) {
       return;
     }
-    setPreviousOrder(list!.model.get('order'));
+    const previousOrder = list.list.model.get('order');
 
-    const id = draggableId.split('-')[1];
+    const { destination, draggableId } = result;
+    const currentOrderWithoutId = list.orderedList.values.filter(value => value !== draggableId);
+    const newOrder = [
+      ...currentOrderWithoutId.slice(0, destination.index),
+      draggableId,
+      ...currentOrderWithoutId.slice(destination.index, list.orderedList.values.length)
+    ];
+    await list.orderedList.init(newOrder);
+    setList({
+      ...list,
+      previousOrder,
+      currentOrder: newOrder
+    });
+  };
 
-    const currentValueInIndex = orderedList.values[destination.index];
-    if (source.index < destination.index) {
-      await orderedList.insert(currentValueInIndex, id);
-    } else {
-      await orderedList.insert(id, currentValueInIndex);
+  const handleReset = async () => {
+    if (!list) {
+      return;
     }
+    await list.orderedList?.init(initialOrder);
+    setList({
+      ...list,
+      currentOrder: initialOrder
+    });
   };
 
   if (!list) {
@@ -103,16 +121,20 @@ const ListStory = () => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '30% 70%'
+      gridTemplateColumns: '1fr 1fr 0.1fr'
     }}>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <DraggableKanban lists={[getList()]} />
-      </DragDropContext>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <DroppableList list={getList()} />
+        </DragDropContext>
+      </div>
       <DragAndDropDebugPanel
-        previousOrder={previousOrder}
-        order={list.model.get('order')}
-        party={party}
+        previousOrder={list.previousOrder ?? {}}
+        order={list.list.model.get('order')}
       />
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
     </div>
   );
 };
@@ -127,122 +149,300 @@ export const List = () => {
   );
 };
 
-const TableStory = () => {
+const MultipleListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [schema, setSchema] = useState<Schema>();
-  const builder = useSchemaBuilder(party);
-  const [table] = useSelection(party?.select()
-    .filter({ type: TYPE_TABLE_TABLE }),
-  []) ?? [];
-  const [orderedList, setOrderedList] = useState<OrderedList>();
-  const [previousOrder, setPreviousOrder] = useState<{[id: string]: string} | undefined>();
-
-  const items = useSelection(party?.select()
-    .filter({ type: schema?.name }),
-  [schema]) ?? [];
+  const [lists, setLists] = useState<ListStruct[]>([]);
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
+  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
+
+    const listItems = await Promise.all(Array.from({ length: 3 }).map(async () => {
+      return await newParty.database.createItem({
+        model: ObjectModel,
+        type: TYPE_LIST
+      });
+    }));
+
+    const newOrderedLists: OrderedList[] = [];
+    await Promise.all(listItems.map(async (listItem) => {
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
+        return await newParty?.database.createItem({
+          model: ObjectModel,
+          type: TYPE_LIST_ITEM,
+          props: {
+            title: faker.name.firstName()
+          }
+        });
+      }));
+      const newOrderedList = new OrderedList(listItem.model);
+      await newOrderedList.init(createdItems.map(item => item.id));
+      newOrderedLists.push(newOrderedList);
+    }));
+
     setParty(newParty);
+    setLists(listItems.map(listItem => {
+      const orderedList = newOrderedLists.find(orderedList => orderedList.id === listItem.id);
+      return {
+        id: listItem.id,
+        list: listItem,
+        orderedList,
+        currentOrder: orderedList?.values ?? []
+      };
+    }));
+    setInitialOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
   }, []);
 
-  useAsyncEffect(async () => {
-    if (builder) {
-      const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
-      const tableItem = await party?.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_TABLE,
-        props: {
-          schema: personSchema!.name
-        }
-      });
-
-      const data = await builder.createData(undefined, {
-        [DefaultSchemaDefs[TestType.Org].schema]: 3,
-        [DefaultSchemaDefs[TestType.Person].schema]: 10
-      });
-      const personItems = data[1];
-
-      const newOrderedList = new OrderedList(tableItem!.model);
-      await newOrderedList.init(personItems.map(item => item.id));
-      setOrderedList(newOrderedList);
-
-      setSchema(personSchema);
+  const getList = (listId: string): ListDef | undefined => {
+    const list = lists.find(list => list.id === listId);
+    if (!list) {
+      return undefined;
     }
-  }, [builder]);
+
+    return {
+      id: list.id,
+      title: 'People',
+      children: list.currentOrder.map(itemId => {
+        const item = items.find(item => item.id === itemId);
+        if (item) {
+          return { id: item.id, title: item.model.get('title') };
+        }
+        return null;
+      }).filter(Boolean) as Card[]
+    };
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!lists.length || !result.destination) {
+      return;
+    }
+    const { destination, draggableId, source } = result;
+    const targetList = lists.find(list => list.id === destination.droppableId);
+    if (!targetList || !targetList.orderedList) {
+      return;
+    }
+
+    let newSourceOrder: string[];
+    const sourceList = lists.find(list => list.id === source.droppableId);
+    if (destination.droppableId !== source.droppableId) {
+      // Remove item from source
+      if (sourceList?.orderedList) {
+        const sourceOrderWithoutId = sourceList.orderedList.values.filter(value => value !== draggableId);
+        await sourceList.orderedList.init(sourceOrderWithoutId);
+        newSourceOrder = sourceOrderWithoutId;
+      }
+    }
+
+    const currentOrderWithoutId = targetList.orderedList.values.filter(value => value !== draggableId);
+    const newOrder = [
+      ...currentOrderWithoutId.slice(0, destination.index),
+      draggableId,
+      ...currentOrderWithoutId.slice(destination.index, targetList.orderedList.values.length)
+    ];
+    await targetList.orderedList.init(newOrder);
+    setLists(prev => prev.map(list => {
+      if (list.id === targetList.id) {
+        return {
+          ...targetList,
+          currentOrder: newOrder
+        };
+      }
+
+      if (sourceList && newSourceOrder && list.id === sourceList.id) {
+        return {
+          ...sourceList,
+          currentOrder: newSourceOrder
+        };
+      }
+
+      return list;
+    }));
+  };
+
+  const handleReset = async () => {
+    if (!initialOrders) {
+      return;
+    }
+
+    await Promise.all(lists.map(async (list) => {
+      const initialOrder = initialOrders.find(order => order.id === list.id);
+      initialOrder && await list.orderedList?.init(initialOrder.values);
+    }));
+
+    // Update state to trigger rerender
+    setLists(lists.map(list => {
+      const initialOrder = initialOrders.find(order => order.id === list.id);
+      if (!initialOrder) {
+        return list;
+      }
+      return {
+        ...list,
+        currentOrder: initialOrder.values
+      };
+    }));
+  };
+
+  if (!party || !lists.length) {
+    return null;
+  }
+
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-around'
+    }}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        {lists.map(list => (
+          <div key={list.id}>
+            <DroppableList list={getList(list.id)} />
+            <DragAndDropDebugPanel
+              order={list.list.model.get('order')}
+            />
+          </div>
+        ))}
+      </DragDropContext>
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+    </div>
+  );
+};
+
+export const MultipleList = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <MultipleListStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
+
+const TYPE_TEST_PERSON = 'example:type/person';
+type TableStruct = {
+  id: string
+  table: Item<ObjectModel>
+  orderedList?: OrderedList
+  currentOrder?: string[]
+}
+
+const TableStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [table, setTable] = useState<TableStruct>();
+  const [initialOrder, setInitialOrder] = useState<string[]>([]);
+
+  const items = useSelection(party?.select()
+    .filter({ type: TYPE_TEST_PERSON }),
+  []) ?? [];
+
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
+    const tableItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_TABLE_TABLE
+    });
+
+    const createdItems = await Promise.all(Array.from({ length: 40 }).map(async () => await newParty?.database.createItem({
+      type: TYPE_TEST_PERSON,
+      props: {
+        title: faker.name.firstName(),
+        country: faker.address.country(),
+        role: faker.name.jobTitle(),
+        email: faker.internet.email()
+      }
+    })));
+    const newOrderedList = new OrderedList(tableItem.model);
+    await newOrderedList.init(createdItems.map(item => item.id));
+
+    setParty(newParty);
+    setTable({
+      id: tableItem.id,
+      table: tableItem,
+      orderedList: newOrderedList,
+      currentOrder: newOrderedList.values
+    });
+    setInitialOrder(newOrderedList.values);
+  }, []);
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, draggableId, source } = result;
     if (
-      !orderedList ||
+      !table?.orderedList ||
       !destination ||
-      destination.droppableId !== source.droppableId ||
       destination.index === source.index
     ) {
       return;
     }
-    setPreviousOrder(table.model.get('order'));
 
-    const id = draggableId.split('-')[1];
-
-    const currentValueInIndex = orderedList.values[destination.index];
-    if (source.index < destination.index) {
-      // await orderedList.remove([id]);
-      await orderedList.insert(currentValueInIndex, id);
-    } else {
-      // await orderedList.remove([currentValueInIndex]);
-      await orderedList.insert(id, currentValueInIndex);
-    }
-  };
-
-  const getRows = () => {
-    if (!table || !orderedList) {
-      return [];
-    }
-
-    const tableRowIds = orderedList.values;
-
-    if (!tableRowIds) {
-      return [];
-    }
-
-    const rows = items.filter(item => tableRowIds.includes(item.id));
-    return rows.map(item => ({
-      id: item.id,
-      ...item.model.toObject()
-    })).sort((a: any, b: any) => {
-      if (!tableRowIds) {
-        return 0;
-      }
-      if (tableRowIds.indexOf(a.id) > tableRowIds.indexOf(b.id)) {
-        return 1;
-      } else {
-        return -1;
-      }
+    const currentOrderWithoutId = table.orderedList.values.filter(value => value !== draggableId);
+    const newOrder = [
+      ...currentOrderWithoutId.slice(0, destination.index),
+      draggableId,
+      ...currentOrderWithoutId.slice(destination.index, table.orderedList.values.length)
+    ];
+    await table.orderedList.init(newOrder);
+    setTable({
+      ...table,
+      currentOrder: newOrder
     });
   };
 
-  if (!schema || !table) {
+  const handleReset = async () => {
+    await table!.orderedList!.init(initialOrder);
+    setTable({
+      ...table!,
+      currentOrder: initialOrder
+    });
+  };
+
+  const getRows = () => {
+    return table!.currentOrder!.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, ...item.model.toObject() };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
+  if (!table?.orderedList) {
     return null;
   }
 
   const columns = [
     {
-      id: 'id',
       accessor: 'id',
-      title: 'ID'
+      title: 'Id'
     },
-    ...schema.fields.map(field => ({
-      id: field.key,
-      accessor: field.key,
-      title: field.key
-    }))
+    {
+      accessor: 'title',
+      title: 'Title'
+    },
+    {
+      accessor: 'country',
+      title: 'Country'
+    },
+    {
+      accessor: 'role',
+      title: 'Role'
+    },
+    {
+      accessor: 'email',
+      title: 'Email'
+    }
   ];
 
   return (
-    <>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 0.3fr 0.1fr'
+    }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <DraggableTable
           id={table.id}
@@ -251,10 +451,12 @@ const TableStory = () => {
         />
       </DragDropContext>
       <DragAndDropDebugPanel
-        previousOrder={previousOrder}
-        order={table.model.get('order')}
+        order={table.table.model.get('order')}
       />
-    </>
+      <div>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+    </div>
   );
 };
 
@@ -263,179 +465,6 @@ export const Table = () => {
     <ClientProvider>
       <ProfileInitializer>
         <TableStory />
-      </ProfileInitializer>
-    </ClientProvider>
-  );
-};
-const MultipleTableStory = () => {
-  const client = useClient();
-  const [party, setParty] = useState<Party>();
-  const [schema, setSchema] = useState<Schema>();
-  const builder = useSchemaBuilder(party);
-  const tableItems = useSelection(party?.select()
-    .filter({ type: TYPE_TABLE_TABLE }),
-  []) ?? [];
-  const [orderedLists, setOrderedLists] = useState<OrderedList[]>([]);
-
-  const items = useSelection(party?.select()
-    .filter({ type: schema?.name }),
-  []) ?? [];
-
-  useAsyncEffect(async () => {
-    const newParty = await client.echo.createParty();
-    setParty(newParty);
-  }, []);
-
-  useAsyncEffect(async () => {
-    if (builder) {
-      const generatedSchemas = await builder.createSchemas();
-      const personSchema = generatedSchemas.find(schema => schema.name === DefaultSchemaDefs[TestType.Person].schema);
-      const table1 = await party?.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_TABLE,
-        props: {
-          schema: personSchema!.name,
-          positions: []
-        }
-      });
-      const table2 = await party?.database.createItem({
-        model: ObjectModel,
-        type: TYPE_TABLE_TABLE,
-        props: {
-          schema: personSchema!.name,
-          positions: []
-        }
-      });
-
-      const data = await builder.createData(undefined, {
-        [DefaultSchemaDefs[TestType.Org].schema]: 3,
-        [DefaultSchemaDefs[TestType.Person].schema]: 10
-      });
-      const personItems = data[1];
-      // Separate data into two tables
-      const personItems1 = personItems.slice(0, personItems.length / 2);
-      const personItems2 = personItems.slice(personItems.length / 2, personItems.length);
-      await table1?.model.set('order', Object.assign({}, ...personItems1.map((item, i) =>
-        ({ [item.id]: personItems1[i + 1]?.id })).slice(0, personItems1.length - 1)));
-      await table2?.model.set('order', Object.assign({}, ...personItems2.map((item, i) =>
-        ({ [item.id]: personItems2[i + 1]?.id })).slice(0, personItems2.length - 1)));
-
-      const newOrderedLists = [table1, table2].map(table => new OrderedList(table!.model, 'order'));
-      setOrderedLists(newOrderedLists);
-
-      setSchema(personSchema);
-    }
-  }, [builder]);
-
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, draggableId, source } = result;
-    console.log(result);
-    if (!destination) {
-      return;
-    }
-
-    const id = draggableId.split('-')[1];
-    const targetTable = tableItems.find(table => table.id === destination.droppableId);
-    if (!targetTable) {
-      console.log('Target table not found');
-      return;
-    }
-
-    // If moving to another table, remove from source table
-    if (targetTable.id !== source.droppableId) {
-      console.log('Different target table');
-      const sourceList = orderedLists.find(list => list.id === source.droppableId);
-      await sourceList?.remove([id]);
-    }
-
-    const list = orderedLists.find(list => list.id === targetTable.id);
-    if (!list) {
-      console.log('List not found');
-      return;
-    }
-    const currentValueInIndex = list.values[destination.index];
-    // const before = [...list.values];
-    if (destination.index > source.index) {
-      await list.insert(currentValueInIndex, id);
-    } else {
-      await list.insert(id, currentValueInIndex);
-    }
-    // const after = [...list.values];
-    // console.table(Array.from({ length: before.length }).map((_, i) => ({ before: before[i], after: after[i] })));
-  };
-
-  const getRows = (tableId: string) => {
-    const table = tableItems.find(item => item.id === tableId);
-    if (!table) {
-      return [];
-    }
-
-    const tableRowIds = orderedLists.find(list => list.id === table.id)?.values;
-
-    if (!tableRowIds) {
-      return [];
-    }
-
-    const rows = items.filter(item => tableRowIds.includes(item.id));
-    return rows.map(item => ({
-      id: item.id,
-      ...item.model.toObject()
-    })).sort((a: any, b: any) => {
-      if (!tableRowIds) {
-        return 0;
-      }
-      if (tableRowIds.indexOf(a.id) > tableRowIds.indexOf(b.id)) {
-        return 1;
-      } else {
-        return -1;
-      }
-    });
-  };
-
-  if (!schema || !tableItems.length) {
-    return null;
-  }
-
-  const columns = [
-    {
-      id: 'id',
-      accessor: 'id',
-      title: 'ID'
-    },
-    ...schema.fields.map(field => ({
-      id: field.key,
-      accessor: field.key,
-      title: field.key
-    }))
-  ];
-
-  return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        height: 'calc(100vh - 8px)'
-      }}>
-        <DraggableTable
-          id={tableItems[0].id}
-          columns={columns}
-          rows={getRows(tableItems[0].id)}
-          />
-        <DraggableTable
-          id={tableItems[1].id}
-          columns={columns}
-          rows={getRows(tableItems[1].id)}
-        />
-      </div>
-    </DragDropContext>
-  );
-};
-
-export const MultipleTable = () => {
-  return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <MultipleTableStory />
       </ProfileInitializer>
     </ClientProvider>
   );
