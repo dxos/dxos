@@ -61,21 +61,21 @@ export const DraggableTable = ({
       >
         {instance.getHeaderGroups().map(headerGroup =>
           headerGroup.headers.map((header, i) => (
-              <DraggableContainer
-                key={header.id}
-                id={header.id}
-                index={i}
-                style={{ padding: 8 }}
-              >
-                {header.isPlaceholder ? null : header.renderHeader()}
-              </DraggableContainer>
+            <DraggableContainer
+              key={header.id}
+              id={header.id}
+              index={i}
+              style={{ padding: 8 }}
+            >
+              {header.isPlaceholder ? null : header.renderHeader()}
+            </DraggableContainer>
           ))
         )}
       </DroppableContainer>
       <DroppableContainer
         id={id}
         style={{
-          height: '100%',
+          height: 'fit-content',
           marginTop: '4px',
           padding: '4px 8px 8px 8px'
         }}

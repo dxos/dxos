@@ -441,7 +441,8 @@ const TableStory = () => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 0.3fr 0.1fr'
+      gridTemplateColumns: '1fr 0.1fr',
+      height: 'calc(100vh - 16px'
     }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <DraggableTable
