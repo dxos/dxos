@@ -50,23 +50,31 @@ export const DraggableTable = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'scroll' }}>
       {title && <h5>{title}</h5>}
-      <div style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
-        {instance.getHeaderGroups().map(headerGroup => (
-          <div key={headerGroup.id} style={{ display: 'grid', gridTemplateColumns: getGridCellSize(defaultColumns) }}>
-            {headerGroup.headers.map(header => (
-              <div
+      <DroppableContainer
+        id='columns'
+        horizontal
+        style={{
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'grid',
+          gridTemplateColumns: getGridCellSize(defaultColumns)
+        }}
+      >
+        {instance.getHeaderGroups().map(headerGroup =>
+          headerGroup.headers.map((header, i) => (
+              <DraggableContainer
                 key={header.id}
+                id={header.id}
+                index={i}
                 style={{ padding: 8 }}
               >
                 {header.isPlaceholder ? null : header.renderHeader()}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+              </DraggableContainer>
+          ))
+        )}
+      </DroppableContainer>
       <DroppableContainer
         id={id}
-        styles={{
+        style={{
           height: '100%',
           marginTop: '4px',
           padding: '4px 8px 8px 8px'
@@ -77,26 +85,23 @@ export const DraggableTable = ({
             key={row.original!.id}
             id={row.original!.id}
             index={i}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: getGridCellSize(defaultColumns)
+            }}
           >
+            {row.getVisibleCells().map(cell => (
               <div
+                key={cell.id}
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: getGridCellSize(defaultColumns)
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  padding: 8
                 }}
               >
-                {row.getVisibleCells().map(cell => (
-                  <div
-                    key={cell.id}
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      padding: 8
-                    }}
-                  >
-                    {cell.renderCell()}
-                  </div>
-                ))}
+                {cell.renderCell()}
               </div>
+            ))}
           </DraggableContainer>
         ))}
       </DroppableContainer>
