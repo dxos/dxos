@@ -2,19 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode, useState } from 'react';
+import React, { CSSProperties, ReactNode, useState } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 
 interface DraggableContainerProps {
   id: string
   index: number,
   children: ReactNode
+  style?: CSSProperties
 }
 
 export const DraggableContainer = ({
   id,
   index,
-  children
+  children,
+  style
 }: DraggableContainerProps) => {
   const [isHovering, setIsHovering] = useState(false);
 
@@ -37,7 +39,8 @@ export const DraggableContainer = ({
     return {
       backgroundColor,
       boxShadow,
-      borderRadius: '0.1em'
+      borderRadius: '0.1em',
+      width: 'fit-content'
     };
   };
 
@@ -50,12 +53,15 @@ export const DraggableContainer = ({
       {({ draggableProps, dragHandleProps, innerRef }, { isDragging }) => (
         <div
           ref={innerRef}
-          style={draggableProps.style}
           {...draggableProps}
           {...dragHandleProps}
+          style={draggableProps.style}
         >
           <div
-            style={getStyles(isDragging, isHovering)}
+            style={{
+              ...style,
+              ...getStyles(isDragging, isHovering)
+            }}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
