@@ -26,7 +26,8 @@ export const DroppableContainer = ({
           style={{
             ...style,
             backgroundColor: isDraggingOver ? 'rgba(0, 0, 0, 0.1)' : undefined,
-            borderRadius: '0.5em'
+            borderRadius: '0.5em',
+            width: 'fit-content'
           }}
         >
           {children}

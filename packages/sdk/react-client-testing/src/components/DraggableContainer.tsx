@@ -39,7 +39,8 @@ export const DraggableContainer = ({
     return {
       backgroundColor,
       boxShadow,
-      borderRadius: '0.1em'
+      borderRadius: '0.1em',
+      width: 'fit-content'
     };
   };
 
