@@ -324,18 +324,39 @@ export const MultipleList = () => {
 };
 
 const TYPE_TEST_PERSON = 'example:type/person';
-type TableStruct = {
-  id: string
-  table: Item<ObjectModel>
-  orderedList?: OrderedList
-  currentOrder?: string[]
-}
+const columns = [
+  {
+    accessor: 'id',
+    title: 'Id'
+  },
+  {
+    accessor: 'title',
+    title: 'Title'
+  },
+  {
+    accessor: 'country',
+    title: 'Country'
+  },
+  {
+    accessor: 'role',
+    title: 'Role'
+  },
+  {
+    accessor: 'email',
+    title: 'Email'
+  }
+];
 
 const TableStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [table, setTable] = useState<TableStruct>();
-  const [initialOrder, setInitialOrder] = useState<string[]>([]);
+  const [table, setTable] = useState<Item<ObjectModel>>();
+  const [initialRowOrder, setInitialRowOrder] = useState<string[]>([]);
+  const [rowOrderedList, setRowOrderedList] = useState<OrderedList>();
+  const [rowOrder, setRowOrder] = useState<string[]>([]);
+  const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
+  const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
 
   const items = useSelection(party?.select()
     .filter({ type: TYPE_TEST_PERSON }),
@@ -357,52 +378,65 @@ const TableStory = () => {
         email: faker.internet.email()
       }
     })));
-    const newOrderedList = new OrderedList(tableItem.model);
-    await newOrderedList.init(createdItems.map(item => item.id));
+    const newRowOrderedList = new OrderedList(tableItem.model, 'rowOrder');
+    await newRowOrderedList.init(createdItems.map(item => item.id));
+    const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
+    await newColumnOrderedList.init(columns.map(column => column.accessor));
 
     setParty(newParty);
-    setTable({
-      id: tableItem.id,
-      table: tableItem,
-      orderedList: newOrderedList,
-      currentOrder: newOrderedList.values
-    });
-    setInitialOrder(newOrderedList.values);
+    setTable(tableItem);
+    setRowOrderedList(newRowOrderedList);
+    setRowOrder(newRowOrderedList.values);
+    setColumnOrderedList(newColumnOrderedList);
+    setColumnOrder(newColumnOrderedList.values);
+    setInitialRowOrder(newRowOrderedList.values);
+    setInitialColumnOrder(newColumnOrderedList.values);
   }, []);
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, draggableId, source } = result;
+    if (destination?.droppableId === 'columns') {
+      const column = columns.find(column => column.accessor === draggableId);
+      if (!column) {
+        return;
+      }
+
+      const columnsWithoutId = columns.filter(col => col.accessor !== column?.accessor);
+      const newColumns = [
+        ...columnsWithoutId.slice(0, destination.index),
+        column,
+        ...columnsWithoutId.slice(destination.index, columns.length)
+      ];
+      setColumnOrder(newColumns.map(column => column.accessor));
+      return;
+    }
     if (
-      !table?.orderedList ||
+      !rowOrderedList ||
       !destination ||
       destination.index === source.index
     ) {
       return;
     }
 
-    const currentOrderWithoutId = table.orderedList.values.filter(value => value !== draggableId);
+    const currentOrderWithoutId = rowOrderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
       draggableId,
-      ...currentOrderWithoutId.slice(destination.index, table.orderedList.values.length)
+      ...currentOrderWithoutId.slice(destination.index, rowOrderedList.values.length)
     ];
-    await table.orderedList.init(newOrder);
-    setTable({
-      ...table,
-      currentOrder: newOrder
-    });
+    await rowOrderedList.init(newOrder);
+    setRowOrder(newOrder);
   };
 
   const handleReset = async () => {
-    await table!.orderedList!.init(initialOrder);
-    setTable({
-      ...table!,
-      currentOrder: initialOrder
-    });
+    await rowOrderedList!.init(initialRowOrder);
+    setRowOrder(initialRowOrder);
+    await columnOrderedList!.init(initialColumnOrder);
+    setColumnOrder(initialColumnOrder);
   };
 
   const getRows = () => {
-    return table!.currentOrder!.map(itemId => {
+    return rowOrder!.map(itemId => {
       const item = items.find(item => item.id === itemId);
       if (item) {
         return { id: item.id, ...item.model.toObject() };
@@ -411,49 +445,24 @@ const TableStory = () => {
     }).filter(Boolean);
   };
 
-  if (!table?.orderedList) {
+  if (!table || !rowOrderedList) {
     return null;
   }
-
-  const columns = [
-    {
-      accessor: 'id',
-      title: 'Id'
-    },
-    {
-      accessor: 'title',
-      title: 'Title'
-    },
-    {
-      accessor: 'country',
-      title: 'Country'
-    },
-    {
-      accessor: 'role',
-      title: 'Role'
-    },
-    {
-      accessor: 'email',
-      title: 'Email'
-    }
-  ];
 
   return (
     <div style={{
       display: 'grid',
       gridTemplateColumns: '1fr 0.1fr',
-      height: 'calc(100vh - 16px'
+      height: 'calc(100vh - 16px)'
     }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <DraggableTable
           id={table.id}
           columns={columns}
+          columnOrder={columnOrder}
           rows={getRows()}
         />
       </DragDropContext>
-      <DragAndDropDebugPanel
-        order={table.table.model.get('order')}
-      />
       <div>
         <button onClick={handleReset}>Reset</button>
       </div>

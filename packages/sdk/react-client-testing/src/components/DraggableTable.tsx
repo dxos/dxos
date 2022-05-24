@@ -3,11 +3,12 @@
 //
 
 import {
+  ColumnOrderState,
   createTable,
   getCoreRowModel,
   useTableInstance
 } from '@tanstack/react-table';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { DraggableContainer } from './DraggableContainer';
 import { DroppableContainer } from './DroppableContainer';
@@ -31,6 +32,7 @@ interface DraggableTableProps {
   id: string
   rows: any[]
   columns: any[]
+  columnOrder?: string[]
   title?: string
 }
 
@@ -38,14 +40,34 @@ export const DraggableTable = ({
   id,
   rows: data,
   columns: defaultColumns,
+  columnOrder: order,
   title
 }: DraggableTableProps) => {
   const [columns] = useState(() => getColumns(defaultColumns));
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
+
   const instance = useTableInstance(table, {
     data,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
+    state: {
+      columnOrder
+    },
+    onColumnOrderChange: setColumnOrder
   });
+
+  useEffect(() => {
+    instance.setColumnOrder(instance.getAllLeafColumns().sort((a, b) => {
+      if (!order || !a.accessorKey || !b.accessorKey) {
+        return 0;
+      }
+      if (order.indexOf(a.accessorKey) > order.indexOf(b.accessorKey)) {
+        return 1;
+      } else {
+        return -1;
+      }
+    }).map(column => column.id));
+  }, [order]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'scroll' }}>
