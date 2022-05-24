@@ -33,7 +33,7 @@ export const DroppableList = ({ list }: DroppableListProps) => {
       <h5 style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{list.title}</h5>
       <DroppableContainer
         id={list.id}
-        styles={{
+        style={{
           width: list.width ?? DEFAULT_LIST_WIDTH,
           border: '0.5px solid rgba(0,0,0,0.2)',
           padding: 8,
