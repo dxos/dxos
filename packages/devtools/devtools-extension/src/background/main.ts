@@ -2,15 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-// REQUIRED FOR THE BRIDGE TO WORK.
-// import Bridge from 'crx-bridge';
 import browser, { Runtime } from 'webextension-polyfill';
 
 // import { startLiveReload } from './live-reload';
 
 // void startLiveReload();
-
-// Bridge.allowWindowMessaging('dxos.devtools');
 
 const panelPorts = new Map<number, Runtime.Port>();
 const clientPorts = new Map<number, Runtime.Port>();

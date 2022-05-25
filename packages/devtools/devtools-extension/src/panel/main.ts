@@ -2,20 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-// import Bridge from 'crx-bridge';
 import browser from 'webextension-polyfill';
 
 import { Client } from '@dxos/client';
 import { defs } from '@dxos/config';
 
-// import { createDevtoolsPort } from '../utils';
-import { wrapPort } from '../utils/wrap-port';
+import { wrapPort } from '../utils';
 import { initPanel } from './init-panel';
 
 void (async () => {
   console.log('[DXOS devtools] Init client API started.');
-  // await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
-  // const port = createDevtoolsPort();
   const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
   console.log('[DXOS devtools] Connected to panel port:', { port });
   port.postMessage({ type: 'extension.inject-client-script' });

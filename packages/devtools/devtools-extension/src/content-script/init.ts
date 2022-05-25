@@ -2,15 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// import Bridge from 'crx-bridge';
-
 import { DevtoolsHook } from '@dxos/client';
 import { RpcPort } from '@dxos/rpc';
 
-// import { createWindowPort } from '../utils';
 import { RpcClientAPI } from './client-api';
-
-// Bridge.allowWindowMessaging('dxos.devtools');
 
 const port: RpcPort = {
   send: async message => {
@@ -54,7 +49,6 @@ const init = async () => {
     if (checkInterval) {
       clearInterval(checkInterval);
     }
-    // const port = createWindowPort();
     const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services);
     (window as any).__DXOS__.devtoolsReady = true;
     console.log('[DXOS devtools] Devtools ready.', { clientReady: devtoolsContext.client.initialized, now: new Date().toISOString() });
