@@ -10,6 +10,8 @@ import { defs } from '@dxos/config';
 import { wrapPort } from '../utils';
 import { initPanel } from './init-panel';
 
+const TIMEOUT = 5000;
+
 void (async () => {
   console.log('[DXOS devtools] Init client API started.');
   const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
@@ -22,13 +24,11 @@ void (async () => {
         mode: defs.Runtime.Client.Mode.REMOTE
       }
     }
-  }, { rpcPort });
+  }, { rpcPort, timeout: TIMEOUT });
   await waitToBeReady();
   await client.initialize();
   initPanel(client);
 })();
-
-const TIMEOUT = 1000;
 
 function waitToBeReady () {
   return new Promise<void>((resolve, reject) => {
