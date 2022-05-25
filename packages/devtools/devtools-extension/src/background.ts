@@ -4,10 +4,6 @@
 
 import browser, { Runtime } from 'webextension-polyfill';
 
-// import { startLiveReload } from './live-reload';
-
-// void startLiveReload();
-
 const panelPorts = new Map<number, Runtime.Port>();
 const clientPorts = new Map<number, Runtime.Port>();
 

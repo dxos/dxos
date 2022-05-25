@@ -13,7 +13,7 @@ port.onMessage.addListener(message => {
     console.log('[DXOS devtools] Injecting client API...');
 
     const script = document.createElement('script');
-    script.src = browser.runtime.getURL('content-script/init.js');
+    script.src = browser.runtime.getURL('inject.js');
     document.documentElement.appendChild(script);
     script.parentElement?.removeChild(script);
 

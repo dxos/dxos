@@ -26,12 +26,11 @@ void (async () => {
   try {
     await build({
       entryPoints: [
-        join(srcDir, 'background/main.ts'),
-        join(srcDir, 'content-script/init.ts'),
-        join(srcDir, 'content-script/main.ts'),
-        join(srcDir, 'panel/main.ts'),
-        join(srcDir, 'popup/main.tsx'),
-        join(srcDir, 'main.ts')
+        join(srcDir, 'background.ts'),
+        join(srcDir, 'content.ts'),
+        join(srcDir, 'devtools.ts'),
+        join(srcDir, 'inject.ts'),
+        join(srcDir, 'panel.ts')
       ],
       outdir: distDir,
       write: true,

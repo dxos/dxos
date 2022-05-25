@@ -2,10 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsHook } from '@dxos/client';
-import { RpcPort } from '@dxos/rpc';
-
-import { RpcClientAPI } from './client-api';
+import { clientServiceBundle, DevtoolsHook } from '@dxos/client';
+import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 const port: RpcPort = {
   send: async message => {
@@ -49,10 +47,16 @@ const init = async () => {
     if (checkInterval) {
       clearInterval(checkInterval);
     }
-    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services);
+
+    const server: RpcPeer = createBundledRpcServer({
+      services: clientServiceBundle,
+      handlers: devtoolsContext.serviceHost.services,
+      port
+    });
     (window as any).__DXOS__.devtoolsReady = true;
     console.log('[DXOS devtools] Devtools ready.', { clientReady: devtoolsContext.client.initialized, now: new Date().toISOString() });
-    await clientApi.run();
+
+    await server.open();
     console.log('[DXOS devtools] Init client API finished.');
   } else {
     if (checkCount > 20) {

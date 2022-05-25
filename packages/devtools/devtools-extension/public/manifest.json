@@ -20,16 +20,16 @@
     "http://*/*",
     "https://*/*"
   ],
-  "devtools_page": "main.html",
+  "devtools_page": "devtools.html",
   "web_accessible_resources": [
-    "main.html",
+    "devtools.html",
     "panel.html",
-    "content-script/init.js"
+    "inject.js"
   ],
   "manifest_version": 2,
   "background": {
     "scripts": [
-      "background/main.js"
+      "background.js"
     ],
     "persistent": false
   },
@@ -39,7 +39,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script/main.js"
+        "content.js"
       ],
       "run_at": "document_start"
     }
