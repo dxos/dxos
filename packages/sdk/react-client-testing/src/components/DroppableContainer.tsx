@@ -9,6 +9,7 @@ interface DroppableContainerProps {
   id: string
   children: ReactNode
   style?: CSSProperties
+  draggingOverStyle?: CSSProperties
   horizontal?: boolean
 }
 
@@ -16,6 +17,7 @@ export const DroppableContainer = ({
   id,
   children,
   style,
+  draggingOverStyle,
   horizontal = false
 }: DroppableContainerProps) => {
   return (
@@ -25,9 +27,7 @@ export const DroppableContainer = ({
           ref={droppableRef}
           style={{
             ...style,
-            backgroundColor: isDraggingOver ? 'rgba(0, 0, 0, 0.1)' : undefined,
-            borderRadius: '0.5em',
-            width: 'fit-content'
+            ...(isDraggingOver ? draggingOverStyle : {})
           }}
         >
           {children}

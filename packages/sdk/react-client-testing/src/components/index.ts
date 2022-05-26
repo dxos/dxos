@@ -3,7 +3,6 @@
 //
 
 export * from './CreatePartyDialog';
-export * from './DraggableKanban';
 export * from './DraggableCard';
 export * from './DraggableTable';
 export * from './DroppableList';

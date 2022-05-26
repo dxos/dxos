@@ -78,7 +78,8 @@ export const DraggableTable = ({
         style={{
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
           display: 'grid',
-          gridTemplateColumns: getGridCellSize(defaultColumns)
+          gridTemplateColumns: getGridCellSize(defaultColumns),
+          width: 'fit-content'
         }}
       >
         {instance.getHeaderGroups().map(headerGroup =>
@@ -109,7 +110,8 @@ export const DraggableTable = ({
             index={i}
             style={{
               display: 'grid',
-              gridTemplateColumns: getGridCellSize(defaultColumns)
+              gridTemplateColumns: getGridCellSize(defaultColumns),
+              width: 'fit-content'
             }}
           >
             {row.getVisibleCells().map(cell => (
