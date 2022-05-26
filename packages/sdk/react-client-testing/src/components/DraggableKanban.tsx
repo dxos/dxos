@@ -4,10 +4,16 @@
 
 import React from 'react';
 
-import { DroppableList, List } from './DroppableList';
+import { Card } from './DraggableCard';
+import { DroppableList } from './DroppableList';
+
+export interface KanbanList {
+  id: string
+  items: Card[]
+}
 
 interface DraggableKanbanProps {
-  lists: List[]
+  lists: KanbanList[]
 }
 
 export const DraggableKanban = ({
@@ -21,7 +27,8 @@ export const DraggableKanban = ({
       {lists.map(list => (
         <DroppableList
           key={list.id}
-          list={list}
+          id={list.id}
+          items={list.items}
         />
       ))}
     </div>
