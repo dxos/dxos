@@ -218,7 +218,6 @@ describe('RpcPeer', () => {
     test('one peer can open before the other is created', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      // eslint-disable-next-line prefer-const
       const alice: RpcPeer = new RpcPeer({
         messageHandler: async msg => ({}),
         port: alicePort

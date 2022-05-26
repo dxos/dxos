@@ -12,7 +12,7 @@ import type { RpcPort } from '@dxos/rpc';
 // TODO(wittjosiah): Factor out to common extension utils?
 export const wrapPort = (port: Runtime.Port): RpcPort => {
   return {
-    send: async msg => port.postMessage(Array.from(msg)),
+    send: async message => port.postMessage(Array.from(message)),
     subscribe: callback => {
       const handler = (message: any) => {
         callback(new Uint8Array(message.data));

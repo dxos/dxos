@@ -4,6 +4,11 @@
 
 /* global chrome */
 
+import debug from 'debug';
+
+const log = debug('dxos:extension:devtools');
+const error = log.extend('error');
+
 let panelCreated = false;
 let checkCount = 0;
 
@@ -11,20 +16,21 @@ let checkCount = 0;
 let loadCheckInterval: NodeJS.Timeout;
 
 function createPanel () {
-  console.log('[DXOS devtools] Attempting to create panel...', { now: new Date().toISOString(), panelCreated, checkCount });
+  log('Attempting to create panel...');
   // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
     return;
   }
 
   // Other dev tools may not have easy access to client, so they can set display flag to true manually.
+  // TODO(wittjosiah): Use browser.
   chrome.devtools.inspectedWindow.eval(
     '!!(window.__DXOS__);',
-    (result, isException) => {
-      console.log('[DXOS devtools] DXOS available', { result, isException });
+    (result, exception) => {
+      log('DXOS hook available.');
       // TODO(elmasse): How should we better handle this error?
-      if (isException) {
-        console.log('DXOS devtools:', isException);
+      if (exception) {
+        error(`DXOS hook exception: ${exception}`);
       }
 
       // Already created or no client.
@@ -40,7 +46,7 @@ function createPanel () {
       panelCreated = true;
 
       chrome.devtools.panels.create('DXOS', '', 'panel.html');
-      console.log('[DXOS devtools] Panel created.');
+      log('Panel created.');
     }
   );
 }

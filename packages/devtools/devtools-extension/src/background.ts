@@ -2,22 +2,28 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import browser, { Runtime } from 'webextension-polyfill';
 
+const log = debug('dxos:extension:background');
+const error = log.extend('error');
+
 const panelPorts = new Map<number, Runtime.Port>();
-const clientPorts = new Map<number, Runtime.Port>();
+const contentPorts = new Map<number, Runtime.Port>();
 
 browser.runtime.onConnect.addListener(port => {
-  console.log('[background] runtime.onConnect', { port });
+  log(`Connected to port: ${port.name}`);
   if (port.name.startsWith('panel-')) {
     const tabId = parseInt(port.name.split('-')[1]);
     panelPorts.set(tabId, port);
 
     const messageListener = (message: any) => {
-      const port = clientPorts.get(tabId);
-      console.log('[background] panelPort.onMessage', { message, tabId, port });
+      const port = contentPorts.get(tabId);
       if (port) {
+        log(`Forwarding message from panel to content on tab ${tabId}: ${message}`);
         port.postMessage(message);
+      } else {
+        error(`Missing content port for tab ${tabId}`);
       }
     };
 
@@ -26,24 +32,26 @@ browser.runtime.onConnect.addListener(port => {
       port.onMessage.removeListener(messageListener);
       panelPorts.delete(tabId);
     });
-  } else if (port.name === 'client' && port.sender?.tab?.id) {
+  } else if (port.name === 'content' && port.sender?.tab?.id) {
     const tabId = port.sender.tab.id;
-    clientPorts.set(tabId, port);
+    contentPorts.set(tabId, port);
 
     const messageListener = (message: any) => {
       const port = panelPorts.get(tabId);
-      console.log('[background] clientPort.onMessage', { message, tabId, port });
       if (port) {
+        log(`Forwarding message from content to panel on tab ${tabId}: ${message}`);
         port.postMessage(message);
+      } else {
+        error(`Missing panel port for tab ${tabId}`);
       }
     };
 
     port.onMessage.addListener(messageListener);
     port.onDisconnect.addListener(() => {
       port.onMessage.removeListener(messageListener);
-      clientPorts.delete(tabId);
+      contentPorts.delete(tabId);
     });
   }
 });
 
-console.log('Background script loaded.');
+console.log('Background script initialized.');

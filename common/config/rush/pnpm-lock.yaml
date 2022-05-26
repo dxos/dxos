@@ -968,6 +968,7 @@ importers:
       '@mui/material': ^5.4.2
       '@mui/styles': ^5.4.2
       '@types/chrome': ^0.0.125
+      '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
@@ -978,6 +979,7 @@ importers:
       color-hash: ^1.0.3
       copy: ~0.3.2
       crx: ^5.0.1
+      debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.11.23
       eslint: ^7.12.1
@@ -1012,6 +1014,7 @@ importers:
       '@mui/styles': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
       clsx: 1.1.1
       color-hash: 1.1.1
+      debug: 4.3.3
       moment: 2.29.1
       react: 17.0.2
       react-copy-to-clipboard: 5.0.4_react@17.0.2
@@ -1023,6 +1026,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/chrome': 0.0.125
+      '@types/debug': 4.1.7
       '@types/download': 8.0.1
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -11629,7 +11633,7 @@ packages:
     engines: {node: '>=0.8'}
 
   /clone/2.1.2:
-    resolution: {integrity: sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=}
+    resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
   /clsx/1.1.1:

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import browser from 'webextension-polyfill';
 
 import { Client } from '@dxos/client';
@@ -10,6 +11,7 @@ import { initialize } from '@dxos/devtools';
 
 import { wrapPort } from './utils';
 
+const log = debug('dxos:extension:panel');
 const TIMEOUT = 5000;
 
 const initPanel = (client: Client) => {
@@ -35,14 +37,15 @@ const waitToBeReady = () => {
       chrome.devtools.inspectedWindow.eval(
         '!!(window.__DXOS__.devtoolsReady);',
         (result, isException) => {
-          console.log('[DXOS devtools] Devtools ready check result:', { result, isException, now: new Date().toISOString() });
           if (!result || isException) {
             if (Date.now() - start > TIMEOUT) {
-              reject(new Error('Timeout on waiting for client API to initialize.'));
+              reject(new Error('Timeout on waiting for client RPC server to initialize.'));
             } else {
+              log('Devtools not ready, will check again...');
               setTimeout(check, 50);
             }
           } else {
+            log('Devtools ready.');
             resolve();
           }
         }
@@ -54,9 +57,8 @@ const waitToBeReady = () => {
 };
 
 void (async () => {
-  console.log('[DXOS devtools] Init client API started.');
+  log('Initialize client RPC server starting...');
   const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
-  console.log('[DXOS devtools] Connected to panel port:', { port });
   port.postMessage({ type: 'extension.inject-client-script' });
   const rpcPort = wrapPort(port);
   const client = new Client({

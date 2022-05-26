@@ -2,19 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
+
 import { clientServiceBundle, DevtoolsHook } from '@dxos/client';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
+const log = debug('dxos:extension:inject');
+const error = log.extend('error');
+
+// eslint-disable-next-line prefer-const
+let checkInterval: NodeJS.Timeout;
+let checkCount = 0;
+
 const port: RpcPort = {
-  send: async message => {
-    console.log('[inject] send', { message });
-    window.postMessage({
-      data: message,
-      source: 'dxos-client'
-    }, '*');
-  },
+  send: async message => window.postMessage({
+    data: Array.from(message),
+    source: 'injected-script'
+  }, '*'),
   subscribe: callback => {
-    window.addEventListener('message', event => {
+    const handler = (event: MessageEvent<any>) => {
       if (event.source !== window) {
         return;
       }
@@ -24,20 +30,18 @@ const port: RpcPort = {
       if (
         typeof message !== 'object' ||
         message === null ||
-        message.source !== 'dxos-devtools'
+        message.source !== 'content-script'
       ) {
         return;
       }
 
-      console.log('[inject] window.message', { message });
-      callback(event.data);
-    });
+      callback(new Uint8Array(message.data));
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
   }
 };
-
-// eslint-disable-next-line prefer-const
-let checkInterval: NodeJS.Timeout;
-let checkCount = 0;
 
 const init = async () => {
   checkCount++;
@@ -54,18 +58,18 @@ const init = async () => {
       port
     });
     (window as any).__DXOS__.devtoolsReady = true;
-    console.log('[DXOS devtools] Devtools ready.', { clientReady: devtoolsContext.client.initialized, now: new Date().toISOString() });
+    log('Client hook found.');
 
     await server.open();
-    console.log('[DXOS devtools] Init client API finished.');
+    log('Initialize client RPC server finished.');
   } else {
     if (checkCount > 20) {
       clearInterval(checkInterval);
-      console.log('[DXOS devtools] Init client API failed after too many retries.');
+      error('Initialize client RPC server failed after too many retries.');
     }
   }
 };
 
-console.log('[DXOS devtools] Init client API started.');
+log('Initialize client RPC server started.');
 checkInterval = setInterval(init, 500);
 void init();

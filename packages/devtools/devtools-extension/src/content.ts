@@ -2,15 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-const port = browser.runtime.connect({ name: 'client' });
+const log = debug('dxos:extension:content');
+
+const port = browser.runtime.connect({ name: 'content' });
 
 port.onMessage.addListener(message => {
-  console.log('[content] port.onMessage', { message });
-
+  log(`Received message from background: ${message}`);
   if (message.type === 'extension.inject-client-script') {
-    console.log('[DXOS devtools] Injecting client API...');
+    log('Injecting client RPC server script...');
 
     const script = document.createElement('script');
     script.src = browser.runtime.getURL('inject.js');
@@ -22,11 +24,11 @@ port.onMessage.addListener(message => {
 
   window.postMessage({
     data: message,
-    source: 'dxos-devtools'
+    source: 'content-script'
   }, '*');
 });
 
-window.addEventListener('message', (event) => {
+window.addEventListener('message', event => {
   if (event.source !== window) {
     return;
   }
@@ -36,13 +38,13 @@ window.addEventListener('message', (event) => {
   if (
     typeof message !== 'object' ||
     message === null ||
-    message.source !== 'dxos-client'
+    message.source !== 'injected-script'
   ) {
     return;
   }
 
-  console.log('[content] window.message', { event });
+  log(`Received message from injected script: ${message}`);
   port.postMessage(message);
 });
 
-console.log('[DXOS devtools] Content-script initialized.');
+log('Content script initialized.');
