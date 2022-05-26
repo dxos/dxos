@@ -29,7 +29,12 @@ export const DroppableList = ({ list }: DroppableListProps) => {
       style={{
         padding: 2,
         height: '100%',
-        overflowY: 'scroll'
+        overflowY: 'scroll',
+        border: '1px solid rgba(0,0,0,0.2)',
+        borderRadius: '5px'
+      }}
+      draggingOverStyle={{
+        border: '1px solid rgba(0, 0, 0, 0.7)'
       }}
     >
       {list.children.map((card, i) => (
