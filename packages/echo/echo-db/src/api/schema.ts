@@ -35,7 +35,7 @@ export class Schema {
     private readonly _schema: ObjectModel
   ) {}
 
-  get schema (): string {
+  get name (): string {
     return this._schema.get('schema');
   }
 

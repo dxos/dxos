@@ -19,7 +19,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-components": "workspace:*",
-    "@dxos/react-framework": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",

@@ -11,5 +11,12 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../react-client"
+    }
+  ]
 }

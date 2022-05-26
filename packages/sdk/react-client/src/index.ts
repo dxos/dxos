@@ -4,4 +4,3 @@
 
 export * from './containers';
 export * from './hooks';
-export * from './testing';

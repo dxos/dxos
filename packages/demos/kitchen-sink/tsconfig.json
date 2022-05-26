@@ -55,6 +55,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-testing"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -67,10 +70,13 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-echo-graph"
     },
     {
-      "path": "../../sdk/react-gem-components"
+      "path": "../../sdk/react-ipfs"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
     }
   ]
 }

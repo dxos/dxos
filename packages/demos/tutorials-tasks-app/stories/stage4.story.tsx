@@ -7,7 +7,7 @@ import { Drawer } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog } from '@dxos/react-framework';
+import { ProfileDialog } from '@dxos/react-toolkit';
 
 import { PartyList, TaskList } from '../src';
 

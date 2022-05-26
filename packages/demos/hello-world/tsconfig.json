@@ -30,10 +30,13 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-client-testing"
+    },
+    {
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     }
   ]
 }

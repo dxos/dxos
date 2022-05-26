@@ -17,7 +17,16 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -29,7 +38,13 @@
       "path": "../client"
     },
     {
+      "path": "../client-testing"
+    },
+    {
       "path": "../react-client"
+    },
+    {
+      "path": "../react-components"
     }
   ]
 }

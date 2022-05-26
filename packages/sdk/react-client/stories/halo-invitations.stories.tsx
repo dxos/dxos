@@ -7,10 +7,10 @@ import React, { useState } from 'react';
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
 import { Invitation, InvitationDescriptor } from '@dxos/client';
+import { useAsyncEffect } from '@dxos/react-async';
 
 import {
   ClientProvider,
-  ProfileInitializer,
   useClient,
   useParties,
   useProfile
@@ -131,6 +131,16 @@ const TestApp = () => {
   const parties = useParties();
   const profile = useProfile();
 
+  useAsyncEffect(async () => {
+    if (!profile) {
+      await client.halo.createProfile();
+    }
+  }, []);
+
+  if (!profile) {
+    return null;
+  }
+
   return (
     <Box sx={{
       display: 'flex',
@@ -163,9 +173,7 @@ export const Primary = () => {
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {/* Instantiated Client. */}
         <ClientProvider>
-          <ProfileInitializer>
-            <TestApp />
-          </ProfileInitializer>
+          <TestApp />
         </ClientProvider>
 
         {/* Joiners. */}

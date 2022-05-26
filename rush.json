@@ -604,14 +604,8 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-framework",
-      "projectFolder": "packages/sdk/react-framework",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/react-gem-components",
-      "projectFolder": "packages/sdk/react-gem-components",
+      "packageName": "@dxos/react-echo-graph",
+      "projectFolder": "packages/sdk/react-echo-graph",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -624,6 +618,12 @@
     {
       "packageName": "@dxos/react-registry-client",
       "projectFolder": "packages/sdk/react-registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/react-toolkit",
+      "projectFolder": "packages/sdk/react-toolkit",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

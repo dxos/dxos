@@ -27,7 +27,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
-    "@dxos/react-framework": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@lexical/hashtag": "~0.2.5",
     "@lexical/list": "~0.2.5",
@@ -37,14 +37,15 @@
     "@mui/icons-material": "^5.4.2",
     "@mui/material": "^5.4.2",
     "lexical": "~0.2.5",
-    "yjs": "^13.4.1",
-    "y-protocols": "~1.0.5"
+    "y-protocols": "~1.0.5",
+    "yjs": "^13.4.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "~2.28.7",
     "@dxos/esbuild-server": "~2.28.7",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/react-client-testing": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",

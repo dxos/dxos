@@ -57,10 +57,15 @@ export const Secondary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
   const config: ConfigObject = {
     runtime: {
+      client: {
+        // Automatic mode doesn't work because it doesn't start up fast enough.
+        // The devtools remote client fails to connect when controls use the automatic mode.
+        mode: defs.Runtime.Client.Mode.LOCAL
+      },
       services: {
         signal: {
           // TODO(burdon): Fallback.
-          server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+          server: 'wss://demo.kube.dxos.network/dxos/signal'
           // server: 'ws://localhost:4000'
         }
       }

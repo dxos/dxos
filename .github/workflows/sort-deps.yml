@@ -15,15 +15,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: 'chore: Update package.json and tsconfig.json files'
-        uses: technote-space/create-pr-action@v2
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: |
+          npm install -g yarn @microsoft/rush
+          yarn global add @dxos/x@1.4.38
+      - name: Update tsconfig.json references
+        run: |
+          npx @monorepo-utils/workspaces-to-typescript-project-references@2.7.4
+      - name: Sort package.json and tsconfig.json files
+        run: |
+          export PATH="$PATH:$(yarn global bin)"
+          # For some reason if this isn't called first it doesn't recognize the rush project.
+          # This causes it only to sort the root files and not each package as well.
+          rush list --json
+          dxtools deps sort
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
         with:
-          EXECUTE_COMMANDS: |
-            npx @sfomin/for-each-package@0.0.2 -n "@dxos/*" "npx sort-package-json@1.53.1"
-            npx @monorepo-utils/workspaces-to-typescript-project-references@2.7.4
-          COMMIT_MESSAGE: 'chore: Sort package.json and update references in tsconfig.json files'
-          COMMIT_NAME: 'GitHub Actions'
-          COMMIT_EMAIL: 'ci@dxos.org'
-          PR_BRANCH_NAME: 'standardize-configs-${PR_ID}'
-          PR_TITLE: 'chore: Sort package.json and update references in tsconfig.json files'
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          commit-message: |
+            chore: Sort package.json and update references in tsconfig.json files
+          committer: DXOS Bot <ci@dxos.org>
+          author: DXOS Bot <ci@dxos.org>
+          branch: standardize-configs
+          title: |
+            chore: Sort package.json and update references in tsconfig.json files

@@ -31,7 +31,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
-    "@dxos/react-framework": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
