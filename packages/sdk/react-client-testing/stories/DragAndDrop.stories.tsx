@@ -11,7 +11,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableTable, DroppableList, Card, List as ListDef, ProfileInitializer } from '../src';
+import { DraggableTable, DroppableList, Card, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -22,19 +22,13 @@ const TYPE_LIST = 'example:type/list';
 const TYPE_LIST_ITEM = 'example:type/list/item';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
 
-type ListStruct = {
-  id: string
-  list: Item<ObjectModel>
-  orderedList: OrderedList | undefined
-  // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
-  currentOrder: string[]
-}
-
 const ListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [list, setList] = useState<ListStruct>();
+  const [list, setList] = useState<Item<ObjectModel>>();
+  const [orderedList, setOrderedList] = useState<OrderedList>();
   const [initialOrder, setInitialOrder] = useState<string[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<string[]>([]);
   const items = useSelection(party?.select()
     .filter({ type: TYPE_LIST_ITEM }),
   [list]) ?? [];
@@ -58,57 +52,44 @@ const ListStory = () => {
 
     const newOrderedList = new OrderedList(listItem.model);
     await newOrderedList.init(res.map(item => item.id));
+    setOrderedList(newOrderedList);
     setInitialOrder(newOrderedList.values);
+    setCurrentOrder(newOrderedList.values);
 
+    setList(listItem);
     setParty(newParty);
-    setList({
-      id: listItem.id,
-      list: listItem,
-      orderedList: newOrderedList,
-      currentOrder: newOrderedList.values
-    });
   }, []);
 
-  const getList = (): ListDef => ({
-    id: 'test-list',
-    title: 'People',
-    children: list!.currentOrder.map(itemId => {
-      const item = items.find(item => item.id === itemId);
-      if (item) {
-        return { id: item.id, title: item.model.get('title') };
-      }
-      return null;
-    }).filter(Boolean) as Card[]
-  });
+  const getListItems = () => currentOrder.map(itemId => {
+    const item = items.find(item => item.id === itemId);
+    if (item) {
+      return { id: item.id, title: item.model.get('title') };
+    }
+    return null;
+  }).filter(Boolean) as Card[];
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!list?.orderedList || !result.destination) {
+    if (!orderedList || !result.destination) {
       return;
     }
 
     const { destination, draggableId } = result;
-    const currentOrderWithoutId = list.orderedList.values.filter(value => value !== draggableId);
+    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
       draggableId,
-      ...currentOrderWithoutId.slice(destination.index, list.orderedList.values.length)
+      ...currentOrderWithoutId.slice(destination.index, orderedList.values.length)
     ];
-    await list.orderedList.init(newOrder);
-    setList({
-      ...list,
-      currentOrder: newOrder
-    });
+    await orderedList.init(newOrder);
+    setCurrentOrder(newOrder);
   };
 
   const handleReset = async () => {
-    if (!list) {
+    if (!orderedList) {
       return;
     }
-    await list.orderedList?.init(initialOrder);
-    setList({
-      ...list,
-      currentOrder: initialOrder
-    });
+    await orderedList.init(initialOrder);
+    setCurrentOrder(initialOrder);
   };
 
   if (!list) {
@@ -121,12 +102,14 @@ const ListStory = () => {
       gridTemplateColumns: '1fr 0.1fr'
     }}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <DroppableList list={getList()} />
+        <DroppableList
+          id='test-list'
+          items={getListItems()} />
       </DragDropContext>
       <div>
         <ResetButton onReset={handleReset} />
         <DragAndDropDebugPanel
-          order={list.list.model.get('order')}
+          order={list.model.get('order')}
         />
       </div>
     </StorybookContainer>
@@ -146,8 +129,10 @@ export const List = () => {
 const MultipleListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
-  const [lists, setLists] = useState<ListStruct[]>([]);
+  const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
+  const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
+  const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>();
   const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
 
   useAsyncEffect(async () => {
@@ -177,107 +162,97 @@ const MultipleListStory = () => {
     }));
 
     setParty(newParty);
-    setLists(listItems.map(listItem => {
-      const orderedList = newOrderedLists.find(orderedList => orderedList.id === listItem.id);
-      return {
-        id: listItem.id,
-        list: listItem,
-        orderedList,
-        currentOrder: orderedList?.values ?? []
-      };
-    }));
+    setLists(listItems);
+    setOrderedLists(newOrderedLists);
+    setCurrentOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
     setInitialOrders(newOrderedLists.map(orderedList => ({
       id: orderedList.id,
       values: orderedList.values
     })));
   }, []);
 
-  const getList = (listId: string): ListDef | undefined => {
-    const list = lists.find(list => list.id === listId);
-    if (!list) {
-      return undefined;
+  const getListItems = (listId: string) => {
+    const currentOrder = currentOrders?.find(list => list.id === listId);
+    if (!currentOrder) {
+      return [];
     }
 
-    return {
-      id: list.id,
-      title: 'People',
-      children: list.currentOrder.map(itemId => {
-        const item = items.find(item => item.id === itemId);
-        if (item) {
-          return { id: item.id, title: item.model.get('title') };
-        }
-        return null;
-      }).filter(Boolean) as Card[]
-    };
+    return currentOrder.values.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, title: item.model.get('title') };
+      }
+      return null;
+    }).filter(Boolean) as Card[];
   };
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!lists.length || !result.destination) {
+    if (!orderedLists?.length || !result.destination) {
       return;
     }
     const { destination, draggableId, source } = result;
-    const targetList = lists.find(list => list.id === destination.droppableId);
-    if (!targetList || !targetList.orderedList) {
+    const targetOrderedList = orderedLists.find(list => list.id === destination.droppableId);
+    if (!targetOrderedList) {
       return;
     }
 
     let newSourceOrder: string[];
-    const sourceList = lists.find(list => list.id === source.droppableId);
+    const sourceOrderedList = orderedLists.find(list => list.id === source.droppableId);
     if (destination.droppableId !== source.droppableId) {
       // Remove item from source
-      if (sourceList?.orderedList) {
-        const sourceOrderWithoutId = sourceList.orderedList.values.filter(value => value !== draggableId);
-        await sourceList.orderedList.init(sourceOrderWithoutId);
+      if (sourceOrderedList) {
+        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== draggableId);
+        await sourceOrderedList.init(sourceOrderWithoutId);
         newSourceOrder = sourceOrderWithoutId;
       }
     }
 
-    const currentOrderWithoutId = targetList.orderedList.values.filter(value => value !== draggableId);
+    const currentOrderWithoutId = targetOrderedList.values.filter(value => value !== draggableId);
     const newOrder = [
       ...currentOrderWithoutId.slice(0, destination.index),
       draggableId,
-      ...currentOrderWithoutId.slice(destination.index, targetList.orderedList.values.length)
+      ...currentOrderWithoutId.slice(destination.index, targetOrderedList.values.length)
     ];
-    await targetList.orderedList.init(newOrder);
-    setLists(prev => prev.map(list => {
-      if (list.id === targetList.id) {
+    await targetOrderedList.init(newOrder);
+    setCurrentOrders(prev => prev?.map(currentOrder => {
+      if (currentOrder.id === targetOrderedList.id) {
         return {
-          ...targetList,
-          currentOrder: newOrder
+          id: currentOrder.id,
+          values: newOrder
         };
       }
 
-      if (sourceList && newSourceOrder && list.id === sourceList.id) {
+      if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
         return {
-          ...sourceList,
-          currentOrder: newSourceOrder
+          id: currentOrder.id,
+          values: newSourceOrder
         };
       }
 
-      return list;
+      return currentOrder;
     }));
   };
 
   const handleReset = async () => {
-    if (!initialOrders) {
+    if (!initialOrders || !orderedLists) {
       return;
     }
 
-    await Promise.all(lists.map(async (list) => {
+    await Promise.all(orderedLists.map(async (orderedList) => {
       const initialOrder = initialOrders.find(order => order.id === list.id);
-      initialOrder && await list.orderedList?.init(initialOrder.values);
+      initialOrder && await orderedList?.init(initialOrder.values);
     }));
 
     // Update state to trigger rerender
-    setLists(lists.map(list => {
-      const initialOrder = initialOrders.find(order => order.id === list.id);
+    setCurrentOrders(orderedLists.map(orderedList => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
       if (!initialOrder) {
-        return list;
+        return orderedList;
       }
-      return {
-        ...list,
-        currentOrder: initialOrder.values
-      };
+      return initialOrder;
     }));
   };
 
@@ -295,10 +270,15 @@ const MultipleListStory = () => {
         {lists.map(list => (
           <ColumnContainer
             key={list.id}
-            topComponent={<DroppableList list={getList(list.id)} />}
+            topComponent={(
+              <DroppableList
+                id={list.id}
+                items={getListItems(list.id)}
+              />
+            )}
             bottomComponent={(
               <DragAndDropDebugPanel
-                order={list.list.model.get('order')}
+                order={list.model.get('order')}
               />
             )}
             config={{

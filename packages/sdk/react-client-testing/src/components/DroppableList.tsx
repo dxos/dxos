@@ -7,25 +7,19 @@ import React from 'react';
 import { Card, DraggableCard } from './DraggableCard';
 import { DroppableContainer } from './DroppableContainer';
 
-export type List = {
-  id: string
-  title: string
-  children: Card[]
-  width?: number | string
-}
-
 interface DroppableListProps {
-  list?: List
+  id: string
+  items: Card[]
 }
 
-export const DroppableList = ({ list }: DroppableListProps) => {
-  if (!list) {
-    return null;
-  }
+export const DroppableList = ({
+  id,
+  items
+}: DroppableListProps) => {
 
   return (
     <DroppableContainer
-      id={list.id}
+      id={id}
       style={{
         padding: 2,
         height: '100%',
@@ -37,7 +31,7 @@ export const DroppableList = ({ list }: DroppableListProps) => {
         border: '1px solid rgba(0, 0, 0, 0.7)'
       }}
     >
-      {list.children.map((card, i) => (
+      {items.map((card, i) => (
         <DraggableCard
           key={card.id}
           index={i}
