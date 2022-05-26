@@ -24,10 +24,9 @@ export const DroppableContainer = ({
         <div
           ref={droppableRef}
           style={{
-            ...style,
-            backgroundColor: isDraggingOver ? 'rgba(0, 0, 0, 0.1)' : undefined,
             borderRadius: '0.5em',
-            width: 'fit-content'
+            ...style,
+            border: isDraggingOver ? '1px solid rgba(0, 0, 0, 0.7)' : (style?.border ?? '1px solid rgba(0,0,0,0.2)')
           }}
         >
           {children}
