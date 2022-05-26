@@ -109,7 +109,8 @@ export const DraggableTable = ({
             index={i}
             style={{
               display: 'grid',
-              gridTemplateColumns: getGridCellSize(defaultColumns)
+              gridTemplateColumns: getGridCellSize(defaultColumns),
+              width: 'fit-content'
             }}
           >
             {row.getVisibleCells().map(cell => (
