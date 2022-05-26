@@ -4,4 +4,5 @@
 
 export * from './ColumnContainer';
 export * from './DragAndDropDebugPanel';
+export * from './RowContainer';
 export * from './StorybookContainer';
