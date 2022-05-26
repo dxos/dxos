@@ -12,7 +12,7 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { DraggableTable, DroppableList, Card, List as ListDef, ProfileInitializer } from '../src';
-import { ColumnContainer, DragAndDropDebugPanel, StorybookContainer } from './helpers';
+import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -124,9 +124,7 @@ const ListStory = () => {
         <DroppableList list={getList()} />
       </DragDropContext>
       <div>
-        <div>
-          <button onClick={handleReset}>Reset</button>
-        </div>
+        <ResetButton onReset={handleReset} />
         <DragAndDropDebugPanel
           order={list.list.model.get('order')}
         />
@@ -310,19 +308,7 @@ const MultipleListStory = () => {
           />
         ))}
       </DragDropContext>
-      <div>
-        <button
-          onClick={handleReset}
-          style={{
-            backgroundColor: 'white',
-            border: '1px solid rgba(0,0,0,0.3)',
-            borderRadius: '5px',
-            fontSize: '12px'
-          }}
-        >
-          Reset
-        </button>
-      </div>
+      <ResetButton onReset={handleReset} />
     </StorybookContainer>
   );
 };
@@ -477,9 +463,7 @@ const TableStory = () => {
           rows={getRows()}
         />
       </DragDropContext>
-      <div>
-        <button onClick={handleReset}>Reset</button>
-      </div>
+      <ResetButton onReset={handleReset} />
     </div>
   );
 };
