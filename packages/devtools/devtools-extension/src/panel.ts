@@ -7,35 +7,21 @@ import browser from 'webextension-polyfill';
 
 import { Client } from '@dxos/client';
 import { defs } from '@dxos/config';
-import { initialize } from '@dxos/devtools';
+import { initialize, Shell } from '@dxos/devtools';
 
 import { wrapPort } from './utils';
 
 const log = debug('dxos:extension:panel');
 const TIMEOUT = 5000;
 
-const initPanel = (client: Client) => {
-  initialize({
-    connect (onConnect) {
-      onConnect(client);
-    },
-
-    tabId: browser.devtools.inspectedWindow.tabId,
-
-    onReload (reloadFn) {
-      browser.devtools.network.onNavigated.addListener(reloadFn);
-    }
-  });
-};
-
-const waitToBeReady = () => {
+const waitForRpcServer = () => {
   return new Promise<void>((resolve, reject) => {
     const start = Date.now();
 
     function check () {
-      // TODO(wittjosiah): Use browser.
+      // TODO(wittjosiah): Switch to using webextension-polyfill once types are improved.
       chrome.devtools.inspectedWindow.eval(
-        '!!(window.__DXOS__.devtoolsReady);',
+        '!!(window.__DXOS__.clientRpcReady);',
         (result, isException) => {
           if (!result || isException) {
             if (Date.now() - start > TIMEOUT) {
@@ -56,10 +42,11 @@ const waitToBeReady = () => {
   });
 };
 
-void (async () => {
+const init = async () => {
   log('Initialize client RPC server starting...');
   const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
   port.postMessage({ type: 'extension.inject-client-script' });
+
   const rpcPort = wrapPort(port);
   const client = new Client({
     runtime: {
@@ -67,8 +54,23 @@ void (async () => {
         mode: defs.Runtime.Client.Mode.REMOTE
       }
     }
-  }, { rpcPort, timeout: TIMEOUT });
-  await waitToBeReady();
+  }, { rpcPort });
+
+  const shell: Shell = {
+    connect (onConnect) {
+      onConnect(client);
+    },
+
+    tabId: browser.devtools.inspectedWindow.tabId,
+
+    onReload (reloadFn) {
+      browser.devtools.network.onNavigated.addListener(reloadFn);
+    }
+  };
+
+  await waitForRpcServer();
   await client.initialize();
-  initPanel(client);
-})();
+  initialize(shell);
+};
+
+void init();

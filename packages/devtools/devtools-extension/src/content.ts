@@ -9,6 +9,7 @@ const log = debug('dxos:extension:content');
 
 const port = browser.runtime.connect({ name: 'content' });
 
+// Forward messages from background script to injected script.
 port.onMessage.addListener(message => {
   log(`Received message from background: ${message}`);
   if (message.type === 'extension.inject-client-script') {
@@ -28,6 +29,7 @@ port.onMessage.addListener(message => {
   }, '*');
 });
 
+// Forward messages from injected script to background script.
 window.addEventListener('message', event => {
   if (event.source !== window) {
     return;

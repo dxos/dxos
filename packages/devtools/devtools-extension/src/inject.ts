@@ -44,7 +44,6 @@ const port: RpcPort = {
 };
 
 const init = async () => {
-  checkCount++;
   if ((window as any).__DXOS__) {
     const devtoolsContext: DevtoolsHook = (window as any).__DXOS__;
 
@@ -57,13 +56,14 @@ const init = async () => {
       handlers: devtoolsContext.serviceHost.services,
       port
     });
-    (window as any).__DXOS__.devtoolsReady = true;
+    // TODO(wittjosiah): Integrate with DevtoolsHook.
+    (window as any).__DXOS__.clientRpcReady = true;
     log('Client hook found.');
 
     await server.open();
     log('Initialize client RPC server finished.');
   } else {
-    if (checkCount > 20) {
+    if (++checkCount > 20) {
       clearInterval(checkInterval);
       error('Initialize client RPC server failed after too many retries.');
     }

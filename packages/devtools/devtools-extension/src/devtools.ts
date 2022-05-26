@@ -2,61 +2,48 @@
 // Copyright 2020 DXOS.org
 //
 
-/* global chrome */
-
 import debug from 'debug';
+import browser from 'webextension-polyfill';
 
 const log = debug('dxos:extension:devtools');
 const error = log.extend('error');
 
+// eslint-disable-next-line prefer-const
+let loadCheckInterval: NodeJS.Timeout;
 let panelCreated = false;
 let checkCount = 0;
 
-// eslint-disable-next-line prefer-const
-let loadCheckInterval: NodeJS.Timeout;
-
-function createPanel () {
+const createPanel = () => {
   log('Attempting to create panel...');
-  // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
     return;
   }
 
-  // Other dev tools may not have easy access to client, so they can set display flag to true manually.
-  // TODO(wittjosiah): Use browser.
+  // TODO(wittjosiah): Switch to using webextension-polyfill once types are improved.
   chrome.devtools.inspectedWindow.eval(
     '!!(window.__DXOS__);',
-    (result, exception) => {
-      log('DXOS hook available.');
+    async (result, exception) => {
       // TODO(elmasse): How should we better handle this error?
       if (exception) {
         error(`DXOS hook exception: ${exception}`);
       }
 
-      // Already created or no client.
       if (!result || panelCreated) {
+        log('DXOS hook not yet available...');
         return;
       }
 
-      // Clear watcher.
       if (loadCheckInterval) {
         clearInterval(loadCheckInterval);
       }
 
       panelCreated = true;
-
-      chrome.devtools.panels.create('DXOS', '', 'panel.html');
+      await browser.devtools.panels.create('DXOS', '', 'panel.html');
       log('Panel created.');
     }
   );
-}
+};
 
-// Attempt to create panel on navigations as well.
-chrome.devtools.network.onNavigated.addListener(createPanel);
-
-// Attempt to create panel once per second in case.
-// DXOS is loaded after page load.
+browser.devtools.network.onNavigated.addListener(createPanel);
 loadCheckInterval = setInterval(createPanel, 1000);
-
-// Start the first attempt immediately.
 createPanel();

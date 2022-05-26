@@ -13,6 +13,8 @@ const contentPorts = new Map<number, Runtime.Port>();
 
 browser.runtime.onConnect.addListener(port => {
   log(`Connected to port: ${port.name}`);
+
+  // Forward messages from devtools panel to content script.
   if (port.name.startsWith('panel-')) {
     const tabId = parseInt(port.name.split('-')[1]);
     panelPorts.set(tabId, port);
@@ -32,6 +34,7 @@ browser.runtime.onConnect.addListener(port => {
       port.onMessage.removeListener(messageListener);
       panelPorts.delete(tabId);
     });
+  // Forward messages from content script to devtools panel.
   } else if (port.name === 'content' && port.sender?.tab?.id) {
     const tabId = port.sender.tab.id;
     contentPorts.set(tabId, port);
