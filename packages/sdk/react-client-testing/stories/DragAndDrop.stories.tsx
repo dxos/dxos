@@ -116,15 +116,13 @@ const ListStory = () => {
   }
 
   return (
-    <div style={{
+    <StorybookContainer style={{
       display: 'grid',
       gridTemplateColumns: '1fr 0.1fr'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <DroppableList list={getList()} />
-        </DragDropContext>
-      </div>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <DroppableList list={getList()} />
+      </DragDropContext>
       <div>
         <div>
           <button onClick={handleReset}>Reset</button>
@@ -133,7 +131,7 @@ const ListStory = () => {
           order={list.list.model.get('order')}
         />
       </div>
-    </div>
+    </StorybookContainer>
   );
 };
 
