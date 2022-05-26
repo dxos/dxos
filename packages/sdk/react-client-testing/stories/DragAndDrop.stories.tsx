@@ -12,7 +12,7 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { DraggableTable, DroppableList, Card, List as ListDef, ProfileInitializer } from '../src';
-import { DragAndDropDebugPanel } from './helpers';
+import { ColumnContainer, DragAndDropDebugPanel, StorybookContainer } from './helpers';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -26,7 +26,6 @@ type ListStruct = {
   id: string
   list: Item<ObjectModel>
   orderedList: OrderedList | undefined
-  previousOrder?: {[key: string]: string}
   // TODO(kaplanski): Check how ordered lists work. To trigger a rerender, we need a useState.
   currentOrder: string[]
 }
@@ -86,7 +85,6 @@ const ListStory = () => {
     if (!list?.orderedList || !result.destination) {
       return;
     }
-    const previousOrder = list.list.model.get('order');
 
     const { destination, draggableId } = result;
     const currentOrderWithoutId = list.orderedList.values.filter(value => value !== draggableId);
@@ -98,7 +96,6 @@ const ListStory = () => {
     await list.orderedList.init(newOrder);
     setList({
       ...list,
-      previousOrder,
       currentOrder: newOrder
     });
   };
@@ -121,19 +118,20 @@ const ListStory = () => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 0.1fr'
+      gridTemplateColumns: '1fr 0.1fr'
     }}>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <DragDropContext onDragEnd={handleDragEnd}>
           <DroppableList list={getList()} />
         </DragDropContext>
       </div>
-      <DragAndDropDebugPanel
-        previousOrder={list.previousOrder ?? {}}
-        order={list.list.model.get('order')}
-      />
       <div>
-        <button onClick={handleReset}>Reset</button>
+        <div>
+          <button onClick={handleReset}>Reset</button>
+        </div>
+        <DragAndDropDebugPanel
+          order={list.list.model.get('order')}
+        />
       </div>
     </div>
   );
@@ -292,24 +290,42 @@ const MultipleListStory = () => {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-around'
+    <StorybookContainer style={{
+      display: 'grid',
+      gridTemplateColumns: [...lists.map(() => '1fr'), '0.1fr'].join(' '),
+      columnGap: 8
     }}>
       <DragDropContext onDragEnd={handleDragEnd}>
         {lists.map(list => (
-          <div key={list.id}>
-            <DroppableList list={getList(list.id)} />
-            <DragAndDropDebugPanel
-              order={list.list.model.get('order')}
-            />
-          </div>
+          <ColumnContainer
+            key={list.id}
+            topComponent={<DroppableList list={getList(list.id)} />}
+            bottomComponent={(
+              <DragAndDropDebugPanel
+                order={list.list.model.get('order')}
+              />
+            )}
+            config={{
+              fixedComponent: 'bottom',
+              height: '300px'
+            }}
+          />
         ))}
       </DragDropContext>
       <div>
-        <button onClick={handleReset}>Reset</button>
+        <button
+          onClick={handleReset}
+          style={{
+            backgroundColor: 'white',
+            border: '1px solid rgba(0,0,0,0.3)',
+            borderRadius: '5px',
+            fontSize: '12px'
+          }}
+        >
+          Reset
+        </button>
       </div>
-    </div>
+    </StorybookContainer>
   );
 };
 
