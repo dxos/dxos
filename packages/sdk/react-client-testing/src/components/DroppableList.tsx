@@ -7,8 +7,6 @@ import React from 'react';
 import { Card, DraggableCard } from './DraggableCard';
 import { DroppableContainer } from './DroppableContainer';
 
-const DEFAULT_LIST_WIDTH = 200;
-
 export type List = {
   id: string
   title: string
@@ -26,29 +24,21 @@ export const DroppableList = ({ list }: DroppableListProps) => {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <h5 style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{list.title}</h5>
-      <DroppableContainer
-        id={list.id}
-        style={{
-          width: list.width ?? DEFAULT_LIST_WIDTH,
-          border: '0.5px solid rgba(0,0,0,0.2)',
-          padding: 8,
-          maxHeight: 300,
-          overflowY: 'auto'
-        }}
-      >
-        {list.children.map((card, i) => (
-          <DraggableCard
-            key={card.id}
-            index={i}
-            card={card}
-          />
-        ))}
-      </DroppableContainer>
-    </div>
+    <DroppableContainer
+      id={list.id}
+      style={{
+        padding: 2,
+        height: '100%',
+        overflowY: 'scroll'
+      }}
+    >
+      {list.children.map((card, i) => (
+        <DraggableCard
+          key={card.id}
+          index={i}
+          card={card}
+        />
+      ))}
+    </DroppableContainer>
   );
 };
