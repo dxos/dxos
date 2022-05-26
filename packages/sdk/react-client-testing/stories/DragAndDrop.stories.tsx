@@ -242,7 +242,7 @@ const MultipleListStory = () => {
     }
 
     await Promise.all(orderedLists.map(async (orderedList) => {
-      const initialOrder = initialOrders.find(order => order.id === list.id);
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
       initialOrder && await orderedList?.init(initialOrder.values);
     }));
 
