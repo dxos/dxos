@@ -1,5 +1,7 @@
 # DXOS DevTools browser extension
 
+TODO(wittjosiah): Upgrade to manifest v3.
+
 The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
 
 <img width="640" alt="Screen Shot 2022-01-26 at 7 04 10 PM" src="https://user-images.githubusercontent.com/3523355/151267314-12169bab-8e45-4662-aa67-57128313ebb7.png">
@@ -78,8 +80,12 @@ An alternative method is to run `rushx start:firefox` which will run a temporary
 
 ## Design
 
-The content script attempts to detect the an object exposed by the SDK's client (window.__DXOS__).
-It then sets-up a bridge that enables the devtools (and other components) to access the client via `crx-bridge` module.
+![devtools-architecture](../../../docs/design/diagrams/devtools.drawio.svg)
+
+The injected script attempts to detect the an object exposed by the SDK's client (`window.__DXOS__`).
+A channel is then setup to forward messages between the devtools panel and app client following the client RPC interface.
+The panel and the content script communicate through the background script using the webextension API as they [do not have direct access to each other](https://developer.chrome.com/docs/extensions/mv3/devtools/#content-script-to-devtools).
+The injected script sends messages through the content script via window events as it [does not have access to the webextension APIs](https://developer.chrome.com/docs/extensions/mv3/devtools/#evaluated-scripts-to-devtools).
 
 ## References
 

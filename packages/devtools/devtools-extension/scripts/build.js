@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 const chalk = require('chalk');
 const copy = require('copy');
 const { build } = require('esbuild');

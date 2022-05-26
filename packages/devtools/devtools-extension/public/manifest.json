@@ -22,8 +22,6 @@
   ],
   "devtools_page": "devtools.html",
   "web_accessible_resources": [
-    "devtools.html",
-    "panel.html",
     "inject.js"
   ],
   "manifest_version": 2,

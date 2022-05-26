@@ -12,7 +12,6 @@
     "rootDir": "src"
   },
   "include": [
-    "scripts",
     "src",
     "stories"
   ],
