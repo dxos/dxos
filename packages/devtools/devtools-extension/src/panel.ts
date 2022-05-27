@@ -5,6 +5,7 @@
 import debug from 'debug';
 import browser from 'webextension-polyfill';
 
+import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { defs } from '@dxos/config';
 import { initialize, Shell } from '@dxos/devtools';
@@ -13,6 +14,20 @@ import { wrapPort } from './utils';
 
 const log = debug('dxos:extension:panel');
 const TIMEOUT = 5000;
+
+const clientReady = new Event<Client>();
+
+const shell: Shell = {
+  connect (onConnect) {
+    onConnect(clientReady);
+  },
+
+  tabId: browser.devtools.inspectedWindow.tabId,
+
+  onReload (reloadFn) {
+    browser.devtools.network.onNavigated.addListener(reloadFn);
+  }
+};
 
 const waitForRpcServer = () => {
   return new Promise<void>((resolve, reject) => {
@@ -43,6 +58,8 @@ const waitForRpcServer = () => {
 };
 
 const init = async () => {
+  initialize(shell);
+
   log('Initialize client RPC server starting...');
   const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
   port.postMessage({ type: 'extension.inject-client-script' });
@@ -56,21 +73,9 @@ const init = async () => {
     }
   }, { rpcPort });
 
-  const shell: Shell = {
-    connect (onConnect) {
-      onConnect(client);
-    },
-
-    tabId: browser.devtools.inspectedWindow.tabId,
-
-    onReload (reloadFn) {
-      browser.devtools.network.onNavigated.addListener(reloadFn);
-    }
-  };
-
   await waitForRpcServer();
   await client.initialize();
-  initialize(shell);
+  clientReady.emit(client);
 };
 
 void init();

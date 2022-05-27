@@ -851,6 +851,7 @@ importers:
   ../../packages/devtools/devtools:
     specifiers:
       '@babel/core': ~7.13.15
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
@@ -896,6 +897,7 @@ importers:
       react-dom: ^17.0.2
       typescript: ^4.5.2
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
