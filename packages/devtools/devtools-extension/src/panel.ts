@@ -42,11 +42,11 @@ const waitForRpcServer = () => {
             if (Date.now() - start > TIMEOUT) {
               reject(new Error('Timeout on waiting for client RPC server to initialize.'));
             } else {
-              log('Devtools not ready, will check again...');
+              log('Client RPC server not ready, will check again...');
               setTimeout(check, 50);
             }
           } else {
-            log('Devtools ready.');
+            log('Client RPC server ready.');
             resolve();
           }
         }
