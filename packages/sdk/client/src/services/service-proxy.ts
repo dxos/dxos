@@ -16,7 +16,10 @@ import { clientServiceBundle, ClientServiceProvider, ClientServices } from './cl
 export class ClientServiceProxy implements ClientServiceProvider {
   private readonly _client: ProtoRpcClient<ClientServices>;
 
-  constructor (port: RpcPort) {
+  constructor (
+    port: RpcPort,
+    private readonly _timeout = 300
+  ) {
     this._client = createBundledRpcClient(clientServiceBundle, {
       port
     });
@@ -27,7 +30,7 @@ export class ClientServiceProxy implements ClientServiceProvider {
   readonly services: ClientServices;
 
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
-    await promiseTimeout(this._client.open(), 300, new RemoteServiceConnectionTimeout());
+    await promiseTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 
   async close () {

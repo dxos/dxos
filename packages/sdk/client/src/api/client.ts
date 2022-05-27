@@ -47,6 +47,11 @@ export interface ClientOptions {
    *
    */
   signer?: HaloSigner
+
+  /**
+   *
+   */
+  timeout?: number
 }
 
 /**
@@ -189,7 +194,10 @@ export class Client {
     }
 
     log('Creating client proxy.');
-    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? createWindowMessagePort());
+    this._serviceProvider = new ClientServiceProxy(
+      this._options.rpcPort ?? createWindowMessagePort(),
+      this._options.timeout
+    );
     await this._serviceProvider.open(onProgressCallback);
   }
 

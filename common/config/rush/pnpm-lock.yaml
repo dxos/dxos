@@ -887,7 +887,6 @@ importers:
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^17.0.9
       color-hash: ^1.0.3
-      crx-bridge: ^2.1.0
       eslint: ^7.12.1
       faker: ^5.1.0
       moment: ^2.24.0
@@ -917,7 +916,6 @@ importers:
       '@mui/material': 5.4.2_fa2645acd9a035406d0184711710de51
       '@mui/styles': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
       color-hash: 1.1.1
-      crx-bridge: 2.2.0
       faker: 5.5.3
       moment: 2.29.1
       protobufjs: 6.11.2
@@ -970,6 +968,7 @@ importers:
       '@mui/material': ^5.4.2
       '@mui/styles': ^5.4.2
       '@types/chrome': ^0.0.125
+      '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
@@ -980,7 +979,7 @@ importers:
       color-hash: ^1.0.3
       copy: ~0.3.2
       crx: ^5.0.1
-      crx-bridge: ^2.1.0
+      debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.11.23
       eslint: ^7.12.1
@@ -1015,7 +1014,7 @@ importers:
       '@mui/styles': 5.4.2_cfedea9b3ed0faf0dded75c187406c5e
       clsx: 1.1.1
       color-hash: 1.1.1
-      crx-bridge: 2.2.0
+      debug: 4.3.3
       moment: 2.29.1
       react: 17.0.2
       react-copy-to-clipboard: 5.0.4_react@17.0.2
@@ -1027,6 +1026,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/chrome': 0.0.125
+      '@types/debug': 4.1.7
       '@types/download': 8.0.1
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -11633,7 +11633,7 @@ packages:
     engines: {node: '>=0.8'}
 
   /clone/2.1.2:
-    resolution: {integrity: sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=}
+    resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
   /clsx/1.1.1:
@@ -12112,12 +12112,6 @@ packages:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  /crx-bridge/2.2.0:
-    resolution: {integrity: sha512-4lvu7C06jD4dvUpY4s6+9ScuwXr69nmWrwnPiNC+Cq/FgCit0PV3Jrd/nNhcHzg0PcKTr9+f/SF76oeWrWeUdQ==}
-    dependencies:
-      serialize-error: 2.1.0
-    dev: false
 
   /crx/5.0.1:
     resolution: {integrity: sha512-n/PzBx/fR1+xZCiJBats9y5zw/a+YBcoJ0ABnUaY56xb1RpXuFhsiCMpNY6WjVtylLzhUUXSWsbitesVg7v2vg==}
@@ -23418,11 +23412,6 @@ packages:
       on-finished: 2.3.0
       range-parser: 1.2.1
       statuses: 1.5.0
-
-  /serialize-error/2.1.0:
-    resolution: {integrity: sha1-ULZ51WNc34Rme9yOWa9OW4HV9go=}
-    engines: {node: '>=0.10.0'}
-    dev: false
 
   /serialize-error/7.0.1:
     resolution: {integrity: sha512-8I8TjW5KMOKsZQTvoxjuSIa7foAwPWGOts+6o7sgjz41/qMD9VQHEDxi6PBvK2l0MXUmqZyNpUK+T2tQaaElvw==}

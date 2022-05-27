@@ -38,7 +38,6 @@
     "@mui/material": "^5.4.2",
     "@mui/styles": "^5.4.2",
     "color-hash": "^1.0.3",
-    "crx-bridge": "^2.1.0",
     "faker": "^5.1.0",
     "moment": "^2.24.0",
     "protobufjs": "^6.9.0",
