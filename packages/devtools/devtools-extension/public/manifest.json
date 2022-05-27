@@ -20,7 +20,7 @@
     "http://*/*",
     "https://*/*"
   ],
-  "devtools_page": "devtools.html",
+  "devtools_page": "main.html",
   "web_accessible_resources": [
     "inject.js"
   ],
