@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 const fs = require('fs');
 const { join } = require('path');
 
