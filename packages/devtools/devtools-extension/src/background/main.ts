@@ -9,7 +9,6 @@ import { startLiveReload } from './live-reload';
 
 void startLiveReload();
 
-Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
 
 console.log('Background script loaded.');
