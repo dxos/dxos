@@ -9,16 +9,11 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { Client } from '../api';
-import { ClientServiceProvider } from '../services';
-
 /**
  * A hook bound to window.__DXOS__.
  */
 export interface DevtoolsHook {
-  // TODO(marik-d): Reduce to just exporting ClientServices.
-  serviceHost: ClientServiceProvider
-  client: Client
+  openClientRpcServer: () => Promise<boolean>
 }
 
 export interface DevtoolsServiceDependencies {

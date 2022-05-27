@@ -21,9 +21,6 @@
     "https://*/*"
   ],
   "devtools_page": "main.html",
-  "web_accessible_resources": [
-    "inject.js"
-  ],
   "manifest_version": 2,
   "background": {
     "scripts": [
