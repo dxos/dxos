@@ -376,16 +376,20 @@ describe('RpcPeer', () => {
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async msg => ({}),
       port: {
-        send: msg => { portOpen && alicePort.send(msg) },
-        subscribe: alicePort.subscribe,
+        send: msg => {
+          portOpen && alicePort.send(msg);
+        },
+        subscribe: alicePort.subscribe
       }
     });
 
     const bob = new RpcPeer({
       messageHandler: async msg => ({}),
       port: {
-        send: msg => { portOpen && bobPort.send(msg) },
-        subscribe: bobPort.subscribe,
+        send: msg => {
+          portOpen && bobPort.send(msg);
+        },
+        subscribe: bobPort.subscribe
       }
     });
 
@@ -394,7 +398,7 @@ describe('RpcPeer', () => {
       bob.open()
     ]);
 
-    await sleep(5)
+    await sleep(5);
 
     portOpen = true;
 
@@ -408,13 +412,13 @@ describe('RpcPeer', () => {
       messageHandler: async msg => ({}),
       port: {
         send: msg => { },
-        subscribe: alicePort.subscribe,
+        subscribe: alicePort.subscribe
       }
     });
 
     const bob = new RpcPeer({
       messageHandler: async msg => ({}),
-      port: bobPort,
+      port: bobPort
     });
 
     let open = false;
@@ -425,11 +429,11 @@ describe('RpcPeer', () => {
       open = true;
     });
 
-    await sleep(5)
+    await sleep(5);
 
     expect(open).toEqual(false);
 
-    alice.close()
+    alice.close();
     bob.close();
   });
 });

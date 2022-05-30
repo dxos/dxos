@@ -174,7 +174,7 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('Received open message');
-      this._sendMessage({ openAck: true })
+      await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
       log('Received openAck message');
       this._remoteOpenTrigger.wake();
@@ -395,13 +395,13 @@ function encodeError (err: any): ErrorResponse {
  * Runs the callback in an exponentially increasing interval
  * @returns Callback to clear the interval.
  */
-function exponentialBackoffInterval(cb: () => void, initialInterval: number): () => void {
+function exponentialBackoffInterval (cb: () => void, initialInterval: number): () => void {
   let interval = initialInterval;
-  function repeat() {
+  function repeat () {
     cb();
     interval *= 2;
     timeoutId = setTimeout(repeat, interval);
   }
-  let timeoutId = setTimeout(repeat, interval)
+  let timeoutId = setTimeout(repeat, interval);
   return () => clearTimeout(timeoutId);
 }
