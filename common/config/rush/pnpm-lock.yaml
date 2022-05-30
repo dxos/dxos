@@ -512,7 +512,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
-      '@dxos/esbuild-server': ~2.28.7
+      '@dxos/esbuild-server': ~2.28.8
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -546,7 +546,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.28.7
-      '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
+      '@dxos/esbuild-server': 2.28.8_@types+react@17.0.37
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@types/mocha': 8.2.3
@@ -572,7 +572,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
-      '@dxos/esbuild-server': ~2.28.7
+      '@dxos/esbuild-server': ~2.28.8
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -662,7 +662,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': 2.28.7
-      '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
+      '@dxos/esbuild-server': 2.28.8_@types+react@17.0.37
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/d3': 7.0.0
@@ -695,7 +695,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
-      '@dxos/esbuild-server': ~2.28.7
+      '@dxos/esbuild-server': ~2.28.8
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -753,7 +753,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.28.7
-      '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
+      '@dxos/esbuild-server': 2.28.8_@types+react@17.0.37
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@emotion/css': 11.7.1_@babel+core@7.13.16
@@ -783,7 +783,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': ~2.28.7
-      '@dxos/esbuild-server': ~2.28.7
+      '@dxos/esbuild-server': ~2.28.8
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
@@ -834,7 +834,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.28.7
-      '@dxos/esbuild-server': 2.28.7_@types+react@17.0.37
+      '@dxos/esbuild-server': 2.28.8_@types+react@17.0.37
       '@dxos/eslint-plugin': 1.0.27_eslint@7.32.0+typescript@4.5.3
       '@types/mocha': 8.2.3
       '@types/node': 14.18.0
@@ -3088,7 +3088,7 @@ importers:
 
   ../../toolchains/toolchain-node-library:
     specifiers:
-      '@dxos/esbuild-server': ~2.28.7
+      '@dxos/esbuild-server': ~2.28.8
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': ~1.4.2
@@ -3111,7 +3111,7 @@ importers:
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
-      '@dxos/esbuild-server': 2.28.7
+      '@dxos/esbuild-server': 2.28.8
       '@dxos/eslint-plugin': 1.0.27_49160144699f5bb2b04429cfe7b55ba8
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@swc-node/register': 1.4.2
@@ -5701,8 +5701,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@dxos/esbuild-server/2.28.7:
-    resolution: {integrity: sha512-xXTBiJ2uJuO3ErIHnwsrxgDcNRHDBA7aDM+BwXQ4DsQrP9utYPghxmMCzmLFIMCiTrJE/HHPA/ZB4xus9ZlomQ==}
+  /@dxos/esbuild-server/2.28.8:
+    resolution: {integrity: sha512-faSDuJIriFusOsBy54NAv7G9EHcahF7/BUOyCXmcTIFHAViSYpjZlQe3ruhZLqwLvE27u4SY1l7aP3ss/QMCug==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
@@ -5730,8 +5730,8 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/esbuild-server/2.28.7_@types+react@17.0.37:
-    resolution: {integrity: sha512-xXTBiJ2uJuO3ErIHnwsrxgDcNRHDBA7aDM+BwXQ4DsQrP9utYPghxmMCzmLFIMCiTrJE/HHPA/ZB4xus9ZlomQ==}
+  /@dxos/esbuild-server/2.28.8_@types+react@17.0.37:
+    resolution: {integrity: sha512-faSDuJIriFusOsBy54NAv7G9EHcahF7/BUOyCXmcTIFHAViSYpjZlQe3ruhZLqwLvE27u4SY1l7aP3ss/QMCug==}
     hasBin: true
     dependencies:
       '@babel/core': 7.16.5
@@ -10572,7 +10572,7 @@ packages:
       styled-components: 5.3.3_281a4fa50a045c9112baf635f3bc27a7
 
   /babel-plugin-syntax-jsx/6.18.0:
-    resolution: {integrity: sha1-CvMqmm4Tyno/1QaeYtew9Y0NiUY=}
+    resolution: {integrity: sha512-qrPaCSo9c8RHNRHIotaufGbuOBN8rtdC4QrrFFc43vyWCCz7Kl7GL1PGaXtMGQZUXrkCjNEgxDfmAuAabr/rlw==}
 
   /babel-plugin-syntax-object-rest-spread/6.13.0:
     resolution: {integrity: sha1-/WU28rzhODb/o6VFjEkDpZe7O/U=}
@@ -11286,7 +11286,7 @@ packages:
     engines: {node: '>=10'}
 
   /camelize/1.0.0:
-    resolution: {integrity: sha1-FkpUg+Yw+kMh5a8HAg5TGDGyYJs=}
+    resolution: {integrity: sha512-W2lPwkBkMZwFlPCXhIlYgxu+7gC/NUlCtdK652DAJ1JdgV0sTrvuPFshNPrFa1TY2JOkLhgdeEBplB4ezEa+xg==}
 
   /caniuse-api/3.0.0:
     resolution: {integrity: sha512-bsTwuIg/BZZK/vreVTYYbSWoe2F+71P7K5QGEX+pT250DZbfU1MQ5prOKpPR+LL6uWKK3KMwMCAS74QB3Um1uw==}
@@ -12170,7 +12170,7 @@ packages:
     dev: true
 
   /css-color-keywords/1.0.0:
-    resolution: {integrity: sha1-/qJhbcZ2spYmhrOvjb2+GAskTgU=}
+    resolution: {integrity: sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==}
     engines: {node: '>=4'}
 
   /css-color-names/0.0.4:
@@ -14990,7 +14990,7 @@ packages:
     dev: false
 
   /format/0.2.2:
-    resolution: {integrity: sha1-1hcBB+nv3E7TDJ3DkBbflCtctYs=}
+    resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
     engines: {node: '>=0.4.x'}
 
   /forwarded/0.2.0:
@@ -15076,7 +15076,7 @@ packages:
       readable-stream: 2.3.7
 
   /fs.realpath/1.0.0:
-    resolution: {integrity: sha1-FQStJSMVjKpA20onh8sBQRmU6k8=}
+    resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
   /fsctl/1.0.0:
     resolution: {integrity: sha512-uNHlfhyUJiVO2kHA6ZBnDkBhG1wM8fII+xGfCi5aBoWR7DLh9Q3nOAWe4fEETQzkptahITI1xbe5r23HuA5ECA==}
@@ -15638,7 +15638,7 @@ packages:
     resolution: {integrity: sha512-LSBS2LjbNBTf6287JEbEzvJgftkF5qFkmCo9hDRpAzKhUOlJ+hx8dd4USs00SgsUNwc4617J9ki5YtEClM2ffA==}
 
   /has-flag/3.0.0:
-    resolution: {integrity: sha1-tdRU3CGZriJWmfNGfloH87lVuv0=}
+    resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
     engines: {node: '>=4'}
 
   /has-flag/4.0.0:
@@ -16317,7 +16317,7 @@ packages:
     resolution: {integrity: sha512-IClj+Xz94+d7irH5qRyfJonOdfTzuDaifE6ZPWfx0N0+/ATZCbuTPq2prFl526urkQd90WyUKIh1DfBQ2hMz9A==}
 
   /inflight/1.0.6:
-    resolution: {integrity: sha1-Sb1jMdfQLQwJvJEKEHW6gWW1bfk=}
+    resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
@@ -21837,7 +21837,6 @@ packages:
   /prismjs/1.28.0:
     resolution: {integrity: sha512-8aaXdYvl1F7iC7Xm1spqSaY/OJBpYW3v+KJ+F17iYxvdc8sfjW194COK5wVhMZX45tGteiBQgdvD/nhxcRwylw==}
     engines: {node: '>=6'}
-    dev: true
 
   /process-nextick-args/2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -22554,7 +22553,7 @@ packages:
       '@babel/runtime': 7.17.2
       highlight.js: 10.7.3
       lowlight: 1.20.0
-      prismjs: 1.25.0
+      prismjs: 1.28.0
       react: 17.0.2
       refractor: 3.5.0
 
