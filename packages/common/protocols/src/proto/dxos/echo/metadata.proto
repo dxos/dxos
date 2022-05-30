@@ -25,6 +25,12 @@ message EchoMetadata {
 }
 
 message PartyMetadata {
+  /// Party key.
   PubKey key = 1;
+
+  /// List of all feed associated with the party.
   repeated PubKey feedKeys = 2;
+
+  /// Key of the wriatable data feed.
+  PubKey dataFeedKey = 3;
 }
