@@ -77,11 +77,11 @@ const ListStory = () => {
     }
   };
 
-  const handleDrop = async (dropTargetId: string, dragItemId: string, index?: number) => {
+  const handleDrop = async (dropTargetId: string, item: DraggableContainerDef) => {
     const newOrder = [
-      ...orderedList.values.filter(itemId => itemId !== dragItemId).slice(0, index),
-      dragItemId,
-      ...orderedList.values.filter(itemId => itemId !== dragItemId).slice(index, orderedList.values.length)
+      ...orderedList.values.filter(itemId => itemId !== item.id).slice(0, item.index),
+      item.id,
+      ...orderedList.values.filter(itemId => itemId !== item.id).slice(item.index, orderedList.values.length)
     ];
     await orderedList.init(newOrder);
     setCurrentOrder(newOrder);
@@ -113,13 +113,16 @@ const ListStory = () => {
           items={getListItems()}
           onDrop={handleDrop}
           moveItem={handleMoveItem}
+          style={{ height: 'inherit' }}
         />
       </DndProvider>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        lineHeight: 2
+        lineHeight: 2,
+        height: 'inherit',
+        overflowY: 'scroll'
       }}>
         <ResetButton onReset={handleReset} />
         <DragAndDropDebugPanel order={list.model.get('order')} party={party} />
