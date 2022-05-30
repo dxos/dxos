@@ -25,6 +25,12 @@ const checkForDXOS = () => {
   });
 };
 
+/**
+ * Wait for DXOS client hook on the inspected winwod to be available.
+ *
+ * @param timeout Total timeout in ms.
+ * @param interval Check every interval ms.
+ */
 export const waitForDXOS = async (timeout = 100000, interval = 1000) => {
   while (timeout > 0) {
     const isReady = await checkForDXOS().catch(error);
@@ -36,4 +42,6 @@ export const waitForDXOS = async (timeout = 100000, interval = 1000) => {
     await sleep(interval);
     timeout -= interval;
   }
+
+  throw new Error('DXOS hook not available.');
 };
