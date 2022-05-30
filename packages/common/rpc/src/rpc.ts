@@ -69,6 +69,7 @@ export class RpcPeer {
   private _nextId = 0;
   private _open = false;
   private _unsubscribe: (() => void) | undefined;
+  private _clearOpenInterval: (() => void) | undefined;
 
   constructor (private readonly _options: RpcPeerOptions) {}
 
@@ -95,11 +96,18 @@ export class RpcPeer {
 
     log('Send open message');
     await this._sendMessage({ open: true });
+
+    this._clearOpenInterval = exponentialBackoffInterval(() => {
+      void this._sendMessage({ open: true }).catch(error => log(`Error: ${error}`));
+    }, 50);
+
     await this._remoteOpenTrigger.wait();
+
+    this._clearOpenInterval?.();
 
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
     log('Send second open message');
-    await this._sendMessage({ open: true });
+    await this._sendMessage({ openAck: true });
   }
 
   /**
@@ -107,6 +115,7 @@ export class RpcPeer {
    */
   close () {
     this._unsubscribe?.();
+    this._clearOpenInterval?.();
     for (const req of this._outgoingRequests.values()) {
       req.reject(new RpcClosedError());
     }
@@ -165,6 +174,9 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('Received open message');
+      this._sendMessage({ openAck: true })
+    } else if (decoded.openAck) {
+      log('Received openAck message');
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (!this._open) {
@@ -377,4 +389,19 @@ function encodeError (err: any): ErrorResponse {
       message: JSON.stringify(err)
     };
   }
+}
+
+/**
+ * Runs the callback in an exponentially increasing interval
+ * @returns Callback to clear the interval.
+ */
+function exponentialBackoffInterval(cb: () => void, initialInterval: number): () => void {
+  let interval = initialInterval;
+  function repeat() {
+    cb();
+    interval *= 2;
+    timeoutId = setTimeout(repeat, interval);
+  }
+  let timeoutId = setTimeout(repeat, interval)
+  return () => clearTimeout(timeoutId);
 }
