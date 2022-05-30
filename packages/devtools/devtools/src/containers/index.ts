@@ -9,6 +9,7 @@ export * from './ItemsPanel';
 export * from './KeyringPanel';
 export * from './LoggingPanel';
 export * from './NetworkPanel';
+export * from './PanelsContainer';
 export * from './PartiesPanel';
 export * from './SignalPanel';
 export * from './SnapshotsPanel';
