@@ -67,8 +67,10 @@ const ListStory = () => {
 
   const handleMoveItem = (dropTargetId: string, dragIndex: number, hoverIndex: number) => {
     setCurrentOrder(prev => {
+      const dragItem = prev[dragIndex];
       const newOrder = [...prev];
-      [newOrder[dragIndex], newOrder[hoverIndex]] = [newOrder[hoverIndex], newOrder[dragIndex]];
+      const deletedItems = newOrder.splice(hoverIndex, 1, dragItem);
+      newOrder.splice(dragIndex, 1, deletedItems[0]);
       return newOrder;
     });
   };
@@ -236,7 +238,12 @@ const MultipleListStory = () => {
         return order;
       }
       const newOrder = [...order.values];
-      [newOrder[dragIndex], newOrder[hoverIndex]] = [newOrder[hoverIndex], newOrder[dragIndex]];
+      // TODO(kaplanski): Manage placeholder on different dropTargets.
+      if (newOrder[dragIndex] && newOrder[hoverIndex]) {
+        const dragItem = newOrder[dragIndex];
+        const deletedItems = newOrder.splice(hoverIndex, 1, dragItem);
+        newOrder.splice(dragIndex, 1, deletedItems[0]);
+      }
       return {
         id: order.id,
         values: newOrder
