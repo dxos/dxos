@@ -178,6 +178,10 @@ export class Client {
       await this.initializeAuto(onProgressCallback);
     }
 
+    if (typeof window !== 'undefined') {
+      await createDevtoolsRpcServer(this, this._serviceProvider);
+    }
+
     this._halo = new HaloProxy(this._serviceProvider);
     this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
@@ -205,10 +209,6 @@ export class Client {
     log('Creating client host.');
     this._serviceProvider = new ClientServiceHost(this._config, this._options);
     await this._serviceProvider.open(onProgressCallback);
-
-    if (typeof window !== 'undefined') {
-      await createDevtoolsRpcServer(this._serviceProvider);
-    }
   }
 
   private async initializeAuto (onProgressCallback: Parameters<this['initialize']>[0]) {

@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { defs } from '@dxos/config';
 import { initialize, Shell } from '@dxos/devtools';
 
-import { wrapPort } from './utils';
+import { waitForDXOS, wrapPort } from './utils';
 
 const log = debug('dxos:extension:panel');
 
@@ -42,8 +42,10 @@ const init = async () => {
     }
   }, { rpcPort });
 
+  await waitForDXOS();
   await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
   await client.initialize();
+  log('Initialized client RPC server finished.');
   clientReady.emit(client);
 };
 

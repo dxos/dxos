@@ -6,6 +6,7 @@ import debug from 'debug';
 
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
+import { Client } from '../api';
 import { clientServiceBundle, ClientServiceProvider } from '../services';
 import { DevtoolsHook } from './devtools-context';
 
@@ -43,23 +44,30 @@ const port: RpcPort = {
 
 // Console debug access.
 // TODO(burdon): Debug only.
-export const createDevtoolsRpcServer = async (serviceHost: ClientServiceProvider) => {
-  log('Initializing window client RPC server...');
-  const server: RpcPeer = createBundledRpcServer({
-    services: clientServiceBundle,
-    handlers: serviceHost.services,
-    port
-  });
+export const createDevtoolsRpcServer = async (client: Client, serviceHost: ClientServiceProvider) => {
+  let server: RpcPeer;
   ((window as any).__DXOS__ as DevtoolsHook) = {
+    client,
     openClientRpcServer: async () => {
-      console.log('Opening client RPC server...');
+      if (server) {
+        log('Closing existing client RPC server.');
+        server.close();
+      }
+
+      log('Opening devtools client RPC server...');
+      server = createBundledRpcServer({
+        services: clientServiceBundle,
+        handlers: serviceHost.services,
+        port
+      });
+
       await server.open().catch(err => {
         error(`Failed to open RPC server: ${err}`);
         return false;
       });
+      log('Opened devtools client RPC server.');
 
       return true;
     }
   };
-  log('Initialize client RPC server finished.');
 };
