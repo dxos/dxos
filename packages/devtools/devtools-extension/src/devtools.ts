@@ -24,5 +24,7 @@ const createPanel = async () => {
   log('Panel created.');
 };
 
+// TODO(wittjosiah): Is this needed?
 browser.devtools.network.onNavigated.addListener(createPanel);
+
 void createPanel();
