@@ -14,22 +14,142 @@ import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
 
 describe('RpcPeer', () => {
-  test('can open', async () => {
-    const [alicePort, bobPort] = createLinkedPorts();
+  describe('handshake', () => {
+    test('can open', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
 
-    const alice = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: alicePort
-    });
-    const bob = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: bobPort
+      const alice = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: bobPort
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
     });
 
-    await Promise.all([
-      alice.open(),
-      bob.open()
-    ]);
+    test('open waits for the other peer to call open', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: bobPort
+      });
+
+      let aliceOpen = false;
+      const promise = alice.open().then(() => {
+        aliceOpen = true;
+      });
+
+      await sleep(5);
+
+      expect(aliceOpen).toEqual(false);
+
+      await bob.open();
+      await aliceOpen;
+
+      expect(aliceOpen).toEqual(true);
+      await promise;
+    });
+
+    test('one peer can open before the other is created', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: alicePort
+      });
+      const aliceOpen = alice.open();
+
+      await sleep(5);
+
+      const bob = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: bobPort
+      });
+
+      await Promise.all([
+        aliceOpen,
+        bob.open()
+      ]);
+    });
+
+    test('hanshake works with a port that is open later', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      let portOpen = false;
+
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: {
+          send: msg => {
+            portOpen && alicePort.send(msg);
+          },
+          subscribe: alicePort.subscribe
+        }
+      });
+
+      const bob = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: {
+          send: msg => {
+            portOpen && bobPort.send(msg);
+          },
+          subscribe: bobPort.subscribe
+        }
+      });
+
+      const openPromise = Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      await sleep(5);
+
+      portOpen = true;
+
+      await openPromise;
+    });
+
+    test('open hangs on half-open streams', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: {
+          send: msg => { },
+          subscribe: alicePort.subscribe
+        }
+      });
+
+      const bob = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: bobPort
+      });
+
+      let open = false;
+      void Promise.all([
+        alice.open(),
+        bob.open()
+      ]).then(() => {
+        open = true;
+      });
+
+      await sleep(5);
+
+      expect(open).toEqual(false);
+
+      alice.close();
+      bob.close();
+    });
   });
 
   describe('one-off requests', () => {
@@ -189,54 +309,6 @@ describe('RpcPeer', () => {
       await expect(req).toBeRejected();
     });
 
-    test('open waits for the other peer to call open', async () => {
-      const [alicePort, bobPort] = createLinkedPorts();
-      const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
-        port: alicePort
-      });
-      const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
-        port: bobPort
-      });
-
-      let aliceOpen = false;
-      const promise = alice.open().then(() => {
-        aliceOpen = true;
-      });
-
-      await sleep(5);
-
-      expect(aliceOpen).toEqual(false);
-
-      await bob.open();
-      await aliceOpen;
-
-      expect(aliceOpen).toEqual(true);
-      await promise;
-    });
-
-    test('one peer can open before the other is created', async () => {
-      const [alicePort, bobPort] = createLinkedPorts();
-
-      const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
-        port: alicePort
-      });
-      const aliceOpen = alice.open();
-
-      await sleep(5);
-
-      const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
-        port: bobPort
-      });
-
-      await Promise.all([
-        aliceOpen,
-        bob.open()
-      ]);
-    });
   });
 
   describe('streaming responses', () => {
@@ -346,94 +418,4 @@ describe('RpcPeer', () => {
     });
   });
 
-  test('one peer can open before the other is created', async () => {
-    const [alicePort, bobPort] = createLinkedPorts();
-
-    const alice: RpcPeer = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: alicePort
-    });
-    const aliceOpen = alice.open();
-
-    await sleep(5);
-
-    const bob = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: bobPort
-    });
-
-    await Promise.all([
-      aliceOpen,
-      bob.open()
-    ]);
-  });
-
-  test('hanshake works with a port that is open later', async () => {
-    const [alicePort, bobPort] = createLinkedPorts();
-
-    let portOpen = false;
-
-    const alice: RpcPeer = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: {
-        send: msg => {
-          portOpen && alicePort.send(msg);
-        },
-        subscribe: alicePort.subscribe
-      }
-    });
-
-    const bob = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: {
-        send: msg => {
-          portOpen && bobPort.send(msg);
-        },
-        subscribe: bobPort.subscribe
-      }
-    });
-
-    const openPromise = Promise.all([
-      alice.open(),
-      bob.open()
-    ]);
-
-    await sleep(5);
-
-    portOpen = true;
-
-    await openPromise;
-  });
-
-  test('open hangs on half-open streams', async () => {
-    const [alicePort, bobPort] = createLinkedPorts();
-
-    const alice: RpcPeer = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: {
-        send: msg => { },
-        subscribe: alicePort.subscribe
-      }
-    });
-
-    const bob = new RpcPeer({
-      messageHandler: async msg => ({}),
-      port: bobPort
-    });
-
-    let open = false;
-    void Promise.all([
-      alice.open(),
-      bob.open()
-    ]).then(() => {
-      open = true;
-    });
-
-    await sleep(5);
-
-    expect(open).toEqual(false);
-
-    alice.close();
-    bob.close();
-  });
 });
