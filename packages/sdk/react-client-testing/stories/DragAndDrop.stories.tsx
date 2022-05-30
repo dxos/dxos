@@ -41,7 +41,7 @@ const ListStory = () => {
       type: TYPE_LIST
     });
 
-    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 6, max: 6 }) }).map(async () => {
+    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 20, max: 40 }) }).map(async () => {
       return await newParty?.database.createItem({
         model: ObjectModel,
         type: TYPE_LIST_ITEM,
