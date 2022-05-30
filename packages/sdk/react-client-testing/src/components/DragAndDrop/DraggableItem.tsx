@@ -5,7 +5,7 @@
 import React, { CSSProperties } from 'react';
 
 import { DNDTypes } from './DragAndDropTypes';
-import { DraggableContainer } from './DraggableContainer';
+import { DraggableContainer, DraggableContainerDef } from './DraggableContainer';
 
 export type DraggableItemDef = {
   id: string
@@ -15,7 +15,8 @@ export type DraggableItemDef = {
 interface DraggableItemProps {
   item: DraggableItemDef
   type: DNDTypes
-  onDrop: (dropTargetId: string, dragItemId: string, index?: number) => void
+  onDrop: (dropTargetId: string, item: DraggableContainerDef) => void
+  containerId: string
   style?: CSSProperties
   index?: number
   moveItem?: (dragIndex: number, hoverIndex: number) => void
@@ -25,6 +26,7 @@ export const DraggableItem = ({
   item,
   type,
   onDrop,
+  containerId,
   style,
   index,
   moveItem
@@ -41,6 +43,9 @@ export const DraggableItem = ({
       onDrop={onDrop}
       index={index}
       moveItem={moveItem}
+      containerProps={{
+        containerId
+      }}
     >
       {item.title}
     </DraggableContainer>

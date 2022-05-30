@@ -5,35 +5,41 @@
 import React, { CSSProperties, ReactNode, useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
+import { Primitive } from '@dxos/util';
+
 import { DNDTypes } from './DragAndDropTypes';
 
 interface DropResult {
   id: string
 }
 
-interface DraggableContainerDef {
+export interface DraggableContainerDef {
   id: string
-  index?: number
+  index?: number,
+  // Container Props
+  [key: string]: Primitive
 }
 
 interface DraggableContainerProps {
   id: string
   type: DNDTypes
-  onDrop: (dropTargetId: string, dragSourceId: string, index?: number) => void
+  onDrop: (dropTargetId: string, item: DraggableContainerDef) => void
+  moveItem?: (dragIndex: number, hoverIndex: number) => void
+  index?: number
   children?: ReactNode
   style?: CSSProperties
-  index?: number
-  moveItem?: (dragIndex: number, hoverIndex: number) => void
+  containerProps?: {[key: string]: Primitive}
 }
 
 export const DraggableContainer = ({
   id,
   type,
   onDrop,
+  index,
+  moveItem,
   children,
   style,
-  index,
-  moveItem
+  containerProps
 }: DraggableContainerProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -84,11 +90,15 @@ export const DraggableContainer = ({
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type,
-    item: { id, index },
+    item: {
+      id,
+      index,
+      ...containerProps
+    },
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult<DropResult>();
       if (dropResult) {
-        onDrop(dropResult.id, item.id, item.index);
+        onDrop(dropResult.id, item);
       }
     },
     collect: (monitor) => ({

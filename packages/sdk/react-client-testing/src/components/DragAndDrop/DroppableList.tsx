@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import { DNDTypes } from './DragAndDropTypes';
+import { DraggableContainerDef } from './DraggableContainer';
 import { DraggableItem, DraggableItemDef } from './DraggableItem';
 import { DroppableContainer } from './DroppableContainer';
 
@@ -13,8 +14,9 @@ interface DroppableListProps {
   title: string
   accept: DNDTypes
   items: DraggableItemDef[]
-  onDrop: (dropTargetId: string, dragItemId: string, index?: number) => void
-  moveItem?: (dragIndex: number, hoverIndex: number) => void
+  onDrop: (dropTargetId: string, item: DraggableContainerDef) => void
+  moveItem?: (dropTargetId: string, dragIndex: number, hoverIndex: number) => void
+  style?: CSSProperties
 }
 
 export const DroppableList = ({
@@ -22,7 +24,8 @@ export const DroppableList = ({
   accept,
   items,
   onDrop,
-  moveItem
+  moveItem,
+  style = {}
 }: DroppableListProps) => {
 
   return (
@@ -35,7 +38,8 @@ export const DroppableList = ({
         padding: 2,
         overflowY: 'scroll',
         border: '1px solid rgba(0,0,0,0.2)',
-        borderRadius: '5px'
+        borderRadius: '5px',
+        ...style
       }}
     >
       {items.map((item, i) => (
@@ -45,7 +49,8 @@ export const DroppableList = ({
           type={accept}
           onDrop={onDrop}
           index={i}
-          moveItem={moveItem}
+          moveItem={(dragIndex, hoverIndex) => moveItem?.(id, dragIndex, hoverIndex)}
+          containerId={id}
         />
       ))}
     </DroppableContainer>

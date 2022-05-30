@@ -27,7 +27,8 @@ export const ColumnContainer = ({
 
   const getFlexibleStyle = (margin = false): CSSProperties => ({
     maxHeight: `calc(100% - ${config.height} - ${!margin ? MARGIN_TOP : 0}px)`,
-    minHeight: `calc(100% - ${config.height} - ${!margin ? MARGIN_TOP : 0}px)`
+    minHeight: `calc(100% - ${config.height} - ${!margin ? MARGIN_TOP : 0}px)`,
+    height: '100%'
   });
 
   return (

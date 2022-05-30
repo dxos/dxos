@@ -12,8 +12,8 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DroppableList, ProfileInitializer, DNDTypes, Card } from '../src';
-import { DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
+import { DroppableList, ProfileInitializer, DNDTypes, Card, DraggableContainerDef } from '../src';
+import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -65,7 +65,7 @@ const ListStory = () => {
     return null;
   }
 
-  const handleMoveItem = (dragIndex: number, hoverIndex: number) => {
+  const handleMoveItem = (dropTargetId: string, dragIndex: number, hoverIndex: number) => {
     const dragItem = currentOrder[dragIndex];
     if (dragItem) {
       setCurrentOrder(prev => {
@@ -138,182 +138,206 @@ export const List = () => {
   );
 };
 
-// const MultipleListStory = () => {
-//   const client = useClient();
-//   const [party, setParty] = useState<Party>();
-//   const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
-//   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
-//   const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
-//   const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>();
-//   const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
+const MultipleListStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
+  const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>([]);
+  const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>([]);
+  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
 
-//   useAsyncEffect(async () => {
-//     const newParty = await client.echo.createParty();
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
 
-//     const listItems = await Promise.all(Array.from({ length: 3 }).map(async () => {
-//       return await newParty.database.createItem({
-//         model: ObjectModel,
-//         type: TYPE_LIST
-//       });
-//     }));
+    const listItems = await Promise.all(Array.from({ length: 3 }).map(async () => {
+      return await newParty.database.createItem({
+        model: ObjectModel,
+        type: TYPE_LIST
+      });
+    }));
 
-//     const newOrderedLists: OrderedList[] = [];
-//     await Promise.all(listItems.map(async (listItem) => {
-//       const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
-//         return await newParty?.database.createItem({
-//           model: ObjectModel,
-//           type: TYPE_LIST_ITEM,
-//           props: {
-//             title: faker.name.firstName()
-//           }
-//         });
-//       }));
-//       const newOrderedList = new OrderedList(listItem.model);
-//       await newOrderedList.init(createdItems.map(item => item.id));
-//       newOrderedLists.push(newOrderedList);
-//     }));
+    const newOrderedLists: OrderedList[] = [];
+    await Promise.all(listItems.map(async (listItem) => {
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
+        return await newParty?.database.createItem({
+          model: ObjectModel,
+          type: TYPE_LIST_ITEM,
+          props: {
+            title: faker.name.firstName()
+          }
+        });
+      }));
+      const newOrderedList = new OrderedList(listItem.model);
+      await newOrderedList.init(createdItems.map(item => item.id));
+      newOrderedLists.push(newOrderedList);
+    }));
 
-//     setParty(newParty);
-//     setLists(listItems);
-//     setOrderedLists(newOrderedLists);
-//     setCurrentOrders(newOrderedLists.map(orderedList => ({
-//       id: orderedList.id,
-//       values: orderedList.values
-//     })));
-//     setInitialOrders(newOrderedLists.map(orderedList => ({
-//       id: orderedList.id,
-//       values: orderedList.values
-//     })));
-//   }, []);
+    setParty(newParty);
+    setLists(listItems);
+    setOrderedLists(newOrderedLists);
+    setCurrentOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
+    setInitialOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
+  }, []);
 
-//   const getListItems = (listId: string) => {
-//     const currentOrder = currentOrders?.find(list => list.id === listId);
-//     if (!currentOrder) {
-//       return [];
-//     }
+  const getListItems = (listId: string) => {
+    const currentOrder = currentOrders?.find(list => list.id === listId);
+    if (!currentOrder) {
+      return [];
+    }
 
-//     return currentOrder.values.map(itemId => {
-//       const item = items.find(item => item.id === itemId);
-//       if (item) {
-//         return { id: item.id, title: item.model.get('title') };
-//       }
-//       return null;
-//     }).filter(Boolean) as Card[];
-//   };
+    return currentOrder.values.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      if (item) {
+        return { id: item.id, title: item.model.get('title') };
+      }
+      return null;
+    }).filter(Boolean) as Card[];
+  };
 
-//   const handleDragEnd = async (result: DropResult) => {
-//     if (!orderedLists?.length || !result.destination) {
-//       return;
-//     }
-//     const { destination, draggableId, source } = result;
-//     const targetOrderedList = orderedLists.find(list => list.id === destination.droppableId);
-//     if (!targetOrderedList) {
-//       return;
-//     }
+  const handleReset = async () => {
+    if (!initialOrders || !orderedLists) {
+      return;
+    }
 
-//     let newSourceOrder: string[];
-//     const sourceOrderedList = orderedLists.find(list => list.id === source.droppableId);
-//     if (destination.droppableId !== source.droppableId) {
-//       // Remove item from source
-//       if (sourceOrderedList) {
-//         const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== draggableId);
-//         await sourceOrderedList.init(sourceOrderWithoutId);
-//         newSourceOrder = sourceOrderWithoutId;
-//       }
-//     }
+    await Promise.all(orderedLists.map(async (orderedList) => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      initialOrder && await orderedList?.init(initialOrder.values);
+    }));
 
-//     const currentOrderWithoutId = targetOrderedList.values.filter(value => value !== draggableId);
-//     const newOrder = [
-//       ...currentOrderWithoutId.slice(0, destination.index),
-//       draggableId,
-//       ...currentOrderWithoutId.slice(destination.index, targetOrderedList.values.length)
-//     ];
-//     await targetOrderedList.init(newOrder);
-//     setCurrentOrders(prev => prev?.map(currentOrder => {
-//       if (currentOrder.id === targetOrderedList.id) {
-//         return {
-//           id: currentOrder.id,
-//           values: newOrder
-//         };
-//       }
+    // Update state to trigger rerender
+    setCurrentOrders(orderedLists.map(orderedList => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      if (!initialOrder) {
+        return orderedList;
+      }
+      return initialOrder;
+    }));
+  };
 
-//       if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
-//         return {
-//           id: currentOrder.id,
-//           values: newSourceOrder
-//         };
-//       }
+  if (!party || !lists.length || !orderedLists) {
+    return null;
+  }
 
-//       return currentOrder;
-//     }));
-//   };
+  const handleMoveItem = (dropTargetId: string, dragIndex: number, hoverIndex: number) => {
+    const targetOrderedList = orderedLists.find(list => list.id === dropTargetId);
+    const targetCurrentOrder = currentOrders?.find(order => order.id === dropTargetId);
+    const dragItem = targetCurrentOrder?.values[dragIndex];
+    if (!targetOrderedList || !targetCurrentOrder || !dragItem) {
+      return;
+    }
+    setCurrentOrders(prev => prev.map(order => {
+      if (order.id !== dropTargetId) {
+        return order;
+      }
+      const newOrder = [...order.values];
+      const itemInHoverPosition = newOrder.splice(hoverIndex, 1, dragItem);
+      newOrder.splice(dragIndex, 1, itemInHoverPosition[0]);
 
-//   const handleReset = async () => {
-//     if (!initialOrders || !orderedLists) {
-//       return;
-//     }
+      return {
+        id: order.id,
+        values: newOrder
+      };
+    }));
+  };
 
-//     await Promise.all(orderedLists.map(async (orderedList) => {
-//       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-//       initialOrder && await orderedList?.init(initialOrder.values);
-//     }));
+  const handleDrop = async (dropTargetId: string, item: DraggableContainerDef) => {
+    const targetOrderedList = orderedLists.find(list => list.id === dropTargetId);
+    const targetCurrentOrder = currentOrders?.find(order => order.id === dropTargetId);
+    if (!targetOrderedList || !targetCurrentOrder || !item?.index) {
+      return;
+    }
 
-//     // Update state to trigger rerender
-//     setCurrentOrders(orderedLists.map(orderedList => {
-//       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-//       if (!initialOrder) {
-//         return orderedList;
-//       }
-//       return initialOrder;
-//     }));
-//   };
+    let newSourceOrder: string[];
+    const sourceOrderedList = orderedLists.find(list => list.id === item.containerId);
+    if (item.containerId !== dropTargetId) {
+      // Remove item from source
+      if (sourceOrderedList) {
+        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== item.id);
+        await sourceOrderedList.init(sourceOrderWithoutId);
+        newSourceOrder = sourceOrderWithoutId;
+      }
+    }
 
-//   if (!party || !lists.length) {
-//     return null;
-//   }
+    const newOrder = [
+      ...targetOrderedList.values.filter(itemId => itemId !== item.id).slice(0, item.index),
+      item.id,
+      ...targetOrderedList.values.filter(itemId => itemId !== item.id).slice(item.index, targetOrderedList.values.length)
+    ];
+    await targetOrderedList.init(newOrder);
+    setCurrentOrders(prev => prev.map(order => {
+      if (order.id === dropTargetId) {
+        return {
+          id: order.id,
+          values: newOrder
+        };
+      }
 
-//   return (
-//     <StorybookContainer style={{
-//       display: 'grid',
-//       gridTemplateColumns: [...lists.map(() => '1fr'), '0.1fr'].join(' '),
-//       columnGap: 8
-//     }}>
-//       <DragDropContext onDragEnd={handleDragEnd}>
-//         {lists.map(list => (
-//           <ColumnContainer
-//             key={list.id}
-//             topComponent={(
-//               <DroppableList
-//                 id={list.id}
-//                 items={getListItems(list.id)}
-//               />
-//             )}
-//             bottomComponent={(
-//               <DragAndDropDebugPanel
-//                 order={list.model.get('order')}
-//               />
-//             )}
-//             config={{
-//               fixedComponent: 'bottom',
-//               height: '300px'
-//             }}
-//           />
-//         ))}
-//       </DragDropContext>
-//       <ResetButton onReset={handleReset} />
-//     </StorybookContainer>
-//   );
-// };
+      if (order.id === item.containerId) {
+        return {
+          id: order.id,
+          values: newSourceOrder
+        };
+      }
 
-// export const MultipleList = () => {
-//   return (
-//     <ClientProvider>
-//       <ProfileInitializer>
-//         <MultipleListStory />
-//       </ProfileInitializer>
-//     </ClientProvider>
-//   );
-// };
+      return order;
+    }));
+  };
+
+  return (
+    <StorybookContainer style={{
+      display: 'grid',
+      gridTemplateColumns: [...lists.map(() => '1fr'), '0.1fr'].join(' '),
+      columnGap: 8
+    }}>
+      <DndProvider backend={HTML5Backend}>
+        {lists.map(list => (
+          <ColumnContainer
+            key={'column-container-' + list.id}
+            topComponent={(
+              <DroppableList
+                id={list.id}
+                title='Simple List'
+                accept={DNDTypes.LIST_ITEM}
+                items={getListItems(list.id)}
+                onDrop={handleDrop}
+                moveItem={handleMoveItem}
+                style={{ height: 'inherit' }}
+              />
+            )}
+            bottomComponent={(
+              <DragAndDropDebugPanel
+                order={list.model.get('order')}
+                party={party}
+              />
+            )}
+            config={{
+              fixedComponent: 'bottom',
+              height: '300px'
+            }}
+          />
+        ))}
+      </DndProvider>
+      <ResetButton onReset={handleReset} />
+    </StorybookContainer>
+  );
+};
+
+export const MultipleList = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <MultipleListStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
 
 // const TYPE_TEST_PERSON = 'example:type/person';
 // const columns = [
