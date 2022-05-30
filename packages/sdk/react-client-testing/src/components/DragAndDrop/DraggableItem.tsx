@@ -16,10 +16,10 @@ interface DraggableItemProps {
   item: DraggableItemDef
   type: DNDTypes
   onDrop: (dropTargetId: string, item: DraggableContainerDef) => void
+  moveItem?: (dragIndex: number, hoverIndex: number) => void
   containerId: string
   style?: CSSProperties
   index?: number
-  moveItem?: (dragIndex: number, hoverIndex: number) => void
 }
 
 export const DraggableItem = ({

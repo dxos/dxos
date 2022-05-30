@@ -66,15 +66,11 @@ const ListStory = () => {
   }
 
   const handleMoveItem = (dropTargetId: string, dragIndex: number, hoverIndex: number) => {
-    const dragItem = currentOrder[dragIndex];
-    if (dragItem) {
-      setCurrentOrder(prev => {
-        const newOrder = [...prev];
-        const itemInHoverPosition = newOrder.splice(hoverIndex, 1, dragItem);
-        newOrder.splice(dragIndex, 1, itemInHoverPosition[0]);
-        return newOrder;
-      });
-    }
+    setCurrentOrder(prev => {
+      const newOrder = [...prev];
+      [newOrder[dragIndex], newOrder[hoverIndex]] = [newOrder[hoverIndex], newOrder[dragIndex]];
+      return newOrder;
+    });
   };
 
   const handleDrop = async (dropTargetId: string, item: DraggableContainerDef) => {
@@ -240,9 +236,7 @@ const MultipleListStory = () => {
         return order;
       }
       const newOrder = [...order.values];
-      const itemInHoverPosition = newOrder.splice(hoverIndex, 1, dragItem);
-      newOrder.splice(dragIndex, 1, itemInHoverPosition[0]);
-
+      [newOrder[dragIndex], newOrder[hoverIndex]] = [newOrder[hoverIndex], newOrder[dragIndex]];
       return {
         id: order.id,
         values: newOrder
