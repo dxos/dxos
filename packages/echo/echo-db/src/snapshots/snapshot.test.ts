@@ -123,7 +123,6 @@ describe('snapshot', () => {
       });
 
       // Create snapshot.
-      console.log('encoding...');
       const snapshot = itemDemuxer.createSnapshot();
       data = schema.getCodecForType('dxos.echo.snapshot.DatabaseSnapshot').encode(snapshot);
     }
@@ -133,7 +132,6 @@ describe('snapshot', () => {
       const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, { snapshots: true });
 
       // Decode snapshot.
-      console.log('decoding...');
       const snapshot = schema.getCodecForType('dxos.echo.snapshot.DatabaseSnapshot').decode(data);
       await itemDemuxer.restoreFromSnapshot(snapshot);
 
