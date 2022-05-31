@@ -128,7 +128,45 @@ describe('PartyCore', () => {
 
     await feedStore.feedOpenedEvent.waitForCount(1)
 
-    expect(partyFeedProvider.getFeedKeys().some(k => k.equals(feedKey.publicKey))).toEqual(true)
+    expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(feedKey.publicKey))).toEqual(true)
+  })
+
+  test('opens feed from hints', async () => {
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    afterTest(async () => feedStore.close());
+
+    const keyring = new Keyring();
+
+    const metadataStore = new MetadataStore(createRamStorage());
+
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
+
+    const otherFeedKey = PublicKey.random();
+
+    const party = new PartyCore(
+      partyKey.publicKey,
+      partyFeedProvider,
+      modelFactory,
+      snapshotStore,
+      PublicKey.random()
+    );
+
+    await partyFeedProvider.createOrOpenDataFeed();
+    
+    const feedOpened = feedStore.feedOpenedEvent.waitForCount(1)
+
+    await party.open([{ type: KeyType.FEED, publicKey: otherFeedKey }]);
+    afterTest(async () => party.close());
+
+    await feedOpened ;
+
+    expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(otherFeedKey))).toEqual(true)
   })
 
   test.skip('two instances replicating', async () => {
