@@ -22,6 +22,12 @@ do
 
   ARTIFACT_NAME=`basename $ARTIFACT_PATH .zip`
 
-  [[ -f "$ARTIFACT_PATH" ]] && echo "Publishing $ARTIFACT_NAME" && dx ipfs upload $ARTIFACT_PATH --account $DX_DXNS_ACCOUNT --domain $DXOS_DOMAIN --name file.$ARTIFACT_NAME --version $VERSION
+  [[ -f "$ARTIFACT_PATH" ]] &&
+  echo "Publishing $ARTIFACT_NAME" &&
+  dx ipfs upload $ARTIFACT_PATH \
+    --account $DX_DXNS_ACCOUNT \
+    --domain $DXOS_DOMAIN \
+    --name "file/$ARTIFACT_NAME" \
+    --version $VERSION
 
 done
