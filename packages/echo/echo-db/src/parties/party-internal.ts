@@ -178,8 +178,7 @@ export class PartyInternal {
       this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._invitationManager,
-      this._partyCore.processor.authenticator,
-      this._partyCore.processor.getActiveFeedSet()
+      this._partyCore.processor.authenticator
     );
 
     // Replication.

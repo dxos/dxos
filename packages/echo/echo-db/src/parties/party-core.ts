@@ -113,9 +113,15 @@ export class PartyCore {
 
     if (!this._partyProcessor) {
       this._partyProcessor = new PartyProcessor(this._partyKey);
-      if (keyHints.length > 0) {
-        await this._partyProcessor.takeHints(keyHints);
-      }
+    }
+    
+    // Automatically open admitted new feeds.
+    this._subscriptions.push(this._partyProcessor.feedAdmitted.on(feed => {
+      void this._feedProvider.createOrOpenReadOnlyFeed(feed);
+    }));
+
+    if (keyHints.length > 0) {
+      await this._partyProcessor.takeHints(keyHints);
     }
 
     //

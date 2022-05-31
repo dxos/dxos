@@ -22,11 +22,6 @@ import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
 
-export interface FeedSetProvider {
-  get(): FeedKey[]
-  added: Event<FeedKey>
-}
-
 /**
  * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
@@ -36,7 +31,7 @@ export class PartyProcessor {
 
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
-  protected readonly _feedAdded = new Event<FeedKey>()
+  public readonly feedAdmitted = new Event<FeedKey>()
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 
@@ -58,9 +53,9 @@ export class PartyProcessor {
     const state = this._state as any;
 
     // TODO(marik-d): Use `Event.wrap` here.
-    state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
+    state.on(PartyEventType.ADMIT_FEED, (keyRecord: KeyRecord) => {
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
-      this._feedAdded.emit(keyRecord.publicKey);
+      this.feedAdmitted.emit(keyRecord.publicKey);
     });
     state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
     state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
@@ -116,14 +111,6 @@ export class PartyProcessor {
     // TODO(marik-d): Commented out beacuse it breaks tests currently.
     // code assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
     return this._state.getAdmittedBy(feedKey);
-  }
-
-  // TODO(burdon): Rename xxxProvider.
-  getActiveFeedSet (): FeedSetProvider {
-    return {
-      get: () => this.feedKeys,
-      added: this._feedAdded
-    };
   }
 
   getOfflineInvitation (invitationID: Buffer) {

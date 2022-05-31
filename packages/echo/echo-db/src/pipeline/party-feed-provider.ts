@@ -11,6 +11,7 @@ import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protoc
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 
 import { MetadataStore } from '../metadata';
+import { Unsubscribe } from '@dxos/util';
 
 const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
@@ -25,6 +26,14 @@ export class PartyFeedProvider {
 
   getFeedKeys () {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
+  }
+
+  onFeedOpened(cb: (feed: FeedDescriptor) => void): Unsubscribe {
+    return this._feedStore.feedOpenedEvent.on((descriptor) => {
+      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
+        cb(descriptor)
+      }
+    });
   }
 
   async createOrOpenDataFeed () {
@@ -74,11 +83,7 @@ export class PartyFeedProvider {
       iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
     }
 
-    this._feedStore.feedOpenedEvent.on((descriptor) => {
-      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
-        iterator.addFeedDescriptor(descriptor);
-      }
-    });
+    this.onFeedOpened(descriptor => iterator.addFeedDescriptor(descriptor));
 
     iterator.stalled.on(candidates => {
       warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
