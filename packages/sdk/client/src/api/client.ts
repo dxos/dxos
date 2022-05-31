@@ -12,7 +12,7 @@ import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 
-import { DevtoolsHook } from '../devtools';
+import { createDevtoolsRpcServer } from '../devtools';
 import { Runtime } from '../proto/gen/dxos/config';
 import { ClientServiceProvider, ClientServices, ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
 import { createWindowMessagePort, isNode } from '../util';
@@ -178,6 +178,10 @@ export class Client {
       await this.initializeAuto(onProgressCallback);
     }
 
+    if (typeof window !== 'undefined') {
+      await createDevtoolsRpcServer(this, this._serviceProvider);
+    }
+
     this._halo = new HaloProxy(this._serviceProvider);
     this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
@@ -260,20 +264,5 @@ export class Client {
   registerModel (constructor: ModelConstructor<any>): this {
     this._echo.modelFactory.registerModel(constructor);
     return this;
-  }
-
-  /**
-   * Returns devtools context.
-   * Used by the DXOS DevTool Extension.
-   * This is what gets assigned to `window.__DXOS__` global.
-   */
-  getDevtoolsContext (): DevtoolsHook {
-    const devtoolsContext: DevtoolsHook = {
-      client: this,
-      // TODO(dmaretskyi): Is serviceHost needed?
-      serviceHost: this._serviceProvider
-    };
-
-    return devtoolsContext;
   }
 }
