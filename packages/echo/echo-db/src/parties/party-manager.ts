@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import unionWith from 'lodash.unionwith';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, promiseTimeout, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
@@ -21,6 +21,8 @@ import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
+
+const PARTY_LOAD_TIMEOUT = 5_000;
 
 const log = debug('dxos:echo-db:party-manager');
 
@@ -187,7 +189,11 @@ export class PartyManager {
     // TODO(marik-d): Somehow check that we don't already have this party.
     // TODO(telackey): We can check the PartyKey during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
-    await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
+    await promiseTimeout(
+      party.database.waitForItem({ type: PARTY_ITEM_TYPE }),
+      PARTY_LOAD_TIMEOUT,
+      new Error('Failed to join party: timeout on waiting for party metadata item.')
+    );
 
     // TODO(telackey): This is wrong, as we'll just open both writable feeds of it next time causing confusion.
     if (this._parties.has(party.key)) {
