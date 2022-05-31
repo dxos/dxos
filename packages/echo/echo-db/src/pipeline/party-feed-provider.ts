@@ -25,21 +25,24 @@ export class PartyFeedProvider {
 
   // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
   async createOrOpenWritableFeed () {
-    let feed: FeedDescriptor | undefined;
-    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
-      const fullKey = this._keyring.getFullKey(feedKey);
-      if (fullKey && fullKey.secretKey) {
-        feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-      }
+    const partyMetadata = this._metadataStore.getParty(this._partyKey);
+    if (!partyMetadata) {
+      return this._createReadWriteFeed();
     }
 
-    if (feed) {
-      const feedKey = this._keyring.getKey(feed.key);
-      assert(feedKey, 'Feed key not found');
-      return feed;
+    if (!partyMetadata.dataFeedKey) {
+      return this._createReadWriteFeed();
     }
 
-    return this._createReadWriteFeed();
+    const fullKey = this._keyring.getFullKey(partyMetadata.dataFeedKey);
+    if (!fullKey?.secretKey) {
+      return this._createReadWriteFeed();
+    }
+
+    const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    const feedKey = this._keyring.getKey(feed.key);
+    assert(feedKey, 'Feed key not found');
+    return feed;
   }
 
   getFeedKeys () {
@@ -58,7 +61,7 @@ export class PartyFeedProvider {
     const feedKey = await this._keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = this._keyring.getFullKey(feedKey.publicKey);
     assert(fullKey && fullKey.secretKey);
-    await this._metadataStore.addPartyFeed(this._partyKey, fullKey.publicKey);
+    await this._metadataStore.setDataFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
     return feed;
   }
