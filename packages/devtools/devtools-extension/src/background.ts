@@ -57,4 +57,4 @@ browser.runtime.onConnect.addListener(port => {
   }
 });
 
-console.log('Background script initialized.');
+log('Background script initialized.');

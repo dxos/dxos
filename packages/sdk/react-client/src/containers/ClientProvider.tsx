@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
+import React, { MutableRefObject, ReactNode, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
 import { ConfigProvider } from '@dxos/config';
@@ -89,14 +89,6 @@ export const ClientProvider = ({
       }
     }
   }, []);
-
-  // Console debug access.
-  // TODO(burdon): Debug only.
-  useEffect(() => {
-    if (client) {
-      (window as any).__DXOS__ = client.getDevtoolsContext();
-    }
-  }, [client]);
 
   if (!client) {
     return null;

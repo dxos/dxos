@@ -77,9 +77,8 @@ The injected script sends messages through the content script via window events 
     1. Waits for `window.__DXOS__` hook to appear.
     1. Creates devtools panel.
 1. Devtools panel is loaded.
-    1. Calls content script to inject script into the page to setup a RPC server for the application client.
-    1. Client API connects to the `window.__DXOS__` hook.
-    1. Client API sends "ready" message.
+    1. Renders the devtools application.
+    1. Client API connects via the `window.__DXOS__` hook.
 1. Devtools panel is ready.
 
 ## References
