@@ -60,7 +60,7 @@ export class HaloFactory {
 
     // 1. Create a feed for the HALO.
     const halo = await this._partyFactory.constructParty(identityKey.publicKey);
-    const { feed } = await halo.feedProvider.createOrOpenWritableFeed();
+    const { feed } = await halo.feedProvider.createOrOpenDataFeed();
 
     // Connect the pipeline.
     await halo.open();

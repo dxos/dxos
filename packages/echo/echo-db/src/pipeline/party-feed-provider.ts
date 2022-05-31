@@ -23,30 +23,22 @@ export class PartyFeedProvider {
     private readonly _partyKey: PublicKey
   ) {}
 
-  // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
-  async createOrOpenWritableFeed () {
-    const partyMetadata = this._metadataStore.getParty(this._partyKey);
-    if (!partyMetadata) {
-      return this._createReadWriteFeed();
-    }
-
-    if (!partyMetadata.dataFeedKey) {
-      return this._createReadWriteFeed();
-    }
-
-    const fullKey = this._keyring.getFullKey(partyMetadata.dataFeedKey);
-    if (!fullKey?.secretKey) {
-      return this._createReadWriteFeed();
-    }
-
-    const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    const feedKey = this._keyring.getKey(feed.key);
-    assert(feedKey, 'Feed key not found');
-    return feed;
-  }
-
   getFeedKeys () {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
+  }
+
+  async createOrOpenDataFeed () {
+    const partyMetadata = this._metadataStore.getParty(this._partyKey);
+
+    const feed = partyMetadata?.dataFeedKey &&
+      await this._tryOpenWritableFeed(partyMetadata.dataFeedKey);
+    if(feed) {
+      return feed;
+    } 
+
+    const newFeed = await this._createReadWriteFeed();
+    await this._metadataStore.setDataFeed(this._partyKey, newFeed.key);
+    return newFeed;
   }
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
@@ -55,6 +47,16 @@ export class PartyFeedProvider {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
     return this._feedStore.openReadOnlyFeed(feedKey);
+  }
+
+  private async _tryOpenWritableFeed(key: PublicKey): Promise<FeedDescriptor | undefined> {
+    const fullKey = this._keyring.getFullKey(key);
+    if (!fullKey?.secretKey) {
+      return undefined;
+    }
+
+    const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    return feed;
   }
 
   private async _createReadWriteFeed () {

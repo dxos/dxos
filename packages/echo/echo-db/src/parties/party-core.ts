@@ -94,7 +94,7 @@ export class PartyCore {
   }
 
   async getWriteFeed () {
-    const feed = await this._feedProvider.createOrOpenWritableFeed();
+    const feed = await this._feedProvider.createOrOpenDataFeed();
     assert(feed, `No writable feed found for party: ${this._partyKey}`);
     return feed;
   }
@@ -127,7 +127,7 @@ export class PartyCore {
       this._initialTimeframe
     );
 
-    const { feed } = await this._feedProvider.createOrOpenWritableFeed();
+    const { feed } = await this._feedProvider.createOrOpenDataFeed();
     const feedWriteStream = createFeedWriter(feed);
 
     this._pipeline = new Pipeline(

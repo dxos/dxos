@@ -33,4 +33,7 @@ message PartyMetadata {
 
   /// Key of the wriatable data feed.
   PubKey dataFeedKey = 3;
+
+  /// Key of the wriatable control feed. Used for HALO and epoch messages.
+  PubKey controlFeedKey = 4;
 }

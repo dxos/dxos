@@ -61,7 +61,7 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+    const writableFeed = await party.feedProvider.createOrOpenDataFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
@@ -120,7 +120,7 @@ export class PartyFactory {
      */
 
     const feedProvider = this._createFeedProvider(partyKey);
-    const { feed } = await feedProvider.createOrOpenWritableFeed();
+    const { feed } = await feedProvider.createOrOpenDataFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
     assert(feedKeyPair, 'Keypair for writable feed not found.');
     const party = new PartyInternal(
@@ -208,7 +208,7 @@ export class PartyFactory {
       invitationDescriptor,
       async partyKey => {
         const feedProvider = this._createFeedProvider(partyKey);
-        const feed = await feedProvider.createOrOpenWritableFeed();
+        const feed = await feedProvider.createOrOpenDataFeed();
         return feed.key;
       }
     );
@@ -248,7 +248,7 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+    const writableFeed = await party.feedProvider.createOrOpenDataFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(

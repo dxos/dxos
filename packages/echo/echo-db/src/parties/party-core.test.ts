@@ -45,7 +45,7 @@ describe('PartyCore', () => {
       PublicKey.random()
     );
 
-    const feed = await partyFeedProvider.createOrOpenWritableFeed();
+    const feed = await partyFeedProvider.createOrOpenDataFeed();
     await party.open();
     afterTest(async () => party.close());
 
