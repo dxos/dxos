@@ -96,16 +96,9 @@ export class PartyInternal {
     return this._partyCore.database;
   }
 
-  // TODO(burdon): Create Devtools interface?
-
   // TODO(burdon): Remove?
   get processor () {
     return this._partyCore.processor;
-  }
-
-  // TODO(burdon): Remove?
-  get pipeline () {
-    return this._partyCore.pipeline;
   }
 
   // TODO(burdon): Remove?

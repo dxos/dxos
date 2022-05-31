@@ -37,8 +37,7 @@ export const subscribeToCredentialMessages = (
 
     const subscriptions = new SubscriptionGroup();
     subscriptions.push(party.processor.keyOrInfoAdded.on(() => update()));
-    const { added } = party.processor.getActiveFeedSet();
-    subscriptions.push(added.on(() => update()));
+    subscriptions.push(party.processor.feedAdmitted.on(() => update()));
     update();
 
     return () => subscriptions.unsubscribe();
