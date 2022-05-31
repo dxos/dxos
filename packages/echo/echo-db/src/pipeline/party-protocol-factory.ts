@@ -143,7 +143,7 @@ export class PartyProtocolFactory {
 /**
  * Creates the protocol plugin for feed replication.
  */
-class ReplicatorProtocolPluginFactory {
+export class ReplicatorProtocolPluginFactory {
   constructor (
     private readonly _feedProvider: PartyFeedProvider,
   ) {}
