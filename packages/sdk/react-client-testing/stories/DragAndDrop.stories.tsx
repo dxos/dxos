@@ -5,7 +5,6 @@
 import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core';
 import faker from 'faker';
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { Item, Party } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
@@ -336,12 +335,9 @@ const MultipleListStory = () => {
             }}
           />
         ))}
-        {createPortal(
-          <DragOverlay>
-            {activeId && renderDragOverlay(activeId)}
-          </DragOverlay>,
-          document.body
-        )}
+        <DragOverlay>
+          {activeId && renderDragOverlay(activeId)}
+        </DragOverlay>
       </DndContext>
       <ResetButton onReset={handleReset} />
     </StorybookContainer>
