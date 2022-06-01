@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { CSSProperties, ReactNode } from 'react';
-import { Droppable } from 'react-beautiful-dnd';
+import { useDroppable } from '@dnd-kit/core';
+import React, { CSSProperties, ReactNode, useEffect } from 'react';
 
 interface DroppableContainerProps {
   id: string
@@ -17,23 +17,21 @@ export const DroppableContainer = ({
   id,
   children,
   style,
-  draggingOverStyle,
-  horizontal = false
+  draggingOverStyle
 }: DroppableContainerProps) => {
+  const { isOver, setNodeRef } = useDroppable({
+    id
+  });
+
   return (
-    <Droppable droppableId={id} direction={horizontal ? 'horizontal' : 'vertical'}>
-      {({ innerRef: droppableRef, placeholder }, { isDraggingOver }) => (
-        <div
-          ref={droppableRef}
-          style={{
-            ...style,
-            ...(isDraggingOver ? draggingOverStyle : {})
-          }}
-        >
-          {children}
-          {placeholder}
-        </div>
-      )}
-    </Droppable>
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        ...(isOver && draggingOverStyle)
+      }}
+    >
+      {children}
+    </div>
   );
 };
