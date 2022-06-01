@@ -9,19 +9,9 @@ const log = debug('dxos:extension:content');
 
 const port = browser.runtime.connect({ name: 'content' });
 
-// Forward messages from background script to injected script.
+// Forward messages from background script to DXOS Client.
 port.onMessage.addListener(message => {
   log(`Received message from background: ${message}`);
-  if (message.type === 'extension.inject-client-script') {
-    log('Injecting client RPC server script...');
-
-    const script = document.createElement('script');
-    script.src = browser.runtime.getURL('inject.js');
-    document.documentElement.appendChild(script);
-    script.parentElement?.removeChild(script);
-
-    return;
-  }
 
   window.postMessage({
     data: message,
@@ -29,7 +19,7 @@ port.onMessage.addListener(message => {
   }, '*');
 });
 
-// Forward messages from injected script to background script.
+// Forward messages from DXOS Client to background script.
 window.addEventListener('message', event => {
   if (event.source !== window) {
     return;
@@ -40,12 +30,12 @@ window.addEventListener('message', event => {
   if (
     typeof message !== 'object' ||
     message === null ||
-    message.source !== 'injected-script'
+    message.source !== 'dxos-client'
   ) {
     return;
   }
 
-  log(`Received message from injected script: ${message}`);
+  log(`Received message from DXOS Client: ${message}`);
   port.postMessage(message);
 });
 

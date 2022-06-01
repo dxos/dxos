@@ -1,5 +1,39 @@
 # Change Log
 
+## [2.32.0](https://www.github.com/dxos/protocols/compare/v2.31.7...v2.32.0) (2022-05-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client:** Move devtools hook into client (#1209)
+* Store data feed key as a separate field in metadata (#1211)
+* Resolve deadlocks in RPC package (#1210)
+* Rename react-framework to react-toolkit (#1188)
+
+### Features
+
+* **devtools:** Deleted items message && items details scrolling ([#1198](https://www.github.com/dxos/protocols/issues/1198)) ([415661f](https://www.github.com/dxos/protocols/commit/415661f870b11e978f689c687d4e5c1b2979346a))
+* **devtools:** Render panel before client is ready with a loader ([#1208](https://www.github.com/dxos/protocols/issues/1208)) ([a069510](https://www.github.com/dxos/protocols/commit/a069510460ee803bb3e48e7aed88eedef72d8640))
+* Dnd containers && DroppableList simplification ([#1207](https://www.github.com/dxos/protocols/issues/1207)) ([5d21ba6](https://www.github.com/dxos/protocols/commit/5d21ba6c7d86012b17aaf64c34f44fc1e1a5be2c))
+* DND List storybook ([#1194](https://www.github.com/dxos/protocols/issues/1194)) ([9afc174](https://www.github.com/dxos/protocols/commit/9afc174f8efaf72513e5b51145dfcc7bc70843fa))
+* DND stories - column reordering ([#1202](https://www.github.com/dxos/protocols/issues/1202)) ([03ec3f9](https://www.github.com/dxos/protocols/commit/03ec3f968f577ed04e315c3955d30bd6904ba933))
+* Drag and drop storybooks ([#1191](https://www.github.com/dxos/protocols/issues/1191)) ([c4a0ada](https://www.github.com/dxos/protocols/commit/c4a0adad843ffa4a50c79328e723ff91d63e1548))
+* ordered list for object model. ([#1185](https://www.github.com/dxos/protocols/issues/1185)) ([37cee8c](https://www.github.com/dxos/protocols/commit/37cee8c4a15c1f2abe617bb3ca08263617452ab7))
+* Simple DND List with no schema ([#1197](https://www.github.com/dxos/protocols/issues/1197)) ([f21022f](https://www.github.com/dxos/protocols/commit/f21022f79bb626298311d966dd00ae8a8cd5ad0c))
+* Store data feed key as a separate field in metadata ([#1211](https://www.github.com/dxos/protocols/issues/1211)) ([91798e6](https://www.github.com/dxos/protocols/commit/91798e6734cfbbd22936e9aca9eaecc438d9ab81))
+
+
+### Bug Fixes
+
+* demo lexical editor with text model. ([#1174](https://www.github.com/dxos/protocols/issues/1174)) ([dcd68d5](https://www.github.com/dxos/protocols/commit/dcd68d504db0b14c4836ec4d157534d3d4e273c4))
+* Rename react-framework to react-toolkit ([#1188](https://www.github.com/dxos/protocols/issues/1188)) ([60de85b](https://www.github.com/dxos/protocols/commit/60de85b7d2d89a9d39fb94d49bbee0630e9c553f))
+* Resolve deadlocks in RPC package ([#1210](https://www.github.com/dxos/protocols/issues/1210)) ([dd541a9](https://www.github.com/dxos/protocols/commit/dd541a91aefcf2c0a5f7acdbc5d2a3bfbac18e46))
+
+
+### Code Refactoring
+
+* **client:** Move devtools hook into client ([#1209](https://www.github.com/dxos/protocols/issues/1209)) ([3bea633](https://www.github.com/dxos/protocols/commit/3bea6337ae78ca093e4e856ee5fb30d2d1ef4427))
+
 ### [2.31.7](https://www.github.com/dxos/protocols/compare/v2.31.6...v2.31.7) (2022-05-05)
 
 
