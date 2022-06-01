@@ -115,59 +115,59 @@ describe('PartyCore', () => {
     }
   });
 
-  test('feed admit message triggers new feed to be opened', async () => {
-    const { party, partyKey, keyring, partyFeedProvider, feedStore } = await createParty();
+  // test('feed admit message triggers new feed to be opened', async () => {
+  //   const { party, partyKey, keyring, partyFeedProvider, feedStore } = await createParty();
 
-    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
-      keyring,
-      party.key,
-      feedKey.publicKey,
-      [partyKey]
-    ));
+  //   const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+  //   await party.processor.writeHaloMessage(createFeedAdmitMessage(
+  //     keyring,
+  //     party.key,
+  //     feedKey.publicKey,
+  //     [partyKey]
+  //   ));
 
-    await feedStore.feedOpenedEvent.waitForCount(1)
+  //   await feedStore.feedOpenedEvent.waitForCount(1)
 
-    expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(feedKey.publicKey))).toEqual(true)
-  })
+  //   expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(feedKey.publicKey))).toEqual(true)
+  // })
 
-  test('opens feed from hints', async () => {
-    const storage = createStorage('', STORAGE_RAM);
-    const feedStore = new FeedStore(storage, { valueEncoding: codec });
-    afterTest(async () => feedStore.close());
+  // test('opens feed from hints', async () => {
+  //   const storage = createStorage('', STORAGE_RAM);
+  //   const feedStore = new FeedStore(storage, { valueEncoding: codec });
+  //   afterTest(async () => feedStore.close());
 
-    const keyring = new Keyring();
+  //   const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(createRamStorage());
+  //   const metadataStore = new MetadataStore(createRamStorage());
 
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+  //   const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  //   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
-    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+  //   const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
+  //   const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
 
-    const otherFeedKey = PublicKey.random();
+  //   const otherFeedKey = PublicKey.random();
 
-    const party = new PartyCore(
-      partyKey.publicKey,
-      partyFeedProvider,
-      modelFactory,
-      snapshotStore,
-      PublicKey.random()
-    );
+  //   const party = new PartyCore(
+  //     partyKey.publicKey,
+  //     partyFeedProvider,
+  //     modelFactory,
+  //     snapshotStore,
+  //     PublicKey.random()
+  //   );
 
-    await partyFeedProvider.createOrOpenDataFeed();
+  //   await partyFeedProvider.createOrOpenDataFeed();
     
-    const feedOpened = feedStore.feedOpenedEvent.waitForCount(1)
+  //   const feedOpened = feedStore.feedOpenedEvent.waitForCount(1)
 
-    await party.open([{ type: KeyType.FEED, publicKey: otherFeedKey }]);
-    afterTest(async () => party.close());
+  //   await party.open([{ type: KeyType.FEED, publicKey: otherFeedKey }]);
+  //   afterTest(async () => party.close());
 
-    await feedOpened ;
+  //   await feedOpened ;
 
-    expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(otherFeedKey))).toEqual(true)
-  })
+  //   expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(otherFeedKey))).toEqual(true)
+  // })
 
   test.skip('two instances replicating', async () => {
     const peer1 = await createParty();

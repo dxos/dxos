@@ -329,6 +329,42 @@ describe('ECHO', () => {
     expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
   }).timeout(10_000);
 
+  test.only('Mutations from another device', async () => {
+    const a = await setup({ createProfile: true });
+    const b = await setup();
+
+    await a.createParty();
+    
+    const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
+    await b.halo.join(invitation, defaultSecretProvider);
+
+    // Check the initial party is opened.
+    await waitForCondition(() => b.queryParties().value.length === 1, 1000);
+
+    const partyA = a.queryParties().value[0];
+    await partyA.open();
+    const partyB = b.queryParties().value[0];
+    await partyB.open();
+
+    {
+      // Subscribe to Item updates on B.
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec()
+      const updated = selection.update.waitFor(result => result.entities.length > 0);
+        
+
+      // Create a new Item on A.
+      const itemB = await partyB.database
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
+      log(`A created ${itemB.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemB.id}`);
+
+      expect(selection.entities[0].id).toEqual(itemB.id)
+    }
+  }).timeout(10_000);
+
   test('Two users, two devices each', async () => {
     const a1 = await setup({ createProfile: true });
     const a2 = await setup();
