@@ -3,7 +3,7 @@
 //
 
 import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import { DraggableListItem, DraggableListItemDef } from './DraggableListItem';
 import { DroppableContainer } from './DroppableContainer';
@@ -12,12 +12,14 @@ interface DroppableListProps {
   id: string
   items: DraggableListItemDef[]
   horizontal?: boolean
+  style?: CSSProperties
 }
 
 export const DroppableList = ({
   id,
   items,
-  horizontal = false
+  horizontal = false,
+  style = {}
 }: DroppableListProps) => {
 
   return (
@@ -28,7 +30,8 @@ export const DroppableList = ({
         height: '100%',
         overflowY: 'scroll',
         border: '1px solid rgba(0,0,0,0.2)',
-        borderRadius: '5px'
+        borderRadius: '5px',
+        ...style
       }}
       draggingOverStyle={{
         border: '1px solid rgba(0, 0, 0, 0.7)'
