@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import faker from 'faker';
 import React, { useState } from 'react';
-import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
 import { Item, Party } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableTable, DroppableList, Card, ProfileInitializer } from '../src';
+import { Card, DroppableList, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -32,6 +32,7 @@ const ListStory = () => {
   const items = useSelection(party?.select()
     .filter({ type: TYPE_LIST_ITEM }),
   [list]) ?? [];
+  const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -68,20 +69,24 @@ const ListStory = () => {
     return null;
   }).filter(Boolean) as Card[];
 
-  const handleDragEnd = async (result: DropResult) => {
-    if (!orderedList || !result.destination) {
+  const handleDragEnd = async ({ over }: DragEndEvent) => {
+    if (!orderedList || !activeId) {
       return;
     }
-
-    const { destination, draggableId } = result;
-    const currentOrderWithoutId = orderedList.values.filter(value => value !== draggableId);
-    const newOrder = [
-      ...currentOrderWithoutId.slice(0, destination.index),
-      draggableId,
-      ...currentOrderWithoutId.slice(destination.index, orderedList.values.length)
-    ];
-    await orderedList.init(newOrder);
-    setCurrentOrder(newOrder);
+    if (over) {
+      const overIndex = orderedList.values.indexOf(over.id as string);
+      const activeIndex = orderedList.values.indexOf(activeId);
+      if (activeIndex !== overIndex) {
+        const currentOrderWithoutId = orderedList.values.filter(itemId => itemId !== activeId);
+        const newOrder = [
+          ...currentOrderWithoutId.slice(0, overIndex),
+          activeId,
+          ...currentOrderWithoutId.slice(overIndex)
+        ];
+        await orderedList.init(newOrder);
+        setCurrentOrder(newOrder);
+      }
+    }
   };
 
   const handleReset = async () => {
@@ -101,11 +106,21 @@ const ListStory = () => {
       display: 'grid',
       gridTemplateColumns: '1fr 0.1fr'
     }}>
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
+
+          setActiveId(active.id as string);
+        }}
+        onDragEnd={handleDragEnd}
+      >
         <DroppableList
           id='test-list'
-          items={getListItems()} />
-      </DragDropContext>
+          items={getListItems()}
+        />
+      </DndContext>
       <div>
         <ResetButton onReset={handleReset} />
         <DragAndDropDebugPanel
@@ -131,9 +146,10 @@ const MultipleListStory = () => {
   const [party, setParty] = useState<Party>();
   const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
-  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>();
-  const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>();
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>([]);
+  const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>([]);
   const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
+  const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -189,51 +205,54 @@ const MultipleListStory = () => {
     }).filter(Boolean) as Card[];
   };
 
-  const handleDragEnd = async (result: DropResult) => {
-    if (!orderedLists?.length || !result.destination) {
+  const handleDragEnd = async ({ over }: DragEndEvent) => {
+    if (!orderedLists?.length || !activeId) {
       return;
     }
-    const { destination, draggableId, source } = result;
-    const targetOrderedList = orderedLists.find(list => list.id === destination.droppableId);
-    if (!targetOrderedList) {
-      return;
-    }
+    if (over?.data.current) {
+      const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
+      const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
+      if (!sourceOrderedList || !targetOrderedList) {
+        return;
+      }
 
-    let newSourceOrder: string[];
-    const sourceOrderedList = orderedLists.find(list => list.id === source.droppableId);
-    if (destination.droppableId !== source.droppableId) {
-      // Remove item from source
-      if (sourceOrderedList) {
-        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== draggableId);
+      let newSourceOrder: string[];
+      if (sourceOrderedList.id !== targetOrderedList.id) {
+        // Remove item from source
+        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
         await sourceOrderedList.init(sourceOrderWithoutId);
         newSourceOrder = sourceOrderWithoutId;
       }
+
+      const overIndex = targetOrderedList.values.indexOf(over.id as string);
+      const activeIndex = targetOrderedList.values.indexOf(activeId);
+      if (activeIndex !== overIndex) {
+        const currentOrderWithoutId = targetOrderedList.values.filter(itemId => itemId !== activeId);
+        const newOrder = [
+          ...currentOrderWithoutId.slice(0, overIndex),
+          activeId,
+          ...currentOrderWithoutId.slice(overIndex)
+        ];
+        await targetOrderedList.init(newOrder);
+        setCurrentOrders(prev => prev.map(currentOrder => {
+          if (currentOrder.id === targetOrderedList.id) {
+            return {
+              id: currentOrder.id,
+              values: targetOrderedList.values
+            };
+          }
+
+          if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
+            return {
+              id: currentOrder.id,
+              values: newSourceOrder
+            };
+          }
+
+          return currentOrder;
+        }));
+      }
     }
-
-    const currentOrderWithoutId = targetOrderedList.values.filter(value => value !== draggableId);
-    const newOrder = [
-      ...currentOrderWithoutId.slice(0, destination.index),
-      draggableId,
-      ...currentOrderWithoutId.slice(destination.index, targetOrderedList.values.length)
-    ];
-    await targetOrderedList.init(newOrder);
-    setCurrentOrders(prev => prev?.map(currentOrder => {
-      if (currentOrder.id === targetOrderedList.id) {
-        return {
-          id: currentOrder.id,
-          values: newOrder
-        };
-      }
-
-      if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
-        return {
-          id: currentOrder.id,
-          values: newSourceOrder
-        };
-      }
-
-      return currentOrder;
-    }));
   };
 
   const handleReset = async () => {
@@ -266,7 +285,16 @@ const MultipleListStory = () => {
       gridTemplateColumns: [...lists.map(() => '1fr'), '0.1fr'].join(' '),
       columnGap: 8
     }}>
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
+
+          setActiveId(active.id as string);
+        }}
+        onDragEnd={handleDragEnd}
+      >
         {lists.map(list => (
           <ColumnContainer
             key={list.id}
@@ -287,7 +315,7 @@ const MultipleListStory = () => {
             }}
           />
         ))}
-      </DragDropContext>
+      </DndContext>
       <ResetButton onReset={handleReset} />
     </StorybookContainer>
   );

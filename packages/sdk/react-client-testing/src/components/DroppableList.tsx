@@ -2,19 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React from 'react';
 
-import { Card, DraggableCard } from './DraggableCard';
+import { DraggableListItem, DraggableListItemDef } from './DraggableListItem';
 import { DroppableContainer } from './DroppableContainer';
 
 interface DroppableListProps {
   id: string
-  items: Card[]
+  items: DraggableListItemDef[]
+  horizontal?: boolean
 }
 
 export const DroppableList = ({
   id,
-  items
+  items,
+  horizontal = false
 }: DroppableListProps) => {
 
   return (
@@ -31,13 +34,18 @@ export const DroppableList = ({
         border: '1px solid rgba(0, 0, 0, 0.7)'
       }}
     >
-      {items.map((card, i) => (
-        <DraggableCard
-          key={card.id}
-          index={i}
-          card={card}
-        />
-      ))}
+      <SortableContext
+        id={id}
+        items={items.map(item => item.id)}
+        strategy={horizontal ? horizontalListSortingStrategy : verticalListSortingStrategy}
+      >
+        {items.map(item => (
+          <DraggableListItem
+            key={item.id}
+            item={item}
+          />
+        ))}
+      </SortableContext>
     </DroppableContainer>
   );
 };
