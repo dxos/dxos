@@ -3,7 +3,7 @@
 //
 
 import { useDroppable } from '@dnd-kit/core';
-import React, { CSSProperties, ReactNode, useEffect } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 
 interface DroppableContainerProps {
   id: string
