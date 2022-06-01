@@ -4,7 +4,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 export type DraggableListItemDef = {
   id: string
@@ -13,10 +13,12 @@ export type DraggableListItemDef = {
 
 interface DraggableListItemProps {
   item: DraggableListItemDef
+  style?: CSSProperties
 }
 
 export const DraggableListItem = ({
-  item
+  item,
+  style: customStyles = {}
 }: DraggableListItemProps) => {
 
   const {
@@ -28,6 +30,7 @@ export const DraggableListItem = ({
   } = useSortable({ id: item.id });
 
   const style = {
+    ...customStyles,
     transform: CSS.Transform.toString(transform),
     transition
   };

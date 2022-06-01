@@ -286,7 +286,12 @@ const MultipleListStory = () => {
       return null;
     }
     return (
-      <DraggableListItem item={{ id: item.id, title: item.model.get('title') }} />
+      <DraggableListItem
+        item={{ id: item.id, title: item.model.get('title') }}
+        style={{
+          backgroundColor: 'white'
+        }}
+      />
     );
   };
 
