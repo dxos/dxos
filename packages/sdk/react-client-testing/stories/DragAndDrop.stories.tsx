@@ -280,21 +280,6 @@ const MultipleListStory = () => {
     return null;
   }
 
-  const renderDragOverlay = (id: string) => {
-    const item = items.find(item => item.id === id);
-    if (!item) {
-      return null;
-    }
-    return (
-      <DraggableListItem
-        item={{ id: item.id, title: item.model.get('title') }}
-        style={{
-          backgroundColor: 'white'
-        }}
-      />
-    );
-  };
-
   return (
     <StorybookContainer style={{
       display: 'grid',
@@ -318,6 +303,7 @@ const MultipleListStory = () => {
               <DroppableList
                 id={list.id}
                 items={getListItems(list.id)}
+                activeId={activeId}
               />
             )}
             bottomComponent={(
@@ -331,12 +317,6 @@ const MultipleListStory = () => {
             }}
           />
         ))}
-        {createPortal(
-          <DragOverlay>
-            {activeId && renderDragOverlay(activeId)}
-          </DragOverlay>,
-          document.body
-        )}
       </DndContext>
       <ResetButton onReset={handleReset} />
     </StorybookContainer>
