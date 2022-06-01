@@ -2,16 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core';
 import faker from 'faker';
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Item, Party } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { Card, DroppableList, ProfileInitializer } from '../src';
+import { Card, DraggableListItem, DroppableList, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -279,6 +280,25 @@ const MultipleListStory = () => {
     return null;
   }
 
+  const renderDragOverlay = (id: string) => {
+    const item = items.find(item => item.id === id);
+    if (!item) {
+      return null;
+    }
+    return (
+      <DraggableListItem
+        item={{
+          id: item.id,
+          title: item.model.get('title')
+        }}
+        style={{
+          backgroundColor: 'white',
+          border: '1px solid #ccc'
+        }}
+      />
+    );
+  };
+
   return (
     <StorybookContainer style={{
       display: 'grid',
@@ -316,6 +336,12 @@ const MultipleListStory = () => {
             }}
           />
         ))}
+        {createPortal(
+          <DragOverlay>
+            {activeId && renderDragOverlay(activeId)}
+          </DragOverlay>,
+          document.body
+        )}
       </DndContext>
       <ResetButton onReset={handleReset} />
     </StorybookContainer>
