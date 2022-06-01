@@ -33,7 +33,6 @@ export const DroppableContainer = ({
         ...(isOverContainer && draggingOverStyle)
       }}
     >
-      {id}
       {children}
     </div>
   );
