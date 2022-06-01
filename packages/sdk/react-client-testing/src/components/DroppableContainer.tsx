@@ -10,7 +10,6 @@ interface DroppableContainerProps {
   children: ReactNode
   style?: CSSProperties
   draggingOverStyle?: CSSProperties
-  horizontal?: boolean
 }
 
 export const DroppableContainer = ({
@@ -19,18 +18,22 @@ export const DroppableContainer = ({
   style,
   draggingOverStyle
 }: DroppableContainerProps) => {
-  const { isOver, setNodeRef } = useDroppable({
+  const { isOver, setNodeRef, over } = useDroppable({
     id
   });
+
+  // When hovering over item, isOver returns false and over id doesn't match container id, so manually check current sortable containerId.
+  const isOverContainer = isOver || over?.id === id || over?.data.current?.sortable.containerId === id;
 
   return (
     <div
       ref={setNodeRef}
       style={{
         ...style,
-        ...(isOver && draggingOverStyle)
+        ...(isOverContainer && draggingOverStyle)
       }}
     >
+      {id}
       {children}
     </div>
   );

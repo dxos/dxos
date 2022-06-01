@@ -21,6 +21,7 @@ export const DroppableList = ({
   horizontal = false,
   style = {}
 }: DroppableListProps) => {
+  const itemIds = items.map(item => item.id);
 
   return (
     <DroppableContainer
@@ -39,7 +40,7 @@ export const DroppableList = ({
     >
       <SortableContext
         id={id}
-        items={items.map(item => item.id)}
+        items={itemIds}
         strategy={horizontal ? horizontalListSortingStrategy : verticalListSortingStrategy}
       >
         {items.map(item => (
