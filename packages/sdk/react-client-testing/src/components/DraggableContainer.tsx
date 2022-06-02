@@ -2,72 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { CSSProperties, ReactNode, useState } from 'react';
-import { Draggable } from 'react-beautiful-dnd';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import React, { CSSProperties, ReactNode } from 'react';
 
 interface DraggableContainerProps {
   id: string
-  index: number,
   children: ReactNode
   style?: CSSProperties
+  placeholderStyles?: CSSProperties
 }
 
 export const DraggableContainer = ({
   id,
-  index,
   children,
-  style
+  style: customStyles = {},
+  placeholderStyles = {}
 }: DraggableContainerProps) => {
-  const [isHovering, setIsHovering] = useState(false);
-
-  const getStyles = (isDragging: boolean, isHovering: boolean) => {
-    let backgroundColor;
-    let boxShadow;
-    if (isDragging) {
-      backgroundColor = '#D8D8D8';
-      boxShadow = `
-        0 1px 1px hsl(0deg 0% 0% / 0.075),
-        0 2px 2px hsl(0deg 0% 0% / 0.075),
-        0 4px 4px hsl(0deg 0% 0% / 0.075),
-        0 8px 8px hsl(0deg 0% 0% / 0.075),
-        0 16px 16px hsl(0deg 0% 0% / 0.075)
-      `;
-    }
-    if (isHovering) {
-      backgroundColor = '#E8E8E8';
-    }
-    return {
-      backgroundColor,
-      boxShadow,
-      borderRadius: '0.1em'
-    };
-  };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id });
 
   return (
-    <Draggable
-      key={id}
-      draggableId={id}
-      index={index}
+    <div
+      ref={setNodeRef}
+      style={{
+        cursor: 'pointer',
+        ...customStyles,
+        ...(isDragging ? placeholderStyles : {}),
+        transform: CSS.Transform.toString(transform),
+        transition
+      }}
+      {...listeners}
+      {...attributes}
     >
-      {({ draggableProps, dragHandleProps, innerRef }, { isDragging }) => (
-        <div
-          ref={innerRef}
-          {...draggableProps}
-          {...dragHandleProps}
-          style={draggableProps.style}
-        >
-          <div
-            style={{
-              ...style,
-              ...getStyles(isDragging, isHovering)
-            }}
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
-            {children}
-          </div>
-        </div>
-      )}
-    </Draggable>
+      {children}
+    </div>
   );
 };

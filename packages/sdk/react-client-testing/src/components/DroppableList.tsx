@@ -5,12 +5,13 @@
 import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { CSSProperties } from 'react';
 
-import { DraggableListItem, DraggableListItemDef } from './DraggableListItem';
+import { DraggableContainer } from './DraggableContainer';
 import { DroppableContainer } from './DroppableContainer';
+import { ListItem, ListItemDef } from './ListItem';
 
 interface DroppableListProps {
   id: string
-  items: DraggableListItemDef[]
+  items: ListItemDef[]
   horizontal?: boolean
   style?: CSSProperties
   activeId?: string
@@ -46,11 +47,18 @@ export const DroppableList = ({
         strategy={horizontal ? horizontalListSortingStrategy : verticalListSortingStrategy}
       >
         {items.map(item => (
-          <DraggableListItem
+          <DraggableContainer
             key={item.id}
-            item={item}
-            style={{ padding: 8 }}
-          />
+            id={item.id}
+            placeholderStyles={{
+              opacity: 0.5
+            }}
+          >
+            <ListItem
+              item={item}
+              style={{ padding: 8 }}
+            />
+          </DraggableContainer>
         ))}
       </SortableContext>
     </DroppableContainer>
