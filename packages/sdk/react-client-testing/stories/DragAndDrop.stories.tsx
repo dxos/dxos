@@ -11,7 +11,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { Card, DraggableListItem, DroppableList, ProfileInitializer } from '../src';
+import { Card, DroppableList, ListItem, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -87,6 +87,7 @@ const ListStory = () => {
         setCurrentOrder(newOrder);
       }
     }
+    setActiveId(undefined);
   };
 
   const handleReset = async () => {
@@ -253,6 +254,7 @@ const MultipleListStory = () => {
         }));
       }
     }
+    setActiveId(undefined);
   };
 
   const handleReset = async () => {
@@ -285,14 +287,16 @@ const MultipleListStory = () => {
       return null;
     }
     return (
-      <DraggableListItem
+      <ListItem
         item={{
           id: item.id,
           title: item.model.get('title')
         }}
         style={{
           backgroundColor: 'white',
-          border: '1px solid #ccc'
+          boxShadow: 'box-shadow: 10px 10px 30px -7px rgba(0,0,0,0.3)',
+          width: 'fit-content',
+          padding: 8
         }}
       />
     );
@@ -313,6 +317,49 @@ const MultipleListStory = () => {
           setActiveId(active.id as string);
         }}
         onDragEnd={handleDragEnd}
+        onDragOver={({ active, over }) => {
+          const overId = over?.id;
+
+          if (overId == null) {
+            return;
+          }
+
+          const overContainer = currentOrders.find(currentOrder => currentOrder.values.includes(overId as string));
+          const activeContainer = currentOrders.find(currentOrder => currentOrder.values.includes(active.id as string));
+
+          if (!overContainer || !activeContainer) {
+            return;
+          }
+
+          if (activeContainer.id !== overContainer.id) {
+            setCurrentOrders(prev => {
+              const overItems = overContainer.values;
+              const overIndex = overItems.indexOf(overId as string);
+
+              const newIndex = overIndex >= 0 ? overIndex : overItems.length + 1;
+
+              return prev.map(currentOrder => {
+                if (currentOrder.id === activeContainer.id) {
+                  return {
+                    id: currentOrder.id,
+                    values: currentOrder.values.filter(itemId => itemId !== active.id)
+                  };
+                }
+                if (currentOrder.id === overContainer.id) {
+                  return {
+                    id: currentOrder.id,
+                    values: [
+                      ...currentOrder.values.slice(0, newIndex),
+                      active.id as string,
+                      ...currentOrder.values.slice(newIndex, currentOrder.values.length)
+                    ]
+                  };
+                }
+                return currentOrder;
+              });
+            });
+          }
+        }}
       >
         {lists.map(list => (
           <ColumnContainer

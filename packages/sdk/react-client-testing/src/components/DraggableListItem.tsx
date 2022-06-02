@@ -6,13 +6,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React, { CSSProperties } from 'react';
 
-export type DraggableListItemDef = {
-  id: string
-  title: string
-}
+import { ListItem, ListItemDef } from './ListItem';
+
+export type DraggableListItemDef = ListItemDef
 
 interface DraggableListItemProps {
-  item: DraggableListItemDef
+  item: ListItemDef
   style?: CSSProperties
 }
 
@@ -26,11 +25,12 @@ export const DraggableListItem = ({
     listeners,
     setNodeRef,
     transform,
-    transition
+    transition,
+    isDragging
   } = useSortable({ id: item.id });
 
   const style = {
-    ...customStyles,
+    cursor: 'pointer',
     transform: CSS.Transform.toString(transform),
     transition
   };
@@ -38,15 +38,17 @@ export const DraggableListItem = ({
   return (
     <div
       ref={setNodeRef}
-      style={{
-        cursor: 'pointer',
-        padding: 8,
-        ...style
-      }}
+      style={style}
       {...attributes}
       {...listeners}
     >
-      {item.title}
+      <ListItem
+        item={item}
+        style={{
+          opacity: isDragging ? 0.5 : 1,
+          ...customStyles
+        }}
+      />
     </div>
   );
 };

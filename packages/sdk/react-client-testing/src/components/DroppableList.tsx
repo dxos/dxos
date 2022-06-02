@@ -49,6 +49,7 @@ export const DroppableList = ({
           <DraggableListItem
             key={item.id}
             item={item}
+            style={{ padding: 8 }}
           />
         ))}
       </SortableContext>
