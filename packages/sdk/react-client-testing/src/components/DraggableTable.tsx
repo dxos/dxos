@@ -115,6 +115,9 @@ export const DraggableTable = ({
               style={{
                 width: 'fit-content'
               }}
+              placeholderStyles={{
+                opacity: 0.5
+              }}
             >
               <Row
                 row={row}
