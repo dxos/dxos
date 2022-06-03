@@ -11,7 +11,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { Card, DraggableTable, DroppableList, ListItem, ProfileInitializer } from '../src';
+import { DraggableTable, DroppableList, ListItem, ListItemDef, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -67,7 +67,7 @@ const ListStory = () => {
       return { id: item.id, title: item.model.get('title') };
     }
     return null;
-  }).filter(Boolean) as Card[];
+  }).filter(Boolean) as ListItemDef[];
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
     if (!orderedList || !activeId) {
@@ -164,7 +164,7 @@ const MultipleListStory = () => {
 
     const newOrderedLists: OrderedList[] = [];
     await Promise.all(listItems.map(async (listItem) => {
-      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async (_, i) => {
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => {
         return await newParty?.database.createItem({
           model: ObjectModel,
           type: TYPE_LIST_ITEM,
@@ -203,7 +203,7 @@ const MultipleListStory = () => {
         return { id: item.id, title: item.model.get('title') };
       }
       return null;
-    }).filter(Boolean) as Card[];
+    }).filter(Boolean) as ListItemDef[];
   };
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
@@ -567,6 +567,273 @@ export const Table = () => {
     <ClientProvider>
       <ProfileInitializer>
         <TableStory />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
+};
+
+const MultipleContainersStory = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+  const [containers, setContainers] = useState<Item<ObjectModel>[]>([]);
+  const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
+  const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>([]);
+  const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>([]);
+  const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const [activeId, setActiveId] = useState<string>();
+
+  useAsyncEffect(async () => {
+    const newParty = await client.echo.createParty();
+
+    const listItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_LIST
+    });
+
+    const tableItem = await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_TABLE_TABLE
+    });
+
+    const containerItems = [listItem, tableItem];
+
+    const newOrderedLists: OrderedList[] = [];
+    await Promise.all(containerItems.map(async (containerItem) => {
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => {
+        return await newParty?.database.createItem({
+          model: ObjectModel,
+          type: TYPE_TEST_PERSON,
+          props: {
+            title: faker.name.firstName(),
+            country: faker.address.country(),
+            role: faker.name.jobTitle(),
+            email: faker.internet.email()
+          }
+        });
+      }));
+      const newOrderedList = new OrderedList(containerItem.model);
+      await newOrderedList.init(createdItems.map(item => item.id));
+      newOrderedLists.push(newOrderedList);
+    }));
+
+    setParty(newParty);
+    setContainers(containerItems);
+    setOrderedLists(newOrderedLists);
+    setCurrentOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
+    setInitialOrders(newOrderedLists.map(orderedList => ({
+      id: orderedList.id,
+      values: orderedList.values
+    })));
+  }, []);
+
+  const getContainerItems = (containerId: string) => {
+    const currentOrder = currentOrders?.find(currentOrder => currentOrder.id === containerId);
+    if (!currentOrder) {
+      return [];
+    }
+
+    return currentOrder.values.map(itemId => {
+      const item = items.find(item => item.id === itemId);
+      console.log(item);
+      if (item) {
+        return { id: item.id, ...item.model.toObject() };
+      }
+      return null;
+    }).filter(Boolean) as ListItemDef[];
+  };
+
+  const handleDragEnd = async ({ over }: DragEndEvent) => {
+    if (!orderedLists?.length || !activeId) {
+      return;
+    }
+    if (over?.data.current) {
+      const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
+      const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
+      if (!sourceOrderedList || !targetOrderedList) {
+        return;
+      }
+
+      let newSourceOrder: string[];
+      if (sourceOrderedList.id !== targetOrderedList.id) {
+        // Remove item from source
+        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
+        await sourceOrderedList.init(sourceOrderWithoutId);
+        newSourceOrder = sourceOrderWithoutId;
+      }
+
+      const overIndex = targetOrderedList.values.indexOf(over.id as string);
+      const activeIndex = targetOrderedList.values.indexOf(activeId);
+      if (activeIndex !== overIndex) {
+        const currentOrderWithoutId = targetOrderedList.values.filter(itemId => itemId !== activeId);
+        const newOrder = [
+          ...currentOrderWithoutId.slice(0, overIndex),
+          activeId,
+          ...currentOrderWithoutId.slice(overIndex)
+        ];
+        await targetOrderedList.init(newOrder);
+        setCurrentOrders(prev => prev.map(currentOrder => {
+          if (currentOrder.id === targetOrderedList.id) {
+            return {
+              id: currentOrder.id,
+              values: targetOrderedList.values
+            };
+          }
+
+          if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
+            return {
+              id: currentOrder.id,
+              values: newSourceOrder
+            };
+          }
+
+          return currentOrder;
+        }));
+      }
+    }
+    setActiveId(undefined);
+  };
+
+  const renderDragOverlay = (id: string, type: string) => {
+    const item = items.find(item => item.id === id);
+    if (!item) {
+      return null;
+    }
+
+    // if (type === TYPE_LIST_ITEM) {
+    return (
+        <ListItem
+          item={{
+            id: item.id,
+            title: item.model.get('title')
+          }}
+          style={{
+            backgroundColor: 'white',
+            boxShadow: 'box-shadow: 10px 10px 30px -7px rgba(0,0,0,0.3)',
+            width: 'fit-content',
+            padding: 8
+          }}
+        />
+    );
+  };
+
+  const handleReset = async () => {
+    if (!initialOrders || !orderedLists) {
+      return;
+    }
+
+    await Promise.all(orderedLists.map(async (orderedList) => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      initialOrder && await orderedList?.init(initialOrder.values);
+    }));
+
+    // Update state to trigger rerender
+    setCurrentOrders(orderedLists.map(orderedList => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      if (!initialOrder) {
+        return orderedList;
+      }
+      return initialOrder;
+    }));
+  };
+
+  return (
+    <StorybookContainer style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 0.1fr',
+      columnGap: 8
+    }}>
+      <DndContext
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
+
+          setActiveId(active.id as string);
+        }}
+        onDragEnd={handleDragEnd}
+        onDragOver={({ active, over }) => {
+          const overId = over?.id;
+
+          if (overId == null) {
+            return;
+          }
+
+          const overContainer = currentOrders.find(currentOrder => currentOrder.values.includes(overId as string));
+          const activeContainer = currentOrders.find(currentOrder => currentOrder.values.includes(active.id as string));
+
+          if (!overContainer || !activeContainer) {
+            return;
+          }
+
+          if (activeContainer.id !== overContainer.id) {
+            setCurrentOrders(prev => {
+              const overItems = overContainer.values;
+              const overIndex = overItems.indexOf(overId as string);
+
+              const newIndex = overIndex >= 0 ? overIndex : overItems.length + 1;
+
+              return prev.map(currentOrder => {
+                if (currentOrder.id === activeContainer.id) {
+                  return {
+                    id: currentOrder.id,
+                    values: currentOrder.values.filter(itemId => itemId !== active.id)
+                  };
+                }
+                if (currentOrder.id === overContainer.id) {
+                  return {
+                    id: currentOrder.id,
+                    values: [
+                      ...currentOrder.values.slice(0, newIndex),
+                      active.id as string,
+                      ...currentOrder.values.slice(newIndex, currentOrder.values.length)
+                    ]
+                  };
+                }
+                return currentOrder;
+              });
+            });
+          }
+        }}
+      >
+        {containers.map(container => {
+          if (container.type === TYPE_LIST) {
+            return (
+              <DroppableList
+                key={container.id}
+                id={container.id}
+                items={getContainerItems(container.id)}
+              />
+            );
+          } else if (container.type === TYPE_TABLE_TABLE) {
+            return (
+              <DraggableTable
+                key={container.id}
+                id={container.id}
+                columns={columns.slice(1, columns.length - 1)}
+                columnOrder={[]}
+                rows={getContainerItems(container.id)}
+              />
+            );
+          }
+          return null;
+        })}
+        <DragOverlay>
+          {activeId && renderDragOverlay(activeId, '')}
+        </DragOverlay>
+      </DndContext>
+      <ResetButton onReset={handleReset} />
+    </StorybookContainer>
+  );
+};
+
+export const MultipleContainers = () => {
+  return (
+    <ClientProvider>
+      <ProfileInitializer>
+        <MultipleContainersStory />
       </ProfileInitializer>
     </ClientProvider>
   );

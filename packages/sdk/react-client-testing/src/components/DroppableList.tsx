@@ -21,8 +21,7 @@ export const DroppableList = ({
   id,
   items,
   horizontal = false,
-  style = {},
-  activeId
+  style = {}
 }: DroppableListProps) => {
   const itemIds = items.map(item => item.id);
 
