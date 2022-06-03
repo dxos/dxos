@@ -36,9 +36,6 @@ export const DroppableList = ({
         borderRadius: '5px',
         ...style
       }}
-      draggingOverStyle={{
-        border: '1px solid rgba(0, 0, 0, 0.7)'
-      }}
     >
       <SortableContext
         id={id}

@@ -5,6 +5,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import React, { CSSProperties, ReactNode } from 'react';
 
+const DEFAULT_DRAGGING_OVER_STYLES = {
+  border: '1px solid rgba(0, 0, 0, 0.7)'
+};
 interface DroppableContainerProps {
   id: string
   children: ReactNode
@@ -16,7 +19,7 @@ export const DroppableContainer = ({
   id,
   children,
   style,
-  draggingOverStyle
+  draggingOverStyle = DEFAULT_DRAGGING_OVER_STYLES
 }: DroppableContainerProps) => {
   const { isOver, setNodeRef, over } = useDroppable({
     id
@@ -29,6 +32,7 @@ export const DroppableContainer = ({
     <div
       ref={setNodeRef}
       style={{
+        width: 'fit-content',
         ...style,
         ...(isOverContainer && draggingOverStyle)
       }}

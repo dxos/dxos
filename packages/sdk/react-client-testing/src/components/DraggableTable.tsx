@@ -98,9 +98,11 @@ export const DraggableTable = ({
       <DroppableContainer
         id={id}
         style={{
-          height: 'fit-content',
+          height: '100%',
           marginTop: '4px',
-          padding: '4px 8px 8px 8px'
+          padding: '4px 8px 8px 8px',
+          borderRadius: '5px',
+          border: '1px solid white'
         }}
       >
         <SortableContext
