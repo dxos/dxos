@@ -11,7 +11,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { Card, DroppableList, ListItem, ProfileInitializer } from '../src';
+import { Card, DraggableTable, DroppableList, ListItem, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -435,6 +435,7 @@ const TableStory = () => {
   const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
   const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [activeId, setActiveId] = useState<string>();
 
   const items = useSelection(party?.select()
     .filter({ type: TYPE_TEST_PERSON }),
@@ -471,39 +472,45 @@ const TableStory = () => {
     setInitialColumnOrder(newColumnOrderedList.values);
   }, []);
 
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, draggableId, source } = result;
-    if (destination?.droppableId === 'columns') {
-      const column = columns.find(column => column.accessor === draggableId);
-      if (!column) {
-        return;
+  const handleDragEnd = async ({ over }: DragEndEvent) => {
+    if (!activeId) {
+      return;
+    }
+
+    if (over) {
+      if (over.data.current?.sortable.containerId.split('-')[0] === 'columns') {
+        if (columnOrderedList) {
+          const overIndex = columnOrderedList.values.indexOf(over.id as string);
+          const activeIndex = columnOrderedList.values.indexOf(activeId);
+          if (activeIndex !== overIndex) {
+            const currentOrderWithoutId = columnOrderedList.values.filter(itemId => itemId !== activeId);
+            const newOrder = [
+              ...currentOrderWithoutId.slice(0, overIndex),
+              activeId,
+              ...currentOrderWithoutId.slice(overIndex)
+            ];
+            await columnOrderedList.init(newOrder);
+            setColumnOrder(newOrder);
+          }
+        }
+      } else {
+        if (rowOrderedList) {
+          const overIndex = rowOrderedList.values.indexOf(over.id as string);
+          const activeIndex = rowOrderedList.values.indexOf(activeId);
+          if (activeIndex !== overIndex) {
+            const currentOrderWithoutId = rowOrderedList.values.filter(itemId => itemId !== activeId);
+            const newOrder = [
+              ...currentOrderWithoutId.slice(0, overIndex),
+              activeId,
+              ...currentOrderWithoutId.slice(overIndex)
+            ];
+            await rowOrderedList.init(newOrder);
+            setRowOrder(newOrder);
+          }
+        }
       }
-
-      const columnsWithoutId = columns.filter(col => col.accessor !== column?.accessor);
-      const newColumns = [
-        ...columnsWithoutId.slice(0, destination.index),
-        column,
-        ...columnsWithoutId.slice(destination.index, columns.length)
-      ];
-      setColumnOrder(newColumns.map(column => column.accessor));
-      return;
     }
-    if (
-      !rowOrderedList ||
-      !destination ||
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    const currentOrderWithoutId = rowOrderedList.values.filter(value => value !== draggableId);
-    const newOrder = [
-      ...currentOrderWithoutId.slice(0, destination.index),
-      draggableId,
-      ...currentOrderWithoutId.slice(destination.index, rowOrderedList.values.length)
-    ];
-    await rowOrderedList.init(newOrder);
-    setRowOrder(newOrder);
+    setActiveId(undefined);
   };
 
   const handleReset = async () => {
@@ -533,14 +540,23 @@ const TableStory = () => {
       gridTemplateColumns: '1fr 0.1fr',
       height: 'calc(100vh - 16px)'
     }}>
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
+
+          setActiveId(active.id as string);
+        }}
+        onDragEnd={handleDragEnd}
+      >
         <DraggableTable
           id={table.id}
           columns={columns}
           columnOrder={columnOrder}
           rows={getRows()}
         />
-      </DragDropContext>
+      </DndContext>
       <ResetButton onReset={handleReset} />
     </div>
   );

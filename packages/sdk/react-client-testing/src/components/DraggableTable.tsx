@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import {
   ColumnOrderState,
   createTable,
@@ -12,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 
 import { DraggableContainer } from './DraggableContainer';
 import { DroppableContainer } from './DroppableContainer';
+import { Row } from './Row';
 
 type RowProps = {
   id: string
@@ -57,16 +59,9 @@ export const DraggableTable = ({
   });
 
   useEffect(() => {
-    instance.setColumnOrder(instance.getAllLeafColumns().sort((a, b) => {
-      if (!order || !a.accessorKey || !b.accessorKey) {
-        return 0;
-      }
-      if (order.indexOf(a.accessorKey) > order.indexOf(b.accessorKey)) {
-        return 1;
-      } else {
-        return -1;
-      }
-    }).map(column => column.id));
+    if (order) {
+      instance.setColumnOrder(order);
+    }
   }, [order]);
 
   return (
@@ -74,7 +69,6 @@ export const DraggableTable = ({
       {title && <h5>{title}</h5>}
       <DroppableContainer
         id='columns'
-        horizontal
         style={{
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
           display: 'grid',
@@ -82,18 +76,24 @@ export const DraggableTable = ({
           width: 'fit-content'
         }}
       >
-        {instance.getHeaderGroups().map(headerGroup =>
-          headerGroup.headers.map((header, i) => (
-            <DraggableContainer
-              key={header.id}
-              id={header.id}
-              index={i}
-              style={{ padding: 8 }}
-            >
-              {header.isPlaceholder ? null : header.renderHeader()}
-            </DraggableContainer>
-          ))
-        )}
+        <SortableContext
+          id={`columns-${id}`}
+          items={columnOrder}
+          strategy={horizontalListSortingStrategy}
+        >
+          {instance.getHeaderGroups().map(headerGroup =>
+            headerGroup.headers.map(header => (
+              <DraggableContainer
+                key={header.id}
+                id={header.id}
+                style={{ padding: 8 }}
+              >
+                {header.isPlaceholder ? null : header.renderHeader()}
+              </DraggableContainer>
+            ))
+          )}
+        </SortableContext>
+
       </DroppableContainer>
       <DroppableContainer
         id={id}
@@ -103,31 +103,29 @@ export const DraggableTable = ({
           padding: '4px 8px 8px 8px'
         }}
       >
-        {instance.getRowModel().rows.map((row, i) => (
-          <DraggableContainer
-            key={row.original!.id}
-            id={row.original!.id}
-            index={i}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: getGridCellSize(defaultColumns),
-              width: 'fit-content'
-            }}
-          >
-            {row.getVisibleCells().map(cell => (
-              <div
-                key={cell.id}
+        <SortableContext
+          id={id}
+          items={instance.getRowModel().rows.map(row => row.original!.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {instance.getRowModel().rows.map(row => (
+            <DraggableContainer
+              key={row.original!.id}
+              id={row.original!.id}
+              style={{
+                width: 'fit-content'
+              }}
+            >
+              <Row
+                row={row}
                 style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  padding: 8
+                  display: 'grid',
+                  gridTemplateColumns: getGridCellSize(defaultColumns)
                 }}
-              >
-                {cell.renderCell()}
-              </div>
-            ))}
-          </DraggableContainer>
-        ))}
+              />
+            </DraggableContainer>
+          ))}
+        </SortableContext>
       </DroppableContainer>
     </div>
   );

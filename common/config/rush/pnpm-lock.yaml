@@ -2498,7 +2498,7 @@ importers:
       '@mui/lab': ^5.0.0-alpha.69
       '@mui/material': ^5.4.2
       '@mui/system': ^5.4.2
-      '@tanstack/react-table': ^8.0.0-alpha.82
+      '@tanstack/react-table': ^8.0.0-beta.3
       '@types/faker': ^5.5.1
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
@@ -2531,7 +2531,7 @@ importers:
       '@mui/lab': 5.0.0-alpha.69_3dbd8f7a3f715159251f1a8d08e97be5
       '@mui/material': 5.4.2_9906e7abeab8a15232123e32b30bbfb4
       '@mui/system': 5.4.2_4c9308aed161217ce971345b6d35c11d
-      '@tanstack/react-table': 8.0.0-alpha.82_react-dom@17.0.2+react@17.0.2
+      '@tanstack/react-table': 8.0.0-beta.3_react-dom@17.0.2+react@17.0.2
       '@types/faker': 5.5.9
       '@types/react': 17.0.37
       '@types/react-dom': 17.0.11
@@ -8278,20 +8278,20 @@ packages:
     dependencies:
       defer-to-connect: 2.0.1
 
-  /@tanstack/react-table/8.0.0-alpha.82_react-dom@17.0.2+react@17.0.2:
-    resolution: {integrity: sha512-LlxfQihrSS8k/N1wrPffQCFs8fZ+lhiRin/Q5Sh0howpUeb0bNVA9KTsEq4v7I4ZgK7wGUCUUZQ39i/ihKuZeA==}
+  /@tanstack/react-table/8.0.0-beta.3_react-dom@17.0.2+react@17.0.2:
+    resolution: {integrity: sha512-et7kWHslZ4CDFCY4wHCluTu6aiISYv4/9/C+1O/E4R6O4By5w0sCutDKJg71GR9XBy0wWLLjTnmoz0svZx+TUA==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'
     dependencies:
-      '@tanstack/table-core': 8.0.0-alpha.82
+      '@tanstack/table-core': 8.0.0-beta.3
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     dev: true
 
-  /@tanstack/table-core/8.0.0-alpha.82:
-    resolution: {integrity: sha512-43jCulE/PS0rsR81ORf8WW60G6VXlBAZxA87pO00RxO7SVutyPa8pRn/QW9vEDpkf5ACrxgRFzqhCB9ci9Q/BA==}
+  /@tanstack/table-core/8.0.0-beta.3:
+    resolution: {integrity: sha512-ejAiBnQG7a4xKxyYWRYOvnOYwLZzKItJC+2Kb+Y+QMiDKqDZadOGanm5o5jt/jn7uk6dawZrCW3gHVce/wrRKQ==}
     engines: {node: '>=12'}
     dev: true
 
@@ -19543,7 +19543,7 @@ packages:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
 
   /mkdirp/0.5.1:
-    resolution: {integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=}
+    resolution: {integrity: sha512-SknJC52obPfGQPnjIkXbmA6+5H15E+fR+E4iR2oQ3zzCLbd7/ONua69R/Gw7AgkTLsRG+r5fzksYwWe1AgTyWA==}
     deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
     hasBin: true
     dependencies:
@@ -19865,7 +19865,7 @@ packages:
     dev: true
 
   /mv/2.1.1:
-    resolution: {integrity: sha1-rmzg1vbV4KT32JN5jQPB6pVZtqI=}
+    resolution: {integrity: sha512-at/ZndSy3xEGJ8i0ygALh8ru9qy7gWW1cmkaqBN29JmMlIvM//MEO9y1sk/avxuwnPcfhkejkLsuPxH81BrkSg==}
     engines: {node: '>=0.8.0'}
     requiresBuild: true
     dependencies:
