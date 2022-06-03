@@ -61,6 +61,7 @@ const ListStory = () => {
     setParty(newParty);
   }, []);
 
+  // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
   const getListItems = () => currentOrder.map(itemId => {
     const item = items.find(item => item.id === itemId);
     if (item) {
@@ -192,6 +193,7 @@ const MultipleListStory = () => {
   }, []);
 
   const getListItems = (listId: string) => {
+    // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
     const currentOrder = currentOrders?.find(list => list.id === listId);
     if (!currentOrder) {
       return [];
@@ -521,6 +523,7 @@ const TableStory = () => {
   };
 
   const getRows = () => {
+    // TODO(kaplanski): Replace rowOrder with rowOrderedList.values triggering re-render.
     return rowOrder!.map(itemId => {
       const item = items.find(item => item.id === itemId);
       if (item) {
@@ -630,6 +633,7 @@ const MultipleContainersStory = () => {
   }, []);
 
   const getContainerItems = (containerId: string) => {
+    // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
     const currentOrder = currentOrders?.find(currentOrder => currentOrder.id === containerId);
     if (!currentOrder) {
       return [];
