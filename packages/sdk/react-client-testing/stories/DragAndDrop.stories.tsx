@@ -582,6 +582,9 @@ const MultipleContainersStory = () => {
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{id: string, values: string[]}[]>([]);
   const [currentOrders, setCurrentOrders] = useState<{id: string, values: string[]}[]>([]);
+  const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
+  const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
@@ -619,6 +622,9 @@ const MultipleContainersStory = () => {
       newOrderedLists.push(newOrderedList);
     }));
 
+    const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
+    await newColumnOrderedList.init(columns.map(column => column.accessor));
+
     setParty(newParty);
     setContainers(containerItems);
     setOrderedLists(newOrderedLists);
@@ -630,6 +636,9 @@ const MultipleContainersStory = () => {
       id: orderedList.id,
       values: orderedList.values
     })));
+    setColumnOrderedList(newColumnOrderedList);
+    setColumnOrder(newColumnOrderedList.values);
+    setInitialColumnOrder(newColumnOrderedList.values);
   }, []);
 
   const getContainerItems = (containerId: string) => {
@@ -652,7 +661,25 @@ const MultipleContainersStory = () => {
     if (!orderedLists?.length || !activeId) {
       return;
     }
+
     if (over?.data.current) {
+      if (over.data.current?.sortable.containerId.split('-')[0] === 'columns') {
+        if (columnOrderedList) {
+          const overIndex = columnOrderedList.values.indexOf(over.id as string);
+          const activeIndex = columnOrderedList.values.indexOf(activeId);
+          if (activeIndex !== overIndex) {
+            const currentOrderWithoutId = columnOrderedList.values.filter(itemId => itemId !== activeId);
+            const newOrder = [
+              ...currentOrderWithoutId.slice(0, overIndex),
+              activeId,
+              ...currentOrderWithoutId.slice(overIndex)
+            ];
+            await columnOrderedList.init(newOrder);
+            setColumnOrder(newOrder);
+          }
+        }
+        return;
+      }
       const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
       const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
       if (!sourceOrderedList || !targetOrderedList) {
@@ -740,12 +767,14 @@ const MultipleContainersStory = () => {
       }
       return initialOrder;
     }));
+    await columnOrderedList!.init(initialColumnOrder);
+    setColumnOrder(initialColumnOrder);
   };
 
   return (
     <StorybookContainer style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 0.1fr',
+      gridTemplateColumns: '1fr 2fr 0.1fr',
       columnGap: 8
     }}>
       <DndContext
@@ -808,6 +837,9 @@ const MultipleContainersStory = () => {
                 key={container.id}
                 id={container.id}
                 items={getContainerItems(container.id)}
+                style={{
+                  width: '100%'
+                }}
               />
             );
           } else if (container.type === TYPE_TABLE_TABLE) {
@@ -816,7 +848,7 @@ const MultipleContainersStory = () => {
                 key={container.id}
                 id={container.id}
                 columns={columns.slice(1, columns.length - 1)}
-                columnOrder={[]}
+                columnOrder={columnOrder}
                 rows={getContainerItems(container.id)}
               />
             );
