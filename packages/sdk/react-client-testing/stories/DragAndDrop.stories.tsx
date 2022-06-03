@@ -637,7 +637,6 @@ const MultipleContainersStory = () => {
 
     return currentOrder.values.map(itemId => {
       const item = items.find(item => item.id === itemId);
-      console.log(item);
       if (item) {
         return { id: item.id, ...item.model.toObject() };
       }
