@@ -28,6 +28,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -37,13 +40,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../client"
     },
     {
-      "path": "../config"
+      "path": "../../halo/credentials"
     }
   ]
 }
