@@ -22,7 +22,7 @@ message Value {
     bool null                         = 1;    // Explicit null vs undefined.
 
     bool bool                         = 2;
-    int32 int                         = 3;
+    int64 int                         = 3;
     float float                       = 4;
     string string                     = 5;
 
