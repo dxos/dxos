@@ -1597,6 +1597,67 @@ importers:
       mocha: 8.4.0
       typescript: 4.5.3
 
+  ../../packages/gravity/orchestrator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
+      '@dxos/botkit': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/eslint-plugin': ~1.0.27
+      '@dxos/network-manager': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@swc-node/register': ~1.4.2
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      debug: ^4.3.3
+      eslint: ^7.12.1
+      expect: ~27.0.2
+      node-fetch: ^2.6.0
+      source-map-support: ^0.5.12
+      typescript: ^4.5.2
+    dependencies:
+      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/botkit': link:../../bot/botkit
+      '@dxos/client': link:../../sdk/client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/registry-client': link:../../sdk/registry-client
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/testutils': link:../../common/testutils
+      '@dxos/util': link:../../common/util
+      '@swc-node/register': 1.4.2
+      debug: 4.3.3
+      node-fetch: 2.6.7
+      source-map-support: 0.5.21
+    devDependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/eslint-plugin': 1.0.27_nv27fge2mo5alj7g7fxbwkxkv4
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/mocha': 8.2.3
+      '@types/node': 14.18.0
+      eslint: 7.32.0
+      expect: 27.0.6
+      typescript: 4.5.3
+
   ../../packages/halo/credentials:
     specifiers:
       '@dxos/async': workspace:*
@@ -11746,7 +11807,7 @@ packages:
     dev: true
 
   /clone/1.0.4:
-    resolution: {integrity: sha1-2jCcwmPfFZlMaIypAheco8fNfH4=}
+    resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
 
   /clone/2.1.2:
@@ -19138,7 +19199,7 @@ packages:
     dev: false
 
   /ltgt/2.2.1:
-    resolution: {integrity: sha1-81ypHEk/e3PaDgdJUwTxezH4fuU=}
+    resolution: {integrity: sha512-AI2r85+4MquTw9ZYqabu4nMwy9Oftlfa/e/52t9IjtfG+mGBbTNdAoZ3RQKLHR6r0wQnwZnPIEh/Ya6XTWAKNA==}
 
   /lunr/2.3.9:
     resolution: {integrity: sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==}
