@@ -15,10 +15,19 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../bot/bot-factory-client"
     },
     {
-      "path": "../../common/async"
+      "path": "../client"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../common/crypto"
@@ -27,25 +36,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/react-async"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../client"
+      "path": "../../common/react-async"
     },
     {
-      "path": "../config"
+      "path": "../../common/util"
     }
   ]
 }

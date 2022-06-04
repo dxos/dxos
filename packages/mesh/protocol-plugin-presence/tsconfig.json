@@ -9,7 +9,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../broadcast"
     },
     {
       "path": "../../common/codec-protobuf"
@@ -18,10 +18,10 @@
       "path": "../../common/crypto"
     },
     {
-      "path": "../broadcast"
+      "path": "../protocol"
     },
     {
-      "path": "../protocol"
+      "path": "../../common/async"
     },
     {
       "path": "../protocol-network-generator"

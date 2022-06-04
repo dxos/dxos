@@ -9,13 +9,13 @@
   ],
   "references": [
     {
+      "path": "../broadcast"
+    },
+    {
       "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/crypto"
-    },
-    {
-      "path": "../broadcast"
     },
     {
       "path": "../protocol"
