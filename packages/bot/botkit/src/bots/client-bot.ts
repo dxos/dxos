@@ -20,9 +20,13 @@ const log = debug('dxos:bot:client-bot');
 export class Bot implements BotService {
   protected client: Client | undefined;
   protected party: Party | undefined;
+  protected id: string | undefined;
 
   async initialize (request: InitializeRequest) {
-    log('Client bot start initilizing');
+    log('Client bot start initializing');
+
+    this.id = request.id;
+
     this.client = new Client(request.config);
     log('Client config:', JSON.stringify(request.config));
 
