@@ -14,10 +14,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../bot-factory-client"
     },
     {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../common/crypto"
@@ -26,22 +29,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
-    },
-    {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../../mesh/network-manager"
@@ -50,19 +38,31 @@
       "path": "../../mesh/protocol-plugin-rpc"
     },
     {
-      "path": "../../mesh/signal"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../sdk/registry-client"
     },
     {
-      "path": "../bot-factory-client"
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../mesh/signal"
+    },
+    {
+      "path": "../../common/util"
     }
   ]
 }
