@@ -42,6 +42,9 @@ describe('ObjectModel', () => {
 
     await model.set('foo', 'bar');
     expect(model.get('foo')).toEqual('bar');
+
+    await model.set('baz', 2 ** 33);
+    expect(model.get('baz')).toEqual(2 ** 33);
   });
 
   it('can set a dot property', async () => {
