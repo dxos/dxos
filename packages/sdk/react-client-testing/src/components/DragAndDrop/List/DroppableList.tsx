@@ -34,6 +34,7 @@ export const DroppableList = ({
         overflowY: 'scroll',
         border: '1px solid rgba(0,0,0,0.2)',
         borderRadius: '5px',
+        boxSizing: 'border-box',
         ...style
       }}
     >

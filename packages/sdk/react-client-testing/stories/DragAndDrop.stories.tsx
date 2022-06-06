@@ -106,7 +106,7 @@ const ListStory = () => {
   return (
     <StorybookContainer style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 0.1fr'
+      gridTemplateColumns: '2fr 1fr'
     }}>
       <DndContext
         onDragStart={({ active }) => {
@@ -121,6 +121,7 @@ const ListStory = () => {
         <DroppableList
           id='test-list'
           items={getListItems()}
+          style={{ width: 'calc(100% - 16px)' }}
         />
       </DndContext>
       <div>
@@ -371,6 +372,7 @@ const MultipleListStory = () => {
                 id={list.id}
                 items={getListItems(list.id)}
                 activeId={activeId}
+                style={{ width: '100%' }}
               />
             )}
             bottomComponent={(
@@ -538,10 +540,10 @@ const TableStory = () => {
   }
 
   return (
-    <div style={{
+    <StorybookContainer style={{
       display: 'grid',
       gridTemplateColumns: '1fr 0.1fr',
-      height: 'calc(100vh - 16px)'
+      columnGap: 8
     }}>
       <DndContext
         onDragStart={({ active }) => {
@@ -561,7 +563,7 @@ const TableStory = () => {
         />
       </DndContext>
       <ResetButton onReset={handleReset} />
-    </div>
+    </StorybookContainer>
   );
 };
 
