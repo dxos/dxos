@@ -97,6 +97,10 @@ export class ValueUtil {
       return value.array.values!.map(value => ValueUtil.valueOf(value));
     }
 
+    if (value.int) {
+      return parseInt(value.int);
+    }
+
     const type = SCALAR_TYPES.find(type => value[type] !== undefined);
     if (type) {
       return value[type];
@@ -114,7 +118,7 @@ export class ValueUtil {
   }
 
   static integer (value: number): Value {
-    return { [Type.INTEGER]: value };
+    return { [Type.INTEGER]: value.toString() };
   }
 
   static float (value: number): Value {
@@ -175,6 +179,13 @@ export class ValueUtil {
     // Remove property.
     if (value[Type.NULL]) {
       set(object, key, null);
+      return object;
+    }
+
+    // Apply integers.
+    const intValue = value[Type.INTEGER];
+    if (intValue !== undefined) {
+      set(object, key, parseInt(intValue));
       return object;
     }
 

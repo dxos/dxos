@@ -14,19 +14,19 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../config"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../registry-client"
+    },
+    {
       "path": "../../common/util"
     },
     {
-      "path": "../config"
-    },
-    {
-      "path": "../registry-client"
+      "path": "../../common/codec-protobuf"
     }
   ]
 }

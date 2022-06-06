@@ -18,31 +18,31 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../echo/text-model"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../sdk/react-client-testing"
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/react-components"
     },
     {
       "path": "../../sdk/react-toolkit"
+    },
+    {
+      "path": "../../echo/text-model"
+    },
+    {
+      "path": "../../sdk/react-client-testing"
     }
   ]
 }

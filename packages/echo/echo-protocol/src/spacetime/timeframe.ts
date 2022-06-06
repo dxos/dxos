@@ -13,7 +13,7 @@ import { FeedKey } from '../types';
  * Describes how many messages have been processed.
  */
 export class Timeframe {
-  private readonly _frames = new ComplexMap<FeedKey, number>(key => key.toHex());
+  private readonly _frames = new ComplexMap<FeedKey, number>(key => key.asUint8Array().toString());
 
   constructor (frames: [FeedKey, number][] = []) {
     for (const [key, seq] of frames) {
