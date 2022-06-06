@@ -57,8 +57,8 @@ export type ItemMeta = {
 }
 
 export interface ItemAdapter {
-  title: (item: Item<ObjectModel>) => string
-  description: (item: Item<ObjectModel>) => string
+  title: (item: Item<ObjectModel>) => string | undefined
+  description: (item: Item<ObjectModel>) => string | undefined
   linkedTypes?: (item: Item<ObjectModel>) => string[]
   linkedItems?: (item: Item<ObjectModel>, kind: string) => Item<ObjectModel>[]
   meta?: (type: string) => ItemMeta | undefined
