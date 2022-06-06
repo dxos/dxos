@@ -13,7 +13,13 @@ import { ModelMessage } from './types';
  * Otherwise it returns `exising.length`.
  */
 export const getInsertionIndex = (existing: ModelMessage<Uint8Array>[], newMutation: ModelMessage<Uint8Array>) => {
-  for (let i = 0; i < existing.length; i++) {
+  let start = existing.length - 1;
+  for (const ourKey = PublicKey.from(newMutation.meta.feedKey); start >= 0; start--) {
+    if (ourKey.equals(existing[start].meta.feedKey)) {
+      break;
+    }
+  }
+  for (let i = start + 1; i < existing.length; i++) {
     const existingTimeframe = Timeframe.merge(
       existing[i].meta.timeframe,
       new Timeframe([[PublicKey.from(existing[i].meta.feedKey), existing[i].meta.seq - 1]])
