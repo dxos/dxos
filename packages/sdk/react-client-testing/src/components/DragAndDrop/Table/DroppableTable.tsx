@@ -65,7 +65,11 @@ export const DroppableTable = ({
   }, [order]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'scroll' }}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      overflowY: 'scroll'
+    }}>
       {title && <h5>{title}</h5>}
       <DroppableContainer
         id='columns'
@@ -114,12 +118,8 @@ export const DroppableTable = ({
             <DraggableContainer
               key={row.original!.id}
               id={row.original!.id}
-              style={{
-                width: 'fit-content'
-              }}
-              placeholderStyles={{
-                opacity: 0.5
-              }}
+              style={{ width: 'fit-content' }}
+              placeholderStyles={{ opacity: 0.5 }}
             >
               <Row
                 row={row}

@@ -46,9 +46,7 @@ export const DroppableList = ({
           <DraggableContainer
             key={item.id}
             id={item.id}
-            placeholderStyles={{
-              opacity: 0.5
-            }}
+            placeholderStyles={{ opacity: 0.5 }}
           >
             <ListItem
               item={item}

@@ -726,13 +726,13 @@ const MultipleContainersStory = () => {
     setActiveId(undefined);
   };
 
-  const renderDragOverlay = (id: string, type: string) => {
+  // TODO(kaplanski): Different types of DragOverlays.
+  const renderDragOverlay = (id: string, type?: string) => {
     const item = items.find(item => item.id === id);
     if (!item) {
       return null;
     }
 
-    // if (type === TYPE_LIST_ITEM) {
     return (
         <ListItem
           item={{
@@ -740,6 +740,7 @@ const MultipleContainersStory = () => {
             title: item.model.get('title')
           }}
           style={{
+            cursor: 'grabbing',
             backgroundColor: 'white',
             boxShadow: 'box-shadow: 10px 10px 30px -7px rgba(0,0,0,0.3)',
             width: 'fit-content',
@@ -856,7 +857,7 @@ const MultipleContainersStory = () => {
           return null;
         })}
         <DragOverlay>
-          {activeId && renderDragOverlay(activeId, '')}
+          {activeId && renderDragOverlay(activeId)}
         </DragOverlay>
       </DndContext>
       <ResetButton onReset={handleReset} />
