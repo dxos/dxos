@@ -59,6 +59,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -88,6 +89,7 @@ importers:
       tail: ~2.2.4
       ts-node: ^9.1.1
       typescript: ^4.5.2
+      wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/bot-factory-client': link:../bot-factory-client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -95,6 +97,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
@@ -128,6 +131,7 @@ importers:
       expect: 27.0.6
       ts-node: 9.1.1_typescript@4.5.3
       typescript: 4.5.3
+      wait-for-expect: 3.0.2
 
   ../../packages/common/async:
     specifiers:
@@ -1608,6 +1612,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1636,6 +1641,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc

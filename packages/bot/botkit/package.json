@@ -37,7 +37,8 @@
     "esbuild": "^0.11.23",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
-    "tail": "~2.2.4"
+    "tail": "~2.2.4",
+    "@dxos/echo-protocol": "workspace:*"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
@@ -59,7 +60,8 @@
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "ts-node": "^9.1.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

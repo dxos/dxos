@@ -6,8 +6,10 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
+import { Stream } from '@dxos/codec-protobuf';
 
 import {
+  BotReport,
   BotService,
   InitializeRequest,
   SendCommandRequest,
@@ -75,6 +77,18 @@ export class Bot implements BotService {
   async stop () {
     await this.client?.destroy();
     await this.onStop();
+  }
+
+  startReporting (): Stream<BotReport> {
+    return new Stream(({ next, close }) => {
+      const report = async () => {
+        const partyDetails = await this.party?.getDetails();
+        next({ partyDetails });
+      };
+      void report();
+      const intervalHandle = setInterval(report, 1000);
+      return () => clearInterval(intervalHandle);
+    });
   }
 
   protected async onStart (request: InitializeRequest) {}
