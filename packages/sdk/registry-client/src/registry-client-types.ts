@@ -11,32 +11,23 @@ import {
   DomainKey,
   AccountKey,
   DXN,
-  RegistryDataRecord,
   RegistryRecord,
-  RegistryTypeRecord,
+  RegistryType,
   Resource,
   ResourceRecord,
   SuppliedRecordMetadata,
   UpdateResourceOptions
 } from './types';
 
-// TODO(burdon): Remove I- prefix.
-
 /**
  * DXNS Registry read-only operations.
  */
-export interface IReadOnlyRegistryClient {
-  /**
-   * Resolves a CID of a record registered under a resource described with DXN name.
-   * @param dxn Name of the resource which CID has to be resolved.
-   */
-  resolveRecordCid (dxn: DXN): Promise<CID | undefined>
-
+export interface ReadOnlyRegistryClient {
   /**
    * Resolves a domain key from the domain name.
    * @param domainName Name of the domain.
    */
-  resolveDomainName (domainName: string): Promise<DomainKey>
+  getDomainKey (domainName: string): Promise<DomainKey>
 
   /**
    * Returns a list of domains created in DXOS system.
@@ -47,37 +38,31 @@ export interface IReadOnlyRegistryClient {
    * Gets record details by CID.
    * @param cid CID of the record.
    */
-  getRecord(cid: CID): Promise<RegistryRecord | undefined>
+  getRecord<T = any>(cid: CID): Promise<RegistryRecord<T> | undefined>
 
   /**
    * Queries all records in the system.
    * @param query Query that each returned record must meet.
    */
-  getRecords(query?: IQuery): Promise<RegistryRecord[]>
-
-  /**
-   * Gets data record details by CID.
-   * @param cid CID of the record.
-   */
-  getDataRecord<T = any>(cid: CID): Promise<RegistryDataRecord<T> | undefined>
-
-  /**
-   * Queries data records.
-   * @param query Query that each returned record must meet.
-   */
-  getDataRecords<T = any>(query?: IQuery): Promise<RegistryDataRecord<T>[]>
+  getRecords<T = any>(query?: IQuery): Promise<RegistryRecord<T>[]>
 
   /**
    * Gets type records details by CID.
    * @param cid CID of the record.
    */
-  getTypeRecord(cid: CID): Promise<RegistryTypeRecord | undefined>
+  getType(cid: CID): Promise<RegistryType | undefined>
 
   /**
    * Queries type records.
    * @param query Query that each returned record must meet.
    */
-  getTypeRecords(query?: IQuery): Promise<RegistryTypeRecord[]>
+  getTypes(query?: IQuery): Promise<RegistryType[]>
+
+  /**
+   * Resolves a CID of a record or type registered under a resource described with DXN name.
+   * @param dxn Name of the resource which CID has to be resolved.
+   */
+  getCID (dxn: DXN): Promise<CID | undefined>
 
   /**
    * Gets resource by its registered name.
@@ -96,26 +81,20 @@ export interface IReadOnlyRegistryClient {
    * Queries resources registered in the system.
    * @param query Query that each returned record must meet.
    */
-  queryResources (query?: IQuery): Promise<Resource[]>
+  getResources (query?: IQuery): Promise<Resource[]>
 }
 
 /**
  * DXNS Registry modification operations.
  */
-export interface IRegistryClient extends IReadOnlyRegistryClient {
-  /**
-   * Creates a new record in the system.
-   * @param data Payload data of the record.
-   */
-  insertRawRecord (data: Uint8Array): Promise<CID>
-
+export interface RegistryClient extends ReadOnlyRegistryClient {
   /**
    * Creates a new data record in the system.
    * @param data Payload data of the record.
    * @param typeCid CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  insertDataRecord (data: unknown, typeCid: CID, meta?: SuppliedRecordMetadata): Promise<CID>
+  createRecord (data: unknown, typeCid: CID, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new type record in the system.
@@ -123,13 +102,13 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param messageFqn Fully qualified name of the message. It must reside in the schema definition.
    * @param meta Record metadata information.
    */
-  insertTypeRecord(schema: protobuf.Root, messageFqn: string, meta?: SuppliedRecordMetadata): Promise<CID>
+  createType(schema: protobuf.Root, messageFqn: string, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new domain in the system under a generated name.
    * @param account DXNS account that will own the domain.
    */
-  registerDomain (account: AccountKey): Promise<DomainKey>
+  createDomain (account: AccountKey): Promise<DomainKey>
 
   /**
    * Registers or updates a resource in the system.
@@ -150,5 +129,5 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * Deletes a resource in the system.
    * @param resource Identifies the domain and name of the resource.
    */
-  deleteResource (resource: DXN, account: AccountKey,): Promise<void>
+  deleteResource (resource: DXN, account: AccountKey): Promise<void>
 }

@@ -2,151 +2,97 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Root } from 'protobufjs';
+import { RegistryClientBackend } from 'sample-polkadotjs-typegen/registry-client-backend';
 
-import { IQuery, Filtering } from '../queries';
-import { IRegistryClient } from '../registry-client-types';
+import { ComplexMap } from '@dxos/util';
+
+import { Record as DXNSRecord } from '../proto';
 import {
+  AccountKey,
   CID,
-  CIDLike,
   Domain,
   DomainKey,
   DXN,
-  RecordKind,
-  RecordMetadata,
-  RegistryDataRecord,
-  RegistryRecord,
-  RegistryTypeRecord,
-  Resource,
-  ResourceRecord
+  Resource
 } from '../types';
-import { createMockTypes, createMockResourceRecords } from './fake-data-generator';
 
 /**
  * In-memory implementation of the registry client with statically specified records.
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
-export class MemoryRegistryClient implements IRegistryClient {
-  private readonly records: RegistryRecord[]
+export class MemoryRegistryClientBackend implements RegistryClientBackend {
+  private readonly _domains = new Map<string, Domain>();
+  private readonly _resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
+  private readonly _records = new ComplexMap<CID, DXNSRecord>(cid => cid.toB58String());
 
-  constructor (
-    // TODO(burdon): Don't provide defaults! Instead create helper method.
-    private resources: ResourceRecord<RegistryRecord>[] = createMockResourceRecords(),
-    private types: RegistryTypeRecord[] = createMockTypes()
-  ) {
-    this.records = this.resources.map(resource => resource.record);
-  }
+  //
+  // Domains
+  //
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async addRecord (data: unknown, schemaId: CIDLike, messageFqn: string): Promise<CID> {
-    return undefined as unknown as CID;
-  }
-
-  async getResource (id: DXN): Promise<Resource | undefined> {
-    const resource = this.resources.find(resource => resource.resource.id.toString() === id.toString());
-    return resource?.resource;
-  }
-
-  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
-    const resource = await this.getResource(id);
-    if (resource === undefined) {
-      return undefined;
+  async getDomainKey (domainName: string): Promise<DomainKey> {
+    const domain = this._domains.get(domainName);
+    if (!domain) {
+      throw new Error('Domain not found');
     }
-    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
-    if (cid === undefined) {
-      return undefined;
-    }
-    const record = await this.getRecord(cid);
-    if (record === undefined) {
-      return undefined;
-    }
-    return {
-      resource,
-      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
-      record: record as R
-    };
+
+    return domain.key;
   }
 
   async getDomains (): Promise<Domain[]> {
-    return [{ key: DomainKey.random(), owner: '0x', name: 'dxos' }];
+    return Array.from(this._domains.values());
   }
 
-  async getRecord<R extends RegistryRecord = RegistryRecord> (cidLike: CIDLike): Promise<R | undefined> {
-    return this.records.find(record => record.cid.equals(cidLike)) as R;
+  // TODO(wittjosiah): Domain names.
+  async createDomain (accountKey: AccountKey): Promise<DomainKey> {
+    const key = DomainKey.random();
+    this._domains.set(key.toString(), {
+      key,
+      owner: accountKey.toHex()
+    });
+    return key;
   }
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async getRecords<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<R[]> {
-    return this.records.filter(record => Filtering.matchRecord(record, query)) as R[];
+  //
+  // Resources
+  //
+
+  async getResource (name: DXN): Promise<Resource | undefined> {
+    return this._resources.get(name);
   }
 
-  async queryResources (query?: IQuery): Promise<Resource[]> {
-    let result = this.resources.map(resource => resource.resource);
-    result = result.filter(resource => Filtering.matchResource(resource, query));
-    return result;
+  async getResources (): Promise<Resource[]> {
+    return Array.from(this._resources.values());
   }
 
-  async registerDomain (): Promise<DomainKey> {
-    return undefined as unknown as DomainKey;
+  async setResource (
+    name: DXN,
+    tag: string,
+    cid: CID | undefined
+  ): Promise<void> {
+    const resource = this._resources.get(name) ?? { name, tags: {} };
+    this._resources.set(name, {
+      ...resource,
+      tags: {
+        ...resource.tags,
+        [tag]: cid
+      }
+    });
   }
 
-  async updateResource (): Promise<void> {
-    return undefined;
+  //
+  // Records
+  //
+
+  async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
+    return this._records.get(cid);
   }
 
-  async deleteResource (): Promise<void> {
-    return undefined;
+  async getRecords (): Promise<DXNSRecord[]> {
+    return Array.from(this._records.values());
   }
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async resolveRecordCid (id: DXN): Promise<CID | undefined> {
-    return undefined;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async resolveDomainName (domainName: string): Promise<DomainKey> {
-    return undefined as unknown as DomainKey;
-  }
-
-  async getTypeRecords (query?: IQuery): Promise<RegistryTypeRecord[]> {
-    return this.types.filter(type => Filtering.matchRecord(type, query));
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async insertDataRecord (data: unknown, typeId: CIDLike, meta?: RecordMetadata): Promise<CID> {
-    return undefined as unknown as CID;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async insertRawRecord (data: Uint8Array): Promise<CID> {
-    return undefined as unknown as CID;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async insertTypeRecord (schema: Root, messageName: string, meta?: RecordMetadata): Promise<CID> {
-    return undefined as unknown as CID;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async getDataRecord<T = any> (cid: CIDLike): Promise<RegistryDataRecord<T> | undefined> {
-    return undefined;
-  }
-
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  async getTypeRecord (cid: CIDLike): Promise<RegistryTypeRecord | undefined> {
-    return undefined;
-  }
-
-  async getDataRecords<T = any> (query?: IQuery): Promise<RegistryDataRecord[]> {
-    const records = await this.getRecords();
-
-    return records
-      .filter((record): record is RegistryDataRecord<T> => record.kind === RecordKind.Data)
-      .filter(record => Filtering.matchRecord(record, query));
-  }
-
-  async disconnect () {
-    return Promise.resolve();
+  // TODO(wittjosiah): Implement.
+  async createRecord (record: DXNSRecord): Promise<CID> {
+    throw new Error('Not implemented');
   }
 }

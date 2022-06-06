@@ -4,7 +4,7 @@
 
 import protobuf from 'protobufjs';
 
-import { RecordExtension } from '../encoding';
+import { Record as DXNSRecord } from '../proto';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
@@ -14,28 +14,20 @@ import { DXN } from './dxn';
 /**
  * Domains are auctioned namespaces for records.
  */
-export interface Domain {
+export type Domain = {
   key: DomainKey
   name?: string
   owner: string
 }
 
 /**
- * Identifies a named (and optionally versioned) record.
+ * Identifies a named record.
  */
-export interface Resource {
+export type Resource = {
   /**
    * Resource DXN.
    */
-  id: DXN
-
-  /**
-   * **semver 2.0** compliant record versions.
-   * Should conform to the semver regex (see https://semver.org/).
-   *
-   * Examples: 1.0.0, 1.0.0-alpha, 1.0.0-alpha.1, 1.0.0-0.3.7, 1.0.0-x.7.z.92, 1.0.0-x-y-z.–
-   */
-  versions: Record<string, CID | undefined>
+  name: DXN
 
   /**
    * Describe release channels.
@@ -45,24 +37,22 @@ export interface Resource {
   tags: Record<string, CID | undefined>
 
   /**
-   * Type of the underlying Records. `undefined` if the Resource points to the type Record.
+   * Type of the underlying Records.
+   * `undefined` if the Resource points to the type Record.
    */
+  // TODO(wittjosiah): Needed?
   type?: CID
 }
 
 /**
- * Specific binding of Resource tag or version to a corresponding Record.
+ * Specific binding of Resource tag to a corresponding Record.
  */
-export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> {
+// TODO(wittjosiah): Replace with tuple (resource, record) once dxn/resource includes tags.
+export interface ResourceRecord {
   /**
    * Resource that points to this Record.
    */
   resource: Resource
-
-  /**
-   * Specific version of the fetched Record.
-   */
-  version?: string
 
   /**
    * Specific tag of the fetched Record.
@@ -72,7 +62,7 @@ export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> {
   /**
    * Record data.
    */
-  record: R
+  record: DXNSRecord
 }
 
 /**
@@ -100,56 +90,15 @@ export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
 export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata
 
 /**
- * Distinguish regular data records from type records, which define the data record schema.
- */
-// TODO(burdon): Should Type records be a special "table"; do we need versioning?
-export enum RecordKind {
-  Type = 'TYPE',
-  Data = 'DATA'
-}
-
-/**
- * Base fields for all Record variants.
- */
-export interface RegistryRecordBase {
-  kind: RecordKind
-  cid: CID
-  meta: RecordMetadata
-}
-
-/**
  * Types are system Records that define protocol-buffer schema of other Records.
  */
-export interface RegistryTypeRecord extends RegistryRecordBase {
-  kind: RecordKind.Type
-  meta: TypeRecordMetadata
+export interface RegistryType {
   /**
    * FQN of the root message in the protobuf definitions.
    * NOTE: Should not be used to name this type.
    */
   messageName: string
   protobufDefs: protobuf.Root
-}
-
-/**
- * Data with a reference to a type record that defines the encoding.
- */
-export interface RegistryDataRecord<T = any> extends RegistryRecordBase {
-  kind: RecordKind.Data
-  type: CID
-  dataSize: number
-  dataRaw: Uint8Array
-  data: RecordExtension<T>
-}
-
-export type RegistryRecord = RegistryTypeRecord | RegistryDataRecord
-
-export const RegistryRecord = {
-  isTypeRecord: (x: RegistryRecord): x is RegistryTypeRecord => x.kind === RecordKind.Type,
-  isDataRecord: (x: RegistryRecord): x is RegistryDataRecord => x.kind === RecordKind.Data
-};
-
-export interface UpdateResourceOptions {
-  version?: string
-  tags?: string[]
+  sourceIpfsCid?: string
+  created?: Date
 }

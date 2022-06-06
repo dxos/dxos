@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { CID, DXN, RegistryRecord, Resource } from './types';
+import { Record as DXNSRecord } from './proto';
+import { CID, DXN, Resource } from './types';
 
 /**
  * Common querying request for data of the DXNS.
@@ -34,7 +35,7 @@ export const Filtering = {
       return true;
     }
 
-    const textMatches = query.text === undefined || matchesDxn(resource.id, query.text);
+    const textMatches = query.text === undefined || matchesDxn(resource.name, query.text);
     const typeMatches = query.type === undefined || (!!resource.type && resource.type.equals(query.type));
 
     return textMatches && typeMatches;
@@ -46,12 +47,12 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param record undergoes query conditions examination.
    */
-  matchRecord (record: RegistryRecord, query?: IQuery): boolean {
+  matchRecord (record: DXNSRecord, query?: IQuery): boolean {
     if (!query) {
       return true;
     }
 
-    const textMatches = query.text === undefined || matchesRecordText(record, query.text);
+    const textMatches = query.text === undefined || matchesText(record, query.text);
     const typeMatches = query.type === undefined || matchesRecordType(record, query.type);
 
     return textMatches && typeMatches;
@@ -59,13 +60,12 @@ export const Filtering = {
 };
 
 function matchesRecordType (record: RegistryRecord, type: CID) {
-  return RegistryRecord.isDataRecord(record) && record.type.equals(type);
+  return record.type.equals(type);
 }
 
-function matchesRecordText (record: RegistryRecord, text: string) {
+function matchesText (record: RegistryRecord | RegistryType, text: string) {
   const places = [
     record.cid.toString(),
-    record.kind,
     record.meta.description ?? ''
   ];
   return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
