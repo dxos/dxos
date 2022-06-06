@@ -223,7 +223,8 @@ export class BotHandle {
     this._log('Initializing bot');
     await this.rpc.initialize({
       config: this.config.values,
-      invitation
+      invitation,
+      id: this.id
     });
     this._log('Initialization complete');
   }
