@@ -12,6 +12,10 @@ export class BotHandle {
     private _rpc: ProtoRpcClient<BotFactoryService>
   ) {}
 
+  get id (): string {
+    return this._id;
+  }
+
   async start () {
     await this._rpc.rpc.start({
       id: this._id

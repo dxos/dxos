@@ -34,20 +34,14 @@ export class BotFactoryClient {
     return this._isReady;
   }
 
-  // TODO(burdon): Remove?
+  // TODO(burdon): Remove
   get botFactory (): BotFactoryService {
     assert(this._rpc, 'Not started.'); // TODO(burdon): Remove.
     return this._rpc.rpc;
   }
 
-  // TODO(burdon): Remove?
-  getBot (id: string) {
-    assert(this._rpc, 'Not started.');
-    return new BotHandle(id, this._rpc);
-  }
-
   // TODO(burdon): Rename listBots?
-  async list () {
+  async getBots () {
     assert(this._rpc, 'Not started.');
     const { bots } = await this._rpc.rpc.getBots();
     return bots || [];
@@ -89,7 +83,10 @@ export class BotFactoryClient {
     this._isReady = false;
   }
 
-  // TODO(burdon): Auto-start?
+  /**
+   * Spawns a bot and starts it.
+   * @param party Party that the bot will join.
+   */
   async spawn (spec: BotPackageSpecifier, party: Party) {
     if (!this._rpc) {
       await this.start(party.key);
