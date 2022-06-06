@@ -5,8 +5,8 @@
 import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { CSSProperties } from 'react';
 
-import { DraggableContainer } from './DraggableContainer';
-import { DroppableContainer } from './DroppableContainer';
+import { DraggableContainer } from '../DraggableContainer';
+import { DroppableContainer } from '../DroppableContainer';
 import { ListItem, ListItemDef } from './ListItem';
 
 interface DroppableListProps {

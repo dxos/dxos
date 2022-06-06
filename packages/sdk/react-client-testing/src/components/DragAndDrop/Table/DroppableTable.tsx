@@ -11,8 +11,8 @@ import {
 } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 
-import { DraggableContainer } from './DraggableContainer';
-import { DroppableContainer } from './DroppableContainer';
+import { DraggableContainer } from '../DraggableContainer';
+import { DroppableContainer } from '../DroppableContainer';
 import { Row } from './Row';
 
 type RowProps = {
@@ -30,7 +30,7 @@ const getColumns = (cols: any[]) => cols.map(col => table.createDataColumn(col.a
 const DEFAULT_COLUMN_WIDTH = '300px';
 const getGridCellSize = (columns: any[]) => columns.map(column => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
 
-interface DraggableTableProps {
+interface DroppableTableProps {
   id: string
   rows: any[]
   columns: any[]
@@ -38,13 +38,13 @@ interface DraggableTableProps {
   title?: string
 }
 
-export const DraggableTable = ({
+export const DroppableTable = ({
   id,
   rows: data,
   columns: defaultColumns,
   columnOrder: order,
   title
-}: DraggableTableProps) => {
+}: DroppableTableProps) => {
   const [columns] = useState(() => getColumns(defaultColumns));
   const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
 

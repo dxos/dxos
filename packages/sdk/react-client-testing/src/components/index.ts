@@ -3,11 +3,8 @@
 //
 
 export * from './CreatePartyDialog';
-export * from './DraggableTable';
-export * from './DroppableList';
+export * from './DragAndDrop';
 export * from './ExportMenu';
 export * from './ImportMenu';
 export * from './ImportIpfsDialog';
-export * from './ListItem';
-export * from './Row';
 export * from './SelectionEditor';

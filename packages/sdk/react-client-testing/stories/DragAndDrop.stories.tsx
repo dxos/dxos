@@ -11,7 +11,7 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DraggableTable, DroppableList, ListItem, ListItemDef, ProfileInitializer } from '../src';
+import { DroppableTable, DroppableList, ListItem, ListItemDef, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
 
 export default {
@@ -553,7 +553,7 @@ const TableStory = () => {
         }}
         onDragEnd={handleDragEnd}
       >
-        <DraggableTable
+        <DroppableTable
           id={table.id}
           columns={columns}
           columnOrder={columnOrder}
@@ -844,7 +844,7 @@ const MultipleContainersStory = () => {
             );
           } else if (container.type === TYPE_TABLE_TABLE) {
             return (
-              <DraggableTable
+              <DroppableTable
                 key={container.id}
                 id={container.id}
                 columns={columns.slice(1, columns.length - 1)}
