@@ -25,7 +25,9 @@ import {
   RedeemedInvitation,
   SubscribeMembersRequest,
   Party,
-  CreateSnaspotRequest
+  CreateSnaspotRequest,
+  GetPartyDetailsRequest,
+  PartyDetails
 } from '../../proto/gen/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '../../proto/gen/dxos/echo/invitation';
 import { PartySnapshot } from '../../proto/gen/dxos/echo/snapshot';
@@ -99,6 +101,13 @@ class PartyService implements IPartyService {
         }))
       });
     });
+  }
+
+  async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
+    const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    return {
+      processedTimeframe: party.timeframe
+    };
   }
 
   async createParty () {
