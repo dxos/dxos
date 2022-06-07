@@ -19,6 +19,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../services';
 import { Client } from './client';
+import { Timeframe } from '@dxos/echo-protocol';
 
 describe('Client', () => {
   //
@@ -264,6 +265,24 @@ describe('Client', () => {
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
+      });
+
+      test('party timeframe is incremented after creating ECHO mutations', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+        const party = await client.echo.createParty();
+
+        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        await item1.model.set('prop1', 'x');
+        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        await item2.model.set('prop1', 'y');
+
+        const details = await party.getDetails()
+        expect(details.processedTimeframe).toBeInstanceOf(Timeframe)
+        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true)
       });
     });
   }
