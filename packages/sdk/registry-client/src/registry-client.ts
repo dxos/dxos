@@ -86,17 +86,17 @@ export class RegistryClient {
    * Registers or updates a resource in the system.
    * Undefined CID means that the resource will be deleted.
    * @param name Identifies the domain and name of the resource.
-   * @param tag Tag for the resource.
    * @param cid CID of the record to be referenced with the given name.
-   * @param account DXNS account that will own the resource.
+   * @param owner DXNS account that will own the resource.
+   * @param tag Tag for the resource.
    */
   async registerResource (
     name: DXN,
     cid: CID | undefined,
-    account: AccountKey,
+    owner: AccountKey,
     tag = 'latest'
   ): Promise<void> {
-    return this._backend.registerResource(name, cid, account, tag);
+    return this._backend.registerResource(name, cid, owner, tag);
   }
 
   //

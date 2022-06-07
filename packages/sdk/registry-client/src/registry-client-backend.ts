@@ -26,13 +26,13 @@ import {
 export interface RegistryClientBackend {
   getDomainKey (domain: string): Promise<DomainKey>
   getDomains (): Promise<Domain[]>
-  registerDomainKey (accountKey: AccountKey): Promise<DomainKey>
+  registerDomainKey (owner: AccountKey): Promise<DomainKey>
   getResource (name: DXN): Promise<Resource | undefined>
   getResources (): Promise<Resource[]>
   registerResource (
     name: DXN,
     cid: CID | undefined,
-    accountKey: AccountKey,
+    owner: AccountKey,
     // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
     tag: string
   ): Promise<void>
@@ -68,9 +68,9 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     });
   }
 
-  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
+  async registerDomainKey (owner: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, account.value));
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, owner.value));
     return domainKey;
   }
 
@@ -119,7 +119,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   async registerResource (
     name: DXN,
     cid: CID,
-    account: AccountKey,
+    owner: AccountKey,
     tag: string
   ): Promise<void> {
     const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
@@ -129,7 +129,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
       await this.transactionsHandler.sendTransaction(
         this.api.tx.registry.deleteResource(
           domainKey.value,
-          account.value,
+          owner.value,
           name.resource
         )
       );
@@ -137,7 +137,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
       await this.transactionsHandler.sendTransaction(
         this.api.tx.registry.updateResource(
           domainKey.value,
-          account.value,
+          owner.value,
           name.resource,
           cid.value,
           null, // TODO(wittjosiah): Remove versions.
