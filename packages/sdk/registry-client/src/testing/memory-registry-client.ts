@@ -2,11 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { RegistryClientBackend } from 'sample-polkadotjs-typegen/registry-client-backend';
+import { compactAddLength } from '@polkadot/util';
+import assert from 'assert';
+import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
 
-import { Record as DXNSRecord } from '../proto';
+import { Record as DXNSRecord, schema as dxnsSchema } from '../proto';
+import { RegistryClientBackend } from '../registry-client-backend';
 import {
   AccountKey,
   CID,
@@ -21,16 +24,16 @@ import {
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
-  private readonly _domains = new Map<string, Domain>();
-  private readonly _resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
-  private readonly _records = new ComplexMap<CID, DXNSRecord>(cid => cid.toB58String());
+  readonly domains = new Map<string, Domain>();
+  readonly resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
+  readonly records = new ComplexMap<CID, DXNSRecord>(cid => cid.toB58String());
 
   //
   // Domains
   //
 
   async getDomainKey (domainName: string): Promise<DomainKey> {
-    const domain = this._domains.get(domainName);
+    const domain = this.domains.get(domainName);
     if (!domain) {
       throw new Error('Domain not found');
     }
@@ -39,17 +42,27 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   }
 
   async getDomains (): Promise<Domain[]> {
-    return Array.from(this._domains.values());
+    return Array.from(this.domains.values());
   }
 
-  // TODO(wittjosiah): Domain names.
-  async createDomain (accountKey: AccountKey): Promise<DomainKey> {
+  async registerDomainKey (owner: AccountKey): Promise<DomainKey> {
     const key = DomainKey.random();
-    this._domains.set(key.toString(), {
+    this.domains.set(key.toString(), {
       key,
-      owner: accountKey.toHex()
+      owner: owner.toHex()
     });
     return key;
+  }
+
+  async registerDomainName (domainName: string, owner: AccountKey): Promise<Domain> {
+    const key = DomainKey.random();
+    const domain = {
+      key,
+      name: domainName,
+      owner: owner.toHex()
+    };
+    this.domains.set(domainName, domain);
+    return domain;
   }
 
   //
@@ -57,20 +70,28 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   //
 
   async getResource (name: DXN): Promise<Resource | undefined> {
-    return this._resources.get(name);
+    return this.resources.get(name);
   }
 
   async getResources (): Promise<Resource[]> {
-    return Array.from(this._resources.values());
+    return Array.from(this.resources.values());
   }
 
-  async setResource (
+  async registerResource (
     name: DXN,
-    tag: string,
-    cid: CID | undefined
+    cid: CID | undefined,
+    owner: AccountKey,
+    tag: string
   ): Promise<void> {
-    const resource = this._resources.get(name) ?? { name, tags: {} };
-    this._resources.set(name, {
+    const domainName = name.domain ?? name.key?.toHex();
+    assert(domainName, 'DXN must have either domain or key');
+    const domain = this.domains.get(domainName);
+    if (domain?.owner !== owner.toHex()) {
+      throw new Error('Domain owner mismatch');
+    }
+
+    const resource = this.resources.get(name) ?? { name, tags: {} };
+    this.resources.set(name, {
       ...resource,
       tags: {
         ...resource.tags,
@@ -84,15 +105,25 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   //
 
   async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
-    return this._records.get(cid);
+    return this.records.get(cid);
   }
 
   async getRecords (): Promise<DXNSRecord[]> {
-    return Array.from(this._records.values());
+    return Array.from(this.records.values());
   }
 
-  // TODO(wittjosiah): Implement.
-  async createRecord (record: DXNSRecord): Promise<CID> {
-    throw new Error('Not implemented');
+  async registerRecord (record: DXNSRecord): Promise<CID> {
+    const data = compactAddLength(dxnsSchema
+      .getCodecForType('dxos.registry.Record')
+      .encode(record)
+    );
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+    const cid = CID.from(Uint8Array.from([18, 32, ...digest]));
+    this.records.set(cid, record);
+
+    return cid;
   }
 }

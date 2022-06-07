@@ -32,7 +32,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
     if (builder) {
       setImmediate(async () => {
         await callback(builder);
-      }, []);
+      });
     }
   }, [builder, party]);
 

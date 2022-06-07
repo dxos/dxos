@@ -17,5 +17,5 @@ export * from './util';
 export * from './accounts-client';
 export * from './auctions-client';
 export * from './queries';
+export * from './registry-client-backend';
 export * from './registry-client';
-export * from './registry-client-types';

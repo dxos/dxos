@@ -23,7 +23,7 @@ describe('Accounts Client', () => {
   beforeEach(async () => {
     const setupResult = await setup();
     apiPromise = setupResult.apiPromise;
-    accountsApi = setupResult.accountsApi;
+    accountsApi = setupResult.accountsClient;
     alice = setupResult.alice;
     bob = setupResult.bob;
   });

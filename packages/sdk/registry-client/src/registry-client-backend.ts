@@ -26,19 +26,19 @@ import {
 export interface RegistryClientBackend {
   getDomainKey (domain: string): Promise<DomainKey>
   getDomains (): Promise<Domain[]>
-  createDomain (accountKey: AccountKey): Promise<DomainKey>
+  registerDomainKey (accountKey: AccountKey): Promise<DomainKey>
   getResource (name: DXN): Promise<Resource | undefined>
   getResources (): Promise<Resource[]>
-  setResource (
+  registerResource (
     name: DXN,
-    // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
-    tag: string,
     cid: CID | undefined,
-    accountKey: AccountKey
+    accountKey: AccountKey,
+    // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
+    tag: string
   ): Promise<void>
   getRecord (cid: CID): Promise<DXNSRecord | undefined>
   getRecords (): Promise<DXNSRecord[]>
-  createRecord (record: DXNSRecord): Promise<CID>
+  registerRecord (record: DXNSRecord): Promise<CID>
 }
 
 /**
@@ -68,7 +68,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     });
   }
 
-  async createDomain (account: AccountKey): Promise<DomainKey> {
+  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, account.value));
     return domainKey;
@@ -116,11 +116,11 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return result;
   }
 
-  async setResource (
+  async registerResource (
     name: DXN,
-    tag: string,
     cid: CID,
-    account: AccountKey
+    account: AccountKey,
+    tag: string
   ): Promise<void> {
     const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
     assert(domainKey, 'Domain not found');
@@ -190,7 +190,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return result;
   }
 
-  async createRecord (record: DXNSRecord): Promise<CID> {
+  async registerRecord (record: DXNSRecord): Promise<CID> {
     const data = compactAddLength(dxnsSchema
       .getCodecForType('dxos.registry.Record')
       .encode(record)

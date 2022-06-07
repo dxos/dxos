@@ -8,7 +8,7 @@ import { CID, DXN, Resource } from './types';
 /**
  * Common querying request for data of the DXNS.
  */
-export interface IQuery {
+export interface Query {
   /**
    * Query by record type. Will only return data records.
    */
@@ -30,7 +30,7 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param resource undergoes query conditions examination.
    */
-  matchResource (resource: Resource, query?: IQuery): boolean {
+  matchResource (resource: Resource, query?: Query): boolean {
     if (!query) {
       return true;
     }
@@ -47,7 +47,7 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param record undergoes query conditions examination.
    */
-  matchRecord (record: DXNSRecord, query?: IQuery): boolean {
+  matchRecord (record: DXNSRecord, query?: Query): boolean {
     if (!query) {
       return true;
     }
@@ -59,14 +59,19 @@ export const Filtering = {
   }
 };
 
-function matchesRecordType (record: RegistryRecord, type: CID) {
-  return record.type.equals(type);
+function matchesRecordType (record: DXNSRecord, type: CID) {
+  if (!record.payload?.typeRecord) {
+    return false;
+  }
+
+  return CID.from(record.payload.typeRecord).equals(type);
 }
 
-function matchesText (record: RegistryRecord | RegistryType, text: string) {
+function matchesText (record: DXNSRecord, text: string) {
   const places = [
-    record.cid.toString(),
-    record.meta.description ?? ''
+    record.displayName ?? '',
+    record.description ?? '',
+    ...(record.tags ?? [])
   ];
   return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
 }

@@ -10,7 +10,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from './encoding';
 import { Record as DXNSRecord } from './proto';
-import { Filtering, IQuery } from './queries';
+import { Filtering, Query } from './queries';
 import { RegistryClientBackend } from './registry-client-backend';
 import {
   CID, Domain, DomainKey,
@@ -37,45 +37,76 @@ export class RegistryClient {
   // Domains
   //
 
-  async getDomainKey (domain: string): Promise<DomainKey> {
-    return this._backend.getDomainKey(domain);
+  /**
+   * Resolves a domain key from the domain name.
+   * @param domainName Name of the domain.
+   */
+  async getDomainKey (domainName: string): Promise<DomainKey> {
+    return this._backend.getDomainKey(domainName);
   }
 
+  /**
+   * Returns a list of domains created in DXOS system.
+   */
   async getDomains (): Promise<Domain[]> {
     return this._backend.getDomains();
   }
 
-  async createDomain (account: AccountKey): Promise<DomainKey> {
-    return this._backend.createDomain(account);
+  /**
+   * Creates a new domain in the system under a generated name.
+   * @param account DXNS account that will own the domain.
+   */
+  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
+    return this._backend.registerDomainKey(account);
   }
 
   //
   // Resources
   //
 
+  /**
+   * Gets resource by its registered name.
+   * @param name DXN of the resource used for registration.
+   */
   async getResource (name: DXN): Promise<Resource | undefined> {
     return this._backend.getResource(name);
   }
 
-  async getResources (query?: IQuery): Promise<Resource[]> {
+  /**
+   * Queries resources registered in the system.
+   * @param query Query that each returned record must meet.
+   */
+  async getResources (query?: Query): Promise<Resource[]> {
     const resources = await this._backend.getResources();
 
     return resources.filter(resource => Filtering.matchResource(resource, query));
   }
 
-  async setResource (
+  /**
+   * Registers or updates a resource in the system.
+   * Undefined CID means that the resource will be deleted.
+   * @param name Identifies the domain and name of the resource.
+   * @param tag Tag for the resource.
+   * @param cid CID of the record to be referenced with the given name.
+   * @param account DXNS account that will own the resource.
+   */
+  async registerResource (
     name: DXN,
-    tag = 'latest',
     cid: CID | undefined,
-    account: AccountKey
+    account: AccountKey,
+    tag = 'latest'
   ): Promise<void> {
-    return this._backend.setResource(name, tag, cid, account);
+    return this._backend.registerResource(name, cid, account, tag);
   }
 
   //
   // Records
   //
 
+  /**
+   * Gets record details by CID.
+   * @param cid CID of the record.
+   */
   async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
@@ -87,6 +118,11 @@ export class RegistryClient {
     return recordPromise;
   }
 
+  /**
+   * Gets resource by its registered name.
+   * @param name DXN of the resource used for registration.
+   * @param tag Tag to get the resource by. 'latest' by default.
+   */
   // TODO(wittjosiah): Move tag into DXN.
   async getResourceRecord (name: DXN, tag = 'latest'): Promise<ResourceRecord | undefined> {
     const resource = await this.getResource(name);
@@ -110,13 +146,23 @@ export class RegistryClient {
     };
   }
 
-  async getRecords (query?: IQuery): Promise<DXNSRecord[]> {
+  /**
+   * Queries all records in the system.
+   * @param query Query that each returned record must meet.
+   */
+  async getRecords (query?: Query): Promise<DXNSRecord[]> {
     const records = await this._backend.getRecords();
 
     return records.filter(record => Filtering.matchRecord(record, query));
   }
 
-  async createRecord (data: unknown, typeId: CID, meta: SuppliedRecordMetadata = {}): Promise<CID> {
+  /**
+   * Creates a new data record in the system.
+   * @param data Payload data of the record.
+   * @param typeId CID of the type record that holds the schema of the data.
+   * @param meta Record metadata information.
+   */
+  async registerRecord (data: unknown, typeId: CID, meta: SuppliedRecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
@@ -127,9 +173,13 @@ export class RegistryClient {
         async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
     };
 
-    return this._backend.createRecord(record);
+    return this._backend.registerRecord(record);
   }
 
+  /**
+   * Gets type records details by CID.
+   * @param cid CID of the record.
+   */
   async getTypeRecord (cid: CID): Promise<RegistryType | undefined> {
     const record = await this.getRecord(cid);
     if (!record) {
@@ -143,7 +193,11 @@ export class RegistryClient {
     return this._decodeType(record);
   }
 
-  async getTypeRecords (query?: IQuery): Promise<RegistryType[]> {
+  /**
+   * Queries type records.
+   * @param query Query that each returned record must meet.
+   */
+  async getTypeRecords (query?: Query): Promise<RegistryType[]> {
     const records = await this._backend.getRecords();
 
     const types = records
@@ -154,7 +208,13 @@ export class RegistryClient {
     return types;
   }
 
-  async createType (schema: protobuf.Root, messageName: string, meta: SuppliedTypeRecordMetadata = {}) {
+  /**
+   * Creates a new type record in the system.
+   * @param schema Protobuf schema of the type.
+   * @param messageFqn Fully qualified name of the message. It must reside in the schema definition.
+   * @param meta Record metadata information.
+   */
+  async registerTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedTypeRecordMetadata = {}) {
     // Make sure message type exists.
     schema.lookupType(messageName);
 
@@ -168,7 +228,7 @@ export class RegistryClient {
       }
     };
 
-    return this._backend.createRecord(record);
+    return this._backend.registerRecord(record);
   }
 
   private _decodeType (record: DXNSRecord): RegistryType {
