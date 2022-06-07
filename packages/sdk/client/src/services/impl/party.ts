@@ -103,11 +103,11 @@ class PartyService implements IPartyService {
     });
   }
 
-  async getPartyDetails(request: GetPartyDetailsRequest): Promise<PartyDetails> {
+  async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
     const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
     return {
-      processedTimeframe: party.timeframe,
-    }
+      processedTimeframe: party.timeframe
+    };
   }
 
   async createParty () {

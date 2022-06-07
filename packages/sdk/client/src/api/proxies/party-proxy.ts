@@ -181,7 +181,7 @@ export class PartyProxy implements Party {
     await this._setOpen(false);
   }
 
-  async getDetails(): Promise<PartyDetails> {
+  async getDetails (): Promise<PartyDetails> {
     return this._serviceProvider.services.PartyService.getPartyDetails({ partyKey: this._key });
   }
 

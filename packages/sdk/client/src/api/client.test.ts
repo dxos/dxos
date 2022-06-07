@@ -12,6 +12,7 @@ import { ConfigObject } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
+import { Timeframe } from '@dxos/echo-protocol';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
@@ -19,7 +20,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { clientServiceBundle } from '../services';
 import { Client } from './client';
-import { Timeframe } from '@dxos/echo-protocol';
 
 describe('Client', () => {
   //
@@ -280,9 +280,9 @@ describe('Client', () => {
         const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
         await item2.model.set('prop1', 'y');
 
-        const details = await party.getDetails()
-        expect(details.processedTimeframe).toBeInstanceOf(Timeframe)
-        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true)
+        const details = await party.getDetails();
+        expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
+        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
       });
     });
   }
