@@ -29,9 +29,7 @@ describe('Proto utils', () => {
 });
 
 describe('Record encoding', () => {
-  console.log('b');
   const mockTypes = createMockTypes();
-  console.log('a');
   const serviceType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
   const ipfsType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
   const lookupType = async cid => mockTypes.find(type => type.cid.equals(cid)) ?? raise(new Error('Not found.'));
