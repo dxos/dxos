@@ -7,7 +7,7 @@ import * as protobuf from 'protobufjs';
 import 'protobufjs/ext/descriptor';
 
 import { FileDescriptorSet, Record, TYPES } from '../proto';
-import { CID, RegistryTypeRecord } from '../types';
+import { CID, RegistryType } from '../types';
 import { FieldMapper, mapMessage } from './mapper';
 
 // TODO(marik-d): Descriptors are unused right now, either fix them or remove those methods.
@@ -48,8 +48,8 @@ export function decodeProtobuf (json: string): protobuf.Root {
   return protobuf.Root.fromJSON(JSON.parse(json));
 }
 
-function getProtoTypeFromTypeRecord (record: RegistryTypeRecord): protobuf.Type {
-  return record.protobufDefs.lookupType(record.messageName);
+function getProtoTypeFromTypeRecord (record: RegistryType): protobuf.Type {
+  return record.type.protobufDefs.lookupType(record.type.messageName);
 }
 
 export type RecordExtension<T> = { '@type': CID } & Pick<T, Exclude<keyof T, '@type'>>
@@ -65,7 +65,7 @@ const OBJECT_CONVERSION_OPTIONS: protobuf.IConversionOptions = {
 
 const RECORD_EXTENSION_NAME: keyof TYPES = 'dxos.registry.Record.Extension';
 
-export async function decodeExtensionPayload (extension: Record.Extension, resolveType: (cid: CID) => Promise<RegistryTypeRecord>): Promise<RecordExtension<any>> {
+export async function decodeExtensionPayload (extension: Record.Extension, resolveType: (cid: CID) => Promise<RegistryType>): Promise<RecordExtension<any>> {
   const mapper: FieldMapper = async (value, typeName) => {
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;
@@ -85,7 +85,7 @@ export async function decodeExtensionPayload (extension: Record.Extension, resol
   return mapper(extension, RECORD_EXTENSION_NAME);
 }
 
-export async function encodeExtensionPayload (data: RecordExtension<any>, resolveType: (cid: CID) => Promise<RegistryTypeRecord>): Promise<Record.Extension> {
+export async function encodeExtensionPayload (data: RecordExtension<any>, resolveType: (cid: CID) => Promise<RegistryType>): Promise<Record.Extension> {
   const mapper: FieldMapper = async (value, typeName) => {
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;

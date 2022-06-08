@@ -43,7 +43,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/mocha": "~8.2.2",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.9",

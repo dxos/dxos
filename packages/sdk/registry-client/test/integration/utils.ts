@@ -18,7 +18,8 @@ import {
   ClientSigner,
   ClientSignerAdapter,
   RegistryClient,
-  SignTxFunction
+  SignTxFunction,
+  PolkadotRegistryClientBackend
 } from '../../src';
 import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
@@ -44,16 +45,16 @@ export const setup = async () => {
   const signer = new ClientSigner(client, apiPromise.registry, alice.address);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
-  const accountsApi = new AccountClient(apiPromise, signTx);
-  const auctionsApi = new AuctionsClient(apiPromise, signTx);
-  const registryApi = new RegistryClient(apiPromise, signTx);
+  const accountsClient = new AccountClient(apiPromise, signTx);
+  const auctionsClient = new AuctionsClient(apiPromise, signTx);
+  const registryClient = new RegistryClient(new PolkadotRegistryClientBackend(apiPromise, signTx));
 
   return {
     alice,
     bob,
     apiPromise,
-    accountsApi,
-    auctionsApi,
-    registryApi
+    accountsClient,
+    auctionsClient,
+    registryClient
   };
 };
