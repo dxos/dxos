@@ -104,12 +104,12 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Records
   //
 
-  async getRecord (cid: CID): Promise<RawRecord | undefined> {
-    return this.records.get(cid);
+  async getRecord (cid: CID): Promise<(RawRecord & { cid: CID }) | undefined> {
+    return { cid, ...this.records.get(cid) };
   }
 
-  async getRecords (): Promise<RawRecord[]> {
-    return Array.from(this.records.values());
+  async getRecords (): Promise<(RawRecord & { cid: CID })[]> {
+    return Array.from(this.records.entries()).map(([cid, record]) => ({ cid, ...record }));
   }
 
   async registerRecord (record: RawRecord): Promise<CID> {

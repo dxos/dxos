@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 
 import { schemaJson } from '../proto';
 import { createCID, createMockTypes } from '../testing';
-import { CID, RegistryType } from '../types';
+import { RegistryType } from '../types';
 import {
   convertSchemaToDescriptor,
   decodeExtensionPayload,
@@ -31,28 +31,26 @@ describe('Proto utils', () => {
 });
 
 describe('Record encoding', () => {
-  const mockTypes: [CID, RegistryType][] = createMockTypes().map(type => [
-    createCID(),
-    {
-      type: {
-        messageName: type.type!.messageName!,
-        protobufDefs: decodeProtobuf(type.type!.protobufDefs!)
-      }
+  const mockTypes: RegistryType[] = createMockTypes().map(type => ({
+    cid: createCID(),
+    type: {
+      messageName: type.type!.messageName!,
+      protobufDefs: decodeProtobuf(type.type!.protobufDefs!)
     }
-  ]);
-  const [serviceCid] = mockTypes.find(([, { type }]) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
-  const [ipfsCid] = mockTypes.find(([, { type }]) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
-  const lookupType = async cid => mockTypes.find(([typeCid]) => typeCid.equals(cid))?.[1] ?? raise(new Error('Not found.'));
+  }));
+  const serviceType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
+  const ipfsType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
+  const lookupType = async cid => mockTypes.find(type => type.cid.equals(cid)) ?? raise(new Error('Not found.'));
 
   it('record without extensions', async () => {
     const data = {
-      '@type': serviceCid,
+      '@type': serviceType.cid,
       'type': 'foo',
       'kube': createCID().value
     };
     const encoded = await encodeExtensionPayload(data, lookupType);
 
-    expect(encoded.typeRecord).to.deep.eq(serviceCid.value);
+    expect(encoded.typeRecord).to.deep.eq(serviceType.cid.value);
     expect(encoded.data).to.be.instanceOf(Uint8Array);
 
     const decoded = await decodeExtensionPayload(encoded, lookupType);
@@ -62,11 +60,11 @@ describe('Record encoding', () => {
 
   it('record with extensions', async () => {
     const data = {
-      '@type': serviceCid,
+      '@type': serviceType.cid,
       'type': 'ipfs',
       'kube': createCID().value,
       'extension': {
-        '@type': ipfsCid,
+        '@type': ipfsType.cid,
         'protocol': 'ipfs/0.1.0',
         'addresses': [
           '/ip4/123.123.123.123/tcp/5566'
@@ -75,7 +73,7 @@ describe('Record encoding', () => {
     };
 
     const encoded = await encodeExtensionPayload(data, lookupType);
-    expect(encoded.typeRecord).to.deep.eq(serviceCid.value);
+    expect(encoded.typeRecord).to.deep.eq(serviceType.cid.value);
     expect(encoded.data).to.be.instanceOf(Uint8Array);
 
     const decoded = await decodeExtensionPayload(encoded, lookupType);

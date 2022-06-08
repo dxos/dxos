@@ -153,9 +153,9 @@ export class RegistryClient {
    * Queries all records in the system.
    * @param query Query that each returned record must meet.
    */
-  async getRecords (query?: Query): Promise<RawRecord[]> {
-    const records = await this._backend.getRecords();
-
+  async getRecords (query?: Query): Promise<RegistryRecord[]> {
+    const rawRecords = await this._backend.getRecords();
+    const records = await Promise.all(rawRecords.map(({ cid, ...record }) => this._decodeRecord(cid, record)));
     return records.filter(record => Filtering.matchRecord(record, query));
   }
 
@@ -203,8 +203,7 @@ export class RegistryClient {
 
     const types = records
       .filter(record => !!record.type)
-      .filter(type => Filtering.matchRecord(type, query))
-      .map(record => this._decodeType(record));
+      .map(({ cid, ...record }) => this._decodeType(cid, record));
 
     return types;
   }
@@ -234,11 +233,11 @@ export class RegistryClient {
 
   private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
     const rawRecord = await this._backend.getRecord(cid);
-    const record = rawRecord && await this._decodeRecord(rawRecord);
+    const record = rawRecord && await this._decodeRecord(cid, rawRecord);
     return record;
   }
 
-  private async _decodeRecord (rawRecord: RawRecord): Promise<RegistryRecord> {
+  private async _decodeRecord (cid: CID, rawRecord: RawRecord): Promise<RegistryRecord> {
     const payload = rawRecord?.payload && await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
       await this.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
     );
@@ -249,6 +248,7 @@ export class RegistryClient {
 
     return {
       ...rawRecord,
+      cid,
       payload
     };
   }
@@ -259,10 +259,10 @@ export class RegistryClient {
       return undefined;
     }
 
-    return this._decodeType(record);
+    return this._decodeType(cid, record);
   }
 
-  private _decodeType (rawRecord: RawRecord): RegistryType {
+  private _decodeType (cid: CID, rawRecord: RawRecord): RegistryType {
     if (!rawRecord.type) {
       throw new Error('Invalid type');
     }
@@ -273,6 +273,7 @@ export class RegistryClient {
 
     return {
       ...rawRecord,
+      cid,
       type: {
         messageName,
         protobufDefs: decodeProtobuf(protobufDefs),

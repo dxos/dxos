@@ -4,10 +4,9 @@
 
 import { expect } from 'chai';
 
-import { Record as RawRecord } from './proto';
 import { Filtering } from './queries';
 import { createCID } from './testing';
-import { DXN, Resource } from './types';
+import { DXN, RegistryRecord, Resource } from './types';
 
 describe('Queries', () => {
   // TODO(marik-d): Fix those tests.
@@ -46,37 +45,46 @@ describe('Queries', () => {
   describe('Records filtering', () => {
     const appTypeCID = createCID();
     const botTypeCID = createCID();
-    const records: RawRecord[] = [
+    // TODO(wittjosiah): Include types in filtering once they are no longer differentiated from data records.
+    // const types: RegistryType[] = [
+    //   {
+    //     cid: appTypeCID,
+    //     displayName: 'appType',
+    //     type: {
+    //       messageName: '.dxos.type.App',
+    //       protobufDefs: null as any
+    //     }
+    //   },
+    //   {
+    //     cid: botTypeCID,
+    //     displayName: 'botType',
+    //     type: {
+    //       messageName: '.dxos.type.Bot',
+    //       protobufDefs: null as any
+    //     }
+    //   }
+    // ];
+
+    const records: RegistryRecord[] = [
       {
-        displayName: 'appType',
-        type: {
-          messageName: '.dxos.type.App',
-          protobufDefs: null as any
-        }
-      },
-      {
-        displayName: 'botType',
-        type: {
-          messageName: '.dxos.type.Bot',
-          protobufDefs: null as any
-        }
-      },
-      {
+        cid: createCID(),
         displayName: 'alphaApplication',
         payload: {
-          typeRecord: appTypeCID.value
+          '@type': appTypeCID
         }
       },
       {
+        cid: createCID(),
         displayName: 'betaApplication',
         payload: {
-          typeRecord: appTypeCID.value
+          '@type': appTypeCID
         }
       },
       {
+        cid: createCID(),
         displayName: 'alphaBotter',
         payload: {
-          typeRecord: botTypeCID.value
+          '@type': botTypeCID
         }
       }
     ];
@@ -88,7 +96,7 @@ describe('Queries', () => {
     });
 
     it('Filters by text', () => {
-      expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
+      // expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'application' }))).to.have.length(2);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'botter' }))).to.have.length(1);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'ipfs' }))).to.have.length(0);
