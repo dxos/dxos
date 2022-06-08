@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Record as DXNSRecord } from './proto';
+import { Record as RawRecord } from './proto';
 import { CID, DXN, Resource } from './types';
 
 /**
@@ -47,7 +47,7 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param record undergoes query conditions examination.
    */
-  matchRecord (record: DXNSRecord, query?: Query): boolean {
+  matchRecord (record: RawRecord, query?: Query): boolean {
     if (!query) {
       return true;
     }
@@ -59,7 +59,7 @@ export const Filtering = {
   }
 };
 
-function matchesRecordType (record: DXNSRecord, type: CID) {
+function matchesRecordType (record: RawRecord, type: CID) {
   if (!record.payload?.typeRecord) {
     return false;
   }
@@ -67,7 +67,7 @@ function matchesRecordType (record: DXNSRecord, type: CID) {
   return CID.from(record.payload.typeRecord).equals(type);
 }
 
-function matchesText (record: DXNSRecord, text: string) {
+function matchesText (record: RawRecord, text: string) {
   const places = [
     record.displayName ?? '',
     record.description ?? '',

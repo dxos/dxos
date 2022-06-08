@@ -34,12 +34,14 @@ describe('Record encoding', () => {
   const mockTypes: [CID, RegistryType][] = createMockTypes().map(type => [
     createCID(),
     {
-      messageName: type.type!.messageName!,
-      protobufDefs: decodeProtobuf(type.type!.protobufDefs!)
+      type: {
+        messageName: type.type!.messageName!,
+        protobufDefs: decodeProtobuf(type.type!.protobufDefs!)
+      }
     }
   ]);
-  const [serviceCid] = mockTypes.find(([, type]) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
-  const [ipfsCid] = mockTypes.find(([, type]) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
+  const [serviceCid] = mockTypes.find(([, { type }]) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
+  const [ipfsCid] = mockTypes.find(([, { type }]) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
   const lookupType = async cid => mockTypes.find(([typeCid]) => typeCid.equals(cid))?.[1] ?? raise(new Error('Not found.'));
 
   it('record without extensions', async () => {

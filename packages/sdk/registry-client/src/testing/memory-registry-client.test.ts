@@ -5,15 +5,15 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { Record as DXNSRecord } from '../proto';
+import { Record as RawRecord } from '../proto';
 import { AccountKey, DXN, Resource } from '../types';
 import { createMockRecord, createMockResource, createMockTypes } from './fake-data-generator';
 import { MemoryRegistryClientBackend } from './memory-registry-client';
 
 describe('Registry API mock', () => {
   let mock: MemoryRegistryClientBackend;
-  let types: DXNSRecord[];
-  let records: DXNSRecord[];
+  let types: RawRecord[];
+  let records: RawRecord[];
   let resources: Resource[];
 
   before(async () => {

@@ -8,7 +8,7 @@ import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
 
-import { Record as DXNSRecord, schema as dxnsSchema } from '../proto';
+import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 import { RegistryClientBackend } from '../registry-client-backend';
 import {
   AccountKey,
@@ -26,7 +26,7 @@ import {
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
   readonly domains = new Map<string, Domain>();
   readonly resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
-  readonly records = new ComplexMap<CID, DXNSRecord>(cid => cid.toB58String());
+  readonly records = new ComplexMap<CID, RawRecord>(cid => cid.toB58String());
 
   //
   // Domains
@@ -104,15 +104,15 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Records
   //
 
-  async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
+  async getRecord (cid: CID): Promise<RawRecord | undefined> {
     return this.records.get(cid);
   }
 
-  async getRecords (): Promise<DXNSRecord[]> {
+  async getRecords (): Promise<RawRecord[]> {
     return Array.from(this.records.values());
   }
 
-  async registerRecord (record: DXNSRecord): Promise<CID> {
+  async registerRecord (record: RawRecord): Promise<CID> {
     const data = compactAddLength(dxnsSchema
       .getCodecForType('dxos.registry.Record')
       .encode(record)

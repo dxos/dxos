@@ -4,12 +4,11 @@
 
 import protobuf from 'protobufjs';
 
-import { Record as DXNSRecord } from '../proto';
+import { RecordExtension } from '..';
+import { Record as RawRecord } from '../proto';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
-
-// TODO(burdon): Define as protobufs.
 
 /**
  * Domains are auctioned namespaces for records.
@@ -44,11 +43,27 @@ export type Resource = {
   type?: CID
 }
 
+export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
+  payload: RecordExtension<T>
+}
+
+export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
+  type: {
+    /**
+     * FQN of the root message in the protobuf definitions.
+     * NOTE: Should not be used to name this type.
+     */
+    messageName: string
+    protobufDefs: protobuf.Root
+    protobufIpfsCid?: CID
+  }
+}
+
 /**
  * Specific binding of Resource tag to a corresponding Record.
  */
 // TODO(wittjosiah): Replace with tuple (resource, record) once dxn/resource includes tags.
-export interface ResourceRecord {
+export interface ResourceRecord<R extends RegistryRecord> {
   /**
    * Resource that points to this Record.
    */
@@ -62,8 +77,10 @@ export interface ResourceRecord {
   /**
    * Record data.
    */
-  record: DXNSRecord
+  record: R
 }
+
+// TODO(wittjosiah): Simplify metadata types.
 
 /**
  * Automatically generated Record metadata.
@@ -88,17 +105,3 @@ export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
 }
 
 export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata
-
-/**
- * Types are system Records that define protocol-buffer schema of other Records.
- */
-export interface RegistryType {
-  /**
-   * FQN of the root message in the protobuf definitions.
-   * NOTE: Should not be used to name this type.
-   */
-  messageName: string
-  protobufDefs: protobuf.Root
-  sourceIpfsCid?: string
-  created?: Date
-}

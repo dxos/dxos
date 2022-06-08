@@ -7,9 +7,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { raise } from '@dxos/debug';
-
-import { AccountKey, App, CID, createCID, decodeExtensionPayload, DomainKey, DXN, RegistryClient, schemaJson } from '../../src';
+import { AccountKey, App, CID, createCID, DomainKey, DXN, RegistryClient, schemaJson } from '../../src';
 import { setup } from './utils';
 
 chai.use(chaiAsPromised);
@@ -55,9 +53,9 @@ describe('Registry Client', () => {
       const typeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), typeCid, account);
 
-      const type = await registryClient.getTypeRecord(typeCid);
-      expect(type?.messageName).to.equal('.dxos.type.App');
-      expect(type?.protobufDefs.lookupType('.dxos.type.App')).to.not.be.undefined;
+      const typeRecord = await registryClient.getTypeRecord(typeCid);
+      expect(typeRecord?.type?.messageName).to.equal('.dxos.type.App');
+      expect(typeRecord?.type?.protobufDefs.lookupType('.dxos.type.App')).to.not.be.undefined;
     });
   });
 
@@ -184,10 +182,7 @@ describe('Registry Client', () => {
       const appCid = await registryClient.registerRecord(appData, appTypeCid);
 
       const appRecord = await registryClient.getRecord(appCid);
-      const recordData = appRecord?.payload && await decodeExtensionPayload(appRecord.payload, async (cid: CID) =>
-        await registryClient.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
-      );
-      expect(recordData).to.deep.equal({
+      expect(appRecord?.payload).to.deep.equal({
         '@type': appTypeCid,
         ...appData
       });
@@ -211,10 +206,7 @@ describe('Registry Client', () => {
       const recordCid = await registryClient.registerRecord(serviceData, serviceTypeCid);
 
       const appRecord = await registryClient.getRecord(recordCid);
-      const recordData = appRecord?.payload && await decodeExtensionPayload(appRecord.payload, async (cid: CID) =>
-        await registryClient.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
-      );
-      expect(recordData).to.deep.equal({
+      expect(appRecord?.payload).to.deep.equal({
         '@type': serviceTypeCid,
         ...serviceData
       });

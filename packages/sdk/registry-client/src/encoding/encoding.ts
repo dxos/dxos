@@ -49,7 +49,7 @@ export function decodeProtobuf (json: string): protobuf.Root {
 }
 
 function getProtoTypeFromTypeRecord (record: RegistryType): protobuf.Type {
-  return record.protobufDefs.lookupType(record.messageName);
+  return record.type.protobufDefs.lookupType(record.type.messageName);
 }
 
 export type RecordExtension<T> = { '@type': CID } & Pick<T, Exclude<keyof T, '@type'>>

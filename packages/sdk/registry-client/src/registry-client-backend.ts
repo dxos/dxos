@@ -11,7 +11,7 @@ import { isNotNullOrUndefined } from '@dxos/util';
 
 import { BaseClient } from './base-client';
 import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
-import { Record as DXNSRecord, schema as dxnsSchema } from './proto';
+import { Record as RawRecord, schema as dxnsSchema } from './proto';
 import {
   CID, Domain, DomainKey,
   AccountKey,
@@ -36,9 +36,9 @@ export interface RegistryClientBackend {
     // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
     tag: string
   ): Promise<void>
-  getRecord (cid: CID): Promise<DXNSRecord | undefined>
-  getRecords (): Promise<DXNSRecord[]>
-  registerRecord (record: DXNSRecord): Promise<CID>
+  getRecord (cid: CID): Promise<RawRecord | undefined>
+  getRecords (): Promise<RawRecord[]>
+  registerRecord (record: RawRecord): Promise<CID>
 }
 
 /**
@@ -164,7 +164,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   // Records
   //
 
-  async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
+  async getRecord (cid: CID): Promise<RawRecord | undefined> {
     const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
     if (record === undefined) {
       return undefined;
@@ -173,7 +173,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return this._decodeRecord(record);
   }
 
-  async getRecords (): Promise<DXNSRecord[]> {
+  async getRecords (): Promise<RawRecord[]> {
     const records = await this.api.query.registry.records.entries();
 
     const result = records
@@ -190,7 +190,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return result;
   }
 
-  async registerRecord (record: DXNSRecord): Promise<CID> {
+  async registerRecord (record: RawRecord): Promise<CID> {
     const data = compactAddLength(dxnsSchema
       .getCodecForType('dxos.registry.Record')
       .encode(record)
@@ -204,7 +204,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return new CID(event.data[1].toU8a());
   }
 
-  private _decodeRecord (record: PolkadotRecord): DXNSRecord {
+  private _decodeRecord (record: PolkadotRecord): RawRecord {
     return dxnsSchema
       .getCodecForType('dxos.registry.Record')
       .decode(Buffer.from(record.data));

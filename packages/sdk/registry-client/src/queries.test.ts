@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Record as DXNSRecord } from './proto';
+import { Record as RawRecord } from './proto';
 import { Filtering } from './queries';
 import { createCID } from './testing';
 import { DXN, Resource } from './types';
@@ -46,7 +46,7 @@ describe('Queries', () => {
   describe('Records filtering', () => {
     const appTypeCID = createCID();
     const botTypeCID = createCID();
-    const records: DXNSRecord[] = [
+    const records: RawRecord[] = [
       {
         displayName: 'appType',
         type: {

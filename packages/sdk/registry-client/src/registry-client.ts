@@ -8,8 +8,8 @@ import protobuf from 'protobufjs';
 import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
-import { decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from './encoding';
-import { Record as DXNSRecord } from './proto';
+import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from './encoding';
+import { Record as RawRecord } from './proto';
 import { Filtering, Query } from './queries';
 import { RegistryClientBackend } from './registry-client-backend';
 import {
@@ -20,14 +20,16 @@ import {
   SuppliedRecordMetadata,
   SuppliedTypeRecordMetadata,
   RegistryType,
-  ResourceRecord
+  ResourceRecord,
+  RegistryRecord
 } from './types';
 
 /**
  * Main API for DXNS registry.
  */
 export class RegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, Promise<DXNSRecord | undefined>>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
+  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String())
 
   constructor (
     private readonly _backend: RegistryClientBackend
@@ -107,12 +109,12 @@ export class RegistryClient {
    * Gets record details by CID.
    * @param cid CID of the record.
    */
-  async getRecord (cid: CID): Promise<DXNSRecord | undefined> {
+  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
     }
 
-    const recordPromise = this._backend.getRecord(cid);
+    const recordPromise = this._fetchRecord(cid);
     this._recordCache.set(cid, recordPromise);
 
     return recordPromise;
@@ -124,7 +126,7 @@ export class RegistryClient {
    * @param tag Tag to get the resource by. 'latest' by default.
    */
   // TODO(wittjosiah): Move tag into DXN.
-  async getResourceRecord (name: DXN, tag = 'latest'): Promise<ResourceRecord | undefined> {
+  async getResourceRecord<R extends RegistryRecord> (name: DXN, tag = 'latest'): Promise<ResourceRecord<R> | undefined> {
     const resource = await this.getResource(name);
     if (!resource) {
       return undefined;
@@ -139,10 +141,11 @@ export class RegistryClient {
     if (record === undefined) {
       return undefined;
     }
+
     return {
       resource,
       tag: resource.tags[tag] ? tag : undefined,
-      record: record
+      record: record as R
     };
   }
 
@@ -150,7 +153,7 @@ export class RegistryClient {
    * Queries all records in the system.
    * @param query Query that each returned record must meet.
    */
-  async getRecords (query?: Query): Promise<DXNSRecord[]> {
+  async getRecords (query?: Query): Promise<RawRecord[]> {
     const records = await this._backend.getRecords();
 
     return records.filter(record => Filtering.matchRecord(record, query));
@@ -181,16 +184,14 @@ export class RegistryClient {
    * @param cid CID of the record.
    */
   async getTypeRecord (cid: CID): Promise<RegistryType | undefined> {
-    const record = await this.getRecord(cid);
-    if (!record) {
-      return undefined;
+    if (this._typeCache.has(cid)) {
+      return this._typeCache.get(cid);
     }
 
-    if (!record.type) {
-      throw new Error('Record is not a type');
-    }
+    const typePromise = this._fetchType(cid);
+    this._typeCache.set(cid, typePromise);
 
-    return this._decodeType(record);
+    return typePromise;
   }
 
   /**
@@ -231,19 +232,52 @@ export class RegistryClient {
     return this._backend.registerRecord(record);
   }
 
-  private _decodeType (record: DXNSRecord): RegistryType {
-    if (record.type) {
-      assert(record.type.protobufDefs);
-      assert(record.type.messageName);
+  private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    const rawRecord = await this._backend.getRecord(cid);
+    const record = rawRecord && await this._decodeRecord(rawRecord);
+    return record;
+  }
 
-      return {
-        messageName: record.type.messageName,
-        protobufDefs: decodeProtobuf(record.type.protobufDefs),
-        created: (record.created && !isNaN(record.created.getTime())) ? record.created : undefined,
-        sourceIpfsCid: record.type.protobufIpfsCid
-      };
-    } else {
+  private async _decodeRecord (rawRecord: RawRecord): Promise<RegistryRecord> {
+    const payload = rawRecord?.payload && await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
+      await this.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
+    );
+
+    if (!payload) {
+      throw new Error('Record payload is not valid');
+    }
+
+    return {
+      ...rawRecord,
+      payload
+    };
+  }
+
+  private async _fetchType (cid: CID): Promise<RegistryType | undefined> {
+    const record = await this._backend.getRecord(cid);
+    if (!record) {
+      return undefined;
+    }
+
+    return this._decodeType(record);
+  }
+
+  private _decodeType (rawRecord: RawRecord): RegistryType {
+    if (!rawRecord.type) {
       throw new Error('Invalid type');
     }
+
+    const { messageName, protobufDefs, protobufIpfsCid } = rawRecord.type;
+    assert(messageName);
+    assert(protobufDefs);
+
+    return {
+      ...rawRecord,
+      type: {
+        messageName,
+        protobufDefs: decodeProtobuf(protobufDefs),
+        protobufIpfsCid: protobufIpfsCid ? CID.from(protobufIpfsCid) : undefined
+      }
+    };
   }
 }

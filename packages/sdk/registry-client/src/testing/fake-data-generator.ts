@@ -4,7 +4,7 @@
 
 import faker from 'faker';
 
-import { Record as DXNSRecord, schemaJson } from '../proto';
+import { Record as RawRecord, schemaJson } from '../proto';
 import { CID, DXN, RecordMetadata, Resource } from '../types';
 
 /**
@@ -43,7 +43,7 @@ export const createMockRecord = (
   typeRecord: CID,
   meta?: RecordMetadata,
   data?: Uint8Array
-): DXNSRecord => {
+): RawRecord => {
   return {
     created: meta?.created ?? faker.date.recent(30),
     displayName: meta?.displayName ?? faker.lorem.words(3),
@@ -70,8 +70,8 @@ export const mockTypeMessageNames = [
  */
 export const createMockTypeRecord = (
   meta?: RecordMetadata,
-  type?: DXNSRecord.Type
-): DXNSRecord => {
+  type?: RawRecord.Type
+): RawRecord => {
   return {
     created: meta?.created ?? faker.date.recent(30),
     displayName: meta?.displayName ?? faker.lorem.words(3),
