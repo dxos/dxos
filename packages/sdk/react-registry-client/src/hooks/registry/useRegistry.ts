@@ -5,10 +5,10 @@
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import type { AccountClient, IRegistryClient } from '@dxos/registry-client';
+import type { AccountClient, RegistryClient } from '@dxos/registry-client';
 
 export type RegistryContext = {
-  registry: IRegistryClient
+  registry: RegistryClient
   // TODO(wittjosiah): Should this go here? Should it be required?
   accounts?: AccountClient
 }
@@ -18,7 +18,7 @@ export const RegistryContext = createContext<RegistryContext | undefined>(undefi
 /**
  * Requires `RegistryProvider` component wrapper.
  */
-export const useRegistry = (): IRegistryClient => {
+export const useRegistry = (): RegistryClient => {
   const context = useContext(RegistryContext) ??
     raise(new Error('`useRegistry` hook is called outside of RegistryContext.'));
 

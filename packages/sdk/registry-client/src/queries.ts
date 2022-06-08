@@ -7,7 +7,7 @@ import { CID, DXN, RegistryRecord, Resource } from './types';
 /**
  * Common querying request for data of the DXNS.
  */
-export interface IQuery {
+export interface Query {
   /**
    * Query by record type. Will only return data records.
    */
@@ -29,12 +29,12 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param resource undergoes query conditions examination.
    */
-  matchResource (resource: Resource, query?: IQuery): boolean {
+  matchResource (resource: Resource, query?: Query): boolean {
     if (!query) {
       return true;
     }
 
-    const textMatches = query.text === undefined || matchesDxn(resource.id, query.text);
+    const textMatches = query.text === undefined || matchesDxn(resource.name, query.text);
     const typeMatches = query.type === undefined || (!!resource.type && resource.type.equals(query.type));
 
     return textMatches && typeMatches;
@@ -46,12 +46,12 @@ export const Filtering = {
    * @param query specifies the querying conditions.
    * @param record undergoes query conditions examination.
    */
-  matchRecord (record: RegistryRecord, query?: IQuery): boolean {
+  matchRecord (record: RegistryRecord, query?: Query): boolean {
     if (!query) {
       return true;
     }
 
-    const textMatches = query.text === undefined || matchesRecordText(record, query.text);
+    const textMatches = query.text === undefined || matchesText(record, query.text);
     const typeMatches = query.type === undefined || matchesRecordType(record, query.type);
 
     return textMatches && typeMatches;
@@ -59,14 +59,18 @@ export const Filtering = {
 };
 
 function matchesRecordType (record: RegistryRecord, type: CID) {
-  return RegistryRecord.isDataRecord(record) && record.type.equals(type);
+  if (!record.payload['@type']) {
+    return false;
+  }
+
+  return CID.from(record.payload['@type']).equals(type);
 }
 
-function matchesRecordText (record: RegistryRecord, text: string) {
+function matchesText (record: RegistryRecord, text: string) {
   const places = [
-    record.cid.toString(),
-    record.kind,
-    record.meta.description ?? ''
+    record.displayName ?? '',
+    record.description ?? '',
+    ...(record.tags ?? [])
   ];
   return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
 }

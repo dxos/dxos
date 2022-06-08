@@ -12,7 +12,7 @@ import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IRegistryClient } from '@dxos/registry-client';
+import { RegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer, NodeContainer } from './bot-container';
 import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
@@ -136,7 +136,7 @@ describe('Node', () => {
   describe('With a DXOS client', () => {
     let clientSetup: ClientSetup;
     let brokerSetup: BrokerSetup;
-    let registry: IRegistryClient;
+    let registry: RegistryClient;
     let botDXN: string;
 
     before(async () => {

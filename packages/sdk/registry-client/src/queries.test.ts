@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { Filtering } from './queries';
 import { createCID } from './testing';
-import { DXN, Resource, RegistryRecord, RegistryTypeRecord, RegistryDataRecord, RecordKind } from './types';
+import { DXN, RegistryRecord, Resource } from './types';
 
 describe('Queries', () => {
   // TODO(marik-d): Fix those tests.
@@ -21,42 +21,72 @@ describe('Queries', () => {
 
     it('Filters by text, when contains text, then filtered in', () => {
       const data = [
-        { id: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
-        { id: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
+        { name: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
+        { name: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
       ];
       const actual = data.filter(item => Filtering.matchResource(item, { text: 'red' }));
 
       expect(actual).to.have.length(1);
-      expect(actual[0].id.toString()).to.be.equal('bricks:redbrick');
+      expect(actual[0].name.toString()).to.be.equal('bricks:redbrick');
     });
 
     it('Filters by text, when contains text (case-insensitive), then filtered in', () => {
       const data = [
-        { id: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
-        { id: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
+        { name: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
+        { name: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
       ];
       const actual = data.filter(item => Filtering.matchResource(item, { text: 'REd' }));
 
       expect(actual).to.have.length(1);
-      expect(actual[0].id.toString()).to.be.equal('bricks:redbrick');
+      expect(actual[0].name.toString()).to.be.equal('bricks:redbrick');
     });
   });
 
   describe('Records filtering', () => {
     const appTypeCID = createCID();
     const botTypeCID = createCID();
-    const typeRecords: RegistryTypeRecord[] = [
-      { cid: appTypeCID, kind: RecordKind.Type, messageName: '.dxos.type.App', meta: { description: 'App' }, protobufDefs: null as any },
-      { cid: botTypeCID, kind: RecordKind.Type, messageName: '.dxos.type.Bot', meta: { description: 'Bot' }, protobufDefs: null as any }
-    ];
-    const dataRecords: RegistryDataRecord[] = [
-      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
-      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'betaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
-      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaBotter' }, type: botTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any }
-    ];
+    // TODO(wittjosiah): Include types in filtering once they are no longer differentiated from data records.
+    // const types: RegistryType[] = [
+    //   {
+    //     cid: appTypeCID,
+    //     displayName: 'appType',
+    //     type: {
+    //       messageName: '.dxos.type.App',
+    //       protobufDefs: null as any
+    //     }
+    //   },
+    //   {
+    //     cid: botTypeCID,
+    //     displayName: 'botType',
+    //     type: {
+    //       messageName: '.dxos.type.Bot',
+    //       protobufDefs: null as any
+    //     }
+    //   }
+    // ];
+
     const records: RegistryRecord[] = [
-      ...typeRecords,
-      ...dataRecords
+      {
+        cid: createCID(),
+        displayName: 'alphaApplication',
+        payload: {
+          '@type': appTypeCID
+        }
+      },
+      {
+        cid: createCID(),
+        displayName: 'betaApplication',
+        payload: {
+          '@type': appTypeCID
+        }
+      },
+      {
+        cid: createCID(),
+        displayName: 'alphaBotter',
+        payload: {
+          '@type': botTypeCID
+        }
+      }
     ];
 
     it('Filters by type', () => {
@@ -66,7 +96,7 @@ describe('Queries', () => {
     });
 
     it('Filters by text', () => {
-      expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
+      // expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'application' }))).to.have.length(2);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'botter' }))).to.have.length(1);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'ipfs' }))).to.have.length(0);

@@ -7,14 +7,14 @@ import React, { useState } from 'react';
 import { Autocomplete, Box, TextField } from '@mui/material';
 
 import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
-import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { CID, RegistryType, Resource } from '@dxos/registry-client';
 
 import { createTypeFilter, RegistrySearchModel } from './RegistrySearchModel';
 import { RegistryTypeFilter } from './RegistryTypeFilter';
 
 export interface RegistrySearchPanelProps {
   model: RegistrySearchModel
-  types?: RegistryTypeRecord[]
+  types?: RegistryType[]
   versions?: boolean
   clearOnSelect?: boolean
   onSelect: (resource: Resource, version?: string) => void
@@ -34,10 +34,7 @@ export const RegistrySearchPanel = ({
   const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
   const [resource, setResource] = useState<Resource>();
 
-  const resourceVersions = Object.keys({
-    ...resource?.tags,
-    ...resource?.versions
-  });
+  const resourceTags = Object.keys(resource?.tags ?? {});
 
   const handleTypeSelect = (types: CID[]) => {
     setSelectedTypes(types);
@@ -87,7 +84,7 @@ export const RegistrySearchPanel = ({
           autoHighlight
           clearOnEscape
           openOnFocus
-          options={resourceVersions}
+          options={resourceTags}
           noOptionsText='No matches'
           onChange={(event, value) => value && handleVersionSelect(value)}
           renderInput={params => (

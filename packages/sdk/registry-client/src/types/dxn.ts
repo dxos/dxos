@@ -4,6 +4,8 @@
 
 import { DomainKey } from './domain-key';
 
+export type DXNString = string;
+
 /**
  * Decentralized Name.
  * Example: dxn://example:foo/bar

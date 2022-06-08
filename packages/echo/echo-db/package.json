@@ -53,7 +53,7 @@
     "@types/lodash.unionwith": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
