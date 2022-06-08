@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import {
+  AccountKey,
   DXN,
   MemoryRegistryClientBackend,
   registerMockRecord,
@@ -13,10 +14,14 @@ import {
   RegistryClient
 } from '@dxos/registry-client';
 
-export const MOCK_BOT_DXN = 'dxos:bot:mock';
+export const MOCK_BOT_DXN = 'example:bot:mock';
 
 export const createMockRegistryWithBot = async (botPath: string) => {
-  const registry = new RegistryClient(new MemoryRegistryClientBackend());
+  const mock = new MemoryRegistryClientBackend();
+  const registry = new RegistryClient(mock);
+
+  const owner = AccountKey.random();
+  await mock.registerDomainName('example', owner);
 
   await registerMockTypes(registry);
   const types = await registry.getTypeRecords();
@@ -35,7 +40,8 @@ export const createMockRegistryWithBot = async (botPath: string) => {
 
   await registerMockResource(registry, {
     name: DXN.parse(MOCK_BOT_DXN),
-    record: botRecordCid
+    record: botRecordCid,
+    owner
   });
 
   return registry;
