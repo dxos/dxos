@@ -32,7 +32,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@swc-node/register": "~1.4.2"
+    "@swc-node/register": "~1.4.2",
+    "@dxos/echo-protocol": "workspace:*"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.27",
