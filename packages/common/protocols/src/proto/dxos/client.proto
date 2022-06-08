@@ -174,7 +174,8 @@ message GetPartyDetailsRequest {
 
 
 message PartyDetails {
-  required dxos.echo.feed.TimeframeVector processedTimeframe = 1;
+  /// The timeframe of mutations processed by the client.
+  required dxos.echo.feed.TimeframeVector processed_timeframe = 1;
 }
 
 message SubscribePartyResponse {
@@ -246,4 +247,3 @@ service PartyService {
 
   rpc CreateSnapshot(CreateSnaspotRequest) returns (PartySnapshot);
 }
-
