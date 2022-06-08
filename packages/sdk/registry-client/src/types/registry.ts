@@ -4,7 +4,7 @@
 
 import protobuf from 'protobufjs';
 
-import { RecordExtension } from '..';
+import { RecordExtension } from '../encoding';
 import { Record as RawRecord } from '../proto';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
@@ -57,6 +57,9 @@ export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
      */
     messageName: string
     protobufDefs: protobuf.Root
+    /**
+     * Source of the type definition.
+     */
     protobufIpfsCid?: CID
   }
 }

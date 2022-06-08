@@ -9,7 +9,7 @@ import { webcrypto as crypto } from 'crypto';
 import { ComplexMap } from '@dxos/util';
 
 import { Record as RawRecord, schema as dxnsSchema } from '../proto';
-import { RegistryClientBackend } from '../registry-client-backend';
+import { RecordWithCid, RegistryClientBackend } from '../registry-client-backend';
 import {
   AccountKey,
   CID,
@@ -104,11 +104,11 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Records
   //
 
-  async getRecord (cid: CID): Promise<(RawRecord & { cid: CID }) | undefined> {
+  async getRecord (cid: CID): Promise<RecordWithCid | undefined> {
     return { cid, ...this.records.get(cid) };
   }
 
-  async getRecords (): Promise<(RawRecord & { cid: CID })[]> {
+  async getRecords (): Promise<RecordWithCid[]> {
     return Array.from(this.records.entries()).map(([cid, record]) => ({ cid, ...record }));
   }
 

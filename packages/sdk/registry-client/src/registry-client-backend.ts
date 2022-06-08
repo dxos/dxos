@@ -19,6 +19,8 @@ import {
   Resource
 } from './types';
 
+export type RecordWithCid = RawRecord & { cid: CID }
+
 /**
  * Minimal API for DXNS registry client backend.
  */
@@ -36,8 +38,8 @@ export interface RegistryClientBackend {
     // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
     tag: string
   ): Promise<void>
-  getRecord (cid: CID): Promise<(RawRecord & { cid: CID }) | undefined>
-  getRecords (): Promise<(RawRecord & { cid: CID })[]>
+  getRecord (cid: CID): Promise<RecordWithCid | undefined>
+  getRecords (): Promise<RecordWithCid[]>
   registerRecord (record: RawRecord): Promise<CID>
 }
 
@@ -164,7 +166,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   // Records
   //
 
-  async getRecord (cid: CID): Promise<RawRecord & { cid: CID } | undefined> {
+  async getRecord (cid: CID): Promise<RecordWithCid | undefined> {
     const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
     if (record === undefined) {
       return undefined;
@@ -173,7 +175,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return { cid, ...this._decodeRecord(record) };
   }
 
-  async getRecords (): Promise<RawRecord & { cid: CID }[]> {
+  async getRecords (): Promise<RecordWithCid[]> {
     const records = await this.api.query.registry.records.entries();
 
     const result = records
