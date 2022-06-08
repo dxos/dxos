@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
+import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
@@ -12,10 +14,10 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { RegistryClient } from '@dxos/registry-client';
 
-import { InProcessBotContainer } from './bot-container';
-import { NodeContainer } from './bot-container/node-container';
+import { InProcessBotContainer, NodeContainer } from './bot-container';
 import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
+import { Bot as ClientBot } from './bots/client-bot';
 import { Bot } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
@@ -103,6 +105,29 @@ describe('In-Memory', () => {
 
       await botFactoryClient.botFactory.removeAll();
       await botFactoryClient.stop();
+    });
+
+    it('sees bot updates', async () => {
+      const { party } = clientSetup;
+
+      const botContainer = new InProcessBotContainer(() => new ClientBot());
+      const botFactory = new BotFactory({
+        botContainer,
+        config: new Config({})
+      });
+      await botFactory.spawnBot({
+        partyKey: party.key,
+        invitation: (await party.createInvitation({})).descriptor.toProto()
+      });
+      await waitForExpect(async () => {
+        const { bots } = await botFactory.getBots();
+        // console.log(bots);
+        expect(bots).toHaveLength(1);
+        const frames = bots[0].report?.partyDetails?.processedTimeframe?.frames();
+        assert(frames);
+        expect(frames.length).toBeGreaterThan(0);
+        expect(frames[0][1]).toBeGreaterThan(0);
+      });
     });
   });
 });

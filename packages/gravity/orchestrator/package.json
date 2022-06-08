@@ -1,23 +1,16 @@
 {
-  "name": "@dxos/botkit",
+  "name": "@dxos/gravity-orchestrator",
   "version": "2.32.0",
-  "description": "Bot",
-  "license": "MIT",
-  "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "bin": {
-    "bot-factory": "bin/main.js"
-  },
-  "files": [
-    "bin",
-    "dist"
-  ],
+  "private": true,
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "single-item-stress": "NODE_ENV=production node -r @swc-node/register src/single-item-stress.ts",
+    "single-item-stress-profile": "NODE_ENV=production node --inspect-brk -r @swc-node/register src/single-item-stress.ts",
+    "multi-item-stress": "NODE_ENV=production node -r @swc-node/register src/multi-item-stress.ts",
+    "multi-item-stress-profile": "NODE_ENV=production node --inspect-brk -r @swc-node/register src/multi-item-stress.ts"
   },
   "dependencies": {
     "@dxos/bot-factory-client": "workspace:*",
@@ -27,44 +20,31 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "abort-controller": "~3.0.0",
     "debug": "^4.3.3",
-    "download": "^8.0.0",
-    "esbuild": "^0.11.23",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
-    "tail": "~2.2.4",
+    "@dxos/botkit": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/testutils": "workspace:*",
+    "@swc-node/register": "~1.4.2",
     "@dxos/echo-protocol": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.27",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@dxos/signal": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@swc-node/register": "~1.4.2",
-    "@types/debug": "^4.1.7",
-    "@types/download": "^8.0.1",
-    "@types/mocha": "~8.2.2",
-    "@types/node": "^16.11.27",
-    "@types/node-fetch": "^2.5.10",
-    "@types/tail": "~2.2.1",
-    "assert": "^2.0.0",
     "eslint": "^7.12.1",
-    "expect": "~27.0.2",
-    "ts-node": "^9.1.1",
     "typescript": "^4.5.2",
-    "wait-for-expect": "^3.0.2"
-  },
-  "publishConfig": {
-    "access": "public"
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
+    "@types/node": "^14.0.9",
+    "@dxos/testutils": "workspace:*",
+    "@dxos/async": "workspace:*"
   },
   "toolchain": {
     "testingFramework": "mocha",

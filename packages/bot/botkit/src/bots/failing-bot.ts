@@ -2,8 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
+
 import { createIpcPort } from '../bot-container';
-import { BotService, InitializeRequest, SendCommandRequest, StartRequest } from '../proto/gen/dxos/bot';
+import { BotReport, BotService, InitializeRequest, SendCommandRequest, StartRequest } from '../proto/gen/dxos/bot';
 import { startBot } from './start-bot';
 
 /**
@@ -23,6 +25,10 @@ class FailingBot implements BotService {
   }
 
   async stop () {
+  }
+
+  startReporting (): Stream<BotReport> {
+    return new Stream(() => {});
   }
 }
 
