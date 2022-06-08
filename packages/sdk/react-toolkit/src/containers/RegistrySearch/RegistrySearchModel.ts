@@ -6,19 +6,19 @@ import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { SearchModel, SearchResult } from '@dxos/react-components';
-import { CID, IRegistryClient, RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { CID, RegistryClient, RegistryType, Resource } from '@dxos/registry-client';
 
 export type SearchFilter = (resource: Resource) => boolean
 
 export const useRegistrySearchModel = (
-  registry: IRegistryClient,
+  registry: RegistryClient,
   filters: SearchFilter[] = [],
   deps: any[] = []
 ) => {
   return useMemo(() => new RegistrySearchModel(registry, filters), deps);
 };
 
-export const getTypeName = (type: RegistryTypeRecord) => {
+export const getTypeName = ({ type }: RegistryType) => {
   const parts = type.messageName.split('.');
   return parts[parts.length - 1];
 };
@@ -28,7 +28,7 @@ export const createTypeFilter = (types: CID[]) => (resource: Resource) => {
 };
 
 export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: Resource) => {
-  return domainExp.exec(resource.id.domain!) && resourceExp.exec(resource.id.resource);
+  return domainExp.exec(resource.name.domain!) && resourceExp.exec(resource.name.resource);
 };
 
 /**
@@ -40,10 +40,10 @@ export class RegistrySearchModel implements SearchModel<Resource> {
   private readonly _update = new Event<SearchResult<Resource>[]>();
   private _results: SearchResult<Resource>[] = [];
   private _text?: string = undefined;
-  private _types: RegistryTypeRecord[] = [];
+  private _types: RegistryType[] = [];
 
   constructor (
-    private readonly _registry: IRegistryClient,
+    private readonly _registry: RegistryClient,
     private _filters: SearchFilter[] = []
   ) {}
 
@@ -77,7 +77,7 @@ export class RegistrySearchModel implements SearchModel<Resource> {
   doUpdate () {
     setImmediate(async () => {
       // TODO(burdon): Push predicates (e.g., type).
-      let resources = await this._registry.queryResources({ text: this._text });
+      let resources = await this._registry.getResources({ text: this._text });
       if (this._filters.length) {
         resources = resources.filter(resource => {
           // Exclude if any filter fails.
@@ -88,9 +88,9 @@ export class RegistrySearchModel implements SearchModel<Resource> {
       this._results = resources.map(resource => {
         const type = this._types.find(type => resource.type && resource.type.equals(type.cid));
         return ({
-          id: resource.id.toString(),
+          id: resource.name.toString(),
           type: type ? getTypeName(type) : undefined,
-          text: resource.id.toString(),
+          text: resource.name.toString(),
           value: resource
         });
       });

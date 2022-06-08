@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { IQuery, Resource } from '@dxos/registry-client';
+import { Query, Resource } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
@@ -15,9 +15,9 @@ interface Result {
 /**
  * Returns matching resources.
  */
-export const useResources = (query?: IQuery): Result => {
+export const useResources = (query?: Query): Result => {
   const registry = useRegistry();
-  const data = useAsync(() => registry?.queryResources(query), [], [query]);
+  const data = useAsync(() => registry?.getResources(query), [], [query]);
 
   return {
     resources: data.data,

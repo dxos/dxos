@@ -7,7 +7,7 @@ import React from 'react';
 import { styled, Chip } from '@mui/material';
 
 import { useControlledState } from '@dxos/react-async';
-import { CID, RegistryTypeRecord } from '@dxos/registry-client';
+import { CID, RegistryType } from '@dxos/registry-client';
 
 import { getTypeName } from './RegistrySearchModel';
 
@@ -26,7 +26,7 @@ const ListItem = styled('li')(({ theme }) => ({
 }));
 
 export interface RegistryTypeFilterProps {
-  types: RegistryTypeRecord[]
+  types: RegistryType[]
   selected?: CID[]
   onSelectedChange: (selected: CID[]) => void
 }
@@ -44,7 +44,7 @@ export const RegistryTypeFilter = ({
   return (
     <List>
       {types.map(type => (
-        <ListItem key={type.messageName}>
+        <ListItem key={type.type.messageName}>
           <Chip
             label={getTypeName(type)}
             size='small'
