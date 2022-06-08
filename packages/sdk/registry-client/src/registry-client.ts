@@ -17,11 +17,11 @@ import {
   AccountKey,
   DXN,
   Resource,
-  SuppliedRecordMetadata,
-  SuppliedTypeRecordMetadata,
   RegistryType,
   ResourceRecord,
-  RegistryRecord
+  RegistryRecord,
+  TypeRecordMetadata,
+  RecordMetadata
 } from './types';
 
 /**
@@ -138,7 +138,7 @@ export class RegistryClient {
     }
 
     const record = await this.getRecord(cid);
-    if (record === undefined) {
+    if (!record) {
       return undefined;
     }
 
@@ -165,7 +165,7 @@ export class RegistryClient {
    * @param typeId CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  async registerRecord (data: unknown, typeId: CID, meta: SuppliedRecordMetadata = {}): Promise<CID> {
+  async registerRecord (data: unknown, typeId: CID, meta: RecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
@@ -214,7 +214,7 @@ export class RegistryClient {
    * @param messageFqn Fully qualified name of the message. It must reside in the schema definition.
    * @param meta Record metadata information.
    */
-  async registerTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedTypeRecordMetadata = {}) {
+  async registerTypeRecord (messageName: string, schema: protobuf.Root, meta: TypeRecordMetadata = {}) {
     // Make sure message type exists.
     schema.lookupType(messageName);
 
@@ -222,9 +222,9 @@ export class RegistryClient {
       ...meta,
       created: new Date(),
       type: {
-        protobufDefs: encodeProtobuf(schema),
         messageName,
-        protobufIpfsCid: meta.sourceIpfsCid
+        protobufDefs: encodeProtobuf(schema),
+        protobufIpfsCid: meta.protobufIpfsCid
       }
     };
 

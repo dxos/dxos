@@ -5,43 +5,49 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { Record as RawRecord } from '../proto';
-import { AccountKey, DXN, Resource } from '../types';
-import { createMockRecord, createMockResource, createMockTypes } from './fake-data-generator';
+import { RegistryClient } from '../registry-client';
+import { AccountKey, CID, DXN } from '../types';
+import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator';
 import { MemoryRegistryClientBackend } from './memory-registry-client';
 
 describe('Registry API mock', () => {
   let mock: MemoryRegistryClientBackend;
-  let types: RawRecord[];
-  let records: RawRecord[];
-  let resources: Resource[];
+  let records: CID[];
+  let names: DXN[];
 
   before(async () => {
     mock = new MemoryRegistryClientBackend();
+    const registry = new RegistryClient(mock);
     const owner = AccountKey.random();
-    const domains = await Promise.all(faker.datatype.array(5).map(() =>
-      mock.registerDomainName(faker.internet.domainWord(), owner)
+    await Promise.all(faker.datatype.array(5).map(() =>
+      mock.registerDomainName('example', owner)
     ));
 
-    types = createMockTypes();
-    const typeCids = await Promise.all(types.map(type => mock.registerRecord(type)));
+    const types = await registerMockTypes(registry);
 
-    records = faker.datatype.array(30).map(() => createMockRecord(faker.random.arrayElement(typeCids)));
-    const recordCids = await Promise.all(records.map(record => mock.registerRecord(record)));
-
-    resources = recordCids.map(cid => createMockResource(
-      DXN.parse(`${faker.random.arrayElement(domains).name}:${faker.company.bs().replaceAll(' ', '-')}`),
-      cid
+    records = await Promise.all(faker.datatype.array(30).map(() =>
+      registerMockRecord(registry, {
+        typeRecord: faker.random.arrayElement(types)
+      })
     ));
-    await Promise.all(resources.map(resource => mock.registerResource(resource.name, resource.tags.latest, owner, 'latest')));
+
+    names = records.map(() => createDXN());
+    await Promise.all(records.map((record, index) => registerMockResource(
+      registry,
+      {
+        name: names[index],
+        record,
+        owner
+      }
+    )));
   });
 
   it('Returns a specific resource', async () => {
-    const name = resources[0].name;
-    // Parse the query DXN separately to ensure it is not the same instance as the resource DXN.
+    const name = names[0];
     const resource = await mock.getResource(name);
-    expect(resource).to.be.deep.equal(resources[0]);
-    expect(resource?.tags.latest).to.not.be.undefined;
+
+    expect(resource?.name.toString()).to.equal(name.toString());
+    expect(resource?.tags.latest).to.equal(records[0]);
   });
 
   it('Returns resources', async () => {

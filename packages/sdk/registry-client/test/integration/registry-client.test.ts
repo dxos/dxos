@@ -37,7 +37,7 @@ describe('Registry Client', () => {
 
   describe('Types', () => {
     it('Adds type to registry', async () => {
-      const hash = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
+      const hash = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       expect(hash.value.length).to.be.greaterThan(0);
     });
@@ -50,7 +50,7 @@ describe('Registry Client', () => {
     it('Retrieves type details', async () => {
       const domainKey = await registryClient.registerDomainKey(account);
 
-      const typeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
+      const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), typeCid, account);
 
       const typeRecord = await registryClient.getTypeRecord(typeCid);
@@ -73,7 +73,7 @@ describe('Registry Client', () => {
     let domainKey: DomainKey;
 
     beforeEach(async () => {
-      appTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
+      appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       contentCid = await registryClient.registerRecord({
         appName: 'Tasks App',
@@ -171,7 +171,7 @@ describe('Registry Client', () => {
 
   describe('Data records', () => {
     it('Register a record of your custom type', async () => {
-      const appTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       const appData: App = {
         repos: [],
@@ -189,8 +189,8 @@ describe('Registry Client', () => {
     });
 
     it('Register a record with nested extensions', async () => {
-      const serviceTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.Service');
-      const ipfsTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.IPFS');
+      const serviceTypeCid = await registryClient.registerTypeRecord('.dxos.type.Service', protoSchema);
+      const ipfsTypeCid = await registryClient.registerTypeRecord('.dxos.type.IPFS', protoSchema);
 
       const serviceData = {
         type: 'ipfs',
@@ -228,19 +228,19 @@ describe('Registry Client', () => {
     //   })).to.be.true;
     // });
 
-    // it('Records has date fields decoded properly', async () => {
-    //   for (const record of await registryClient.getRecords()) {
-    //     expect(record.meta.created?.toString()).to.not.equal('Invalid Date');
-    //   }
-    // });
+    it('Records has date fields decoded properly', async () => {
+      for (const record of await registryClient.getRecords()) {
+        expect(record.created?.toString()).to.not.equal('Invalid Date');
+      }
+    });
 
     describe('Querying', () => {
       let appTypeCid: CID;
       let botTypeCid: CID;
 
       beforeEach(async () => {
-        appTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
-        botTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.Bot');
+        appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
+        botTypeCid = await registryClient.registerTypeRecord('.dxos.type.Bot', protoSchema);
 
         const appCid = await registryClient.registerRecord({
           appName: 'Tasks App',
@@ -266,7 +266,7 @@ describe('Registry Client', () => {
     it('Assigns a name to a type', async () => {
       const domainKey = await registryClient.registerDomainKey(account);
 
-      const appTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.App', protoSchema);
 
       await expect(
         registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid, account)
@@ -276,7 +276,7 @@ describe('Registry Client', () => {
     it('Does allow to overwrite already registered name', async () => {
       const domainKey = await registryClient.registerDomainKey(account);
 
-      const appTypeCid = await registryClient.registerTypeRecord(protoSchema, '.dxos.type.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       await expect(
         registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid, account)

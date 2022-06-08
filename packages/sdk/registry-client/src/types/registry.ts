@@ -82,28 +82,15 @@ export interface ResourceRecord<R extends RegistryRecord> {
   record: R
 }
 
-// TODO(wittjosiah): Simplify metadata types.
-
-/**
- * Automatically generated Record metadata.
- */
-export interface InferredRecordMetadata {
-  created?: Date
-}
-
 /**
  * Record metadata provided by the user.
  */
-export interface SuppliedRecordMetadata {
-  tags?: string[]
+export interface RecordMetadata {
   displayName?: string
   description?: string
+  tags?: string[]
 }
 
-export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata
-
-export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
-  sourceIpfsCid?: string
+export interface TypeRecordMetadata extends RecordMetadata {
+  protobufIpfsCid?: string
 }
-
-export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata

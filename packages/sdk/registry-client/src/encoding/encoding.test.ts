@@ -9,11 +9,9 @@ import { raise } from '@dxos/debug';
 
 import { schemaJson } from '../proto';
 import { createCID, createMockTypes } from '../testing';
-import { RegistryType } from '../types';
 import {
   convertSchemaToDescriptor,
   decodeExtensionPayload,
-  decodeProtobuf,
   encodeExtensionPayload,
   loadSchemaFromDescriptor
 } from './encoding';
@@ -31,13 +29,9 @@ describe('Proto utils', () => {
 });
 
 describe('Record encoding', () => {
-  const mockTypes: RegistryType[] = createMockTypes().map(type => ({
-    cid: createCID(),
-    type: {
-      messageName: type.type!.messageName!,
-      protobufDefs: decodeProtobuf(type.type!.protobufDefs!)
-    }
-  }));
+  console.log('b');
+  const mockTypes = createMockTypes();
+  console.log('a');
   const serviceType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
   const ipfsType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
   const lookupType = async cid => mockTypes.find(type => type.cid.equals(cid)) ?? raise(new Error('Not found.'));
