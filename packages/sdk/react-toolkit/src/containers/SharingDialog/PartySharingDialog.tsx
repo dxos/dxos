@@ -29,7 +29,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   };
 
   const handleBotInvitation = botClient ? async (resource: Resource) => {
-    await botClient!.spawn({ dxn: resource.id.toString() }, party!);
+    await botClient!.spawn({ dxn: resource.name.toString() }, party!);
   } : undefined;
 
   if (!party) {

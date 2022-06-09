@@ -12,6 +12,7 @@ import { ConfigObject } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
+import { Timeframe } from '@dxos/echo-protocol';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
@@ -264,6 +265,24 @@ describe('Client', () => {
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
+      });
+
+      test('party timeframe is incremented after creating ECHO mutations', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+        const party = await client.echo.createParty();
+
+        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        await item1.model.set('prop1', 'x');
+        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        await item2.model.set('prop1', 'y');
+
+        const details = await party.getDetails();
+        expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
+        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
       });
     });
   }

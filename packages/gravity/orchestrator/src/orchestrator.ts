@@ -26,6 +26,10 @@ export class Orchestrator {
     return this._party;
   }
 
+  get botFactoryClient (): BotFactoryClient {
+    return this._botFactoryClient;
+  }
+
   async initialize () {
     this._client = new Client();
     await this._client.initialize();

@@ -24,7 +24,7 @@ export const SpawnBotPanel = ({
   useAsyncEffect(async () => {
     await model.initialize();
     // TODO(burdon): DXN of type?
-    const botType = model.types.find(type => type.messageName === '.dxos.type.Bot');
+    const botType = model.types.find(type => type.type.messageName === '.dxos.type.Bot');
     model.setFilters([
       createTypeFilter([botType!.cid])
     ]);

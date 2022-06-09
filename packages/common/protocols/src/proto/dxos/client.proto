@@ -168,6 +168,16 @@ message SubscribePartyRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
 }
 
+message GetPartyDetailsRequest {
+  required dxos.halo.keys.PubKey partyKey = 1;
+}
+
+
+message PartyDetails {
+  /// The timeframe of mutations processed by the client.
+  required dxos.echo.feed.TimeframeVector processed_timeframe = 1;
+}
+
 message SubscribePartyResponse {
   Party party = 1;
 }
@@ -220,6 +230,8 @@ service PartyService {
   rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
+  rpc GetPartyDetails(GetPartyDetailsRequest) returns (PartyDetails);
+
   rpc CreateParty(google.protobuf.Empty) returns(Party);
   rpc CloneParty(PartySnapshot) returns(Party);
 
@@ -235,4 +247,3 @@ service PartyService {
 
   rpc CreateSnapshot(CreateSnaspotRequest) returns (PartySnapshot);
 }
-

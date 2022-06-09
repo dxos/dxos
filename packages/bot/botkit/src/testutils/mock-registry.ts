@@ -5,33 +5,50 @@
 import assert from 'assert';
 
 import {
-  createMockResourceRecord,
-  createMockResourceRecords,
-  createMockTypes,
+  AccountKey,
   DXN,
-  MemoryRegistryClient
+  MemoryRegistryClientBackend,
+  registerMockRecord,
+  registerMockResource,
+  registerMockTypes,
+  RegistryClient
 } from '@dxos/registry-client';
 
-export const MOCK_BOT_DXN = 'dxos:bot:mock';
+export const MOCK_BOT_DXN = 'example:bot:mock';
 
-export const createMockRegistryWithBot = (botPath: string) => {
-  const types = createMockTypes();
-  const botTypeRecord = types.find(type => type.messageName === '.dxos.type.Bot');
-  assert(botTypeRecord, 'Bot type not found.');
-  const records = createMockResourceRecords();
-  const botRecord = createMockResourceRecord({
-    type: '.dxos.type.Bot',
-    dxn: DXN.parse(MOCK_BOT_DXN),
-    data: {
-      localPath: botPath
+export const createMockRegistryWithBot = async (botPath: string) => {
+  const mock = new MemoryRegistryClientBackend();
+  const registry = new RegistryClient(mock);
+
+  const owner = AccountKey.random();
+  await mock.registerDomainName('example', owner);
+
+  await registerMockTypes(registry);
+  const types = await registry.getTypeRecords();
+
+  const botType = types.find(({ type }) => type?.messageName === '.dxos.type.Bot');
+  assert(botType, 'Bot type not found.');
+
+  const botRecordCid = await registerMockRecord(
+    registry,
+    {
+      typeRecord: botType.cid,
+      data: { localPath: botPath },
+      meta: { displayName: 'Test Bot' }
     }
+  );
+
+  await registerMockResource(registry, {
+    name: DXN.parse(MOCK_BOT_DXN),
+    record: botRecordCid,
+    owner
   });
 
-  return new MemoryRegistryClient([...records, botRecord]);
+  return registry;
 };
 
 export const setupMockRegistryWithBot = async (botPath: string) => {
-  const registry = createMockRegistryWithBot(botPath);
+  const registry = await createMockRegistryWithBot(botPath);
 
   return {
     registry,
