@@ -24,7 +24,7 @@ class TestBot extends Bot {
 describe('Orchestrator', () => {
   let counter = 0;
 
-  const orchestrator = new Orchestrator(new InProcessBotContainer(() => new TestBot(() => counter++)));
+  const orchestrator = new Orchestrator(new InProcessBotContainer(() => new TestBot(() => counter++)), config);
   it('should start', async () => {
     await orchestrator.initialize();
   });
