@@ -3,6 +3,7 @@
 //
 
 import { DndContext, DragEndEvent, DragOverlay } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import faker from 'faker';
 import React, { useState } from 'react';
 
@@ -109,6 +110,7 @@ const ListStory = () => {
       gridTemplateColumns: '2fr 1fr'
     }}>
       <DndContext
+        // modifiers={[restrictToVerticalAxis]}
         onDragStart={({ active }) => {
           if (!active) {
             return;
