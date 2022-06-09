@@ -110,7 +110,7 @@ const ListStory = () => {
       gridTemplateColumns: '2fr 1fr'
     }}>
       <DndContext
-        // modifiers={[restrictToVerticalAxis]}
+        modifiers={[restrictToVerticalAxis]}
         onDragStart={({ active }) => {
           if (!active) {
             return;
