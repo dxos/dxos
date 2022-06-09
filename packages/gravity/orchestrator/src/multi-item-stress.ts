@@ -27,7 +27,7 @@ async function multiItemStress () {
     await orchestrator.spawnBot({
       localPath: require.resolve('./isolated-ping-bot')
     });
-    console.log(botCount++);
+    console.log(`botCount=${++botCount}`);
     await sleep(SLEEP_TIME);
   } while (isAllFresh(orchestrator.party));
 

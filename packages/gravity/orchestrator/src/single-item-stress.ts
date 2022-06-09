@@ -31,7 +31,7 @@ async function singleItemStress () {
     await orchestrator.spawnBot({
       localPath: require.resolve('./single-item-ping-bot')
     });
-    console.log(botCount++);
+    console.log(`botCount=${++botCount}`);
     await item.model.update.waitForCondition(() => Object.keys(item.model.toObject()).length === botCount);
     await sleep(SLEEP_TIME);
   } while (isAllFresh(item));
