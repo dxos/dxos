@@ -23,6 +23,70 @@ const TYPE_LIST = 'example:type/list';
 const TYPE_LIST_ITEM = 'example:type/list/item';
 const TYPE_TABLE_TABLE = 'dxos:type/table/table';
 
+const items = Array.from({ length: faker.datatype.number({ min: 1, max: 10 }) }).map(() => ({
+  id: faker.datatype.uuid(),
+  title: faker.name.firstName()
+}));
+const initialOrder = items.map(item => item.id);
+export const NonEchoList = () => {
+  const [activeId, setActiveId] = useState<string>();
+  const [order, setOrder] = useState(items.map(item => item.id));
+
+  const handleDragEnd = async ({ over }: DragEndEvent) => {
+    if (!order || !activeId) {
+      return;
+    }
+    if (over) {
+      const overIndex = order.indexOf(over.id as string);
+      const activeIndex = order.indexOf(activeId);
+      if (activeIndex !== overIndex) {
+        const currentOrderWithoutId = order.filter(id => id !== activeId);
+        console.log(currentOrderWithoutId);
+        const newOrder = [
+          ...currentOrderWithoutId.slice(0, overIndex),
+          activeId,
+          ...currentOrderWithoutId.slice(overIndex)
+        ];
+        console.log(order);
+        console.log(newOrder);
+        setOrder(newOrder);
+      }
+    }
+    setActiveId(undefined);
+  };
+
+  return (
+    <StorybookContainer style={{
+      display: 'grid',
+      gridTemplateColumns: '2fr 1fr'
+    }}>
+      <DndContext
+        modifiers={[restrictToVerticalAxis]}
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
+
+          setActiveId(active.id as string);
+        }}
+        onDragEnd={handleDragEnd}
+      >
+        <DroppableList
+          id='test-list'
+          items={order.map(id => items.find(item => item.id === id)).filter(Boolean) as {id: string, title: string}[]}
+          style={{ width: 'calc(100% - 16px)' }}
+        />
+      </DndContext>
+      <div>
+        <ResetButton onReset={() => setOrder(initialOrder)} />
+        <DragAndDropDebugPanel
+          order={Object.assign({}, ...order.map((id, i) => ({ [id]: order[i+1] ?? '' })))}
+        />
+      </div>
+    </StorybookContainer>
+  );
+}
+
 const ListStory = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
