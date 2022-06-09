@@ -155,9 +155,9 @@ export class RegistryClient {
    */
   async getRecords (query?: Query): Promise<RegistryRecord[]> {
     const rawRecords = await this._backend.getRecords();
-    const records = await Promise.all(rawRecords.map(({ cid, ...record }) => {
-      return this._decodeRecord(cid, record);
-    }));
+    const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
+      this._decodeRecord(cid, record)
+    ));
 
     return records
       .filter(isNotNullOrUndefined)
