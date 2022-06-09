@@ -80,12 +80,12 @@ export const NonEchoList = () => {
       <div>
         <ResetButton onReset={() => setOrder(initialOrder)} />
         <DragAndDropDebugPanel
-          order={Object.assign({}, ...order.map((id, i) => ({ [id]: order[i+1] ?? '' })))}
+          order={Object.assign({}, ...order.map((id, i) => ({ [id]: order[i + 1] ?? '' })))}
         />
       </div>
     </StorybookContainer>
   );
-}
+};
 
 const ListStory = () => {
   const client = useClient();
