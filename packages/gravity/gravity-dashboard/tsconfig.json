@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "composite": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "ES2018"
+  },
+  "include": [
+    "src",
+    "stories",
+  ]
+}
