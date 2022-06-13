@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React, { CSSProperties, ReactNode } from 'react';
 
-interface DraggableContainerProps {
+export interface DraggableContainerProps {
   id: string
   children: ReactNode
   style?: CSSProperties

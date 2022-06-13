@@ -20,7 +20,6 @@ type RowProps = {
 }
 
 const table = createTable().setRowType<RowProps>();
-// const table = createTable();
 
 const getColumns = (cols: any[]) => cols.map(col => table.createDataColumn(col.accessor, {
   header: () => <span>{col.title}</span>,
@@ -30,7 +29,7 @@ const getColumns = (cols: any[]) => cols.map(col => table.createDataColumn(col.a
 const DEFAULT_COLUMN_WIDTH = '300px';
 const getGridCellSize = (columns: any[]) => columns.map(column => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
 
-interface DroppableTableProps {
+export interface DroppableTableProps {
   id: string
   rows: any[]
   columns: any[]

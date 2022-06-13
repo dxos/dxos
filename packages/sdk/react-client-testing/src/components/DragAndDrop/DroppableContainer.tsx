@@ -8,7 +8,7 @@ import React, { CSSProperties, ReactNode } from 'react';
 const DEFAULT_DRAGGING_OVER_STYLES = {
   border: '1px solid rgba(0, 0, 0, 0.7)'
 };
-interface DroppableContainerProps {
+export interface DroppableContainerProps {
   id: string
   children: ReactNode
   style?: CSSProperties

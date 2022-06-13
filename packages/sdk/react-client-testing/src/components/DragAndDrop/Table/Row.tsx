@@ -5,7 +5,7 @@
 import { Row as RowDef } from '@tanstack/react-table';
 import React, { CSSProperties } from 'react';
 
-interface RowProps {
+export interface RowProps {
   row: RowDef<any>
   style?: CSSProperties
 }
