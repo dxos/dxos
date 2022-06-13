@@ -33,7 +33,7 @@ export const NonEchoList = () => {
   const [order, setOrder] = useState(items.map(item => item.id));
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
-    if (!order || !activeId) {
+    if (!activeId) {
       return;
     }
     if (over) {
