@@ -43,7 +43,7 @@
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/mocha": "~8.2.2",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",

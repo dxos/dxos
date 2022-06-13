@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { ConfigObject } from '@dxos/config';
-import { RegistryTypeRecord, MemoryRegistryClient } from '@dxos/registry-client';
+import { MemoryRegistryClientBackend, RegistryClient, RegistryType } from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';
 
@@ -15,7 +15,7 @@ export default {
 
 const TestApp = () => {
   const registry = useRegistry();
-  const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
+  const [types, setTypes] = useState<RegistryType[]>([]);
 
   useEffect(() => {
     setImmediate(async () => {
@@ -27,7 +27,7 @@ const TestApp = () => {
   return (
     <div style={{ padding: 16 }}>
       <div style={{ marginBottom: 8 }}>Domains</div>
-      {types.length > 0 && types.map(({ messageName }) => (
+      {types.length > 0 && types.map(({ type: { messageName } }) => (
         <div key={messageName}>
           {messageName}
         </div>
@@ -40,7 +40,7 @@ const TestApp = () => {
 };
 
 export const Memory = () => {
-  const registry = new MemoryRegistryClient();
+  const registry = new RegistryClient(new MemoryRegistryClientBackend());
 
   return (
     <RegistryProvider registry={registry}>

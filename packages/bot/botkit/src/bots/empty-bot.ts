@@ -2,8 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
+
 import { createIpcPort } from '../bot-container';
 import {
+  BotReport,
   BotService,
   InitializeRequest,
   SendCommandRequest,
@@ -36,6 +39,10 @@ export class EmptyBot implements BotService {
   }
 
   protected async onStop () {}
+
+  startReporting (): Stream<BotReport> {
+    return new Stream(() => {});
+  }
 }
 
 if (typeof require !== 'undefined' && require.main === module) {

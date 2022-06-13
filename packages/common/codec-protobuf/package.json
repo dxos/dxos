@@ -38,7 +38,7 @@
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "^4.6.6",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",

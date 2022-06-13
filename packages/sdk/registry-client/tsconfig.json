@@ -4,6 +4,10 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "paths": {
       "@polkadot/api/augment": [
         "./src/interfaces/augment-api.ts"
