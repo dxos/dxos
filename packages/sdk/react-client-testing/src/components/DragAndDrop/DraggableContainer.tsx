@@ -28,6 +28,7 @@ export const DraggableContainer = ({
     isDragging
   } = useSortable({ id });
 
+  // TODO(kaplanski): Better way to handle styles? (i.e., Emotion, etc.).
   return (
     <div
       ref={setNodeRef}
