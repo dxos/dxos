@@ -160,12 +160,6 @@ describe('Registry Client', () => {
         expect(resource).to.not.be.undefined;
         expect(resource!.tag).to.be.equal('alpha');
       });
-
-      it('queries by version', async () => {
-        const resource = await registryClient.getResourceRecord(versionedDxn, '3.0.0');
-        expect(resource).to.not.be.undefined;
-        expect(resource!.tag).to.be.undefined;
-      });
     });
   });
 
