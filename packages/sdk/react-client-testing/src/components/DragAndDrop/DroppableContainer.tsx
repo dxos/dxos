@@ -21,9 +21,7 @@ export const DroppableContainer = ({
   style,
   draggingOverStyle = DEFAULT_DRAGGING_OVER_STYLES
 }: DroppableContainerProps) => {
-  const { isOver, setNodeRef, over } = useDroppable({
-    id
-  });
+  const { isOver, setNodeRef, over } = useDroppable({ id });
 
   // TODO(kaplanski): Is this a dnd-kit bug or is there a better way of checking?
   // When hovering over item, isOver returns false and over id doesn't match container id, so manually check current sortable containerId.
