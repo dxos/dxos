@@ -1,5 +1,22 @@
 # Change Log
 
+### [2.32.1](https://www.github.com/dxos/protocols/compare/v2.32.0...v2.32.1) (2022-06-13)
+
+
+### Features
+
+* Add method to query current processed timeframe of a party ([#1227](https://www.github.com/dxos/protocols/issues/1227)) ([641c5b5](https://www.github.com/dxos/protocols/commit/641c5b554ed85be0fcf378fe388591f5a9e6714a))
+* Bot reporting in BotFactory ([#1228](https://www.github.com/dxos/protocols/issues/1228)) ([7b087c8](https://www.github.com/dxos/protocols/commit/7b087c810ba9fb0f5596a412c08bc7f0aef49363))
+* initial Gravity orchestrator, simple tests ([#1225](https://www.github.com/dxos/protocols/issues/1225)) ([e93af3d](https://www.github.com/dxos/protocols/commit/e93af3d9175cc00c2d64f3f4058908de4e460226))
+* Pass bot IDs upon their initialization ([#1222](https://www.github.com/dxos/protocols/issues/1222)) ([c4d0622](https://www.github.com/dxos/protocols/commit/c4d0622258c0bcc6d3251bf36228c92e514d652d))
+* Support large integers in object-model ([#1218](https://www.github.com/dxos/protocols/issues/1218)) ([4fd0ca1](https://www.github.com/dxos/protocols/commit/4fd0ca1bf3330370d52236269812590c5a5bfe20))
+
+
+### Bug Fixes
+
+* Unexpectedly undefined item properties in kitchen sink demo ([#1224](https://www.github.com/dxos/protocols/issues/1224)) ([0d16db2](https://www.github.com/dxos/protocols/commit/0d16db2cf691162e85ed450be16d36b06487129d))
+* Upgrade pnpm to latest ([#1216](https://www.github.com/dxos/protocols/issues/1216)) ([feb0178](https://www.github.com/dxos/protocols/commit/feb0178ad3e345fe8b07e2e1c02602308c18a246))
+
 ## [2.32.0](https://www.github.com/dxos/protocols/compare/v2.31.7...v2.32.0) (2022-05-31)
 
 
