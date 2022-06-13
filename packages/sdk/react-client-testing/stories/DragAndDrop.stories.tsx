@@ -14,6 +14,7 @@ import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { DroppableTable, DroppableList, ListItem, ListItemDef, ProfileInitializer } from '../src';
 import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
+import { moveItemInArray, updateSourceAndTargetState } from './helpers/utils';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -41,12 +42,7 @@ export const NonEchoList = () => {
       const overIndex = order.indexOf(over.id as string);
       const activeIndex = order.indexOf(activeId);
       if (activeIndex !== overIndex) {
-        const currentOrderWithoutId = order.filter(id => id !== activeId);
-        const newOrder = [
-          ...currentOrderWithoutId.slice(0, overIndex),
-          activeId,
-          ...currentOrderWithoutId.slice(overIndex)
-        ];
+        const newOrder = moveItemInArray(order, activeId, overIndex);
         setOrder(newOrder);
       }
     }
@@ -141,12 +137,7 @@ const ListStory = () => {
       const overIndex = orderedList.values.indexOf(over.id as string);
       const activeIndex = orderedList.values.indexOf(activeId);
       if (activeIndex !== overIndex) {
-        const currentOrderWithoutId = orderedList.values.filter(itemId => itemId !== activeId);
-        const newOrder = [
-          ...currentOrderWithoutId.slice(0, overIndex),
-          activeId,
-          ...currentOrderWithoutId.slice(overIndex)
-        ];
+        const newOrder = moveItemInArray(orderedList.values, activeId, overIndex);
         await orderedList.init(newOrder);
         setCurrentOrder(newOrder);
       }
@@ -274,53 +265,36 @@ const MultipleListStory = () => {
   };
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
-    if (!orderedLists?.length || !activeId) {
+    if (!orderedLists?.length || !activeId || !over?.data.current) {
       return;
     }
-    if (over?.data.current) {
-      const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
-      const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
-      if (!sourceOrderedList || !targetOrderedList) {
-        return;
-      }
 
-      let newSourceOrder: string[];
-      if (sourceOrderedList.id !== targetOrderedList.id) {
-        // Remove item from source
-        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
-        await sourceOrderedList.init(sourceOrderWithoutId);
-        newSourceOrder = sourceOrderWithoutId;
-      }
-
-      const overIndex = targetOrderedList.values.indexOf(over.id as string);
-      const activeIndex = targetOrderedList.values.indexOf(activeId);
-      if (activeIndex !== overIndex) {
-        const currentOrderWithoutId = targetOrderedList.values.filter(itemId => itemId !== activeId);
-        const newOrder = [
-          ...currentOrderWithoutId.slice(0, overIndex),
-          activeId,
-          ...currentOrderWithoutId.slice(overIndex)
-        ];
-        await targetOrderedList.init(newOrder);
-        setCurrentOrders(prev => prev.map(currentOrder => {
-          if (currentOrder.id === targetOrderedList.id) {
-            return {
-              id: currentOrder.id,
-              values: targetOrderedList.values
-            };
-          }
-
-          if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
-            return {
-              id: currentOrder.id,
-              values: newSourceOrder
-            };
-          }
-
-          return currentOrder;
-        }));
-      }
+    const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
+    const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
+    if (!sourceOrderedList || !targetOrderedList) {
+      return;
     }
+
+    let newSourceOrder: string[] | undefined;
+    if (sourceOrderedList.id !== targetOrderedList.id) {
+      // Remove item from source
+      const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
+      await sourceOrderedList.init(sourceOrderWithoutId);
+      newSourceOrder = sourceOrderWithoutId;
+    }
+
+    const overIndex = targetOrderedList.values.indexOf(over.id as string);
+    const activeIndex = targetOrderedList.values.indexOf(activeId);
+    if (activeIndex === overIndex) {
+      return;
+    }
+
+    const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
+    await targetOrderedList.init(newOrder);
+    targetOrderedList.id !== sourceOrderedList.id
+      ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
+      : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
+
     setActiveId(undefined);
   };
 
@@ -551,12 +525,7 @@ const TableStory = () => {
           const overIndex = columnOrderedList.values.indexOf(over.id as string);
           const activeIndex = columnOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
-            const currentOrderWithoutId = columnOrderedList.values.filter(itemId => itemId !== activeId);
-            const newOrder = [
-              ...currentOrderWithoutId.slice(0, overIndex),
-              activeId,
-              ...currentOrderWithoutId.slice(overIndex)
-            ];
+            const newOrder = moveItemInArray(columnOrderedList.values, activeId, overIndex);
             await columnOrderedList.init(newOrder);
             setColumnOrder(newOrder);
           }
@@ -566,12 +535,7 @@ const TableStory = () => {
           const overIndex = rowOrderedList.values.indexOf(over.id as string);
           const activeIndex = rowOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
-            const currentOrderWithoutId = rowOrderedList.values.filter(itemId => itemId !== activeId);
-            const newOrder = [
-              ...currentOrderWithoutId.slice(0, overIndex),
-              activeId,
-              ...currentOrderWithoutId.slice(overIndex)
-            ];
+            const newOrder = moveItemInArray(rowOrderedList.values, activeId, overIndex);
             await rowOrderedList.init(newOrder);
             setRowOrder(newOrder);
           }
@@ -723,72 +687,52 @@ const MultipleContainersStory = () => {
     }).filter(Boolean) as ListItemDef[];
   };
 
+  const handleColumnDrag = async (overId: string, activeId: string) => {
+    const overIndex = columnOrderedList!.values.indexOf(overId);
+    const activeIndex = columnOrderedList!.values.indexOf(activeId);
+    if (activeIndex !== overIndex) {
+      const newOrder = moveItemInArray(columnOrderedList!.values, activeId, overIndex);
+      await columnOrderedList!.init(newOrder);
+      setColumnOrder(newOrder);
+    }
+  };
+
   const handleDragEnd = async ({ over }: DragEndEvent) => {
-    if (!orderedLists?.length || !activeId) {
+    if (!orderedLists?.length || !activeId || !over?.data.current) {
       return;
     }
 
-    if (over?.data.current) {
-      if (over.data.current?.sortable.containerId.split('-')[0] === 'columns') {
-        if (columnOrderedList) {
-          const overIndex = columnOrderedList.values.indexOf(over.id as string);
-          const activeIndex = columnOrderedList.values.indexOf(activeId);
-          if (activeIndex !== overIndex) {
-            const currentOrderWithoutId = columnOrderedList.values.filter(itemId => itemId !== activeId);
-            const newOrder = [
-              ...currentOrderWithoutId.slice(0, overIndex),
-              activeId,
-              ...currentOrderWithoutId.slice(overIndex)
-            ];
-            await columnOrderedList.init(newOrder);
-            setColumnOrder(newOrder);
-          }
-        }
-        return;
-      }
-      const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
-      const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
-      if (!sourceOrderedList || !targetOrderedList) {
-        return;
-      }
-
-      let newSourceOrder: string[];
-      if (sourceOrderedList.id !== targetOrderedList.id) {
-        // Remove item from source
-        const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
-        await sourceOrderedList.init(sourceOrderWithoutId);
-        newSourceOrder = sourceOrderWithoutId;
-      }
-
-      const overIndex = targetOrderedList.values.indexOf(over.id as string);
-      const activeIndex = targetOrderedList.values.indexOf(activeId);
-      if (activeIndex !== overIndex) {
-        const currentOrderWithoutId = targetOrderedList.values.filter(itemId => itemId !== activeId);
-        const newOrder = [
-          ...currentOrderWithoutId.slice(0, overIndex),
-          activeId,
-          ...currentOrderWithoutId.slice(overIndex)
-        ];
-        await targetOrderedList.init(newOrder);
-        setCurrentOrders(prev => prev.map(currentOrder => {
-          if (currentOrder.id === targetOrderedList.id) {
-            return {
-              id: currentOrder.id,
-              values: targetOrderedList.values
-            };
-          }
-
-          if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
-            return {
-              id: currentOrder.id,
-              values: newSourceOrder
-            };
-          }
-
-          return currentOrder;
-        }));
-      }
+    if (over.data.current?.sortable.containerId.split('-')[0] === 'columns' && columnOrderedList) {
+      await handleColumnDrag(over.id as string, activeId);
+      return;
     }
+
+    const sourceOrderedList = orderedLists.find(list => list.values.includes(activeId));
+    const targetOrderedList = orderedLists.find(list => list.id === over.data.current!.sortable.containerId);
+    if (!sourceOrderedList || !targetOrderedList) {
+      return;
+    }
+
+    let newSourceOrder: string[] | undefined;
+    // Check if dragging to a different list.
+    if (sourceOrderedList.id !== targetOrderedList.id) {
+      // Remove item from source list.
+      const sourceOrderWithoutId = sourceOrderedList.values.filter(value => value !== activeId);
+      await sourceOrderedList.init(sourceOrderWithoutId);
+      newSourceOrder = sourceOrderWithoutId;
+    }
+
+    const overIndex = targetOrderedList.values.indexOf(over.id as string);
+    const activeIndex = targetOrderedList.values.indexOf(activeId);
+    if (activeIndex === overIndex) {
+      return;
+    }
+
+    const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
+    await targetOrderedList.init(newOrder);
+    targetOrderedList.id !== sourceOrderedList.id
+      ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
+      : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
     setActiveId(undefined);
   };
 
