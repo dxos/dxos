@@ -17,8 +17,15 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
     return 1;
   }
 
-  const ta = itemAdapter.title(a).toLowerCase();
-  const tb = itemAdapter.title(b).toLowerCase();
+  const ta = itemAdapter.title(a)?.toLowerCase();
+  if (!ta) {
+    return -1;
+  }
+
+  const tb = itemAdapter.title(b)?.toLowerCase();
+  if (!tb) {
+    return 1;
+  }
 
   return (ta < tb) ? -1 : (ta > tb) ? 1 : 0;
 };
