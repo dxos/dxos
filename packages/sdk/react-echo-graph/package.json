@@ -19,7 +19,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/gem-core": "~2.2.1-beta.11",
+    "@dxos/gem-core": "~2.2.1-beta.12",
     "@dxos/gem-spore": "~2.2.1-beta.11"
   },
   "devDependencies": {

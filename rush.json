@@ -822,6 +822,10 @@
       "packageName": "@dxos/browser-tests",
       "projectFolder": "packages/gravity/browser-tests"
     },
+    {
+      "packageName": "@dxos/gravity-dashboard",
+      "projectFolder": "packages/gravity/gravity-dashboard"
+    },
 
     //
     // wallet
