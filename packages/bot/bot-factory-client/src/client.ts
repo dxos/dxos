@@ -40,6 +40,11 @@ export class BotFactoryClient {
     return this._rpc.rpc;
   }
 
+  getBot (id: string) {
+    assert(this._rpc, 'Not started.');
+    return new BotHandle(id, this._rpc);
+  }
+
   // TODO(burdon): Rename listBots?
   async getBots () {
     assert(this._rpc, 'Not started.');
