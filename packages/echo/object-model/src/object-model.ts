@@ -66,8 +66,8 @@ export class MutationBuilder {
  * Defines generic object accessor.
  */
 export interface ObjectProperties {
-  get (key: string, defaultValue?: any): any
-  set (key: string, value: any): Promise<void>
+  get (key: string, defaultValue?: unknown): any
+  set (key: string, value: unknown): Promise<void>
 }
 
 /**
@@ -101,12 +101,12 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     return new MutationBuilder(this);
   }
 
-  get (key: string, defaultValue: any = undefined) {
+  get (key: string, defaultValue?: unknown) {
     validateKey(key);
     return cloneDeep(get(this._getState(), key, defaultValue));
   }
 
-  async set (key: string, value: any) {
+  async set (key: string, value: unknown) {
     validateKey(key);
     await this._makeMutation({
       mutations: [
