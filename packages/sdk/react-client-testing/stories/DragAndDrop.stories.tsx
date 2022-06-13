@@ -41,14 +41,11 @@ export const NonEchoList = () => {
       const activeIndex = order.indexOf(activeId);
       if (activeIndex !== overIndex) {
         const currentOrderWithoutId = order.filter(id => id !== activeId);
-        console.log(currentOrderWithoutId);
         const newOrder = [
           ...currentOrderWithoutId.slice(0, overIndex),
           activeId,
           ...currentOrderWithoutId.slice(overIndex)
         ];
-        console.log(order);
-        console.log(newOrder);
         setOrder(newOrder);
       }
     }
