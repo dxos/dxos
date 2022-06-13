@@ -14,7 +14,7 @@ import {
   RegistryClient
 } from '@dxos/registry-client';
 
-export const MOCK_BOT_DXN = 'example:bot:mock';
+export const MOCK_BOT_DXN = 'example:bot/mock';
 
 export const createMockRegistryWithBot = async (botPath: string) => {
   const mock = new MemoryRegistryClientBackend();
