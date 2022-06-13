@@ -96,7 +96,6 @@ export const DroppableTable = ({
             ))
           )}
         </SortableContext>
-
       </DroppableContainer>
       <DroppableContainer
         id={id}
