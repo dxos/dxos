@@ -28,6 +28,7 @@ const items = Array.from({ length: faker.datatype.number({ min: 1, max: 10 }) })
   title: faker.name.firstName()
 }));
 const initialOrder = items.map(item => item.id);
+
 export const NonEchoList = () => {
   const [activeId, setActiveId] = useState<string>();
   const [order, setOrder] = useState(items.map(item => item.id));
