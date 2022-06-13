@@ -6,7 +6,7 @@ import assert from 'assert';
 import protobuf from 'protobufjs';
 
 import { raise } from '@dxos/debug';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from './encoding';
 import { Record as RawRecord } from './proto';
@@ -155,8 +155,13 @@ export class RegistryClient {
    */
   async getRecords (query?: Query): Promise<RegistryRecord[]> {
     const rawRecords = await this._backend.getRecords();
-    const records = await Promise.all(rawRecords.map(({ cid, ...record }) => this._decodeRecord(cid, record)));
-    return records.filter(record => Filtering.matchRecord(record, query));
+    const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
+      this._decodeRecord(cid, record)
+    ));
+
+    return records
+      .filter(isNotNullOrUndefined)
+      .filter(record => Filtering.matchRecord(record, query));
   }
 
   /**
@@ -237,14 +242,14 @@ export class RegistryClient {
     return record;
   }
 
-  private async _decodeRecord (cid: CID, rawRecord: RawRecord): Promise<RegistryRecord> {
-    const payload = rawRecord?.payload && await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
+  private async _decodeRecord (cid: CID, rawRecord: RawRecord): Promise<RegistryRecord | undefined> {
+    if (!rawRecord.payload) {
+      return undefined;
+    }
+
+    const payload = await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
       await this.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
     );
-
-    if (!payload) {
-      throw new Error('Record payload is not valid');
-    }
 
     return {
       ...rawRecord,
