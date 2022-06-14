@@ -10,10 +10,10 @@
     ],
     "paths": {
       "@polkadot/api/augment": [
-        "./src/interfaces/augment-api.ts"
+        "./src/polkadot/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
-        "./src/interfaces/augment-types.ts"
+        "./src/polkadot/interfaces/augment-types.ts"
       ],
       "sample-polkadotjs-typegen/*": [
         "./src/*"

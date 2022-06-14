@@ -8,21 +8,73 @@ import protobuf from 'protobufjs';
 import { raise } from '@dxos/debug';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from './encoding';
-import { Record as RawRecord } from './proto';
-import { Filtering, Query } from './queries';
-import { RegistryClientBackend } from './registry-client-backend';
 import {
-  CID, Domain, DomainKey,
-  AccountKey,
-  DXN,
-  Resource,
-  RegistryType,
-  ResourceRecord,
-  RegistryRecord,
-  TypeRecordMetadata,
-  RecordMetadata
-} from './types';
+  RecordExtension,
+  decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload,
+  encodeProtobuf, sanitizeExtensionData
+} from '../encoding';
+import { Record as RawRecord } from '../proto';
+import { AccountKey } from './account-key';
+import { CID } from './cid';
+import { DomainKey } from './domain-key';
+import { DXN } from './dxn';
+import { Filtering, Query } from './queries';
+import { Domain, RegistryClientBackend, Resource } from './registry';
+
+export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
+  cid: CID,
+  payload: RecordExtension<T>
+}
+
+export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
+  cid: CID,
+  type: {
+    /**
+     * FQN of the root message in the protobuf definitions.
+     * NOTE: Should not be used to name this type.
+     */
+    messageName: string
+    protobufDefs: protobuf.Root
+    /**
+     * Source of the type definition.
+     */
+    protobufIpfsCid?: CID
+  }
+}
+
+/**
+ * Specific binding of Resource tag to a corresponding Record.
+ */
+// TODO(wittjosiah): Replace with tuple (resource, record) once dxn/resource includes tags.
+export interface ResourceRecord<R extends RegistryRecord> {
+  /**
+   * Resource that points to this Record.
+   */
+  resource: Resource
+
+  /**
+   * Specific tag of the fetched Record.
+   */
+  tag?: string
+
+  /**
+   * Record data.
+   */
+  record: R
+}
+
+/**
+ * Record metadata provided by the user.
+ */
+export interface RecordMetadata {
+  displayName?: string
+  description?: string
+  tags?: string[]
+}
+
+export interface TypeRecordMetadata extends RecordMetadata {
+  protobufIpfsCid?: string
+}
 
 /**
  * Main API for DXNS registry.
