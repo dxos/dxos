@@ -31,3 +31,26 @@
 
     Presentation:
       A challenge signed by `device-1` key.
+
+
+## Intuition about credentials
+
+Conceptually we can think about access control as being handled by a set of state machines with a signature of:
+
+```
+process(CredentialMessage[]) -> Key[]
+```
+
+They process a list of credential messages and return a set of keys that have access to certain resource.
+
+For example:
+ - Feed DAG is built by such state machine.
+ - List of party members is built by such state machine.
+ - List of devices in an identity is built by such state machine.
+
+**Party State-Machine is a composition of those smaller state machines**.
+
+The messages that are fed into those state machines may come from control feeds or be ephemeral.
+
+Consider member authentication example above. We could pass credentials from party-state as well as those presented by the member into an appropriate state-machine and as a result get back the set of device keys that are members of this party. The rest of the verification is just checking that the presented key is in that set and verifying the presentation.
+
