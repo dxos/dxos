@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import { synchronized } from '@dxos/async';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -97,7 +98,12 @@ export class MetadataStore {
   /**
    * Adds new party to store and saves it in persistent storage.
    */
+   @synchronized
   async addParty (partyKey: PublicKey): Promise<void> {
+    await this._addParty(partyKey);
+  }
+
+  private async _addParty(partyKey: PublicKey): Promise<void> {
     if (this.getParty(partyKey)) {
       return;
     }
@@ -113,12 +119,17 @@ export class MetadataStore {
    * Adds feed key to the party specified by public key and saves updated data in persistent storage.
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
+  @synchronized
   async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    await this._addPartyFeed(partyKey, feedKey);
+  }
+
+  private async _addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
     if (this.hasFeed(partyKey, feedKey)) {
       return;
     }
     if (!this.getParty(partyKey)) {
-      await this.addParty(partyKey);
+      await this._addParty(partyKey);
     }
     const party = this.getParty(partyKey);
     assert(party);
@@ -135,8 +146,9 @@ export class MetadataStore {
    * Update party's feed list.
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
+   @synchronized
   async setDataFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
-    await this.addPartyFeed(partyKey, feedKey);
+    await this._addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
     party.dataFeedKey = feedKey;
     await this._save();
