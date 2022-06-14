@@ -323,18 +323,19 @@ describe('PartyCore', () => {
     );
 
     const feed2 = await partyFeedProvider.createOrOpenDataFeed();
-    await party2.open([{
-      type: KeyType.FEED,
-      publicKey: peer1.feedKey,
-    }]);
-    afterTest(async () => party2.close());
-    
+  
     await peer1.party.processor.writeHaloMessage(createFeedAdmitMessage(
       peer1.keyring,
       peer1.party.key,
       feed2.key,
       [peer1.partyKey]
     ));
+
+    await party2.open([{
+      publicKey: peer1.feedKey,
+      type: KeyType.FEED,
+    }]);
+    afterTest(async () => party2.close());
 
     const protocol1 = new Protocol({
       discoveryKey: peer1.party.key.asBuffer(),
@@ -359,11 +360,7 @@ describe('PartyCore', () => {
 
     protocol1.stream.pipe(protocol2.stream).pipe(protocol1.stream)
 
-    await peer1.party.open();
-    await party2.open([{
-      publicKey: peer1.feedKey,
-      type: KeyType.FEED,
-    }]);
+  
 
     const item1 = await peer1.party.database.createItem();
     await promiseTimeout(party2.database.waitForItem({ id: item1.id }), 1000, new Error('timeout'));
