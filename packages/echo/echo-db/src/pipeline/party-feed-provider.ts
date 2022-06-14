@@ -9,13 +9,18 @@ import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { ComplexMap } from '@dxos/util'
 
 import { MetadataStore } from '../metadata';
+import { Event } from '@dxos/async';
 
 const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
+  private readonly _descriptors = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex())
+  readonly feedOpened = new Event<FeedDescriptor>();
+  
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
@@ -23,14 +28,9 @@ export class PartyFeedProvider {
     private readonly _partyKey: PublicKey
   ) {}
 
-  // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
   async createOrOpenWritableFeed () {
     const partyMetadata = this._metadataStore.getParty(this._partyKey);
-    if (!partyMetadata) {
-      return this._createReadWriteFeed();
-    }
-
-    if (!partyMetadata.dataFeedKey) {
+    if (!partyMetadata?.dataFeedKey) {
       return this._createReadWriteFeed();
     }
 
@@ -38,10 +38,14 @@ export class PartyFeedProvider {
     if (!fullKey?.secretKey) {
       return this._createReadWriteFeed();
     }
+    
+    if(this._descriptors.has(fullKey.publicKey)) {
+      return this._descriptors.get(fullKey.publicKey)!;
+    }
 
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    const feedKey = this._keyring.getKey(feed.key);
-    assert(feedKey, 'Feed key not found');
+    this._descriptors.set(fullKey.publicKey, feed);
+    this.feedOpened.emit(feed);
     return feed;
   }
 
@@ -50,11 +54,18 @@ export class PartyFeedProvider {
   }
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
+    if(this._descriptors.has(feedKey)) {
+      return this._descriptors.get(feedKey)!;
+    }
+
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
-    return this._feedStore.openReadOnlyFeed(feedKey);
+    const feed = await this._feedStore.openReadOnlyFeed(feedKey);
+    this._descriptors.set(feedKey, feed);
+    this.feedOpened.emit(feed);
+    return feed;
   }
 
   private async _createReadWriteFeed () {
@@ -63,6 +74,8 @@ export class PartyFeedProvider {
     assert(fullKey && fullKey.secretKey);
     await this._metadataStore.setDataFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    this._descriptors.set(fullKey.publicKey, feed);
+    this.feedOpened.emit(feed);
     return feed;
   }
 
@@ -72,7 +85,7 @@ export class PartyFeedProvider {
       iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
     }
 
-    this._feedStore.feedOpenedEvent.on((descriptor) => {
+    this.feedOpened.on((descriptor) => {
       if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
         iterator.addFeedDescriptor(descriptor);
       }
