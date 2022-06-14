@@ -716,6 +716,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/libp2p-demo",
+      "projectFolder": "packages/mesh/libp2p-demo",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/network-manager",
       "projectFolder": "packages/mesh/network-manager",
       "shouldPublish": true,
