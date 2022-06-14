@@ -7,7 +7,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, waitForCondition } from '@dxos/async';
+import { latch, sleep, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
 import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
@@ -327,6 +327,56 @@ describe('ECHO', () => {
     expect(b.queryParties().value.length).toBe(2);
     expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
     expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
+  }).timeout(10_000);
+
+  test('Mutations from another device', async () => {
+    const a = await setup({ createProfile: true });
+    const b = await setup();
+
+    await a.createParty();
+    
+    const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
+    await b.halo.join(invitation, defaultSecretProvider);
+
+    // Check the initial party is opened.
+    await waitForCondition(() => b.queryParties().value.length === 1, 1000);
+
+    const partyA = a.queryParties().value[0];
+    await partyA.open();
+    const partyB = b.queryParties().value[0];
+    await partyB.open();
+
+
+    {
+      // Subscribe to Item updates on B.
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec()
+      const updated = selection.update.waitFor(result => result.entities.length > 0);
+        
+
+      // Create a new Item on A.
+      const itemB = await partyB.database
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
+      log(`A created ${itemB.id}`);
+
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemB.id}`);
+
+      expect(selection.entities[0].id).toEqual(itemB.id)
+    }
+
+    await a.close();
+    await b.close();
+
+    await a.open();
+
+    {
+      const partyA = a.queryParties().first;
+
+      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true)
+    }
+
   }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
