@@ -28,6 +28,10 @@ export class PartyFeedProvider {
     private readonly _partyKey: PublicKey
   ) {}
 
+  getFeedKeys () {
+    return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
+  }
+
   async createOrOpenWritableFeed () {
     const partyMetadata = this._metadataStore.getParty(this._partyKey);
     if (!partyMetadata?.dataFeedKey) {
@@ -49,8 +53,17 @@ export class PartyFeedProvider {
     return feed;
   }
 
-  getFeedKeys () {
-    return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
+  async openKnownFeeds() {
+    for(const feedKey of this.getFeedKeys()) {
+      if(!this._descriptors.has(feedKey)) {
+        const fullKey = this._keyring.getFullKey(feedKey);
+        const feed = fullKey?.secretKey
+          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
+          : await this._feedStore.openReadOnlyFeed(feedKey)
+        this._descriptors.set(feedKey, feed);
+        this.feedOpened.emit(feed);
+      }
+    }
   }
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
@@ -81,8 +94,8 @@ export class PartyFeedProvider {
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
-    for (const feedKey of this.getFeedKeys()) {
-      iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
+    for (const feed of this._descriptors.values()) {
+      iterator.addFeedDescriptor(feed);
     }
 
     this.feedOpened.on((descriptor) => {
