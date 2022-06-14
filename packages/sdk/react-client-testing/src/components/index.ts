@@ -3,9 +3,7 @@
 //
 
 export * from './CreatePartyDialog';
-export * from './DraggableCard';
-export * from './DraggableTable';
-export * from './DroppableList';
+export * from './DragAndDrop';
 export * from './ExportMenu';
 export * from './ImportMenu';
 export * from './ImportIpfsDialog';
