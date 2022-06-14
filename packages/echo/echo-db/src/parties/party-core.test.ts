@@ -22,7 +22,7 @@ import { PartyCore } from './party-core';
 import { Protocol } from '@dxos/mesh-protocol';
 import { promiseTimeout, sleep } from '@dxos/async';
 
-describe.only('PartyCore', () => {
+describe('PartyCore', () => {
   const createParty = async () => {
     const storage = createStorage('', STORAGE_RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
@@ -300,7 +300,7 @@ describe.only('PartyCore', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   })
 
-  test('two instances replicating', async () => {
+  test.only('two instances replicating', async () => {
     const peer1 = await createParty();
 
     const storage = createStorage('', STORAGE_RAM);
@@ -323,7 +323,10 @@ describe.only('PartyCore', () => {
     );
 
     const feed2 = await partyFeedProvider.createOrOpenDataFeed();
-    await party2.open();
+    await party2.open([{
+      type: KeyType.FEED,
+      publicKey: peer1.feedKey,
+    }]);
     afterTest(async () => party2.close());
     
     await peer1.party.processor.writeHaloMessage(createFeedAdmitMessage(
