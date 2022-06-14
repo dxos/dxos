@@ -379,7 +379,7 @@ describe('ECHO', () => {
 
   }).timeout(10_000);
 
-  test('3 devices', async () => {
+  test.skip('3 devices', async () => {
     const a = await setup({ createProfile: true });
     const b = await setup();
 
