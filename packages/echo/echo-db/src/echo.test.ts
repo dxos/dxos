@@ -7,7 +7,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, waitForCondition } from '@dxos/async';
+import { latch, sleep, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
 import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
@@ -346,6 +346,14 @@ describe('ECHO', () => {
     const partyB = b.queryParties().value[0];
     await partyB.open();
 
+    console.log('ALL OPEN')
+
+    await sleep(1000)
+    console.log({
+      a: partyA.feedProvider.getFeedKeys().map(x => x.toHex()),
+      b: partyA.feedProvider.getFeedKeys().map(x => x.toHex()),
+    })
+
     {
       // Subscribe to Item updates on B.
       const selection = partyA.database.select({ type: 'example:item/test' }).exec()
@@ -356,6 +364,8 @@ describe('ECHO', () => {
       const itemB = await partyB.database
         .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       log(`A created ${itemB.id}`);
+
+      console.log('ITEM CREATED')
 
       // Now wait to see it on B.
       await updated;

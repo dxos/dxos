@@ -11,12 +11,17 @@ import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protoc
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 
 import { MetadataStore } from '../metadata';
-import { Unsubscribe } from '@dxos/util';
+import { ComplexMap, Unsubscribe } from '@dxos/util';
+import { Event } from '@dxos/async';
+import { ComplexSet } from '@dxos/util';
 
 const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
+  private readonly _descriptors = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex());
+  readonly feedOpened = new Event<FeedDescriptor>();
+
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
@@ -29,11 +34,21 @@ export class PartyFeedProvider {
   }
 
   onFeedOpened(cb: (feed: FeedDescriptor) => void): Unsubscribe {
-    return this._feedStore.feedOpenedEvent.on((descriptor) => {
-      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
-        cb(descriptor)
-      }
-    });
+      // return this._feedStore.feedOpenedEvent.on((descriptor) => {
+      //   if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
+      //     cb(descriptor)
+      //   } else {
+      //     console.log(`CHECK FAILED ${descriptor.key}`)
+      //   }
+      // });
+    return this.feedOpened.on(cb);
+  }
+
+  private _notifyFeed(feed: FeedDescriptor) {
+    if(!this._descriptors.has(feed.key)) {
+      this._descriptors.set(feed.key, feed)
+      this.feedOpened.emit(feed);
+    }
   }
 
   async createOrOpenDataFeed () {
@@ -51,11 +66,14 @@ export class PartyFeedProvider {
   }
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
+    console.log(`Open readonly ${feedKey}`)
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
-    return this._feedStore.openReadOnlyFeed(feedKey);
+    const feed = await this._feedStore.openReadOnlyFeed(feedKey);
+    this._notifyFeed(feed);
+    return feed;
   }
 
   private async _tryOpenWritableFeed(key: PublicKey): Promise<FeedDescriptor | undefined> {
@@ -65,6 +83,7 @@ export class PartyFeedProvider {
     }
 
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    this._notifyFeed(feed);
     return feed;
   }
 
@@ -74,16 +93,25 @@ export class PartyFeedProvider {
     assert(fullKey && fullKey.secretKey);
     await this._metadataStore.setDataFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    this._notifyFeed(feed);
     return feed;
   }
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
+    const seenFeeds = new ComplexSet<PublicKey>(x => x.toHex());
     for (const feedKey of this.getFeedKeys()) {
+      console.log(`Read from initial feed ${feedKey}`)
+      seenFeeds.add(feedKey)
       iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
     }
 
-    this.onFeedOpened(descriptor => iterator.addFeedDescriptor(descriptor));
+    this.feedOpened.on(descriptor => {
+      if(!seenFeeds.has(descriptor.key)) {
+        seenFeeds.add(descriptor.key)
+        iterator.addFeedDescriptor(descriptor);
+      }
+    })
 
     iterator.stalled.on(candidates => {
       warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);

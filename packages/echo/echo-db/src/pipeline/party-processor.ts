@@ -54,6 +54,7 @@ export class PartyProcessor {
 
     // TODO(marik-d): Use `Event.wrap` here.
     state.on(PartyEventType.ADMIT_FEED, (keyRecord: KeyRecord) => {
+      console.log(`ADMIT_FEED ${keyRecord.publicKey}`)
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
       this.feedAdmitted.emit(keyRecord.publicKey);
     });
@@ -128,6 +129,7 @@ export class PartyProcessor {
   }
 
   async processMessage (message: IHaloStream) {
+    console.log(`Processing ${PublicKey.from(message.meta.feedKey).toHex()}:${message.meta.seq}`)
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     const { data } = message;
     this._haloMessages.push(data);

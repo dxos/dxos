@@ -109,6 +109,7 @@ export class Pipeline {
     setImmediate(async () => {
       for await (const block of this._feedStorIterator) {
         readLogger?.(block as any);
+        console.log(`Pipeline processed ${PublicKey.from(block.key)}:${block.seq}`)
 
         try {
           const { data: message } = block;

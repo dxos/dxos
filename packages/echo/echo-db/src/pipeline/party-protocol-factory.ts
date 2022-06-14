@@ -160,7 +160,7 @@ export class ReplicatorProtocolPluginFactory {
         },
 
         subscribe: (addFeedToReplicatedSet: (feed: any) => void) => {
-          return this._feedProvider.onFeedOpened(async (descriptor) => {
+          return this._feedProvider.feedOpened.on(async (descriptor) => {
             log(`Adding feed: ${descriptor.key.toHex()}`);
             addFeedToReplicatedSet({ discoveryKey: descriptor.feed.discoveryKey });
           });

@@ -300,7 +300,7 @@ describe('PartyCore', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   })
 
-  test.only('two instances replicating', async () => {
+  test('two instances replicating', async () => {
     const peer1 = await createParty();
 
     const storage = createStorage('', STORAGE_RAM);

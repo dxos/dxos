@@ -83,6 +83,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    * @param descriptor
    */
   addFeedDescriptor (descriptor: FeedDescriptor) {
+    console.log(`[Iterator] Add ${descriptor.key}`)
+    assert(Array.from(this._candidateFeeds.values()).every(feed => !feed.key.equals(descriptor.key)), 'Duplicate feed added.')
     this._candidateFeeds.add(descriptor);
     this._trigger.wake();
     return this;
@@ -130,7 +132,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     const frameSeq = this._skipTimeframe.get(PublicKey.from(descriptor.key));
     const startIdx = frameSeq !== undefined ? frameSeq + 1 : 0;
 
-    log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}`);
+    log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}, feedLength=${descriptor.feed.length}`);
 
     assert(descriptor.feed, 'Feed is not initialized');
     const stream = new Readable({ objectMode: true })
@@ -161,12 +163,15 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private _popSendQueue () {
     const candidates = this._getMessageCandidates();
 
+    console.log({ candidates: candidates.map(c => [c.key, c.seq]), feeds: Array.from(this._openFeeds.values()).map(f => f.descriptor.key.toHex()) })
+
     if (candidates.length === 0) {
       return undefined;
     }
 
     const selected = this._messageSelector(candidates);
     if (selected === undefined) {
+      console.log(`No message selected ${candidates.map(c => PublicKey.from(c.key))}`)
       return;
     }
 
@@ -189,6 +194,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
         // TODO(burdon): Then/catch?
         feed.iterator.next()
           .then(result => {
+            console.log(`Poll ${feed.descriptor.key}`)
             assert(!result.done);
             feed.sendQueue.push(...result.value);
             this._trigger.wake();
