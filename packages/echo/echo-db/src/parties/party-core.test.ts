@@ -6,8 +6,8 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createEnvelopeMessage, createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { codec } from '@dxos/echo-protocol';
+import { createId, PublicKey } from '@dxos/crypto';
+import { codec, schema, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -20,9 +20,9 @@ import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
 import { Protocol } from '@dxos/mesh-protocol';
-import { promiseTimeout } from '@dxos/async';
+import { promiseTimeout, sleep } from '@dxos/async';
 
-describe('PartyCore', () => {
+describe.only('PartyCore', () => {
   const createParty = async () => {
     const storage = createStorage('', STORAGE_RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
@@ -115,21 +115,21 @@ describe('PartyCore', () => {
     }
   });
 
-  // test('feed admit message triggers new feed to be opened', async () => {
-  //   const { party, partyKey, keyring, partyFeedProvider, feedStore } = await createParty();
+  test('feed admit message triggers new feed to be opened', async () => {
+    const { party, partyKey, keyring, partyFeedProvider, feedStore } = await createParty();
 
-  //   const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
-  //   await party.processor.writeHaloMessage(createFeedAdmitMessage(
-  //     keyring,
-  //     party.key,
-  //     feedKey.publicKey,
-  //     [partyKey]
-  //   ));
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      keyring,
+      party.key,
+      feedKey.publicKey,
+      [partyKey]
+    ));
 
-  //   await feedStore.feedOpenedEvent.waitForCount(1)
+    await feedStore.feedOpenedEvent.waitForCount(1)
 
-  //   expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(feedKey.publicKey))).toEqual(true)
-  // })
+    // expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(feedKey.publicKey))).toEqual(true)
+  })
 
   // test('opens feed from hints', async () => {
   //   const storage = createStorage('', STORAGE_RAM);
@@ -169,7 +169,138 @@ describe('PartyCore', () => {
   //   expect(partyFeedProvider.openDescriptors.some(k => k.key.equals(otherFeedKey))).toEqual(true)
   // })
 
-  test.skip('two instances replicating', async () => {
+
+  test('manually create item', async () => {
+    const { party, keyring, partyKey, feedStore, partyFeedProvider } = await createParty();
+    await party.open();
+
+    const feed = await partyFeedProvider.createOrOpenDataFeed();
+
+    const itemId = createId()
+    await feed.feed.append({
+      echo: {
+        itemId,
+        genesis: {
+          itemType: 'dxos:example',
+          modelType: ObjectModel.meta.type,
+        },
+        timeframe: new Timeframe(),
+      }
+    })
+
+    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
+  })
+
+  test('admit a second feed to the party', async () => {
+    const { party, keyring, partyKey, feedStore, partyFeedProvider } = await createParty();
+    await party.open();
+
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const fullKey = keyring.getFullKey(feedKey.publicKey)
+    console.log(`New feed: ${feedKey.publicKey}`)
+    const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
+    
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      keyring,
+      party.key,
+      feed2.key,
+      [partyKey]
+    ));
+
+    const itemId = createId()
+    await feed2.append({
+      echo: {
+        itemId,
+        genesis: {
+          itemType: 'dxos:example',
+          modelType: ObjectModel.meta.type,
+        },
+        timeframe: new Timeframe(),
+      }
+    })
+    console.log('MESSAGE WRITTEN')
+    console.log(`length=${feed2.feed.length}`)
+
+    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
+  })
+
+  test('admit feed and then open it', async () => {
+    const { party, keyring, partyKey, feedStore, partyFeedProvider } = await createParty();
+    await party.open();
+
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const fullKey = keyring.getFullKey(feedKey.publicKey)
+    console.log(`New feed: ${feedKey.publicKey}`)
+    
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      keyring,
+      party.key,
+      feedKey.publicKey,
+      [partyKey]
+    ));
+
+    await sleep(5);
+
+    const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
+    const itemId = createId()
+    await feed2.append({
+      echo: {
+        itemId,
+        genesis: {
+          itemType: 'dxos:example',
+          modelType: ObjectModel.meta.type,
+        },
+        timeframe: new Timeframe(),
+      }
+    })
+    console.log('MESSAGE WRITTEN')
+    console.log(`length=${feed2.feed.length}`)
+
+    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
+  })
+
+
+  test('self-admitting feed with a hint', async () => {
+    const { party, keyring, partyKey, feedStore, partyFeedProvider } = await createParty();
+    await party.open();
+
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const fullKey = keyring.getFullKey(feedKey.publicKey)
+    console.log(`New feed: ${feedKey.publicKey}`)
+    const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
+    
+    await party.processor.takeHints([{
+      type: KeyType.FEED,
+      publicKey: feedKey.publicKey,
+    }]);
+
+    await feed2.append({
+      halo: createFeedAdmitMessage(
+        keyring,
+        party.key,
+        feedKey.publicKey,
+        [partyKey]
+      ),
+    })
+
+    const itemId = createId()
+    await feed2.append({
+      echo: {
+        itemId,
+        genesis: {
+          itemType: 'dxos:example',
+          modelType: ObjectModel.meta.type,
+        },
+        timeframe: new Timeframe(),
+      }
+    })
+    console.log('MESSAGE WRITTEN')
+    console.log(`length=${feed2.feed.length}`)
+
+    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
+  })
+
+  test('two instances replicating', async () => {
     const peer1 = await createParty();
 
     const storage = createStorage('', STORAGE_RAM);
