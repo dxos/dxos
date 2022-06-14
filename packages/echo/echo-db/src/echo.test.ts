@@ -7,7 +7,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, promiseTimeout, sleep, waitForCondition } from '@dxos/async';
+import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
 import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
@@ -334,7 +334,7 @@ describe('ECHO', () => {
     const b = await setup();
 
     await a.createParty();
-    
+
     const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
     await b.halo.join(invitation, defaultSecretProvider);
 
@@ -346,24 +346,21 @@ describe('ECHO', () => {
     const partyB = b.queryParties().value[0];
     await partyB.open();
 
-
     {
       // Subscribe to Item updates on B.
-      const selection = partyA.database.select({ type: 'example:item/test' }).exec()
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec();
       const updated = selection.update.waitFor(result => result.entities.length > 0);
-        
 
       // Create a new Item on A.
       const itemB = await partyB.database
         .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       log(`A created ${itemB.id}`);
 
-
       // Now wait to see it on B.
       await updated;
       log(`B has ${itemB.id}`);
 
-      expect(selection.entities[0].id).toEqual(itemB.id)
+      expect(selection.entities[0].id).toEqual(itemB.id);
     }
 
     await a.close();
@@ -374,7 +371,7 @@ describe('ECHO', () => {
     {
       const partyA = a.queryParties().first;
 
-      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true)
+      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true);
     }
 
   }).timeout(10_000);
@@ -384,7 +381,7 @@ describe('ECHO', () => {
     const b = await setup();
 
     await a.createParty();
-    
+
     await b.halo.join(await a.halo.createInvitation(defaultInvitationAuthenticator), defaultSecretProvider);
 
     // Check the initial party is opened.
@@ -395,24 +392,21 @@ describe('ECHO', () => {
     const partyB = b.queryParties().value[0];
     await partyB.open();
 
-
     {
       // Subscribe to Item updates on B.
-      const selection = partyA.database.select({ type: 'example:item/test' }).exec()
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec();
       const updated = selection.update.waitFor(result => result.entities.length > 0);
-        
 
       // Create a new Item on A.
       const itemB = await partyB.database
         .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
       log(`A created ${itemB.id}`);
 
-
       // Now wait to see it on B.
       await updated;
       log(`B has ${itemB.id}`);
 
-      expect(selection.entities[0].id).toEqual(itemB.id)
+      expect(selection.entities[0].id).toEqual(itemB.id);
     }
 
     await a.close();
@@ -423,7 +417,7 @@ describe('ECHO', () => {
     {
       const partyA = a.queryParties().first;
 
-      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true)
+      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true);
     }
 
     const c = await setup();
@@ -431,7 +425,7 @@ describe('ECHO', () => {
     await waitForCondition(() => c.queryParties().value.length === 1, 1000);
     const partyC = c.queryParties().first;
 
-    await promiseTimeout(partyC.database.waitForItem({ type: 'example:item/test' }), 1000, new Error('timeout'))
+    await promiseTimeout(partyC.database.waitForItem({ type: 'example:item/test' }), 1000, new Error('timeout'));
   }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
