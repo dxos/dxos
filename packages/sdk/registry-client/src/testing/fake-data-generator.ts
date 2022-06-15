@@ -37,9 +37,9 @@ export const registerMockResource = async (
 ): Promise<void> => {
   return registry.registerResource(
     params.name ?? createDXN(), // TODO(burdon): Either pass in or don't.
+    params.tag ?? 'latest',
     params.record ?? createCID(),
-    params.owner ?? AccountKey.random(),
-    params.tag ?? 'latest'
+    params.owner ?? AccountKey.random()
   );
 };
 
