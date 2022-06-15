@@ -6,7 +6,7 @@ import assert from 'assert';
 import pify from 'pify';
 import randomAccessIdb from 'random-access-idb';
 
-import { IFile, StorageType, STORAGE_IDB } from '../interfaces';
+import { IFile, StorageType } from '../interfaces';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
@@ -21,7 +21,7 @@ interface FileRegistryRecord {
 }
 
 export class IDbStorage extends AbstractStorage {
-  public override type: StorageType = STORAGE_IDB;
+  public override type: StorageType = StorageType.idb;
   private _fileStorage: RandomAccessStorage;
   private _fileRegistry: Map<string, FileRegistryRecord> = new Map();
 

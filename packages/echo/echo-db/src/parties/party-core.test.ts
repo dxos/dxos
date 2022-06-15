@@ -11,7 +11,7 @@ import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
@@ -22,7 +22,7 @@ import { PartyCore } from './party-core';
 
 describe('PartyCore', () => {
   const setup = async () => {
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.ram);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -31,7 +31,7 @@ describe('PartyCore', () => {
     const metadataStore = new MetadataStore(createRamStorage());
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.ram));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 

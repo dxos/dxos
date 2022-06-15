@@ -12,7 +12,7 @@ import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../database';
@@ -24,7 +24,7 @@ const log = debug('dxos:echo:pipeline:test');
 // TODO(burdon): Test read-only.
 describe('pipeline', () => {
   test('streams', async () => {
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.ram);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
@@ -86,7 +86,7 @@ describe('pipeline', () => {
   });
 
   test('writing', async () => {
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.ram);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 

@@ -10,7 +10,7 @@ import pify from 'pify';
 import { latch } from '@dxos/async';
 import { createId, createKeyPair, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
@@ -29,7 +29,7 @@ describe('feed store iterator', () => {
       numMessages: 10
     };
 
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('', StorageType.ram), { valueEncoding: codec });
 
     //
     // Create the ordered feed stream.
@@ -152,7 +152,7 @@ describe('feed store iterator', () => {
   });
 
   test('skipping initial messages', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), {
+    const feedStore = new FeedStore(createStorage('', StorageType.ram), {
       valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
     });
 

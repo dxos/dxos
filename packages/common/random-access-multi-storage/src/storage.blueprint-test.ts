@@ -5,7 +5,7 @@
 import expect from 'expect';
 import pify from 'pify';
 
-import { IFile, IStorage, STORAGE_NODE, STORAGE_RAM } from './interfaces';
+import { IFile, IStorage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => IStorage) {
@@ -63,7 +63,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const storage = createStorage();
 
       // TODO(yivlad): Doesn't work for node.
-      if (storage.type === STORAGE_NODE) {
+      if (storage.type === StorageType.node) {
         this.skip();
       }
       const fileName = randomText();
@@ -110,8 +110,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('subdirectories', async function () {
       const rootStorage = createStorage();
 
-      // TODO(yivlad): Doesn't work for STORAGE_NODE.
-      if (rootStorage.type === STORAGE_NODE) {
+      // TODO(yivlad): Doesn't work for StorageType.node.
+      if (rootStorage.type === StorageType.node) {
         this.skip();
       }
       const fileName = randomText();
@@ -142,8 +142,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('destroys file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): Works only for STORAGE_RAM.
-      if (storage.type !== STORAGE_RAM) {
+      // TODO(yivlad): Works only for StorageType.ram.
+      if (storage.type !== StorageType.ram) {
         this.skip();
       }
 
