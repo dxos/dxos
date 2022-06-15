@@ -17,7 +17,7 @@ export const subscribeToFeeds = ({ echo }: DevtoolsServiceDependencies) => {
       next({
         parties: parties.map(party => ({
           key: party.key,
-          feeds: party.feedProvider.getFeeds().map(feed => feed.key),
+          feeds: party.feedProvider.getFeeds().map(feed => feed.key)
         }))
       });
     };
