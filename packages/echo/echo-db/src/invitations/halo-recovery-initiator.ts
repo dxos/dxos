@@ -7,7 +7,6 @@ import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
 import {
-  Authenticator,
   ClaimResponse,
   Keyring,
   KeyType,
@@ -17,7 +16,8 @@ import {
   createGreetingClaimMessage,
   SecretProvider,
   SecretValidator,
-  SignedMessage
+  SignedMessage,
+  codec
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
@@ -144,7 +144,7 @@ export class HaloRecoveryInitiator {
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
   createSecretProvider (): SecretProvider {
-    return async (info: any) => Buffer.from(Authenticator.encodePayload(
+    return async (info: any) => Buffer.from(codec.encode(
       /* The signed portion of the Auth message includes the ID and authNonce provided
        * by "info". These values will be validated on the other end.
        */
@@ -182,7 +182,7 @@ export class HaloRecoveryInitiator {
       });
 
       const secretValidator: SecretValidator = async (invitation, secret) => {
-        const { payload: authMessage } = Authenticator.decodePayload(secret);
+        const { payload: authMessage } = codec.decode(secret);
 
         return keyring.verify(<unknown>authMessage as SignedMessage) &&
           authMessage.signed.payload.partyKey.equals(invitation.id) &&

@@ -7,11 +7,9 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import {
-  Authenticator,
   KeyHint,
   KeyRecord,
   PartyState,
-  PartyAuthenticator,
   Message as HaloMessage,
   IdentityEventType,
   PartyEventType
@@ -32,7 +30,6 @@ export interface FeedSetProvider {
  */
 export class PartyProcessor {
   private readonly _state: PartyState;
-  private readonly _authenticator: Authenticator;
 
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
@@ -49,21 +46,14 @@ export class PartyProcessor {
     private readonly _partyKey: PartyKey
   ) {
     this._state = new PartyState(this._partyKey);
-    this._authenticator = new PartyAuthenticator(this._state);
-
-    /* TODO(telackey): `@dxos/credentials` was only half converted to TS. In its current state, the KeyRecord type
-     * is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
-     * Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
-     */
-    const state = this._state as any;
 
     // TODO(marik-d): Use `Event.wrap` here.
-    state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
+    this._state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
       this._feedAdded.emit(keyRecord.publicKey);
     });
-    state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
-    state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
+    this._state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
+    this._state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
   }
 
   get partyKey () {
@@ -90,8 +80,8 @@ export class PartyProcessor {
     return this._state.credentialMessages.size === 0;
   }
 
-  get authenticator () {
-    return this._authenticator;
+  get state () {
+    return this._state;
   }
 
   isFeedAdmitted (feedKey: FeedKey) {

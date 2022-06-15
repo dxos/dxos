@@ -2,65 +2,44 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import moment from 'moment';
 
 import { PublicKey } from '@dxos/crypto';
 
-import { Keyring } from '../keys';
 import { isSignedMessage, PartyState } from '../party';
-import { codec, KeyType, Message } from '../proto';
+import { Auth, SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:auth');
 
 const MAX_AGE = 24 * 60 * 60; // One day.
 
 /**
- * Abstract base class for Authenticators.
+ * Interface for Authenticators.
  * Used by AuthPlugin for authenticating nodes during handshake.
  */
-// TODO(telackey): Explain here the intention behind the abstract base class:
+// TODO(telackey): Explain here the intention behind the interface:
 //  E.g., to have different authentication methods (besides the current PartyAuthenticator) for replication auth,
 //  or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
-export abstract class Authenticator {
-  // TODO(dboreham): The following static methods:
-  //  temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
-
-  static encodePayload (credentials: Message) {
-    return codec.encode(credentials);
-  }
-
-  static decodePayload (credentials: Buffer) {
-    return codec.decode(credentials);
-  }
-
+export interface Authenticator {
   /**
    * Return true if the credentials checkout, else false.
-   * @param credentials
-   * @returns {Promise<boolean>}
    */
-  async authenticate(credentials: any): Promise<boolean> { // eslint-disable-line
-    throw new Error('Not Implemented');
-  }
+  authenticate(credentials: SignedMessage): Promise<boolean>
 }
 
 /**
  * A Party-based Authenticator, which checks that the supplied credentials belong to a Party member.
  */
-export class PartyAuthenticator extends Authenticator {
-  _party: PartyState;
+export class PartyAuthenticator implements Authenticator {
 
   /**
    * Takes the target Party for checking admitted keys and verifying signatures.
-   * @param party
    */
-  constructor (party: PartyState) {
-    assert(party);
-    super();
-
-    this._party = party;
-  }
+  constructor (
+    private readonly _party: PartyState,
+    private readonly _onAuthenticated?: (auth: Auth) => Promise<void>
+  ) {}
 
   /**
    * Authenticate the credentials presented during handshake. The signature on the credentials must be valid and belong
@@ -70,14 +49,14 @@ export class PartyAuthenticator extends Authenticator {
    */
   // TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage`
   //  signing a message of type `dxos.credentials.auth.Auth`.
-  override async authenticate (credentials: any) {
+  async authenticate (credentials: SignedMessage): Promise<boolean> {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
       return false;
     }
 
-    const { created, payload } = credentials.signed || {};
-    const { deviceKey, identityKey, partyKey, feedKey } = payload || {};
+    const { created, payload: auth = {} } = credentials.signed || {};
+    const { deviceKey, identityKey, partyKey } = auth;
     if (!created || !PublicKey.isPublicKey(deviceKey) || !PublicKey.isPublicKey(identityKey) || !PublicKey.isPublicKey(partyKey)) {
       log('Bad credentials:', credentials);
       return false;
@@ -109,14 +88,14 @@ export class PartyAuthenticator extends Authenticator {
 
     const verified = this._party.verifySignatures(credentials);
 
-    // TODO(telackey): Find a better place to do this, since doing it here could be considered a side-effect.
-    if (verified &&
-      PublicKey.isPublicKey(feedKey) &&
-      Keyring.signingKeys(credentials, { deep: false, validate: false }).find(key => key.equals(feedKey)) &&
-      !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))) {
-      log(`Auto-hinting feedKey: ${feedKey.toHex()} for Device ` +
-        `${deviceKey.toHex()} on Identity ${identityKey.toHex()}`);
-      await this._party.takeHints([{ publicKey: feedKey, type: KeyType.FEED }]);
+    if (
+      verified
+      // feedAdmit &&
+      // PublicKey.isPublicKey(feedKey) &&
+      // !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
+    ) {
+      log(`Member authenticated: deviceKey=${deviceKey}, identityKey=${identityKey}`);
+      await this._onAuthenticated?.(auth);
     }
 
     return verified;
