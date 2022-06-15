@@ -7,7 +7,7 @@
 import expect from 'expect';
 import moment from 'moment';
 
-import { randomBytes } from '@dxos/crypto';
+import { PublicKey, randomBytes } from '@dxos/crypto';
 
 import { Filter, Keyring } from '../keys';
 import {
@@ -17,7 +17,7 @@ import {
   createPartyGenesisMessage,
   PartyState
 } from '../party';
-import { codecLoop, KeyType } from '../proto';
+import { codecLoop, KeyType, Message, SignedMessage } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { PartyAuthenticator } from './authenticator';
 
@@ -26,11 +26,11 @@ const createPartyKeyrings = async () => {
   const keyring = new Keyring();
   for (const type of Object.values(KeyType)) {
     if (typeof type === 'string') {
-      await keyring.createKeyRecord({ type: KeyType[type] });
+      await keyring.createKeyRecord({ type: KeyType[type as any] });
     }
   }
 
-  const partyKey = keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey;
+  const partyKey = keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!.publicKey;
 
   /* This Keyring will have nothing but the public key of the Party. This mimics the initial state
    * when joining a Party, since all that is known at that time know at that time is the public key.
@@ -50,24 +50,8 @@ const createPartyKeyrings = async () => {
   };
 };
 
-/* eslint-disable unused-imports/no-unused-vars */
-const chainToString = (chain, depth = 0) => {
-  let ret = chain.publicKey.toHex() + '\n';
-  if (chain.parents.length) {
-    depth += 1;
-    for (const parent of chain.parents) {
-      let spaces = '';
-      for (let i = 0; i < depth; i++) {
-        spaces += '  ';
-      }
-      ret += `${spaces}-> ${chainToString(parent, depth)}`;
-    }
-  }
-  return ret;
-};
 /* eslint-enable @typescript-eslint/no-unused-vars */
-
-const messageMap = (messages) => {
+const messageMap = (messages: (Message | SignedMessage)[]): Map<string, Message | SignedMessage> => {
   const map = new Map();
   for (const message of messages) {
     const admits = admitsKeys(message);
@@ -78,7 +62,7 @@ const messageMap = (messages) => {
   return map;
 };
 
-const getIdentityKeyChainForDevice = (keyring, devicePublicKey, messages) => {
+const getIdentityKeyChainForDevice = (keyring: Keyring, devicePublicKey: PublicKey, messages: Map<string, Message | SignedMessage>) => {
   // Excludes all the FEED keys.
   return Keyring.buildKeyChain(devicePublicKey, messages,
     keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
@@ -125,9 +109,9 @@ it('Chain of Keys', async () => {
     const emptyKeyring = new Keyring();
     const chain = Keyring.buildKeyChain(deviceKey.publicKey, messages);
     // In the target keyring, which only has the Identity, it should chase all the way back to the Identity.
-    expect(identityKey.publicKey).toEqual((await targetKeyring.findTrusted(chain)).publicKey);
+    expect(identityKey.publicKey).toEqual((await targetKeyring.findTrusted(chain))!.publicKey);
     // And in the halo, which has all the keys, it should chase straight back to this key.
-    expect(deviceKey.publicKey).toEqual((await haloKeyring.findTrusted(chain)).publicKey);
+    expect(deviceKey.publicKey).toEqual((await haloKeyring.findTrusted(chain))!.publicKey);
     // And in an empty Keyring, we should not get anything.
     expect(await emptyKeyring.findTrusted(chain)).toBeUndefined();
   }
@@ -142,9 +126,9 @@ it('PartyAuthenticator - good direct', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -155,8 +139,8 @@ it('PartyAuthenticator - good direct', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
-      identityKeyRecord
+      identityKeyRecord!,
+      identityKeyRecord!
     )
   );
 
@@ -175,9 +159,9 @@ it('PartyAuthenticator - good chain', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -188,14 +172,14 @@ it('PartyAuthenticator - good chain', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
+      identityKeyRecord!,
       getIdentityKeyChainForDevice(
         keyring,
         secondDeviceKeyRecord.publicKey,
         messageMap([
           ...messages,
-          createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord, [identityKeyRecord]),
-          createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord])
+          createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord!, [identityKeyRecord!]),
+          createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord!])
         ]
         )
       )
@@ -217,9 +201,9 @@ it('PartyAuthenticator - bad chain', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -232,8 +216,8 @@ it('PartyAuthenticator - bad chain', async () => {
     secondDeviceKeyRecord.publicKey,
     messageMap([
       ...messages,
-      createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord, [deviceKeyRecord]),
-      createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord])
+      createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord!, [deviceKeyRecord!]),
+      createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord!])
     ]
     )
   );
@@ -242,7 +226,7 @@ it('PartyAuthenticator - bad chain', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
+      identityKeyRecord!,
       chain
     )
   );
@@ -260,9 +244,9 @@ it('PartyAuthenticator - wrong key', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!
     )
   ];
   await party.processMessages(messages);
@@ -271,7 +255,7 @@ it('PartyAuthenticator - wrong key', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!,
       wrongKey
     )
   );
@@ -288,9 +272,9 @@ it('PartyAuthenticator - wrong party', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
   await party.processMessages(messages);
@@ -299,8 +283,8 @@ it('PartyAuthenticator - wrong party', async () => {
     createAuthMessage(
       keyring,
       randomBytes(32),
-      identityKeyRecord,
-      identityKeyRecord
+      identityKeyRecord!,
+      identityKeyRecord!
     )
   );
 
@@ -317,9 +301,9 @@ it('PartyAuthenticator - missing deviceKey', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!
     )
   ];
   await party.processMessages(messages);
@@ -330,8 +314,8 @@ it('PartyAuthenticator - missing deviceKey', async () => {
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
-        identityKey: identityKeyRecord.publicKey
-      }, [identityKeyRecord])
+        identityKey: identityKeyRecord!.publicKey
+      }, [identityKeyRecord!])
   };
 
   const ok = await auth.authenticate(wrappedCredentials.payload);
@@ -346,9 +330,9 @@ it('PartyAuthenticator - tampered message', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -358,8 +342,8 @@ it('PartyAuthenticator - tampered message', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
-      identityKeyRecord
+      identityKeyRecord!,
+      identityKeyRecord!
     )
   );
 
@@ -380,9 +364,9 @@ it('PartyAuthenticator - tampered signature', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -392,8 +376,8 @@ it('PartyAuthenticator - tampered signature', async () => {
     createAuthMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
-      identityKeyRecord
+      identityKeyRecord!,
+      identityKeyRecord!
     )
   );
 
@@ -415,9 +399,9 @@ it('PartyAuthenticator - signature too old', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -429,11 +413,11 @@ it('PartyAuthenticator - signature too old', async () => {
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
-        identityKey: identityKeyRecord.publicKey,
-        deviceKey: deviceKeyRecord.publicKey
+        identityKey: identityKeyRecord!.publicKey,
+        deviceKey: deviceKeyRecord!.publicKey
       },
-      [identityKeyRecord],
-      null,
+      [identityKeyRecord!],
+      undefined,
       moment().subtract(2, 'days').format('YYYY-MM-DDTHH:mm:ssZ')
       )
   };
@@ -451,9 +435,9 @@ it('PartyAuthenticator - signature too far in future', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -465,11 +449,11 @@ it('PartyAuthenticator - signature too far in future', async () => {
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
-        identityKey: identityKeyRecord.publicKey,
-        deviceKey: deviceKeyRecord.publicKey
+        identityKey: identityKeyRecord!.publicKey,
+        deviceKey: deviceKeyRecord!.publicKey
       },
-      [identityKeyRecord],
-      null,
+      [identityKeyRecord!],
+      undefined,
       moment().add(2, 'days').format('YYYY-MM-DDTHH:mm:ssZ')
       )
   };
@@ -487,9 +471,9 @@ it('PartyAuthenticator - signature date invalid', async () => {
 
   const messages = [
     createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
-      identityKeyRecord
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
     )
   ];
 
@@ -501,11 +485,11 @@ it('PartyAuthenticator - signature date invalid', async () => {
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
-        identityKey: identityKeyRecord.publicKey,
-        deviceKey: deviceKeyRecord.publicKey
+        identityKey: identityKeyRecord!.publicKey,
+        deviceKey: deviceKeyRecord!.publicKey
       },
-      [identityKeyRecord],
-      null,
+      [identityKeyRecord!],
+      undefined,
       'INVALID'
       )
   };
