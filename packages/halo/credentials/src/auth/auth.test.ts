@@ -13,11 +13,12 @@ import { Filter, Keyring } from '../keys';
 import {
   admitsKeys,
   createEnvelopeMessage,
+  createFeedAdmitMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage,
   PartyState
 } from '../party';
-import { codecLoop, KeyType, Message, SignedMessage } from '../proto';
+import { codecLoop, FeedAdmit, KeyType, Message, SignedMessage } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { PartyAuthenticator } from './authenticator';
 
@@ -147,6 +148,104 @@ it('PartyAuthenticator - good direct', async () => {
   const ok = await auth.authenticate(wrappedCredentials.payload);
   expect(ok).toBe(true);
 });
+
+
+it('PartyAuthenticator - feed admit callback is called', async () => {
+  const { keyring, partyKey } = await createPartyKeyrings();
+  const party = new PartyState(partyKey);
+
+  let admitMsg: SignedMessage | undefined;
+
+  const auth = new PartyAuthenticator(party, async (msg) => {
+    admitMsg = msg;
+  });
+
+  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
+
+  const messages = [
+    createPartyGenesisMessage(keyring,
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
+    )
+  ];
+
+  // Only add the Identity to the party keyring.
+  await party.processMessages(messages);
+
+  const newFeedKeyRecord = await keyring.createKeyRecord({ type: KeyType.FEED })!;
+  const feedAdmit = createFeedAdmitMessage(
+    keyring,
+    partyKey,
+    newFeedKeyRecord.publicKey,
+  )
+
+  const wrappedCredentials = codecLoop(
+    createAuthMessage(
+      keyring,
+      partyKey,
+      identityKeyRecord,
+      identityKeyRecord,
+      newFeedKeyRecord,
+      undefined,
+      feedAdmit,
+    )
+  );
+
+  const ok = await auth.authenticate(wrappedCredentials.payload);
+  expect(ok).toBe(true);
+
+  expect(admitMsg).toEqual(feedAdmit)
+});
+
+it('PartyAuthenticator - feed admit callback is not called when feed is already in the party', async () => {
+  const { keyring, partyKey } = await createPartyKeyrings();
+  const party = new PartyState(partyKey);
+
+  let admitMsg: SignedMessage | undefined;
+
+  const auth = new PartyAuthenticator(party, async (msg) => {
+    admitMsg = msg;
+  });
+
+  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
+  const feedKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!;
+
+  const messages = [
+    createPartyGenesisMessage(keyring,
+      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
+      identityKeyRecord!
+    )
+  ];
+
+  // Only add the Identity to the party keyring.
+  await party.processMessages(messages);
+
+  const feedAdmit = createFeedAdmitMessage(
+    keyring,
+    partyKey,
+    feedKeyRecord.publicKey,
+  )
+
+  const wrappedCredentials = codecLoop(
+    createAuthMessage(
+      keyring,
+      partyKey,
+      identityKeyRecord,
+      identityKeyRecord,
+      feedKeyRecord,
+      undefined,
+      feedAdmit,
+    )
+  );
+
+  const ok = await auth.authenticate(wrappedCredentials.payload);
+  expect(ok).toBe(true);
+
+  expect(admitMsg).toEqual(undefined)
+});
+
 
 it('PartyAuthenticator - good chain', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();

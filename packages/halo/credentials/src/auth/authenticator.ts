@@ -55,7 +55,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   constructor (
     private readonly _party: PartyState,
-    private readonly _onFeedAdmission: (feedAdmit: FeedAdmit) => Promise<void>,
+    private readonly _onFeedAdmission: (feedAdmit: SignedMessage) => Promise<void>,
   ) {
     super();
   }
@@ -107,7 +107,7 @@ export class PartyAuthenticator extends Authenticator {
 
     const verified = this._party.verifySignatures(credentials);
 
-    // TODO(telackey): Find a better place to do this, since doing it here could be considered a side-effect.
+    // TODO(dmaretskiy): Consider extracting this as a generic onAuth callback.
     if (
       verified &&
       feedAdmit &&
