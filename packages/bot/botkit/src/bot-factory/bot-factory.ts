@@ -116,10 +116,10 @@ export class BotFactory implements BotFactoryService {
       const packageSpecifier = request.package;
 
       // TODO(egorgripasov): Get rid of dxn.
-      const { dxn, name } = packageSpecifier ?? {};
+      const name = packageSpecifier?.name ?? packageSpecifier?.dxn;
 
-      if (this._contentResolver && (dxn || name)) {
-        request.package = await this._contentResolver.resolve({ dxn, name });
+      if (this._contentResolver && name) {
+        request.package = await this._contentResolver.resolve({ name });
       }
 
       const handle = new BotHandle(
