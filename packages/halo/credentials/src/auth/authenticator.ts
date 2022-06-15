@@ -54,7 +54,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   constructor (
     private readonly _party: PartyState,
-    private readonly _onFeedAdmission: (feedAdmit: Message) => Promise<void>
+    private readonly _onAuthenticated?: (auth: Auth) => Promise<void>
   ) {
     super();
   }
@@ -106,18 +106,14 @@ export class PartyAuthenticator extends Authenticator {
 
     const verified = this._party.verifySignatures(credentials);
 
-    // TODO(dmaretskiy): Consider extracting this as a generic onAuth callback.
     if (
-      verified &&
-      feedAdmit &&
-      PublicKey.isPublicKey(feedKey) &&
-      !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
+      verified
+      // feedAdmit &&
+      // PublicKey.isPublicKey(feedKey) &&
+      // !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
     ) {
-      log(`Admitting feedKey: ${feedKey} for Device ` +
-        `${deviceKey} on Identity ${identityKey}`);
-      await this._onFeedAdmission(feedAdmit);
-    } else {
-      log(`No new feeds for: ${feedKey} for Device ${deviceKey} on Identity ${identityKey}`)
+      log(`Member authenticated: deviceKey=${deviceKey}, identityKey=${identityKey}`)
+      await this._onAuthenticated?.(payload || {})
     }
 
     return verified;

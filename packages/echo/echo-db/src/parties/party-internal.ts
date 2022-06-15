@@ -22,6 +22,7 @@ import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 import debug from 'debug'
+import { createAuthenticator } from './authenticator';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
@@ -181,20 +182,7 @@ export class PartyInternal {
       this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._invitationManager,
-      new PartyAuthenticator(this._partyCore.processor.state, async feedAdmit => {
-        const deviceKeyChain = this._identityProvider().deviceKeyChain;
-        if(!deviceKeyChain) {
-          log('Not device key chain available to admit new member feed')
-          return
-        }
-
-        await this._partyCore.processor.writeHaloMessage(createEnvelopeMessage(
-          this._identityProvider().keyring,
-          this._partyCore.key,
-          feedAdmit,
-          [deviceKeyChain]
-        ))
-      }),
+      createAuthenticator(this._partyCore.processor, this._identityProvider),
       this._partyCore.processor.getActiveFeedSet()
     );
 

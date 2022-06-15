@@ -151,13 +151,13 @@ describe('PartyAuthenticator', () => {
     expect(ok).toBe(true);
   });
 
-  it('feed admit callback is called', async () => {
+  it('auth callback is called', async () => {
     const { keyring, partyKey } = await createPartyKeyrings();
     const party = new PartyState(partyKey);
 
-    let admitMsg: Message | undefined;
+    let called = false;
     const auth = new PartyAuthenticator(party, async (msg) => {
-      admitMsg = msg;
+      called = true;
     });
 
     const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
@@ -195,54 +195,7 @@ describe('PartyAuthenticator', () => {
     const ok = await auth.authenticate(wrappedCredentials.payload);
     expect(ok).toBe(true);
 
-    expect(admitMsg).toEqual(feedAdmit);
-  });
-
-  it('feed admit callback is not called when feed is already in the party', async () => {
-    const { keyring, partyKey } = await createPartyKeyrings();
-    const party = new PartyState(partyKey);
-
-    let admitMsg: Message | undefined;
-    const auth = new PartyAuthenticator(party, async (msg) => {
-      admitMsg = msg;
-    });
-
-    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
-    const feedKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!;
-
-    const messages = [
-      createPartyGenesisMessage(keyring,
-      keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
-      identityKeyRecord!
-      )
-    ];
-
-    // Only add the Identity to the party keyring.
-    await party.processMessages(messages);
-
-    const feedAdmit = createFeedAdmitMessage(
-      keyring,
-      partyKey,
-      feedKeyRecord.publicKey
-    );
-
-    const wrappedCredentials = codecLoop(
-      createAuthMessage(
-        keyring,
-        partyKey,
-        identityKeyRecord,
-        identityKeyRecord,
-        feedKeyRecord,
-        undefined,
-        feedAdmit
-      )
-    );
-
-    const ok = await auth.authenticate(wrappedCredentials.payload);
-    expect(ok).toBe(true);
-
-    expect(admitMsg).toEqual(undefined);
+    expect(called).toEqual(true);
   });
 
   it('good chain', async () => {
