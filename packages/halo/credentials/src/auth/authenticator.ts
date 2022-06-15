@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import { Keyring } from '../keys';
 import { isSignedMessage, PartyState } from '../party';
-import { codec, KeyType, Message } from '../proto';
+import { Auth, codec, FeedAdmit, KeyType, Message, SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:auth');
 
@@ -49,17 +49,15 @@ export abstract class Authenticator {
  * A Party-based Authenticator, which checks that the supplied credentials belong to a Party member.
  */
 export class PartyAuthenticator extends Authenticator {
-  _party: PartyState;
 
   /**
    * Takes the target Party for checking admitted keys and verifying signatures.
-   * @param party
    */
-  constructor (party: PartyState) {
-    assert(party);
+  constructor (
+    private readonly _party: PartyState,
+    private readonly _onFeedAdmission: (feedAdmit: FeedAdmit) => Promise<void>,
+  ) {
     super();
-
-    this._party = party;
   }
 
   /**
@@ -70,14 +68,14 @@ export class PartyAuthenticator extends Authenticator {
    */
   // TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage`
   //  signing a message of type `dxos.credentials.auth.Auth`.
-  override async authenticate (credentials: any) {
+  override async authenticate (credentials: SignedMessage) {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
       return false;
     }
 
     const { created, payload } = credentials.signed || {};
-    const { deviceKey, identityKey, partyKey, feedKey } = payload || {};
+    const { deviceKey, identityKey, partyKey, feedKey, feedAdmit }: Auth = payload  || {};
     if (!created || !PublicKey.isPublicKey(deviceKey) || !PublicKey.isPublicKey(identityKey) || !PublicKey.isPublicKey(partyKey)) {
       log('Bad credentials:', credentials);
       return false;
@@ -110,13 +108,16 @@ export class PartyAuthenticator extends Authenticator {
     const verified = this._party.verifySignatures(credentials);
 
     // TODO(telackey): Find a better place to do this, since doing it here could be considered a side-effect.
-    if (verified &&
+    if (
+      verified &&
+      feedAdmit &&
       PublicKey.isPublicKey(feedKey) &&
       Keyring.signingKeys(credentials, { deep: false, validate: false }).find(key => key.equals(feedKey)) &&
-      !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))) {
-      log(`Auto-hinting feedKey: ${feedKey.toHex()} for Device ` +
+      !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
+    ) {
+      log(`Admitting feedKey: ${feedKey.toHex()} for Device ` +
         `${deviceKey.toHex()} on Identity ${identityKey.toHex()}`);
-      await this._party.takeHints([{ publicKey: feedKey, type: KeyType.FEED }]);
+      await this._onFeedAdmission(feedAdmit)
     }
 
     return verified;
