@@ -1,13 +1,17 @@
-import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test'
-import { TestFoo } from "./proto/gen/dxos/test/testfoo";
-import { schema } from './proto/gen';
+//
+// Copyright 2022 DXOS.org
+//
+
+import { readFileSync, readdirSync, lstatSync } from 'fs';
+import { join } from 'path';
+
 import { MyKey } from './my-key';
-import { readFileSync, readdirSync, lstatSync } from 'fs'
-import { join } from 'path'
-import { loadSync } from 'protobufjs';
+import { schema } from './proto/gen';
+import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test';
+import { TestFoo } from './proto/gen/dxos/test/testfoo';
 
 test('encode and decode', async () => {
-  const codec = schema.getCodecForType('dxos.test.TaskList')
+  const codec = schema.getCodecForType('dxos.test.TaskList');
 
   const initial: TaskList = {
     tasks: [
@@ -17,51 +21,51 @@ test('encode and decode', async () => {
         key: new MyKey(Buffer.from('foo')),
         type: TaskType.COMPLETED,
         googleAny: {
-          __type_url: 'dxos.test.SubstitutedByInterface',
-          foo: 'foo',
+          '@type': 'dxos.test.SubstitutedByInterface',
+          foo: 'foo'
         }
       },
       {
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
-        type: TaskType.IN_PROGRESS,
+        type: TaskType.IN_PROGRESS
       }
-    ],
-  }
+    ]
+  };
 
-  const encoded = codec.encode(initial)
-  
+  const encoded = codec.encode(initial);
+
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
+  const decoded = codec.decode(encoded);
 
-  expect(decoded).toEqual(initial)
-})
+  expect(decoded).toEqual(initial);
+});
 
 test('encode and decode external package message', async () => {
-  const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo')
+  const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo');
 
-  const initial: TestFoo = { fizz: 3, bazz: "5" };
+  const initial: TestFoo = { fizz: 3, bazz: '5' };
 
-  const encoded = codec.encode(initial)
+  const encoded = codec.encode(initial);
 
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
+  const decoded = codec.decode(encoded);
 
-  expect(decoded).toEqual(initial)
+  expect(decoded).toEqual(initial);
 
   expect(() => {
-    const encoded = codec.encode({ badname: "badvalue" } as any)
+    const encoded = codec.encode({ badname: 'badvalue' } as any);
 
     expect(encoded).toBeInstanceOf(Uint8Array);
 
-    const decoded = codec.decode(encoded)
+    const decoded = codec.decode(encoded);
 
-    expect(decoded).toEqual(initial)
+    expect(decoded).toEqual(initial);
   }).toThrow();
-})
+});
 
 test('complex fields round trip', () => {
   const codec = schema.getCodecForType('dxos.test.ComplexFields');
@@ -71,7 +75,7 @@ test('complex fields round trip', () => {
     requiredField: new MyKey(Buffer.from('foo')),
     mappedField: {
       foo: new MyKey(Buffer.from('foo')),
-      bar: new MyKey(Buffer.from('foo')),
+      bar: new MyKey(Buffer.from('foo'))
     },
     inner: {
       bar: ComplexFields.InnerEnum.BAR,
@@ -81,38 +85,38 @@ test('complex fields round trip', () => {
       foo: 'foo'
     },
     googleAny: {
-      __type_url: 'dxos.test.Task',
+      '@type': 'dxos.test.Task',
       id: 'baz',
       title: 'Baz',
       key: new MyKey(Buffer.from('foo')),
-      type: TaskType.IN_PROGRESS,
+      type: TaskType.IN_PROGRESS
     },
     importedAny: {
-      bar: 123,
-    },
-  }
+      bar: 123
+    }
+  };
 
-  const encoded = codec.encode(initial)
+  const encoded = codec.encode(initial);
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
-  expect(decoded).toEqual(initial)
-})
+  const decoded = codec.decode(encoded);
+  expect(decoded).toEqual(initial);
+});
 
 test('encodes empty repeated fields as empty arrays', () => {
   const codec = schema.getCodecForType('dxos.test.ComplexFields');
 
   const initial: ComplexFields = {
     repeatedField: [],
-    requiredField: new MyKey(Buffer.from('foo')),
-  }
+    requiredField: new MyKey(Buffer.from('foo'))
+  };
 
-  const encoded = codec.encode(initial)
+  const encoded = codec.encode(initial);
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
-  expect(decoded).toEqual(initial)
-})
+  const decoded = codec.decode(encoded);
+  expect(decoded).toEqual(initial);
+});
 
 test('scalars', () => {
   const codec = schema.getCodecForType('dxos.test.Scalars');
@@ -132,54 +136,53 @@ test('scalars', () => {
     sfixed64Field: '312313123',
     boolField: true,
     stringField: 'hello',
-    bytesField: Buffer.from('world'),
-  }
+    bytesField: Buffer.from('world')
+  };
 
-  const encoded = codec.encode(initial)
-  
+  const encoded = codec.encode(initial);
+
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
+  const decoded = codec.decode(encoded);
 
-  expect(decoded).toEqual(initial)
-})
+  expect(decoded).toEqual(initial);
+});
 
 test('timestamp', () => {
-  const codec = schema.getCodecForType('dxos.test.WithTimestamp')
+  const codec = schema.getCodecForType('dxos.test.WithTimestamp');
 
   const initial: WithTimestamp = {
     timestamp: new Date('2021-09-17T09:46:04Z')
-  }
+  };
 
-  const encoded = codec.encode(initial)
-  
+  const encoded = codec.encode(initial);
+
   expect(encoded).toBeInstanceOf(Uint8Array);
 
-  const decoded = codec.decode(encoded)
+  const decoded = codec.decode(encoded);
 
-  expect(decoded).toEqual(initial)
-})
+  expect(decoded).toEqual(initial);
+});
 
 test('definitions', () => {
-  expect(readDirectoryFiles(join(__dirname, 'proto/gen'))).toMatchSnapshot()
-})
+  expect(readDirectoryFiles(join(__dirname, 'proto/gen'))).toMatchSnapshot();
+});
 
-
-function readDirectoryFiles(dir: string) {
-  let res = ''
-  for(const file of listFilesRecursive(dir)) {
-    res += `${file}:\n`
-    res += readFileSync(join(dir, file), { encoding: 'utf-8' })
-    res += '\n'
+function readDirectoryFiles (dir: string) {
+  let res = '';
+  for (const file of listFilesRecursive(dir)) {
+    res += `${file}:\n`;
+    res += readFileSync(join(dir, file), { encoding: 'utf-8' });
+    res += '\n';
   }
-  return res
+  return res;
 }
 
-function* listFilesRecursive(dir: string): Generator<string> {
+function * listFilesRecursive (dir: string): Generator<string> {
   for (const file of readdirSync(dir)) {
-    if(lstatSync(join(dir, file)).isDirectory()) {
-      for(const sub of listFilesRecursive(join(dir, file))) {
-        yield join(file, sub)
+    if (lstatSync(join(dir, file)).isDirectory()) {
+      for (const sub of listFilesRecursive(join(dir, file))) {
+        yield join(file, sub);
       }
     } else {
       yield file;

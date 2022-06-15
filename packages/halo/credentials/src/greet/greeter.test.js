@@ -55,7 +55,7 @@ it('Good invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -71,7 +71,7 @@ it('Good invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: await secretProvider()
       }
@@ -91,7 +91,7 @@ it('Good invitation', async () => {
   {
     const message = {
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.NOTARIZE,
         secret: await secretProvider(),
         params: [
@@ -114,7 +114,7 @@ it('Good invitation', async () => {
     {
       const message = codecLoop({
         payload: {
-          __type_url: 'dxos.credentials.greet.Command',
+          '@type': 'dxos.credentials.greet.Command',
           command: Command.Type.FINISH,
           secret: await secretProvider()
         }
@@ -139,7 +139,7 @@ it('Bad invitation secret', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -151,7 +151,7 @@ it('Bad invitation secret', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: Buffer.from('wrong')
       }
@@ -174,7 +174,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -186,7 +186,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: await secretProvider()
       }
@@ -201,7 +201,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = {
       payload: {
-        __type_url: 'dxos.credentials.greet.Command',
+        '@type': 'dxos.credentials.greet.Command',
         command: Command.Type.NOTARIZE,
         secret: await secretProvider(),
         params: [
@@ -249,14 +249,14 @@ it('WellKnownType params - BytesValue', async () => {
   const value = randomBytes();
 
   const command = codecLoop({
-    __type_url: 'dxos.credentials.Message',
+    '@type': 'dxos.credentials.Message',
     payload: {
-      __type_url: 'dxos.credentials.greet.Command',
+      '@type': 'dxos.credentials.greet.Command',
       command: Command.Type.CLAIM,
       secret: Buffer.from('123'),
       params: [
         {
-          __type_url: 'google.protobuf.BytesValue',
+          '@type': 'google.protobuf.BytesValue',
           value
         }
       ]
