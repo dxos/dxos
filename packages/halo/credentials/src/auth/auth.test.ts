@@ -155,8 +155,7 @@ describe('PartyAuthenticator', () => {
     const { keyring, partyKey } = await createPartyKeyrings();
     const party = new PartyState(partyKey);
 
-    let admitMsg: SignedMessage | undefined;
-
+    let admitMsg: Message | undefined;
     const auth = new PartyAuthenticator(party, async (msg) => {
       admitMsg = msg;
     });
@@ -203,8 +202,7 @@ describe('PartyAuthenticator', () => {
     const { keyring, partyKey } = await createPartyKeyrings();
     const party = new PartyState(partyKey);
 
-    let admitMsg: SignedMessage | undefined;
-
+    let admitMsg: Message | undefined;
     const auth = new PartyAuthenticator(party, async (msg) => {
       admitMsg = msg;
     });

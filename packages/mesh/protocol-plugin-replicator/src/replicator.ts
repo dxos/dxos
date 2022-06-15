@@ -11,6 +11,9 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
+import debug from 'debug';
+
+const log = debug('dxos:protocol-plugin-replicator')
 
 // code const log = debug('dxos.replicator');
 
@@ -110,7 +113,13 @@ export class Replicator {
     const info = { context, session };
 
     try {
-      const share = (feeds: FeedData[]) => peer?.share(feeds);
+      const share = async (feeds: FeedData[]) => { 
+        try {
+          await peer?.share(feeds)
+        } catch(err) {
+          log(err)
+        }
+      };
       const unsubscribe = this._subscribe(share, info);
       peer?.closed.on(unsubscribe);
 

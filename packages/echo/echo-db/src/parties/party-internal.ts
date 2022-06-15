@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, Authenticator } from '@dxos/credentials';
+import { KeyHint, createAuthMessage, Authenticator, createEnvelopeMessage, PartyAuthenticator, createFeedAdmitMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
@@ -21,10 +21,13 @@ import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '..
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
+import debug from 'debug'
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
 export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not be special).
+
+const log = debug('dxos:echo-db:party-internal')
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {
@@ -178,7 +181,20 @@ export class PartyInternal {
       this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._invitationManager,
-      this._partyCore.processor.authenticator,
+      new PartyAuthenticator(this._partyCore.processor.state, async feedAdmit => {
+        const deviceKeyChain = this._identityProvider().deviceKeyChain;
+        if(!deviceKeyChain) {
+          log('Not device key chain available to admit new member feed')
+          return
+        }
+
+        await this._partyCore.processor.writeHaloMessage(createEnvelopeMessage(
+          this._identityProvider().keyring,
+          this._partyCore.key,
+          feedAdmit,
+          [deviceKeyChain]
+        ))
+      }),
       this._partyCore.processor.getActiveFeedSet()
     );
 
@@ -274,12 +290,20 @@ export class PartyInternal {
     return {
       get: () => {
         const identity = this._identityProvider();
+        const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
         return Buffer.from(Authenticator.encodePayload(createAuthMessage(
           identity.signer,
           partyKey,
           identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),
-          identity.keyring.getKey(feedKey)
+          signingKey,
+          identity.keyring.getKey(feedKey),
+          undefined,
+          createFeedAdmitMessage(
+            identity.signer,
+            partyKey,
+            feedKey,
+            [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
+          )
         )));
       }
     };

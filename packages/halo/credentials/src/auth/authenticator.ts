@@ -54,7 +54,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   constructor (
     private readonly _party: PartyState,
-    private readonly _onFeedAdmission: (feedAdmit: SignedMessage) => Promise<void>
+    private readonly _onFeedAdmission: (feedAdmit: Message) => Promise<void>
   ) {
     super();
   }
@@ -111,12 +111,13 @@ export class PartyAuthenticator extends Authenticator {
       verified &&
       feedAdmit &&
       PublicKey.isPublicKey(feedKey) &&
-      Keyring.signingKeys(credentials, { deep: false, validate: false }).find(key => key.equals(feedKey)) &&
       !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
     ) {
-      log(`Admitting feedKey: ${feedKey.toHex()} for Device ` +
-        `${deviceKey.toHex()} on Identity ${identityKey.toHex()}`);
+      log(`Admitting feedKey: ${feedKey} for Device ` +
+        `${deviceKey} on Identity ${identityKey}`);
       await this._onFeedAdmission(feedAdmit);
+    } else {
+      log(`No new feeds for: ${feedKey} for Device ${deviceKey} on Identity ${identityKey}`)
     }
 
     return verified;
