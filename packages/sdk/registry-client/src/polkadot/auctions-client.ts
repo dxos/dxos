@@ -5,9 +5,9 @@
 import { AddressOrPair } from '@polkadot/api/types';
 import BigNumber from 'bn.js';
 
-import { SignTxFunction } from './api/api-transaction-handler';
+import { DomainKey, AccountKey } from '../api';
+import { SignTxFunction } from './api-transaction-handler';
 import { BaseClient } from './base-client';
-import { DomainKey, AccountKey } from './types';
 
 /**
  * Auction allows assigning names to identities. It facilitates domain names registration and ownership.
@@ -84,6 +84,7 @@ export interface IAuctionsClient {
 /**
  *
  */
+// TODO(wittjosiah): Factor out polakadot specific code.
 export class AuctionsClient extends BaseClient implements IAuctionsClient {
   async createAuction (name: string, startAmount: number): Promise<void> {
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.createAuction(name, startAmount));

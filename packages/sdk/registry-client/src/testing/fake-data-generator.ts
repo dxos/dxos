@@ -4,10 +4,9 @@
 
 import faker from 'faker';
 
+import { AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata } from '../api';
 import { decodeProtobuf } from '../encoding';
 import { schemaJson } from '../proto';
-import { RegistryClient } from '../registry-client';
-import { AccountKey, CID, DXN, RecordMetadata, RegistryType, TypeRecordMetadata } from '../types';
 
 /**
  * Generates a random CID.

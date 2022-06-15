@@ -7,7 +7,7 @@ import type { Extrinsic } from '@polkadot/types/interfaces/extrinsics';
 import type { GrandpaEquivocationProof, KeyOwnerProof } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, BlockNumber, Call, ChangesTrieConfiguration, KeyValue, LookupSource, Moment, Perbill, Weight } from '@polkadot/types/interfaces/runtime';
 import type { Key } from '@polkadot/types/interfaces/system';
-import type { AccountKey, DomainKey, Multihash } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { AccountKey, DomainKey, Multihash } from 'sample-polkadotjs-typegen/polkadot/interfaces/registry';
 import type { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types';
 
 declare module '@polkadot/api/types/submittable' {
