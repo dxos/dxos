@@ -8,7 +8,6 @@ import debug from 'debug';
 import { waitForEvent } from '@dxos/async';
 import {
   createEnvelopeMessage,
-  createFeedAdmitMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
   createGreetingHandshakeMessage,
@@ -55,7 +54,6 @@ export class GreetingInitiator {
     private readonly _networkManager: NetworkManager,
     private readonly _identity: Identity,
     private readonly _invitationDescriptor: InvitationDescriptor,
-    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<PublicKey>
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }
@@ -148,8 +146,6 @@ export class GreetingInitiator {
     // The result will include the partyKey and a nonce used when signing the response.
     const { nonce } = handshakeResponse;
     const partyKey = handshakeResponse.partyKey;
-
-    const feedKey = await this._feedInitializer(partyKey);
 
     const credentialMessages = [];
     if (haloInvitation) {

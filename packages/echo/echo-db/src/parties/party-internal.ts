@@ -3,9 +3,10 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, Authenticator, createEnvelopeMessage, PartyAuthenticator, createFeedAdmitMessage } from '@dxos/credentials';
+import { KeyHint, createAuthMessage, Authenticator, createFeedAdmitMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
@@ -19,16 +20,13 @@ import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
+import { createAuthenticator } from './authenticator';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import debug from 'debug'
-import { createAuthenticator } from './authenticator';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
 export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not be special).
-
-const log = debug('dxos:echo-db:party-internal')
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {

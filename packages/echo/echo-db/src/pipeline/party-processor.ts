@@ -7,15 +7,12 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import {
-  Authenticator,
   KeyHint,
   KeyRecord,
   PartyState,
-  PartyAuthenticator,
   Message as HaloMessage,
   IdentityEventType,
-  PartyEventType,
-  createEnvelopeMessage
+  PartyEventType
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
