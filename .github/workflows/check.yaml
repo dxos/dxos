@@ -17,7 +17,7 @@ jobs:
           clean: false
       - uses: actions/checkout@v2
         id: test
-        uses: vmactions/ngrok-tunnel@v0.0.1
+      - uses: vmactions/ngrok-tunnel@v0.0.1
         with:
           protocol: tcp
           port: 22
