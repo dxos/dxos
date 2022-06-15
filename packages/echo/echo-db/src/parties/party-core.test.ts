@@ -10,7 +10,7 @@ import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } f
 import { createId, PublicKey } from '@dxos/crypto';
 import { codec, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { Protocol } from '@dxos/mesh-protocol';
+import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -324,28 +324,16 @@ describe('PartyCore', () => {
     }]);
     afterTest(async () => party2.close());
 
-    const protocol1 = new Protocol({
-      discoveryKey: peer1.party.key.asBuffer(),
-      initiator: true,
-      streamOptions: {
-        live: true
-      },
-      userSession: { peerId: 'user1' }
-    }).setExtensions(
-      new ReplicatorProtocolPluginFactory(peer1.partyFeedProvider, peer1.party.processor.getActiveFeedSet()).createPlugins().map(r => r.createExtension())
-    ).init();
-    const protocol2 = new Protocol({
-      discoveryKey: peer1.party.key.asBuffer(),
-      initiator: false,
-      streamOptions: {
-        live: true
-      },
-      userSession: { peerId: 'user2' }
-    }).setExtensions(
-      new ReplicatorProtocolPluginFactory(partyFeedProvider, peer1.party.processor.getActiveFeedSet()).createPlugins().map(r => r.createExtension())
-    ).init();
-
-    protocol1.stream.pipe(protocol2.stream).pipe(protocol1.stream);
+    createTestProtocolPair(
+      new ReplicatorProtocolPluginFactory(
+        peer1.partyFeedProvider,
+        peer1.party.processor.getActiveFeedSet()
+      ).createPlugins().map(r => r.createExtension()),
+      new ReplicatorProtocolPluginFactory(
+        partyFeedProvider,
+        peer1.party.processor.getActiveFeedSet()
+      ).createPlugins().map(r => r.createExtension())
+    );
 
     const item1 = await peer1.party.database.createItem();
     await promiseTimeout(party2.database.waitForItem({ id: item1.id }), 1000, new Error('timeout'));

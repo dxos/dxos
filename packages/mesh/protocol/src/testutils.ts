@@ -7,6 +7,8 @@ import pump from 'pump';
 import { createPromiseFromCallback } from '@dxos/async';
 
 import { Protocol } from './protocol';
+import { Extension } from './extension';
+import { PublicKey } from '@dxos/crypto';
 
 /**
  * Connect two protocols in-memory.
@@ -15,4 +17,31 @@ import { Protocol } from './protocol';
  */
 export function pipeProtocols (a: Protocol, b: Protocol) {
   return createPromiseFromCallback(cb => pump(a.stream as any, b.stream as any, a.stream as any, cb));
+}
+
+export function createTestProtocolPair(aExtensions: Extension[], bExtensions: Extension[]) {
+  const discoveryKey = PublicKey.random();
+  const protocol1 = new Protocol({
+    discoveryKey: discoveryKey.asBuffer(),
+    initiator: true,
+    streamOptions: {
+      live: true
+    },
+    userSession: { peerId: 'user1' }
+  }).setExtensions(
+    aExtensions
+  ).init();
+  const protocol2 = new Protocol({
+    discoveryKey: discoveryKey.asBuffer(),
+    initiator: false,
+    streamOptions: {
+      live: true
+    },
+    userSession: { peerId: 'user2' }
+  }).setExtensions(
+    bExtensions
+  ).init();
+
+  
+  void pipeProtocols(protocol1, protocol2);
 }
