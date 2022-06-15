@@ -122,6 +122,7 @@ export class PartyCore {
     // Pipeline
     //
 
+    await this._feedProvider.openKnownFeeds();
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
       this._initialTimeframe
