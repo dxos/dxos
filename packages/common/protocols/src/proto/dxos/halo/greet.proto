@@ -99,6 +99,7 @@ message NotarizeResponse {
   repeated KeyHint hints = 2;
 };
 
+// TODO(dmaretskyi): Verify if this is valid. Wouldn't the knowledge of the party's public key be enough to verify the rest of credential messages?
 //
 // Feed and key hints are required by the invitee, because even though the Party members now trust it, it does not trust
 // them. Until it has a chance to replicate, it cannot construct its own understanding of the Party from party.*

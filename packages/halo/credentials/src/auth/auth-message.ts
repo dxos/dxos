@@ -19,7 +19,8 @@ export const createAuthMessage = (
   identityKey: KeyRecord,
   deviceKey: KeyRecord | KeyChain,
   feedKey?: KeyRecord,
-  nonce?: Buffer
+  nonce?: Buffer,
+  feedAdmit?: Message
 ): WithTypeUrl<Message> => {
   assert(signer);
 
@@ -35,7 +36,8 @@ export const createAuthMessage = (
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,
-    feedKey: feedKey?.publicKey
+    feedKey: feedKey?.publicKey,
+    feedAdmit
   };
 
   return wrapMessage(signer.sign(authMessage, signingKeys, nonce));
