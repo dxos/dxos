@@ -7,7 +7,6 @@ import moment from 'moment';
 
 import { PublicKey } from '@dxos/crypto';
 
-import { Keyring } from '../keys';
 import { isSignedMessage, PartyState } from '../party';
 import { Auth, codec, Message, SignedMessage } from '../proto';
 
@@ -112,8 +111,8 @@ export class PartyAuthenticator extends Authenticator {
       // PublicKey.isPublicKey(feedKey) &&
       // !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
     ) {
-      log(`Member authenticated: deviceKey=${deviceKey}, identityKey=${identityKey}`)
-      await this._onAuthenticated?.(payload || {})
+      log(`Member authenticated: deviceKey=${deviceKey}, identityKey=${identityKey}`);
+      await this._onAuthenticated?.(payload || {});
     }
 
     return verified;

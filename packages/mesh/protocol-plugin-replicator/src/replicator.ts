@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { PublicKeyLike } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
@@ -11,9 +12,8 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
-import debug from 'debug';
 
-const log = debug('dxos:protocol-plugin-replicator')
+const log = debug('dxos:protocol-plugin-replicator');
 
 // code const log = debug('dxos.replicator');
 
@@ -113,11 +113,11 @@ export class Replicator {
     const info = { context, session };
 
     try {
-      const share = async (feeds: FeedData[]) => { 
+      const share = async (feeds: FeedData[]) => {
         try {
-          await peer?.share(feeds)
-        } catch(err) {
-          log(err)
+          await peer?.share(feeds);
+        } catch (err) {
+          log(err);
         }
       };
       const unsubscribe = this._subscribe(share, info);

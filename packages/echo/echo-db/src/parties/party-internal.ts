@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
 import { synchronized, Event } from '@dxos/async';
 import { KeyHint, createAuthMessage, Authenticator, createFeedAdmitMessage } from '@dxos/credentials';

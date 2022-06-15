@@ -205,7 +205,7 @@ export class PartyFactory {
     const initiator = new GreetingInitiator(
       this._networkManager,
       identity,
-      invitationDescriptor,
+      invitationDescriptor
     );
 
     await initiator.connect();

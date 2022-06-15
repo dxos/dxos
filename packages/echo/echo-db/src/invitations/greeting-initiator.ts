@@ -22,7 +22,6 @@ import {
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
-import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { Identity } from '../halo';
@@ -53,7 +52,7 @@ export class GreetingInitiator {
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _identity: Identity,
-    private readonly _invitationDescriptor: InvitationDescriptor,
+    private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }
