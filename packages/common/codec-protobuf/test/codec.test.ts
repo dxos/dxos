@@ -20,7 +20,7 @@ describe('extending protobuf', () => {
 
     const data = {
       payload: {
-        __type_url: 'dxos.test.another.AnotherMessage',
+        '@type': 'dxos.test.another.AnotherMessage',
         foo: 'foo'
       }
     };
@@ -42,7 +42,7 @@ describe('extending protobuf', () => {
 
     const data = {
       payload: {
-        __type_url: 'dxos.test.another.AnotherMessageWithAny',
+        '@type': 'dxos.test.another.AnotherMessageWithAny',
         foo: 'foo'
       }
     };

@@ -193,14 +193,14 @@ export class Greeter {
     await invitation.begin();
 
     return {
-      __type_url: 'dxos.credentials.greet.BeginResponse',
+      '@type': 'dxos.credentials.greet.BeginResponse',
       info: {
         id: {
-          __type_url: 'google.protobuf.BytesValue',
+          '@type': 'google.protobuf.BytesValue',
           value: invitation.id
         },
         authNonce: {
-          __type_url: 'google.protobuf.BytesValue',
+          '@type': 'google.protobuf.BytesValue',
           value: invitation.authNonce
         }
       }
@@ -214,7 +214,7 @@ export class Greeter {
 
     await invitation.handshake();
     return {
-      __type_url: 'dxos.credentials.greet.HandshakeResponse',
+      '@type': 'dxos.credentials.greet.HandshakeResponse',
       partyKey: invitation.partyKey,
       nonce: invitation.nonce
     };
@@ -260,7 +260,7 @@ export class Greeter {
 
     await invitation.notarize();
     return {
-      __type_url: 'dxos.credentials.greet.NotarizeResponse',
+      '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
       hints
     };

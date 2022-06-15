@@ -36,9 +36,9 @@ export class Peer {
     }
 
     const message = {
-      __type_url: 'dxos.protocol.replicator.Container',
+      '@type': 'dxos.protocol.replicator.Container',
       type: 'share-feeds',
-      data: feeds.map(({ key, discoveryKey }) => ({ __type_url: 'dxos.protocol.replicator.Feed', key, discoveryKey }))
+      data: feeds.map(({ key, discoveryKey }) => ({ '@type': 'dxos.protocol.replicator.Feed', key, discoveryKey }))
     };
 
     await this._extension.send(message, { oneway: true });
