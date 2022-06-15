@@ -18,7 +18,7 @@ import {
   createPartyGenesisMessage,
   PartyState
 } from '../party';
-import { codecLoop, FeedAdmit, KeyType, Message, SignedMessage } from '../proto';
+import { codecLoop, KeyType, Message, SignedMessage } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { PartyAuthenticator } from './authenticator';
 
@@ -69,208 +69,208 @@ const getIdentityKeyChainForDevice = (keyring: Keyring, devicePublicKey: PublicK
     keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
 };
 
-it('Chain of Keys', async () => {
-  const haloKeyring = new Keyring();
-  const identityKey = await haloKeyring.createKeyRecord({ type: KeyType.PARTY });
-  const deviceKeyA = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
-  const deviceKeyB = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
-  const deviceKeyC = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
-  const feedKeyA = await haloKeyring.createKeyRecord({ type: KeyType.FEED });
+describe('PartyAuthenticator', () => {
 
-  const messages = new Map();
+  it('Chain of Keys', async () => {
+    const haloKeyring = new Keyring();
+    const identityKey = await haloKeyring.createKeyRecord({ type: KeyType.PARTY });
+    const deviceKeyA = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
+    const deviceKeyB = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
+    const deviceKeyC = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
+    const feedKeyA = await haloKeyring.createKeyRecord({ type: KeyType.FEED });
 
-  // The first message in the chain in always a PartyGenesis for the Halo.
-  messages.set(identityKey.publicKey.toHex(), createPartyGenesisMessage(haloKeyring, identityKey, feedKeyA.publicKey, deviceKeyA));
-  messages.set(deviceKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
-  messages.set(feedKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
+    const messages = new Map();
 
-  // Next is DeviceB greeted by DeviceA.
-  messages.set(deviceKeyB.publicKey.toHex(),
-    createEnvelopeMessage(haloKeyring, identityKey.publicKey,
-      createKeyAdmitMessage(haloKeyring, identityKey.publicKey, deviceKeyB, [deviceKeyB]),
-      [deviceKeyA]
-    ));
+    // The first message in the chain in always a PartyGenesis for the Halo.
+    messages.set(identityKey.publicKey.toHex(), createPartyGenesisMessage(haloKeyring, identityKey, feedKeyA.publicKey, deviceKeyA));
+    messages.set(deviceKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
+    messages.set(feedKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
 
-  // Next is DeviceC greeted by DeviceB.
-  messages.set(deviceKeyC.publicKey.toHex(),
-    createEnvelopeMessage(haloKeyring, identityKey.publicKey,
-      createKeyAdmitMessage(haloKeyring, identityKey.publicKey, deviceKeyC, [deviceKeyC]),
-      [deviceKeyB]
-    ));
+    // Next is DeviceB greeted by DeviceA.
+    messages.set(deviceKeyB.publicKey.toHex(),
+      createEnvelopeMessage(haloKeyring, identityKey.publicKey,
+        createKeyAdmitMessage(haloKeyring, identityKey.publicKey, deviceKeyB, [deviceKeyB]),
+        [deviceKeyA]
+      ));
 
-  const targetKeyring = new Keyring();
-  await targetKeyring.addPublicKey({
-    publicKey: identityKey.publicKey,
-    type: KeyType.IDENTITY,
-    trusted: true,
-    own: false
+    // Next is DeviceC greeted by DeviceB.
+    messages.set(deviceKeyC.publicKey.toHex(),
+      createEnvelopeMessage(haloKeyring, identityKey.publicKey,
+        createKeyAdmitMessage(haloKeyring, identityKey.publicKey, deviceKeyC, [deviceKeyC]),
+        [deviceKeyB]
+      ));
+
+    const targetKeyring = new Keyring();
+    await targetKeyring.addPublicKey({
+      publicKey: identityKey.publicKey,
+      type: KeyType.IDENTITY,
+      trusted: true,
+      own: false
+    });
+
+    for (const deviceKey of [deviceKeyA, deviceKeyB, deviceKeyC]) {
+      const emptyKeyring = new Keyring();
+      const chain = Keyring.buildKeyChain(deviceKey.publicKey, messages);
+      // In the target keyring, which only has the Identity, it should chase all the way back to the Identity.
+      expect(identityKey.publicKey).toEqual((await targetKeyring.findTrusted(chain))!.publicKey);
+      // And in the halo, which has all the keys, it should chase straight back to this key.
+      expect(deviceKey.publicKey).toEqual((await haloKeyring.findTrusted(chain))!.publicKey);
+      // And in an empty Keyring, we should not get anything.
+      expect(await emptyKeyring.findTrusted(chain)).toBeUndefined();
+    }
   });
 
-  for (const deviceKey of [deviceKeyA, deviceKeyB, deviceKeyC]) {
-    const emptyKeyring = new Keyring();
-    const chain = Keyring.buildKeyChain(deviceKey.publicKey, messages);
-    // In the target keyring, which only has the Identity, it should chase all the way back to the Identity.
-    expect(identityKey.publicKey).toEqual((await targetKeyring.findTrusted(chain))!.publicKey);
-    // And in the halo, which has all the keys, it should chase straight back to this key.
-    expect(deviceKey.publicKey).toEqual((await haloKeyring.findTrusted(chain))!.publicKey);
-    // And in an empty Keyring, we should not get anything.
-    expect(await emptyKeyring.findTrusted(chain)).toBeUndefined();
-  }
-});
+  it('good direct', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
 
-it('PartyAuthenticator - good direct', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  // Only add the Identity to the party keyring.
-  await party.processMessages(messages);
+    // Only add the Identity to the party keyring.
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      partyKey,
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       identityKeyRecord!,
       identityKeyRecord!
-    )
-  );
+      )
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(true);
-});
-
-
-it('PartyAuthenticator - feed admit callback is called', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-
-  let admitMsg: SignedMessage | undefined;
-
-  const auth = new PartyAuthenticator(party, async (msg) => {
-    admitMsg = msg;
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(true);
   });
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
+  it('feed admit callback is called', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    let admitMsg: SignedMessage | undefined;
+
+    const auth = new PartyAuthenticator(party, async (msg) => {
+      admitMsg = msg;
+    });
+
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
+
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  // Only add the Identity to the party keyring.
-  await party.processMessages(messages);
+    // Only add the Identity to the party keyring.
+    await party.processMessages(messages);
 
-  const newFeedKeyRecord = await keyring.createKeyRecord({ type: KeyType.FEED })!;
-  const feedAdmit = createFeedAdmitMessage(
-    keyring,
-    partyKey,
-    newFeedKeyRecord.publicKey,
-  )
-
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
+    const newFeedKeyRecord = await keyring.createKeyRecord({ type: KeyType.FEED })!;
+    const feedAdmit = createFeedAdmitMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
-      identityKeyRecord,
-      newFeedKeyRecord,
-      undefined,
-      feedAdmit,
-    )
-  );
+      newFeedKeyRecord.publicKey
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(true);
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
+        identityKeyRecord,
+        identityKeyRecord,
+        newFeedKeyRecord,
+        undefined,
+        feedAdmit
+      )
+    );
 
-  expect(admitMsg).toEqual(feedAdmit)
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(true);
 
-it('PartyAuthenticator - feed admit callback is not called when feed is already in the party', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-
-  let admitMsg: SignedMessage | undefined;
-
-  const auth = new PartyAuthenticator(party, async (msg) => {
-    admitMsg = msg;
+    expect(admitMsg).toEqual(feedAdmit);
   });
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
-  const feedKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!;
+  it('feed admit callback is not called when feed is already in the party', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    let admitMsg: SignedMessage | undefined;
+
+    const auth = new PartyAuthenticator(party, async (msg) => {
+      admitMsg = msg;
+    });
+
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!;
+    const feedKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!;
+
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  // Only add the Identity to the party keyring.
-  await party.processMessages(messages);
+    // Only add the Identity to the party keyring.
+    await party.processMessages(messages);
 
-  const feedAdmit = createFeedAdmitMessage(
-    keyring,
-    partyKey,
-    feedKeyRecord.publicKey,
-  )
-
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
+    const feedAdmit = createFeedAdmitMessage(
       keyring,
       partyKey,
-      identityKeyRecord,
-      identityKeyRecord,
-      feedKeyRecord,
-      undefined,
-      feedAdmit,
-    )
-  );
+      feedKeyRecord.publicKey
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(true);
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
+        identityKeyRecord,
+        identityKeyRecord,
+        feedKeyRecord,
+        undefined,
+        feedAdmit
+      )
+    );
 
-  expect(admitMsg).toEqual(undefined)
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(true);
 
+    expect(admitMsg).toEqual(undefined);
+  });
 
-it('PartyAuthenticator - good chain', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
+  it('good chain', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-  const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
-  const secondDeviceKeyRecord = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    const secondDeviceKeyRecord = await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  // Only add the Identity to the party keyring.
-  await party.processMessages(messages);
+    // Only add the Identity to the party keyring.
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      partyKey,
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       identityKeyRecord!,
       getIdentityKeyChainForDevice(
         keyring,
@@ -282,233 +282,233 @@ it('PartyAuthenticator - good chain', async () => {
         ]
         )
       )
-    )
-  );
+      )
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(true);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(true);
+  });
 
-it('PartyAuthenticator - bad chain', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
+  it('bad chain', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-  const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
-  const secondDeviceKeyRecord = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    const secondDeviceKeyRecord = await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  // Only add the Identity to the party keyring.
-  await party.processMessages(messages);
+    // Only add the Identity to the party keyring.
+    await party.processMessages(messages);
 
-  // A bad chain, it doesn't track back to the Identity.
-  const chain = getIdentityKeyChainForDevice(
-    keyring,
-    secondDeviceKeyRecord.publicKey,
-    messageMap([
-      ...messages,
-      createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord!, [deviceKeyRecord!]),
-      createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord!])
-    ]
-    )
-  );
-
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
+    // A bad chain, it doesn't track back to the Identity.
+    const chain = getIdentityKeyChainForDevice(
       keyring,
-      partyKey,
+      secondDeviceKeyRecord.publicKey,
+      messageMap([
+        ...messages,
+        createKeyAdmitMessage(keyring, partyKey, deviceKeyRecord!, [deviceKeyRecord!]),
+        createKeyAdmitMessage(keyring, partyKey, secondDeviceKeyRecord, [deviceKeyRecord!])
+      ]
+      )
+    );
+
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       identityKeyRecord!,
       chain
-    )
-  );
+      )
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-// TODO(dboreham): This test isn't discriminating errors because when I broke the code entirely it still passed.
-it('PartyAuthenticator - wrong key', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const wrongKey = await keyring.createKeyRecord();
+  // TODO(dboreham): This test isn't discriminating errors because when I broke the code entirely it still passed.
+  it('wrong key', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const wrongKey = await keyring.createKeyRecord();
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!
-    )
-  ];
-  await party.processMessages(messages);
+      )
+    ];
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      partyKey,
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!,
       wrongKey
-    )
-  );
+      )
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-it('PartyAuthenticator - wrong party', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+  it('wrong party', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
-  await party.processMessages(messages);
+      )
+    ];
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      randomBytes(32),
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        randomBytes(32),
       identityKeyRecord!,
       identityKeyRecord!
-    )
-  );
+      )
+    );
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-it('PartyAuthenticator - missing deviceKey', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
+  it('missing deviceKey', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
 
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))!
-    )
-  ];
-  await party.processMessages(messages);
+      )
+    ];
+    await party.processMessages(messages);
 
-  const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
-    payload:
+    const wrappedCredentials = {
+      __type_url: 'dxos.credentials.Message',
+      payload:
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord!.publicKey
       }, [identityKeyRecord!])
-  };
+    };
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-it('PartyAuthenticator - tampered message', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+  it('tampered message', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  await party.processMessages(messages);
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      partyKey,
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       identityKeyRecord!,
       identityKeyRecord!
-    )
-  );
+      )
+    );
 
-  const before = await auth.authenticate(wrappedCredentials.payload);
-  expect(before).toBe(true);
+    const before = await auth.authenticate(wrappedCredentials.payload);
+    expect(before).toBe(true);
 
-  wrappedCredentials.payload.signed.payload.deviceKey = randomBytes(32);
+    wrappedCredentials.payload.signed.payload.deviceKey = randomBytes(32);
 
-  const after = await auth.authenticate(wrappedCredentials.payload);
-  expect(after).toBe(false);
-});
+    const after = await auth.authenticate(wrappedCredentials.payload);
+    expect(after).toBe(false);
+  });
 
-it('PartyAuthenticator - tampered signature', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+  it('tampered signature', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  await party.processMessages(messages);
+    await party.processMessages(messages);
 
-  const wrappedCredentials = codecLoop(
-    createAuthMessage(
-      keyring,
-      partyKey,
+    const wrappedCredentials = codecLoop(
+      createAuthMessage(
+        keyring,
+        partyKey,
       identityKeyRecord!,
       identityKeyRecord!
-    )
-  );
+      )
+    );
 
-  const before = await auth.authenticate(wrappedCredentials.payload);
-  expect(before).toBe(true);
+    const before = await auth.authenticate(wrappedCredentials.payload);
+    expect(before).toBe(true);
 
-  wrappedCredentials.payload.signatures[0].signature = randomBytes(64);
+    wrappedCredentials.payload.signatures[0].signature = randomBytes(64);
 
-  const after = await auth.authenticate(wrappedCredentials.payload);
-  expect(after).toBe(false);
-});
+    const after = await auth.authenticate(wrappedCredentials.payload);
+    expect(after).toBe(false);
+  });
 
-it('PartyAuthenticator - signature too old', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-  const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+  it('signature too old', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  await party.processMessages(messages);
+    await party.processMessages(messages);
 
-  const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
-    payload:
+    const wrappedCredentials = {
+      __type_url: 'dxos.credentials.Message',
+      payload:
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
@@ -519,32 +519,32 @@ it('PartyAuthenticator - signature too old', async () => {
       undefined,
       moment().subtract(2, 'days').format('YYYY-MM-DDTHH:mm:ssZ')
       )
-  };
+    };
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-it('PartyAuthenticator - signature too far in future', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-  const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+  it('signature too far in future', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  await party.processMessages(messages);
+    await party.processMessages(messages);
 
-  const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
-    payload:
+    const wrappedCredentials = {
+      __type_url: 'dxos.credentials.Message',
+      payload:
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
@@ -555,32 +555,32 @@ it('PartyAuthenticator - signature too far in future', async () => {
       undefined,
       moment().add(2, 'days').format('YYYY-MM-DDTHH:mm:ssZ')
       )
-  };
+    };
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
-});
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
 
-it('PartyAuthenticator - signature date invalid', async () => {
-  const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new PartyState(partyKey);
-  const auth = new PartyAuthenticator(party, async () => {});
-  const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-  const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+  it('signature date invalid', async () => {
+    const { keyring, partyKey } = await createPartyKeyrings();
+    const party = new PartyState(partyKey);
+    const auth = new PartyAuthenticator(party, async () => {});
+    const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
 
-  const messages = [
-    createPartyGenesisMessage(keyring,
+    const messages = [
+      createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY }))!,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED }))!.publicKey,
       identityKeyRecord!
-    )
-  ];
+      )
+    ];
 
-  await party.processMessages(messages);
+    await party.processMessages(messages);
 
-  const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
-    payload:
+    const wrappedCredentials = {
+      __type_url: 'dxos.credentials.Message',
+      payload:
       keyring.sign({
         __type_url: 'dxos.credentials.auth.Auth',
         partyKey,
@@ -591,8 +591,10 @@ it('PartyAuthenticator - signature date invalid', async () => {
       undefined,
       'INVALID'
       )
-  };
+    };
 
-  const ok = await auth.authenticate(wrappedCredentials.payload);
-  expect(ok).toBe(false);
+    const ok = await auth.authenticate(wrappedCredentials.payload);
+    expect(ok).toBe(false);
+  });
+
 });

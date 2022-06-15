@@ -8,7 +8,7 @@ import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
 import { Signer } from '../keys';
 import { wrapMessage } from '../party';
-import { Auth, KeyChain, KeyRecord, Message, SignedMessage, WithTypeUrl } from '../proto';
+import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
 
 /**
  * Create `dxos.credentials.auth.Auth` credentials.
@@ -20,7 +20,7 @@ export const createAuthMessage = (
   deviceKey: KeyRecord | KeyChain,
   feedKey?: KeyRecord,
   nonce?: Buffer,
-  feedAdmit?: Message,
+  feedAdmit?: Message
 ): WithTypeUrl<Message> => {
   assert(signer);
 
@@ -37,7 +37,7 @@ export const createAuthMessage = (
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,
     feedKey: feedKey?.publicKey,
-    feedAdmit,
+    feedAdmit
   };
 
   return wrapMessage(signer.sign(authMessage, signingKeys, nonce));

@@ -2,7 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import moment from 'moment';
 
@@ -10,7 +9,7 @@ import { PublicKey } from '@dxos/crypto';
 
 import { Keyring } from '../keys';
 import { isSignedMessage, PartyState } from '../party';
-import { Auth, codec, FeedAdmit, KeyType, Message, SignedMessage } from '../proto';
+import { Auth, codec, Message, SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:auth');
 
@@ -55,7 +54,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   constructor (
     private readonly _party: PartyState,
-    private readonly _onFeedAdmission: (feedAdmit: SignedMessage) => Promise<void>,
+    private readonly _onFeedAdmission: (feedAdmit: SignedMessage) => Promise<void>
   ) {
     super();
   }
@@ -75,7 +74,7 @@ export class PartyAuthenticator extends Authenticator {
     }
 
     const { created, payload } = credentials.signed || {};
-    const { deviceKey, identityKey, partyKey, feedKey, feedAdmit }: Auth = payload  || {};
+    const { deviceKey, identityKey, partyKey, feedKey, feedAdmit }: Auth = payload || {};
     if (!created || !PublicKey.isPublicKey(deviceKey) || !PublicKey.isPublicKey(identityKey) || !PublicKey.isPublicKey(partyKey)) {
       log('Bad credentials:', credentials);
       return false;
@@ -117,7 +116,7 @@ export class PartyAuthenticator extends Authenticator {
     ) {
       log(`Admitting feedKey: ${feedKey.toHex()} for Device ` +
         `${deviceKey.toHex()} on Identity ${identityKey.toHex()}`);
-      await this._onFeedAdmission(feedAdmit)
+      await this._onFeedAdmission(feedAdmit);
     }
 
     return verified;
