@@ -5,10 +5,10 @@
 import pump from 'pump';
 
 import { createPromiseFromCallback } from '@dxos/async';
-
-import { Protocol } from './protocol';
-import { Extension } from './extension';
 import { PublicKey } from '@dxos/crypto';
+
+import { Extension } from './extension';
+import { Protocol } from './protocol';
 
 /**
  * Connect two protocols in-memory.
@@ -19,7 +19,7 @@ export function pipeProtocols (a: Protocol, b: Protocol) {
   return createPromiseFromCallback(cb => pump(a.stream as any, b.stream as any, a.stream as any, cb));
 }
 
-export function createTestProtocolPair(aExtensions: Extension[], bExtensions: Extension[]) {
+export function createTestProtocolPair (aExtensions: Extension[], bExtensions: Extension[]) {
   const discoveryKey = PublicKey.random();
   const protocol1 = new Protocol({
     discoveryKey: discoveryKey.asBuffer(),
@@ -42,6 +42,5 @@ export function createTestProtocolPair(aExtensions: Extension[], bExtensions: Ex
     bExtensions
   ).init();
 
-  
   void pipeProtocols(protocol1, protocol2);
 }
