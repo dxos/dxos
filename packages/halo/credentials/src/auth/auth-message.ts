@@ -32,7 +32,7 @@ export const createAuthMessage = (
   }
 
   const authMessage: WithTypeUrl<Auth> = {
-    __type_url: 'dxos.credentials.auth.Auth',
+    '@type': 'dxos.credentials.auth.Auth',
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,

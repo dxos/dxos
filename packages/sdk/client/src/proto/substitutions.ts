@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { newAnySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
+import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { codec, Message } from '@dxos/credentials';
 import { publicKeySubstitutions } from '@dxos/crypto';
 import { timeframeSubstitutions } from '@dxos/echo-protocol';
@@ -12,7 +12,7 @@ export default {
   ...timestampSubstitutions,
   ...publicKeySubstitutions,
   ...timeframeSubstitutions,
-  ...newAnySubstitutions,
+  ...anySubstitutions,
 
   // TODO(dmaretskyi): Remove this and include halo messages directly.
   'dxos.echo.feed.CredentialsMessage': {

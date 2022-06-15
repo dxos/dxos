@@ -34,7 +34,7 @@ export const createPartyGenesisMessage = (
   assert(typeof admitKeyPair.type !== 'undefined');
 
   const message: WithTypeUrl<PartyCredential> = {
-    __type_url: TYPE_URL_PARTY_CREDENTIAL,
+    '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
       partyKey: partyKeyPair.publicKey,
@@ -61,7 +61,7 @@ export const createKeyAdmitMessage = (
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {
-    __type_url: TYPE_URL_PARTY_CREDENTIAL,
+    '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.KEY_ADMIT,
     keyAdmit: {
       partyKey,
@@ -87,7 +87,7 @@ export const createFeedAdmitMessage = (
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {
-    __type_url: TYPE_URL_PARTY_CREDENTIAL,
+    '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.FEED_ADMIT,
     feedAdmit: {
       partyKey,
@@ -115,7 +115,7 @@ export const createEnvelopeMessage = (
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {
-    __type_url: TYPE_URL_PARTY_CREDENTIAL,
+    '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.ENVELOPE,
     envelope: {
       partyKey,
@@ -134,7 +134,7 @@ export const createEnvelopeMessage = (
 export const isPartyCredentialMessage = (message: Message | SignedMessage) => {
   const signed = unwrapMessage(message) as SignedMessage;
   // eslint-disable-next-line camelcase
-  return signed?.signed?.payload?.__type_url === TYPE_URL_PARTY_CREDENTIAL;
+  return signed?.signed?.payload?.['@type'] === TYPE_URL_PARTY_CREDENTIAL;
 };
 
 /**
@@ -166,7 +166,7 @@ export function isSignedMessage (message: any): message is SignedMessage {
 // TODO(burdon): Typespec is too loose.
 export function wrapMessage (message: Message | SignedMessage | Command | Auth): WithTypeUrl<Message> {
   const payload = message as any;
-  return { __type_url: TYPE_URL_MESSAGE, payload } as WithTypeUrl<Message>;
+  return { '@type': TYPE_URL_MESSAGE, payload } as WithTypeUrl<Message>;
 }
 
 /**
@@ -286,10 +286,10 @@ export const createPartyInvitationMessage = (
   inviteeKey = PublicKey.from(inviteeKey);
 
   return {
-    __type_url: TYPE_URL_MESSAGE,
+    '@type': TYPE_URL_MESSAGE,
     payload:
       signer.sign({
-        __type_url: TYPE_URL_PARTY_INVITATION,
+        '@type': TYPE_URL_PARTY_INVITATION,
         id: randomBytes(),
         partyKey,
         issuerKey: issuerKey.publicKey,
@@ -307,8 +307,8 @@ export const isPartyInvitationMessage = (message: Message | SignedMessage) => {
   const signed = unwrapMessage(message);
 
   // eslint-disable-next-line camelcase
-  const payloadType = signed?.__type_url;
+  const payloadType = signed?.['@type'];
   // eslint-disable-next-line camelcase
-  const signedType = signed?.signed?.payload?.__type_url;
+  const signedType = signed?.signed?.payload?.['@type'];
   return payloadType === TYPE_URL_SIGNED_MESSAGE && signedType === TYPE_URL_PARTY_INVITATION;
 };
