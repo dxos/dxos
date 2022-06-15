@@ -11,6 +11,37 @@ export type DXNString = string;
  * Example: dxn://example:foo/bar
  */
 export class DXN {
+  static parse (name: string) {
+    const match = name.match(/^(0x)?([^:]+):([^:@]+)(@?)([^:]+)?/);
+    if (!match) {
+      throw new Error(`Invalid DXN: ${name}`);
+    }
+
+    const [, hex, authority, path, at, tag] = match;
+    if (at && !tag) {
+      throw new Error(`Invalid DXN tag: ${name}`);
+    }
+
+    if (hex) {
+      return DXN.fromDomainKey(DomainKey.fromHex(authority), path, tag);
+    } else {
+      return DXN.fromDomainName(authority, path, tag);
+    }
+  }
+
+  static fromDomainKey (domainKey: DomainKey, path: string, tag?: string) {
+    path = DXN.validatePath(DXN.normalize(path));
+    tag = tag && DXN.validateTag(DXN.normalize(tag));
+    return new DXN(domainKey, path, tag);
+  }
+
+  static fromDomainName (domainName: string, path: string, tag?: string) {
+    domainName = DXN.validateDomainName(DXN.normalize(domainName));
+    path = DXN.validatePath(DXN.normalize(path));
+    tag = tag && DXN.validateTag(DXN.normalize(tag));
+    return new DXN(domainName, path, tag);
+  }
+
   static urlencode (dxn: DXN) {
     return dxn.toString().replace(/\//g, '.');
   }
@@ -19,56 +50,19 @@ export class DXN {
     return DXN.parse(encodedDxn.replace(/\./g, '/'));
   }
 
-  static parse (dxn: string) {
-    // TODO(wittjosiah): Make tag optional.
-    const match = dxn.match(/^(~?)([^:]+):([^:]+)@([^:]+)/);
-    if (!match) {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-
-    const [, tilda, domain, path, tag] = match;
-    if (tilda) {
-      return DXN.fromDomainKey(DomainKey.fromHex(domain), path, tag);
-    } else {
-      return DXN.fromDomainName(domain, path, tag);
-    }
-  }
-
-  static fromDomainKey (domainKey: DomainKey, path: string, tag?: string) {
-    path = DXN.validatePath(DXN.normalize(path));
-    tag = tag && DXN.validateTag(DXN.normalize(tag));
-    return new DXN({ domainKey, path, tag });
-  }
-
-  static fromDomainName (domainName: string, path: string, tag?: string) {
-    domainName = DXN.validateDomain(DXN.normalize(domainName));
-    path = DXN.validatePath(DXN.normalize(path));
-    tag = tag && DXN.validateTag(DXN.normalize(tag));
-    return new DXN({ domainName, path, tag });
-  }
-
-  public readonly domainKey?: DomainKey;
-  public readonly domainName?: string;
-  public readonly path: string;
-  public readonly tag?: string;
-
-  private constructor ({ domainKey, domainName, path, tag }: {
-    domainKey?: DomainKey,
-    domainName?: string,
-    path: string,
-    tag?: string
-  }) {
-    this.domainKey = domainKey;
-    this.domainName = domainName;
-    this.path = path;
-    this.tag = tag;
-  }
+  private constructor (
+    public readonly authority: DomainKey | string,
+    public readonly path: string,
+    public readonly tag?: string
+  ) {}
 
   toString () {
-    if (this.domainName) {
-      return `${this.domainName}:${this.path}@${this.tag}`;
+    const tag = this.tag ? `@${this.tag}` : '';
+
+    if (typeof this.authority === 'string') {
+      return `${this.authority}:${this.path}${tag}`;
     } else {
-      return `~${this.domainKey!.toHex()}:${this.path}@${this.tag}`;
+      return `0x${this.authority.toHex()}:${this.path}${tag}`;
     }
   }
 
@@ -83,7 +77,7 @@ export class DXN {
    * Must not have multiple hyphens in a row or end with a hyphen.
    * @param domain
    */
-  private static validateDomain (domain: string) {
+  private static validateDomainName (domain: string) {
     if (!domain.match(/^[a-z][a-z0-9-]{2,31}$/)) {
       throw new Error(`Invalid domain: ${domain}`);
     }
