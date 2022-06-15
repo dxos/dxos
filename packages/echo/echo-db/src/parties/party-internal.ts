@@ -78,7 +78,7 @@ export class PartyInternal {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeedKeys().length,
+      feedKeys: this._feedProvider.getFeeds().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };

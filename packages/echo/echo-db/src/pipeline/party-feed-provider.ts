@@ -5,10 +5,12 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
 
@@ -16,6 +18,9 @@ const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
+  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex())
+  readonly feedOpened = new Event<FeedDescriptor>();
+
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
@@ -23,14 +28,13 @@ export class PartyFeedProvider {
     private readonly _partyKey: PublicKey
   ) {}
 
-  // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
+  getFeeds (): FeedDescriptor[] {
+    return Array.from(this._feeds.values());
+  }
+
   async createOrOpenWritableFeed () {
     const partyMetadata = this._metadataStore.getParty(this._partyKey);
-    if (!partyMetadata) {
-      return this._createReadWriteFeed();
-    }
-
-    if (!partyMetadata.dataFeedKey) {
+    if (!partyMetadata?.dataFeedKey) {
       return this._createReadWriteFeed();
     }
 
@@ -39,22 +43,42 @@ export class PartyFeedProvider {
       return this._createReadWriteFeed();
     }
 
+    if (this._feeds.has(fullKey.publicKey)) {
+      return this._feeds.get(fullKey.publicKey)!;
+    }
+
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    const feedKey = this._keyring.getKey(feed.key);
-    assert(feedKey, 'Feed key not found');
+    this._feeds.set(fullKey.publicKey, feed);
+    this.feedOpened.emit(feed);
     return feed;
   }
 
-  getFeedKeys () {
-    return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
+  async openKnownFeeds () {
+    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
+      if (!this._feeds.has(feedKey)) {
+        const fullKey = this._keyring.getFullKey(feedKey);
+        const feed = fullKey?.secretKey
+          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
+          : await this._feedStore.openReadOnlyFeed(feedKey);
+        this._feeds.set(feedKey, feed);
+        this.feedOpened.emit(feed);
+      }
+    }
   }
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
+    if (this._feeds.has(feedKey)) {
+      return this._feeds.get(feedKey)!;
+    }
+
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
-    return this._feedStore.openReadOnlyFeed(feedKey);
+    const feed = await this._feedStore.openReadOnlyFeed(feedKey);
+    this._feeds.set(feedKey, feed);
+    this.feedOpened.emit(feed);
+    return feed;
   }
 
   private async _createReadWriteFeed () {
@@ -63,16 +87,18 @@ export class PartyFeedProvider {
     assert(fullKey && fullKey.secretKey);
     await this._metadataStore.setDataFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
+    this._feeds.set(fullKey.publicKey, feed);
+    this.feedOpened.emit(feed);
     return feed;
   }
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
-    for (const feedKey of this.getFeedKeys()) {
-      iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
+    for (const feed of this._feeds.values()) {
+      iterator.addFeedDescriptor(feed);
     }
 
-    this._feedStore.feedOpenedEvent.on((descriptor) => {
+    this.feedOpened.on((descriptor) => {
       if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
         iterator.addFeedDescriptor(descriptor);
       }
