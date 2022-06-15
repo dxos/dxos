@@ -15,9 +15,8 @@ jobs:
         with:
           fetch-depth: 0
           clean: false
-      - uses: actions/checkout@v2
-        id: test
       - uses: vmactions/ngrok-tunnel@v0.0.1
+        id: test
         with:
           protocol: tcp
           port: 22
