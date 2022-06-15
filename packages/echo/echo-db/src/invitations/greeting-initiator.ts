@@ -164,16 +164,6 @@ export class GreetingInitiator {
           [],
           nonce)
       );
-
-      // And Feed, signed for by the FEED and the DEVICE.
-      credentialMessages.push(
-        createFeedAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          feedKey,
-          [this._identity.deviceKey],
-          nonce)
-      );
     } else {
       assert(this._identity.deviceKeyChain, 'Device key required');
       assert(this._identity.identityGenesis, 'Identity genesis message required');
@@ -184,16 +174,6 @@ export class GreetingInitiator {
           this._identity.signer,
           partyKey,
           wrapMessage(this._identity.identityGenesis),
-          [this._identity.deviceKeyChain],
-          nonce)
-      );
-
-      // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
-      credentialMessages.push(
-        createFeedAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          feedKey,
           [this._identity.deviceKeyChain],
           nonce)
       );

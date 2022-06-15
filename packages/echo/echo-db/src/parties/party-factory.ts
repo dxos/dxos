@@ -207,6 +207,7 @@ export class PartyFactory {
       identity,
       invitationDescriptor,
       async partyKey => {
+        // TODO(dmaretskyi): Do not create one-off FeedProvider.
         const feedProvider = this._createFeedProvider(partyKey);
         const feed = await feedProvider.createOrOpenWritableFeed();
         return feed.key;
