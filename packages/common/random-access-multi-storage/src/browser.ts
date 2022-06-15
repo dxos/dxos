@@ -8,6 +8,7 @@ import { RamStorage } from './implementations/ram-storage';
 import { IStorage } from './interfaces/IStorage';
 import { StorageType } from './interfaces/storage-types';
 
+export { StorageType };
 // Extensions to manage and inspect storage.
 // https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search
 // https://chrome.google.com/webstore/detail/clear-cache-for-chrome/lcebokhepdpopanpieoopnjiehmoabfp?hl=en-US
