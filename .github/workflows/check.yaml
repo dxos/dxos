@@ -14,6 +14,7 @@ jobs:
         with:
           fetch-depth: 0
           clean: false
+      - uses: appleboy/ssh-action@master
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use
