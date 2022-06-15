@@ -65,8 +65,8 @@ describe('StateManager', () => {
     const feedWriter = new MockFeedWriter<Uint8Array>();
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-      feedKey: meta.feedKey.asUint8Array(),
-      memberKey: PublicKey.random().asUint8Array(),
+      feedKey: meta.feedKey,
+      memberKey: PublicKey.random(),
       seq: meta.seq,
       timeframe: new Timeframe()
     }, message));
@@ -105,8 +105,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -122,8 +122,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -143,8 +143,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -163,8 +163,8 @@ describe('StateManager', () => {
 });
 
 const createMeta = (feedKey: PublicKey, seq: number): MutationMetaWithTimeframe => ({
-  feedKey: feedKey.asUint8Array(),
-  memberKey: feedKey.asUint8Array(),
+  feedKey,
+  memberKey: feedKey,
   seq,
   timeframe: new Timeframe()
 });

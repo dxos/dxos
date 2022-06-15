@@ -6,7 +6,8 @@ syntax = "proto3";
 
 package dxos.echo.snapshot;
 
-import "feed.proto";
+import "./feed.proto";
+import "../halo/keys.proto";
 
 //
 // Snapshots define full party state at a given point in time.
@@ -91,7 +92,7 @@ message ModelMutation {
 
 message ModelMutationMeta {
   // TODO(burdon): Remove required.
-  required bytes feedKey = 1;
+  required dxos.halo.keys.PubKey feedKey = 1;
   required int32 seq = 2;
-  required bytes memberKey = 3;
+  required dxos.halo.keys.PubKey memberKey = 3;
 }

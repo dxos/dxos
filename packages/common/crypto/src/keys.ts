@@ -52,8 +52,10 @@ export function keyToBuffer (str: string): Buffer {
  * @param {Buffer | Uint8Array} buffer - Key buffer.
  * @return {string} Hex string representation of key.
  */
-export function keyToString (buffer: Buffer | Uint8Array): string {
-  if (buffer instanceof Uint8Array) {
+export function keyToString (buffer: Buffer | Uint8Array | PublicKey): string {
+  if (buffer instanceof PublicKey) {
+    buffer = buffer.asBuffer();
+  } else if (buffer instanceof Uint8Array) {
     buffer = Buffer.from(buffer);
   }
 
