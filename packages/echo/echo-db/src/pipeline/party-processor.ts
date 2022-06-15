@@ -33,7 +33,7 @@ export class PartyProcessor {
 
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
-  protected readonly _feedAdded = new Event<FeedKey>()
+  readonly feedAdded = new Event<FeedKey>()
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 
@@ -50,7 +50,7 @@ export class PartyProcessor {
     // TODO(marik-d): Use `Event.wrap` here.
     this._state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
-      this._feedAdded.emit(keyRecord.publicKey);
+      this.feedAdded.emit(keyRecord.publicKey);
     });
     this._state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
     this._state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
@@ -112,7 +112,7 @@ export class PartyProcessor {
   getActiveFeedSet (): FeedSetProvider {
     return {
       get: () => this.feedKeys,
-      added: this._feedAdded
+      added: this.feedAdded
     };
   }
 
