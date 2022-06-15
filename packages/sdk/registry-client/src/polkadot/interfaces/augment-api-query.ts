@@ -9,7 +9,7 @@ import type { AccountId, Balance, BlockNumber, Hash, Moment, Releases } from '@p
 import type { SessionIndex } from '@polkadot/types/interfaces/session';
 import type { AccountInfo, ConsumedWeight, DigestOf, EventIndex, EventRecord, LastRuntimeUpgradeInfo, Phase } from '@polkadot/types/interfaces/system';
 import type { Multiplier } from '@polkadot/types/interfaces/txpayment';
-import type { Account, AccountKey, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { Account, AccountKey, Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/polkadot/interfaces/registry';
 import type { ApiTypes } from '@polkadot/api/types';
 
 declare module '@polkadot/api/types/storage' {

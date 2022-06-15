@@ -6,7 +6,7 @@ import type { BalanceStatus } from '@polkadot/types/interfaces/balances';
 import type { AuthorityList } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, Hash } from '@polkadot/types/interfaces/runtime';
 import type { DispatchError, DispatchInfo, DispatchResult } from '@polkadot/types/interfaces/system';
-import type { AccountKey, Domain, DomainKey, Multihash } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { AccountKey, Domain, DomainKey, Multihash } from 'sample-polkadotjs-typegen/polkadot/interfaces/registry';
 import type { ApiTypes } from '@polkadot/api/types';
 
 declare module '@polkadot/api/types/events' {
