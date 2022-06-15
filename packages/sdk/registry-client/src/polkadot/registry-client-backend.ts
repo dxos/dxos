@@ -16,8 +16,7 @@ import {
   DomainKey,
   DXN,
   RecordWithCid,
-  RegistryClientBackend,
-  Resource
+  RegistryClientBackend
 } from '../api';
 import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 import { BaseClient } from './base-client';
@@ -60,39 +59,40 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   // Resources
   //
 
-  async getResource (name: DXN): Promise<Resource | undefined> {
-    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
-    assert(domainKey, 'Domain not found');
+  async getResource (name: DXN): Promise<CID | undefined> {
+    assert(name.tag, 'Tag is required');
 
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, name.path))
+    const authority = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
+    assert(authority, 'Authority not found');
+
+    const resource = (await this.api.query.registry
+      .resources<Option<BaseResource>>(authority.value, name.path))
       .unwrapOr(undefined);
-    if (resource === undefined) {
+    if (!resource) {
       return undefined;
     }
 
-    return {
-      name,
-      ...this._decodeResource(resource)
-    };
+    const tags = this._decodeResource(resource);
+    return tags[name.tag];
   }
 
-  async getResources (): Promise<Resource[]> {
+  async getResources (): Promise<[DXN, CID][]> {
     const [resources, domains] = await Promise.all([
       this.api.query.registry.resources.entries<Option<BaseResource>>(),
       this.getDomains()
     ]);
 
     const result = resources
-      .map(([key, resource]) => {
+      .flatMap(([key, resource]) => {
         const path = key.args[1].toString();
         const domainKey = new DomainKey(key.args[0].toU8a());
         const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
-        const name = domain?.name ? DXN.fromDomainName(domain.name, path) : DXN.fromDomainKey(domainKey, path);
+        const tags = this._decodeResource(resource.unwrap());
 
-        return {
-          name,
-          ...this._decodeResource(resource.unwrap())
-        };
+        return Object.entries(tags).map(([tag, cid]): [DXN, CID] => [
+          domain?.name ? DXN.fromDomainName(domain.name, path, tag) : DXN.fromDomainKey(domainKey, path, tag),
+          cid
+        ]);
       });
 
     return result;
@@ -101,9 +101,9 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   async registerResource (
     name: DXN,
     cid: CID,
-    owner: AccountKey,
-    tag: string
+    owner: AccountKey
   ): Promise<void> {
+    assert(name.tag, 'Tag is required');
     const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
@@ -123,13 +123,13 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
           name.path,
           cid.value,
           null, // TODO(wittjosiah): Remove versions.
-          [tag]
+          [name.tag]
         )
       );
     }
   }
 
-  private _decodeResource (resource: BaseResource): Omit<Resource, 'name'> {
+  private _decodeResource (resource: BaseResource): Record<string, CID> {
     const decodeMap = (map: BTreeMap<Text, Multihash>): Record<string, CID> => {
       return Object.fromEntries(
         Array.from(map.entries())
@@ -137,9 +137,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
       );
     };
 
-    return {
-      tags: decodeMap(resource.tags ?? new Map())
-    };
+    return decodeMap(resource.tags ?? new Map());
   }
 
   //
