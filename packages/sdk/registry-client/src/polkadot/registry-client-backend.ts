@@ -32,8 +32,8 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   // Domains
   //
 
-  async getDomainKey (domain: string): Promise<DomainKey> {
-    const rawKey = (await this.api.query.registry.domainNames(domain)).unwrap().toU8a();
+  async getDomainKey (domainName: string): Promise<DomainKey> {
+    const rawKey = (await this.api.query.registry.domainNames(domainName)).unwrap().toU8a();
     return new DomainKey(rawKey);
   }
 
@@ -61,10 +61,10 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   //
 
   async getResource (name: DXN): Promise<Resource | undefined> {
-    const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
+    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, name.resource))
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, name.path))
       .unwrapOr(undefined);
     if (resource === undefined) {
       return undefined;
@@ -104,7 +104,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     owner: AccountKey,
     tag: string
   ): Promise<void> {
-    const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
+    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
     if (!cid) {
@@ -112,7 +112,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
         this.api.tx.registry.deleteResource(
           domainKey.value,
           owner.value,
-          name.resource
+          name.path
         )
       );
     } else {
@@ -120,7 +120,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
         this.api.tx.registry.updateResource(
           domainKey.value,
           owner.value,
-          name.resource,
+          name.path,
           cid.value,
           null, // TODO(wittjosiah): Remove versions.
           [tag]
