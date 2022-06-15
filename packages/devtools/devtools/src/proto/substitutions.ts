@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { newAnySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
+import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { publicKeySubstitutions } from '@dxos/crypto';
 import { timeframeSubstitutions } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
@@ -11,7 +11,7 @@ export default {
   ...timestampSubstitutions,
   ...publicKeySubstitutions,
   ...timeframeSubstitutions,
-  ...newAnySubstitutions,
+  ...anySubstitutions,
 
   // TODO(dmaretskyi): Use protobuf's built-in type and remove this.
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {

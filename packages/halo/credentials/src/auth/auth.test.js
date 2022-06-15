@@ -325,10 +325,10 @@ it('PartyAuthenticator - missing deviceKey', async () => {
   await party.processMessages(messages);
 
   const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
+    '@type': 'dxos.credentials.Message',
     payload:
       keyring.sign({
-        __type_url: 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord.publicKey
       }, [identityKeyRecord])
@@ -424,10 +424,10 @@ it('PartyAuthenticator - signature too old', async () => {
   await party.processMessages(messages);
 
   const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
+    '@type': 'dxos.credentials.Message',
     payload:
       keyring.sign({
-        __type_url: 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord.publicKey,
         deviceKey: deviceKeyRecord.publicKey
@@ -460,10 +460,10 @@ it('PartyAuthenticator - signature too far in future', async () => {
   await party.processMessages(messages);
 
   const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
+    '@type': 'dxos.credentials.Message',
     payload:
       keyring.sign({
-        __type_url: 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord.publicKey,
         deviceKey: deviceKeyRecord.publicKey
@@ -496,10 +496,10 @@ it('PartyAuthenticator - signature date invalid', async () => {
   await party.processMessages(messages);
 
   const wrappedCredentials = {
-    __type_url: 'dxos.credentials.Message',
+    '@type': 'dxos.credentials.Message',
     payload:
       keyring.sign({
-        __type_url: 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord.publicKey,
         deviceKey: deviceKeyRecord.publicKey
