@@ -15,11 +15,6 @@ jobs:
         with:
           fetch-depth: 0
           clean: false
-      - uses: vmactions/ngrok-tunnel@v0.0.1
-        id: test
-        with:
-          protocol: tcp
-          port: 22
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use
