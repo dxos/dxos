@@ -72,8 +72,8 @@ export class PartyAuthenticator extends Authenticator {
       return false;
     }
 
-    const { created, payload } = credentials.signed || {};
-    const { deviceKey, identityKey, partyKey, feedKey, feedAdmit }: Auth = payload || {};
+    const { created, payload: auth = {} } = credentials.signed || {};
+    const { deviceKey, identityKey, partyKey } = auth;
     if (!created || !PublicKey.isPublicKey(deviceKey) || !PublicKey.isPublicKey(identityKey) || !PublicKey.isPublicKey(partyKey)) {
       log('Bad credentials:', credentials);
       return false;
@@ -112,7 +112,7 @@ export class PartyAuthenticator extends Authenticator {
       // !this._party.memberFeeds.find(partyFeed => partyFeed.equals(feedKey))
     ) {
       log(`Member authenticated: deviceKey=${deviceKey}, identityKey=${identityKey}`);
-      await this._onAuthenticated?.(payload || {});
+      await this._onAuthenticated?.(auth);
     }
 
     return verified;
