@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, Authenticator } from '@dxos/credentials';
+import { KeyHint, createAuthMessage, createFeedAdmitMessage, codec } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
@@ -19,6 +19,7 @@ import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
+import { createAuthenticator } from './authenticator';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
@@ -78,7 +79,7 @@ export class PartyInternal {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeedKeys().length,
+      feedKeys: this._feedProvider.getFeeds().length,
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };
@@ -178,7 +179,7 @@ export class PartyInternal {
       this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._invitationManager,
-      this._partyCore.processor.authenticator,
+      createAuthenticator(this._partyCore.processor, this._identityProvider),
       this._partyCore.processor.getActiveFeedSet()
     );
 
@@ -274,12 +275,20 @@ export class PartyInternal {
     return {
       get: () => {
         const identity = this._identityProvider();
-        return Buffer.from(Authenticator.encodePayload(createAuthMessage(
+        const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
+        return Buffer.from(codec.encode(createAuthMessage(
           identity.signer,
           partyKey,
           identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),
-          identity.keyring.getKey(feedKey)
+          signingKey,
+          identity.keyring.getKey(feedKey),
+          undefined,
+          createFeedAdmitMessage(
+            identity.signer,
+            partyKey,
+            feedKey,
+            [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
+          )
         )));
       }
     };

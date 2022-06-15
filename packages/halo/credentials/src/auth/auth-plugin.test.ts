@@ -19,7 +19,7 @@ import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';
-import { codec, codecLoop, KeyType } from '../proto';
+import { codec, codecLoop, KeyType, SignedMessage } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';
@@ -42,17 +42,15 @@ const createTestKeyring = async () => {
 /**
  * A test Authenticator that checks for the signature of a pre-determined key.
  */
-class ExpectedKeyAuthenticator extends Authenticator {
+class ExpectedKeyAuthenticator implements Authenticator {
   constructor (
     private _keyring: Keyring,
     private _expectedKey: PublicKey
-  ) {
-    super();
-  }
+  ) {}
 
-  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type.
+  async authenticate (credentials: SignedMessage) {
     if (this._keyring.verify(credentials)) {
-      if (this._expectedKey.equals(credentials.signatures[0].key)) {
+      if (this._expectedKey.equals(credentials.signatures![0].key)) {
         return true;
       }
     }

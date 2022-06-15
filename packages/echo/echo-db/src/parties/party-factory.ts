@@ -205,12 +205,7 @@ export class PartyFactory {
     const initiator = new GreetingInitiator(
       this._networkManager,
       identity,
-      invitationDescriptor,
-      async partyKey => {
-        const feedProvider = this._createFeedProvider(partyKey);
-        const feed = await feedProvider.createOrOpenWritableFeed();
-        return feed.key;
-      }
+      invitationDescriptor
     );
 
     await initiator.connect();
