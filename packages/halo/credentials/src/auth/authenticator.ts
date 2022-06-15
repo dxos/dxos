@@ -8,45 +8,30 @@ import moment from 'moment';
 import { PublicKey } from '@dxos/crypto';
 
 import { isSignedMessage, PartyState } from '../party';
-import { Auth, codec, Message, SignedMessage } from '../proto';
+import { Auth, SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:auth');
 
 const MAX_AGE = 24 * 60 * 60; // One day.
 
 /**
- * Abstract base class for Authenticators.
+ * Interface for Authenticators.
  * Used by AuthPlugin for authenticating nodes during handshake.
  */
-// TODO(telackey): Explain here the intention behind the abstract base class:
+// TODO(telackey): Explain here the intention behind the interface:
 //  E.g., to have different authentication methods (besides the current PartyAuthenticator) for replication auth,
 //  or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
-export abstract class Authenticator {
-  // TODO(dboreham): The following static methods:
-  //  temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
-
-  static encodePayload (credentials: Message) {
-    return codec.encode(credentials);
-  }
-
-  static decodePayload (credentials: Buffer) {
-    return codec.decode(credentials);
-  }
-
+export interface Authenticator {
   /**
    * Return true if the credentials checkout, else false.
-   * @param credentials
-   * @returns {Promise<boolean>}
    */
-  async authenticate(credentials: any): Promise<boolean> { // eslint-disable-line
-    throw new Error('Not Implemented');
-  }
+  authenticate(credentials: SignedMessage): Promise<boolean>
 }
 
 /**
  * A Party-based Authenticator, which checks that the supplied credentials belong to a Party member.
  */
-export class PartyAuthenticator extends Authenticator {
+export class PartyAuthenticator implements Authenticator {
 
   /**
    * Takes the target Party for checking admitted keys and verifying signatures.
@@ -54,9 +39,7 @@ export class PartyAuthenticator extends Authenticator {
   constructor (
     private readonly _party: PartyState,
     private readonly _onAuthenticated?: (auth: Auth) => Promise<void>
-  ) {
-    super();
-  }
+  ) {}
 
   /**
    * Authenticate the credentials presented during handshake. The signature on the credentials must be valid and belong
@@ -66,7 +49,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   // TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage`
   //  signing a message of type `dxos.credentials.auth.Auth`.
-  override async authenticate (credentials: SignedMessage) {
+  async authenticate (credentials: SignedMessage): Promise<boolean> {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
       return false;
