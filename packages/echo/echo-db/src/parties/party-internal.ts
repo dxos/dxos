@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, Authenticator, createFeedAdmitMessage } from '@dxos/credentials';
+import { KeyHint, createAuthMessage, createFeedAdmitMessage, codec } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
@@ -276,7 +276,7 @@ export class PartyInternal {
       get: () => {
         const identity = this._identityProvider();
         const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
-        return Buffer.from(Authenticator.encodePayload(createAuthMessage(
+        return Buffer.from(codec.encode(createAuthMessage(
           identity.signer,
           partyKey,
           identity.identityKey ?? raise(new IdentityNotInitializedError()),
