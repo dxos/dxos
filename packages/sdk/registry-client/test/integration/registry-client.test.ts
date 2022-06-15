@@ -51,7 +51,7 @@ describe('Registry Client', () => {
       const domainKey = await registryClient.registerDomainKey(account);
 
       const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
-      await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), typeCid, account);
+      await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), 'latest', typeCid, account);
 
       const typeRecord = await registryClient.getTypeRecord(typeCid);
       expect(typeRecord?.type?.messageName).to.equal('.dxos.type.App');
@@ -82,7 +82,7 @@ describe('Registry Client', () => {
       }, appTypeCid);
 
       domainKey = await registryClient.registerDomainKey(account);
-      await registryClient.registerResource(DXN.fromDomainKey(domainKey, appResourceName), contentCid, account);
+      await registryClient.registerResource(DXN.fromDomainKey(domainKey, appResourceName), 'latest', contentCid, account);
     });
 
     it('Retrieves a list of resources', async () => {
@@ -111,7 +111,7 @@ describe('Registry Client', () => {
 
     it('Deletes a single resource', async () => {
       const name = DXN.fromDomainKey(domainKey, appResourceName);
-      await registryClient.registerResource(name, undefined, account);
+      await registryClient.registerResource(name, 'latest', undefined, account);
       const resource = await registryClient.getResource(name);
       expect(resource).to.be.undefined;
     });
@@ -141,9 +141,9 @@ describe('Registry Client', () => {
         }, appTypeCid);
 
         versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
-        await registryClient.registerResource(versionedDxn, version2, account, 'beta');
-        await registryClient.registerResource(versionedDxn, version3, account, 'alpha');
-        await registryClient.registerResource(versionedDxn, version4, account); // Latest tag by default.
+        await registryClient.registerResource(versionedDxn, 'latest', version4, account);
+        await registryClient.registerResource(versionedDxn, 'beta', version2, account);
+        await registryClient.registerResource(versionedDxn, 'alpha', version3, account);
       });
 
       it('Properly Registers resource with tags and versions', async () => {
@@ -263,7 +263,7 @@ describe('Registry Client', () => {
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.App', protoSchema);
 
       await expect(
-        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid, account)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), 'latest', appTypeCid, account)
       ).to.be.fulfilled;
     });
 
@@ -273,11 +273,11 @@ describe('Registry Client', () => {
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       await expect(
-        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid, account)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), 'latest', appTypeCid, account)
       ).to.be.fulfilled;
 
       await expect(
-        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), appTypeCid, account)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName()), 'latest', appTypeCid, account)
       ).to.be.fulfilled;
     });
   });
