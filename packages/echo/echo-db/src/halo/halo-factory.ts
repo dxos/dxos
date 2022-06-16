@@ -73,7 +73,7 @@ export class HaloFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider,
+      this._identityProvider().getCredentialsSigner(),
       this._networkManager,
       hints,
       undefined,

@@ -20,6 +20,7 @@ import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
 import { IdentityProvider } from './identity';
 import { Preferences } from './preferences';
+import { CredentialsSigner } from './credentials-signer';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';
 export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxos:item/halo/contact-list';
@@ -53,8 +54,7 @@ export class HaloParty {
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
-    // This needs to be a provider because the identity is changed during HALO initialization process.
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe: Timeframe | undefined,
@@ -148,14 +148,11 @@ export class HaloParty {
       return this;
     }
 
-    const identity = this._identityProvider();
-    assert(identity.deviceKey, 'Missing device key.');
-
     await this._partyCore.open(this._hints);
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
-      this._identityProvider().getCredentialsSigner(),
+      this._credentialsSigner,
       this._networkManager
     );
 
@@ -171,13 +168,13 @@ export class HaloParty {
       this._feedProvider,
       this._deviceKey,
       // TODO(dmaretskyi): Device key chain is queried from identity provider here. Figure out if we can just sign with device key instead.
-      createCredentialsProvider(this._identityProvider().getCredentialsSigner(), this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider().getCredentialsSigner()), this._deviceKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), this._deviceKey),
       createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey),
     ]);
 
