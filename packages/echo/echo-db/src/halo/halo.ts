@@ -22,6 +22,7 @@ import { HaloFactory } from './halo-factory';
 import { IdentityProvider } from './identity';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
+import { CredentialsSigner } from './credentials-signer';
 
 const log = debug('dxos:echo');
 
@@ -35,7 +36,7 @@ export interface HaloConfiguration {
   networkManager: NetworkManager,
   partyManager: PartyManager,
   metadataStore: MetadataStore,
-  identityProvider: IdentityProvider,
+  getCredentialsSigner: () => CredentialsSigner,
   modelFactory: ModelFactory,
   snapshotStore: SnapshotStore,
   createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
@@ -53,7 +54,7 @@ export class HALO {
   constructor ({
     keyring,
     partyManager,
-    identityProvider,
+    getCredentialsSigner,
     networkManager,
     metadataStore,
     modelFactory,
@@ -65,7 +66,7 @@ export class HALO {
     this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
-      () => identityProvider().getCredentialsSigner(),
+      getCredentialsSigner,
       networkManager,
       modelFactory,
       snapshotStore,

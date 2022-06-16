@@ -170,7 +170,7 @@ export class ECHO {
       networkManager: this._networkManager,
       metadataStore: this._metadataStore,
       createFeedProvider: createFeedProvider,
-      identityProvider: () => this.halo.identity,
+      getCredentialsSigner: () => this.halo.identity.getCredentialsSigner(),
       modelFactory: this._modelFactory,
       snapshotStore: this._snapshotStore,
       options
