@@ -17,11 +17,10 @@ import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
-import { PartyFeedProvider } from './party-feed-provider';
 import { CredentialsProvider } from '../parties/authenticator';
+import { PartyFeedProvider } from './party-feed-provider';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
-
 
 /**
  * Manages the party's connection to the network swarm.

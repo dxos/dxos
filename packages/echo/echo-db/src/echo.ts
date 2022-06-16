@@ -167,9 +167,13 @@ export class ECHO {
     this._halo = new HALO({
       keyring: this._keyring,
       partyManager: this._partyManager,
-      partyFactory,
       networkManager: this._networkManager,
-      metadataStore: this._metadataStore
+      metadataStore: this._metadataStore,
+      createFeedProvider: createFeedProvider,
+      identityProvider: () => this.halo.identity,
+      modelFactory: this._modelFactory,
+      snapshotStore: this._snapshotStore,
+      options
     });
 
     this._halo.identityReady.once(() => {

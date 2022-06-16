@@ -2,23 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined, timed } from '@dxos/debug';
-import { PartyKey, Timeframe } from '@dxos/echo-protocol';
+import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import assert from 'assert';
-import { InvitationManager } from '../invitations';
 
-import { PartyCore, PartyInternal, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
+import { InvitationManager } from '../invitations';
+import { PartyCore, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { createAuthenticator, createCredentialsProvider } from '../parties/authenticator';
 import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
 import { IdentityProvider } from './identity';
-import { PartyPreferences } from './party-preferences';
 import { Preferences } from './preferences';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';
@@ -74,7 +74,10 @@ export class HaloParty {
     );
 
     this._contactManager = new ContactManager(this);
-    this._preferences = new Preferences(() => this.database, deviceKey);
+    this._preferences = new Preferences(
+      () => this.isOpen ? this.database : undefined,
+      deviceKey
+    );
   }
 
   get isOpen () {
@@ -100,6 +103,7 @@ export class HaloParty {
   //
 
   get invitationManager () {
+    assert(this._invitationManager);
     return this._invitationManager;
   }
 
@@ -124,7 +128,7 @@ export class HaloParty {
   }
 
   async getWriteFeedKey () {
-    const feed = await this._feedProvider.createOrOpenWritableFeed()
+    const feed = await this._feedProvider.createOrOpenWritableFeed();
     return feed.key;
   }
 
@@ -137,50 +141,50 @@ export class HaloParty {
    */
    @synchronized
    @timed(5_000)
-   async open () {
-     if (this.isOpen) {
-       return this;
-     }
- 
-     const identity = this._identityProvider();
-     assert(identity.deviceKey, 'Missing device key.');
- 
-     await this._partyCore.open(this._hints);
- 
-     this._invitationManager = new InvitationManager(
-       this._partyCore.processor,
-       this._identityProvider,
-       this._networkManager
-     );
- 
-     //
-     // Network/swarm.
-     //
- 
-     const writeFeed = await this._partyCore.getWriteFeed();
- 
-     this._protocol = new PartyProtocolFactory(
-       this._partyCore.key,
-       this._networkManager,
-       this._feedProvider,
-       this._identityProvider,
-       createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
-       this._invitationManager,
-       createAuthenticator(this._partyCore.processor, this._identityProvider),
-       this._partyCore.processor.getActiveFeedSet()
-     );
- 
-     // Replication.
-     await this._protocol.start();
- 
-     // Issue an 'update' whenever the properties change.
-     this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());
- 
-     this.update.emit();
-     return this;
-   }
+  async open () {
+    if (this.isOpen) {
+      return this;
+    }
 
-  /**
+    const identity = this._identityProvider();
+    assert(identity.deviceKey, 'Missing device key.');
+
+    await this._partyCore.open(this._hints);
+
+    this._invitationManager = new InvitationManager(
+      this._partyCore.processor,
+      this._identityProvider,
+      this._networkManager
+    );
+
+    //
+    // Network/swarm.
+    //
+
+    const writeFeed = await this._partyCore.getWriteFeed();
+
+    this._protocol = new PartyProtocolFactory(
+      this._partyCore.key,
+      this._networkManager,
+      this._feedProvider,
+      this._identityProvider,
+      createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
+      this._invitationManager,
+      createAuthenticator(this._partyCore.processor, this._identityProvider),
+      this._partyCore.processor.getActiveFeedSet()
+    );
+
+    // Replication.
+    await this._protocol.start();
+
+    // Issue an 'update' whenever the properties change.
+    this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());
+
+    this.update.emit();
+    return this;
+  }
+
+   /**
    * Closes the pipeline and streams.
    */
    @synchronized
@@ -188,15 +192,15 @@ export class HaloParty {
      if (!this.isOpen) {
        return this;
      }
- 
+
      await this._partyCore.close();
      await this._protocol?.stop();
- 
+
      this._protocol = undefined;
      this._invitationManager = undefined;
- 
+
      this.update.emit();
- 
+
      return this;
    }
 }

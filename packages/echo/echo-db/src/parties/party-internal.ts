@@ -5,16 +5,15 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, createFeedAdmitMessage, codec } from '@dxos/credentials';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise, timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
+import { failUndefined, timed } from '@dxos/debug';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';

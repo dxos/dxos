@@ -9,9 +9,11 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
+import { IdentityNotInitializedError } from '../errors';
 import { PartyInternal } from '../parties';
 import {
   HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty
@@ -23,7 +25,7 @@ import {
 // TODO(burdon): Split into device settings, user preferences, etc. (Expose subset as public API).
 export class Preferences {
   constructor (
-    private readonly _getDatabase: () => Database,
+    private readonly _getDatabase: () => Database | undefined,
     private readonly _deviceKey: PublicKey
   ) {}
 
@@ -41,8 +43,10 @@ export class Preferences {
   }
 
   subscribeToPreferences (callback: (preferences: any) => void) {
-    const globalResults = this._getDatabase().select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec();
-    const deviceResults = this._getDatabase().select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec();
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
+
+    const globalResults = database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec();
+    const deviceResults = database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec();
 
     const event = new Event<any>();
 
@@ -73,18 +77,20 @@ export class Preferences {
   }
 
   getGlobalPreferences () {
-    // if (!this._party.isOpen) {
-    //   return null;
-    // }
-    const [globalItem] = this._getDatabase().select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec().entities;
+    const database = this._getDatabase();
+    if (!database) {
+      return;
+    }
+    const [globalItem] = database.select({ type: HALO_PARTY_PREFERENCES_TYPE }).exec().entities;
     return globalItem;
   }
 
   getDevicePreferences () {
-    // if (!this._party.isOpen) {
-    //   return null;
-    // }
-    const deviceItems = this._getDatabase().select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec().entities;
+    const database = this._getDatabase();
+    if (!database) {
+      return;
+    }
+    const deviceItems = database.select({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).exec().entities;
     return deviceItems.find(item => this._deviceKey.equals(item.model.get('publicKey')));
   }
 
@@ -129,13 +135,17 @@ export class Preferences {
   }
 
   async recordPartyJoining (joinedParty: JoinedParty) {
-    const [partyDesc] = this._getDatabase()
+    const database = this._getDatabase();
+    if (!database) {
+      return;
+    }
+    const [partyDesc] = database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.get('publicKey')))
       .exec().entities;
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
-    await this._getDatabase().createItem({
+    await database.createItem({
       model: ObjectModel,
       type: HALO_PARTY_DESCRIPTOR_TYPE,
       props: {
@@ -147,6 +157,8 @@ export class Preferences {
   }
 
   subscribeToJoinedPartyList (callback: (parties: JoinedParty[]) => void): () => void {
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
+
     const converter = (partyDesc: Item<any>) => {
       // TODO(burdon): Define type.
       return {
@@ -158,7 +170,7 @@ export class Preferences {
       };
     };
 
-    const result = this._getDatabase().select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
+    const result = database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
 
     // Wrap the query event so we can have manual control.
     const event = new Event();

@@ -10,7 +10,6 @@ import { Keyring, SecretProvider } from '@dxos/credentials';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
-import { PartyInternal } from '../parties';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
@@ -46,13 +45,12 @@ export class IdentityManager {
       !!this._identity.deviceKeyChain;
   }
 
-  private async _initialize (halo: PartyInternal) {
+  private async _initialize (halo: HaloParty) {
     assert(this._identity.identityKey, 'No identity key.');
     assert(this._identity.deviceKey, 'No device key.');
     assert(halo.isOpen, 'HALO must be open.');
 
-    const haloParty = new HaloParty(halo, this._identity.identityKey!.publicKey, this._identity.deviceKey.publicKey);
-    this._identity.setHalo(haloParty);
+    this._identity.setHalo(halo);
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() => this.initialized);
@@ -66,7 +64,7 @@ export class IdentityManager {
     if (this._identity.identityKey) {
       if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty(this._identity.identityKey.publicKey);
+        const halo = await this._haloFactory.constructParty();
         // Always open the HALO.
         await halo.open();
         await this._initialize(halo);
@@ -80,7 +78,7 @@ export class IdentityManager {
    * Creates the Identity HALO.
    */
    @synchronized
-  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
+  async createHalo (options: HaloCreationOptions = {}): Promise<HaloParty> {
     assert(!this._identity.halo, 'HALO already exists.');
 
     const halo = await this._haloFactory.createHalo(options);

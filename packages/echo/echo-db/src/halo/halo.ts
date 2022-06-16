@@ -8,14 +8,18 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { MetadataStore } from '../metadata';
-import { PartyFactory, OpenProgress, PartyManager } from '../parties';
+import { OpenProgress, PartyManager, PartyOptions } from '../parties';
+import { PartyFeedProvider } from '../pipeline';
+import { SnapshotStore } from '../snapshots';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
+import { IdentityProvider } from './identity';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
 
@@ -28,10 +32,14 @@ export interface ProfileInfo {
 
 export interface HaloConfiguration {
   keyring: Keyring,
-  partyFactory: PartyFactory,
   networkManager: NetworkManager,
   partyManager: PartyManager,
-  metadataStore: MetadataStore
+  metadataStore: MetadataStore,
+  identityProvider: IdentityProvider,
+  modelFactory: ModelFactory,
+  snapshotStore: SnapshotStore,
+  createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+  options: PartyOptions
 }
 
 /**
@@ -45,17 +53,25 @@ export class HALO {
   constructor ({
     keyring,
     partyManager,
-    partyFactory,
+    identityProvider,
     networkManager,
-    metadataStore
+    metadataStore,
+    modelFactory,
+    snapshotStore,
+    createFeedProvider,
+    options
   }: HaloConfiguration) {
     this._keyring = keyring;
     this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
-      partyFactory,
+      identityProvider,
       networkManager,
-      this._keyring
+      modelFactory,
+      snapshotStore,
+      createFeedProvider,
+      keyring,
+      options
     );
 
     this._identityManager = new IdentityManager(this._keyring, haloFactory, metadataStore);

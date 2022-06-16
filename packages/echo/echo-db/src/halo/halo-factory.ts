@@ -13,22 +13,27 @@ import {
   Keyring,
   KeyType,
   Filter,
-  SecretProvider
+  SecretProvider,
+  createEnvelopeMessage,
+  wrapMessage,
+  KeyHint,
+  createFeedAdmitMessage
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { PartyKey } from '@dxos/echo-protocol';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
-import { PartyFactory, PartyInternal, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
+import { PartyOptions, PARTY_ITEM_TYPE } from '../parties';
+import { PartyFeedProvider } from '../pipeline';
+import { SnapshotStore } from '../snapshots';
 import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
 import { Identity, IdentityProvider } from './identity';
-import { ModelFactory } from '@dxos/model-factory';
-import { SnapshotStore } from '../snapshots';
-import { PartyFeedProvider } from '../pipeline';
 
 /**
  * Options allowed when creating the HALO.
@@ -55,12 +60,11 @@ export class HaloFactory {
   ) {}
 
   async constructParty (): Promise<HaloParty> {
-    const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
     assert(identityKey, 'Identity key required.');
 
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
     assert(deviceKey, 'Device key required.');
-
 
     const feedProvider = this._createFeedProvider(identityKey.publicKey);
 
@@ -77,7 +81,7 @@ export class HaloFactory {
       [],
       undefined,
       this._options,
-      deviceKey.publicKey,
+      deviceKey.publicKey
     );
 
     return party;
@@ -181,48 +185,45 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // const halo = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
-    {
-      const haloInvitation = !!invitationDescriptor.identityKey;
-      const originalInvitation = invitationDescriptor;
-  
-      const identity = this._identityProvider();
-      // Claim the offline invitation and convert it into an interactive invitation.
-      if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
-        const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
-        await invitationClaimer.connect();
-        invitationDescriptor = await invitationClaimer.claim();
-        log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
+    const haloInvitation = !!invitationDescriptor.identityKey;
+    const originalInvitation = invitationDescriptor;
+
+    const identity = this._identityProvider();
+    // Claim the offline invitation and convert it into an interactive invitation.
+    if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
+      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
+      await invitationClaimer.connect();
+      invitationDescriptor = await invitationClaimer.claim();
+      log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
           `at ${keyToString(invitationDescriptor.invitation)}`);
-        await invitationClaimer.destroy();
-      }
-  
-      // TODO(burdon): Factor out.
-      const initiator = new GreetingInitiator(
-        this._networkManager,
-        identity,
-        invitationDescriptor
-      );
-  
-      await initiator.connect();
-      const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
-      const party = await this.addParty(partyKey, hints);
-      await initiator.destroy();
-      if (!haloInvitation) {
-        assert(identity.deviceKeyChain);
-  
-        // Copy our signed IdentityInfo into the new Party.
-        const infoMessage = identity.identityInfo;
-        if (infoMessage) {
-          await party.processor.writeHaloMessage(createEnvelopeMessage(
-            identity.signer,
-            partyKey,
-            wrapMessage(infoMessage),
-            [identity.deviceKeyChain]
-          ));
-        }
-      }
+      await invitationClaimer.destroy();
     }
 
+    // TODO(burdon): Factor out.
+    const initiator = new GreetingInitiator(
+      this._networkManager,
+      identity,
+      invitationDescriptor
+    );
+
+    await initiator.connect();
+    const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+    const halo = await this._addParty(partyKey, hints);
+    await initiator.destroy();
+    if (!haloInvitation) {
+      assert(identity.deviceKeyChain);
+
+      // Copy our signed IdentityInfo into the new Party.
+      const infoMessage = identity.identityInfo;
+      if (infoMessage) {
+        await halo.processor.writeHaloMessage(createEnvelopeMessage(
+          identity.signer,
+          partyKey,
+          wrapMessage(infoMessage),
+          [identity.deviceKeyChain]
+        ));
+      }
+    }
 
     await halo.database.createItem({
       model: ObjectModel,
@@ -231,5 +232,53 @@ export class HaloFactory {
     });
 
     return halo;
+  }
+
+  /**
+   * Constructs a party object and creates a local write feed for it.
+   * @param partyKey
+   * @param hints
+   */
+  private async _addParty (partyKey: PartyKey, hints: KeyHint[] = []): Promise<HaloParty> {
+    const identity = this._identityProvider();
+
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ??
+          await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
+
+    /*
+       * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
+       * mechanism is broken by not waiting on the messages to be processed before returning.
+       */
+
+    const feedProvider = this._createFeedProvider(partyKey);
+    const { feed } = await feedProvider.createOrOpenWritableFeed();
+    const feedKeyPair = identity.keyring.getKey(feed.key);
+    assert(feedKeyPair, 'Keypair for writable feed not found.');
+    const party = new HaloParty(
+      partyKey,
+      this._modelFactory,
+      this._snapshotStore,
+      feedProvider,
+      this._identityProvider,
+      this._networkManager,
+      [{ type: feedKeyPair.type, publicKey: feedKeyPair.publicKey }, ...hints],
+      undefined,
+      this._options,
+      deviceKey.publicKey
+    );
+
+    await party.open();
+    assert(identity.identityKey, 'No identity key.');
+    const isHalo = identity.identityKey.publicKey.equals(partyKey);
+    const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
+    assert(signingKey, 'No device key or keychain.');
+    // Write the Feed genesis message.
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      identity.signer,
+      partyKey,
+      feedKeyPair.publicKey,
+      [signingKey]
+    ));
+    return party;
   }
 }

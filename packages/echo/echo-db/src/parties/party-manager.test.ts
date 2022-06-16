@@ -89,7 +89,18 @@ const setup = async (open = true, createIdentity = true) => {
     }
   );
 
-  const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
+  const haloFactory: HaloFactory = new HaloFactory(
+    () => identityManager.identity,
+    networkManager,
+    modelFactory,
+    snapshotStore,
+    feedProviderFactory,
+    keyring,
+    {
+      writeLogger: messageLogger('<<<'),
+      readLogger: messageLogger('>>>')
+    }
+  );
   const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
   const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
@@ -192,8 +203,21 @@ describe('Party manager', () => {
     const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
-    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, modelFactory, snapshotStore, feedProviderFactory);
-    const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
+    const partyFactory = new PartyFactory(
+      () => identityManager.identity,
+      networkManager,
+      modelFactory,
+      snapshotStore,
+      feedProviderFactory
+    );
+    const haloFactory: HaloFactory = new HaloFactory(
+      () => identityManager.identity,
+      networkManager,
+      modelFactory,
+      snapshotStore,
+      feedProviderFactory,
+      keyring
+    );
     const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 

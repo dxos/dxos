@@ -5,12 +5,12 @@
 import debug from 'debug';
 
 import { Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
+import { failUndefined, raise } from '@dxos/debug';
+import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 
+import { IdentityNotInitializedError } from '../errors';
 import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../pipeline';
-import { FeedKey, PartyKey } from '@dxos/echo-protocol';
-import { IdentityNotInitializedError } from '../errors';
-import { failUndefined, raise } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:authenticator');
 
