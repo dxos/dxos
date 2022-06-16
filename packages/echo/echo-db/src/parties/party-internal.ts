@@ -16,7 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Database, Item, ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, IdentityProvider, Identity } from '../halo';
 import { InvitationManager } from '../invitations';
-import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { createAuthPlugin, createOfflineInvitationPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createAuthenticator, createCredentialsProvider } from './authenticator';
 import { PartyCore, PartyOptions } from './party-core';
@@ -162,23 +162,24 @@ export class PartyInternal {
 
     //
     // Network/swarm.
+    // Replication, invitations, and authentication functions.
     //
 
+    const deviceKey = this._identity.deviceKey;
     const writeFeed = await this._partyCore.getWriteFeed();
-
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      () => this._identity,
+      deviceKey.publicKey,
       createCredentialsProvider(() => this._identity, this._partyCore.key, writeFeed.key),
-      this._invitationManager,
-      createAuthenticator(this._partyCore.processor, () => this._identity),
       this._partyCore.processor.getActiveFeedSet()
     );
 
-    // Replication.
-    await this._protocol.start();
+    await this._protocol.start([
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, () => this._identity), deviceKey.publicKey),
+      createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey),
+    ]);
 
     // Issue an 'update' whenever the properties change.
     this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());

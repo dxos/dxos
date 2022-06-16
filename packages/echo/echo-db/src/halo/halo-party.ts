@@ -15,7 +15,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { InvitationManager } from '../invitations';
 import { PartyCore, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { createAuthenticator, createCredentialsProvider } from '../parties/authenticator';
-import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { createAuthPlugin, createHaloRecoveryPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
 import { IdentityProvider } from './identity';
@@ -47,7 +47,7 @@ export class HaloParty {
   private readonly _contactManager: ContactManager;
   private readonly _preferences: Preferences;
 
-  constructor (
+  constructor(
     private readonly _identityKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
@@ -85,24 +85,24 @@ export class HaloParty {
    * Always equal to the identity key.
    * @deprecated Should remove.
    */
-  get key () {
+  get key() {
     return this._partyCore.key;
   }
 
-  get isOpen () {
+  get isOpen() {
     return !!(this._partyCore.isOpen && this._protocol);
   }
 
-  get contacts () {
+  get contacts() {
     return this._contactManager;
   }
 
-  get preferences () {
+  get preferences() {
     return this._preferences;
   }
 
   // TODO(burdon): Remove.
-  get database () {
+  get database() {
     return this._partyCore.database;
   }
 
@@ -111,46 +111,46 @@ export class HaloParty {
   // (eg, identity, credentials, device management.)
   //
 
-  get invitationManager () {
+  get invitationManager() {
     assert(this._invitationManager);
     return this._invitationManager;
   }
 
-  get identityInfo () {
+  get identityInfo() {
     return this._partyCore.processor.infoMessages.get(this._identityKey.toHex());
   }
 
-  get identityGenesis () {
+  get identityGenesis() {
     return this._partyCore.processor.credentialMessages.get(this._identityKey.toHex());
   }
 
-  get memberKeys () {
+  get memberKeys() {
     return this._partyCore.processor.memberKeys;
   }
 
-  get credentialMessages () {
+  get credentialMessages() {
     return this._partyCore.processor.credentialMessages;
   }
 
-  get feedKeys () {
+  get feedKeys() {
     return this._partyCore.processor.feedKeys;
   }
 
-  async getWriteFeedKey () {
+  async getWriteFeedKey() {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
     return feed.key;
   }
 
-  get processor () {
+  get processor() {
     return this._partyCore.processor;
   }
 
   /**
    * Opens the pipeline and connects the streams.
    */
-   @synchronized
-   @timed(5_000)
-  async open () {
+  @synchronized
+  @timed(5_000)
+  async open() {
     if (this.isOpen) {
       return this;
     }
@@ -172,19 +172,22 @@ export class HaloParty {
 
     const writeFeed = await this._partyCore.getWriteFeed();
 
+    const deviceKey = this._identityProvider()?.deviceKey;
+    assert(deviceKey, 'Device key required');
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      this._identityProvider,
+      deviceKey.publicKey,
       createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
-      this._invitationManager,
-      createAuthenticator(this._partyCore.processor, this._identityProvider),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.
-    await this._protocol.start();
+    await this._protocol.start([
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider), deviceKey.publicKey),
+      createHaloRecoveryPlugin(this._identityProvider, deviceKey.publicKey),
+    ]);
 
     // Issue an 'update' whenever the properties change.
     this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());
@@ -193,23 +196,23 @@ export class HaloParty {
     return this;
   }
 
-   /**
-   * Closes the pipeline and streams.
-   */
-   @synchronized
-   async close () {
-     if (!this.isOpen) {
-       return this;
-     }
+  /**
+  * Closes the pipeline and streams.
+  */
+  @synchronized
+  async close() {
+    if (!this.isOpen) {
+      return this;
+    }
 
-     await this._partyCore.close();
-     await this._protocol?.stop();
+    await this._partyCore.close();
+    await this._protocol?.stop();
 
-     this._protocol = undefined;
-     this._invitationManager = undefined;
+    this._protocol = undefined;
+    this._invitationManager = undefined;
 
-     this.update.emit();
+    this.update.emit();
 
-     return this;
-   }
+    return this;
+  }
 }
