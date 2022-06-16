@@ -34,6 +34,7 @@ import {
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
 import { Identity, IdentityProvider } from './identity';
+import { CredentialsSigner } from './credentials-signer';
 
 /**
  * Options allowed when creating the HALO.
@@ -50,7 +51,7 @@ const log = debug('dxos:echo-db:halo-factory');
  */
 export class HaloFactory {
   constructor (
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _getCredentialsSigner: () => CredentialsSigner,
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
@@ -73,7 +74,7 @@ export class HaloFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider().getCredentialsSigner(),
+      this._getCredentialsSigner(),
       this._networkManager,
       hints,
       undefined,
@@ -184,7 +185,7 @@ export class HaloFactory {
 
     const originalInvitation = invitationDescriptor;
 
-    const identity = this._identityProvider();
+    const credentialsSigner = this._getCredentialsSigner();
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
@@ -201,7 +202,7 @@ export class HaloFactory {
       invitationDescriptor,
       async (partyKey, nonce) => {
         assert(partyKey.equals(identityKey!.publicKey));
-        return [createHaloPartyInvitationNotarizationMessage(identity.getCredentialsSigner(), nonce)]
+        return [createHaloPartyInvitationNotarizationMessage(credentialsSigner, nonce)]
       }
     );
 
@@ -215,16 +216,12 @@ export class HaloFactory {
     const halo = await this.constructParty(hints);
 
     await halo.open();
-    assert(identity.identityKey, 'No identity key.');
-    const isHalo = identity.identityKey.publicKey.equals(partyKey);
-    const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
-    assert(signingKey, 'No device key or keychain.');
     // Write the Feed genesis message.
     await halo.processor.writeHaloMessage(createFeedAdmitMessage(
-      identity.signer,
+      credentialsSigner.signer,
       partyKey,
       await halo.getWriteFeedKey(),
-      [signingKey]
+      [credentialsSigner.getDeviceKey()]
     ));
     await initiator.destroy();
 

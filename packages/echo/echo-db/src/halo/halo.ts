@@ -65,7 +65,7 @@ export class HALO {
     this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
-      identityProvider,
+      () => identityProvider().getCredentialsSigner(),
       networkManager,
       modelFactory,
       snapshotStore,
