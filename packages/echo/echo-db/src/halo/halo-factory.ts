@@ -19,12 +19,16 @@ import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { HaloRecoveryInitiator, InvitationDescriptor } from '../invitations';
-import { PartyFactory, PartyInternal, PARTY_ITEM_TYPE } from '../parties';
+import { GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
+import { PartyFactory, PartyInternal, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import {
+  HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { Identity } from './identity';
+import { Identity, IdentityProvider } from './identity';
+import { ModelFactory } from '@dxos/model-factory';
+import { SnapshotStore } from '../snapshots';
+import { PartyFeedProvider } from '../pipeline';
 
 /**
  * Options allowed when creating the HALO.
@@ -41,16 +45,45 @@ const log = debug('dxos:echo-db:halo-factory');
  */
 export class HaloFactory {
   constructor (
-    private readonly _partyFactory: PartyFactory,
+    private readonly _identityProvider: IdentityProvider,
     private readonly _networkManager: NetworkManager,
-    private readonly _keyring: Keyring
+    private readonly _modelFactory: ModelFactory,
+    private readonly _snapshotStore: SnapshotStore,
+    private readonly _createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+    private readonly _keyring: Keyring,
+    private readonly _options: PartyOptions = {}
   ) {}
 
-  async constructParty (partyKey: PublicKey) {
-    return this._partyFactory.constructParty(partyKey);
+  async constructParty (): Promise<HaloParty> {
+    const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    assert(identityKey, 'Identity key required.');
+
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    assert(deviceKey, 'Device key required.');
+
+
+    const feedProvider = this._createFeedProvider(identityKey.publicKey);
+
+    //
+    // Create the party.
+    //
+    const party = new HaloParty(
+      identityKey.publicKey,
+      this._modelFactory,
+      this._snapshotStore,
+      feedProvider,
+      this._identityProvider,
+      this._networkManager,
+      [],
+      undefined,
+      this._options,
+      deviceKey.publicKey,
+    );
+
+    return party;
   }
 
-  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
+  async createHalo (options: HaloCreationOptions = {}): Promise<HaloParty> {
     // Don't use `identityManager.identityKey`, because that doesn't check for the secretKey.
     const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
@@ -59,8 +92,10 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
-    const halo = await this._partyFactory.constructParty(identityKey.publicKey);
-    const { feed } = await halo.feedProvider.createOrOpenWritableFeed();
+    const halo = await this.constructParty();
+    const feedKey = await halo.getWriteFeedKey();
+    const feedKeyPair = this._keyring.getKey(feedKey);
+    assert(feedKeyPair);
 
     // Connect the pipeline.
     await halo.open();
@@ -70,8 +105,6 @@ export class HaloFactory {
      *    B. Device key (the first "member" of the Identity's HALO).
      *    C. Feed key (the feed owned by the Device).
      */
-    const feedKeyPair = this._keyring.getKey(feed.key);
-    assert(feedKeyPair);
     await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
     /* 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
@@ -147,7 +180,50 @@ export class HaloFactory {
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ??
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
-    const halo = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+    // const halo = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+    {
+      const haloInvitation = !!invitationDescriptor.identityKey;
+      const originalInvitation = invitationDescriptor;
+  
+      const identity = this._identityProvider();
+      // Claim the offline invitation and convert it into an interactive invitation.
+      if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
+        const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
+        await invitationClaimer.connect();
+        invitationDescriptor = await invitationClaimer.claim();
+        log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
+          `at ${keyToString(invitationDescriptor.invitation)}`);
+        await invitationClaimer.destroy();
+      }
+  
+      // TODO(burdon): Factor out.
+      const initiator = new GreetingInitiator(
+        this._networkManager,
+        identity,
+        invitationDescriptor
+      );
+  
+      await initiator.connect();
+      const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+      const party = await this.addParty(partyKey, hints);
+      await initiator.destroy();
+      if (!haloInvitation) {
+        assert(identity.deviceKeyChain);
+  
+        // Copy our signed IdentityInfo into the new Party.
+        const infoMessage = identity.identityInfo;
+        if (infoMessage) {
+          await party.processor.writeHaloMessage(createEnvelopeMessage(
+            identity.signer,
+            partyKey,
+            wrapMessage(infoMessage),
+            [identity.deviceKeyChain]
+          ));
+        }
+      }
+    }
+
+
     await halo.database.createItem({
       model: ObjectModel,
       type: HALO_PARTY_DEVICE_PREFERENCES_TYPE,

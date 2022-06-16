@@ -18,15 +18,10 @@ import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { PartyFeedProvider } from './party-feed-provider';
+import { CredentialsProvider } from '../parties/authenticator';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
 
-export interface CredentialsProvider {
-  /**
-   * The credentials (e.g., a serialized AuthMessage) as a bytes.
-   */
-  get (): Buffer
-}
 
 /**
  * Manages the party's connection to the network swarm.

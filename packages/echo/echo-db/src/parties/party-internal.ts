@@ -17,9 +17,9 @@ import { Database, Item, ResultSet } from '../api';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
-import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { createAuthenticator } from './authenticator';
+import { createAuthenticator, createCredentialsProvider } from './authenticator';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
@@ -177,7 +177,7 @@ export class PartyInternal {
       this._networkManager,
       this._feedProvider,
       this._identityProvider,
-      this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
       this._invitationManager,
       createAuthenticator(this._partyCore.processor, this._identityProvider),
       this._partyCore.processor.getActiveFeedSet()
@@ -269,29 +269,6 @@ export class PartyInternal {
 
   async restoreFromSnapshot (snapshot: PartySnapshot) {
     await this._partyCore.restoreFromSnapshot(snapshot);
-  }
-
-  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
-    return {
-      get: () => {
-        const identity = this._identityProvider();
-        const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
-        return Buffer.from(codec.encode(createAuthMessage(
-          identity.signer,
-          partyKey,
-          identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          signingKey,
-          identity.keyring.getKey(feedKey),
-          undefined,
-          createFeedAdmitMessage(
-            identity.signer,
-            partyKey,
-            feedKey,
-            [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
-          )
-        )));
-      }
-    };
   }
 
   /**

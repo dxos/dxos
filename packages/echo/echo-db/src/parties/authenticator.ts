@@ -4,10 +4,13 @@
 
 import debug from 'debug';
 
-import { Authenticator, createEnvelopeMessage, PartyAuthenticator } from '@dxos/credentials';
+import { Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
 
 import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../pipeline';
+import { FeedKey, PartyKey } from '@dxos/echo-protocol';
+import { IdentityNotInitializedError } from '../errors';
+import { failUndefined, raise } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:authenticator');
 
@@ -28,4 +31,34 @@ export function createAuthenticator (partyProcessor: PartyProcessor, identityPro
       ));
     }
   });
+}
+
+export interface CredentialsProvider {
+  /**
+   * The credentials (e.g., a serialized AuthMessage) as a bytes.
+   */
+  get (): Buffer
+}
+
+export function createCredentialsProvider (identityProvider: IdentityProvider, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
+  return {
+    get: () => {
+      const identity = identityProvider();
+      const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
+      return Buffer.from(codec.encode(createAuthMessage(
+        identity.signer,
+        partyKey,
+        identity.identityKey ?? raise(new IdentityNotInitializedError()),
+        signingKey,
+        identity.keyring.getKey(feedKey),
+        undefined,
+        createFeedAdmitMessage(
+          identity.signer,
+          partyKey,
+          feedKey,
+          [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
+        )
+      )));
+    }
+  };
 }

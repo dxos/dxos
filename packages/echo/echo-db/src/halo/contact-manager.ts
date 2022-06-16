@@ -8,7 +8,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Item, ResultSet } from '../api';
 import { PartyInternal, PartyMember } from '../parties';
-import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
+import { HaloParty, HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 
 // TODO(burdon): Create different class (additional properties).
 export type Contact = PartyMember;
@@ -18,7 +18,8 @@ export type Contact = PartyMember;
  */
 export class ContactManager {
   constructor (
-    private readonly _party: PartyInternal
+    // TODO(dmaretskyi): Resolve circular dependency.
+    private readonly _party: HaloParty
   ) {}
 
   getContactListItem (): Item<ObjectModel> | undefined {
