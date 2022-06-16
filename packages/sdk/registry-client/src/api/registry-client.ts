@@ -18,7 +18,7 @@ import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
-import { Filtering, Query } from './queries';
+import { Filtering, Filter } from './filtering';
 import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
@@ -112,14 +112,14 @@ export class RegistryClient {
   }
 
   /**
-   * Queries resources registered in the system.
-   * @param query Query that each returned record must meet.
+   * List resources registered in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async listResources (query?: Query): Promise<ResourceSet[]> {
+  async listResources (filter?: Filter): Promise<ResourceSet[]> {
     const resources = await this._backend.listResources();
 
     return resources
-      .filter(([name]) => Filtering.matchResource(name, query))
+      .filter(([name]) => Filtering.matchResource(name, filter))
       .reduce((result, [name, cid]) => {
         if (!name.tag) {
           return result;
@@ -183,11 +183,10 @@ export class RegistryClient {
   }
 
   /**
-   * Queries all records in the system.
-   * @param query Query that each returned record must meet.
+   * Lists records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  // TODO(wittjosiah): query -> filters
-  async listRecords (query?: Query): Promise<RegistryRecord[]> {
+  async listRecords (filter?: Filter): Promise<RegistryRecord[]> {
     const rawRecords = await this._backend.listRecords();
     const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
       this._decodeRecord(cid, record)
@@ -195,7 +194,7 @@ export class RegistryClient {
 
     return records
       .filter(isNotNullOrUndefined)
-      .filter(record => Filtering.matchRecord(record, query));
+      .filter(record => Filtering.matchRecord(record, filter));
   }
 
   /**
@@ -234,10 +233,10 @@ export class RegistryClient {
   }
 
   /**
-   * Queries type records.
-   * @param query Query that each returned record must meet.
+   * Lists type records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async listTypeRecords (query?: Query): Promise<RegistryType[]> {
+  async listTypeRecords (filter?: Filter): Promise<RegistryType[]> {
     const records = await this._backend.listRecords();
 
     const types = records
