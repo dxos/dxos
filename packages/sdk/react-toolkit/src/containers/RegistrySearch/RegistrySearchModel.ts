@@ -28,7 +28,7 @@ export const createTypeFilter = (types: CID[]) => (resource: Resource) => {
 };
 
 export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: Resource) => {
-  return domainExp.exec(resource.name.domain!) && resourceExp.exec(resource.name.resource);
+  return domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
 };
 
 /**

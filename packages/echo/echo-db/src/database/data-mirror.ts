@@ -86,8 +86,8 @@ export class DataMirror {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);
             await entity._stateManager.processMessage({
-              feedKey: (update.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
-              memberKey: (update.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
+              feedKey: update.mutation.meta.feedKey ?? failUndefined(),
+              memberKey: update.mutation.meta.memberKey ?? failUndefined(),
               seq: update.mutation.meta.seq ?? failUndefined(),
               timeframe: update.mutation.meta.timeframe ?? failUndefined()
             }, update.mutation.data.mutation ?? failUndefined());

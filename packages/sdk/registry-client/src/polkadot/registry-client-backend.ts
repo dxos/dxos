@@ -9,39 +9,19 @@ import assert from 'assert';
 
 import { isNotNullOrUndefined } from '@dxos/util';
 
+import {
+  AccountKey,
+  CID,
+  Domain,
+  DomainKey,
+  DXN,
+  RecordWithCid,
+  RegistryClientBackend,
+  Resource
+} from '../api';
+import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 import { BaseClient } from './base-client';
 import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
-import { Record as RawRecord, schema as dxnsSchema } from './proto';
-import {
-  CID, Domain, DomainKey,
-  AccountKey,
-  DXN,
-  Resource
-} from './types';
-
-export type RecordWithCid = RawRecord & { cid: CID }
-
-/**
- * Minimal API for DXNS registry client backend.
- */
-// TODO(wittjosiah): Don't use DXN? Fully specify resource parts in backend?
-export interface RegistryClientBackend {
-  getDomainKey (domain: string): Promise<DomainKey>
-  getDomains (): Promise<Domain[]>
-  registerDomainKey (owner: AccountKey): Promise<DomainKey>
-  getResource (name: DXN): Promise<Resource | undefined>
-  getResources (): Promise<Resource[]>
-  registerResource (
-    name: DXN,
-    cid: CID | undefined,
-    owner: AccountKey,
-    // TODO(wittjosiah): Will be removed once tags are integrated with DXN.
-    tag: string
-  ): Promise<void>
-  getRecord (cid: CID): Promise<RecordWithCid | undefined>
-  getRecords (): Promise<RecordWithCid[]>
-  registerRecord (record: RawRecord): Promise<CID>
-}
 
 /**
  * Polkadot DXNS registry client backend
@@ -52,8 +32,8 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   // Domains
   //
 
-  async getDomainKey (domain: string): Promise<DomainKey> {
-    const rawKey = (await this.api.query.registry.domainNames(domain)).unwrap().toU8a();
+  async getDomainKey (domainName: string): Promise<DomainKey> {
+    const rawKey = (await this.api.query.registry.domainNames(domainName)).unwrap().toU8a();
     return new DomainKey(rawKey);
   }
 
@@ -81,10 +61,10 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   //
 
   async getResource (name: DXN): Promise<Resource | undefined> {
-    const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
+    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, name.resource))
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, name.path))
       .unwrapOr(undefined);
     if (resource === undefined) {
       return undefined;
@@ -124,7 +104,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     owner: AccountKey,
     tag: string
   ): Promise<void> {
-    const domainKey = name.domain ? await this.getDomainKey(name.domain) : name.key;
+    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
     if (!cid) {
@@ -132,7 +112,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
         this.api.tx.registry.deleteResource(
           domainKey.value,
           owner.value,
-          name.resource
+          name.path
         )
       );
     } else {
@@ -140,7 +120,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
         this.api.tx.registry.updateResource(
           domainKey.value,
           owner.value,
-          name.resource,
+          name.path,
           cid.value,
           null, // TODO(wittjosiah): Remove versions.
           [tag]

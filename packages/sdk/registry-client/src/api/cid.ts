@@ -6,7 +6,7 @@ import assert from 'assert';
 import { fromB58String, toB58String } from 'multihashes';
 import { inspect } from 'util';
 
-import { Multihash } from '../interfaces';
+import { Multihash } from '../polkadot/interfaces';
 
 /**
  * Conten-addressable ID.

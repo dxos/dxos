@@ -2,7 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { CID, DXN, RegistryRecord, Resource } from './types';
+import { CID } from './cid';
+import { DXN } from './dxn';
+import { Resource } from './registry';
+import { RegistryRecord } from './registry-client';
 
 /**
  * Common querying request for data of the DXNS.

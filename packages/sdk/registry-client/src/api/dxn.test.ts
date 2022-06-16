@@ -4,23 +4,21 @@
 
 import { expect } from 'chai';
 
-import { randomBytes } from '@dxos/crypto';
-
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
 
-describe('DXN', () => {
-  it('DomainKey', () => {
-    expect(() => new DomainKey(randomBytes(24))).to.throw();
-  });
+const VALID_AUTHORITY = 'example';
+const VALID_PATH = 'valid/path';
+const VALID_TAG = 'valid-tag';
 
-  it('validateDomain', () => {
+describe('DXN', () => {
+  it('validates domain name', () => {
     // Valid.
     [
       'dxos',
       'dxos-prime',
       'a-b-c-d'
-    ].forEach(domain => expect(DXN.validateDomain(domain), domain).length.greaterThanOrEqual(1));
+    ].forEach(domainName => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.not.throw());
 
     // Invalid.
     [
@@ -32,10 +30,10 @@ describe('DXN', () => {
       'dxos-',
       'foo--bar',
       'c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
-    ].forEach(domain => expect(() => DXN.validateDomain(domain), domain).to.throw());
+    ].forEach(domainName => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw());
   });
 
-  it('validateResource', () => {
+  it('validates path', () => {
     // Valid.
     [
       'x',
@@ -43,7 +41,7 @@ describe('DXN', () => {
       'foo/bar',
       'a/b/c/d',
       'A23456789-A23456789-A23456789-A23456789-A23456789-A23456789-A123' // Max length.
-    ].forEach(resource => expect(DXN.validateResource(resource), resource).length.greaterThanOrEqual(1));
+    ].forEach(path => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.not.throw());
 
     // Invalid.
     [
@@ -62,23 +60,20 @@ describe('DXN', () => {
       'foo//bar',
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234', // Max length.
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5' // TODO(burdon): ???
-    ].forEach(resource => expect(() => DXN.validateResource(resource), resource).to.throw());
+    ].forEach(path => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw());
   });
 
   it('fromDomainKey', () => {
     const key = DomainKey.random();
-    expect(DXN.fromDomainKey(key, 'dxos').key).not.to.be.undefined;
-  });
-
-  it('fromDomainName', () => {
-    expect(DXN.fromDomainName('dxos', 'app/test').domain).not.to.be.undefined;
+    expect(DXN.fromDomainKey(key, VALID_PATH).authority).not.to.be.undefined;
   });
 
   it('parse', () => {
     // Valid.
     [
+      `${VALID_AUTHORITY}:${VALID_PATH}@${VALID_TAG}`,
       'example:foo/bar',
-      '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
+      '0xc54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
     ].forEach(dxn => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
 
     // Invalid.
@@ -86,7 +81,8 @@ describe('DXN', () => {
       '',
       'dxos',
       'dxos:',
-      'example::foo/bar'
+      'example::foo/bar',
+      'example:path@'
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 
