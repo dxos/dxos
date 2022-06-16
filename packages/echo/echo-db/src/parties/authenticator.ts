@@ -11,23 +11,18 @@ import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 import { IdentityNotInitializedError } from '../errors';
 import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../pipeline';
+import { CredentialsSigner } from '../halo/credentials-signer';
 
 const log = debug('dxos:echo-db:authenticator');
 
-export function createAuthenticator (partyProcessor: PartyProcessor, identityProvider: IdentityProvider): Authenticator {
+export function createAuthenticator (partyProcessor: PartyProcessor, credentialsSigner: CredentialsSigner): Authenticator {
   return new PartyAuthenticator(partyProcessor.state, async auth => {
     if (auth.feedAdmit && auth.feedKey && !partyProcessor.isFeedAdmitted(auth.feedKey)) {
-      const deviceKeyChain = identityProvider().deviceKeyChain ?? identityProvider().deviceKey;
-      if (!deviceKeyChain) {
-        log('Not device key chain available to admit new member feed');
-        return;
-      }
-
       await partyProcessor.writeHaloMessage(createEnvelopeMessage(
-        identityProvider().keyring,
+        credentialsSigner.signer,
         partyProcessor.partyKey,
         auth.feedAdmit,
-        [deviceKeyChain]
+        [credentialsSigner.getDeviceSigningKeys()]
       ));
     }
   });
@@ -40,23 +35,21 @@ export interface CredentialsProvider {
   get (): Buffer
 }
 
-export function createCredentialsProvider (identityProvider: IdentityProvider, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
+export function createCredentialsProvider (credentialsSigner: CredentialsSigner, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
   return {
     get: () => {
-      const identity = identityProvider();
-      const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
       return Buffer.from(codec.encode(createAuthMessage(
-        identity.signer,
+        credentialsSigner.signer,
         partyKey,
-        identity.identityKey ?? raise(new IdentityNotInitializedError()),
-        signingKey,
-        identity.keyring.getKey(feedKey)?.publicKey,
+        credentialsSigner.getIdentityKey(),
+        credentialsSigner.getDeviceSigningKeys(),
+        feedKey,
         undefined,
         createFeedAdmitMessage(
-          identity.signer,
+          credentialsSigner.signer,
           partyKey,
           feedKey,
-          [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
+          [feedKey, credentialsSigner.getDeviceSigningKeys()]
         )
       )));
     }

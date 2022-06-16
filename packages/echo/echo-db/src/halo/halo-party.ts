@@ -171,13 +171,13 @@ export class HaloParty {
       this._feedProvider,
       this._deviceKey,
       // TODO(dmaretskyi): Device key chain is queried from identity provider here. Figure out if we can just sign with device key instead.
-      createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._identityProvider().getCredentialsSigner(), this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider), this._deviceKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider().getCredentialsSigner()), this._deviceKey),
       createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey),
     ]);
 

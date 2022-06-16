@@ -174,12 +174,12 @@ export class DataParty {
       this._networkManager,
       this._feedProvider,
       deviceKey.publicKey,
-      createCredentialsProvider(() => this._identity, this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._identity.getCredentialsSigner(), this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, () => this._identity), deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identity.getCredentialsSigner()), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey),
     ]);
 
