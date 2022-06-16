@@ -12,7 +12,7 @@ import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { InvitationManager } from '../invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationManager, InvitationOptions } from '../invitations';
 import { PartyCore, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { createAuthenticator, createCredentialsProvider } from '../parties/authenticator';
 import { createAuthPlugin, createHaloRecoveryPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
@@ -108,11 +108,6 @@ export class HaloParty {
   // TODO(burdon): Factor out getters into other class abstractions (grouping functionality).
   // (eg, identity, credentials, device management.)
   //
-
-  get invitationManager() {
-    assert(this._invitationManager);
-    return this._invitationManager;
-  }
 
   get identityInfo() {
     return this._partyCore.processor.infoMessages.get(this._identityKey.toHex());
@@ -211,5 +206,10 @@ export class HaloParty {
     this.update.emit();
 
     return this;
+  }
+
+  async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {
+    assert(this._invitationManager, 'HALO party not open.')
+    return this._invitationManager.createInvitation(authenticationDetails, options)
   }
 }
