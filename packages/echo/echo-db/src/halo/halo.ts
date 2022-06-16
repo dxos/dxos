@@ -19,10 +19,8 @@ import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
-import { IdentityProvider } from './identity';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
-import { CredentialsSigner } from './credentials-signer';
 
 const log = debug('dxos:echo');
 

@@ -5,13 +5,13 @@
 import debug from 'debug';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
+import { raise } from '@dxos/debug';
 
+import { IdentityNotInitializedError } from '../errors';
 import { ContactManager } from './contact-manager';
+import { CredentialsSigner } from './credentials-signer';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
-import { CredentialsSigner } from './credentials-signer';
-import { raise } from '@dxos/debug';
-import { IdentityNotInitializedError } from '../errors';
 
 const log = debug('dxos:echo-db:identity');
 
@@ -99,13 +99,13 @@ export class Identity {
     return this._keyring;
   }
 
-  getCredentialsSigner(): CredentialsSigner {
+  getCredentialsSigner (): CredentialsSigner {
     return new CredentialsSigner(
       this._keyring,
       () => this.identityKey ?? raise(new IdentityNotInitializedError()),
       () => this.deviceKey ?? raise(new IdentityNotInitializedError()),
-      () => this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError()),
-    )
+      () => this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError())
+    );
   }
 
   /**

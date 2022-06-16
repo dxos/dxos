@@ -14,7 +14,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { ActivationOptions, PartyPreferences, IdentityProvider, Identity } from '../halo';
+import { ActivationOptions, PartyPreferences, Identity } from '../halo';
 import { InvitationFactory } from '../invitations';
 import { createAuthPlugin, createOfflineInvitationPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
@@ -34,8 +34,8 @@ export interface PartyMember {
 
 /**
  * Generic parties that peers create that is capable of storing data in the database.
- * 
- * This class handles data-storage, replication, snapshots, access-control, and invitations. 
+ *
+ * This class handles data-storage, replication, snapshots, access-control, and invitations.
  */
 export class DataParty {
   public readonly update = new Event<void>();
@@ -180,7 +180,7 @@ export class DataParty {
 
     await this._protocol.start([
       createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identity.getCredentialsSigner()), deviceKey.publicKey),
-      createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey),
+      createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 
     // Issue an 'update' whenever the properties change.

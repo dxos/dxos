@@ -17,8 +17,8 @@ import { IdentityProvider } from '../halo';
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { PartyFactory } from './party-factory';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
+import { PartyFactory } from './party-factory';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 

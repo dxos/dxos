@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, timed } from '@dxos/debug';
+import { timed } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -18,9 +18,8 @@ import { createAuthenticator, createCredentialsProvider } from '../parties/authe
 import { createAuthPlugin, createHaloRecoveryPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
-import { IdentityProvider } from './identity';
-import { Preferences } from './preferences';
 import { CredentialsSigner } from './credentials-signer';
+import { Preferences } from './preferences';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';
 export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxos:item/halo/contact-list';
@@ -48,7 +47,7 @@ export class HaloParty {
   private readonly _contactManager: ContactManager;
   private readonly _preferences: Preferences;
 
-  constructor(
+  constructor (
     private readonly _identityKey: PublicKey,
     private readonly _deviceKey: PublicKey,
     modelFactory: ModelFactory,
@@ -83,24 +82,24 @@ export class HaloParty {
    * Always equal to the identity key.
    * @deprecated Should remove.
    */
-  get key() {
+  get key () {
     return this._partyCore.key;
   }
 
-  get isOpen() {
+  get isOpen () {
     return !!(this._partyCore.isOpen && this._protocol);
   }
 
-  get contacts() {
+  get contacts () {
     return this._contactManager;
   }
 
-  get preferences() {
+  get preferences () {
     return this._preferences;
   }
 
   // TODO(burdon): Remove.
-  get database() {
+  get database () {
     return this._partyCore.database;
   }
 
@@ -109,32 +108,32 @@ export class HaloParty {
   // (eg, identity, credentials, device management.)
   //
 
-  get identityInfo() {
+  get identityInfo () {
     return this._partyCore.processor.infoMessages.get(this._identityKey.toHex());
   }
 
-  get identityGenesis() {
+  get identityGenesis () {
     return this._partyCore.processor.credentialMessages.get(this._identityKey.toHex());
   }
 
-  get memberKeys() {
+  get memberKeys () {
     return this._partyCore.processor.memberKeys;
   }
 
-  get credentialMessages() {
+  get credentialMessages () {
     return this._partyCore.processor.credentialMessages;
   }
 
-  get feedKeys() {
+  get feedKeys () {
     return this._partyCore.processor.feedKeys;
   }
 
-  async getWriteFeedKey() {
+  async getWriteFeedKey () {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
     return feed.key;
   }
 
-  get processor() {
+  get processor () {
     return this._partyCore.processor;
   }
 
@@ -143,7 +142,7 @@ export class HaloParty {
    */
   @synchronized
   @timed(5_000)
-  async open() {
+  async open () {
     if (this.isOpen) {
       return this;
     }
@@ -175,7 +174,7 @@ export class HaloParty {
     // Replication.
     await this._protocol.start([
       createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), this._deviceKey),
-      createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey),
+      createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey)
     ]);
 
     // Issue an 'update' whenever the properties change.
@@ -189,7 +188,7 @@ export class HaloParty {
   * Closes the pipeline and streams.
   */
   @synchronized
-  async close() {
+  async close () {
     if (!this.isOpen) {
       return this;
     }
@@ -206,7 +205,7 @@ export class HaloParty {
   }
 
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {
-    assert(this._invitationManager, 'HALO party not open.')
-    return this._invitationManager.createInvitation(authenticationDetails, options)
+    assert(this._invitationManager, 'HALO party not open.');
+    return this._invitationManager.createInvitation(authenticationDetails, options);
   }
 }

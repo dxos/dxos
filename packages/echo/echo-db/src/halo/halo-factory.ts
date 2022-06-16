@@ -14,13 +14,10 @@ import {
   KeyType,
   Filter,
   SecretProvider,
-  createEnvelopeMessage,
-  wrapMessage,
   KeyHint,
   createFeedAdmitMessage
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
-import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -29,12 +26,12 @@ import { createHaloPartyInvitationNotarizationMessage, GreetingInitiator, HaloRe
 import { PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
+import { CredentialsSigner } from './credentials-signer';
 import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { Identity, IdentityProvider } from './identity';
-import { CredentialsSigner } from './credentials-signer';
+import { Identity } from './identity';
 
 /**
  * Options allowed when creating the HALO.
@@ -177,7 +174,7 @@ export class HaloFactory {
       assert(identityKey.publicKey.equals(invitationDescriptor.identityKey),
         'Identity key must match invitation');
     }
-    assert(identityKey)
+    assert(identityKey);
 
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ??
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -201,7 +198,7 @@ export class HaloFactory {
       invitationDescriptor,
       async (partyKey, nonce) => {
         assert(partyKey.equals(identityKey!.publicKey));
-        return [createHaloPartyInvitationNotarizationMessage(credentialsSigner, nonce)]
+        return [createHaloPartyInvitationNotarizationMessage(credentialsSigner, nonce)];
       }
     );
 

@@ -2,18 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
 import { Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
-import { failUndefined, raise } from '@dxos/debug';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 
-import { IdentityNotInitializedError } from '../errors';
-import { IdentityProvider } from '../halo';
-import { PartyProcessor } from '../pipeline';
 import { CredentialsSigner } from '../halo/credentials-signer';
-
-const log = debug('dxos:echo-db:authenticator');
+import { PartyProcessor } from '../pipeline';
 
 export function createAuthenticator (partyProcessor: PartyProcessor, credentialsSigner: CredentialsSigner): Authenticator {
   return new PartyAuthenticator(partyProcessor.state, async auth => {

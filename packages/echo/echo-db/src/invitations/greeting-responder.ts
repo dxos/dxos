@@ -19,11 +19,10 @@ import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo';
+import { CredentialsSigner } from '../halo/credentials-signer';
 import { PartyProcessor } from '../pipeline';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
-import { CredentialsSigner } from '../halo/credentials-signer';
 
 const log = debug('dxos:echo-db:greeting-responder');
 
@@ -59,7 +58,7 @@ export class GreetingResponder {
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _partyProcessor: PartyProcessor,
-    private readonly _credentialsSigner: CredentialsSigner,
+    private readonly _credentialsSigner: CredentialsSigner
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,

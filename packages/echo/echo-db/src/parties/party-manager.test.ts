@@ -40,8 +40,8 @@ import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
 import { createRamStorage } from '../util';
-import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './data-party';
+import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:parties:party-manager:test');

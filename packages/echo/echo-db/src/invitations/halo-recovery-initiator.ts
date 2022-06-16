@@ -24,7 +24,7 @@ import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
-import { Identity, IdentityProvider } from '../halo';
+import { Identity } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

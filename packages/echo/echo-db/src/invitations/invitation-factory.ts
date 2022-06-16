@@ -8,12 +8,11 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { IdentityProvider } from '../halo';
+import { CredentialsSigner } from '../halo/credentials-signer';
 import { PartyProcessor } from '../pipeline';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { CredentialsSigner } from '../halo/credentials-signer';
 
 /**
  * Groups together all invitation-related functionality for a single party.
@@ -40,7 +39,7 @@ export class InvitationFactory {
       this._partyProcessor.partyKey,
       publicKey,
       this._credentialsSigner.getIdentityKey(),
-      this._credentialsSigner.getDeviceSigningKeys(),
+      this._credentialsSigner.getDeviceSigningKeys()
     );
 
     await this._partyProcessor.writeHaloMessage(invitationMessage);

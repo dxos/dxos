@@ -21,6 +21,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
+import { IdentityNotInitializedError } from '../errors';
 import { IdentityProvider } from '../halo';
 import {
   createDataPartyInvitationNotarizationMessages,
@@ -28,9 +29,8 @@ import {
 } from '../invitations';
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { PartyOptions } from './party-core';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
-import { IdentityNotInitializedError } from '../errors';
+import { PartyOptions } from './party-core';
 
 const log = debug('dxos:echo-db:party-factory');
 
@@ -211,7 +211,7 @@ export class PartyFactory {
         identity.getCredentialsSigner(),
         partyKey,
         identity.identityGenesis ?? raise(new IdentityNotInitializedError()),
-        nonce,
+        nonce
       )]
     );
 
