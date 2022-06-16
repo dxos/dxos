@@ -6,14 +6,14 @@ import assert from 'assert';
 import pify from 'pify';
 import randomAccessIdb from 'random-access-idb';
 
-import { IFile, StorageType } from '../interfaces';
+import { File, StorageType } from '../interfaces';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
   /**
    * Handle for open files with patched closed function which doesn't actually close the file.
    */
-  file: IFile,
+  file: File,
   /**
    * The actual file close funciton that is supposed to be called at the end of the storage lifecycle.
    */
@@ -82,7 +82,7 @@ export class IDbStorage extends AbstractStorage {
 }
 
 interface RandomAccessStorage {
-  (file: string, opts?: {}): IFile;
+  (file: string, opts?: {}): File;
 
   root: string;
 
