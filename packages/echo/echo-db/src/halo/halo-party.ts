@@ -35,7 +35,7 @@ export interface JoinedParty {
 }
 
 /**
- * Wraps PartyInternal and provides all HALO-related functionality.
+ * Provides all HALO-related functionality.
  */
 export class HaloParty {
   public readonly update = new Event<void>();
