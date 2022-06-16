@@ -133,6 +133,11 @@ export class FeedDescriptor {
 
     await pify(this._feed.ready.bind(this._feed))();
   }
+
+  append (message: any): Promise<void> {
+    assert(this._feed);
+    return pify(this._feed.append.bind(this._feed))(message);
+  }
 }
 
 export default FeedDescriptor;
