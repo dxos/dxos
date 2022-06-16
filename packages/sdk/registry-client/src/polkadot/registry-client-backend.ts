@@ -11,8 +11,8 @@ import { isNotNullOrUndefined } from '@dxos/util';
 
 import {
   AccountKey,
+  Authority,
   CID,
-  Domain,
   DomainKey,
   DXN,
   RecordWithCid,
@@ -36,7 +36,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return new DomainKey(rawKey);
   }
 
-  async getDomains (): Promise<Domain[]> {
+  async listAuthorities (): Promise<Authority[]> {
     const domains = await this.api.query.registry.domains.entries();
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
@@ -49,7 +49,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     });
   }
 
-  async registerDomainKey (owner: AccountKey): Promise<DomainKey> {
+  async registerAuthority (owner: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, owner.value));
     return domainKey;
@@ -76,21 +76,23 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return tags[name.tag];
   }
 
-  async getResources (): Promise<[DXN, CID][]> {
-    const [resources, domains] = await Promise.all([
+  async listResources (): Promise<[DXN, CID][]> {
+    const [resources, authorities] = await Promise.all([
       this.api.query.registry.resources.entries<Option<BaseResource>>(),
-      this.getDomains()
+      this.listAuthorities()
     ]);
 
     const result = resources
       .flatMap(([key, resource]) => {
         const path = key.args[1].toString();
         const domainKey = new DomainKey(key.args[0].toU8a());
-        const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
+        const authority = authorities.find(authority => authority.key.toHex() === domainKey.toHex());
         const tags = this._decodeResource(resource.unwrap());
 
         return Object.entries(tags).map(([tag, cid]): [DXN, CID] => [
-          domain?.name ? DXN.fromDomainName(domain.name, path, tag) : DXN.fromDomainKey(domainKey, path, tag),
+          authority?.domainName
+            ? DXN.fromDomainName(authority.domainName, path, tag)
+            : DXN.fromDomainKey(domainKey, path, tag),
           cid
         ]);
       });
@@ -153,7 +155,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
     return { cid, ...this._decodeRecord(record) };
   }
 
-  async getRecords (): Promise<RecordWithCid[]> {
+  async listRecords (): Promise<RecordWithCid[]> {
     const records = await this.api.query.registry.records.entries();
 
     const result = records

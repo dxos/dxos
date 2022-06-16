@@ -17,7 +17,7 @@ interface Result {
  */
 export const useRecordTypes = (query?: Query): Result => {
   const registry = useRegistry();
-  const data = useAsync(() => registry?.getTypeRecords(query), [], [query]);
+  const data = useAsync(() => registry?.listTypeRecords(query), [], [query]);
 
   return {
     recordTypes: data.data,

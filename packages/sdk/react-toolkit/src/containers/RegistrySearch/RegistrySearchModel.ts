@@ -62,7 +62,7 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
   }
 
   async initialize () {
-    this._types = await this._registry.getTypeRecords();
+    this._types = await this._registry.listTypeRecords();
     this.doUpdate();
   }
 
@@ -79,7 +79,7 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
   doUpdate () {
     setImmediate(async () => {
       // TODO(burdon): Push predicates (e.g., type).
-      let resources = await this._registry.getResources({ text: this._text });
+      let resources = await this._registry.listResources({ text: this._text });
       if (this._filters.length) {
         resources = resources.filter(resource => {
           // Exclude if any filter fails.

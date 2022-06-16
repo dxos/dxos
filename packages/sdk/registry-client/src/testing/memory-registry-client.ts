@@ -10,8 +10,8 @@ import { ComplexMap } from '@dxos/util';
 
 import {
   AccountKey,
+  Authority,
   CID,
-  Domain,
   DomainKey,
   DXN,
   RecordWithCid,
@@ -24,7 +24,7 @@ import { Record as RawRecord, schema as dxnsSchema } from '../proto';
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
-  readonly domains = new Map<string, Domain>();
+  readonly authorities = new Map<string, Authority>();
   readonly resources = new ComplexMap<DXN, CID>(dxn => dxn.toString());
   readonly records = new ComplexMap<CID, RawRecord>(cid => cid.toB58String());
 
@@ -33,21 +33,21 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   //
 
   async getDomainKey (domainName: string): Promise<DomainKey> {
-    const domain = this.domains.get(domainName);
-    if (!domain) {
-      throw new Error('Domain not found');
+    const authority = this.authorities.get(domainName);
+    if (!authority) {
+      throw new Error('Authority not found');
     }
 
-    return domain.key;
+    return authority.key;
   }
 
-  async getDomains (): Promise<Domain[]> {
-    return Array.from(this.domains.values());
+  async listAuthorities (): Promise<Authority[]> {
+    return Array.from(this.authorities.values());
   }
 
-  async registerDomainKey (owner: AccountKey): Promise<DomainKey> {
+  async registerAuthority (owner: AccountKey): Promise<DomainKey> {
     const key = DomainKey.random();
-    this.domains.set(key.toString(), {
+    this.authorities.set(key.toString(), {
       key,
       owner: owner.toHex()
     });
@@ -55,16 +55,16 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return key;
   }
 
-  async registerDomainName (domainName: string, owner: AccountKey): Promise<Domain> {
+  async registerDomainName (domainName: string, owner: AccountKey): Promise<Authority> {
     const key = DomainKey.random();
-    const domain = {
+    const authority = {
       key,
       name: domainName,
       owner: owner.toHex()
     };
-    this.domains.set(domainName, domain);
+    this.authorities.set(domainName, authority);
 
-    return domain;
+    return authority;
   }
 
   //
@@ -75,7 +75,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return this.resources.get(name);
   }
 
-  async getResources (): Promise<[DXN, CID][]> {
+  async listResources (): Promise<[DXN, CID][]> {
     return Array.from(this.resources.entries());
   }
 
@@ -86,7 +86,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   ): Promise<void> {
     assert(name.tag, 'Tag is required');
     const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
-    const domain = this.domains.get(domainName);
+    const domain = this.authorities.get(domainName);
     if (domain?.owner !== owner.toHex()) {
       throw new Error('Domain owner mismatch');
     }
@@ -106,7 +106,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return { cid, ...this.records.get(cid) };
   }
 
-  async getRecords (): Promise<RecordWithCid[]> {
+  async listRecords (): Promise<RecordWithCid[]> {
     return Array.from(this.records.entries()).map(([cid, record]) => ({ cid, ...record }));
   }
 

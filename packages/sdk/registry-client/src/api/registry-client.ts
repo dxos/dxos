@@ -19,7 +19,7 @@ import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
 import { Filtering, Query } from './queries';
-import { Domain, RegistryClientBackend } from './registry';
+import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
   name: DXN,
@@ -84,18 +84,18 @@ export class RegistryClient {
   }
 
   /**
-   * Returns a list of domains created in DXOS system.
+   * Returns a list of authorities created in DXOS system.
    */
-  async getDomains (): Promise<Domain[]> {
-    return this._backend.getDomains();
+  async listAuthorities (): Promise<Authority[]> {
+    return this._backend.listAuthorities();
   }
 
   /**
    * Creates a new domain in the system under a generated name.
    * @param account DXNS account that will own the domain.
    */
-  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
-    return this._backend.registerDomainKey(account);
+  async registerAuthority (account: AccountKey): Promise<DomainKey> {
+    return this._backend.registerAuthority(account);
   }
 
   //
@@ -115,8 +115,8 @@ export class RegistryClient {
    * Queries resources registered in the system.
    * @param query Query that each returned record must meet.
    */
-  async getResources (query?: Query): Promise<ResourceSet[]> {
-    const resources = await this._backend.getResources();
+  async listResources (query?: Query): Promise<ResourceSet[]> {
+    const resources = await this._backend.listResources();
 
     return resources
       .filter(([name]) => Filtering.matchResource(name, query))
@@ -186,8 +186,9 @@ export class RegistryClient {
    * Queries all records in the system.
    * @param query Query that each returned record must meet.
    */
-  async getRecords (query?: Query): Promise<RegistryRecord[]> {
-    const rawRecords = await this._backend.getRecords();
+  // TODO(wittjosiah): query -> filters
+  async listRecords (query?: Query): Promise<RegistryRecord[]> {
+    const rawRecords = await this._backend.listRecords();
     const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
       this._decodeRecord(cid, record)
     ));
@@ -236,8 +237,8 @@ export class RegistryClient {
    * Queries type records.
    * @param query Query that each returned record must meet.
    */
-  async getTypeRecords (query?: Query): Promise<RegistryType[]> {
-    const records = await this._backend.getRecords();
+  async listTypeRecords (query?: Query): Promise<RegistryType[]> {
+    const records = await this._backend.listRecords();
 
     const types = records
       .filter(record => !!record.type)

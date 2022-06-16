@@ -49,13 +49,13 @@ describe('Registry API mock', () => {
   });
 
   it('Returns resources', async () => {
-    const resources = await mock.getResources();
+    const resources = await mock.listResources();
 
     expect(resources.length).to.be.equal(30);
   });
 
   it('Returns records', async () => {
-    const records = await mock.getRecords();
+    const records = await mock.listRecords();
 
     expect(records.length).to.be.equal(36);
   });

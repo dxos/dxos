@@ -19,7 +19,7 @@ const TestApp = () => {
 
   useEffect(() => {
     setImmediate(async () => {
-      const types = await registry.getTypeRecords();
+      const types = await registry.listTypeRecords();
       setTypes(types);
     });
   }, []);

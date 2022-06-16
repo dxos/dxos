@@ -17,7 +17,7 @@ interface Result {
  */
 export const useResources = (query?: Query): Result => {
   const registry = useRegistry();
-  const data = useAsync(() => registry?.getResources(query), [], [query]);
+  const data = useAsync(() => registry?.listResources(query), [], [query]);
 
   return {
     resources: data.data,
