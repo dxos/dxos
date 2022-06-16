@@ -24,7 +24,7 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, PartyFactory, PartyInternal, PartyManager } from './parties';
+import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
@@ -319,7 +319,7 @@ export class ECHO {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<PartyInternal> {
+  async createParty (): Promise<DataParty> {
     await this.open();
 
     const party = await this._partyManager.createParty();
@@ -345,7 +345,7 @@ export class ECHO {
    * Returns an individual party by it's key.
    * @param {PartyKey} partyKey
    */
-  getParty (partyKey: PartyKey): PartyInternal | undefined {
+  getParty (partyKey: PartyKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -359,7 +359,7 @@ export class ECHO {
    * @param {PartyFilter} filter
    */
   // eslint-disable-next-line unused-imports/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
+  queryParties (filter?: PartyFilter): ResultSet<DataParty> {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -375,7 +375,7 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =

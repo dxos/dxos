@@ -28,7 +28,7 @@ import {
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
+import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
 const log = debug('dxos:echo-db:party-factory');
 
@@ -49,7 +49,7 @@ export class PartyFactory {
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
    */
   @timed(5_000)
-  async createParty (): Promise<PartyInternal> {
+  async createParty (): Promise<DataParty> {
     const identity = this._identityProvider();
     assert(identity.identityGenesis, 'HALO not initialized.');
     assert(identity.deviceKeyChain, 'Device KeyChain not initialized.');
@@ -123,7 +123,7 @@ export class PartyFactory {
     const { feed } = await feedProvider.createOrOpenWritableFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
     assert(feedKeyPair, 'Keypair for writable feed not found.');
-    const party = new PartyInternal(
+    const party = new DataParty(
       partyKey,
       this._modelFactory,
       this._snapshotStore,
@@ -162,7 +162,7 @@ export class PartyFactory {
     //
     // Create the party.
     //
-    const party = new PartyInternal(
+    const party = new DataParty(
       partyKey,
       this._modelFactory,
       this._snapshotStore,
@@ -186,7 +186,7 @@ export class PartyFactory {
     return party;
   }
 
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<DataParty> {
     const haloInvitation = !!invitationDescriptor.identityKey;
     const originalInvitation = invitationDescriptor;
 
@@ -230,7 +230,7 @@ export class PartyFactory {
     return party;
   }
 
-  async cloneParty (snapshot: PartySnapshot): Promise<PartyInternal> {
+  async cloneParty (snapshot: PartySnapshot): Promise<DataParty> {
     const identity = this._identityProvider();
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');

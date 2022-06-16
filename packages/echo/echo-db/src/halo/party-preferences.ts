@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { PARTY_TITLE_PROPERTY, PartyInternal } from '../parties';
+import { PARTY_TITLE_PROPERTY, DataParty } from '../parties';
 import { Preferences } from './preferences';
 
 export interface ActivationOptions {
@@ -21,7 +21,7 @@ export interface ActivationOptions {
 export class PartyPreferences {
   constructor (
     private readonly _preferences: Preferences,
-    private readonly _party: PartyInternal
+    private readonly _party: DataParty
   ) {
     assert(this._party);
   }

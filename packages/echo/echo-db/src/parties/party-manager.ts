@@ -18,7 +18,7 @@ import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { PartyFactory } from './party-factory';
-import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
+import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 
@@ -37,10 +37,10 @@ export interface OpenProgress {
  */
 export class PartyManager {
   // External event listener.
-  readonly update = new Event<PartyInternal>();
+  readonly update = new Event<DataParty>();
 
   // Map of parties by party key.
-  private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
+  private readonly _parties = new ComplexMap<PublicKey, DataParty>(key => key.toHex());
 
   // Unsubscribe handlers.
   // TODO(burdon): Never used.
@@ -59,7 +59,7 @@ export class PartyManager {
     return this._open;
   }
 
-  get parties (): PartyInternal[] {
+  get parties (): DataParty[] {
     return Array.from(this._parties.values());
   }
 
@@ -141,7 +141,7 @@ export class PartyManager {
    * Creates a new party, writing its genesis block to the stream.
    */
   @synchronized
-  async createParty (): Promise<PartyInternal> {
+  async createParty (): Promise<DataParty> {
     assert(this._open, 'PartyManager is not open.');
 
     const party = await this._partyFactory.createParty();
@@ -224,7 +224,7 @@ export class PartyManager {
     return party;
   }
 
-  private _setParty (party: PartyInternal) {
+  private _setParty (party: DataParty) {
     const updateContact = async () => {
       try {
         await this._updateContactList(party);
@@ -258,7 +258,7 @@ export class PartyManager {
   }
 
   // TODO(burdon): Refactor.
-  private async _updatePartyTitle (party: PartyInternal) {
+  private async _updatePartyTitle (party: DataParty) {
     if (!this._open) {
       return;
     }
@@ -273,7 +273,7 @@ export class PartyManager {
   }
 
   // TODO(burdon): Reconcile with `Halo.ContactManager`.
-  private async _updateContactList (party: PartyInternal) {
+  private async _updateContactList (party: DataParty) {
     // Prevent any updates after we closed ECHO.
     // This will get re-run next time echo is loaded so we don't loose any data.
     if (!this._open) {
@@ -314,7 +314,7 @@ export class PartyManager {
   }
 
   @timed(5_000)
-  private async _recordPartyJoining (party: PartyInternal) {
+  private async _recordPartyJoining (party: DataParty) {
     const identity = this._identityProvider();
 
     // TODO(marik-d): Extract HALO functionality from this class.

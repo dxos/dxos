@@ -4,5 +4,5 @@
 
 export * from './party-core';
 export * from './party-factory';
-export * from './party-internal';
+export * from './data-party';
 export * from './party-manager';

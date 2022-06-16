@@ -10,7 +10,7 @@ import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
-import { PartyInternal } from '../parties';
+import { DataParty } from '../parties';
 import { createRamStorage } from '../util';
 
 export const log = debug('dxos:echo-db:testing');
@@ -72,7 +72,7 @@ export const createTestInstance = async ({
  * Invites a test peer to the party.
  * @returns Party instance on provided test instance.
  */
-export const inviteTestPeer = async (party: PartyInternal, peer: ECHO): Promise<PartyInternal> => {
+export const inviteTestPeer = async (party: DataParty, peer: ECHO): Promise<DataParty> => {
   const invitation = await party.invitationManager.createInvitation({
     secretValidator: async () => true
   });

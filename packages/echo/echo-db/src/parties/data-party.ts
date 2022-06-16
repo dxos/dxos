@@ -33,9 +33,11 @@ export interface PartyMember {
 }
 
 /**
- * TODO(burdon): Comment.
+ * Generic parties that peers create that is capable of storing data in the database.
+ * 
+ * This class handles data-storage, replication, snapshots, access-control, and invitations. 
  */
-export class PartyInternal {
+export class DataParty {
   public readonly update = new Event<void>();
 
   private readonly _partyCore: PartyCore;

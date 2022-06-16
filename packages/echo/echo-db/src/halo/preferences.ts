@@ -14,7 +14,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
 import { IdentityNotInitializedError } from '../errors';
-import { PartyInternal } from '../parties';
+import { DataParty } from '../parties';
 import {
   HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty
 } from './halo-party';
@@ -100,7 +100,7 @@ export class Preferences {
     return this._getPartyPreference(item, partyKey, key);
   }
 
-  public async setGlobalPartyPreference (party: PartyInternal, key: string, value: any) {
+  public async setGlobalPartyPreference (party: DataParty, key: string, value: any) {
     const item = this.getGlobalPreferences();
     assert(item, 'Global preference item required.');
     return this._setPartyPreference(item, party, key, value);
@@ -112,7 +112,7 @@ export class Preferences {
     return this._getPartyPreference(item, partyKey, key);
   }
 
-  public async setDevicePartyPreference (party: PartyInternal, key: string, value: any) {
+  public async setDevicePartyPreference (party: DataParty, key: string, value: any) {
     const item = this.getDevicePreferences();
     assert(item, 'Device preference item required.');
     return this._setPartyPreference(item, party, key, value);
@@ -126,7 +126,7 @@ export class Preferences {
   }
 
   // TODO(burdon): DO NOT USE THE PARTY KEY AS A TOP-LEVEL KEY!
-  public async _setPartyPreference (preferences: Item<any>, party: PartyInternal, key: string, value: any) {
+  public async _setPartyPreference (preferences: Item<any>, party: DataParty, key: string, value: any) {
     const path = party.key.toHex();
     const partyPrefs = preferences.model.get(path, {});
     partyPrefs[key] = value;
