@@ -10,7 +10,7 @@ import { Auction as BaseAuction } from './interfaces';
 import { PolkadotClient } from './polkadot-client';
 
 /**
- *
+ * Polkadot DXNS auctions client backend.
  */
 export class PolkadotAuctions extends PolkadotClient implements AuctionsClientBackend {
   async getAuction (name: string): Promise<Auction | undefined> {
