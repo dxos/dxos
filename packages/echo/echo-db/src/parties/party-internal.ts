@@ -14,7 +14,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
+import { ActivationOptions, PartyPreferences, IdentityProvider, Identity } from '../halo';
 import { InvitationManager } from '../invitations';
 import { PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
@@ -48,28 +48,24 @@ export class PartyInternal {
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
-    // This needs to be a provider in case this is a backend for the HALO party.
-    // Then the identity would be changed after this is instantiated.
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _identity: Identity,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
-    const identity = this._identityProvider();
-
     this._partyCore = new PartyCore(
       partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
-      identity.identityKey?.publicKey ?? failUndefined(),
+      this._identity.identityKey?.publicKey ?? failUndefined(),
       _initialTimeframe,
       _options
     );
 
-    if (identity.preferences) {
-      this._preferences = new PartyPreferences(identity.preferences, this);
+    if (this._identity.preferences) {
+      this._preferences = new PartyPreferences(this._identity.preferences, this);
     }
   }
 
@@ -154,14 +150,13 @@ export class PartyInternal {
       return this;
     }
 
-    const identity = this._identityProvider();
-    assert(identity.deviceKey, 'Missing device key.');
+    assert(this._identity.deviceKey, 'Missing device key.');
 
     await this._partyCore.open(this._hints);
 
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
-      this._identityProvider,
+      () => this._identity,
       this._networkManager
     );
 
@@ -175,10 +170,10 @@ export class PartyInternal {
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      this._identityProvider,
-      createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
+      () => this._identity,
+      createCredentialsProvider(() => this._identity, this._partyCore.key, writeFeed.key),
       this._invitationManager,
-      createAuthenticator(this._partyCore.processor, this._identityProvider),
+      createAuthenticator(this._partyCore.processor, () => this._identity),
       this._partyCore.processor.getActiveFeedSet()
     );
 
