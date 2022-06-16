@@ -28,7 +28,7 @@ import { Identity, IdentityProvider } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { InvitationManager } from './invitation-manager';
+import { InvitationFactory } from './invitation-manager';
 
 const log = debug('dxos:echo-db:halo-recovery-initiator');
 
@@ -159,7 +159,7 @@ export class HaloRecoveryInitiator {
     ));
   }
 
-  static createHaloInvitationClaimHandler (identityKey: PublicKey, invitationManager: InvitationManager) {
+  static createHaloInvitationClaimHandler (identityKey: PublicKey, invitationManager: InvitationFactory) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
       const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityKey.asBuffer());

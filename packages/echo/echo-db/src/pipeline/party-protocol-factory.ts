@@ -16,7 +16,7 @@ import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityProvider } from '../halo';
-import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
+import { HaloRecoveryInitiator, InvitationFactory, OfflineInvitationClaimer } from '../invitations';
 import { CredentialsProvider } from '../parties/authenticator';
 import { PartyFeedProvider } from './party-feed-provider';
 
@@ -181,7 +181,7 @@ export function createAuthPlugin(authenticator: Authenticator, peerId: PublicKey
  * Plugin is intended to be used in HALO party swarm.
  * 
  */
-export function createHaloRecoveryPlugin(identityKey: PublicKey, invitationManager: InvitationManager, peerId: PublicKey) {
+export function createHaloRecoveryPlugin(identityKey: PublicKey, invitationManager: InvitationFactory, peerId: PublicKey) {
   return new GreetingCommandPlugin(
     peerId.asBuffer(),
     HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityKey, invitationManager)
@@ -192,7 +192,7 @@ export function createHaloRecoveryPlugin(identityKey: PublicKey, invitationManag
  * Creates network protocol plugin that allows peers to claim offline invitations.
  * Plugin is intended to be used in data-party swarms.
  */
-export function createOfflineInvitationPlugin(invitationManager: InvitationManager, peerId: PublicKey) {
+export function createOfflineInvitationPlugin(invitationManager: InvitationFactory, peerId: PublicKey) {
   return new GreetingCommandPlugin(
     peerId.asBuffer(),
     OfflineInvitationClaimer.createOfflineInvitationClaimHandler(invitationManager)

@@ -17,7 +17,7 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 /**
  * Groups together all invitation-related functionality for a single party.
  */
-export class InvitationManager {
+export class InvitationFactory {
   constructor (
     private readonly _partyProcessor: PartyProcessor,
     // This needs to be a provider in case this is a backend for the HALO party.

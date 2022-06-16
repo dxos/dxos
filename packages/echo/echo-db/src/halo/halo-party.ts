@@ -12,7 +12,7 @@ import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { InvitationAuthenticator, InvitationDescriptor, InvitationManager, InvitationOptions } from '../invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PartyCore, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { createAuthenticator, createCredentialsProvider } from '../parties/authenticator';
 import { createAuthPlugin, createHaloRecoveryPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
@@ -41,7 +41,7 @@ export class HaloParty {
   public readonly update = new Event<void>();
 
   private readonly _partyCore: PartyCore;
-  private _invitationManager?: InvitationManager;
+  private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
 
   private readonly _contactManager: ContactManager;
@@ -153,7 +153,7 @@ export class HaloParty {
 
     await this._partyCore.open(this._hints);
 
-    this._invitationManager = new InvitationManager(
+    this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       this._identityProvider,
       this._networkManager

@@ -15,7 +15,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, IdentityProvider, Identity } from '../halo';
-import { InvitationManager } from '../invitations';
+import { InvitationFactory } from '../invitations';
 import { createAuthPlugin, createOfflineInvitationPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createAuthenticator, createCredentialsProvider } from './authenticator';
@@ -40,7 +40,7 @@ export class PartyInternal {
 
   private readonly _partyCore: PartyCore;
   private readonly _preferences?: PartyPreferences;
-  private _invitationManager?: InvitationManager;
+  private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
 
   constructor (
@@ -154,7 +154,7 @@ export class PartyInternal {
 
     await this._partyCore.open(this._hints);
 
-    this._invitationManager = new InvitationManager(
+    this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       () => this._identity,
       this._networkManager
