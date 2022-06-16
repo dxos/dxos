@@ -32,11 +32,13 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
 
   async getDomainKey (domainName: string): Promise<DomainKey> {
     const rawKey = (await this.api.query.registry.domainNames(domainName)).unwrap().toU8a();
+
     return new DomainKey(rawKey);
   }
 
   async listAuthorities (): Promise<Authority[]> {
     const domains = await this.api.query.registry.domains.entries();
+
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
       const domain = domainEntry[1].unwrap();
@@ -51,6 +53,7 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
   async registerAuthority (owner: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, owner.value));
+
     return domainKey;
   }
 
@@ -178,12 +181,18 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
       .getCodecForType('dxos.registry.Record')
       .encode(record)
     );
+
+    return this.registerRecordBytes(data);
+  }
+
+  async registerRecordBytes (data: Uint8Array): Promise<CID> {
     const { events } = await this.transactionsHandler
       .sendTransaction(this.api.tx.registry.addRecord(data));
     const event = events
       .map(eventRecord => eventRecord.event)
       .find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
+
     return new CID(event.data[1].toU8a());
   }
 

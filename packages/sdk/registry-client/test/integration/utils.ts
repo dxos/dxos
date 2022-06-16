@@ -47,16 +47,22 @@ export const setup = async () => {
   const signer = new ClientSigner(client, apiPromise.registry, alice.address);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
-  const accountsClient = new AccountsClient(new PolkadotAccounts(apiPromise, signTx));
-  const auctionsClient = new AuctionsClient(new PolkadotAuctions(apiPromise, signTx));
-  const registryClient = new RegistryClient(new PolkadotRegistry(apiPromise, signTx));
+  const accountsBackend = new PolkadotAccounts(apiPromise, signTx);
+  const accountsClient = new AccountsClient(accountsBackend);
+  const auctionsBackend = new PolkadotAuctions(apiPromise, signTx);
+  const auctionsClient = new AuctionsClient(auctionsBackend);
+  const registryBackend = new PolkadotRegistry(apiPromise, signTx);
+  const registryClient = new RegistryClient(registryBackend);
 
   return {
     alice,
     bob,
     apiPromise,
+    accountsBackend,
     accountsClient,
+    auctionsBackend,
     auctionsClient,
+    registryBackend,
     registryClient
   };
 };
