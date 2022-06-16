@@ -10,7 +10,7 @@ import path from 'path';
 import pify from 'pify';
 
 import { IFile } from './interfaces/IFile';
-import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './interfaces/storage-types';
+import { StorageType } from './interfaces/storage-types';
 import { createStorage } from './node';
 import { storageTests } from './storage.blueprint-test';
 
@@ -30,7 +30,7 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
-    expect(storage.type).toBe(STORAGE_NODE);
+    expect(storage.type).toBe(StorageType.NODE);
 
     // Check write a file.
     const file = storage.createOrOpen('file1');
@@ -43,9 +43,9 @@ describe('testing node storage types', () => {
   });
 
   it('should throw an assert error if invalid type for platform', () => {
-    expect(() => createStorage('error', STORAGE_IDB)).toThrow(/Unsupported storage/);
+    expect(() => createStorage('error', StorageType.IDB)).toThrow(/Unsupported storage/);
   });
 
-  storageTests(STORAGE_RAM, () => createStorage(ROOT_DIRECTORY, STORAGE_RAM));
-  storageTests(STORAGE_NODE, () => createStorage(ROOT_DIRECTORY, STORAGE_NODE));
+  storageTests(StorageType.RAM, () => createStorage(ROOT_DIRECTORY, StorageType.RAM));
+  storageTests(StorageType.NODE, () => createStorage(ROOT_DIRECTORY, StorageType.NODE));
 });
