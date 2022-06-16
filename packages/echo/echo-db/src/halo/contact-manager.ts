@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Database, Item, ResultSet } from '../api';
 import { IdentityNotInitializedError } from '../errors';
 import { PartyMember } from '../parties';
-import { HaloParty, HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
+import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 
 // TODO(burdon): Create different class (additional properties).
 export type Contact = PartyMember;
@@ -20,16 +20,16 @@ export type Contact = PartyMember;
  */
 export class ContactManager {
   constructor (
-    private readonly _getDatabase: () => Database | undefined,
+    private readonly _getDatabase: () => Database | undefined
   ) {}
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError())
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
     return database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec().entities[0];
   }
 
   queryContacts (): ResultSet<Contact> {
-    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError())
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
     const event = new Event();
     const result = database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec();
     result.update.on(() => {
