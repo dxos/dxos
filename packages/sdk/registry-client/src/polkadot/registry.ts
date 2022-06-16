@@ -19,14 +19,13 @@ import {
   RegistryClientBackend
 } from '../api';
 import { Record as RawRecord, schema as dxnsSchema } from '../proto';
-import { BaseClient } from './base-client';
 import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
+import { PolkadotClient } from './polkadot-client';
 
 /**
- * Polkadot DXNS registry client backend
+ * Polkadot DXNS registry client backend.
  */
-// TODO(wittjosiah): Review if BaseClient is useful.
-export class PolkadotRegistryClientBackend extends BaseClient implements RegistryClientBackend {
+export class PolkadotRegistry extends PolkadotClient implements RegistryClientBackend {
   //
   // Domains
   //
@@ -148,7 +147,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
 
   async getRecord (cid: CID): Promise<RecordWithCid | undefined> {
     const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
-    if (record === undefined) {
+    if (!record) {
       return undefined;
     }
 
