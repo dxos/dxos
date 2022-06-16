@@ -58,7 +58,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
 const setup = async (open = true, createIdentity = true) => {
   const keyring = new Keyring();
   const metadataStore = new MetadataStore(createRamStorage());
-  const feedStore = new FeedStore(createStorage('', StorageType.ram), { valueEncoding: codec });
+  const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
 
   let seedPhrase;
   if (createIdentity) {
@@ -73,7 +73,7 @@ const setup = async (open = true, createIdentity = true) => {
     assert(keyring.keys.length === 1);
   }
 
-  const snapshotStore = new SnapshotStore(createStorage('', StorageType.ram));
+  const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
@@ -179,7 +179,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const storage = createStorage('', StorageType.ram);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
@@ -189,7 +189,7 @@ describe('Party manager', () => {
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.ram));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
     const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, modelFactory, snapshotStore, feedProviderFactory);

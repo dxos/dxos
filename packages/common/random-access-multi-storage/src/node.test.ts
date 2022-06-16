@@ -30,7 +30,7 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
-    expect(storage.type).toBe(StorageType.node);
+    expect(storage.type).toBe(StorageType.NODE);
 
     // Check write a file.
     const file = storage.createOrOpen('file1');
@@ -43,9 +43,9 @@ describe('testing node storage types', () => {
   });
 
   it('should throw an assert error if invalid type for platform', () => {
-    expect(() => createStorage('error', StorageType.idb)).toThrow(/Unsupported storage/);
+    expect(() => createStorage('error', StorageType.IDB)).toThrow(/Unsupported storage/);
   });
 
-  storageTests(StorageType.ram, () => createStorage(ROOT_DIRECTORY, StorageType.ram));
-  storageTests(StorageType.node, () => createStorage(ROOT_DIRECTORY, StorageType.node));
+  storageTests(StorageType.RAM, () => createStorage(ROOT_DIRECTORY, StorageType.RAM));
+  storageTests(StorageType.NODE, () => createStorage(ROOT_DIRECTORY, StorageType.NODE));
 });

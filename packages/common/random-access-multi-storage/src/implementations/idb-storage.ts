@@ -21,7 +21,7 @@ interface FileRegistryRecord {
 }
 
 export class IDbStorage extends AbstractStorage {
-  public override type: StorageType = StorageType.idb;
+  public override type: StorageType = StorageType.IDB;
   private _fileStorage: RandomAccessStorage;
   private _fileRegistry: Map<string, FileRegistryRecord> = new Map();
 

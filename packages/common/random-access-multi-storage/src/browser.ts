@@ -20,13 +20,13 @@ export const createStorage = (
   if (type === undefined) {
     return defaultBrowserImplementation(root);
   }
-  if (type === StorageType.ram) {
+  if (type === StorageType.RAM) {
     return new RamStorage(root);
   }
-  if (type === StorageType.idb || type === StorageType.chrome) {
+  if (type === StorageType.IDB || type === StorageType.CHROME) {
     return new IDbStorage(root);
   }
-  if (type === StorageType.firefox) {
+  if (type === StorageType.FIREFOX) {
     return new FirefoxStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);

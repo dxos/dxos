@@ -14,10 +14,10 @@ export const createStorage = (
   if (type === undefined) {
     return new NodeStorage(root);
   }
-  if (type === StorageType.ram) {
+  if (type === StorageType.RAM) {
     return new RamStorage(root);
   }
-  if (type === StorageType.node) {
+  if (type === StorageType.NODE) {
     return new NodeStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);

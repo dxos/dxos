@@ -38,10 +38,10 @@ export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapsh
   }
 
   return {
-    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : StorageType.ram),
+    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : StorageType.RAM),
     keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : StorageType.ram),
-    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : StorageType.ram)
+    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : StorageType.RAM),
+    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : StorageType.RAM)
   };
 };
 
@@ -64,11 +64,11 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
 const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
     case undefined: return undefined;
-    case StorageDriver.RAM: return StorageType.ram;
-    case StorageDriver.CHROME: return StorageType.chrome;
-    case StorageDriver.FIREFOX: return StorageType.firefox;
-    case StorageDriver.IDB: return StorageType.idb;
-    case StorageDriver.NODE: return StorageType.node;
+    case StorageDriver.RAM: return StorageType.RAM;
+    case StorageDriver.CHROME: return StorageType.CHROME;
+    case StorageDriver.FIREFOX: return StorageType.FIREFOX;
+    case StorageDriver.IDB: return StorageType.IDB;
+    case StorageDriver.NODE: return StorageType.NODE;
     default: throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
   }
 };

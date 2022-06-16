@@ -12,12 +12,12 @@ import { storageTests } from './storage.blueprint-test';
 const ROOT_DIRECTORY = 'testing';
 
 describe('Tests for different storage types in different browsers', () => {
-  for (const storageType of [StorageType.ram, StorageType.idb] as StorageType[]) {
+  for (const storageType of [StorageType.RAM, StorageType.IDB] as StorageType[]) {
     storageTests(storageType, () => createStorage(ROOT_DIRECTORY, storageType));
   }
 
-  it(`Used ${StorageType.idb} by default`, async function () {
+  it(`Used ${StorageType.IDB} by default`, async function () {
     const storage = createStorage(ROOT_DIRECTORY);
-    expect(storage.type).toBe(StorageType.idb);
+    expect(storage.type).toBe(StorageType.IDB);
   });
 });

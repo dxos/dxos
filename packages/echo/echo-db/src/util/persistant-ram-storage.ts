@@ -10,7 +10,7 @@ import { StorageType, createStorage, IFile, IStorage } from '@dxos/random-access
 // TODO(burdon): Factor out?
 export function createRamStorage (): IStorage {
   const root = 'snapshots';
-  const storage = createStorage(root, StorageType.ram);
+  const storage = createStorage(root, StorageType.RAM);
   const files = new Map<string, IFile>();
 
   const fn: any = {};

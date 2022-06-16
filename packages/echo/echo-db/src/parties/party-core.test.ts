@@ -22,7 +22,7 @@ import { PartyCore } from './party-core';
 
 describe('PartyCore', () => {
   const setup = async () => {
-    const storage = createStorage('', StorageType.ram);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -31,7 +31,7 @@ describe('PartyCore', () => {
     const metadataStore = new MetadataStore(createRamStorage());
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.ram));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 

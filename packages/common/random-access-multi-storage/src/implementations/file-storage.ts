@@ -9,7 +9,7 @@ import { StorageType } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
 export class NodeStorage extends AbstractStorage {
-  public override type: StorageType = StorageType.node;
+  public override type: StorageType = StorageType.NODE;
 
   constructor (protected rootPath: string) {
     super(rootPath);

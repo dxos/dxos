@@ -9,7 +9,7 @@ import { StorageType } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
 export class RamStorage extends AbstractStorage {
-  public override type: StorageType = StorageType.ram;
+  public override type: StorageType = StorageType.RAM;
 
   constructor (protected rootPath: string) {
     super(rootPath);

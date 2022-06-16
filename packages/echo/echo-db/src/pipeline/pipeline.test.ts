@@ -24,7 +24,7 @@ const log = debug('dxos:echo:pipeline:test');
 // TODO(burdon): Test read-only.
 describe('pipeline', () => {
   test('streams', async () => {
-    const storage = createStorage('', StorageType.ram);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
@@ -86,7 +86,7 @@ describe('pipeline', () => {
   });
 
   test('writing', async () => {
-    const storage = createStorage('', StorageType.ram);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 

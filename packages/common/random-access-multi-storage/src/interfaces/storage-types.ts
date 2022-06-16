@@ -3,9 +3,9 @@
 //
 
 export enum StorageType {
-  ram = 'ram',
-  idb = 'idb',
-  chrome = 'chrome',
-  firefox = 'firefox',
-  node = 'node',
+  RAM = 'ram',
+  IDB = 'idb',
+  CHROME = 'chrome',
+  FIREFOX = 'firefox',
+  NODE = 'node',
 }

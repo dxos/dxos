@@ -63,7 +63,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const storage = createStorage();
 
       // TODO(yivlad): Doesn't work for node.
-      if (storage.type === StorageType.node) {
+      if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
@@ -110,8 +110,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('subdirectories', async function () {
       const rootStorage = createStorage();
 
-      // TODO(yivlad): Doesn't work for StorageType.node.
-      if (rootStorage.type === StorageType.node) {
+      // TODO(yivlad): Doesn't work for StorageType.NODE.
+      if (rootStorage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
@@ -142,8 +142,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('destroys file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): Works only for StorageType.ram.
-      if (storage.type !== StorageType.ram) {
+      // TODO(yivlad): Works only for StorageType.RAM.
+      if (storage.type !== StorageType.RAM) {
         this.skip();
       }
 
