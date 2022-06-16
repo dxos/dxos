@@ -4,10 +4,9 @@
 
 import faker from 'faker';
 
+import { AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata } from '../api';
 import { decodeProtobuf } from '../encoding';
 import { schemaJson } from '../proto';
-import { RegistryClient } from '../registry-client';
-import { AccountKey, CID, DXN, RecordMetadata, RegistryType, TypeRecordMetadata } from '../types';
 
 /**
  * Generates a random CID.
@@ -38,9 +37,9 @@ export const registerMockResource = async (
 ): Promise<void> => {
   return registry.registerResource(
     params.name ?? createDXN(), // TODO(burdon): Either pass in or don't.
+    params.tag ?? 'latest',
     params.record ?? createCID(),
-    params.owner ?? AccountKey.random(),
-    params.tag ?? 'latest'
+    params.owner ?? AccountKey.random()
   );
 };
 

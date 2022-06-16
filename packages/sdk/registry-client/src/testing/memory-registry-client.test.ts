@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { RegistryClient } from '../registry-client';
-import { AccountKey, CID, DXN } from '../types';
+import { AccountKey, CID, DXN, RegistryClient } from '../api';
 import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator';
 import { MemoryRegistryClientBackend } from './memory-registry-client';
 
