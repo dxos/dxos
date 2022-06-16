@@ -5,7 +5,7 @@
 import { NodeStorage } from './implementations/file-storage';
 import { RamStorage } from './implementations/ram-storage';
 import { IStorage } from './interfaces/IStorage';
-import { STORAGE_RAM, STORAGE_NODE, StorageType } from './interfaces/storage-types';
+import { StorageType } from './interfaces/storage-types';
 
 export const createStorage = (
   root: string,
@@ -14,10 +14,10 @@ export const createStorage = (
   if (type === undefined) {
     return new NodeStorage(root);
   }
-  if (type === STORAGE_RAM) {
+  if (type === StorageType.RAM) {
     return new RamStorage(root);
   }
-  if (type === STORAGE_NODE) {
+  if (type === StorageType.NODE) {
     return new NodeStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);

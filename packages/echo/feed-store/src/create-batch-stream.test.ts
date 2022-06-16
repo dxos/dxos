@@ -6,14 +6,14 @@ import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair, PublicKey } from '@dxos/crypto';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { createBatchStream } from './create-batch-stream';
 import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 
 const createFeed = async () => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf-8' });
+  const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: 'utf-8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   return feed;

@@ -13,7 +13,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
@@ -24,7 +24,7 @@ import { PartyCore } from './party-core';
 
 describe('PartyCore', () => {
   const setup = async () => {
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -33,7 +33,7 @@ describe('PartyCore', () => {
     const metadataStore = new MetadataStore(createRamStorage());
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -132,7 +132,7 @@ describe('PartyCore', () => {
   });
 
   test('opens feed from hints', async () => {
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -141,7 +141,7 @@ describe('PartyCore', () => {
     const metadataStore = new MetadataStore(createRamStorage());
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -290,14 +290,14 @@ describe('PartyCore', () => {
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
-    const storage = createStorage('', STORAGE_RAM);
+    const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
     const metadataStore = new MetadataStore(createRamStorage());
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 

@@ -6,7 +6,7 @@ import pify from 'pify';
 
 import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { codec, FeedMessage } from '../proto';
 import { createFeedWriter } from './feed-writer';
@@ -23,7 +23,7 @@ describe('Feed tests:', () => {
   });
 
   test('hypercore', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
@@ -39,7 +39,7 @@ describe('Feed tests:', () => {
   });
 
   test('feed writer', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
