@@ -50,7 +50,7 @@ export function createCredentialsProvider (identityProvider: IdentityProvider, p
         partyKey,
         identity.identityKey ?? raise(new IdentityNotInitializedError()),
         signingKey,
-        identity.keyring.getKey(feedKey),
+        identity.keyring.getKey(feedKey)?.publicKey,
         undefined,
         createFeedAdmitMessage(
           identity.signer,

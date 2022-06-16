@@ -81,7 +81,7 @@ export const createFeedAdmitMessage = (
   signer: Signer,
   partyKey: PublicKeyLike,
   feedKey: PublicKey,
-  signingKeys: (KeyRecord | KeyChain)[] = [],
+  signingKeys: (KeyRecord | KeyChain | PublicKey)[] = [],
   nonce?: Buffer
 ): Message => {
   partyKey = PublicKey.from(partyKey);
