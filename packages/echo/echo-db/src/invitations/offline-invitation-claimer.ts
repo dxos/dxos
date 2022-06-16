@@ -29,7 +29,7 @@ import { Identity } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { InvitationFactory } from './invitation-manager';
+import { InvitationFactory } from './invitation-factory';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
