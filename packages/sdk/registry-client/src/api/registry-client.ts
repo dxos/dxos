@@ -21,6 +21,11 @@ import { DXN } from './dxn';
 import { Filtering, Query } from './queries';
 import { Domain, RegistryClientBackend } from './registry';
 
+export type ResourceSet = {
+  name: DXN,
+  tags: Record<string, CID>
+}
+
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
   cid: CID,
   payload: RecordExtension<T>
@@ -110,10 +115,22 @@ export class RegistryClient {
    * Queries resources registered in the system.
    * @param query Query that each returned record must meet.
    */
-  async getResources (query?: Query): Promise<[DXN, CID][]> {
+  async getResources (query?: Query): Promise<ResourceSet[]> {
     const resources = await this._backend.getResources();
 
-    return resources.filter(([name]) => Filtering.matchResource(name, query));
+    return resources
+      .filter(([name]) => Filtering.matchResource(name, query))
+      .reduce((result, [name, cid]) => {
+        if (!name.tag) {
+          return result;
+        }
+
+        const set = result.find(set => set.name.authority === name.authority && set.name.path === name.path) ??
+          { name: name.with({ tag: undefined }), tags: {} };
+        set.tags[name.tag] = cid;
+
+        return result;
+      }, new Array<ResourceSet>());
   }
 
   /**

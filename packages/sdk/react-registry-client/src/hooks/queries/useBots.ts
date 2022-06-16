@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { DXN, RegistryRecord, Resource } from '@dxos/registry-client';
+import { DXN, RegistryRecord, ResourceSet } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
@@ -23,7 +23,7 @@ export interface Result {
   error?: unknown
 }
 
-const mergeResourceRecords = (records: RegistryRecord[], resources: Resource[]) => {
+const mergeResourceRecords = (records: RegistryRecord[], resources: ResourceSet[]) => {
   const bots: BotData[] = [];
   for (const resource of resources) {
     for (const tag of Object.keys(resource.tags)) {
@@ -49,8 +49,8 @@ export const useBots = (): Result => {
   const registry = useRegistry();
   const { data, error } = useAsync(async () => {
     const botType = await registry.getResource(BOT_TYPE_DXN);
-    assert(botType?.tags.latest, new Error('Bot type not found.'));
-    const records = await registry.getRecords({ type: botType.tags.latest });
+    assert(botType, new Error('Bot type not found.'));
+    const records = await registry.getRecords({ type: botType });
     const resources = await registry.getResources();
 
     const bots = mergeResourceRecords(records, resources);
