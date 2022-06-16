@@ -73,7 +73,7 @@ export class HaloParty {
       _options
     );
 
-    this._contactManager = new ContactManager(this);
+    this._contactManager = new ContactManager(() => this.isOpen ? this.database : undefined);
     this._preferences = new Preferences(
       () => this.isOpen ? this.database : undefined,
       deviceKey
