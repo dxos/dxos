@@ -6,8 +6,8 @@ import assert from 'assert';
 import * as protobuf from 'protobufjs';
 import 'protobufjs/ext/descriptor';
 
+import { CID, RegistryType } from '../api';
 import { FileDescriptorSet, Record, TYPES } from '../proto';
-import { CID, RegistryType } from '../types';
 import { FieldMapper, mapMessage } from './mapper';
 
 // TODO(marik-d): Descriptors are unused right now, either fix them or remove those methods.

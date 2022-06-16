@@ -746,12 +746,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/protocol-plugin-messenger",
-      "projectFolder": "packages/mesh/protocol-plugin-messenger",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/protocol-plugin-replicator",
       "projectFolder": "packages/mesh/protocol-plugin-replicator",
       "shouldPublish": true,

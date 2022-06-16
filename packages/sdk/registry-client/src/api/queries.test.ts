@@ -4,9 +4,11 @@
 
 import { expect } from 'chai';
 
+import { createCID } from '../testing';
+import { DXN } from './dxn';
 import { Filtering } from './queries';
-import { createCID } from './testing';
-import { DXN, RegistryRecord, Resource } from './types';
+import { Resource } from './registry';
+import { RegistryRecord } from './registry-client';
 
 describe('Queries', () => {
   // TODO(marik-d): Fix those tests.

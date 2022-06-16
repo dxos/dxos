@@ -9,19 +9,14 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/interfaces",
-    "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/interfaces",
+    "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/polkadot/interfaces",
+    "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/polkadot/interfaces",
     "generate:types": "toolchain generate:defs && yarn generate:meta",
     "lint": "toolchain lint",
     "test": "toolchain test",
     "test:integration": "NODE_ENV=test mocha 'test/integration/**/*.test.ts'",
     "test:integration:auctions": "NODE_ENV=test mocha 'test/integration/**/auctions-api.test.ts'",
     "test:integration:registry": "NODE_ENV=test mocha 'test/integration/**/registry-client.test.ts'"
-  },
-  "eslintConfig": {
-    "ignorePatterns": [
-      "src/interfaces"
-    ]
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

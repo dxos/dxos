@@ -4,12 +4,13 @@
 
 import assert from 'assert';
 
+import { DxnsAccount, AccountKey } from '../api';
 import { BaseClient } from './base-client';
-import { DxnsAccount, AccountKey } from './types';
 
 /**
  * Main API for DXNS account and devices management.
  */
+// TODO(wittjosiah): Factor out polakadot specific code.
 export class AccountClient extends BaseClient {
   /**
    * Creates a DXNS account on the blockchain.

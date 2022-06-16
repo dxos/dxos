@@ -75,8 +75,8 @@ describe('Ordering', () => {
 
 const createMutation = (feedKey: PublicKey, seq: number, timeframe: Timeframe): ModelMessage<Uint8Array> => ({
   meta: {
-    feedKey: feedKey.asUint8Array(),
-    memberKey: feedKey.asUint8Array(),
+    feedKey,
+    memberKey: feedKey,
     seq,
     timeframe
   },

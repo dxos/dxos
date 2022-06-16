@@ -52,7 +52,7 @@ describe('pipeline', () => {
     await partyProcessor.processMessage({
       data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey),
       meta: {
-        feedKey: feedKey.publicKey.asBuffer(),
+        feedKey: feedKey.publicKey,
         seq: 0
       }
     });

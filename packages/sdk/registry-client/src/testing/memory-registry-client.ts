@@ -3,21 +3,21 @@
 //
 
 import { compactAddLength } from '@polkadot/util';
-import assert from 'assert';
 import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
 
-import { Record as RawRecord, schema as dxnsSchema } from '../proto';
-import { RecordWithCid, RegistryClientBackend } from '../registry-client-backend';
 import {
   AccountKey,
   CID,
   Domain,
   DomainKey,
   DXN,
+  RecordWithCid,
+  RegistryClientBackend,
   Resource
-} from '../types';
+} from '../api';
+import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 
 /**
  * In-memory implementation of the registry client with statically specified records.
@@ -83,8 +83,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     owner: AccountKey,
     tag: string
   ): Promise<void> {
-    const domainName = name.domain ?? name.key?.toHex();
-    assert(domainName, 'DXN must have either domain or key');
+    const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
     const domain = this.domains.get(domainName);
     if (domain?.owner !== owner.toHex()) {
       throw new Error('Domain owner mismatch');

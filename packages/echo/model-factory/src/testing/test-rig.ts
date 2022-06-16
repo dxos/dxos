@@ -72,8 +72,8 @@ export class TestRig<M extends Model<any>> {
     log(`Write ${peerKey}:${seq}`);
     const message: ModelMessage<Uint8Array> = {
       meta: {
-        feedKey: peerKey.asUint8Array(),
-        memberKey: peerKey.asUint8Array(),
+        feedKey: peerKey,
+        memberKey: peerKey,
         seq,
         timeframe
       },
