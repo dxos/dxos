@@ -15,7 +15,7 @@ import {
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
-import { failUndefined, timed } from '@dxos/debug';
+import { failUndefined, raise, timed } from '@dxos/debug';
 import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -23,12 +23,14 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { IdentityProvider } from '../halo';
 import {
+  createDataPartyInvitationNotarizationMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
+import { IdentityNotInitializedError } from '../errors';
 
 const log = debug('dxos:echo-db:party-factory');
 
@@ -204,8 +206,13 @@ export class PartyFactory {
     // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
-      identity,
-      invitationDescriptor
+      invitationDescriptor,
+      async (partyKey, nonce) => [createDataPartyInvitationNotarizationMessages(
+        identity.getCredentialsSigner(),
+        partyKey,
+        identity.identityGenesis ?? raise(new IdentityNotInitializedError()),
+        nonce,
+      )]
     );
 
     await initiator.connect();

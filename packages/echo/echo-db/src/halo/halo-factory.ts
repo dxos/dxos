@@ -25,7 +25,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
+import { createHaloPartyInvitationNotarizationMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
 import { PartyOptions, PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
@@ -165,9 +165,9 @@ export class HaloFactory {
     log(`Admitting device with invitation: ${keyToString(invitationDescriptor.invitation)}`);
     assert(invitationDescriptor.identityKey);
 
-    const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    let identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     if (!identityKey) {
-      await this._keyring.addPublicKey({
+      identityKey = await this._keyring.addPublicKey({
         type: KeyType.IDENTITY,
         publicKey: invitationDescriptor.identityKey,
         own: true,
@@ -177,6 +177,7 @@ export class HaloFactory {
       assert(identityKey.publicKey.equals(invitationDescriptor.identityKey),
         'Identity key must match invitation');
     }
+    assert(identityKey)
 
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ??
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -197,8 +198,11 @@ export class HaloFactory {
     // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
-      identity,
-      invitationDescriptor
+      invitationDescriptor,
+      async (partyKey, nonce) => {
+        assert(partyKey.equals(identityKey!.publicKey));
+        return [createHaloPartyInvitationNotarizationMessage(identity.getCredentialsSigner(), nonce)]
+      }
     );
 
     await initiator.connect();

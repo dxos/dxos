@@ -19,7 +19,8 @@ import {
   Message,
   SecretProvider,
   WithTypeUrl,
-  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
+  SignedMessage
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
@@ -28,6 +29,7 @@ import { Identity } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { CredentialsSigner } from '../halo/credentials-signer';
 
 const log = debug('dxos:echo-db:greeting-initiator');
 
@@ -48,16 +50,17 @@ export class GreetingInitiator {
    * @param _identity
    * @param _invitationDescriptor
    * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
+   * @param _getMessagesToNotarize Returns a list of credential messages that the inviter will be asked to write into the control feed.
    */
-  constructor (
+  constructor(
     private readonly _networkManager: NetworkManager,
-    private readonly _identity: Identity,
-    private readonly _invitationDescriptor: InvitationDescriptor
+    private readonly _invitationDescriptor: InvitationDescriptor,
+    private readonly _getMessagesToNotarize: (partyKey: PublicKey, nonce: Uint8Array) => Promise<Message[]>
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }
 
-  get state () {
+  get state() {
     return this._state;
   }
 
@@ -65,7 +68,7 @@ export class GreetingInitiator {
    * Initiate a connection to a greeting responder node.
    * @param {number} timeout Connection timeout (ms).
    */
-  async connect (timeout = DEFAULT_TIMEOUT) {
+  async connect(timeout = DEFAULT_TIMEOUT) {
     assert(this._state === GreetingState.INITIALIZED);
 
     // TODO(telackey): Clarify what the following comment means.
@@ -109,7 +112,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider) {
+  async redeemInvitation(secretProvider: SecretProvider) {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
     const haloInvitation = !!this._invitationDescriptor.identityKey;
@@ -146,33 +149,7 @@ export class GreetingInitiator {
     const { nonce } = handshakeResponse;
     const partyKey = handshakeResponse.partyKey;
 
-    const credentialMessages = [];
-    if (haloInvitation) {
-      assert(this._identity.deviceKey, 'Device key required');
-
-      // For the HALO, add the DEVICE directly.
-      credentialMessages.push(
-        createKeyAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          this._identity.deviceKey,
-          [],
-          nonce)
-      );
-    } else {
-      assert(this._identity.deviceKeyChain, 'Device key required');
-      assert(this._identity.identityGenesis, 'Identity genesis message required');
-
-      // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
-      credentialMessages.push(
-        createEnvelopeMessage(
-          this._identity.signer,
-          partyKey,
-          wrapMessage(this._identity.identityGenesis),
-          [this._identity.deviceKeyChain],
-          nonce)
-      );
-    }
+    const credentialMessages = await this._getMessagesToNotarize(PublicKey.from(partyKey), nonce);
 
     // Send the signed payload to the greeting responder.
     const notarizeResponse = await this._greeterPlugin.send(responderPeerId,
@@ -200,16 +177,47 @@ export class GreetingInitiator {
     };
   }
 
-  async disconnect () {
+  async disconnect() {
     const { swarmKey } = this._invitationDescriptor;
     await this._networkManager.leaveProtocolSwarm(PublicKey.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
 
-  async destroy () {
+  async destroy() {
     await this.disconnect();
     this._greeterPlugin = undefined;
     this._state = GreetingState.DESTROYED;
     log('Destroyed');
   }
+}
+
+/**
+ * Create credentials messages that should be written to invite new device to the HALO party.
+ */
+export function createHaloPartyInvitationNotarizationMessage(
+  credentialsSigner: CredentialsSigner,
+  nonce: Uint8Array,
+): Message {
+  return createKeyAdmitMessage(
+    credentialsSigner.signer,
+    credentialsSigner.getIdentityKey().publicKey,
+    credentialsSigner.getDeviceKey(),
+    [],
+    Buffer.from(nonce)
+  )
+}
+
+export function createDataPartyInvitationNotarizationMessages(
+  credentialsSigner: CredentialsSigner,
+  partyKey: PublicKey,
+  identityGenesis: SignedMessage,
+  nonce: Uint8Array,
+): Message {
+  return createEnvelopeMessage(
+    credentialsSigner.signer,
+    partyKey,
+    wrapMessage(identityGenesis),
+    [credentialsSigner.getDeviceSigningKeys()],
+    Buffer.from(nonce)
+  )
 }
