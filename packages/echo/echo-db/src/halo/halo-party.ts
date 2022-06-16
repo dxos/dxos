@@ -80,6 +80,15 @@ export class HaloParty {
     );
   }
 
+  /**
+   * Party key.
+   * Always equal to the identity key.
+   * @deprecated Should remove.
+   */
+  get key () {
+    return this._partyCore.key;
+  }
+
   get isOpen () {
     return !!(this._partyCore.isOpen && this._protocol);
   }
