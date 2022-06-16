@@ -1989,33 +1989,6 @@ importers:
       eslint: 7.32.0
       typescript: 4.5.3
 
-  ../../packages/mesh/protocol-plugin-messenger:
-    specifiers:
-      '@dxos/broadcast': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': ~1.0.27
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/protocol-network-generator': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      eslint: ^7.12.1
-      jest: ^26.6.3
-      typescript: ^4.5.2
-      wait-for-expect: ^3.0.2
-    dependencies:
-      '@dxos/broadcast': link:../broadcast
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/mesh-protocol': link:../protocol
-    devDependencies:
-      '@dxos/eslint-plugin': 1.0.27_jelacrdjt5n3fmcefhh6pnk3va
-      '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      eslint: 7.32.0
-      jest: 26.6.3
-      typescript: 4.5.3
-      wait-for-expect: 3.0.2
-
   ../../packages/mesh/protocol-plugin-presence:
     specifiers:
       '@dxos/async': workspace:*
@@ -19455,7 +19428,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -19976,7 +19949,7 @@ packages:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
 
   /mkdirp/0.5.1:
-    resolution: {integrity: sha512-SknJC52obPfGQPnjIkXbmA6+5H15E+fR+E4iR2oQ3zzCLbd7/ONua69R/Gw7AgkTLsRG+r5fzksYwWe1AgTyWA==}
+    resolution: {integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=}
     deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
     hasBin: true
     dependencies:
@@ -26249,7 +26222,7 @@ packages:
       defaults: 1.0.3
 
   /wd-exec/1.1.6:
-    resolution: {integrity: sha1-jqHlERgDKmN9UXoXLXknH66Il2Q=}
+    resolution: {integrity: sha512-WLhhW96LEV8vxKWHqGecsrA4PzkFVGuSL7ZRgfzri3+uc+wPYU5uYTbjWWt+OnwutTRUYmJZ3pLLXQfXmdtaOQ==}
     dependencies:
       debug: 2.6.9
       min-request: 1.4.1
