@@ -155,7 +155,7 @@ export class HaloParty {
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
-      this._identityProvider,
+      () => this._identityProvider().getCredentialsSigner(),
       this._networkManager
     );
 

@@ -13,6 +13,7 @@ import { PartyProcessor } from '../pipeline';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { CredentialsSigner } from '../halo/credentials-signer';
 
 /**
  * Groups together all invitation-related functionality for a single party.
@@ -22,31 +23,24 @@ export class InvitationFactory {
     private readonly _partyProcessor: PartyProcessor,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _getCredentialsSigner: () => CredentialsSigner,
     private readonly _networkManager: NetworkManager
   ) {}
 
-  private get _identity () {
-    return this._identityProvider();
-  }
-
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.
-    assert(this._identity.identityKey, 'No identity key.');
-    return this._identity.identityKey.publicKey.equals(this._partyProcessor.partyKey);
+    return this._getCredentialsSigner().getIdentityKey().publicKey.equals(this._partyProcessor.partyKey);
   }
 
   async createOfflineInvitation (publicKey: PublicKey) {
     assert(!this.isHalo, 'Offline invitations to HALO are not allowed.');
-    assert(this._identity.identityKey, 'Identity key is required.');
-    assert(this._identity.deviceKeyChain, 'Device keychain is required.');
 
     const invitationMessage = createPartyInvitationMessage(
-      this._identity.signer,
+      this._getCredentialsSigner().signer,
       this._partyProcessor.partyKey,
       publicKey,
-      this._identity.identityKey,
-      this._identity.deviceKeyChain
+      this._getCredentialsSigner().getIdentityKey(),
+      this._getCredentialsSigner().getDeviceSigningKeys(),
     );
 
     await this._partyProcessor.writeHaloMessage(invitationMessage);
@@ -67,7 +61,7 @@ export class InvitationFactory {
     const responder = new GreetingResponder(
       this._networkManager,
       this._partyProcessor,
-      this._identity
+      this._getCredentialsSigner()
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;
