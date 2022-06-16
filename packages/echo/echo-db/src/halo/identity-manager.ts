@@ -64,7 +64,7 @@ export class IdentityManager {
     if (this._identity.identityKey) {
       if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty();
+        const halo = await this._haloFactory.constructParty([]);
         // Always open the HALO.
         await halo.open();
         await this._initialize(halo);
