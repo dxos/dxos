@@ -3,6 +3,7 @@
 //
 
 import { compactAddLength } from '@polkadot/util';
+import assert from 'assert';
 import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
@@ -50,6 +51,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
       key,
       owner: owner.toHex()
     });
+
     return key;
   }
 
@@ -61,6 +63,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
       owner: owner.toHex()
     };
     this.domains.set(domainName, domain);
+
     return domain;
   }
 
@@ -81,6 +84,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     cid: CID | undefined,
     owner: AccountKey
   ): Promise<void> {
+    assert(name.tag, 'Tag is required');
     const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
     const domain = this.domains.get(domainName);
     if (domain?.owner !== owner.toHex()) {

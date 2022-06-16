@@ -32,7 +32,6 @@ export const registerMockResource = async (
     name?: DXN
     record?: CID
     owner?: AccountKey
-    tag?: string
   } = {}
 ): Promise<void> => {
   return registry.registerResource(
