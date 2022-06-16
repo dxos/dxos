@@ -23,24 +23,24 @@ export class InvitationFactory {
     private readonly _partyProcessor: PartyProcessor,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
-    private readonly _getCredentialsSigner: () => CredentialsSigner,
+    private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager
   ) {}
 
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.
-    return this._getCredentialsSigner().getIdentityKey().publicKey.equals(this._partyProcessor.partyKey);
+    return this._credentialsSigner.getIdentityKey().publicKey.equals(this._partyProcessor.partyKey);
   }
 
   async createOfflineInvitation (publicKey: PublicKey) {
     assert(!this.isHalo, 'Offline invitations to HALO are not allowed.');
 
     const invitationMessage = createPartyInvitationMessage(
-      this._getCredentialsSigner().signer,
+      this._credentialsSigner.signer,
       this._partyProcessor.partyKey,
       publicKey,
-      this._getCredentialsSigner().getIdentityKey(),
-      this._getCredentialsSigner().getDeviceSigningKeys(),
+      this._credentialsSigner.getIdentityKey(),
+      this._credentialsSigner.getDeviceSigningKeys(),
     );
 
     await this._partyProcessor.writeHaloMessage(invitationMessage);
@@ -61,7 +61,7 @@ export class InvitationFactory {
     const responder = new GreetingResponder(
       this._networkManager,
       this._partyProcessor,
-      this._getCredentialsSigner()
+      this._credentialsSigner
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

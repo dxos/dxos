@@ -158,7 +158,7 @@ export class DataParty {
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
-      () => this._identity.getCredentialsSigner(),
+      this._identity.getCredentialsSigner(),
       this._networkManager
     );
 
