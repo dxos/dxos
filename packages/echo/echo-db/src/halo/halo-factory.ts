@@ -51,7 +51,6 @@ const log = debug('dxos:echo-db:halo-factory');
  */
 export class HaloFactory {
   constructor (
-    private readonly _getCredentialsSigner: () => CredentialsSigner,
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
@@ -74,7 +73,7 @@ export class HaloFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._getCredentialsSigner(),
+      CredentialsSigner.createDirectDeviceSigner(this._keyring),
       this._networkManager,
       hints,
       undefined,
@@ -185,7 +184,7 @@ export class HaloFactory {
 
     const originalInvitation = invitationDescriptor;
 
-    const credentialsSigner = this._getCredentialsSigner();
+    const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);

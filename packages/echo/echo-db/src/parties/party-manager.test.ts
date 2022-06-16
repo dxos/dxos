@@ -90,7 +90,6 @@ const setup = async (open = true, createIdentity = true) => {
   );
 
   const haloFactory: HaloFactory = new HaloFactory(
-    () => identityManager.identity.getCredentialsSigner(),
     networkManager,
     modelFactory,
     snapshotStore,
@@ -211,7 +210,6 @@ describe('Party manager', () => {
       feedProviderFactory
     );
     const haloFactory: HaloFactory = new HaloFactory(
-      () => identityManager.identity.getCredentialsSigner(),
       networkManager,
       modelFactory,
       snapshotStore,

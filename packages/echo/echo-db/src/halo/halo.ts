@@ -36,7 +36,6 @@ export interface HaloConfiguration {
   networkManager: NetworkManager,
   partyManager: PartyManager,
   metadataStore: MetadataStore,
-  getCredentialsSigner: () => CredentialsSigner,
   modelFactory: ModelFactory,
   snapshotStore: SnapshotStore,
   createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
@@ -54,7 +53,6 @@ export class HALO {
   constructor ({
     keyring,
     partyManager,
-    getCredentialsSigner,
     networkManager,
     metadataStore,
     modelFactory,
@@ -66,7 +64,6 @@ export class HALO {
     this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
-      getCredentialsSigner,
       networkManager,
       modelFactory,
       snapshotStore,
