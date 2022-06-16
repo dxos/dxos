@@ -49,11 +49,11 @@ export class HaloParty {
 
   constructor(
     private readonly _identityKey: PublicKey,
+    private readonly _deviceKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
-    // This needs to be a provider in case this is a backend for the HALO party.
-    // Then the identity would be changed after this is instantiated.
+    // This needs to be a provider because the identity is changed during HALO initialization process.
     private readonly _identityProvider: IdentityProvider,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
@@ -61,14 +61,12 @@ export class HaloParty {
     _options: PartyOptions,
     deviceKey: PublicKey
   ) {
-    const identity = this._identityProvider();
-
     this._partyCore = new PartyCore(
       _identityKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
-      identity.identityKey?.publicKey ?? failUndefined(),
+      _identityKey,
       _initialTimeframe,
       _options
     );
@@ -172,21 +170,20 @@ export class HaloParty {
 
     const writeFeed = await this._partyCore.getWriteFeed();
 
-    const deviceKey = this._identityProvider()?.deviceKey;
-    assert(deviceKey, 'Device key required');
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      deviceKey.publicKey,
+      this._deviceKey,
+      // TODO(dmaretskyi): Device key chain is queried from identity provider here. Figure out if we can just sign with device key instead.
       createCredentialsProvider(this._identityProvider, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider), deviceKey.publicKey),
-      createHaloRecoveryPlugin(this._identityProvider, deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identityProvider), this._deviceKey),
+      createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey),
     ]);
 
     // Issue an 'update' whenever the properties change.

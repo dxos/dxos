@@ -69,6 +69,7 @@ export class HaloFactory {
     const feedProvider = this._createFeedProvider(identityKey.publicKey);
     const halo = new HaloParty(
       identityKey.publicKey,
+      deviceKey.publicKey,
       this._modelFactory,
       this._snapshotStore,
       feedProvider,

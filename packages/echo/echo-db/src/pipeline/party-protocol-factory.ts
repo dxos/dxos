@@ -181,10 +181,10 @@ export function createAuthPlugin(authenticator: Authenticator, peerId: PublicKey
  * Plugin is intended to be used in HALO party swarm.
  * 
  */
-export function createHaloRecoveryPlugin(identityProvider: IdentityProvider, peerId: PublicKey) {
+export function createHaloRecoveryPlugin(identityKey: PublicKey, invitationManager: InvitationManager, peerId: PublicKey) {
   return new GreetingCommandPlugin(
     peerId.asBuffer(),
-    HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityProvider)
+    HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityKey, invitationManager)
   )
 }
 

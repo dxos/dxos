@@ -28,6 +28,7 @@ import { Identity, IdentityProvider } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { InvitationManager } from './invitation-manager';
 
 const log = debug('dxos:echo-db:halo-recovery-initiator');
 
@@ -158,14 +159,10 @@ export class HaloRecoveryInitiator {
     ));
   }
 
-  static createHaloInvitationClaimHandler (identityProvider: IdentityProvider) {
+  static createHaloInvitationClaimHandler (identityKey: PublicKey, invitationManager: InvitationManager) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
-      const identity = identityProvider();
-      assert(identity.halo, 'HALO is required');
-      assert(identity.identityKey);
-
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
-      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identity.identityKey.publicKey.asBuffer());
+      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityKey.asBuffer());
       if (!ok) {
         throw new InvalidInvitationError();
       }
@@ -175,7 +172,7 @@ export class HaloRecoveryInitiator {
        */
       const keyring = new Keyring();
       await keyring.addPublicKey({
-        publicKey: identity.identityKey.publicKey,
+        publicKey: identityKey,
         type: KeyType.IDENTITY,
         trusted: true,
         own: false
@@ -190,8 +187,7 @@ export class HaloRecoveryInitiator {
       };
 
       // TODO(telackey): Configure expiration.
-      return identity.halo.invitationManager
-        .createInvitation({ secretValidator }, { expiration: Date.now() + 60_000 });
+      return invitationManager.createInvitation({ secretValidator }, { expiration: Date.now() + 60_000 });
     });
 
     return claimHandler.createMessageHandler();
