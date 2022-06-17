@@ -119,6 +119,7 @@ export class PartyCore {
       this._partyProcessor = new PartyProcessor(this._partyKey);
 
       // Hint at our own writable feed.
+      // TODO(dmaretskyi): Does not seem like it should be required, but without it replication between devices (B -> A) breaks.
       await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
 
       if (keyHints.length > 0) {
