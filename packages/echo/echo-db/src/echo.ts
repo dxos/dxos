@@ -163,10 +163,8 @@ export class ECHO {
       partyFactory
     );
 
-    // TODO(burdon): Why does this need both PartyManager and PartyFactory?
     this._halo = new HALO({
       keyring: this._keyring,
-      partyManager: this._partyManager,
       networkManager: this._networkManager,
       metadataStore: this._metadataStore,
       createFeedProvider: createFeedProvider,

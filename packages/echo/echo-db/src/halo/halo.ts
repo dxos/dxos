@@ -32,7 +32,6 @@ export interface ProfileInfo {
 export interface HaloConfiguration {
   keyring: Keyring,
   networkManager: NetworkManager,
-  partyManager: PartyManager,
   metadataStore: MetadataStore,
   modelFactory: ModelFactory,
   snapshotStore: SnapshotStore,
@@ -45,12 +44,10 @@ export interface HaloConfiguration {
  */
 export class HALO {
   private readonly _keyring: Keyring;
-  private readonly _partyManager: PartyManager;
   private readonly _identityManager: IdentityManager;
 
   constructor ({
     keyring,
-    partyManager,
     networkManager,
     metadataStore,
     modelFactory,
@@ -59,7 +56,6 @@ export class HALO {
     options
   }: HaloConfiguration) {
     this._keyring = keyring;
-    this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
       networkManager,
@@ -203,8 +199,8 @@ export class HALO {
   /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
+  // TODO(dmaretskyi): Do not return HALO party here.
   async recover (seedPhrase: string) {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
     assert(!this.identity.halo, 'HALO already exists.');
     assert(!this.identity.identityKey, 'Identity key already exists.');
 
@@ -214,8 +210,8 @@ export class HALO {
   /**
    * Joins an existing identity HALO by invitation.
    */
+  // TODO(dmaretskyi): Do not return HALO party here.
   async join (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
     assert(!this.identity.halo, 'HALO already exists.');
 
     return this._identityManager.joinHalo(invitationDescriptor, secretProvider);
