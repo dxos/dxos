@@ -6,10 +6,10 @@ import { expect } from 'chai';
 
 import { createCID } from '../testing';
 import { DXN } from './dxn';
-import { Filtering } from './queries';
+import { Filtering } from './filtering';
 import { RegistryRecord } from './registry-client';
 
-describe('Queries', () => {
+describe('Filtering', () => {
   // TODO(marik-d): Fix those tests.
   describe('Resources filtering', () => {
     it('Filters by type, when equal, then filtered in', () => {

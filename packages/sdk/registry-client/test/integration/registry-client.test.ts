@@ -43,12 +43,12 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves a list of types', async () => {
-      const types = await registryClient.getTypeRecords();
+      const types = await registryClient.listTypeRecords();
       expect(types.length).to.be.greaterThan(0);
     });
 
     it('Retrieves type details', async () => {
-      const domainKey = await registryClient.registerDomainKey(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
       const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), typeCid, account);
@@ -61,7 +61,7 @@ describe('Registry Client', () => {
 
   describe('Domains', () => {
     it('Retrieves a list of domains', async () => {
-      const domains = await registryClient.getDomains();
+      const domains = await registryClient.listAuthorities();
       expect(domains.length).to.be.greaterThan(0);
     });
   });
@@ -81,22 +81,22 @@ describe('Registry Client', () => {
         hasSso: false
       }, appTypeCid);
 
-      domainKey = await registryClient.registerDomainKey(account);
+      domainKey = await registryClient.registerAuthority(account);
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, appResourceName, 'latest'), contentCid, account);
     });
 
     it('Retrieves a list of resources', async () => {
-      const resources = await registryClient.getResources();
+      const resources = await registryClient.listResources();
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when matching, returns matching items', async () => {
-      const resources = await registryClient.getResources({ text: appResourceName });
+      const resources = await registryClient.listResources({ text: appResourceName });
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when not matching, returns empty', async () => {
-      const resources = await registryClient.getResources({ text: 'mybot' });
+      const resources = await registryClient.listResources({ text: 'mybot' });
       expect(resources).to.be.empty;
     });
 
@@ -220,7 +220,7 @@ describe('Registry Client', () => {
     // });
 
     it('Records has date fields decoded properly', async () => {
-      for (const record of await registryClient.getRecords()) {
+      for (const record of await registryClient.listRecords()) {
         expect(record.created?.toString()).to.not.equal('Invalid Date');
       }
     });
@@ -242,12 +242,12 @@ describe('Registry Client', () => {
       });
 
       it('Queries records by type, when matching, returns matching items', async () => {
-        const records = await registryClient.getRecords({ type: appTypeCid });
+        const records = await registryClient.listRecords({ type: appTypeCid });
         expect(records.length).to.be.equal(1);
       });
 
       it('Queries records by type, when not matching, returns empty', async () => {
-        const resources = await registryClient.getRecords({ type: botTypeCid });
+        const resources = await registryClient.listRecords({ type: botTypeCid });
         expect(resources).to.be.empty;
       });
     });
@@ -255,7 +255,7 @@ describe('Registry Client', () => {
 
   describe('Register name', () => {
     it('Assigns a name to a type', async () => {
-      const domainKey = await registryClient.registerDomainKey(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.App', protoSchema);
 
@@ -265,7 +265,7 @@ describe('Registry Client', () => {
     });
 
     it('Does allow to overwrite already registered name', async () => {
-      const domainKey = await registryClient.registerDomainKey(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
@@ -281,7 +281,7 @@ describe('Registry Client', () => {
 
   describe('Register domain', () => {
     it('Allows to register a free domain without a vanity name', async () => {
-      await expect(registryClient.registerDomainKey(account)).to.be.fulfilled;
+      await expect(registryClient.registerAuthority(account)).to.be.fulfilled;
     });
   });
 });

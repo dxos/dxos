@@ -50,8 +50,8 @@ export const useBots = (): Result => {
   const { data, error } = useAsync(async () => {
     const botType = await registry.getResource(BOT_TYPE_DXN);
     assert(botType, new Error('Bot type not found.'));
-    const records = await registry.getRecords({ type: botType });
-    const resources = await registry.getResources();
+    const records = await registry.listRecords({ type: botType });
+    const resources = await registry.listResources();
 
     const bots = mergeResourceRecords(records, resources);
     return bots;

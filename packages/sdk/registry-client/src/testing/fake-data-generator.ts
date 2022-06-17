@@ -65,7 +65,7 @@ export const registerMockRecord = async (
 };
 
 export const getRandomTypeRecord = async (registry: RegistryClient) => {
-  const types = await registry.getTypeRecords();
+  const types = await registry.listTypeRecords();
   return faker.random.arrayElement(types);
 };
 

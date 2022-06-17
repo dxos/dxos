@@ -18,8 +18,8 @@ import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
-import { Filtering, Query } from './queries';
-import { Domain, RegistryClientBackend } from './registry';
+import { Filtering, Filter } from './filtering';
+import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
   name: DXN,
@@ -84,18 +84,18 @@ export class RegistryClient {
   }
 
   /**
-   * Returns a list of domains created in DXOS system.
+   * Returns a list of authorities created in DXOS system.
    */
-  async getDomains (): Promise<Domain[]> {
-    return this._backend.getDomains();
+  async listAuthorities (): Promise<Authority[]> {
+    return this._backend.listAuthorities();
   }
 
   /**
    * Creates a new domain in the system under a generated name.
    * @param account DXNS account that will own the domain.
    */
-  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
-    return this._backend.registerDomainKey(account);
+  async registerAuthority (account: AccountKey): Promise<DomainKey> {
+    return this._backend.registerAuthority(account);
   }
 
   //
@@ -112,14 +112,14 @@ export class RegistryClient {
   }
 
   /**
-   * Queries resources registered in the system.
-   * @param query Query that each returned record must meet.
+   * List resources registered in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getResources (query?: Query): Promise<ResourceSet[]> {
-    const resources = await this._backend.getResources();
+  async listResources (filter?: Filter): Promise<ResourceSet[]> {
+    const resources = await this._backend.listResources();
 
     return resources
-      .filter(([name]) => Filtering.matchResource(name, query))
+      .filter(([name]) => Filtering.matchResource(name, filter))
       .reduce((result, [name, cid]) => {
         if (!name.tag) {
           return result;
@@ -183,18 +183,18 @@ export class RegistryClient {
   }
 
   /**
-   * Queries all records in the system.
-   * @param query Query that each returned record must meet.
+   * Lists records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getRecords (query?: Query): Promise<RegistryRecord[]> {
-    const rawRecords = await this._backend.getRecords();
+  async listRecords (filter?: Filter): Promise<RegistryRecord[]> {
+    const rawRecords = await this._backend.listRecords();
     const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
       this._decodeRecord(cid, record)
     ));
 
     return records
       .filter(isNotNullOrUndefined)
-      .filter(record => Filtering.matchRecord(record, query));
+      .filter(record => Filtering.matchRecord(record, filter));
   }
 
   /**
@@ -233,11 +233,11 @@ export class RegistryClient {
   }
 
   /**
-   * Queries type records.
-   * @param query Query that each returned record must meet.
+   * Lists type records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getTypeRecords (query?: Query): Promise<RegistryType[]> {
-    const records = await this._backend.getRecords();
+  async listTypeRecords (filter?: Filter): Promise<RegistryType[]> {
+    const records = await this._backend.listRecords();
 
     const types = records
       .filter(record => !!record.type)
