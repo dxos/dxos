@@ -163,8 +163,7 @@ export class HALO {
    *
    * NOTE: This method does not initialize the HALO party.
    */
-  // TODO(burdon): Why is this separate from createHalo?
-  async createIdentity (keyPair: KeyPair) {
+  private async _createIdentityKeypair (keyPair: KeyPair) {
     const { publicKey, secretKey } = keyPair;
     assert(publicKey, 'Invalid publicKey');
     assert(secretKey, 'Invalid secretKey');
@@ -181,8 +180,7 @@ export class HALO {
   /**
    * Creates the initial HALO party.
    */
-  // TODO(burdon): Return Halo API object?
-  async create (displayName?: string) {
+  private async _createHaloParty (displayName?: string) {
     // TODO(burdon): Why not assert?
     if (this.identity.halo) {
       throw new Error('HALO party already exists');
@@ -252,8 +250,8 @@ export class HALO {
     }
 
     const keyPair = publicKey ? { publicKey: Buffer.from(publicKey), secretKey: Buffer.from(secretKey!) } : createKeyPair();
-    await this.createIdentity(keyPair);
-    await this.create(username);
+    await this._createIdentityKeypair(keyPair);
+    await this._createHaloParty(username);
 
     const profile = this.getProfile();
     assert(profile);
