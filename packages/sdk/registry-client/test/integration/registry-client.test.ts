@@ -156,9 +156,9 @@ describe('Registry Client', () => {
       });
 
       it('queries by tag', async () => {
-        const resource = await registryClient.getResourceRecord(versionedDxn, 'alpha');
-        expect(resource).to.not.be.undefined;
-        expect(resource!.tag).to.be.equal('alpha');
+        const taggedDxn = DXN.fromDomainKey(domainKey, versionedName, 'alpha');
+        const record = await registryClient.getRecordByName(taggedDxn);
+        expect(record).to.not.be.undefined;
       });
     });
   });
