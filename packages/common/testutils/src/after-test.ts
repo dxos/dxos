@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 let afterTestCallbacks: (() => any | Promise<any>)[] = [];
 
 /**
