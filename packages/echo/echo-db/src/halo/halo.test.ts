@@ -50,6 +50,13 @@ describe('HALO', () => {
     });
   };
 
+  const setupOpen = async () => {
+    const halo = setup();
+    await halo.open()
+    afterTest(() => halo.close())
+    return halo;
+  }
+
   test('open & close', async () => {
     const halo = setup();
 
@@ -103,23 +110,16 @@ describe('HALO', () => {
   });
 
   test('invite 2 devices in a chain', async () => {
-    const deviceA = setup();
-    await deviceA.open();
-    afterTest(() => deviceA.close());
-    const profileA = await deviceA.createProfile({ username: 'Test user' });
+    const deviceA = await setupOpen();
+    const deviceB = await setupOpen();
+    const deviceC = await setupOpen();
 
-    const deviceB = setup();
-    await deviceB.open();
-    afterTest(() => deviceB.close());
+    const profileA = await deviceA.createProfile({ username: 'Test user' });
 
     {
       const invitation = await deviceA.createInvitation(defaultInvitationAuthenticator);
       await deviceB.join(invitation, defaultSecretProvider);
     }
-
-    const deviceC = setup();
-    await deviceC.open();
-    afterTest(() => deviceC.close());
 
     {
       const invitation = await deviceB.createInvitation(defaultInvitationAuthenticator);
@@ -133,16 +133,11 @@ describe('HALO', () => {
   });
 
   test('recover HALO', async () => {
-    const deviceA = setup();
-    await deviceA.open();
-    afterTest(() => deviceA.close());
+    const deviceA = await setupOpen();
+    const deviceB = await setupOpen();
 
     const seedPhrase = generateSeedPhrase();
     const profileA = await deviceA.createProfile({ username: 'Test user', ...keyPairFromSeedPhrase(seedPhrase) });
-
-    const deviceB = setup();
-    await deviceB.open();
-    afterTest(() => deviceB.close());
 
     await deviceB.recover(seedPhrase);
     const profileB = deviceB.getProfile();
@@ -150,4 +145,35 @@ describe('HALO', () => {
     expect(profileB!.username).toEqual('Test user');
     expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
   });
+
+  describe('Preferences', () => {
+    test('global and device work on single device', async () => {
+      const halo = await setupOpen()
+      await halo.createProfile()
+
+      const globalPreferences: ObjectModel = halo.identity.preferences!.getGlobalPreferences()!.model;
+      await globalPreferences.set('key', 'value')
+      expect(globalPreferences.get('key')).toEqual('value')
+
+      const devicePreferences: ObjectModel = halo.identity.preferences!.getDevicePreferences()!.model;
+      await devicePreferences.set('key', 'value2')
+      expect(devicePreferences.get('key')).toEqual('value2')
+    })
+
+    test('global preferences are synced between devices', async () => {
+      const deviceA = await setupOpen();
+      const deviceB = await setupOpen();
+      await deviceA.createProfile({ username: 'Test user' });
+      const invitation = await deviceA.createInvitation(defaultInvitationAuthenticator);
+      await deviceB.join(invitation, defaultSecretProvider);
+
+      const preferencesA: ObjectModel = deviceA.identity.preferences!.getGlobalPreferences()!.model;
+      const preferencesB: ObjectModel = deviceB.identity.preferences!.getGlobalPreferences()!.model;
+      
+      const update = await preferencesB.update.waitForCount(1)
+      await preferencesA.set('key', 'value')
+      await update;
+      expect(preferencesB.get('key')).toEqual('value')
+    })
+  })
 });
