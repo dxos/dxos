@@ -125,9 +125,15 @@ export class RegistryClient {
           return result;
         }
 
-        const set = result.find(set => set.name.authority === name.authority && set.name.path === name.path) ??
-          { name: name.with({ tag: undefined }), tags: {} };
+        const index = result.findIndex(set => set.name.authority === name.authority && set.name.path === name.path);
+        const set = result[index] ?? { name: name.with({ tag: undefined }), tags: {} };
         set.tags[name.tag] = cid;
+
+        if (index === -1) {
+          result.push(set);
+        } else {
+          result[index] = set;
+        }
 
         return result;
       }, new Array<ResourceSet>());
