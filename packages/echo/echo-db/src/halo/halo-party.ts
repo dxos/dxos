@@ -166,7 +166,6 @@ export class HaloParty {
       this._networkManager,
       this._feedProvider,
       this._deviceKey,
-      // TODO(dmaretskyi): Device key chain is queried from identity provider here. Figure out if we can just sign with device key instead.
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
