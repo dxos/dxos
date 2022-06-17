@@ -147,7 +147,6 @@ export class HaloParty {
       return this;
     }
 
-
     await this._partyCore.open(this._hints);
 
     this._invitationManager = new InvitationFactory(
