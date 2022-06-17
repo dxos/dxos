@@ -132,7 +132,7 @@ export class PartyFactory {
       feedProvider,
       this._identityProvider(),
       this._networkManager,
-      [{ type: feedKeyPair.type, publicKey: feedKeyPair.publicKey }, ...hints],
+      hints,
       undefined,
       this._options
     );

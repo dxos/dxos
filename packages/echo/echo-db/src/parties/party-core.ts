@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
+import { KeyHint, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
@@ -110,9 +110,17 @@ export class PartyCore {
     }
 
     this._timeframeClock = new TimeframeClock(this._initialTimeframe);
+    
+    // Open all feeds known from metadata and open or create a writable feed to the party.
+    await this._feedProvider.openKnownFeeds();
+    const writableFeed = await this._feedProvider.createOrOpenWritableFeed();
 
     if (!this._partyProcessor) {
       this._partyProcessor = new PartyProcessor(this._partyKey);
+
+      // Hint at our own writable feed.
+      await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
+
       if (keyHints.length > 0) {
         await this._partyProcessor.takeHints(keyHints);
       }
@@ -122,17 +130,14 @@ export class PartyCore {
     // Pipeline
     //
 
-    await this._feedProvider.openKnownFeeds();
+    
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
       this._initialTimeframe
     );
-
-    const { feed } = await this._feedProvider.createOrOpenWritableFeed();
-    const feedWriteStream = createFeedWriter(feed);
-
+    
     this._pipeline = new Pipeline(
-      this._partyProcessor, iterator, this._timeframeClock, feedWriteStream, this._options);
+      this._partyProcessor, iterator, this._timeframeClock, createFeedWriter(writableFeed.feed), this._options);
 
     // TODO(burdon): Support read-only parties.
     const [readStream, writeStream] = await this._pipeline.open();
