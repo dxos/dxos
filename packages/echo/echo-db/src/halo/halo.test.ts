@@ -20,6 +20,7 @@ import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { HALO } from './halo';
+import { testTimeout } from '@dxos/mesh-protocol';
 
 describe('HALO', () => {
   const setup = () => {
@@ -145,6 +146,26 @@ describe('HALO', () => {
     expect(profileB!.username).toEqual('Test user');
     expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
   });
+
+  test('HALO database is synced between 2 devices', async () => {
+    const deviceA = await setupOpen();
+    const deviceB = await setupOpen();
+    await deviceA.createProfile({ username: 'Test user' });
+    const invitation = await deviceA.createInvitation(defaultInvitationAuthenticator);
+    await deviceB.join(invitation, defaultSecretProvider);
+
+    {
+      const itemA = await deviceA.identity.halo!.database.createItem({ type: 'example:test-1' })
+      const itemB = await testTimeout(deviceB.identity.halo!.database.waitForItem({ type: 'example:test-1' }))
+      expect(itemA.id).toEqual(itemB.id)
+    }
+
+    {
+      const itemB = await deviceB.identity.halo!.database.createItem({ type: 'example:test-2' })
+      const itemA = await testTimeout(deviceA.identity.halo!.database.waitForItem({ type: 'example:test-2' }))
+      expect(itemB.id).toEqual(itemA.id)
+    }
+  })
 
   describe('Preferences', () => {
     test('global and device work on single device', async () => {
