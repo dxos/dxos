@@ -4,7 +4,6 @@
 
 import debug from 'debug';
 
-import { createKeyPair } from '@dxos/crypto';
 import { NetworkManagerOptions } from '@dxos/network-manager';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
