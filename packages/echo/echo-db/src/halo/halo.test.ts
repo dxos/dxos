@@ -20,7 +20,7 @@ import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { HALO } from './halo';
-import { testTimeout } from '@dxos/mesh-protocol';
+import { testTimeout } from '@dxos/testutils';
 
 describe('HALO', () => {
   const setup = () => {
