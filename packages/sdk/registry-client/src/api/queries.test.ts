@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import { createCID } from '../testing';
 import { DXN } from './dxn';
 import { Filtering } from './queries';
-import { Resource } from './registry';
 import { RegistryRecord } from './registry-client';
 
 describe('Queries', () => {
@@ -23,24 +22,24 @@ describe('Queries', () => {
 
     it('Filters by text, when contains text, then filtered in', () => {
       const data = [
-        { name: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
-        { name: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
+        DXN.fromDomainName('apps', 'super-app'),
+        DXN.fromDomainName('bricks', 'redbrick')
       ];
       const actual = data.filter(item => Filtering.matchResource(item, { text: 'red' }));
 
       expect(actual).to.have.length(1);
-      expect(actual[0].name.toString()).to.be.equal('bricks:redbrick');
+      expect(actual[0].toString()).to.be.equal('bricks:redbrick');
     });
 
     it('Filters by text, when contains text (case-insensitive), then filtered in', () => {
       const data = [
-        { name: DXN.fromDomainName('apps', 'super-app') } as unknown as Resource,
-        { name: DXN.fromDomainName('bricks', 'redbrick') } as unknown as Resource
+        DXN.fromDomainName('apps', 'super-app'),
+        DXN.fromDomainName('bricks', 'redbrick')
       ];
       const actual = data.filter(item => Filtering.matchResource(item, { text: 'REd' }));
 
       expect(actual).to.have.length(1);
-      expect(actual[0].name.toString()).to.be.equal('bricks:redbrick');
+      expect(actual[0].toString()).to.be.equal('bricks:redbrick');
     });
   });
 

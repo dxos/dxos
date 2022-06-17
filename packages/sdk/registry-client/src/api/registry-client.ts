@@ -19,7 +19,12 @@ import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
 import { Filtering, Query } from './queries';
-import { Domain, RegistryClientBackend, Resource } from './registry';
+import { Domain, RegistryClientBackend } from './registry';
+
+export type ResourceSet = {
+  name: DXN,
+  tags: Record<string, CID>
+}
 
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
   cid: CID,
@@ -101,7 +106,8 @@ export class RegistryClient {
    * Gets resource by its registered name.
    * @param name DXN of the resource used for registration.
    */
-  async getResource (name: DXN): Promise<Resource | undefined> {
+  async getResource (name: DXN): Promise<CID | undefined> {
+    name = name.tag ? name : name.with({ tag: 'latest' });
     return this._backend.getResource(name);
   }
 
@@ -109,10 +115,22 @@ export class RegistryClient {
    * Queries resources registered in the system.
    * @param query Query that each returned record must meet.
    */
-  async getResources (query?: Query): Promise<Resource[]> {
+  async getResources (query?: Query): Promise<ResourceSet[]> {
     const resources = await this._backend.getResources();
 
-    return resources.filter(resource => Filtering.matchResource(resource, query));
+    return resources
+      .filter(([name]) => Filtering.matchResource(name, query))
+      .reduce((result, [name, cid]) => {
+        if (!name.tag) {
+          return result;
+        }
+
+        const set = result.find(set => set.name.authority === name.authority && set.name.path === name.path) ??
+          { name: name.with({ tag: undefined }), tags: {} };
+        set.tags[name.tag] = cid;
+
+        return result;
+      }, new Array<ResourceSet>());
   }
 
   /**
@@ -125,11 +143,10 @@ export class RegistryClient {
    */
   async registerResource (
     name: DXN,
-    tag,
     cid: CID | undefined,
     owner: AccountKey
   ): Promise<void> {
-    return this._backend.registerResource(name, cid, owner, tag);
+    return this._backend.registerResource(name, cid, owner);
   }
 
   //
@@ -156,13 +173,7 @@ export class RegistryClient {
    * @param name DXN of the resource used for registration.
    */
   async getRecordByName<T> (name: DXN): Promise<RegistryRecord<T> | undefined> {
-    const resource = await this.getResource(name);
-    if (!resource) {
-      return undefined;
-    }
-
-    const tag = name.tag ?? 'latest';
-    const cid = resource.tags[tag];
+    const cid = await this.getResource(name);
     if (!cid) {
       return undefined;
     }

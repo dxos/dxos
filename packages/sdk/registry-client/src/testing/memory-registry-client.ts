@@ -3,6 +3,7 @@
 //
 
 import { compactAddLength } from '@polkadot/util';
+import assert from 'assert';
 import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
@@ -14,8 +15,7 @@ import {
   DomainKey,
   DXN,
   RecordWithCid,
-  RegistryClientBackend,
-  Resource
+  RegistryClientBackend
 } from '../api';
 import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 
@@ -25,7 +25,7 @@ import { Record as RawRecord, schema as dxnsSchema } from '../proto';
  */
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
   readonly domains = new Map<string, Domain>();
-  readonly resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
+  readonly resources = new ComplexMap<DXN, CID>(dxn => dxn.toString());
   readonly records = new ComplexMap<CID, RawRecord>(cid => cid.toB58String());
 
   //
@@ -51,6 +51,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
       key,
       owner: owner.toHex()
     });
+
     return key;
   }
 
@@ -62,6 +63,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
       owner: owner.toHex()
     };
     this.domains.set(domainName, domain);
+
     return domain;
   }
 
@@ -69,34 +71,31 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Resources
   //
 
-  async getResource (name: DXN): Promise<Resource | undefined> {
+  async getResource (name: DXN): Promise<CID | undefined> {
     return this.resources.get(name);
   }
 
-  async getResources (): Promise<Resource[]> {
-    return Array.from(this.resources.values());
+  async getResources (): Promise<[DXN, CID][]> {
+    return Array.from(this.resources.entries());
   }
 
   async registerResource (
     name: DXN,
     cid: CID | undefined,
-    owner: AccountKey,
-    tag: string
+    owner: AccountKey
   ): Promise<void> {
+    assert(name.tag, 'Tag is required');
     const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
     const domain = this.domains.get(domainName);
     if (domain?.owner !== owner.toHex()) {
       throw new Error('Domain owner mismatch');
     }
 
-    const resource = this.resources.get(name) ?? { name, tags: {} };
-    this.resources.set(name, {
-      ...resource,
-      tags: {
-        ...resource.tags,
-        [tag]: cid
-      }
-    });
+    if (cid) {
+      this.resources.set(name, cid);
+    } else {
+      this.resources.delete(name);
+    }
   }
 
   //

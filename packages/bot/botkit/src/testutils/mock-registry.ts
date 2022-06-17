@@ -39,7 +39,7 @@ export const createMockRegistryWithBot = async (botPath: string) => {
   );
 
   await registerMockResource(registry, {
-    name: DXN.parse(MOCK_BOT_DXN),
+    name: DXN.parse(MOCK_BOT_DXN).with({ tag: 'latest' }),
     record: botRecordCid,
     owner
   });

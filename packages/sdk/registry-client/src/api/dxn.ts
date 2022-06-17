@@ -56,6 +56,21 @@ export class DXN {
     public readonly tag?: string
   ) {}
 
+  /**
+   * Create new DXN overriding specified fields.
+   */
+  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string }) {
+    authority = authority ?? this.authority;
+    path = path ?? this.path;
+    tag = tag ?? this.tag;
+
+    if (typeof authority === 'string') {
+      return DXN.fromDomainName(authority, path, tag);
+    } else {
+      return DXN.fromDomainKey(authority, path, tag);
+    }
+  }
+
   toString () {
     const tag = this.tag ? `@${this.tag}` : '';
 

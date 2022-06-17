@@ -4,7 +4,6 @@
 
 import { CID } from './cid';
 import { DXN } from './dxn';
-import { Resource } from './registry';
 import { RegistryRecord } from './registry-client';
 
 /**
@@ -29,18 +28,17 @@ export const Filtering = {
   /**
    * Returns true if the item matches the query specification. False otherwise.
    *
+   * @param name undergoes query conditions examination.
    * @param query specifies the querying conditions.
-   * @param resource undergoes query conditions examination.
    */
-  matchResource (resource: Resource, query?: Query): boolean {
+  matchResource (name: DXN, query?: Query): boolean {
     if (!query) {
       return true;
     }
 
-    const textMatches = query.text === undefined || matchesDxn(resource.name, query.text);
-    const typeMatches = query.type === undefined || (!!resource.type && resource.type.equals(query.type));
+    const textMatches = query.text === undefined || matchesDxn(name, query.text);
 
-    return textMatches && typeMatches;
+    return textMatches;
   },
 
   /**
