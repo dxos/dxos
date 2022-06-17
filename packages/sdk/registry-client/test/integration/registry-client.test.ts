@@ -206,7 +206,7 @@ describe('Registry Client', () => {
     });
 
     it('invalid records are ignored by list methods', async () => {
-      const cid = await registryBackend.registerRecordBytes(Buffer.from('100203', 'hex'));
+      const cid = await registryBackend.registerRecordBytes(Buffer.from('10200300040000', 'hex'));
 
       const records = await registryClient.listRecords();
       expect(records.every(record => !record.cid.equals(cid))).to.be.true;
