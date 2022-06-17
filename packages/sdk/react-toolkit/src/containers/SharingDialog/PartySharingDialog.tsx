@@ -6,7 +6,7 @@ import React from 'react';
 
 import type { PublicKey } from '@dxos/crypto';
 import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
-import { Resource } from '@dxos/registry-client';
+import { ResourceSet } from '@dxos/registry-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
@@ -28,7 +28,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
     await party!.createInvitation();
   };
 
-  const handleBotInvitation = botClient ? async (resource: Resource) => {
+  const handleBotInvitation = botClient ? async (resource: ResourceSet) => {
     await botClient!.spawn({ name: resource.name.toString() }, party!);
   } : undefined;
 

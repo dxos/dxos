@@ -25,13 +25,12 @@ export class DXNSContentResolver implements ContentResolver {
   ) {}
 
   async resolve ({ name }: { name: string }): Promise<ContentResolverResult> {
-    const botDXN = DXN.parse(name);
-    const botRecord = await this._registry.getRecordByName<Bot>(botDXN);
-    assert(botRecord, `Bot resource not found: ${name.toString()}`);
+    const botRecord = await this._registry.getRecordByName<Bot>(DXN.parse(name));
+    assert(botRecord, `Bot resource not found: ${name}`);
     const botIpfsCID = botRecord.payload.bundle;
     const botLocalPath = botRecord.payload.localPath;
     if (!botIpfsCID && !botLocalPath) {
-      throw new Error(`Unable to resolve bot content byt the provided dxn: ${name.toString()}`);
+      throw new Error(`Unable to resolve bot content by the provided name: ${name}`);
     }
 
     const result: ContentResolverResult = {};

@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Query, Resource } from '@dxos/registry-client';
+import { Query, ResourceSet } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  resources: Resource[],
+  resources: ResourceSet[],
   error?: unknown
 }
 
