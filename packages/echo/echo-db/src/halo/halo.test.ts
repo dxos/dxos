@@ -191,9 +191,9 @@ describe('HALO', () => {
       const preferencesA: ObjectModel = deviceA.identity.preferences!.getGlobalPreferences()!.model;
       const preferencesB: ObjectModel = deviceB.identity.preferences!.getGlobalPreferences()!.model;
       
-      const update = await preferencesB.update.waitForCount(1)
+      const update = preferencesB.update.waitForCount(1)
       await preferencesA.set('key', 'value')
-      await update;
+      await testTimeout(update);
       expect(preferencesB.get('key')).toEqual('value')
     })
   })

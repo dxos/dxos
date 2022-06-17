@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
+import { KeyHint, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
@@ -147,7 +147,12 @@ export class HaloParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    const writeFeed = await this._partyCore.getWriteFeed();
+
+    await this._partyCore.open([
+      { type: KeyType.FEED, publicKey: writeFeed.key },
+      ...this._hints
+    ]);
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
@@ -158,8 +163,6 @@ export class HaloParty {
     //
     // Network/swarm.
     //
-
-    const writeFeed = await this._partyCore.getWriteFeed();
 
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
