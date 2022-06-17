@@ -7,19 +7,19 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { AccountClient, AccountKey, AuctionsClient, IAuctionsClient } from '../../src';
+import { AccountsClient, AccountKey, AuctionsClient, PolkadotAuctions } from '../../src';
 import { setup } from './utils';
 
 chai.use(chaiAsPromised);
 
 describe('Auctions Client', () => {
-  let auctionsApi: IAuctionsClient;
+  let auctionsApi: AuctionsClient;
   let apiPromise: ApiPromise;
   let sudoer: KeyringPair;
   let alice: KeyringPair;
   let bob: KeyringPair;
   let account: AccountKey;
-  let accountApi: AccountClient;
+  let accountApi: AccountsClient;
 
   before(async () => {
     const setupResult = await setup();
@@ -99,9 +99,9 @@ describe('Auctions Client', () => {
     });
 
     it('Only the winner can claim an auction', async () => {
-      const winner = new AuctionsClient(apiPromise, bob);
-      const loser = new AuctionsClient(apiPromise, alice);
-      await accountApi.addDeviceToAccount(account, bob.address);
+      const winner = new AuctionsClient(new PolkadotAuctions(apiPromise, bob));
+      const loser = new AuctionsClient(new PolkadotAuctions(apiPromise, alice));
+      await accountApi.addDevice(account, bob.address);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -115,8 +115,8 @@ describe('Auctions Client', () => {
     });
 
     it('Auction winner has a domain registered', async () => {
-      const winner = new AuctionsClient(apiPromise, bob);
-      await accountApi.addDeviceToAccount(account, bob.address);
+      const winner = new AuctionsClient(new PolkadotAuctions(apiPromise, bob));
+      await accountApi.addDevice(account, bob.address);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;

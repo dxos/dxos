@@ -2,10 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
+import { AccountKey } from './account-key';
+
 /**
- * DXNS Accounts with a list of devices.
+ * Accounts with a list of devices.
  */
-export interface DxnsAccount {
+export interface Account {
   id: string,
   devices: string[],
+}
+
+export interface AccountsClientBackend {
+  getAccount(account: AccountKey): Promise<Account | undefined>
+  listAccounts(): Promise<Account[]>
+  createAccount(): Promise<AccountKey>
+  addDevice(account: AccountKey, device: string): Promise<void>
+  belongsToAccount(account: AccountKey, device: string): Promise<boolean>
 }

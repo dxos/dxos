@@ -4,6 +4,9 @@
 
 export * from './account-key';
 export * from './accounts';
+export * from './accounts-client';
+export * from './auctions';
+export * from './auctions-client';
 export * from './cid';
 export * from './domain-key';
 export * from './dxn';
