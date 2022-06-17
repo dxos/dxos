@@ -12,7 +12,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
 import { MetadataStore } from '../metadata';
@@ -20,7 +20,6 @@ import { PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { HALO } from './halo';
-import { testTimeout } from '@dxos/testutils';
 
 describe('HALO', () => {
   const setup = () => {
@@ -53,10 +52,10 @@ describe('HALO', () => {
 
   const setupOpen = async () => {
     const halo = setup();
-    await halo.open()
-    afterTest(() => halo.close())
+    await halo.open();
+    afterTest(() => halo.close());
     return halo;
-  }
+  };
 
   test('open & close', async () => {
     const halo = setup();
@@ -155,31 +154,31 @@ describe('HALO', () => {
     await deviceB.join(invitation, defaultSecretProvider);
 
     {
-      const itemA = await deviceA.identity.halo!.database.createItem({ type: 'example:test-1' })
-      const itemB = await testTimeout(deviceB.identity.halo!.database.waitForItem({ type: 'example:test-1' }))
-      expect(itemA.id).toEqual(itemB.id)
+      const itemA = await deviceA.identity!.halo!.database.createItem({ type: 'example:test-1' });
+      const itemB = await testTimeout(deviceB.identity!.halo!.database.waitForItem({ type: 'example:test-1' }));
+      expect(itemA.id).toEqual(itemB.id);
     }
 
     {
-      const itemB = await deviceB.identity.halo!.database.createItem({ type: 'example:test-2' })
-      const itemA = await testTimeout(deviceA.identity.halo!.database.waitForItem({ type: 'example:test-2' }))
-      expect(itemB.id).toEqual(itemA.id)
+      const itemB = await deviceB.identity!.halo.database.createItem({ type: 'example:test-2' });
+      const itemA = await testTimeout(deviceA.identity!.halo.database.waitForItem({ type: 'example:test-2' }));
+      expect(itemB.id).toEqual(itemA.id);
     }
-  })
+  });
 
   describe('Preferences', () => {
     test('global and device work on single device', async () => {
-      const halo = await setupOpen()
-      await halo.createProfile()
+      const halo = await setupOpen();
+      await halo.createProfile();
 
-      const globalPreferences: ObjectModel = halo.identity.preferences!.getGlobalPreferences()!.model;
-      await globalPreferences.set('key', 'value')
-      expect(globalPreferences.get('key')).toEqual('value')
+      const globalPreferences: ObjectModel = halo.identity!.preferences!.getGlobalPreferences()!.model;
+      await globalPreferences.set('key', 'value');
+      expect(globalPreferences.get('key')).toEqual('value');
 
-      const devicePreferences: ObjectModel = halo.identity.preferences!.getDevicePreferences()!.model;
-      await devicePreferences.set('key', 'value2')
-      expect(devicePreferences.get('key')).toEqual('value2')
-    })
+      const devicePreferences: ObjectModel = halo.identity!.preferences!.getDevicePreferences()!.model;
+      await devicePreferences.set('key', 'value2');
+      expect(devicePreferences.get('key')).toEqual('value2');
+    });
 
     test('global preferences are synced between devices', async () => {
       const deviceA = await setupOpen();
@@ -188,13 +187,13 @@ describe('HALO', () => {
       const invitation = await deviceA.createInvitation(defaultInvitationAuthenticator);
       await deviceB.join(invitation, defaultSecretProvider);
 
-      const preferencesA: ObjectModel = deviceA.identity.preferences!.getGlobalPreferences()!.model;
-      const preferencesB: ObjectModel = deviceB.identity.preferences!.getGlobalPreferences()!.model;
-      
-      const update = preferencesB.update.waitForCount(1)
-      await preferencesA.set('key', 'value')
+      const preferencesA: ObjectModel = deviceA.identity!.preferences!.getGlobalPreferences()!.model;
+      const preferencesB: ObjectModel = deviceB.identity!.preferences!.getGlobalPreferences()!.model;
+
+      const update = preferencesB.update.waitForCount(1);
+      await preferencesA.set('key', 'value');
       await testTimeout(update);
-      expect(preferencesB.get('key')).toEqual('value')
-    })
-  })
+      expect(preferencesB.get('key')).toEqual('value');
+    });
+  });
 });

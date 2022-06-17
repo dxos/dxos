@@ -52,7 +52,7 @@ export class PartyFactory {
    */
   @timed(5_000)
   async createParty (): Promise<DataParty> {
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     assert(identity.identityGenesis, 'HALO not initialized.');
     assert(identity.deviceKeyChain, 'Device KeyChain not initialized.');
     assert(!this._options.readOnly, 'PartyFactory is read-only.');
@@ -114,7 +114,7 @@ export class PartyFactory {
    * @param hints
    */
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     /*
      * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
@@ -130,7 +130,7 @@ export class PartyFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider(),
+      identity,
       this._networkManager,
       hints,
       undefined,
@@ -158,6 +158,8 @@ export class PartyFactory {
    * @param hints
    */
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
+
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
     const feedProvider = this._createFeedProvider(partyKey);
 
@@ -169,7 +171,7 @@ export class PartyFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider(),
+      identity,
       this._networkManager,
       hints,
       initialTimeframe,
@@ -192,7 +194,7 @@ export class PartyFactory {
     const haloInvitation = !!invitationDescriptor.identityKey;
     const originalInvitation = invitationDescriptor;
 
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
@@ -238,7 +240,7 @@ export class PartyFactory {
   }
 
   async cloneParty (snapshot: PartySnapshot): Promise<DataParty> {
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
     assert(identity.identityGenesis, 'IdentityGenesis must exist');

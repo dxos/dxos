@@ -8,7 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { InvalidStateError } from '@dxos/debug';
+import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -19,7 +19,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
 import { DataServiceRouter } from './database';
-import { InvalidStorageVersionError } from './errors';
+import { IdentityNotInitializedError, InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
@@ -175,7 +175,7 @@ export class ECHO {
 
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
-      if (this.halo.identity.halo?.isOpen) {
+      if (this.halo.identity?.halo.isOpen) {
         this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
@@ -376,7 +376,7 @@ export class ECHO {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity ?? raise(new IdentityNotInitializedError()));
 
     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }

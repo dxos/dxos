@@ -8,6 +8,7 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -106,7 +107,7 @@ export class HALO {
    * User's IDENTITY keypair.
    */
   get identityKey (): KeyRecord | undefined {
-    return this.identity.identityKey;
+    return this.identity?.identityKey;
   }
 
   /**
@@ -114,7 +115,7 @@ export class HALO {
    */
   // TODO(burdon): Rename username (here and in data structure).
   get identityDisplayName (): string | undefined {
-    return this.identity.displayName;
+    return this.identity?.displayName;
   }
 
   /**
@@ -144,7 +145,7 @@ export class HALO {
    */
   async close () {
     // TODO(marik-d): Should be `_identityManager.close()`.
-    await this.identity.halo?.close();
+    await this.identity?.halo.close();
   }
 
   /**
@@ -168,7 +169,7 @@ export class HALO {
     assert(publicKey, 'Invalid publicKey');
     assert(secretKey, 'Invalid secretKey');
 
-    if (this.identity.identityKey) {
+    if (this.identity?.identityKey) {
       // TODO(burdon): Bad API: Semantics change based on options.
       // TODO(burdon): `createProfile` isn't part of this package.
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
@@ -182,15 +183,13 @@ export class HALO {
    */
   private async _createHaloParty (displayName?: string) {
     // TODO(burdon): Why not assert?
-    if (this.identity.halo) {
-      throw new Error('HALO party already exists');
-    }
-    if (!this.identity.identityKey) {
-      throw new Error('Cannot create HALO. Identity key not found.');
+    if (this.identity) {
+      throw new Error('Identity already initialized');
     }
 
+    const identityKey = this._identityManager.getIdentityKey() ?? raise(new Error('Cannot create HALO. Identity key not found.'));
     await this._identityManager.createHalo({
-      identityDisplayName: displayName || this.identity.identityKey.publicKey.humanize()
+      identityDisplayName: displayName || identityKey.publicKey.humanize()
     });
   }
 
@@ -199,8 +198,8 @@ export class HALO {
    */
   // TODO(dmaretskyi): Do not return HALO party here.
   async recover (seedPhrase: string) {
-    assert(!this.identity.halo, 'HALO already exists.');
-    assert(!this.identity.identityKey, 'Identity key already exists.');
+    assert(!this.identity?.halo, 'HALO already exists.');
+    assert(!this.identity?.identityKey, 'Identity key already exists.');
 
     return this._identityManager.recoverHalo(seedPhrase);
   }
@@ -210,7 +209,7 @@ export class HALO {
    */
   // TODO(dmaretskyi): Do not return HALO party here.
   async join (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(!this.identity.halo, 'HALO already exists.');
+    assert(!this.identity?.halo, 'HALO already exists.');
 
     return this._identityManager.joinHalo(invitationDescriptor, secretProvider);
   }
@@ -219,7 +218,7 @@ export class HALO {
    * Create an invitation to an exiting identity HALO.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
-    assert(this.identity.halo, 'HALO not initialized.');
+    assert(this.identity?.halo, 'HALO not initialized.');
     return this.identity.halo.createInvitation(authenticationDetails, options);
   }
 
@@ -228,7 +227,7 @@ export class HALO {
    */
   // TODO(burdon): Expose ContactManager directly.
   queryContacts (): ResultSet<Contact> {
-    assert(this.identity.contacts, 'HALO not initialized.');
+    assert(this.identity?.contacts, 'HALO not initialized.');
 
     return this.identity.contacts.queryContacts();
   }

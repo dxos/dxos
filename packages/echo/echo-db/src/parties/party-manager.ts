@@ -77,7 +77,7 @@ export class PartyManager {
     const identity = this._identityProvider();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (identity.identityKey) {
+    if (identity?.identityKey) {
       partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
     }
 
@@ -97,7 +97,7 @@ export class PartyManager {
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
 
-        const isActive = identity.preferences?.isPartyActive(partyKey) ?? true;
+        const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
           // TODO(marik-d): Might not be required if separately snapshot this item.
@@ -266,9 +266,9 @@ export class PartyManager {
     const identity = this._identityProvider();
     const item = await party.getPropertiesItem();
     const currentTitle = item.model.get(PARTY_TITLE_PROPERTY);
-    const storedTitle = identity.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
+    const storedTitle = identity?.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
-      await identity.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
+      await identity?.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
 
@@ -282,7 +282,7 @@ export class PartyManager {
 
     const identity = this._identityProvider();
 
-    const contactListItem = identity.contacts?.getContactListItem();
+    const contactListItem = identity?.contacts?.getContactListItem();
     if (!contactListItem) {
       return;
     }
@@ -318,7 +318,7 @@ export class PartyManager {
     const identity = this._identityProvider();
 
     // TODO(marik-d): Extract HALO functionality from this class.
-    if (!identity.preferences) {
+    if (!identity?.preferences) {
       return;
     }
 

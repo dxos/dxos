@@ -66,6 +66,7 @@ export class DataParty {
       _options
     );
 
+    // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     if (this._identity.preferences) {
       this._preferences = new PartyPreferences(this._identity.preferences, this);
     }

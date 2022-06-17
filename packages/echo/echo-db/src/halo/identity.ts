@@ -25,22 +25,9 @@ export class Identity {
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
-  static fromKeyring (keyring: Keyring) {
-    return new Identity(
-      keyring,
-      undefined
-    );
-  }
-
-  static createFromHalo (keyring: Keyring, halo: HaloParty) {
-    const identity = Identity.fromKeyring(keyring);
-    identity.setHalo(halo);
-    return identity;
-  }
-
   constructor (
     private readonly _keyring: Keyring,
-    private _halo: HaloParty | undefined
+    private readonly _halo: HaloParty
   ) {}
 
   get signer (): Signer {
@@ -91,7 +78,7 @@ export class Identity {
     return this._halo?.identityGenesis;
   }
 
-  get halo (): HaloParty | undefined {
+  get halo (): HaloParty {
     return this._halo;
   }
 
@@ -107,18 +94,9 @@ export class Identity {
       () => this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError())
     );
   }
-
-  /**
-   * @internal
-   *
-   * Called by `IdentityManager` when HALO party is initialized.
-   */
-  setHalo (halo: HaloParty) {
-    this._halo = halo;
-  }
 }
 
-export type IdentityProvider = () => Identity;
+export type IdentityProvider = () => Identity | undefined;
 
 function getDeviceKeyChainFromHalo (halo: HaloParty, deviceKey: KeyRecord) {
   try {

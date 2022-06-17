@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
-import { Keyring, SecretProvider } from '@dxos/credentials';
+import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
@@ -20,7 +20,7 @@ const log = debug('dxos:echo-db:identity-manager');
  * Manages the keyring and HALO party.
  */
 export class IdentityManager {
-  private readonly _identity: Identity;
+  private _identity: Identity | undefined;
 
   public readonly ready = new Event();
 
@@ -28,29 +28,25 @@ export class IdentityManager {
     private readonly _keyring: Keyring,
     private readonly _haloFactory: HaloFactory,
     private readonly _metadataStore: MetadataStore
-  ) {
-    this._identity = Identity.fromKeyring(_keyring);
-  }
+  ) {}
 
-  get identity () {
+  get identity (): Identity | undefined {
     return this._identity;
   }
 
   get initialized (): boolean {
-    const haloParty = this._identity.halo;
-    return haloParty !== undefined &&
-      haloParty.isOpen &&
-      !!haloParty!.memberKeys.length &&
-      !!haloParty!.identityGenesis &&
+    return this._identity !== undefined &&
+      !!this._identity.halo &&
+      this._identity.halo.isOpen &&
+      !!this._identity.halo!.memberKeys.length &&
+      !!this._identity.halo!.identityGenesis &&
       !!this._identity.deviceKeyChain;
   }
 
   private async _initialize (halo: HaloParty) {
-    assert(this._identity.identityKey, 'No identity key.');
-    assert(this._identity.deviceKey, 'No device key.');
     assert(halo.isOpen, 'HALO must be open.');
 
-    this._identity.setHalo(halo);
+    this._identity = new Identity(this._keyring, halo);
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() => this.initialized);
@@ -59,16 +55,21 @@ export class IdentityManager {
     this.ready.emit();
   }
 
+  getIdentityKey (): KeyRecord | undefined {
+    return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+  }
+
   @synchronized
   async loadFromStorage () {
-    if (this._identity.identityKey) {
-      if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
+    const identityKey = this.getIdentityKey();
+    if (identityKey) {
+      if (this._metadataStore.getParty(identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
         const halo = await this._haloFactory.constructParty([]);
         // Always open the HALO.
         await halo.open();
         await this._initialize(halo);
-      } else if (!this._identity.keyring.hasSecretKey(this._identity.identityKey)) {
+      } else if (!this._keyring.hasSecretKey(identityKey)) {
         throw new Error('HALO missing and identity key has no secret.');
       }
     }
@@ -79,7 +80,7 @@ export class IdentityManager {
    */
    @synchronized
   async createHalo (options: HaloCreationOptions = {}): Promise<HaloParty> {
-    assert(!this._identity.halo, 'HALO already exists.');
+    assert(!this._identity, 'Identity already initialized.');
 
     const halo = await this._haloFactory.createHalo(options);
     await this._initialize(halo);
@@ -95,10 +96,9 @@ export class IdentityManager {
     */
    @synchronized
    async recoverHalo (seedPhrase: string) {
-     assert(!this._identity.halo, 'HALO already exists.');
-     assert(!this._identity.identityKey, 'Identity key already exists.');
+     assert(!this._identity, 'Identity already initialized.');
 
-     const halo = await this._haloFactory.recoverHalo(this.identity, seedPhrase);
+     const halo = await this._haloFactory.recoverHalo(seedPhrase);
      await this._initialize(halo);
      return halo;
    }
@@ -108,7 +108,7 @@ export class IdentityManager {
     */
    @synchronized
    async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-     assert(!this._identity.halo, 'HALO already exists.');
+     assert(!this._identity, 'Identity already initialized.');
 
      const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);
      await this._initialize(halo);

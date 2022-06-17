@@ -110,7 +110,7 @@ export class PartyCore {
     }
 
     this._timeframeClock = new TimeframeClock(this._initialTimeframe);
-    
+
     // Open all feeds known from metadata and open or create a writable feed to the party.
     await this._feedProvider.openKnownFeeds();
     const writableFeed = await this._feedProvider.createOrOpenWritableFeed();
@@ -131,12 +131,11 @@ export class PartyCore {
     // Pipeline
     //
 
-    
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
       this._initialTimeframe
     );
-    
+
     this._pipeline = new Pipeline(
       this._partyProcessor, iterator, this._timeframeClock, createFeedWriter(writableFeed.feed), this._options);
 

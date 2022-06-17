@@ -31,7 +31,6 @@ import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { Identity } from './identity';
 
 /**
  * Options allowed when creating the HALO.
@@ -136,15 +135,16 @@ export class HaloFactory {
     return halo;
   }
 
-  async recoverHalo (identity: Identity, seedPhrase: string) {
+  async recoverHalo (seedPhrase: string) {
     const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
     await this._keyring.addKeyRecord({
       publicKey: PublicKey.from(recoveredKeyPair.publicKey),
       secretKey: recoveredKeyPair.secretKey,
       type: KeyType.IDENTITY
     });
+    await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
-    const recoverer = new HaloRecoveryInitiator(this._networkManager, identity);
+    const recoverer = new HaloRecoveryInitiator(this._networkManager, CredentialsSigner.createDirectDeviceSigner(this._keyring));
     await recoverer.connect();
 
     const invitationDescriptor = await recoverer.claim();
