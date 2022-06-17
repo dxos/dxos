@@ -23,6 +23,7 @@ import { Record as RawRecord, schema as dxnsSchema } from '../proto';
  * In-memory implementation of the registry client with statically specified records.
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
+// TODO(wittjosiah): Support accounts and auctions in the memory registry.
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
   readonly authorities = new Map<string, Authority>();
   readonly resources = new ComplexMap<DXN, CID>(dxn => dxn.toString());

@@ -19,25 +19,26 @@ import {
   RegistryClientBackend
 } from '../api';
 import { Record as RawRecord, schema as dxnsSchema } from '../proto';
-import { BaseClient } from './base-client';
 import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
+import { PolkadotClient } from './polkadot-client';
 
 /**
- * Polkadot DXNS registry client backend
+ * Polkadot DXNS registry client backend.
  */
-// TODO(wittjosiah): Review if BaseClient is useful.
-export class PolkadotRegistryClientBackend extends BaseClient implements RegistryClientBackend {
+export class PolkadotRegistry extends PolkadotClient implements RegistryClientBackend {
   //
   // Domains
   //
 
   async getDomainKey (domainName: string): Promise<DomainKey> {
     const rawKey = (await this.api.query.registry.domainNames(domainName)).unwrap().toU8a();
+
     return new DomainKey(rawKey);
   }
 
   async listAuthorities (): Promise<Authority[]> {
     const domains = await this.api.query.registry.domains.entries();
+
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
       const domain = domainEntry[1].unwrap();
@@ -52,6 +53,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
   async registerAuthority (owner: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
     await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, owner.value));
+
     return domainKey;
   }
 
@@ -148,7 +150,7 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
 
   async getRecord (cid: CID): Promise<RecordWithCid | undefined> {
     const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
-    if (record === undefined) {
+    if (!record) {
       return undefined;
     }
 
@@ -179,12 +181,18 @@ export class PolkadotRegistryClientBackend extends BaseClient implements Registr
       .getCodecForType('dxos.registry.Record')
       .encode(record)
     );
+
+    return this.registerRecordBytes(data);
+  }
+
+  async registerRecordBytes (data: Uint8Array): Promise<CID> {
     const { events } = await this.transactionsHandler
       .sendTransaction(this.api.tx.registry.addRecord(data));
     const event = events
       .map(eventRecord => eventRecord.event)
       .find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
+
     return new CID(event.data[1].toU8a());
   }
 

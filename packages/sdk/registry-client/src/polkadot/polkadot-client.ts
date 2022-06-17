@@ -10,7 +10,7 @@ import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler
 /**
  * Base functionality for derived clients.
  */
-export class BaseClient {
+export class PolkadotClient {
   protected transactionsHandler: ApiTransactionHandler;
 
   constructor (

@@ -7,7 +7,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { AccountKey, App, CID, createCID, DomainKey, DXN, RegistryClient, schemaJson } from '../../src';
+import { AccountKey, App, CID, createCID, DomainKey, DXN, PolkadotRegistry, RegistryClient, schemaJson } from '../../src';
 import { setup } from './utils';
 
 chai.use(chaiAsPromised);
@@ -20,6 +20,7 @@ const randomName = () => {
 };
 
 describe('Registry Client', () => {
+  let registryBackend: PolkadotRegistry;
   let registryClient: RegistryClient;
   let apiPromise: ApiPromise;
   let account: AccountKey;
@@ -27,6 +28,7 @@ describe('Registry Client', () => {
   beforeEach(async () => {
     const setupResult = await setup();
     apiPromise = setupResult.apiPromise;
+    registryBackend = setupResult.registryBackend;
     registryClient = setupResult.registryClient;
     account = await setupResult.accountsClient.createAccount();
   });
@@ -203,21 +205,18 @@ describe('Registry Client', () => {
       });
     });
 
-    // TODO(wittjosiah): Reimplement.
+    it('invalid records are ignored by list methods', async () => {
+      const cid = await registryBackend.registerRecordBytes(Buffer.from('100203', 'hex'));
 
-    // it('invalid records are ignored by list methods', async () => {
-    //   const cid = await registryClient.insertRawRecord(Buffer.from('100203', 'hex'));
+      const records = await registryClient.listRecords();
+      expect(records.every(record => !record.cid.equals(cid))).to.be.true;
 
-    //   const records = await registryClient.getRecords();
-    //   expect(records.every(record => !record.cid.equals(cid))).to.be.true;
-
-    //   const resources = await registryClient.queryResources();
-    //   expect(resources.every(resource => {
-    //     const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '');
-    //     const versions = Object.values(resource.versions).map(version => version?.toString() ?? '');
-    //     return !tags.includes(cid.toString()) && !versions.includes(cid.toString());
-    //   })).to.be.true;
-    // });
+      const resources = await registryClient.listResources();
+      expect(resources.every(resource => {
+        const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '');
+        return !tags.includes(cid.toString());
+      })).to.be.true;
+    });
 
     it('Records has date fields decoded properly', async () => {
       for (const record of await registryClient.listRecords()) {
