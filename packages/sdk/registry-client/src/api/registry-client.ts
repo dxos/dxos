@@ -43,27 +43,6 @@ export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
 }
 
 /**
- * Specific binding of Resource tag to a corresponding Record.
- */
-// TODO(wittjosiah): Replace with tuple (resource, record) once dxn/resource includes tags.
-export interface ResourceRecord<R extends RegistryRecord> {
-  /**
-   * Resource that points to this Record.
-   */
-  resource: Resource
-
-  /**
-   * Specific tag of the fetched Record.
-   */
-  tag?: string
-
-  /**
-   * Record data.
-   */
-  record: R
-}
-
-/**
  * Record metadata provided by the user.
  */
 export interface RecordMetadata {
@@ -161,7 +140,7 @@ export class RegistryClient {
    * Gets record details by CID.
    * @param cid CID of the record.
    */
-  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
+  async getRecord<T> (cid: CID): Promise<RegistryRecord<T> | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
     }
@@ -175,30 +154,21 @@ export class RegistryClient {
   /**
    * Gets resource by its registered name.
    * @param name DXN of the resource used for registration.
-   * @param tag Tag to get the resource by. 'latest' by default.
    */
-  // TODO(wittjosiah): Move tag into DXN.
-  async getResourceRecord<R extends RegistryRecord> (name: DXN, tag = 'latest'): Promise<ResourceRecord<R> | undefined> {
+  async getRecordByName<T> (name: DXN): Promise<RegistryRecord<T> | undefined> {
     const resource = await this.getResource(name);
     if (!resource) {
       return undefined;
     }
 
+    const tag = name.tag ?? 'latest';
     const cid = resource.tags[tag];
     if (!cid) {
       return undefined;
     }
 
-    const record = await this.getRecord(cid);
-    if (!record) {
-      return undefined;
-    }
-
-    return {
-      resource,
-      tag: resource.tags[tag] ? tag : undefined,
-      record: record as R
-    };
+    const record = await this.getRecord<T>(cid);
+    return record;
   }
 
   /**
