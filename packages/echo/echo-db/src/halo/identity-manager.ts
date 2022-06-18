@@ -55,6 +55,13 @@ export class IdentityManager {
     this.ready.emit();
   }
 
+  async close() {
+    // const identity = this._identity;
+    // this._identity = undefined;
+    console.log(typeof this._identity?.halo)
+    await this._identity?.halo.close();
+  }
+
   getIdentityKey (): KeyRecord | undefined {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }

@@ -25,6 +25,9 @@ export class Identity {
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
+  /**
+   * @param _halo HALO party. Must be open.
+   */
   constructor (
     private readonly _keyring: Keyring,
     private readonly _halo: HaloParty
@@ -78,6 +81,9 @@ export class Identity {
     return this._halo?.identityGenesis;
   }
 
+  /**
+   * HALO party. Must be open.
+   */
   get halo (): HaloParty {
     return this._halo;
   }

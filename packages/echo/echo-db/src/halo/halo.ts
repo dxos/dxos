@@ -144,8 +144,7 @@ export class HALO {
    * Closes HALO. Automatically called when client is destroyed.
    */
   async close () {
-    // TODO(marik-d): Should be `_identityManager.close()`.
-    await this.identity?.halo.close();
+    await this._identityManager.close();
   }
 
   /**

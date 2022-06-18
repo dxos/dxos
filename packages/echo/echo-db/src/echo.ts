@@ -266,10 +266,8 @@ export class ECHO {
 
     this._subs.unsubscribe();
 
-    // TODO(marik-d): Should be `_identityManager.close()`.
     await this.halo.close();
 
-    // TODO(marik-d): Close network manager.
     await this._partyManager.close();
 
     await this._feedStore.close();
