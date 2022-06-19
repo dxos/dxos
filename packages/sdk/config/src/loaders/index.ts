@@ -10,6 +10,8 @@ import { mapFromKeyValues } from '../config';
 import { ConfigObject } from '../proto';
 import { FILE_DEFAULTS, FILE_ENVS } from '../types';
 
+// TODO(burdon): Move out of index?
+
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
 const maybeLoadFile = (file: string): any => {

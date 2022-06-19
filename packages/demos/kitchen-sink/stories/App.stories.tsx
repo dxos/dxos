@@ -16,7 +16,9 @@ import { useFileDownload } from '@dxos/react-components';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { usePartySerializer } from '@dxos/react-toolkit';
 
+import C from '../config/defaults.yml';
 import { ONLINE_CONFIG, App } from './helpers';
+console.log(C);
 
 export default {
   title: 'KitchenSink/App'

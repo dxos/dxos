@@ -24,7 +24,8 @@
   "include": [
     "src",
     "stories",
-    "playwright"
+    "playwright",
+    "config/*.yml"
   ],
   "references": [
     {

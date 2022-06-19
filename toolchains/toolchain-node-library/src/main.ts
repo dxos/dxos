@@ -258,7 +258,7 @@ export const setupCoreCommands = (yargs: Argv) => (
     )
 
     .command(
-      'start',
+      'start', // TODO(burdon): Rename to make less generic.
       'Run a dev server for the package.',
       yargs => yargs
         .strict(),

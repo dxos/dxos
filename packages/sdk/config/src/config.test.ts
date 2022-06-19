@@ -12,7 +12,6 @@ import envmap from './testing/envs-map.json';
 
 test('Empty config', () => {
   const config = new Config({});
-
   expect(config.values).toBeTruthy();
   expect(config.get('runtime.props.title')).toBeUndefined();
 });

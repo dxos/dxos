@@ -7,6 +7,7 @@ import { MaybeFunction, MaybePromise } from '@dxos/util';
 import { Config } from './config';
 import type { ConfigObject } from './proto';
 
+// TODO(burdon): Not used?
 export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigObject>>
 
 export const FILE_DEFAULTS = 'defaults.yml';
