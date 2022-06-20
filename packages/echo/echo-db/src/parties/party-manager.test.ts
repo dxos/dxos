@@ -256,6 +256,7 @@ describe('Party manager', () => {
 
     // Open.
     await identityManager.createHalo();
+    afterTest(() => identityManager.close())
     await partyManager.open();
     expect(partyManager.parties).toHaveLength(numParties);
     await partyManager.close();
@@ -269,7 +270,7 @@ describe('Party manager', () => {
     const PIN = Buffer.from('0000');
     const secretProvider: SecretProvider = async () => PIN;
     const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
-    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, { expiration: Date.now() + 3000 });
+    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, { expiration: Date.now() + 1000 });
   });
 
   test('Create invitation', async () => {
