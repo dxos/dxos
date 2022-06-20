@@ -24,7 +24,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { IdentityNotInitializedError } from '../errors';
 import { IdentityProvider } from '../halo';
 import {
-  createDataPartyInvitationNotarizationMessages,
+  createDataPartyAdmissionMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
 import { PartyFeedProvider, PartyOptions } from '../pipeline';
@@ -42,7 +42,7 @@ export class PartyFactory {
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+    private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _options: PartyOptions = {}
   ) {}
 
@@ -120,7 +120,7 @@ export class PartyFactory {
      * mechanism is broken by not waiting on the messages to be processed before returning.
      */
 
-    const feedProvider = this._createFeedProvider(partyKey);
+    const feedProvider = this._feedProviderFactory(partyKey);
     const { feed } = await feedProvider.createOrOpenWritableFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
     assert(feedKeyPair, 'Keypair for writable feed not found.');
@@ -129,7 +129,7 @@ export class PartyFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      identity.getCredentialsSigner(),
+      identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,
       hints,
@@ -161,7 +161,7 @@ export class PartyFactory {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
-    const feedProvider = this._createFeedProvider(partyKey);
+    const feedProvider = this._feedProviderFactory(partyKey);
 
     //
     // Create the party.
@@ -171,7 +171,7 @@ export class PartyFactory {
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      identity.getCredentialsSigner(),
+      identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,
       hints,
@@ -210,8 +210,8 @@ export class PartyFactory {
     const initiator = new GreetingInitiator(
       this._networkManager,
       invitationDescriptor,
-      async (partyKey, nonce) => [createDataPartyInvitationNotarizationMessages(
-        identity.getCredentialsSigner(),
+      async (partyKey, nonce) => [createDataPartyAdmissionMessages(
+        identity.createCredentialsSigner(),
         partyKey,
         identity.identityGenesis ?? raise(new IdentityNotInitializedError()),
         nonce

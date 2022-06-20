@@ -22,7 +22,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { createHaloPartyInvitationNotarizationMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
+import { createHaloPartyAdmissionMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyOptions } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
@@ -50,31 +50,23 @@ export class HaloFactory {
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+    private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _keyring: Keyring,
     private readonly _options: PartyOptions = {}
   ) {}
 
   async constructParty (hints: KeyHint[]): Promise<HaloParty> {
-    const identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
-    assert(identityKey, 'Identity key required.');
-
-    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
-    assert(deviceKey, 'Device key required.');
-
-    const feedProvider = this._createFeedProvider(identityKey.publicKey);
+    const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
+    const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
     const halo = new HaloParty(
-      identityKey.publicKey,
-      deviceKey.publicKey,
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      CredentialsSigner.createDirectDeviceSigner(this._keyring),
+      credentialsSigner,
       this._networkManager,
       hints,
       undefined,
-      this._options,
-      deviceKey.publicKey
+      this._options
     );
 
     return halo;
@@ -153,7 +145,7 @@ export class HaloFactory {
   }
 
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(!this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY })), 'Identity key must NOT exist.');
+    assert(!this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY })), 'Identity key must not exist.');
 
     return this._joinHalo(invitationDescriptor, secretProvider);
   }
@@ -183,22 +175,20 @@ export class HaloFactory {
 
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     // Claim the offline invitation and convert it into an interactive invitation.
-    if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
+    if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();
-      log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
-          `at ${keyToString(invitationDescriptor.invitation)}`);
+      log(`Party invitation triggered interactive Greeting at: ${JSON.stringify({ original: originalInvitation.invitation, interactive: invitationDescriptor.invitation })}`);
       await invitationClaimer.destroy();
     }
 
-    // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
       invitationDescriptor,
       async (partyKey, nonce) => {
         assert(partyKey.equals(identityKey!.publicKey));
-        return [createHaloPartyInvitationNotarizationMessage(credentialsSigner, nonce)];
+        return [createHaloPartyAdmissionMessage(credentialsSigner, nonce)];
       }
     );
 
@@ -210,8 +200,8 @@ export class HaloFactory {
      * mechanism is broken by not waiting on the messages to be processed before returning.
      */
     const halo = await this.constructParty(hints);
-
     await halo.open();
+
     // Write the Feed genesis message.
     await halo.processor.writeHaloMessage(createFeedAdmitMessage(
       credentialsSigner.signer,

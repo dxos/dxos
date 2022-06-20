@@ -36,7 +36,7 @@ export interface CredentialsProvider {
 export function createCredentialsProvider (credentialsSigner: CredentialsSigner, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
   return {
     get: () => {
-      return Buffer.from(codec.encode(createAuthMessage(
+      const authMessage = createAuthMessage(
         credentialsSigner.signer,
         partyKey,
         credentialsSigner.getIdentityKey(),
@@ -49,7 +49,8 @@ export function createCredentialsProvider (credentialsSigner: CredentialsSigner,
           feedKey,
           [feedKey, credentialsSigner.getDeviceSigningKeys()]
         )
-      )));
+      );
+      return Buffer.from(codec.encode(authMessage));
     }
   };
 }

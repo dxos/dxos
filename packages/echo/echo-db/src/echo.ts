@@ -131,7 +131,7 @@ export class ECHO {
     this._keyring = new Keyring(new KeyStore(keyStorage));
     this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
 
-    const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
+    const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,
       this._keyring,
       this._feedStore,
@@ -151,7 +151,7 @@ export class ECHO {
       this._networkManager,
       this._modelFactory,
       this._snapshotStore,
-      createFeedProvider,
+      feedProviderFactory,
       options
     );
 
@@ -166,7 +166,7 @@ export class ECHO {
       keyring: this._keyring,
       networkManager: this._networkManager,
       metadataStore: this._metadataStore,
-      createFeedProvider: createFeedProvider,
+      feedProviderFactory: feedProviderFactory,
       modelFactory: this._modelFactory,
       snapshotStore: this._snapshotStore,
       options

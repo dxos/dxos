@@ -48,8 +48,6 @@ export class HaloParty {
   private readonly _preferences: Preferences;
 
   constructor (
-    private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
@@ -57,15 +55,14 @@ export class HaloParty {
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe: Timeframe | undefined,
-    _options: PartyOptions,
-    deviceKey: PublicKey
+    _options: PartyOptions
   ) {
     this._partyCore = new PartyCore(
-      _identityKey,
+      _credentialsSigner.getIdentityKey().publicKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
-      _identityKey,
+      _credentialsSigner.getIdentityKey().publicKey,
       _initialTimeframe,
       _options
     );
@@ -73,7 +70,7 @@ export class HaloParty {
     this._contactManager = new ContactManager(() => this.isOpen ? this.database : undefined);
     this._preferences = new Preferences(
       () => this.isOpen ? this.database : undefined,
-      deviceKey
+      _credentialsSigner.getDeviceKey().publicKey
     );
   }
 
@@ -109,11 +106,11 @@ export class HaloParty {
   //
 
   get identityInfo () {
-    return this._partyCore.processor.infoMessages.get(this._identityKey.toHex());
+    return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
   get identityGenesis () {
-    return this._partyCore.processor.credentialMessages.get(this._identityKey.toHex());
+    return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
   get memberKeys () {
@@ -160,19 +157,20 @@ export class HaloParty {
     //
 
     const writeFeed = await this._partyCore.getWriteFeed();
+    const peerId = this._credentialsSigner.getDeviceKey().publicKey;
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      this._deviceKey,
+      peerId,
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), this._deviceKey),
-      createHaloRecoveryPlugin(this._identityKey, this._invitationManager, this._deviceKey)
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), peerId),
+      createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);
 
     // Issue an 'update' whenever the properties change.

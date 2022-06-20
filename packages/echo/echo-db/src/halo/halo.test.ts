@@ -31,7 +31,7 @@ describe('HALO', () => {
     const keyring = new Keyring();
     const feedStore = new FeedStore(createRamStorage(), { valueEncoding: codec });
 
-    const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
+    const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,
       keyring,
       feedStore,
@@ -42,7 +42,7 @@ describe('HALO', () => {
       keyring: keyring,
       networkManager: networkManager,
       metadataStore: metadataStore,
-      createFeedProvider: createFeedProvider,
+      feedProviderFactory,
       modelFactory: modelFactory,
       snapshotStore: snapshotStore,
       options: {}

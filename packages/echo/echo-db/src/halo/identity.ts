@@ -92,7 +92,7 @@ export class Identity {
     return this._keyring;
   }
 
-  getCredentialsSigner (): CredentialsSigner {
+  createCredentialsSigner (): CredentialsSigner {
     return new CredentialsSigner(
       this._keyring,
       () => this.identityKey ?? raise(new IdentityNotInitializedError()),

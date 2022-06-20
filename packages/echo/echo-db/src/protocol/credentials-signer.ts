@@ -46,6 +46,13 @@ export class CredentialsSigner {
 
   /**
    * @returns Either a device key record or a key-chain for the device key.
+   *
+   * HALO-party members are devices of the same profile,
+   * and their admission credential messages are stored in the same HALO party
+   * so they can sign directly with their DEVICE key.
+   *
+   * Data-parties don't store credentials that admit devices to profiles.
+   * Devices need to sign with their keyChain including the device key admission credential in the signature.
    */
   getDeviceSigningKeys (): KeyRecord | KeyChain {
     return this._getDeviceSigningKeys();

@@ -192,30 +192,29 @@ export class GreetingInitiator {
 /**
  * Create credentials messages that should be written to invite new device to the HALO party.
  */
-export function createHaloPartyInvitationNotarizationMessage (
+export const createHaloPartyAdmissionMessage = (
   credentialsSigner: CredentialsSigner,
   nonce: Uint8Array
-): Message {
-  return createKeyAdmitMessage(
-    credentialsSigner.signer,
-    credentialsSigner.getIdentityKey().publicKey,
-    credentialsSigner.getDeviceKey(),
-    [],
-    Buffer.from(nonce)
-  );
-}
+): Message => createKeyAdmitMessage(
+  credentialsSigner.signer,
+  credentialsSigner.getIdentityKey().publicKey,
+  credentialsSigner.getDeviceKey(),
+  [],
+  Buffer.from(nonce)
+);
 
-export function createDataPartyInvitationNotarizationMessages (
+/**
+ * Create credentials messages that should be written to invite member to the data party.
+ */
+export const createDataPartyAdmissionMessages = (
   credentialsSigner: CredentialsSigner,
   partyKey: PublicKey,
   identityGenesis: SignedMessage,
   nonce: Uint8Array
-): Message {
-  return createEnvelopeMessage(
-    credentialsSigner.signer,
-    partyKey,
-    wrapMessage(identityGenesis),
-    [credentialsSigner.getDeviceSigningKeys()],
-    Buffer.from(nonce)
-  );
-}
+): Message => createEnvelopeMessage(
+  credentialsSigner.signer,
+  partyKey,
+  wrapMessage(identityGenesis),
+  [credentialsSigner.getDeviceSigningKeys()],
+  Buffer.from(nonce)
+);

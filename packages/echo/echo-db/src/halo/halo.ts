@@ -35,7 +35,7 @@ export interface HaloConfiguration {
   metadataStore: MetadataStore,
   modelFactory: ModelFactory,
   snapshotStore: SnapshotStore,
-  createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+  feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
   options: PartyOptions
 }
 
@@ -52,7 +52,7 @@ export class HALO {
     metadataStore,
     modelFactory,
     snapshotStore,
-    createFeedProvider,
+    feedProviderFactory,
     options
   }: HaloConfiguration) {
     this._keyring = keyring;
@@ -61,7 +61,7 @@ export class HALO {
       networkManager,
       modelFactory,
       snapshotStore,
-      createFeedProvider,
+      feedProviderFactory,
       keyring,
       options
     );
