@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { Lock } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import type { File, IStorage } from '@dxos/random-access-multi-storage';
+import type { FileInternal, IStorage } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
@@ -115,7 +115,7 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => File {
+  private _createStorage (dir = ''): (name: string) => FileInternal {
     return (name) => {
       return this._storage.createOrOpen(`${dir}/${name}`);
     };

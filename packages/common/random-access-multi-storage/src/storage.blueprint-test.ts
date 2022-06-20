@@ -5,13 +5,13 @@
 import expect from 'expect';
 import pify from 'pify';
 
-import { File, IStorage, StorageType } from './interfaces';
+import { FileInternal, IStorage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => IStorage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
-  const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
+  const writeAndCheck = async (file: FileInternal, data: Buffer, offset = 0) => {
     await pify(file.write.bind(file))(offset, data);
     const bufferRead = await pify(file.read.bind(file))(offset, data.length);
     const result = data.equals(bufferRead);

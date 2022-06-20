@@ -3,5 +3,5 @@
 //
 
 export * from './storage-types';
-export * from './File';
+export * from './FileInternal';
 export * from './IStorage';
