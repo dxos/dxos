@@ -56,10 +56,10 @@ export class IdentityManager {
   }
 
   async close() {
-    // const identity = this._identity;
-    // this._identity = undefined;
-    console.log(typeof this._identity?.halo)
-    await this._identity?.halo.close();
+    const identity = this._identity;
+    this._identity = undefined;
+    
+    await identity?.halo.close();
   }
 
   getIdentityKey (): KeyRecord | undefined {
