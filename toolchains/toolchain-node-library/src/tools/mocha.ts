@@ -93,7 +93,8 @@ export async function execMocha ({
   await execTool('mocha', [
     ...requires,
     '-r', '@swc-node/register',
-    '-r', require.resolve('./util/wtfnode.js'),
+    // Causes performance issues when loaded. Enable manually when needed.
+    // '-r', require.resolve('./util/wtfnode.js'),
     '-r', require.resolve('./util/catch-unhandled-rejections.js'),
     ...options
   ], {
