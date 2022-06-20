@@ -15,8 +15,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
-import { MetadataStore } from '../metadata';
-import { PartyFeedProvider } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { HALO } from './halo';

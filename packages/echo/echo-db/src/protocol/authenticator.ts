@@ -7,8 +7,8 @@ import debug from 'debug';
 import { Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 
-import { CredentialsSigner } from '../halo/credentials-signer';
 import { PartyProcessor } from '../pipeline';
+import { CredentialsSigner } from './credentials-signer';
 
 const log = debug('dxos:echo-db:authenticator');
 

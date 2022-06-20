@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { PARTY_TITLE_PROPERTY, DataParty } from '../parties';
-import { Preferences } from './preferences';
+import { PARTY_TITLE_PROPERTY, DataParty } from '.';
+import { Preferences } from '../halo/preferences';
 
 export interface ActivationOptions {
   global?: boolean;

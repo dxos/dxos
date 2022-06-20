@@ -14,9 +14,8 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
-import { MetadataStore } from '../metadata';
-import { OpenProgress, PartyOptions } from '../parties';
-import { PartyFeedProvider } from '../pipeline';
+import { OpenProgress } from '../parties';
+import { MetadataStore, PartyOptions, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';

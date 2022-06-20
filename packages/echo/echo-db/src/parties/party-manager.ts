@@ -15,7 +15,7 @@ import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
 import { InvitationDescriptor } from '../invitations';
-import { MetadataStore } from '../metadata';
+import { MetadataStore } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';

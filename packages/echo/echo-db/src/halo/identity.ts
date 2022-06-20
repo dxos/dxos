@@ -8,8 +8,8 @@ import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/cre
 import { raise } from '@dxos/debug';
 
 import { IdentityNotInitializedError } from '../errors';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { ContactManager } from './contact-manager';
-import { CredentialsSigner } from './credentials-signer';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
 

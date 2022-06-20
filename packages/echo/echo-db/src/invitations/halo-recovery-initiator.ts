@@ -23,7 +23,7 @@ import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { InvalidInvitationError } from '../errors';
-import { CredentialsSigner } from '../halo/credentials-signer';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

@@ -17,8 +17,7 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, generateSeedPhrase,
-  keyPairFromSeedPhrase, PublicKey,
+  createKeyPair, PublicKey,
   randomBytes,
   sign,
   SIGNATURE_LENGTH, verify
@@ -33,10 +32,9 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Item } from '../api';
-import { autoPartyOpener, HaloFactory, Identity, IdentityManager } from '../halo';
+import { HaloFactory, Identity, IdentityManager } from '../halo';
 import { OfflineInvitationClaimer } from '../invitations';
-import { MetadataStore } from '../metadata';
-import { PartyFeedProvider } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
 import { createRamStorage } from '../util';
@@ -60,14 +58,7 @@ const setup = async () => {
   const metadataStore = new MetadataStore(createRamStorage());
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
-  let seedPhrase;
-  seedPhrase = generateSeedPhrase();
-  const keyPair = keyPairFromSeedPhrase(seedPhrase);
-  const identityKey = await keyring.addKeyRecord({
-    publicKey: PublicKey.from(keyPair.publicKey),
-    secretKey: keyPair.secretKey,
-    type: KeyType.IDENTITY
-  });
+  const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
   assert(keyring.keys.length === 1);
 
@@ -107,8 +98,8 @@ const setup = async () => {
   const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
   await partyManager.open();
   afterTest(() => partyManager.close());
-  
-  return { feedStore, partyManager, identity, seedPhrase };
+
+  return { feedStore, partyManager, identity };
 };
 
 describe('Party manager', () => {
@@ -244,7 +235,7 @@ describe('Party manager', () => {
 
     // Open.
     await identityManager.createHalo();
-    afterTest(() => identityManager.close())
+    afterTest(() => identityManager.close());
     await partyManager.open();
     expect(partyManager.parties).toHaveLength(numParties);
     await partyManager.close();

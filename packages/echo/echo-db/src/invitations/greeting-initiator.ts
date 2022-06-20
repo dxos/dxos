@@ -25,7 +25,7 @@ import {
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { CredentialsSigner } from '../halo/credentials-signer';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

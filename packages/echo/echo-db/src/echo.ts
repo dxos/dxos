@@ -23,9 +23,8 @@ import { IdentityNotInitializedError, InvalidStorageVersionError } from './error
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
-import { MetadataStore, STORAGE_VERSION } from './metadata';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
-import { PartyFeedProvider } from './pipeline';
+import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
 

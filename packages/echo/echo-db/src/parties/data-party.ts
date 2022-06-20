@@ -7,21 +7,20 @@ import assert from 'assert';
 import { synchronized, Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, timed } from '@dxos/debug';
+import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { ActivationOptions, PartyPreferences, Identity, Preferences } from '../halo';
+import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
-import { createAuthPlugin, createOfflineInvitationPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
-import { createAuthenticator, createCredentialsProvider } from './authenticator';
-import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import { CredentialsSigner } from '../halo/credentials-signer';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 

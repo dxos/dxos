@@ -10,7 +10,7 @@ export * from './echo';
 export * from './errors';
 export * from './halo';
 export * from './invitations';
-export * from './metadata';
+export * from './protocol';
 export * from './parties';
 export * from './pipeline';
 export * from './snapshots';

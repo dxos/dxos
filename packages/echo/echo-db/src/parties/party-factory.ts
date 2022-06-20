@@ -27,10 +27,9 @@ import {
   createDataPartyInvitationNotarizationMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
-import { PartyFeedProvider } from '../pipeline';
+import { PartyFeedProvider, PartyOptions } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
-import { PartyOptions } from './party-core';
 
 const log = debug('dxos:echo-db:party-factory');
 

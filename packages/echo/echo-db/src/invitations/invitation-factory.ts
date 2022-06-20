@@ -8,8 +8,8 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { CredentialsSigner } from '../halo/credentials-signer';
 import { PartyProcessor } from '../pipeline';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

@@ -9,7 +9,7 @@ import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 
 import { InvitationDescriptor } from '../invitations';
-import { MetadataStore } from '../metadata';
+import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
@@ -55,10 +55,10 @@ export class IdentityManager {
     this.ready.emit();
   }
 
-  async close() {
+  async close () {
     const identity = this._identity;
     this._identity = undefined;
-    
+
     await identity?.halo.close();
   }
 

@@ -13,12 +13,12 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
-import { PartyCore, PartyOptions, PARTY_ITEM_TYPE } from '../parties';
-import { createAuthenticator, createCredentialsProvider } from '../parties/authenticator';
-import { createAuthPlugin, createHaloRecoveryPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { PARTY_ITEM_TYPE } from '../parties';
+import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
-import { CredentialsSigner } from './credentials-signer';
 import { Preferences } from './preferences';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';

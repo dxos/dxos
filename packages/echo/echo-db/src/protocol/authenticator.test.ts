@@ -8,9 +8,9 @@ import { it as test } from 'mocha';
 import { createAuthMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { MockFeedWriter } from '@dxos/echo-protocol';
 
-import { CredentialsSigner } from '../halo/credentials-signer';
 import { PartyProcessor } from '../pipeline';
 import { createAuthenticator } from './authenticator';
+import { CredentialsSigner } from './credentials-signer';
 
 describe('authenticator', () => {
   // TODO(dmaretskyi): Figure out how credentials work and if this test makes sense.

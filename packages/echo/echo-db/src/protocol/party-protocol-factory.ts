@@ -5,7 +5,6 @@
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { AuthPlugin, Authenticator, GreetingCommandPlugin } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import type { HypercoreFeed } from '@dxos/feed-store';
@@ -14,9 +13,8 @@ import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { HaloRecoveryInitiator, InvitationFactory, OfflineInvitationClaimer } from '../invitations';
-import { CredentialsProvider } from '../parties/authenticator';
-import { PartyFeedProvider } from './party-feed-provider';
+import { CredentialsProvider } from '.';
+import { PartyFeedProvider } from '../pipeline/party-feed-provider';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
 
@@ -165,34 +163,4 @@ class ReplicatorProtocolPluginFactory {
     const descriptor = await this._feedProvider.createOrOpenReadOnlyFeed(key);
     return descriptor.feed;
   }
-}
-
-/**
- * Creates authenticator network-protocol plugin that guards access to the replicator.
- */
-export function createAuthPlugin (authenticator: Authenticator, peerId: PublicKey) {
-  return new AuthPlugin(peerId.asBuffer(), authenticator, [Replicator.extension]);
-}
-
-/**
- * Creates network protocol plugin that allows peers to recover access to their HALO.
- * Plugin is intended to be used in HALO party swarm.
- *
- */
-export function createHaloRecoveryPlugin (identityKey: PublicKey, invitationManager: InvitationFactory, peerId: PublicKey) {
-  return new GreetingCommandPlugin(
-    peerId.asBuffer(),
-    HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityKey, invitationManager)
-  );
-}
-
-/**
- * Creates network protocol plugin that allows peers to claim offline invitations.
- * Plugin is intended to be used in data-party swarms.
- */
-export function createOfflineInvitationPlugin (invitationManager: InvitationFactory, peerId: PublicKey) {
-  return new GreetingCommandPlugin(
-    peerId.asBuffer(),
-    OfflineInvitationClaimer.createOfflineInvitationClaimHandler(invitationManager)
-  );
 }

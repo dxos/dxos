@@ -23,10 +23,10 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { createHaloPartyInvitationNotarizationMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
-import { PartyOptions, PARTY_ITEM_TYPE } from '../parties';
-import { PartyFeedProvider } from '../pipeline';
+import { PARTY_ITEM_TYPE } from '../parties';
+import { PartyFeedProvider, PartyOptions } from '../pipeline';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
-import { CredentialsSigner } from './credentials-signer';
 import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE

@@ -12,7 +12,7 @@ import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protoc
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { ComplexMap } from '@dxos/util';
 
-import { MetadataStore } from '../metadata';
+import { MetadataStore } from './metadata-store';
 
 const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
