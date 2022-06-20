@@ -184,7 +184,7 @@ describe('Node', () => {
 
       const botHandle = await botFactoryClient.spawn(
         {
-          dxn: botDXN
+          name: botDXN
         },
         party
       );

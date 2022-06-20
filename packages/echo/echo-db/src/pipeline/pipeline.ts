@@ -141,7 +141,7 @@ export class Pipeline {
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  memberKey: memberKey.asUint8Array(),
+                  memberKey,
                   timeframe: message.echo.timeframe ?? new Timeframe()
                 },
                 data: message.echo

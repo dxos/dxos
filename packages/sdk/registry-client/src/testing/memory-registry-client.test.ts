@@ -45,18 +45,17 @@ describe('Registry API mock', () => {
     const name = names[0];
     const resource = await mock.getResource(name);
 
-    expect(resource?.name.toString()).to.equal(name.toString());
-    expect(resource?.tags.latest).to.equal(records[0]);
+    expect(resource!.toString()).to.equal(records[0]!.toString());
   });
 
   it('Returns resources', async () => {
-    const resources = await mock.getResources();
+    const resources = await mock.listResources();
 
     expect(resources.length).to.be.equal(30);
   });
 
   it('Returns records', async () => {
-    const records = await mock.getRecords();
+    const records = await mock.listRecords();
 
     expect(records.length).to.be.equal(36);
   });

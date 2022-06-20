@@ -20,7 +20,7 @@ export const createCID = (): CID => {
  * Accepts a custom domain, uses 'example' by default.
  */
 export const createDXN = (domain = 'example'): DXN => {
-  return DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'));
+  return DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'), 'latest');
 };
 
 /**
@@ -32,14 +32,12 @@ export const registerMockResource = async (
     name?: DXN
     record?: CID
     owner?: AccountKey
-    tag?: string
   } = {}
 ): Promise<void> => {
   return registry.registerResource(
     params.name ?? createDXN(), // TODO(burdon): Either pass in or don't.
     params.record ?? createCID(),
-    params.owner ?? AccountKey.random(),
-    params.tag ?? 'latest'
+    params.owner ?? AccountKey.random()
   );
 };
 
@@ -67,7 +65,7 @@ export const registerMockRecord = async (
 };
 
 export const getRandomTypeRecord = async (registry: RegistryClient) => {
-  const types = await registry.getTypeRecords();
+  const types = await registry.listTypeRecords();
   return faker.random.arrayElement(types);
 };
 

@@ -58,7 +58,7 @@ export class PartyCore {
     private readonly _memberKey: PublicKey,
     private readonly _initialTimeframe?: Timeframe,
     private readonly _options: PartyOptions = {}
-  ) {}
+  ) { }
 
   get key (): PartyKey {
     return this._partyKey;
@@ -117,14 +117,19 @@ export class PartyCore {
 
     if (!this._partyProcessor) {
       this._partyProcessor = new PartyProcessor(this._partyKey);
+    }
 
-      // Hint at our own writable feed.
-      // TODO(dmaretskyi): Does not seem like it should be required, but without it replication between devices (B -> A) breaks.
-      await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
+    // Automatically open new admitted feeds.
+    this._subscriptions.push(this._partyProcessor.feedAdded.on(feed => {
+      void this._feedProvider.createOrOpenReadOnlyFeed(feed);
+    }));
 
-      if (keyHints.length > 0) {
-        await this._partyProcessor.takeHints(keyHints);
-      }
+    // Hint at our own writable feed.
+    // TODO(dmaretskyi): Does not seem like it should be required, but without it replication between devices (B -> A) breaks.
+    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
+
+    if (keyHints.length > 0) {
+      await this._partyProcessor.takeHints(keyHints);
     }
 
     //

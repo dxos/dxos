@@ -24,7 +24,7 @@ export const createMockRegistryWithBot = async (botPath: string) => {
   await mock.registerDomainName('example', owner);
 
   await registerMockTypes(registry);
-  const types = await registry.getTypeRecords();
+  const types = await registry.listTypeRecords();
 
   const botType = types.find(({ type }) => type?.messageName === '.dxos.type.Bot');
   assert(botType, 'Bot type not found.');
@@ -39,7 +39,7 @@ export const createMockRegistryWithBot = async (botPath: string) => {
   );
 
   await registerMockResource(registry, {
-    name: DXN.parse(MOCK_BOT_DXN),
+    name: DXN.parse(MOCK_BOT_DXN).with({ tag: 'latest' }),
     record: botRecordCid,
     owner
   });

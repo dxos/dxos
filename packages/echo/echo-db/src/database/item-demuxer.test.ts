@@ -7,7 +7,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch } from '@dxos/async';
-import { createId, PublicKey, randomBytes } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/feed-store';
@@ -99,8 +99,8 @@ describe('Item demuxer', () => {
     const writeStream = createTransform<EchoEnvelope, IEchoStream>(
       async (message: EchoEnvelope): Promise<IEchoStream> => ({
         meta: {
-          feedKey: randomBytes(),
-          memberKey: randomBytes(),
+          feedKey: PublicKey.random(),
+          memberKey: PublicKey.random(),
           seq: 0,
           timeframe: new Timeframe()
         },

@@ -18,8 +18,13 @@ import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
 import { DXN } from './dxn';
-import { Filtering, Query } from './queries';
-import { Domain, RegistryClientBackend, Resource } from './registry';
+import { Filtering, Filter } from './filtering';
+import { Authority, RegistryClientBackend } from './registry';
+
+export type ResourceSet = {
+  name: DXN,
+  tags: Record<string, CID>
+}
 
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
   cid: CID,
@@ -40,27 +45,6 @@ export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
      */
     protobufIpfsCid?: CID
   }
-}
-
-/**
- * Specific binding of Resource tag to a corresponding Record.
- */
-// TODO(wittjosiah): Replace with tuple (resource, record) once dxn/resource includes tags.
-export interface ResourceRecord<R extends RegistryRecord> {
-  /**
-   * Resource that points to this Record.
-   */
-  resource: Resource
-
-  /**
-   * Specific tag of the fetched Record.
-   */
-  tag?: string
-
-  /**
-   * Record data.
-   */
-  record: R
 }
 
 /**
@@ -100,18 +84,18 @@ export class RegistryClient {
   }
 
   /**
-   * Returns a list of domains created in DXOS system.
+   * Returns a list of authorities created in DXOS system.
    */
-  async getDomains (): Promise<Domain[]> {
-    return this._backend.getDomains();
+  async listAuthorities (): Promise<Authority[]> {
+    return this._backend.listAuthorities();
   }
 
   /**
    * Creates a new domain in the system under a generated name.
    * @param account DXNS account that will own the domain.
    */
-  async registerDomainKey (account: AccountKey): Promise<DomainKey> {
-    return this._backend.registerDomainKey(account);
+  async registerAuthority (account: AccountKey): Promise<DomainKey> {
+    return this._backend.registerAuthority(account);
   }
 
   //
@@ -122,35 +106,53 @@ export class RegistryClient {
    * Gets resource by its registered name.
    * @param name DXN of the resource used for registration.
    */
-  async getResource (name: DXN): Promise<Resource | undefined> {
+  async getResource (name: DXN): Promise<CID | undefined> {
+    name = name.tag ? name : name.with({ tag: 'latest' });
     return this._backend.getResource(name);
   }
 
   /**
-   * Queries resources registered in the system.
-   * @param query Query that each returned record must meet.
+   * List resources registered in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getResources (query?: Query): Promise<Resource[]> {
-    const resources = await this._backend.getResources();
+  async listResources (filter?: Filter): Promise<ResourceSet[]> {
+    const resources = await this._backend.listResources();
 
-    return resources.filter(resource => Filtering.matchResource(resource, query));
+    return resources
+      .filter(([name]) => Filtering.matchResource(name, filter))
+      .reduce((result, [name, cid]) => {
+        if (!name.tag) {
+          return result;
+        }
+
+        const index = result.findIndex(set => set.name.authority === name.authority && set.name.path === name.path);
+        const set = result[index] ?? { name: name.with({ tag: undefined }), tags: {} };
+        set.tags[name.tag] = cid;
+
+        if (index === -1) {
+          result.push(set);
+        } else {
+          result[index] = set;
+        }
+
+        return result;
+      }, new Array<ResourceSet>());
   }
 
   /**
    * Registers or updates a resource in the system.
    * Undefined CID means that the resource will be deleted.
    * @param name Identifies the domain and name of the resource.
+   * @param tag Tag for the resource.
    * @param cid CID of the record to be referenced with the given name.
    * @param owner DXNS account that will own the resource.
-   * @param tag Tag for the resource.
    */
   async registerResource (
     name: DXN,
     cid: CID | undefined,
-    owner: AccountKey,
-    tag = 'latest'
+    owner: AccountKey
   ): Promise<void> {
-    return this._backend.registerResource(name, cid, owner, tag);
+    return this._backend.registerResource(name, cid, owner);
   }
 
   //
@@ -161,7 +163,7 @@ export class RegistryClient {
    * Gets record details by CID.
    * @param cid CID of the record.
    */
-  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
+  async getRecord<T> (cid: CID): Promise<RegistryRecord<T> | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
     }
@@ -175,45 +177,30 @@ export class RegistryClient {
   /**
    * Gets resource by its registered name.
    * @param name DXN of the resource used for registration.
-   * @param tag Tag to get the resource by. 'latest' by default.
    */
-  // TODO(wittjosiah): Move tag into DXN.
-  async getResourceRecord<R extends RegistryRecord> (name: DXN, tag = 'latest'): Promise<ResourceRecord<R> | undefined> {
-    const resource = await this.getResource(name);
-    if (!resource) {
-      return undefined;
-    }
-
-    const cid = resource.tags[tag];
+  async getRecordByName<T> (name: DXN): Promise<RegistryRecord<T> | undefined> {
+    const cid = await this.getResource(name);
     if (!cid) {
       return undefined;
     }
 
-    const record = await this.getRecord(cid);
-    if (!record) {
-      return undefined;
-    }
-
-    return {
-      resource,
-      tag: resource.tags[tag] ? tag : undefined,
-      record: record as R
-    };
+    const record = await this.getRecord<T>(cid);
+    return record;
   }
 
   /**
-   * Queries all records in the system.
-   * @param query Query that each returned record must meet.
+   * Lists records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getRecords (query?: Query): Promise<RegistryRecord[]> {
-    const rawRecords = await this._backend.getRecords();
+  async listRecords (filter?: Filter): Promise<RegistryRecord[]> {
+    const rawRecords = await this._backend.listRecords();
     const records = await Promise.all(rawRecords.map(({ cid, ...record }) =>
       this._decodeRecord(cid, record)
     ));
 
     return records
       .filter(isNotNullOrUndefined)
-      .filter(record => Filtering.matchRecord(record, query));
+      .filter(record => Filtering.matchRecord(record, filter));
   }
 
   /**
@@ -252,11 +239,11 @@ export class RegistryClient {
   }
 
   /**
-   * Queries type records.
-   * @param query Query that each returned record must meet.
+   * Lists type records in the system.
+   * @param filter Filter that each returned record must meet.
    */
-  async getTypeRecords (query?: Query): Promise<RegistryType[]> {
-    const records = await this._backend.getRecords();
+  async listTypeRecords (filter?: Filter): Promise<RegistryType[]> {
+    const records = await this._backend.listRecords();
 
     const types = records
       .filter(record => !!record.type)
