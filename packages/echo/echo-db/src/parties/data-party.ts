@@ -14,13 +14,14 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { ActivationOptions, PartyPreferences, Identity } from '../halo';
+import { ActivationOptions, PartyPreferences, Identity, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
 import { createAuthPlugin, createOfflineInvitationPlugin, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createAuthenticator, createCredentialsProvider } from './authenticator';
 import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
+import { CredentialsSigner } from '../halo/credentials-signer';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
@@ -50,7 +51,9 @@ export class DataParty {
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
-    private readonly _identity: Identity,
+    private readonly _credentialsSigner: CredentialsSigner,
+    // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
+    private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
@@ -61,14 +64,14 @@ export class DataParty {
       _feedProvider,
       modelFactory,
       snapshotStore,
-      this._identity.identityKey?.publicKey ?? failUndefined(),
+      this._credentialsSigner.getIdentityKey().publicKey,
       _initialTimeframe,
       _options
     );
 
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
-    if (this._identity.preferences) {
-      this._preferences = new PartyPreferences(this._identity.preferences, this);
+    if (this._profilePreferences) {
+      this._preferences = new PartyPreferences(this._profilePreferences, this);
     }
   }
 
@@ -153,13 +156,11 @@ export class DataParty {
       return this;
     }
 
-    assert(this._identity.deviceKey, 'Missing device key.');
-
     await this._partyCore.open(this._hints);
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
-      this._identity.getCredentialsSigner(),
+      this._credentialsSigner,
       this._networkManager
     );
 
@@ -168,19 +169,19 @@ export class DataParty {
     // Replication, invitations, and authentication functions.
     //
 
-    const deviceKey = this._identity.deviceKey;
+    const deviceKey = this._credentialsSigner.getDeviceKey();
     const writeFeed = await this._partyCore.getWriteFeed();
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
       deviceKey.publicKey,
-      createCredentialsProvider(this._identity.getCredentialsSigner(), this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._identity.getCredentialsSigner()), deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 

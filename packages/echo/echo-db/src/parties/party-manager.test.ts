@@ -111,7 +111,7 @@ const setup = async () => {
   return { feedStore, partyManager, identity, seedPhrase };
 };
 
-describe.only('Party manager', () => {
+describe('Party manager', () => {
   // eslint-disable-next-line jest/expect-expect
   test('It exits cleanly', async () => {
     await setup();
