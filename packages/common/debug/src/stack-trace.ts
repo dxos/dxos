@@ -3,14 +3,6 @@
 //
 
 /**
- * @deprecated Use StackTrace class to support lazy evaluation.
- */
-export function getStackTrace () {
-  const stackTrace = new StackTrace();
-  return stackTrace.getStack();
-}
-
-/**
  * Allows to capture stack-traces.
  *
  * Will capture the stack trace at the point where the class is created.
