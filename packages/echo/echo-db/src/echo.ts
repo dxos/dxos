@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvalidStateError, raise } from '@dxos/debug';
@@ -32,7 +33,7 @@ const log = debug('dxos:echo');
 const error = log.extend('error');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PartyFilter {}
+export interface PartyFilter { }
 
 /**
  * Various options passed to `ECHO.create`.
@@ -110,7 +111,7 @@ export class ECHO {
    * Default will create an in-memory database.
    */
   // TODO(burdon): Factor out config an define type.
-  constructor ({
+  constructor({
     keyStorage = memdown(),
     feedStorage = createRamStorage(),
     snapshotStorage = createRamStorage(),
@@ -188,22 +189,22 @@ export class ECHO {
     });
   }
 
-  toString () {
+  toString() {
     return `ECHO(${JSON.stringify(this.info())})`;
   }
 
-  info () {
+  info() {
     return {
       open: this.isOpen,
       parties: this._partyManager.parties.length
     };
   }
 
-  get isOpen () {
+  get isOpen() {
     return this._partyManager.isOpen;
   }
 
-  get halo () {
+  get halo() {
     return this._halo;
   }
 
@@ -212,23 +213,23 @@ export class ECHO {
   // TODO(burdon): Expose single devtools object.
   //
 
-  get feedStore (): FeedStore {
+  get feedStore(): FeedStore {
     return this._feedStore;
   }
 
-  get networkManager (): NetworkManager {
+  get networkManager(): NetworkManager {
     return this._networkManager;
   }
 
-  get modelFactory (): ModelFactory {
+  get modelFactory(): ModelFactory {
     return this._modelFactory;
   }
 
-  get dataService (): DataService {
+  get dataService(): DataService {
     return this._dataServiceRouter;
   }
 
-  get snapshotStore (): SnapshotStore {
+  get snapshotStore(): SnapshotStore {
     return this._snapshotStore;
   }
 
@@ -237,7 +238,8 @@ export class ECHO {
    *
    * Previously active parties will be opened and will begin replication.
    */
-  async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
+  @synchronized
+  async open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     if (this.isOpen) {
       return;
     }
@@ -258,7 +260,8 @@ export class ECHO {
   /**
    * Closes the ECHO instance.
    */
-  async close () {
+  @synchronized
+  async close() {
     if (!this.isOpen) {
       return;
     }
@@ -275,12 +278,12 @@ export class ECHO {
   }
 
   /**
-   * Removes all data and closes this ECHO instance.
-   *
-   * The instance will be in an unusable state at this point and a page refresh is recommended.
-   */
+  * Removes all data and closes this ECHO instance.
+  *
+  * The instance will be in an unusable state at this point and a page refresh is recommended.
+  */
   // TODO(burdon): Enable re-open.
-  async reset () {
+  async reset() {
     await this.close();
 
     try {
@@ -313,7 +316,7 @@ export class ECHO {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<DataParty> {
+  async createParty(): Promise<DataParty> {
     await this.open();
 
     const party = await this._partyManager.createParty();
@@ -323,10 +326,10 @@ export class ECHO {
   }
 
   /**
-   * Clones an existing party from a snapshot.
-   * @param snapshot
-   */
-  async cloneParty (snapshot: PartySnapshot) {
+  * Clones an existing party from a snapshot.
+  * @param snapshot
+  */
+  async cloneParty(snapshot: PartySnapshot) {
     await this.open();
 
     const party = await this._partyManager.cloneParty(snapshot);
@@ -336,10 +339,10 @@ export class ECHO {
   }
 
   /**
-   * Returns an individual party by it's key.
-   * @param {PartyKey} partyKey
-   */
-  getParty (partyKey: PartyKey): DataParty | undefined {
+  * Returns an individual party by it's key.
+  * @param {PartyKey} partyKey
+  */
+  getParty(partyKey: PartyKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -349,11 +352,11 @@ export class ECHO {
   }
 
   /**
-   * Queries for a set of Parties matching the optional filter.
-   * @param {PartyFilter} filter
-   */
+  * Queries for a set of Parties matching the optional filter.
+  * @param {PartyFilter} filter
+  */
   // eslint-disable-next-line unused-imports/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<DataParty> {
+  queryParties(filter?: PartyFilter): ResultSet<DataParty> {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -365,11 +368,11 @@ export class ECHO {
   }
 
   /**
-   * Joins a party that was created by another peer and starts replicating with it.
-   * @param invitationDescriptor Invitation descriptor passed from another peer.
-   * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
-   */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
+  * Joins a party that was created by another peer and starts replicating with it.
+  * @param invitationDescriptor Invitation descriptor passed from another peer.
+  * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
+  */
+  async joinParty(invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =

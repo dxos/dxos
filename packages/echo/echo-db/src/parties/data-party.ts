@@ -276,15 +276,20 @@ export class DataParty {
     assert(this.isOpen, 'Party is not open.');
     return new ResultSet(
       this.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter(),
-      () => this.processor.memberKeys
-        .filter(publicKey => !this.processor.partyKey.equals(publicKey))
-        .map((publicKey: PublicKey): PartyMember => {
-          const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
-          return {
-            publicKey,
-            displayName
-          };
-        })
+      () => {
+        if (!this.isOpen) {
+          return [];
+        }
+        return this.processor.memberKeys
+          .filter(publicKey => !this.processor.partyKey.equals(publicKey))
+          .map((publicKey: PublicKey): PartyMember => {
+            const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
+            return {
+              publicKey,
+              displayName
+            };
+          });
+      }
     );
   }
 }
