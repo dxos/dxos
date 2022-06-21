@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
-import { raise } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 
 import { IdentityNotInitializedError } from '../errors';
 import { CredentialsSigner } from '../protocol/credentials-signer';
@@ -21,8 +21,8 @@ const log = debug('dxos:echo-db:identity');
  * Acts as a read-only view into IdentityManager.
  */
 export class Identity {
-  private _identityKey?: KeyRecord;
-  private _deviceKey?: KeyRecord;
+  private readonly _identityKey: KeyRecord;
+  private readonly _deviceKey: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
   /**
@@ -31,31 +31,26 @@ export class Identity {
   constructor (
     private readonly _keyring: Keyring,
     private readonly _halo: HaloParty
-  ) {}
+  ) {
+    this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
+    this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+  }
 
   get signer (): Signer {
     return this._keyring;
   }
 
-  get identityKey (): KeyRecord | undefined {
-    if (!this._identityKey) {
-      this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
-    }
-
+  get identityKey (): KeyRecord {
     return this._identityKey;
   }
 
-  get deviceKey (): KeyRecord | undefined {
-    if (!this._deviceKey) {
-      this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
-    }
-
+  get deviceKey (): KeyRecord {
     return this._deviceKey;
   }
 
   get deviceKeyChain (): KeyChain | undefined {
     if (!this._deviceKeyChain) {
-      this._deviceKeyChain = this.deviceKey && this._halo ? getDeviceKeyChainFromHalo(this._halo, this.deviceKey) : undefined;
+      this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey);
     }
 
     return this._deviceKeyChain;
@@ -95,9 +90,9 @@ export class Identity {
   createCredentialsSigner (): CredentialsSigner {
     return new CredentialsSigner(
       this._keyring,
-      this.identityKey ?? raise(new IdentityNotInitializedError()),
-      this.deviceKey ?? raise(new IdentityNotInitializedError()),
-      this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError())
+      this.identityKey,
+      this.deviceKey,
+      this.deviceKeyChain ?? this.deviceKey,
     );
   }
 }

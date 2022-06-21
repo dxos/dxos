@@ -179,7 +179,7 @@ export class OfflineInvitationClaimer {
         createAuthMessage(
           identity.signer,
           info!.id.value,
-          identity.identityKey ?? raise(new IdentityNotInitializedError()),
+          identity.identityKey,
           identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
           undefined,
           info!.authNonce.value)

@@ -74,10 +74,11 @@ export class PartyManager {
 
     let partyKeys = this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
-    const identity = this._identityProvider();
+    // Identity may be undefined, for example, on the first start.
+    const identity = this._identityProvider(); 
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (identity?.identityKey) {
+    if (identity) {
       partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
     }
 

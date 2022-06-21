@@ -138,7 +138,6 @@ export class PartyFactory {
     );
 
     await party.open();
-    assert(identity.identityKey, 'No identity key.');
     const isHalo = identity.identityKey.publicKey.equals(partyKey);
     const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
     assert(signingKey, 'No device key or keychain.');
