@@ -48,21 +48,21 @@ export class HaloService implements IHaloService {
   }
 
   subscribeContacts (): Stream<Contacts> {
-    if (this.echo.halo.isInitialized) {
+    if (this.echo.halo.identity) {
       return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
     }
 
     // TODO(burdon): Explain non-initialized path.
     return new Stream(({ next }) => {
       // If profile does not exist, send an empty array.
-      if (!this.echo.halo.isInitialized) {
+      if (!this.echo.halo.identity) {
         next({ contacts: [] });
       }
 
       const subGroup = new SubscriptionGroup();
 
       setImmediate(async () => {
-        await this.echo.halo.identityReady.waitForCondition(() => this.echo.halo.isInitialized);
+        await this.echo.halo.identityReady.waitForCondition(() => !!this.echo.halo.identity);
 
         const resultSet = this.echo.halo.queryContacts();
         next({ contacts: resultSet.value });
