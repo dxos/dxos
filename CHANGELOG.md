@@ -1,5 +1,21 @@
 # Change Log
 
+### [2.33.1](https://www.github.com/dxos/protocols/compare/v2.33.0...v2.33.1) (2022-06-21)
+
+
+### Features
+
+* Admit feeds to party from Authenticator ([#1243](https://www.github.com/dxos/protocols/issues/1243)) ([0a5ae2e](https://www.github.com/dxos/protocols/commit/0a5ae2e2fb3d195ac4bbf1714c030b9ba76661cb))
+* dnd-kit poc ([#1215](https://www.github.com/dxos/protocols/issues/1215)) ([5f79881](https://www.github.com/dxos/protocols/commit/5f79881c368e9539f10b8e51e318db49201e102c))
+* Track control feeds in FeedSetProvider ([#1239](https://www.github.com/dxos/protocols/issues/1239)) ([83d113f](https://www.github.com/dxos/protocols/commit/83d113fe8045f4aa5787fb1295fb5b7d796da630))
+* Use key types in echo metadata ([#1246](https://www.github.com/dxos/protocols/issues/1246)) ([5378ccd](https://www.github.com/dxos/protocols/commit/5378ccd56a5e2d5a4a0da41d5002a3b0b1f3a5e8))
+
+
+### Bug Fixes
+
+* Race condition in queryMembers ([#1260](https://www.github.com/dxos/protocols/issues/1260)) ([e48632f](https://www.github.com/dxos/protocols/commit/e48632f84a97875a81ce41130e6928c213c3b448))
+* **registry-client:** List resources ([#1257](https://www.github.com/dxos/protocols/issues/1257)) ([5df1655](https://www.github.com/dxos/protocols/commit/5df1655e9385f57ef59d59ff7121e2d911229173))
+
 ## [2.33.0](https://www.github.com/dxos/protocols/compare/v2.32.0...v2.33.0) (2022-06-13)
 
 
