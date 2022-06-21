@@ -43,11 +43,15 @@ export class DXN {
   }
 
   static urlencode (dxn: DXN) {
-    return dxn.toString().replace(/\//g, '.');
+    const [authorityPath, maybeTag] = dxn.toString().split('@');
+    const tag = maybeTag ? `@${maybeTag}` : '';
+    return `${authorityPath.replace(/\//g, '.')}${tag}`;
   }
 
   static urldecode (encodedDxn: string) {
-    return DXN.parse(encodedDxn.replace(/\./g, '/'));
+    const [authorityPath, maybeTag] = encodedDxn.split('@');
+    const tag = maybeTag ? `@${maybeTag}` : '';
+    return DXN.parse(`${authorityPath.replace(/\./g, '/')}${tag}`);
   }
 
   private constructor (
