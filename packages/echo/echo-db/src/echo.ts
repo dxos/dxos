@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvalidStateError } from '@dxos/debug';
@@ -237,6 +238,7 @@ export class ECHO {
    *
    * Previously active parties will be opened and will begin replication.
    */
+  @synchronized
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     if (this.isOpen) {
       return;
@@ -258,6 +260,7 @@ export class ECHO {
   /**
    * Closes the ECHO instance.
    */
+   @synchronized
   async close () {
     if (!this.isOpen) {
       return;
@@ -276,107 +279,107 @@ export class ECHO {
     await this.networkManager.destroy();
   }
 
-  /**
+   /**
    * Removes all data and closes this ECHO instance.
    *
    * The instance will be in an unusable state at this point and a page refresh is recommended.
    */
-  // TODO(burdon): Enable re-open.
-  async reset () {
-    await this.close();
+   // TODO(burdon): Enable re-open.
+   async reset () {
+     await this.close();
 
-    try {
-      if (this._feedStore.storage.destroy) {
-        await this._feedStore.storage.destroy();
-      }
-    } catch (err: any) {
-      error('Error clearing feed storage:', err);
-    }
+     try {
+       if (this._feedStore.storage.destroy) {
+         await this._feedStore.storage.destroy();
+       }
+     } catch (err: any) {
+       error('Error clearing feed storage:', err);
+     }
 
-    await this.halo.reset();
+     await this.halo.reset();
 
-    try {
-      await this._snapshotStore.clear();
-    } catch (err: any) {
-      error('Error clearing snapshot storage:', err);
-    }
+     try {
+       await this._snapshotStore.clear();
+     } catch (err: any) {
+       error('Error clearing snapshot storage:', err);
+     }
 
-    try {
-      await this._metadataStore.clear();
-    } catch (err: any) {
-      error('Error clearing metadata storage:', err);
-    }
-  }
+     try {
+       await this._metadataStore.clear();
+     } catch (err: any) {
+       error('Error clearing metadata storage:', err);
+     }
+   }
 
-  //
-  // Parties.
-  //
+   //
+   // Parties.
+   //
 
-  /**
+   /**
    * Creates a new party.
    */
-  async createParty (): Promise<PartyInternal> {
-    await this.open();
+   async createParty (): Promise<PartyInternal> {
+     await this.open();
 
-    const party = await this._partyManager.createParty();
-    await party.open();
+     const party = await this._partyManager.createParty();
+     await party.open();
 
-    return party;
-  }
+     return party;
+   }
 
-  /**
+   /**
    * Clones an existing party from a snapshot.
    * @param snapshot
    */
-  async cloneParty (snapshot: PartySnapshot) {
-    await this.open();
+   async cloneParty (snapshot: PartySnapshot) {
+     await this.open();
 
-    const party = await this._partyManager.cloneParty(snapshot);
-    await party.open();
+     const party = await this._partyManager.cloneParty(snapshot);
+     await party.open();
 
-    return party;
-  }
+     return party;
+   }
 
-  /**
+   /**
    * Returns an individual party by it's key.
    * @param {PartyKey} partyKey
    */
-  getParty (partyKey: PartyKey): PartyInternal | undefined {
-    if (!this._partyManager.isOpen) {
-      throw new InvalidStateError();
-    }
+   getParty (partyKey: PartyKey): PartyInternal | undefined {
+     if (!this._partyManager.isOpen) {
+       throw new InvalidStateError();
+     }
 
-    const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
-    return party;
-  }
+     const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
+     return party;
+   }
 
-  /**
+   /**
    * Queries for a set of Parties matching the optional filter.
    * @param {PartyFilter} filter
    */
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
-    if (!this._partyManager.isOpen) {
-      throw new InvalidStateError();
-    }
+   // eslint-disable-next-line unused-imports/no-unused-vars
+   queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
+     if (!this._partyManager.isOpen) {
+       throw new InvalidStateError();
+     }
 
-    return new ResultSet(
-      this._partyManager.update.discardParameter(),
-      () => this._partyManager.parties
-    );
-  }
+     return new ResultSet(
+       this._partyManager.update.discardParameter(),
+       () => this._partyManager.parties
+     );
+   }
 
-  /**
+   /**
    * Joins a party that was created by another peer and starts replicating with it.
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
-    assert(this._partyManager.isOpen, new InvalidStateError());
+   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
+     assert(this._partyManager.isOpen, new InvalidStateError());
 
-    const actualSecretProvider =
+     const actualSecretProvider =
       secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
 
-    return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
-  }
+     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
+   }
 }
