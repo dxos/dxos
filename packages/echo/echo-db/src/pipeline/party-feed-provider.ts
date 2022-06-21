@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
@@ -15,6 +15,7 @@ import { ComplexMap } from '@dxos/util';
 import { MetadataStore } from './metadata-store';
 
 const STALL_TIMEOUT = 1000;
+const log = debug('dxos:echo-db:party-feed-provider');
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
@@ -32,6 +33,20 @@ export class PartyFeedProvider {
     return Array.from(this._feeds.values());
   }
 
+  @synchronized
+  async openKnownFeeds () {
+    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
+      if (!this._feeds.has(feedKey)) {
+        const fullKey = this._keyring.getFullKey(feedKey);
+        const feed = fullKey?.secretKey
+          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
+          : await this._feedStore.openReadOnlyFeed(feedKey);
+        this._trackFeed(feed);
+      }
+    }
+  }
+
+  @synchronized
   async createOrOpenWritableFeed () {
     const partyMetadata = this._metadataStore.getParty(this._partyKey);
     if (!partyMetadata?.dataFeedKey) {
@@ -48,24 +63,11 @@ export class PartyFeedProvider {
     }
 
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    this._feeds.set(fullKey.publicKey, feed);
-    this.feedOpened.emit(feed);
+    this._trackFeed(feed);
     return feed;
   }
 
-  async openKnownFeeds () {
-    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
-      if (!this._feeds.has(feedKey)) {
-        const fullKey = this._keyring.getFullKey(feedKey);
-        const feed = fullKey?.secretKey
-          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
-          : await this._feedStore.openReadOnlyFeed(feedKey);
-        this._feeds.set(feedKey, feed);
-        this.feedOpened.emit(feed);
-      }
-    }
-  }
-
+  @synchronized
   async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
     if (this._feeds.has(feedKey)) {
       return this._feeds.get(feedKey)!;
@@ -76,9 +78,19 @@ export class PartyFeedProvider {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
     const feed = await this._feedStore.openReadOnlyFeed(feedKey);
-    this._feeds.set(feedKey, feed);
-    this.feedOpened.emit(feed);
+    this._trackFeed(feed);
     return feed;
+  }
+
+  private _trackFeed(feed: FeedDescriptor) {
+    assert(!this._feeds.has(feed.key))
+    this._feeds.set(feed.key, feed);
+    this.feedOpened.emit(feed);
+
+    log(`Party feed set changed: ${JSON.stringify({
+      party: this._partyKey,
+      feeds: Array.from(this._feeds.values()).map(feed => feed.key)
+    })}`)
   }
 
   private async _createReadWriteFeed () {
@@ -87,8 +99,7 @@ export class PartyFeedProvider {
     assert(fullKey && fullKey.secretKey);
     await this._metadataStore.setDataFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    this._feeds.set(fullKey.publicKey, feed);
-    this.feedOpened.emit(feed);
+    this._trackFeed(feed);
     return feed;
   }
 
