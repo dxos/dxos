@@ -1621,9 +1621,11 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@swc-node/register': ~1.4.2
+      '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       debug: ^4.3.3
@@ -1648,6 +1650,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/signal': link:../../mesh/signal
       '@dxos/testutils': link:../../common/testutils
       '@dxos/util': link:../../common/util
       '@swc-node/register': 1.4.2
@@ -1658,6 +1661,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/eslint-plugin': 1.0.27_nv27fge2mo5alj7g7fxbwkxkv4
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       eslint: 7.32.0
