@@ -6,7 +6,7 @@ interface FileStat {
     size: number
   }
 
-interface FileInternal {
+export interface FileInternal {
   read(offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
 
   write(offset: number, data: Buffer, cb?: (err: Error | null) => void): void;

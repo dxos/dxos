@@ -6,6 +6,7 @@ import assert from 'assert';
 import randomAccessIdb from 'random-access-idb';
 
 import { File, StorageType } from '../interfaces';
+import { FileInternal } from '../interfaces/File';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
@@ -40,7 +41,7 @@ export class IDbStorage extends AbstractStorage {
       assert(record, 'File registry is corrupt');
       return record.file;
     }
-    const file = this._fileStorage(filename);
+    const file = new File(this._fileStorage(filename));
 
     // Monkeypatch close function.
     const defaultClose = file.close.bind(file) as any;
@@ -50,7 +51,7 @@ export class IDbStorage extends AbstractStorage {
 
     this._fileRegistry.set(filename, { file, close: defaultClose });
 
-    return new File(file);
+    return file;
   }
 
   protected override async _destroy () {
@@ -81,7 +82,7 @@ export class IDbStorage extends AbstractStorage {
 }
 
 interface RandomAccessStorage {
-  (file: string, opts?: {}): File;
+  (file: string, opts?: {}): FileInternal;
 
   root: string;
 
