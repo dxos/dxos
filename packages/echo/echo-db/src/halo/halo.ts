@@ -46,6 +46,8 @@ export class HALO {
   private readonly _keyring: Keyring;
   private readonly _identityManager: IdentityManager;
 
+  private _isOpen = false;
+
   constructor ({
     keyring,
     networkManager,
@@ -85,7 +87,7 @@ export class HALO {
    * Whether the current identity manager has been initialized.
    */
   get isInitialized (): boolean {
-    return this._identityManager.initialized;
+    return this._isOpen;
   }
 
   /**
@@ -129,6 +131,7 @@ export class HALO {
    *
    * Loads the saved identity from disk. Is called by client.
    */
+  @synchronized
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
@@ -137,12 +140,16 @@ export class HALO {
     await this._identityManager.loadFromStorage();
 
     onProgressCallback?.({ haloOpened: true });
+
+    this._isOpen = true;
   }
 
   /**
    * Closes HALO. Automatically called when client is destroyed.
    */
+  @synchronized
   async close () {
+    this._isOpen = false;
     await this._identityManager.close();
   }
 

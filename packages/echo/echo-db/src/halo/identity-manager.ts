@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
@@ -34,25 +35,23 @@ export class IdentityManager {
     return this._identity;
   }
 
-  get initialized (): boolean {
-    return this._identity !== undefined &&
-      !!this._identity.halo &&
-      this._identity.halo.isOpen &&
-      !!this._identity.halo!.memberKeys.length &&
-      !!this._identity.halo!.identityGenesis &&
-      !!this._identity.deviceKeyChain;
-  }
-
   private async _initialize (halo: HaloParty) {
     assert(halo.isOpen, 'HALO must be open.');
 
+    // Wait for the minimum set of keys and messages we need for proper function:
+    //
+    // - KeyAdmit message for the current device so we can build the device KeyChain.
+    // - Identity genesis so it can be copied into newly joined parties.
+    //
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+    await waitForCondition(() =>
+      halo.processor.isMemberKey(deviceKey.publicKey) &&
+      halo.identityGenesis
+    );
+
     this._identity = new Identity(this._keyring, halo);
-
-    // Wait for the minimum set of keys and messages we need for proper function.
-    await waitForCondition(() => this.initialized);
-
-    log('HALO initialized.');
     this.ready.emit();
+    log('HALO initialized.');
   }
 
   async close () {
