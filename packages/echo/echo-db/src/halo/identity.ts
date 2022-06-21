@@ -66,7 +66,10 @@ export class Identity {
     return this.identityInfo?.signed.payload.displayName;
   }
 
-  // TODO(dmaretskyi): Make required.
+  /**
+   * Contains profile username.
+   * Can be missing if the username wasn't provided when profile was created.
+   */
   get identityInfo (): SignedMessage | undefined {
     return this._halo.identityInfo;
   }
