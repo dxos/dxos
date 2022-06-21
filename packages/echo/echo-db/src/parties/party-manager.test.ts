@@ -12,6 +12,7 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
+  defaultSecretProvider,
   Keyring, KeyType,
   SecretProvider,
   SecretValidator
@@ -29,11 +30,11 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
-import { afterTest } from '@dxos/testutils';
+import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { Item } from '../api';
 import { HaloFactory, Identity, IdentityManager } from '../halo';
-import { OfflineInvitationClaimer } from '../invitations';
+import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
@@ -491,6 +492,30 @@ describe('Party manager', () => {
       }
     }
   }).timeout(10_000);
+
+  test('3 peers in a party', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    const { partyManager: partyManagerB } = await setup();
+    const { partyManager: partyManagerC } = await setup();
+
+    const partyA = await partyManagerA.createParty();
+
+    const invitationA = await partyA.invitationManager.createInvitation(defaultInvitationAuthenticator);
+    const partyB = await partyManagerB.joinParty(invitationA, defaultSecretProvider);
+
+    const invitationB = await partyB.invitationManager.createInvitation(defaultInvitationAuthenticator);
+    const partyC = await partyManagerC.joinParty(invitationB, defaultSecretProvider);
+
+    await partyA.database.createItem({ type: 'test:item-a' })
+    await partyB.database.createItem({ type: 'test:item-b' })
+    await partyC.database.createItem({ type: 'test:item-c' })
+
+    for(const party of [partyA, partyB, partyC]) {
+      await testTimeout(party.database.waitForItem({ type: 'test:item-a' }))
+      await testTimeout(party.database.waitForItem({ type: 'test:item-b' }))
+      await testTimeout(party.database.waitForItem({ type: 'test:item-c' }))
+    }
+  })
 
   test('Clone party', async () => {
     const { partyManager } = await setup();
