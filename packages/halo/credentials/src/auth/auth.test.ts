@@ -186,7 +186,7 @@ describe('PartyAuthenticator', () => {
         partyKey,
         identityKeyRecord,
         identityKeyRecord,
-        newFeedKeyRecord,
+        newFeedKeyRecord.publicKey,
         undefined,
         feedAdmit
       )

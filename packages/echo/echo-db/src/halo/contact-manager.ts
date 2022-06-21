@@ -4,10 +4,12 @@
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Item, ResultSet } from '../api';
-import { PartyInternal, PartyMember } from '../parties';
+import { Database, Item, ResultSet } from '../api';
+import { IdentityNotInitializedError } from '../errors';
+import { PartyMember } from '../parties';
 import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 
 // TODO(burdon): Create different class (additional properties).
@@ -18,16 +20,18 @@ export type Contact = PartyMember;
  */
 export class ContactManager {
   constructor (
-    private readonly _party: PartyInternal
+    private readonly _getDatabase: () => Database | undefined
   ) {}
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    return this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec().entities[0];
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
+    return database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec().entities[0];
   }
 
   queryContacts (): ResultSet<Contact> {
+    const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
     const event = new Event();
-    const result = this._party.database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec();
+    const result = database.select({ type: HALO_PARTY_CONTACT_LIST_TYPE }).exec();
     result.update.on(() => {
       event.emit();
     });

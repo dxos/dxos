@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { Signer } from '../keys';
+import { Signer, SigningKey } from '../keys';
 import { wrapMessage } from '../party';
 import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
 
@@ -18,7 +18,7 @@ export const createAuthMessage = (
   partyKey: PublicKeyLike,
   identityKey: KeyRecord,
   deviceKey: KeyRecord | KeyChain,
-  feedKey?: KeyRecord,
+  feedKey?: PublicKey,
   nonce?: Buffer,
   feedAdmit?: Message
 ): WithTypeUrl<Message> => {
@@ -26,7 +26,7 @@ export const createAuthMessage = (
 
   partyKey = PublicKey.from(partyKey);
 
-  const signingKeys = [deviceKey];
+  const signingKeys: SigningKey[] = [deviceKey];
   if (feedKey) {
     signingKeys.push(feedKey);
   }
@@ -36,7 +36,7 @@ export const createAuthMessage = (
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,
-    feedKey: feedKey?.publicKey,
+    feedKey: feedKey,
     feedAdmit
   };
 
