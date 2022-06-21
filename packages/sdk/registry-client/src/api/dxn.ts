@@ -43,11 +43,15 @@ export class DXN {
   }
 
   static urlencode (dxn: DXN) {
-    return dxn.toString().replace(/\//g, '.');
+    const [authorityPath, maybeTag] = dxn.toString().split('@');
+    const tag = maybeTag ? `@${maybeTag}` : '';
+    return `${authorityPath.replace(/\//g, '.')}${tag}`;
   }
 
   static urldecode (encodedDxn: string) {
-    return DXN.parse(encodedDxn.replace(/\./g, '/'));
+    const [authorityPath, maybeTag] = encodedDxn.split('@');
+    const tag = maybeTag ? `@${maybeTag}` : '';
+    return DXN.parse(`${authorityPath.replace(/\./g, '/')}${tag}`);
   }
 
   private constructor (
@@ -59,10 +63,10 @@ export class DXN {
   /**
    * Create new DXN overriding specified fields.
    */
-  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string }) {
+  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string | null }) {
     authority = authority ?? this.authority;
     path = path ?? this.path;
-    tag = tag ?? this.tag;
+    tag = tag === null ? undefined : tag ?? this.tag;
 
     if (typeof authority === 'string') {
       return DXN.fromDomainName(authority, path, tag);

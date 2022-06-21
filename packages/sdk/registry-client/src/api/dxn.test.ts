@@ -87,8 +87,13 @@ describe('DXN', () => {
   });
 
   it('urlencode/urldecode', () => {
-    const dxn = DXN.parse('dxos:foo/bar');
-
-    expect(DXN.urldecode(DXN.urlencode(dxn)).toString()).to.equal(dxn.toString());
+    [
+      'example:app/path@2.0.1',
+      'example:app/path@2-alpha',
+      'dxos:foo/bar',
+      '0xc54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
+    ].map(DXN.parse).forEach(name =>
+      expect(DXN.urldecode(DXN.urlencode(name)).toString()).to.equal(name.toString())
+    );
   });
 });

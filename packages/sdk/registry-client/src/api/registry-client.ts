@@ -126,7 +126,7 @@ export class RegistryClient {
         }
 
         const index = result.findIndex(set => set.name.authority === name.authority && set.name.path === name.path);
-        const set = result[index] ?? { name: name.with({ tag: undefined }), tags: {} };
+        const set = result[index] ?? { name: name.with({ tag: null }), tags: {} };
         set.tags[name.tag] = cid;
 
         if (index === -1) {
