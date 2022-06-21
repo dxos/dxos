@@ -7,9 +7,8 @@ import del from 'del';
 import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
-import pify from 'pify';
 
-import { FileInternal } from './interfaces/FileInternal';
+import { File } from './interfaces/File';
 import { StorageType } from './interfaces/storage-types';
 import { createStorage } from './node';
 import { storageTests } from './storage.blueprint-test';
@@ -18,10 +17,10 @@ const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.tes
 
 const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 
-const write = async (file: FileInternal) => {
+const write = async (file: File) => {
   const buffer = Buffer.from('test');
-  await pify(file.write.bind(file))(10, buffer);
-  await expect(pify(file.read.bind(file))(10, 4)).resolves.toEqual(buffer);
+  await file.write(10, buffer);
+  await expect(file.read(10, 4)).resolves.toEqual(buffer);
 };
 
 after(() => del(ROOT_DIRECTORY));

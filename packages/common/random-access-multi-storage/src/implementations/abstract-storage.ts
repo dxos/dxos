@@ -2,9 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import pify from 'pify';
-
-import { FileInternal } from '../interfaces/FileInternal';
+import { File } from '../interfaces/File';
 import { IStorage } from '../interfaces/IStorage';
 import { StorageType } from '../interfaces/storage-types';
 
@@ -13,7 +11,7 @@ import { StorageType } from '../interfaces/storage-types';
  */
 export abstract class AbstractStorage implements IStorage {
   protected readonly _root: string;
-  protected readonly _files: Set<FileInternal>;
+  protected readonly _files: Set<File>;
   public abstract type: StorageType
 
   constructor (root: string) {
@@ -34,7 +32,7 @@ export abstract class AbstractStorage implements IStorage {
   private _close () {
     return Promise.all(
       Array.from(this._files.values())
-        .map(file => pify(file.close.bind(file))().catch((err: any) => console.error(err.message)))
+        .map(file => file.close().catch((error: any) => console.error(error.message)))
     );
   }
 
@@ -49,6 +47,6 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   public abstract subDir (path: string): IStorage
-  protected abstract _create (filename: string, opts?: any): FileInternal;
+  protected abstract _create (filename: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

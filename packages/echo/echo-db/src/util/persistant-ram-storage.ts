@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { StorageType, createStorage, FileInternal, IStorage } from '@dxos/random-access-multi-storage';
+import { StorageType, createStorage, File, IStorage } from '@dxos/random-access-multi-storage';
 
 /**
  * A wrapper around RAM storage that preserves file data when closing and re-opening files.
@@ -11,7 +11,7 @@ import { StorageType, createStorage, FileInternal, IStorage } from '@dxos/random
 export function createRamStorage (): IStorage {
   const root = 'snapshots';
   const storage = createStorage(root, StorageType.RAM);
-  const files = new Map<string, FileInternal>();
+  const files = new Map<string, File>();
 
   const fn: any = {};
 
