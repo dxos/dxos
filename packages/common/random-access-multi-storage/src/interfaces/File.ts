@@ -6,19 +6,19 @@ interface FileStat {
     size: number
   }
 
-  interface FileInternal {
-    read(offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
+interface FileInternal {
+  read(offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
 
-    write(offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
+  write(offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
 
-    del(offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
+  del(offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
 
-    stat(cb: (err: Error | null, data?: FileStat) => void): void;
+  stat(cb: (err: Error | null, data?: FileStat) => void): void;
 
-    close(cb?: (err: Error | null) => void): void;
+  close(cb?: (err: Error | null) => void): void;
 
-    destroy(cb?: (err: Error | null) => void): void
-  }
+  destroy(cb?: (err: Error | null) => void): void
+}
 
 export class File {
     private _fileInternal: FileInternal;
@@ -26,87 +26,99 @@ export class File {
       this._fileInternal = fileInternal;
     }
 
-    read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): Promise<Buffer | void> {
-      return new Promise<Buffer | void>((resolve, reject) => {
+    read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): Promise<Buffer> {
+      const promise = new Promise<Buffer>((resolve, reject) => {
         this._fileInternal.read(offset, size, (err: Error | null, data?: Buffer) => {
-          if (typeof cb !== 'undefined') {
-            cb(err, data);
-          }
+          cb?.(err, data);
           if (err) {
             return reject(err);
           }
-          resolve(data);
+          return resolve(data as Buffer);
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 
-    write (offset: number, data: Buffer, cb?: (err: Error | null) => void): Promise<Buffer | void> {
-      return new Promise<Buffer | void>((resolve, reject) => {
+    write (offset: number, data: Buffer, cb?: (err: Error | null) => void): Promise<void> {
+      const promise = new Promise<void>((resolve, reject) => {
         this._fileInternal.write(offset, data, (err: Error | null) => {
-          if (typeof cb !== 'undefined') {
-            cb(err);
-          }
+          cb?.(err);
           if (err) {
             return reject(err);
           }
-          resolve(data);
+          return resolve();
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 
-    del (offset: number, data: Buffer, cb?: (err: Error | null) => void): Promise<Buffer | void> {
-      return new Promise<Buffer | void>((resolve, reject) => {
+    del (offset: number, data: Buffer, cb?: (err: Error | null) => void): Promise<void> {
+      const promise = new Promise<void>((resolve, reject) => {
         this._fileInternal.del(offset, data, (err: Error | null) => {
-          if (typeof cb !== 'undefined') {
-            cb(err);
-          }
+          cb?.(err);
           if (err) {
             return reject(err);
           }
-          resolve(data);
+          return resolve();
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 
-    stat (cb?: (err: Error | null, data?: FileStat) => void): Promise<FileStat | void> {
-      return new Promise<FileStat | void>((resolve, reject) => {
+    stat (cb?: (err: Error | null, data?: FileStat) => void): Promise<FileStat> {
+      const promise = new Promise<FileStat>((resolve, reject) => {
         this._fileInternal.stat((err: Error | null, data?: FileStat) => {
-          if (typeof cb !== 'undefined') {
-            cb(err, data);
-          }
+          cb?.(err, data);
           if (err) {
             return reject(err);
           }
-          resolve(data);
+          return resolve(data as FileStat);
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 
     close (cb?: (err: Error | null) => void): Promise<void> {
-      return new Promise<void>((resolve, reject) => {
+      const promise = new Promise<void>((resolve, reject) => {
         this._fileInternal.close((err: Error | null) => {
-          if (typeof cb !== 'undefined') {
-            cb(err);
-          }
+          cb?.(err);
           if (err) {
             return reject(err);
           }
-          resolve();
+          return resolve();
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 
     destroy (cb?: (err: Error | null) => void): Promise<void> {
-      return new Promise<void>((resolve, reject) => {
+      const promise = new Promise<void>((resolve, reject) => {
         this._fileInternal.destroy((err: Error | null) => {
-          if (typeof cb !== 'undefined') {
-            cb(err);
-          }
+          cb?.(err);
           if (err) {
             return reject(err);
           }
-          resolve();
+          return resolve();
         });
       });
+      if (cb) {
+        promise.catch((_) => {});
+      }
+      return promise;
     }
 }
