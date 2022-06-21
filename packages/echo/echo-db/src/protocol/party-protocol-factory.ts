@@ -2,40 +2,27 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { AuthPlugin, Authenticator, GreetingCommandPlugin } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
+import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { IdentityProvider } from '../halo';
-import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
-import { PartyFeedProvider } from './party-feed-provider';
+import { CredentialsProvider } from '.';
+import { PartyFeedProvider } from '../pipeline/party-feed-provider';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
-
-export interface CredentialsProvider {
-  /**
-   * The credentials (e.g., a serialized AuthMessage) as a bytes.
-   */
-  get (): Buffer
-}
 
 /**
  * Manages the party's connection to the network swarm.
  */
 export class PartyProtocolFactory {
-  private readonly _peerId = PublicKey.random(); // TODO(marik-d): Should this be a specific peer id?
-
   private readonly _presencePlugin = new PresencePlugin(this._peerId.asBuffer());
-  private readonly _haloProtocolPluginFactory: HaloProtocolPluginFactory;
   private readonly _replicatorProtocolPluginFactory: ReplicatorProtocolPluginFactory;
 
   private _started = false;
@@ -44,22 +31,16 @@ export class PartyProtocolFactory {
     private readonly _partyKey: PartyKey,
     private readonly _networkManager: NetworkManager,
     private readonly _feedProvider: PartyFeedProvider,
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _peerId: PublicKey,
     private readonly _credentials: CredentialsProvider,
-    invitationManager: InvitationManager,
-    authenticator: Authenticator,
     activeFeeds: FeedSetProvider
   ) {
-    // Authentication.
-    this._haloProtocolPluginFactory =
-      new HaloProtocolPluginFactory(this._partyKey, this._identityProvider, invitationManager, authenticator);
-
     // Replication.
     this._replicatorProtocolPluginFactory =
       new ReplicatorProtocolPluginFactory(this._feedProvider, activeFeeds);
   }
 
-  async start () {
+  async start (plugins: Plugin[]) {
     if (this._started) {
       return;
     }
@@ -74,7 +55,7 @@ export class PartyProtocolFactory {
 
     log(`Joining swarm: ${this._partyKey.toHex()}`);
     return this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }),
+      protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }, plugins),
       peerId: this._peerId,
       topic: this._partyKey,
       presence: this._presencePlugin,
@@ -93,12 +74,10 @@ export class PartyProtocolFactory {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol (channel: any, opts: {initiator: boolean}) {
-    assert(this._identityProvider().deviceKey);
-
-    const plugins = [
-      ...this._haloProtocolPluginFactory.createPlugins(),
+  private _createProtocol (channel: any, opts: {initiator: boolean}, extraPlugins: Plugin[]) {
+    const plugins: Plugin[] = [
       ...this._replicatorProtocolPluginFactory.createPlugins(),
+      ...extraPlugins,
       this._presencePlugin
     ];
 
@@ -125,7 +104,7 @@ export class PartyProtocolFactory {
 
       userSession: {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: keyToString(this._identityProvider().deviceKey!.publicKey.asBuffer()),
+        peerId: keyToString(this._peerId.asBuffer()),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       },
@@ -183,56 +162,5 @@ export class ReplicatorProtocolPluginFactory {
   private async _openFeed (key: FeedKey): Promise<HypercoreFeed> {
     const descriptor = await this._feedProvider.createOrOpenReadOnlyFeed(key);
     return descriptor.feed;
-  }
-}
-
-/**
- * Creates protocol plugins for HALO authentication and invitations.
- */
-class HaloProtocolPluginFactory {
-  constructor (
-    private readonly _partyKey: PartyKey,
-    private readonly _identityProvider: IdentityProvider,
-    private readonly _invitationManager: InvitationManager,
-    private readonly _authenticator: Authenticator
-  ) {}
-
-  private get _identity () {
-    return this._identityProvider();
-  }
-
-  createPlugins () {
-    assert(this._identity.identityKey);
-    assert(this._identity.deviceKey);
-
-    const plugins: any[] = [
-      new AuthPlugin(
-        this._identity.deviceKey.publicKey.asBuffer(),
-        this._authenticator,
-        [Replicator.extension]
-      )
-    ];
-
-    // Determine if this party is the main HALO.
-    const isHalo = this._identity.identityKey.publicKey.equals(this._partyKey);
-    if (isHalo) {
-      // Enables devices to re-join the HALO using a recovery seed phrase.
-      plugins.push(
-        new GreetingCommandPlugin(
-          this._identity.deviceKey.publicKey.asBuffer(),
-          HaloRecoveryInitiator.createHaloInvitationClaimHandler(this._identityProvider)
-        )
-      );
-    } else {
-      // Enables peers to join the party.
-      plugins.push(
-        new GreetingCommandPlugin(
-          this._identity.deviceKey.publicKey.asBuffer(),
-          OfflineInvitationClaimer.createOfflineInvitationClaimHandler(this._invitationManager)
-        )
-      );
-    }
-
-    return plugins;
   }
 }
