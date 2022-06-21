@@ -5,13 +5,13 @@
 import expect from 'expect';
 import pify from 'pify';
 
-import { IFile, IStorage, STORAGE_NODE, STORAGE_RAM } from './interfaces';
+import { File, IStorage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => IStorage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
-  const writeAndCheck = async (file: IFile, data: Buffer, offset = 0) => {
+  const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await pify(file.write.bind(file))(offset, data);
     const bufferRead = await pify(file.read.bind(file))(offset, data.length);
     const result = data.equals(bufferRead);
@@ -63,7 +63,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const storage = createStorage();
 
       // TODO(yivlad): Doesn't work for node.
-      if (storage.type === STORAGE_NODE) {
+      if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
@@ -110,8 +110,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('subdirectories', async function () {
       const rootStorage = createStorage();
 
-      // TODO(yivlad): Doesn't work for STORAGE_NODE.
-      if (rootStorage.type === STORAGE_NODE) {
+      // TODO(yivlad): Doesn't work for StorageType.NODE.
+      if (rootStorage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
@@ -142,8 +142,8 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('destroys file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): Works only for STORAGE_RAM.
-      if (storage.type !== STORAGE_RAM) {
+      // TODO(yivlad): Works only for StorageType.RAM.
+      if (storage.type !== StorageType.RAM) {
         this.skip();
       }
 

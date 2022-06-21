@@ -6,9 +6,9 @@ import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { SearchModel, SearchResult } from '@dxos/react-components';
-import { CID, RegistryClient, RegistryType, Resource } from '@dxos/registry-client';
+import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client';
 
-export type SearchFilter = (resource: Resource) => boolean
+export type SearchFilter = (resource: ResourceSet) => boolean
 
 export const useRegistrySearchModel = (
   registry: RegistryClient,
@@ -23,12 +23,14 @@ export const getTypeName = ({ type }: RegistryType) => {
   return parts[parts.length - 1];
 };
 
-export const createTypeFilter = (types: CID[]) => (resource: Resource) => {
-  return types.some(type => resource.type && type.equals(resource.type));
-};
+// TODO(wittjosiah): Reimplement this with DXQS.
 
-export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: Resource) => {
-  return domainExp.exec(resource.name.domain!) && resourceExp.exec(resource.name.resource);
+// export const createTypeFilter = (types: CID[]) => (resource: ResourceSet) => {
+//   return types.some(type => resource.type && type.equals(resource.type));
+// };
+
+export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) => {
+  return domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
 };
 
 /**
@@ -36,9 +38,9 @@ export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => 
  */
 // TODO(burdon): Create tests.
 // TODO(burdon): Move to registry-client?
-export class RegistrySearchModel implements SearchModel<Resource> {
-  private readonly _update = new Event<SearchResult<Resource>[]>();
-  private _results: SearchResult<Resource>[] = [];
+export class RegistrySearchModel implements SearchModel<ResourceSet> {
+  private readonly _update = new Event<SearchResult<ResourceSet>[]>();
+  private _results: SearchResult<ResourceSet>[] = [];
   private _text?: string = undefined;
   private _types: RegistryType[] = [];
 
@@ -55,12 +57,12 @@ export class RegistrySearchModel implements SearchModel<Resource> {
     return this._results;
   }
 
-  subscribe (callback: (results: SearchResult<Resource>[]) => void) {
+  subscribe (callback: (results: SearchResult<ResourceSet>[]) => void) {
     return this._update.on(callback);
   }
 
   async initialize () {
-    this._types = await this._registry.getTypeRecords();
+    this._types = await this._registry.listTypeRecords();
     this.doUpdate();
   }
 
@@ -77,7 +79,7 @@ export class RegistrySearchModel implements SearchModel<Resource> {
   doUpdate () {
     setImmediate(async () => {
       // TODO(burdon): Push predicates (e.g., type).
-      let resources = await this._registry.getResources({ text: this._text });
+      let resources = await this._registry.listResources({ text: this._text });
       if (this._filters.length) {
         resources = resources.filter(resource => {
           // Exclude if any filter fails.
@@ -86,10 +88,10 @@ export class RegistrySearchModel implements SearchModel<Resource> {
       }
 
       this._results = resources.map(resource => {
-        const type = this._types.find(type => resource.type && resource.type.equals(type.cid));
+        // const type = this._types.find(type => resource.type && resource.type.equals(type.cid));
         return ({
           id: resource.name.toString(),
-          type: type ? getTypeName(type) : undefined,
+          // type: type ? getTypeName(type) : undefined,
           text: resource.name.toString(),
           value: resource
         });

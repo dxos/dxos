@@ -7,9 +7,9 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, waitForCondition } from '@dxos/async';
+import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -34,8 +34,7 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.halo.createIdentity({ ...createKeyPair() });
-      await echo.halo.create(displayName); // TODO(burdon): Rename.
+      await echo.halo.createProfile({ username: displayName });
     }
 
     return echo;
@@ -227,8 +226,7 @@ describe('ECHO', () => {
   test('open and create profile', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
   });
@@ -236,8 +234,7 @@ describe('ECHO', () => {
   test('close and open again', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
 
@@ -256,8 +253,7 @@ describe('ECHO', () => {
   test('reset', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
 
     await echo.reset();
@@ -327,6 +323,105 @@ describe('ECHO', () => {
     expect(b.queryParties().value.length).toBe(2);
     expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
     expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
+  }).timeout(10_000);
+
+  test('Mutations from another device', async () => {
+    const a = await setup({ createProfile: true });
+    const b = await setup();
+
+    await a.createParty();
+
+    const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
+    await b.halo.join(invitation, defaultSecretProvider);
+
+    // Check the initial party is opened.
+    await waitForCondition(() => b.queryParties().value.length === 1, 1000);
+
+    const partyA = a.queryParties().value[0];
+    await partyA.open();
+    const partyB = b.queryParties().value[0];
+    await partyB.open();
+
+    {
+      // Subscribe to Item updates on B.
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec();
+      const updated = selection.update.waitFor(result => result.entities.length > 0);
+
+      // Create a new Item on A.
+      const itemB = await partyB.database
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
+      log(`A created ${itemB.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemB.id}`);
+
+      expect(selection.entities[0].id).toEqual(itemB.id);
+    }
+
+    await a.close();
+    await b.close();
+
+    await a.open();
+
+    {
+      const partyA = a.queryParties().first;
+
+      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true);
+    }
+
+  }).timeout(10_000);
+
+  test.skip('3 devices', async () => {
+    const a = await setup({ createProfile: true });
+    const b = await setup();
+
+    await a.createParty();
+
+    await b.halo.join(await a.halo.createInvitation(defaultInvitationAuthenticator), defaultSecretProvider);
+
+    // Check the initial party is opened.
+    await waitForCondition(() => b.queryParties().value.length === 1, 1000);
+
+    const partyA = a.queryParties().value[0];
+    await partyA.open();
+    const partyB = b.queryParties().value[0];
+    await partyB.open();
+
+    {
+      // Subscribe to Item updates on B.
+      const selection = partyA.database.select({ type: 'example:item/test' }).exec();
+      const updated = selection.update.waitFor(result => result.entities.length > 0);
+
+      // Create a new Item on A.
+      const itemB = await partyB.database
+        .createItem({ model: ObjectModel, type: 'example:item/test' }) as Item<any>;
+      log(`A created ${itemB.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemB.id}`);
+
+      expect(selection.entities[0].id).toEqual(itemB.id);
+    }
+
+    await a.close();
+    await b.close();
+
+    await a.open();
+
+    {
+      const partyA = a.queryParties().first;
+
+      expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length > 0).toEqual(true);
+    }
+
+    const c = await setup();
+    await c.halo.join(await a.halo.createInvitation(defaultInvitationAuthenticator), defaultSecretProvider);
+    await waitForCondition(() => c.queryParties().value.length === 1, 1000);
+    const partyC = c.queryParties().first;
+
+    await promiseTimeout(partyC.database.waitForItem({ type: 'example:item/test' }), 1000, new Error('timeout'));
   }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
@@ -430,8 +525,7 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.halo.create();
+    await a.halo.createProfile({ ...keyPairFromSeedPhrase(seedPhrase) });
 
     const b = await setup();
 
@@ -661,8 +755,7 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.halo.create();
+    await a.halo.createProfile({ ...keyPairFromSeedPhrase(seedPhrase) });
 
     // User's other device, joined by device invitation.
     const b = await setup();

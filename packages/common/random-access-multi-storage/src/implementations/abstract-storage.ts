@@ -4,7 +4,7 @@
 
 import pify from 'pify';
 
-import { IFile } from '../interfaces/IFile';
+import { File } from '../interfaces/File';
 import { IStorage } from '../interfaces/IStorage';
 import { StorageType } from '../interfaces/storage-types';
 
@@ -13,7 +13,7 @@ import { StorageType } from '../interfaces/storage-types';
  */
 export abstract class AbstractStorage implements IStorage {
   protected readonly _root: string;
-  protected readonly _files: Set<IFile>;
+  protected readonly _files: Set<File>;
   public abstract type: StorageType
 
   constructor (root: string) {
@@ -49,6 +49,6 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   public abstract subDir (path: string): IStorage
-  protected abstract _create (filename: string, opts?: any): IFile;
+  protected abstract _create (filename: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

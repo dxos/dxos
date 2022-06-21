@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React from 'react';
 
-import { randomBytes } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { FullScreen } from '@dxos/react-components';
 
@@ -30,7 +30,7 @@ const generateTree = (node = {}, level = 1) => {
 export const Primary = () => {
   // TODO(burdon): Factor out.
   const messages: IFeedGenericBlock<any>[] = [...new Array(20)].map((_, i) => ({
-    key: randomBytes(),
+    key: PublicKey.random(),
     seq: i,
     sync: true,
     path: '',

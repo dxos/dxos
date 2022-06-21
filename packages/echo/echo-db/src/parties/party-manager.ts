@@ -15,10 +15,10 @@ import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
 import { InvitationDescriptor } from '../invitations';
-import { MetadataStore } from '../metadata';
+import { MetadataStore } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
+import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
-import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 
@@ -33,14 +33,14 @@ export interface OpenProgress {
 /**
  * Top-level class manages the complete life-cycle of parties.
  *
- * `PartyManager` => `PartyManager` => `PartyInternal` => `PartyCore`
+ * `ECHO` => `PartyManager` => `DataParty` => `PartyCore`
  */
 export class PartyManager {
   // External event listener.
-  readonly update = new Event<PartyInternal>();
+  readonly update = new Event<DataParty>();
 
   // Map of parties by party key.
-  private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
+  private readonly _parties = new ComplexMap<PublicKey, DataParty>(key => key.toHex());
 
   // Unsubscribe handlers.
   // TODO(burdon): Never used.
@@ -59,7 +59,7 @@ export class PartyManager {
     return this._open;
   }
 
-  get parties (): PartyInternal[] {
+  get parties (): DataParty[] {
     return Array.from(this._parties.values());
   }
 
@@ -77,7 +77,7 @@ export class PartyManager {
     const identity = this._identityProvider();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (identity.identityKey) {
+    if (identity?.identityKey) {
       partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
     }
 
@@ -97,7 +97,7 @@ export class PartyManager {
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
 
-        const isActive = identity.preferences?.isPartyActive(partyKey) ?? true;
+        const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
           // TODO(marik-d): Might not be required if separately snapshot this item.
@@ -141,7 +141,7 @@ export class PartyManager {
    * Creates a new party, writing its genesis block to the stream.
    */
   @synchronized
-  async createParty (): Promise<PartyInternal> {
+  async createParty (): Promise<DataParty> {
     assert(this._open, 'PartyManager is not open.');
 
     const party = await this._partyFactory.createParty();
@@ -224,7 +224,7 @@ export class PartyManager {
     return party;
   }
 
-  private _setParty (party: PartyInternal) {
+  private _setParty (party: DataParty) {
     const updateContact = async () => {
       try {
         await this._updateContactList(party);
@@ -258,7 +258,7 @@ export class PartyManager {
   }
 
   // TODO(burdon): Refactor.
-  private async _updatePartyTitle (party: PartyInternal) {
+  private async _updatePartyTitle (party: DataParty) {
     if (!this._open) {
       return;
     }
@@ -266,14 +266,14 @@ export class PartyManager {
     const identity = this._identityProvider();
     const item = await party.getPropertiesItem();
     const currentTitle = item.model.get(PARTY_TITLE_PROPERTY);
-    const storedTitle = identity.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
+    const storedTitle = identity?.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
-      await identity.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
+      await identity?.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
 
   // TODO(burdon): Reconcile with `Halo.ContactManager`.
-  private async _updateContactList (party: PartyInternal) {
+  private async _updateContactList (party: DataParty) {
     // Prevent any updates after we closed ECHO.
     // This will get re-run next time echo is loaded so we don't loose any data.
     if (!this._open) {
@@ -282,7 +282,7 @@ export class PartyManager {
 
     const identity = this._identityProvider();
 
-    const contactListItem = identity.contacts?.getContactListItem();
+    const contactListItem = identity?.contacts?.getContactListItem();
     if (!contactListItem) {
       return;
     }
@@ -314,11 +314,11 @@ export class PartyManager {
   }
 
   @timed(5_000)
-  private async _recordPartyJoining (party: PartyInternal) {
+  private async _recordPartyJoining (party: DataParty) {
     const identity = this._identityProvider();
 
     // TODO(marik-d): Extract HALO functionality from this class.
-    if (!identity.preferences) {
+    if (!identity?.preferences) {
       return;
     }
 

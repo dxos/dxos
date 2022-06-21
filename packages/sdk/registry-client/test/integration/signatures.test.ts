@@ -19,13 +19,13 @@ import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import {
-  AuctionsClient,
   ClientSigner,
   ClientSignerAdapter,
   SignTxFunction,
   createApiPromise,
   createKeyring,
-  registryTypes
+  registryTypes,
+  PolkadotAuctions
 } from '../../src';
 import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
@@ -98,12 +98,12 @@ describe('Signatures', () => {
 
   it('Can send transactions with normal signer', async () => {
     {
-      const auctionsApi = new AuctionsClient(apiPromise, keypair);
+      const auctionsApi = new PolkadotAuctions(apiPromise, keypair);
       await auctionsApi.createAuction(auctionName(), 100000);
     }
 
     {
-      const auctionsApi = new AuctionsClient(apiPromise, tx => tx.signAsync(keypair));
+      const auctionsApi = new PolkadotAuctions(apiPromise, tx => tx.signAsync(keypair));
       await auctionsApi.createAuction(auctionName(), 100000);
     }
   });
@@ -113,7 +113,7 @@ describe('Signatures', () => {
       return await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
     };
 
-    const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
+    const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 
@@ -124,7 +124,7 @@ describe('Signatures', () => {
       });
     };
 
-    const auctionsApi = new AuctionsClient(apiPromise, signTxFunction);
+    const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 });

@@ -15,20 +15,21 @@ import {
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
-import { failUndefined, timed } from '@dxos/debug';
+import { failUndefined, raise, timed } from '@dxos/debug';
 import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
+import { IdentityNotInitializedError } from '../errors';
 import { IdentityProvider } from '../halo';
 import {
+  createDataPartyAdmissionMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
-import { PartyFeedProvider } from '../pipeline';
+import { PartyFeedProvider, PartyOptions } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { PartyOptions } from './party-core';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
+import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
 const log = debug('dxos:echo-db:party-factory');
 
@@ -41,7 +42,7 @@ export class PartyFactory {
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
+    private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _options: PartyOptions = {}
   ) {}
 
@@ -49,8 +50,8 @@ export class PartyFactory {
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
    */
   @timed(5_000)
-  async createParty (): Promise<PartyInternal> {
-    const identity = this._identityProvider();
+  async createParty (): Promise<DataParty> {
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     assert(identity.identityGenesis, 'HALO not initialized.');
     assert(identity.deviceKeyChain, 'Device KeyChain not initialized.');
     assert(!this._options.readOnly, 'PartyFactory is read-only.');
@@ -112,25 +113,26 @@ export class PartyFactory {
    * @param hints
    */
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     /*
      * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
      * mechanism is broken by not waiting on the messages to be processed before returning.
      */
 
-    const feedProvider = this._createFeedProvider(partyKey);
+    const feedProvider = this._feedProviderFactory(partyKey);
     const { feed } = await feedProvider.createOrOpenWritableFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
     assert(feedKeyPair, 'Keypair for writable feed not found.');
-    const party = new PartyInternal(
+    const party = new DataParty(
       partyKey,
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider,
+      identity.createCredentialsSigner(),
+      identity.preferences,
       this._networkManager,
-      [{ type: feedKeyPair.type, publicKey: feedKeyPair.publicKey }, ...hints],
+      hints,
       undefined,
       this._options
     );
@@ -156,18 +158,21 @@ export class PartyFactory {
    * @param hints
    */
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
+
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
-    const feedProvider = this._createFeedProvider(partyKey);
+    const feedProvider = this._feedProviderFactory(partyKey);
 
     //
     // Create the party.
     //
-    const party = new PartyInternal(
+    const party = new DataParty(
       partyKey,
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
-      this._identityProvider,
+      identity.createCredentialsSigner(),
+      identity.preferences,
       this._networkManager,
       hints,
       initialTimeframe,
@@ -186,11 +191,11 @@ export class PartyFactory {
     return party;
   }
 
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<DataParty> {
     const haloInvitation = !!invitationDescriptor.identityKey;
     const originalInvitation = invitationDescriptor;
 
-    const identity = this._identityProvider();
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
@@ -204,13 +209,13 @@ export class PartyFactory {
     // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
-      identity,
       invitationDescriptor,
-      async partyKey => {
-        const feedProvider = this._createFeedProvider(partyKey);
-        const feed = await feedProvider.createOrOpenWritableFeed();
-        return feed.key;
-      }
+      async (partyKey, nonce) => [createDataPartyAdmissionMessages(
+        identity.createCredentialsSigner(),
+        partyKey,
+        identity.identityGenesis ?? raise(new IdentityNotInitializedError()),
+        nonce
+      )]
     );
 
     await initiator.connect();
@@ -235,8 +240,8 @@ export class PartyFactory {
     return party;
   }
 
-  async cloneParty (snapshot: PartySnapshot): Promise<PartyInternal> {
-    const identity = this._identityProvider();
+  async cloneParty (snapshot: PartySnapshot): Promise<DataParty> {
+    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
     assert(identity.identityGenesis, 'IdentityGenesis must exist');
