@@ -42,11 +42,13 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
       const domain = domainEntry[1].unwrap();
-      return {
+      const authority: Authority = {
         key,
-        name: domain.name.unwrapOr(undefined)?.toString(),
+        domainName: domain.name.unwrapOr(undefined)?.toString(),
         owner: domain.owner.toHex()
       };
+
+      return authority;
     });
   }
 
