@@ -1,5 +1,14 @@
 # Change Log
 
+### [2.33.2](https://www.github.com/dxos/protocols/compare/v2.33.1...v2.33.2) (2022-06-21)
+
+
+### Bug Fixes
+
+* **registry-client:** Allow DXN tag to be unset ([#1263](https://www.github.com/dxos/protocols/issues/1263)) ([18eaace](https://www.github.com/dxos/protocols/commit/18eaaced762f9341c3cd1536dce013f7343a903e))
+* **registry-client:** Don't replace dots when en/decoding DXN tags ([#1264](https://www.github.com/dxos/protocols/issues/1264)) ([c42403b](https://www.github.com/dxos/protocols/commit/c42403ba21cc6952f884d2e1f739cde9fc5e0b79))
+* **registry-client:** Polkadot registry list authorities misshape ([#1262](https://www.github.com/dxos/protocols/issues/1262)) ([8ff5a3c](https://www.github.com/dxos/protocols/commit/8ff5a3c5ebad18a94a1a4c90cbc12154a813f103))
+
 ### [2.33.1](https://www.github.com/dxos/protocols/compare/v2.33.0...v2.33.1) (2022-06-21)
 
 
