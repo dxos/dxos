@@ -506,16 +506,16 @@ describe('Party manager', () => {
     const invitationB = await partyB.invitationManager.createInvitation(defaultInvitationAuthenticator);
     const partyC = await partyManagerC.joinParty(invitationB, defaultSecretProvider);
 
-    await partyA.database.createItem({ type: 'test:item-a' })
-    await partyB.database.createItem({ type: 'test:item-b' })
-    await partyC.database.createItem({ type: 'test:item-c' })
+    await partyA.database.createItem({ type: 'test:item-a' });
+    await partyB.database.createItem({ type: 'test:item-b' });
+    await partyC.database.createItem({ type: 'test:item-c' });
 
-    for(const party of [partyA, partyB, partyC]) {
-      await testTimeout(party.database.waitForItem({ type: 'test:item-a' }))
-      await testTimeout(party.database.waitForItem({ type: 'test:item-b' }))
-      await testTimeout(party.database.waitForItem({ type: 'test:item-c' }))
+    for (const party of [partyA, partyB, partyC]) {
+      await testTimeout(party.database.waitForItem({ type: 'test:item-a' }));
+      await testTimeout(party.database.waitForItem({ type: 'test:item-b' }));
+      await testTimeout(party.database.waitForItem({ type: 'test:item-c' }));
     }
-  })
+  });
 
   test('Clone party', async () => {
     const { partyManager } = await setup();

@@ -82,15 +82,15 @@ export class PartyFeedProvider {
     return feed;
   }
 
-  private _trackFeed(feed: FeedDescriptor) {
-    assert(!this._feeds.has(feed.key))
+  private _trackFeed (feed: FeedDescriptor) {
+    assert(!this._feeds.has(feed.key));
     this._feeds.set(feed.key, feed);
     this.feedOpened.emit(feed);
 
     log(`Party feed set changed: ${JSON.stringify({
       party: this._partyKey,
       feeds: Array.from(this._feeds.values()).map(feed => feed.key)
-    })}`)
+    })}`);
   }
 
   private async _createReadWriteFeed () {
