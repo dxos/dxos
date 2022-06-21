@@ -67,7 +67,8 @@ export class Identity {
     return this.identityInfo?.signed.payload.displayName;
   }
 
-  get identityInfo () {
+  // TODO(dmaretskyi): Make required.
+  get identityInfo (): SignedMessage | undefined {
     return this._halo.identityInfo;
   }
 

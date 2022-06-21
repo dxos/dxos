@@ -35,15 +35,6 @@ export class IdentityManager {
     return this._identity;
   }
 
-  get initialized (): boolean {
-    return this._identity !== undefined &&
-      !!this._identity.halo &&
-      this._identity.halo.isOpen &&
-      !!this._identity.halo!.memberKeys.length &&
-      !!this._identity.halo!.identityGenesis &&
-      !!this._identity.deviceKeyChain;
-  }
-
   private async _initialize (halo: HaloParty) {
     assert(halo.isOpen, 'HALO must be open.');
 
@@ -59,11 +50,8 @@ export class IdentityManager {
     );
 
     this._identity = new Identity(this._keyring, halo);
-
-    await waitForCondition(() => this.initialized);
-
-    log('HALO initialized.');
     this.ready.emit();
+    log('HALO initialized.');
   }
 
   async close () {
