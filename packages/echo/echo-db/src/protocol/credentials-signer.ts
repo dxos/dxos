@@ -19,17 +19,17 @@ export class CredentialsSigner {
 
     return new CredentialsSigner(
       keyring,
-      () => identityKey,
-      () => deviceKey,
-      () => deviceKey
+      identityKey,
+      deviceKey,
+      deviceKey,
     );
   }
 
   constructor (
     private readonly _signer: Signer,
-    private readonly _getIdentityKey: () => KeyRecord,
-    private readonly _getDeviceKey: () => KeyRecord,
-    private readonly _getDeviceSigningKeys: () => KeyRecord | KeyChain
+    private readonly _identityKey: KeyRecord,
+    private readonly _deviceKey: KeyRecord,
+    private readonly _signingKeys: KeyRecord | KeyChain
   ) {}
 
   get signer (): Signer {
@@ -37,11 +37,11 @@ export class CredentialsSigner {
   }
 
   getIdentityKey (): KeyRecord {
-    return this._getIdentityKey();
+    return this._identityKey;
   }
 
   getDeviceKey (): KeyRecord {
-    return this._getDeviceKey();
+    return this._deviceKey
   }
 
   /**
@@ -55,6 +55,6 @@ export class CredentialsSigner {
    * Devices need to sign with their keyChain including the device key admission credential in the signature.
    */
   getDeviceSigningKeys (): KeyRecord | KeyChain {
-    return this._getDeviceSigningKeys();
+    return this._signingKeys;
   }
 }

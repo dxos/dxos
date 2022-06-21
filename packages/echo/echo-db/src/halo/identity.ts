@@ -95,9 +95,9 @@ export class Identity {
   createCredentialsSigner (): CredentialsSigner {
     return new CredentialsSigner(
       this._keyring,
-      () => this.identityKey ?? raise(new IdentityNotInitializedError()),
-      () => this.deviceKey ?? raise(new IdentityNotInitializedError()),
-      () => this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError())
+      this.identityKey ?? raise(new IdentityNotInitializedError()),
+      this.deviceKey ?? raise(new IdentityNotInitializedError()),
+      this.deviceKeyChain ?? this.deviceKey ?? raise(new IdentityNotInitializedError())
     );
   }
 }
