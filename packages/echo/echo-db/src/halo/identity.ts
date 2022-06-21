@@ -2,17 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 
-import { IdentityNotInitializedError } from '../errors';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
-import assert from 'assert';
 
 const log = debug('dxos:echo-db:identity');
 
@@ -35,7 +34,7 @@ export class Identity {
   ) {
     this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
     this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
-    this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey)
+    this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey);
     assert(this._halo.identityGenesis);
   }
 
@@ -92,7 +91,7 @@ export class Identity {
       this._keyring,
       this.identityKey,
       this.deviceKey,
-      this.deviceKeyChain,
+      this.deviceKeyChain
     );
   }
 }

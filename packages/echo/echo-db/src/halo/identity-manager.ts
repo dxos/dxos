@@ -7,13 +7,13 @@ import debug from 'debug';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
-import { failUndefined } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:identity-manager');
 

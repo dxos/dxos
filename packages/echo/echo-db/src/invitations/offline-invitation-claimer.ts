@@ -21,10 +21,9 @@ import {
   codec
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
+import { InvalidInvitationError } from '../errors';
 import { Identity } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';

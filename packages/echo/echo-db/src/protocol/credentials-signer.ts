@@ -21,7 +21,7 @@ export class CredentialsSigner {
       keyring,
       identityKey,
       deviceKey,
-      deviceKey,
+      deviceKey
     );
   }
 
@@ -41,7 +41,7 @@ export class CredentialsSigner {
   }
 
   getDeviceKey (): KeyRecord {
-    return this._deviceKey
+    return this._deviceKey;
   }
 
   /**
