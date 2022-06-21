@@ -180,7 +180,7 @@ export class OfflineInvitationClaimer {
           identity.signer,
           info!.id.value,
           identity.identityKey,
-          identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
+          identity.deviceKeyChain,
           undefined,
           info!.authNonce.value)
       ));

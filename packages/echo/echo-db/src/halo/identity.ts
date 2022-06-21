@@ -23,7 +23,7 @@ const log = debug('dxos:echo-db:identity');
 export class Identity {
   private readonly _identityKey: KeyRecord;
   private readonly _deviceKey: KeyRecord;
-  private _deviceKeyChain?: KeyChain;
+  private readonly _deviceKeyChain: KeyChain;
 
   /**
    * @param _halo HALO party. Must be open.
@@ -34,6 +34,7 @@ export class Identity {
   ) {
     this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
     this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+    this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey)
   }
 
   get signer (): Signer {
@@ -48,11 +49,7 @@ export class Identity {
     return this._deviceKey;
   }
 
-  get deviceKeyChain (): KeyChain | undefined {
-    if (!this._deviceKeyChain) {
-      this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey);
-    }
-
+  get deviceKeyChain (): KeyChain {
     return this._deviceKeyChain;
   }
 
@@ -92,7 +89,7 @@ export class Identity {
       this._keyring,
       this.identityKey,
       this.deviceKey,
-      this.deviceKeyChain ?? this.deviceKey,
+      this.deviceKeyChain,
     );
   }
 }
@@ -107,7 +104,7 @@ function getDeviceKeyChainFromHalo (halo: HaloParty, deviceKey: KeyRecord) {
       halo.feedKeys
     );
   } catch (err: any) {
-    log('Unable to locate device KeyChain:', err); // TODO(burdon): ???
-    return undefined;
+    log('Unable to locate device KeyChain:', err);
+    throw err;
   }
 }

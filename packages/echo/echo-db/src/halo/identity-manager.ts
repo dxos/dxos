@@ -13,6 +13,7 @@ import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
+import { failUndefined } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:identity-manager');
 
@@ -46,9 +47,19 @@ export class IdentityManager {
   private async _initialize (halo: HaloParty) {
     assert(halo.isOpen, 'HALO must be open.');
 
+    // Wait for the minimum set of keys and messages we need for proper function:
+    //
+    // - KeyAdmit message for the current device so we can build the device KeyChain.
+    // - Identity genesis so it can be copied into newly joined parties.
+    //
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+    await waitForCondition(() =>
+      halo.processor.isMemberKey(deviceKey.publicKey) &&
+      halo.identityGenesis
+    );
+
     this._identity = new Identity(this._keyring, halo);
 
-    // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() => this.initialized);
 
     log('HALO initialized.');

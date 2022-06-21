@@ -53,7 +53,6 @@ export class PartyFactory {
   async createParty (): Promise<DataParty> {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     assert(identity.identityGenesis, 'HALO not initialized.');
-    assert(identity.deviceKeyChain, 'Device KeyChain not initialized.');
     assert(!this._options.readOnly, 'PartyFactory is read-only.');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
@@ -222,8 +221,6 @@ export class PartyFactory {
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();
     if (!haloInvitation) {
-      assert(identity.deviceKeyChain);
-
       // Copy our signed IdentityInfo into the new Party.
       const infoMessage = identity.identityInfo;
       if (infoMessage) {
@@ -244,7 +241,6 @@ export class PartyFactory {
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
     assert(identity.identityGenesis, 'IdentityGenesis must exist');
-    assert(identity.deviceKeyChain, 'Device KeyChain must exist');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
     const party = await this.constructParty(partyKey.publicKey);
