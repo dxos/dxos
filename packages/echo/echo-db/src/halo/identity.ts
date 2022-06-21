@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
 import { failUndefined, raise } from '@dxos/debug';
 
 import { IdentityNotInitializedError } from '../errors';
@@ -12,6 +12,7 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
+import assert from 'assert';
 
 const log = debug('dxos:echo-db:identity');
 
@@ -35,6 +36,7 @@ export class Identity {
     this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
     this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
     this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey)
+    assert(this._halo.identityGenesis);
   }
 
   get signer (): Signer {
@@ -53,12 +55,12 @@ export class Identity {
     return this._deviceKeyChain;
   }
 
-  get preferences (): Preferences | undefined {
-    return this._halo?.preferences;
+  get preferences (): Preferences {
+    return this._halo.preferences;
   }
 
-  get contacts (): ContactManager | undefined {
-    return this._halo?.contacts;
+  get contacts (): ContactManager {
+    return this._halo.contacts;
   }
 
   get displayName (): string | undefined {
@@ -66,11 +68,11 @@ export class Identity {
   }
 
   get identityInfo () {
-    return this._halo?.identityInfo;
+    return this._halo.identityInfo;
   }
 
-  get identityGenesis () {
-    return this._halo?.identityGenesis;
+  get identityGenesis (): SignedMessage {
+    return this._halo.identityGenesis ?? failUndefined();
   }
 
   /**

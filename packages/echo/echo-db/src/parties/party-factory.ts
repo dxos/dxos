@@ -52,7 +52,6 @@ export class PartyFactory {
   @timed(5_000)
   async createParty (): Promise<DataParty> {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
-    assert(identity.identityGenesis, 'HALO not initialized.');
     assert(!this._options.readOnly, 'PartyFactory is read-only.');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
@@ -211,7 +210,7 @@ export class PartyFactory {
       async (partyKey, nonce) => [createDataPartyAdmissionMessages(
         identity.createCredentialsSigner(),
         partyKey,
-        identity.identityGenesis ?? raise(new IdentityNotInitializedError()),
+        identity.identityGenesis,
         nonce
       )]
     );
@@ -240,7 +239,6 @@ export class PartyFactory {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
-    assert(identity.identityGenesis, 'IdentityGenesis must exist');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
     const party = await this.constructParty(partyKey.publicKey);
