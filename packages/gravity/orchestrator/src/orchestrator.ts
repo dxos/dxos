@@ -10,16 +10,19 @@ import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { createTestBroker, TestBroker } from '@dxos/signal';
+import { randomInt } from '@dxos/util';
 
 export class Orchestrator {
   private _client: Client | undefined;
   private _botFactoryClient = new BotFactoryClient(new NetworkManager());
-  private _botContainer: BotContainer;
   private _party: Party | undefined;
+  private _config?: Config;
+  private _broker?: TestBroker;
 
-  constructor (botContainer: BotContainer) {
-    this._botContainer = botContainer;
-  }
+  constructor (
+    private readonly _botContainer: BotContainer
+  ) { }
 
   get party (): Party {
     assert(this._party);
@@ -31,14 +34,27 @@ export class Orchestrator {
   }
 
   async initialize () {
-    this._client = new Client();
+    const port = randomInt(40000, 10000);
+    this._broker = await createTestBroker(port);
+    this._config = new Config({
+      version: 1,
+      runtime: {
+        services: {
+          signal: {
+            server: `ws://localhost:${port}`
+          }
+        }
+      }
+    });
+
+    this._client = new Client(this._config);
     await this._client.initialize();
     await this._client.halo.createProfile();
     this._party = await this._client.echo.createParty();
 
     const topic = PublicKey.random();
 
-    const botFactory = new BotFactory({ config: new Config({}), botContainer: this._botContainer });
+    const botFactory = new BotFactory({ config: this._config, botContainer: this._botContainer });
     const botController = new BotController(botFactory, new NetworkManager());
     await botController.start(topic);
     await this._botFactoryClient.start(topic);
@@ -48,6 +64,7 @@ export class Orchestrator {
     await this._botFactoryClient.botFactory.removeAll();
     await this._botFactoryClient.stop();
     await this._client?.destroy();
+    await this._broker?.stop();
   }
 
   async spawnBot (botPackageSpecifier: BotPackageSpecifier) {
