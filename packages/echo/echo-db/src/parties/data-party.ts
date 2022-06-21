@@ -5,22 +5,21 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, createAuthMessage, createFeedAdmitMessage, codec } from '@dxos/credentials';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { failUndefined, raise, timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
+import { timed } from '@dxos/debug';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { IdentityNotInitializedError } from '../errors';
-import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
-import { InvitationManager } from '../invitations';
-import { CredentialsProvider, PartyFeedProvider, PartyProtocolFactory } from '../pipeline';
+import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
+import { InvitationFactory } from '../invitations';
+import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
-import { createAuthenticator } from './authenticator';
-import { PartyCore, PartyOptions } from './party-core';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
@@ -34,14 +33,16 @@ export interface PartyMember {
 }
 
 /**
- * TODO(burdon): Comment.
+ * Generic parties that peers create that is capable of storing data in the database.
+ *
+ * This class handles data-storage, replication, snapshots, access-control, and invitations.
  */
-export class PartyInternal {
+export class DataParty {
   public readonly update = new Event<void>();
 
   private readonly _partyCore: PartyCore;
   private readonly _preferences?: PartyPreferences;
-  private _invitationManager?: InvitationManager;
+  private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
 
   constructor (
@@ -49,28 +50,27 @@ export class PartyInternal {
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
-    // This needs to be a provider in case this is a backend for the HALO party.
-    // Then the identity would be changed after this is instantiated.
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _credentialsSigner: CredentialsSigner,
+    // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
+    private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
-    const identity = this._identityProvider();
-
     this._partyCore = new PartyCore(
       partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
-      identity.identityKey?.publicKey ?? failUndefined(),
+      this._credentialsSigner.getIdentityKey().publicKey,
       _initialTimeframe,
       _options
     );
 
-    if (identity.preferences) {
-      this._preferences = new PartyPreferences(identity.preferences, this);
+    // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
+    if (this._profilePreferences) {
+      this._preferences = new PartyPreferences(this._profilePreferences, this);
     }
   }
 
@@ -155,36 +155,34 @@ export class PartyInternal {
       return this;
     }
 
-    const identity = this._identityProvider();
-    assert(identity.deviceKey, 'Missing device key.');
-
     await this._partyCore.open(this._hints);
 
-    this._invitationManager = new InvitationManager(
+    this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
-      this._identityProvider,
+      this._credentialsSigner,
       this._networkManager
     );
 
     //
     // Network/swarm.
+    // Replication, invitations, and authentication functions.
     //
 
+    const deviceKey = this._credentialsSigner.getDeviceKey();
     const writeFeed = await this._partyCore.getWriteFeed();
-
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
       this._feedProvider,
-      this._identityProvider,
-      this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
-      this._invitationManager,
-      createAuthenticator(this._partyCore.processor, this._identityProvider),
+      deviceKey.publicKey,
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
       this._partyCore.processor.getActiveFeedSet()
     );
 
-    // Replication.
-    await this._protocol.start();
+    await this._protocol.start([
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
+      createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
+    ]);
 
     // Issue an 'update' whenever the properties change.
     this.database.select({ type: PARTY_ITEM_TYPE }).exec().update.on(() => this.update.emit());
@@ -271,29 +269,6 @@ export class PartyInternal {
     await this._partyCore.restoreFromSnapshot(snapshot);
   }
 
-  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
-    return {
-      get: () => {
-        const identity = this._identityProvider();
-        const signingKey = identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError());
-        return Buffer.from(codec.encode(createAuthMessage(
-          identity.signer,
-          partyKey,
-          identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          signingKey,
-          identity.keyring.getKey(feedKey),
-          undefined,
-          createFeedAdmitMessage(
-            identity.signer,
-            partyKey,
-            feedKey,
-            [identity.keyring.getKey(feedKey) ?? failUndefined(), signingKey]
-          )
-        )));
-      }
-    };
-  }
-
   /**
    * Get all party members.
    */
@@ -301,15 +276,20 @@ export class PartyInternal {
     assert(this.isOpen, 'Party is not open.');
     return new ResultSet(
       this.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter(),
-      () => this.processor.memberKeys
-        .filter(publicKey => !this.processor.partyKey.equals(publicKey))
-        .map((publicKey: PublicKey): PartyMember => {
-          const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
-          return {
-            publicKey,
-            displayName
-          };
-        })
+      () => {
+        if (!this.isOpen) {
+          return [];
+        }
+        return this.processor.memberKeys
+          .filter(publicKey => !this.processor.partyKey.equals(publicKey))
+          .map((publicKey: PublicKey): PartyMember => {
+            const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
+            return {
+              publicKey,
+              displayName
+            };
+          });
+      }
     );
   }
 }

@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -34,8 +34,7 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.halo.createIdentity({ ...createKeyPair() });
-      await echo.halo.create(displayName); // TODO(burdon): Rename.
+      await echo.halo.createProfile({ username: displayName });
     }
 
     return echo;
@@ -227,8 +226,7 @@ describe('ECHO', () => {
   test('open and create profile', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
   });
@@ -236,8 +234,7 @@ describe('ECHO', () => {
   test('close and open again', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
 
@@ -256,8 +253,7 @@ describe('ECHO', () => {
   test('reset', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.halo.createIdentity(createKeyPair());
-    await echo.halo.create();
+    await echo.halo.createProfile();
     expect(echo.halo.identityKey).toBeDefined();
 
     await echo.reset();
@@ -376,7 +372,7 @@ describe('ECHO', () => {
 
   }).timeout(10_000);
 
-  test('3 devices', async () => {
+  test.skip('3 devices', async () => {
     const a = await setup({ createProfile: true });
     const b = await setup();
 
@@ -529,8 +525,7 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.halo.create();
+    await a.halo.createProfile({ ...keyPairFromSeedPhrase(seedPhrase) });
 
     const b = await setup();
 
@@ -760,8 +755,7 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.halo.create();
+    await a.halo.createProfile({ ...keyPairFromSeedPhrase(seedPhrase) });
 
     // User's other device, joined by device invitation.
     const b = await setup();

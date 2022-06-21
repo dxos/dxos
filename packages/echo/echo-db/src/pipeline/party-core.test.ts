@@ -16,8 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore } from '../metadata';
-import { PartyFeedProvider, ReplicatorProtocolPluginFactory } from '../pipeline';
+import { MetadataStore, PartyFeedProvider, ReplicatorProtocolPluginFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';

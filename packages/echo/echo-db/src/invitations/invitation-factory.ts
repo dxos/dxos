@@ -8,8 +8,8 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../pipeline';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -17,36 +17,29 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 /**
  * Groups together all invitation-related functionality for a single party.
  */
-export class InvitationManager {
+export class InvitationFactory {
   constructor (
     private readonly _partyProcessor: PartyProcessor,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager
   ) {}
 
-  private get _identity () {
-    return this._identityProvider();
-  }
-
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.
-    assert(this._identity.identityKey, 'No identity key.');
-    return this._identity.identityKey.publicKey.equals(this._partyProcessor.partyKey);
+    return this._credentialsSigner.getIdentityKey().publicKey.equals(this._partyProcessor.partyKey);
   }
 
   async createOfflineInvitation (publicKey: PublicKey) {
     assert(!this.isHalo, 'Offline invitations to HALO are not allowed.');
-    assert(this._identity.identityKey, 'Identity key is required.');
-    assert(this._identity.deviceKeyChain, 'Device keychain is required.');
 
     const invitationMessage = createPartyInvitationMessage(
-      this._identity.signer,
+      this._credentialsSigner.signer,
       this._partyProcessor.partyKey,
       publicKey,
-      this._identity.identityKey,
-      this._identity.deviceKeyChain
+      this._credentialsSigner.getIdentityKey(),
+      this._credentialsSigner.getDeviceSigningKeys()
     );
 
     await this._partyProcessor.writeHaloMessage(invitationMessage);
@@ -67,7 +60,7 @@ export class InvitationManager {
     const responder = new GreetingResponder(
       this._networkManager,
       this._partyProcessor,
-      this._identity
+      this._credentialsSigner
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

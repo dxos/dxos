@@ -29,7 +29,7 @@ import { Identity } from '../halo';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { InvitationManager } from './invitation-manager';
+import { InvitationFactory } from './invitation-factory';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
@@ -132,9 +132,9 @@ export class OfflineInvitationClaimer {
   /**
    * Create a function for handling PartyInvitation claims on the indicated Party. This is used by members
    * of the Party for responding to attempts to claim an Invitation which has been written to the Party.
-   * @param {InvitationManager} invitationManager
+   * @param {InvitationFactory} invitationManager
    */
-  static createOfflineInvitationClaimHandler (invitationManager: InvitationManager) {
+  static createOfflineInvitationClaimHandler (invitationManager: InvitationFactory) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
       const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {

@@ -75,14 +75,14 @@ export class HaloService implements IHaloService {
 
   async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
   async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     return {
       value: preferences?.getProperty(request.key)
     };
@@ -90,14 +90,14 @@ export class HaloService implements IHaloService {
 
   async setDevicePreference (request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
   async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     return {
       value: preferences?.getProperty(request.key)
     };
