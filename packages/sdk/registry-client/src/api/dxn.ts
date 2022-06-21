@@ -59,10 +59,10 @@ export class DXN {
   /**
    * Create new DXN overriding specified fields.
    */
-  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string }) {
+  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string | null }) {
     authority = authority ?? this.authority;
     path = path ?? this.path;
-    tag = tag ?? this.tag;
+    tag = tag === null ? undefined : tag ?? this.tag;
 
     if (typeof authority === 'string') {
       return DXN.fromDomainName(authority, path, tag);
