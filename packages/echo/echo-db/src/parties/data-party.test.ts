@@ -16,7 +16,7 @@ import { codec as haloCodec } from "@dxos/credentials";
 import { createAuthenticator, createCredentialsProvider } from "../protocol";
 import expect from 'expect'
 
-describe.only('DataParty', () => {
+describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
     const metadataStore = new MetadataStore(createRamStorage());
     const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
