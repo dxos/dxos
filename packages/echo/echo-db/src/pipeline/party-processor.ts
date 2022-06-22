@@ -20,11 +20,6 @@ import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
 
-export interface FeedSetProvider {
-  get(): FeedKey[]
-  added: Event<FeedKey>
-}
-
 /**
  * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
@@ -106,14 +101,6 @@ export class PartyProcessor {
     // TODO(marik-d): Commented out beacuse it breaks tests currently.
     // code assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
     return this._state.getAdmittedBy(feedKey);
-  }
-
-  // TODO(burdon): Rename xxxProvider.
-  getActiveFeedSet (): FeedSetProvider {
-    return {
-      get: () => this.feedKeys,
-      added: this.feedAdded
-    };
   }
 
   getOfflineInvitation (invitationID: Buffer) {

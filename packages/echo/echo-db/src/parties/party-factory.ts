@@ -79,6 +79,7 @@ export class PartyFactory {
     );
 
     // FeedAdmit (signed by the Device KeyChain).
+    // TODO(dmaretskyi): Is this really needed since a feed is already admitted by party genesis message.
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey.publicKey,
