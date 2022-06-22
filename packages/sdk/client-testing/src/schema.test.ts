@@ -11,7 +11,7 @@ import { truncate, truncateKey } from '@dxos/debug';
 import { Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { SchemaBuilder, TestType } from './builders';
+import { log, SchemaBuilder, TestType } from './builders';
 
 let client: Client;
 let party: Party;
