@@ -11,7 +11,7 @@ import { keyToString, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
 
 import { Timeframe } from '../spacetime';
-import { FeedBlock, FeedKey } from '../types';
+import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 const STALL_TIMEOUT = 1000;
@@ -21,12 +21,6 @@ const STALL_TIMEOUT = 1000;
  * - Remove path and metadata.
  * - Construction separate from open.
  */
-
-// TODO(burdon): Invert (ask for set of feed keys).
-export interface FeedSetProvider {
-  get(): FeedKey[]
-  added: Event<FeedKey>
-}
 
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean;

@@ -116,6 +116,8 @@ export class Replicator {
       const share = async (feeds: FeedData[]) => {
         try {
           await peer?.share(feeds);
+          // Necessary to avoid deadlocks.
+          await this._replicateHandler(protocol, []);
         } catch (err) {
           log(err);
         }
@@ -125,6 +127,8 @@ export class Replicator {
 
       const feeds = await this._load(info) || [];
       await share(feeds);
+      // Necessary to avoid deadlocks.
+      await this._replicateHandler(protocol, []);
     } catch (err: any) {
       console.warn('Load error: ', err);
     }
