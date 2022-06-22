@@ -164,7 +164,6 @@ export class HaloParty {
       this._feedProvider,
       peerId,
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
-      this._partyCore.processor.getActiveFeedSet()
     );
 
     // Replication.

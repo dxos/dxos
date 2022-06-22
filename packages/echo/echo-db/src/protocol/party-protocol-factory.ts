@@ -33,11 +33,10 @@ export class PartyProtocolFactory {
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _peerId: PublicKey,
     private readonly _credentials: CredentialsProvider,
-    activeFeeds: FeedSetProvider
   ) {
     // Replication.
     this._replicatorProtocolPluginFactory =
-      new ReplicatorProtocolPluginFactory(this._feedProvider, activeFeeds);
+      new ReplicatorProtocolPluginFactory(this._feedProvider);
   }
 
   async start (plugins: Plugin[]) {
@@ -126,33 +125,30 @@ export class PartyProtocolFactory {
 export class ReplicatorProtocolPluginFactory {
   constructor (
     private readonly _feedProvider: PartyFeedProvider,
-    private readonly _activeFeeds: FeedSetProvider
   ) {}
 
   createPlugins () {
     return [
       new Replicator({
         load: async () => {
-          const partyFeeds = await Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
-          log(`Loading feeds: ${partyFeeds.map(feed => keyToString(feed.key))}`);
-          return partyFeeds.map((feed) => {
-            return { discoveryKey: feed.discoveryKey };
-          });
+          const feeds = this._feedProvider.getFeeds();
+          log(`Loading feeds: ${feeds.map(feed => keyToString(feed.key))}`);
+          return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
         },
 
         subscribe: (addFeedToReplicatedSet: (feed: any) => void) => {
-          return this._activeFeeds.added.on(async (feedKey) => {
-            log(`Adding feed: ${feedKey.toHex()}`);
-            const feed = await this._openFeed(feedKey);
-            addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
+          return this._feedProvider.feedOpened.on(async (feed) => {
+            log(`Adding feed: ${feed.key.toHex()}`);
+            addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
           });
         },
 
         replicate: async (remoteFeeds, info) => {
           // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
           // TODO(telackey): Why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          log(`Replicating: peerId=${info.session}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
-          return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
+          const feeds = this._feedProvider.getFeeds();
+          log(`Replicating: peerId=${info.session}; feeds=${feeds.map(feed => feed.key.toHex())}`);
+          return feeds.map(feed => feed.feed);
         }
       })
     ];

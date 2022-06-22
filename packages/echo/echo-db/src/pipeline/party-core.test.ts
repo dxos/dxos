@@ -326,11 +326,9 @@ describe('PartyCore', () => {
     createTestProtocolPair(
       new ReplicatorProtocolPluginFactory(
         peer1.partyFeedProvider,
-        peer1.party.processor.getActiveFeedSet()
       ).createPlugins().map(r => r.createExtension()),
       new ReplicatorProtocolPluginFactory(
         partyFeedProvider,
-        peer1.party.processor.getActiveFeedSet()
       ).createPlugins().map(r => r.createExtension())
     );
 

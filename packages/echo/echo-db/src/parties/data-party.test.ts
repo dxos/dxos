@@ -1,5 +1,5 @@
 import { createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, KeyHint, Keyring, KeyType } from "@dxos/credentials";
-import { PublicKey } from "@dxos/crypto";
+import { keyToString, PublicKey } from "@dxos/crypto";
 import { FeedStore } from "@dxos/feed-store";
 import { ModelFactory } from "@dxos/model-factory";
 import { NetworkManager } from "@dxos/network-manager";
