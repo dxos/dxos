@@ -34,7 +34,8 @@ export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
       {
         key: 'collaborators',
         required: false,
-        generator: () => faker.datatype.number().toString()
+        type: 'number',
+        generator: () => faker.datatype.number()
       }
     ]
   },
@@ -53,6 +54,23 @@ export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
           schema: EXAMPLE_SCHEMA_ORG,
           field: 'title'
         }
+      },
+      {
+        key: 'city',
+        required: false,
+        type: 'string',
+        generator: () => faker.address.cityName()
+      },
+      {
+        key: 'role',
+        required: false,
+        generator: () => faker.name.jobTitle()
+      },
+      {
+        key: 'active',
+        required: false,
+        type: 'boolean',
+        generator: () => false
       }
     ]
   }
