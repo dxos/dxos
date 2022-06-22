@@ -7,7 +7,6 @@ import del from 'del';
 import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
-import pify from 'pify';
 
 import { File } from './interfaces/File';
 import { StorageType } from './interfaces/storage-types';
@@ -20,8 +19,8 @@ const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('he
 
 const write = async (file: File) => {
   const buffer = Buffer.from('test');
-  await pify(file.write.bind(file))(10, buffer);
-  await expect(pify(file.read.bind(file))(10, 4)).resolves.toEqual(buffer);
+  await file.write(10, buffer);
+  await expect(file.read(10, 4)).resolves.toEqual(buffer);
 };
 
 after(() => del(ROOT_DIRECTORY));

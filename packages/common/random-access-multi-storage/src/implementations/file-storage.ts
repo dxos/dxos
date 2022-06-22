@@ -5,6 +5,7 @@
 import del from 'del';
 import raf from 'random-access-file';
 
+import { File } from '../interfaces';
 import { StorageType } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
@@ -19,11 +20,11 @@ export class NodeStorage extends AbstractStorage {
     return new NodeStorage(`${this.rootPath}${path}`);
   }
 
-  _create (filename: string, opts: any = {}) {
-    return raf(filename, {
+  _create (filename: string, opts: any = {}): File {
+    return new File(raf(filename, {
       directory: this._root,
       ...opts
-    });
+    }));
   }
 
   async _destroy () {

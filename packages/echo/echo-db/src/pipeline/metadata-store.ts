@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
@@ -50,12 +49,12 @@ export class MetadataStore {
   async load (): Promise<void> {
     const file = this._storage.createOrOpen('EchoMetadata');
     try {
-      const { size } = await pify(file.stat.bind(file))();
+      const { size } = await file.stat();
       if (size === 0) {
         return;
       }
 
-      const data = await pify(file.read.bind(file))(0, size);
+      const data = await file.read(0, size);
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
@@ -64,7 +63,7 @@ export class MetadataStore {
         throw err;
       }
     } finally {
-      await pify(file.close.bind(file))();
+      await file.close();
     }
   }
 
@@ -80,9 +79,9 @@ export class MetadataStore {
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
-      await pify(file.write.bind(file))(0, encoded);
+      await file.write(0, encoded);
     } finally {
-      await pify(file.close.bind(file))();
+      await file.close();
     }
   }
 

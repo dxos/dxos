@@ -3,10 +3,10 @@
 //
 
 import assert from 'assert';
-import pify from 'pify';
 import randomAccessIdb from 'random-access-idb';
 
 import { File, StorageType } from '../interfaces';
+import { FileInternal } from '../interfaces/File';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
@@ -34,17 +34,17 @@ export class IDbStorage extends AbstractStorage {
     return new IDbStorage(`${this.rootPath}${path}`);
   }
 
-  protected override _create (filename: string) {
+  protected override _create (filename: string): File {
     // Looking up the file in the registry.
     if (this._fileRegistry.has(filename)) {
       const record = this._fileRegistry.get(filename);
       assert(record, 'File registry is corrupt');
       return record.file;
     }
-    const file = this._fileStorage(filename);
+    const file = new File(this._fileStorage(filename));
 
     // Monkeypatch close function.
-    const defaultClose = pify(file.close.bind(file));
+    const defaultClose = file.close.bind(file) as any;
     // Do not close the file - put it in the registry and reuse later.
     // Caching file is necessary because in some cases IndexedDB dosen't handle reopening files well - so instead of reopening we can get already opened handle from the registry.
     file.close = (cb: any) => cb?.(null);
@@ -82,7 +82,7 @@ export class IDbStorage extends AbstractStorage {
 }
 
 interface RandomAccessStorage {
-  (file: string, opts?: {}): File;
+  (file: string, opts?: {}): FileInternal;
 
   root: string;
 
