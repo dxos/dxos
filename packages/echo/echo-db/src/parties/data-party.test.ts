@@ -1,0 +1,155 @@
+import { createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyHint, Keyring, KeyType } from "@dxos/credentials";
+import { PublicKey } from "@dxos/crypto";
+import { FeedStore } from "@dxos/feed-store";
+import { ModelFactory } from "@dxos/model-factory";
+import { NetworkManager } from "@dxos/network-manager";
+import { ObjectModel } from "@dxos/object-model";
+import { createStorage, StorageType } from "@dxos/random-access-multi-storage";
+import { MetadataStore, PartyFeedProvider } from "../pipeline";
+import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCredentials } from "../protocol/identity-credentials"
+import { SnapshotStore } from "../snapshots";
+import { createRamStorage } from "../util";
+import { DataParty } from "./data-party";
+import { it as test } from 'mocha'
+import { codec } from "@dxos/echo-protocol";
+import { codec as haloCodec } from "@dxos/credentials";
+import { createAuthenticator, createCredentialsProvider } from "../protocol";
+import expect from 'expect'
+
+describe.only('DataParty', () => {
+  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
+    const metadataStore = new MetadataStore(createRamStorage());
+    const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
+    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const networkManager = new NetworkManager();
+    const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
+
+    return new DataParty(
+      partyKey,
+      modelFactory,
+      snapshotStore,
+      partyFeedProvider,
+      identity.createCredentialsSigner(),
+      identity.preferences,
+      networkManager,
+      hints
+    )
+  }
+
+  test('open & close', async () => {
+    const keyring = new Keyring()
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await createParty(identity, partyKey.publicKey, [])
+
+    await party.open()
+    await party.close()
+  })
+
+  test('edit data', async () => {
+    const keyring = new Keyring()
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await createParty(identity, partyKey.publicKey, [])
+    await party.open()
+
+    const feed = await party.feedProvider.createOrOpenWritableFeed()
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ))
+
+    await party.database.createItem({ type: 'test:item' })
+
+    await party.close()
+  })
+
+  test('authenticates its own credentials', async () => {
+    const keyring = new Keyring()
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const party = await createParty(identity, partyKey.publicKey, [])
+    await party.open()
+    const feed = await party.feedProvider.createOrOpenWritableFeed()
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ))
+
+    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner())
+    const credentialsProvider = createCredentialsProvider(identity.createCredentialsSigner(), party.key, feed.key);
+
+    const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
+    expect(await authenticator.authenticate(wrappedCredentials.payload)).toEqual(true)
+
+    await party.close()
+  })
+
+  test('authenticates another device', async () => {
+    const keyring = new Keyring()
+    const identityA = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const party = await createParty(identityA, partyKey.publicKey, [])
+    await party.open()
+    const feed = await party.feedProvider.createOrOpenWritableFeed()
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ))
+    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner())
+
+    const identityB = await deriveTestDeviceCredentials(identityA);
+    const credentialsProvider = createCredentialsProvider(identityB.createCredentialsSigner(), party.key, feed.key);
+
+    const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
+    expect(await authenticator.authenticate(wrappedCredentials.payload)).toEqual(true)
+
+    await party.close()
+  })
+
+  test('two instances replicating', async () => {
+    const keyring = new Keyring()
+    const identityA = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const partyA = await createParty(identityA, partyKey.publicKey, [])
+    await partyA.open()
+    const feedA = await partyA.feedProvider.createOrOpenWritableFeed()
+    await partyA.processor.writeHaloMessage(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feedA.key,
+      partyKey
+    ))
+    await partyA.processor.writeHaloMessage(createKeyAdmitMessage(
+      keyring,
+      partyKey.publicKey,
+      identityA.identityKey,
+      [partyKey]
+    ))
+
+    const identityB = await deriveTestDeviceCredentials(identityA);
+    const partyB = await createParty(identityB, partyKey.publicKey, [
+      { type: KeyType.FEED, publicKey: feedA.key }
+    ])
+    await partyB.open()
+
+    await partyA.database.createItem({ type: 'test:item-a' })
+    await partyB.database.waitForItem({ type: 'test:item-a' })
+
+    await partyB.database.createItem({ type: 'test:item-b' })
+    await partyA.database.waitForItem({ type: 'test:item-b' })
+
+    await partyA.close()
+    await partyB.close()
+  })
+})
