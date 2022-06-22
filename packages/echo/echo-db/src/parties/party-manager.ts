@@ -19,7 +19,7 @@ import { MetadataStore } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
-import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials-provider';
+import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 

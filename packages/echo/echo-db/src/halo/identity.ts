@@ -12,7 +12,7 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
-import { IdentityCredentials } from '../protocol/identity-credentials-provider';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 
 const log = debug('dxos:echo-db:identity');
 
