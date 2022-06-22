@@ -1,5 +1,17 @@
 # Change Log
 
+### [2.33.3](https://www.github.com/dxos/protocols/compare/v2.33.2...v2.33.3) (2022-06-22)
+
+
+### Features
+
+* Multi process stress tests ([#1231](https://www.github.com/dxos/protocols/issues/1231)) ([138ca60](https://www.github.com/dxos/protocols/commit/138ca606f556416863ca02094cc1bf31ddba224a))
+
+
+### Bug Fixes
+
+* **schema:** Fix in schema validation && Add new testing fields. ([#1272](https://www.github.com/dxos/protocols/issues/1272)) ([18553f0](https://www.github.com/dxos/protocols/commit/18553f061467801d0cd6a62b75a5ac357119486e))
+
 ### [2.33.2](https://www.github.com/dxos/protocols/compare/v2.33.1...v2.33.2) (2022-06-21)
 
 
