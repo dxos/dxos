@@ -11,7 +11,7 @@ import { truncate, truncateKey } from '@dxos/debug';
 import { Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { log, SchemaBuilder, TestType } from './builders';
+import { SchemaBuilder, TestType } from './builders';
 
 let client: Client;
 let party: Party;
@@ -31,13 +31,13 @@ afterEach(async () => {
 });
 
 describe('Schemas', () => {
-  it('creation of Schema', async () => async () => {
+  it('creation of Schema', async () => {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  it('add Schema field', async () => async () => {
+  it('add Schema field', async () => {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -49,7 +49,7 @@ describe('Schemas', () => {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  it('add Schema linked field', async () => async () => {
+  it('add Schema linked field', async () => {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -67,7 +67,10 @@ describe('Schemas', () => {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const items = await party.database.select().exec().entities;
+    const items = await party.database.select()
+      .filter(item => Boolean(item.type) && [orgSchema.name, personSchema.name].includes(item.type as string))
+      .exec()
+      .entities;
 
     [orgSchema, personSchema].forEach(schema => {
       items.forEach(item => {
@@ -76,7 +79,7 @@ describe('Schemas', () => {
     });
   });
 
-  it('Use schema to validate the fields of an item', () => async () => {
+  it('Use schema to validate the fields of an item', async () => {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,
