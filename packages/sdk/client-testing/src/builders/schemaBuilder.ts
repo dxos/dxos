@@ -5,7 +5,7 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import { Database, Schema, SchemaDef, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
+import { Database, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { TestType } from './partyBuilder';
@@ -13,7 +13,7 @@ import { TestType } from './partyBuilder';
 export const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
 
-export type SchemaFieldWithGenerator = SchemaField & { generator?: () => string }
+export type SchemaFieldWithGenerator = SchemaField & { generator?: () => string | number | boolean | SchemaRef }
 export type SchemaDefWithGenerator = Omit<SchemaDef, 'fields'> & { fields: SchemaFieldWithGenerator[] };
 
 const EXAMPLE_SCHEMA_ORG = 'example:type/schema/organization';
