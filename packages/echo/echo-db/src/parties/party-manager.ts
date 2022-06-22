@@ -13,9 +13,9 @@ import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
-import { IdentityProvider } from '../halo';
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
+import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
@@ -51,7 +51,7 @@ export class PartyManager {
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _identityProvider: IdentityCredentialsProvider,
     private readonly _partyFactory: PartyFactory
   ) {}
 
@@ -74,10 +74,11 @@ export class PartyManager {
 
     let partyKeys = this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
+    // Identity may be undefined, for example, on the first start.
     const identity = this._identityProvider();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (identity?.identityKey) {
+    if (identity) {
       partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
     }
 

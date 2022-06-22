@@ -41,6 +41,11 @@ jobs:
           mkdir artifacts
           pushd packages/devtools/devtools-extension/dist/ && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
           pushd packages/wallet/wallet-extension/dist/ && zip -r $ROOT_CWD/artifacts/wallet.zip . && popd
+      - name: Upload
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
       - name: Publish to DXNS
         run: |
           export PATH="$PATH:$(yarn global bin)"
@@ -51,10 +56,5 @@ jobs:
           DX_DXNS_USER_URI: ${{ secrets.DX_DXNS_USER_URI }}
           DX_DXNS_ACCOUNT: ${{ secrets.DX_DXNS_ACCOUNT }}
           DX_PROFILE: ci
-      - name: Upload
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
       - name: Cleanup
         run: rm -rf artifacts

@@ -33,9 +33,9 @@ import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { Item } from '../api';
-import { HaloFactory, Identity, IdentityManager } from '../halo';
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { createTestIdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
 import { createRamStorage } from '../util';
@@ -58,33 +58,12 @@ const setup = async () => {
   const keyring = new Keyring();
   const metadataStore = new MetadataStore(createRamStorage());
   const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
-
-  const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-
-  assert(keyring.keys.length === 1);
-
   const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
-  const haloFactory = new HaloFactory(
-    networkManager,
-    modelFactory,
-    snapshotStore,
-    feedProviderFactory,
-    keyring,
-    {
-      writeLogger: messageLogger('<<<'),
-      readLogger: messageLogger('>>>')
-    }
-  );
-  const haloParty = await haloFactory.createHalo({
-    identityDisplayName: identityKey.publicKey.humanize()
-  });
-  afterTest(() => haloParty.close());
-  const identity = new Identity(keyring, haloParty);
-
+  const identity = await createTestIdentityCredentials(keyring);
   const partyFactory = new PartyFactory(
     () => identity,
     networkManager,
@@ -171,33 +150,22 @@ describe('Party manager', () => {
   test('Create from cold start', async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
-
     const keyring = new Keyring();
     const metadataStore = new MetadataStore(createRamStorage());
-
-    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    await keyring.createKeyRecord({ type: KeyType.DEVICE });
-
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
+
+    const identity = await createTestIdentityCredentials(keyring);
     const partyFactory = new PartyFactory(
-      () => identityManager.identity,
+      () => identity,
       networkManager,
       modelFactory,
       snapshotStore,
       feedProviderFactory
     );
-    const haloFactory: HaloFactory = new HaloFactory(
-      networkManager,
-      modelFactory,
-      snapshotStore,
-      feedProviderFactory,
-      keyring
-    );
-    const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
-    const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
+    const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
 
     /* TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
      * Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
@@ -221,7 +189,7 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey) });
+      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identity.identityKey) });
       feedStream.write({
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',
@@ -235,8 +203,6 @@ describe('Party manager', () => {
     }
 
     // Open.
-    await identityManager.createHalo();
-    afterTest(() => identityManager.close());
     await partyManager.open();
     expect(partyManager.parties).toHaveLength(numParties);
     await partyManager.close();
@@ -450,7 +416,7 @@ describe('Party manager', () => {
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
     const partyB = await partyManagerB.joinParty(invitationDescriptor,
-      OfflineInvitationClaimer.createSecretProvider(identityB));
+      OfflineInvitationClaimer.createSecretProvider(identityB.createCredentialsSigner()));
     expect(partyB).toBeDefined();
     log(`Joined ${partyB.key.toHex()}`);
 

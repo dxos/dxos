@@ -21,11 +21,10 @@ import {
   codec
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
-import { Identity } from '../halo';
+import { InvalidInvitationError } from '../errors';
+import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -170,17 +169,17 @@ export class OfflineInvitationClaimer {
   }
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-  static createSecretProvider (identity: Identity): SecretProvider {
+  static createSecretProvider (credentials: CredentialsSigner): SecretProvider {
     return async (info?: SecretInfo) => {
       return Buffer.from(codec.encode(
         /* The signed portion of the Auth message includes the ID and authNonce provided
          * by the `info` object. These values will be validated on the other end.
          */
         createAuthMessage(
-          identity.signer,
+          credentials.signer,
           info!.id.value,
-          identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
+          credentials.getIdentityKey(),
+          credentials.getDeviceSigningKeys(),
           undefined,
           info!.authNonce.value)
       ));

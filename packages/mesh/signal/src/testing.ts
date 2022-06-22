@@ -8,12 +8,14 @@ import { PublicKey } from '@dxos/crypto';
 
 import { createBroker } from './broker';
 
+export type TestBroker = Moleculer.ServiceBroker;
+
 /**
  * Creates a test instance of the signal server with swarming disabled and starts it.
  *
  * @param port Port to start the signal server on, random by default.
  */
-export const createTestBroker = async (port?: string | number): Promise<Moleculer.ServiceBroker> => {
+export const createTestBroker = async (port?: string | number): Promise<TestBroker> => {
   const broker = createBroker(PublicKey.random().asBuffer(), {
     port,
     logger: false,

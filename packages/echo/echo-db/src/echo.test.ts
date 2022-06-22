@@ -264,8 +264,8 @@ describe('ECHO', () => {
     const a = await setup({ createProfile: true });
     const b = await setup();
 
-    expect(a.halo.isInitialized).toEqual(true);
-    expect(b.halo.isInitialized).toEqual(false);
+    expect(!!a.halo.identity).toEqual(true);
+    expect(!!b.halo.identity).toEqual(false);
 
     expect(a.queryParties().value.length).toBe(0);
     await a.createParty();
@@ -430,11 +430,11 @@ describe('ECHO', () => {
     const b1 = await setup({ createProfile: true });
     const b2 = await setup();
 
-    expect(a1.halo.isInitialized).toBeTruthy();
-    expect(a2.halo.isInitialized).toBeFalsy();
+    expect(a1.halo.identity).toBeTruthy();
+    expect(a2.halo.identity).toBeFalsy();
 
-    expect(b1.halo.isInitialized).toBeTruthy();
-    expect(b2.halo.isInitialized).toBeFalsy();
+    expect(b1.halo.identity).toBeTruthy();
+    expect(b2.halo.identity).toBeFalsy();
 
     await Promise.all([
       (async () => {
@@ -529,13 +529,13 @@ describe('ECHO', () => {
 
     const b = await setup();
 
-    expect(a.halo.isInitialized).toBeTruthy();
-    expect(b.halo.isInitialized).toBeFalsy();
+    expect(a.halo.identity).toBeTruthy();
+    expect(b.halo.identity).toBeFalsy();
 
     // And then redeem it on nodeB.
     await b.halo.recover(seedPhrase);
-    expect(a.halo.isInitialized).toBeTruthy();
-    expect(b.halo.isInitialized).toBeTruthy();
+    expect(a.halo.identity).toBeTruthy();
+    expect(b.halo.identity).toBeTruthy();
 
     // Now create a Party on A and make sure it gets opened on both A and B.
     expect(a.queryParties().value.length).toBe(0);
