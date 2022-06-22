@@ -22,15 +22,14 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import { IdentityNotInitializedError } from '../errors';
-import { IdentityProvider } from '../halo';
 import {
   createDataPartyAdmissionMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
 import { PartyFeedProvider, PartyOptions } from '../pipeline';
+import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
-import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials';
 
 const log = debug('dxos:echo-db:party-factory');
 
