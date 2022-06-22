@@ -22,12 +22,6 @@ const STALL_TIMEOUT = 1000;
  * - Construction separate from open.
  */
 
-// TODO(burdon): Invert (ask for set of feed keys).
-export interface FeedSetProvider {
-  get(): FeedKey[]
-  added: Event<FeedKey>
-}
-
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
 

@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
-import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
+import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
