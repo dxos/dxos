@@ -1,4 +1,4 @@
-import { createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyHint, Keyring, KeyType } from "@dxos/credentials";
+import { createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, KeyHint, Keyring, KeyType } from "@dxos/credentials";
 import { PublicKey } from "@dxos/crypto";
 import { FeedStore } from "@dxos/feed-store";
 import { ModelFactory } from "@dxos/model-factory";
@@ -15,6 +15,7 @@ import { codec } from "@dxos/echo-protocol";
 import { codec as haloCodec } from "@dxos/credentials";
 import { createAuthenticator, createCredentialsProvider } from "../protocol";
 import expect from 'expect'
+import { createDataPartyAdmissionMessages, defaultInvitationAuthenticator, GreetingInitiator } from "../invitations";
 
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
@@ -142,6 +143,57 @@ describe('DataParty', () => {
       { type: KeyType.FEED, publicKey: feedA.key }
     ])
     await partyB.open()
+
+    await partyA.database.createItem({ type: 'test:item-a' })
+    await partyB.database.waitForItem({ type: 'test:item-a' })
+
+    await partyB.database.createItem({ type: 'test:item-b' })
+    await partyA.database.waitForItem({ type: 'test:item-b' })
+
+    await partyA.close()
+    await partyB.close()
+  })
+
+  test('invitations', async () => {
+    const identityA = await createTestIdentityCredentials(new Keyring());
+    const partyKeyA = await identityA.keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const partyA = await createParty(identityA, partyKeyA.publicKey, [])
+    await partyA.open()
+    const feedA = await partyA.feedProvider.createOrOpenWritableFeed()
+    await partyA.processor.writeHaloMessage(createPartyGenesisMessage(
+      identityA.keyring,
+      partyKeyA,
+      feedA.key,
+      partyKeyA
+    ))
+    await partyA.processor.writeHaloMessage(createKeyAdmitMessage(
+      identityA.keyring,
+      partyKeyA.publicKey,
+      identityA.identityKey,
+      [partyKeyA]
+    ))
+
+    const invitation = await partyA.invitationManager.createInvitation(defaultInvitationAuthenticator)
+
+    const identityB = await createTestIdentityCredentials(new Keyring())
+    const initiator = new GreetingInitiator(
+      new NetworkManager(),
+      invitation,
+      async (partyKey, nonce) => [createDataPartyAdmissionMessages(
+        identityB.createCredentialsSigner(),
+        partyKey,
+        identityB.identityGenesis,
+        nonce
+      )]
+    );
+
+    await initiator.connect();
+    const { partyKey: partyKeyB, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
+    expect(partyKeyB.equals(partyKeyA.publicKey))
+    const partyB = await createParty(identityB, partyKeyB, hintsB)
+    await partyB.open()
+    await initiator.destroy();
 
     await partyA.database.createItem({ type: 'test:item-a' })
     await partyB.database.waitForItem({ type: 'test:item-a' })
