@@ -30,7 +30,7 @@ import {
 import { PartyFeedProvider, PartyOptions } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
-import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials-provider';
+import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials';
 
 const log = debug('dxos:echo-db:party-factory');
 
