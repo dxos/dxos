@@ -19,6 +19,7 @@ import { MetadataStore } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
+import { IdentityCredentials, IdentityCredentialsProvider } from '../protocol/identity-credentials-provider';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 
@@ -51,7 +52,7 @@ export class PartyManager {
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _identityProvider: IdentityCredentialsProvider,
     private readonly _partyFactory: PartyFactory
   ) {}
 

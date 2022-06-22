@@ -12,6 +12,7 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
+import { IdentityCredentials } from '../protocol/identity-credentials-provider';
 
 const log = debug('dxos:echo-db:identity');
 
@@ -20,7 +21,7 @@ const log = debug('dxos:echo-db:identity');
  *
  * Acts as a read-only view into IdentityManager.
  */
-export class Identity {
+export class Identity implements IdentityCredentials {
   private readonly _identityKey: KeyRecord;
   private readonly _deviceKey: KeyRecord;
   private readonly _deviceKeyChain: KeyChain;
@@ -42,6 +43,10 @@ export class Identity {
     return this._keyring;
   }
 
+  get keyring (): Keyring {
+    return this._keyring;
+  }
+
   get identityKey (): KeyRecord {
     return this._identityKey;
   }
@@ -52,14 +57,6 @@ export class Identity {
 
   get deviceKeyChain (): KeyChain {
     return this._deviceKeyChain;
-  }
-
-  get preferences (): Preferences {
-    return this._halo.preferences;
-  }
-
-  get contacts (): ContactManager {
-    return this._halo.contacts;
   }
 
   get displayName (): string | undefined {
@@ -78,15 +75,19 @@ export class Identity {
     return this._halo.identityGenesis ?? failUndefined();
   }
 
+  get preferences (): Preferences {
+    return this._halo.preferences;
+  }
+
+  get contacts (): ContactManager {
+    return this._halo.contacts;
+  }
+
   /**
    * HALO party. Must be open.
    */
   get halo (): HaloParty {
     return this._halo;
-  }
-
-  get keyring () {
-    return this._keyring;
   }
 
   createCredentialsSigner (): CredentialsSigner {
