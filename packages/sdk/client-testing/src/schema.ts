@@ -7,34 +7,10 @@ import columnify from 'columnify';
 
 import { Party } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
-import { Item } from '@dxos/echo-db';
+import { Item, SchemaField } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-// TODO(burdon): Factor out schema utils (to ObjectModel).
-
-export const TYPE_SCHEMA = 'dxos:type/schema';
-
-export type FieldType = 'string' | 'number' | 'boolean' | 'ref'
-
 // TODO(burdon): Protobuf definitions.
-
-export type SchemaFieldRef = {
-  schema: string
-  field: string
-}
-
-export type SchemaField = {
-  key: string
-  type?: FieldType
-  required: boolean
-  ref?: SchemaFieldRef
-  // TODO(burdon): Repeated.
-}
-
-export type Schema = {
-  schema: string
-  fields: SchemaField[]
-}
 
 /**
  * Validate item matches schema.
