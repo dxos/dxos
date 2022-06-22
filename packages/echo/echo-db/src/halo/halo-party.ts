@@ -163,7 +163,7 @@ export class HaloParty {
       this._networkManager,
       this._feedProvider,
       peerId,
-      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     // Replication.

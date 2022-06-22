@@ -32,7 +32,7 @@ export class PartyProtocolFactory {
     private readonly _networkManager: NetworkManager,
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _peerId: PublicKey,
-    private readonly _credentials: CredentialsProvider,
+    private readonly _credentials: CredentialsProvider
   ) {
     // Replication.
     this._replicatorProtocolPluginFactory =
@@ -124,7 +124,7 @@ export class PartyProtocolFactory {
  */
 export class ReplicatorProtocolPluginFactory {
   constructor (
-    private readonly _feedProvider: PartyFeedProvider,
+    private readonly _feedProvider: PartyFeedProvider
   ) {}
 
   createPlugins () {

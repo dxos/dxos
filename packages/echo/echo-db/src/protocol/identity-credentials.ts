@@ -55,7 +55,7 @@ export async function createTestIdentityCredentials (keyring: Keyring): Promise<
   };
 }
 
-export async function deriveTestDeviceCredentials(identity: IdentityCredentials): Promise<IdentityCredentials> {
+export async function deriveTestDeviceCredentials (identity: IdentityCredentials): Promise<IdentityCredentials> {
   const deviceKey = await identity.keyring.createKeyRecord({ type: KeyType.DEVICE });
   const keyAdmit = createKeyAdmitMessage(identity.keyring, identity.identityKey.publicKey, deviceKey, [identity.identityKey]);
 
@@ -74,5 +74,5 @@ export async function deriveTestDeviceCredentials(identity: IdentityCredentials)
       deviceKey,
       deviceKeyChain
     )
-  }
+  };
 }

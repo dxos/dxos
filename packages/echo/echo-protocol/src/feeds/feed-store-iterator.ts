@@ -11,7 +11,7 @@ import { keyToString, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
 
 import { Timeframe } from '../spacetime';
-import { FeedBlock, FeedKey } from '../types';
+import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 const STALL_TIMEOUT = 1000;
