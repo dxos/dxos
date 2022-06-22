@@ -44,6 +44,7 @@ export interface MutationMetaWithTimeframe extends MutationMeta {
  */
 // TODO(burdon): Move to FeedStore (since not a hypercore data structure).
 export interface IFeedGenericBlock<T> {
+  // TODO(dmaretskyi): It's a buffer for some reason.
   key: FeedKey;
   seq: number;
   sync: boolean;

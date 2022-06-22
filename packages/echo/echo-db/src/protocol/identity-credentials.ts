@@ -34,8 +34,8 @@ export async function createTestIdentityCredentials (keyring: Keyring): Promise<
   const keyAdmit = createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey);
 
   const messageMap = new Map();
-  messageMap.set(deviceKey.publicKey.toHex(), partyGenesis);
   messageMap.set(identityKey.publicKey.toHex(), keyAdmit);
+  messageMap.set(deviceKey.publicKey.toHex(), partyGenesis);
   const deviceKeyChain = Keyring.buildKeyChain(deviceKey.publicKey, messageMap, [feedKey.publicKey]);
 
   const displayName = identityKey.publicKey.humanize();
@@ -52,5 +52,27 @@ export async function createTestIdentityCredentials (keyring: Keyring): Promise<
     createCredentialsSigner: () => new CredentialsSigner(keyring, identityKey, deviceKey, deviceKeyChain),
     preferences: undefined,
     contacts: undefined
+  };
+}
+
+export async function deriveTestDeviceCredentials (identity: IdentityCredentials): Promise<IdentityCredentials> {
+  const deviceKey = await identity.keyring.createKeyRecord({ type: KeyType.DEVICE });
+  const keyAdmit = createKeyAdmitMessage(identity.keyring, identity.identityKey.publicKey, deviceKey, [identity.identityKey]);
+
+  const messageMap = new Map();
+  messageMap.set(identity.identityKey.publicKey.toHex(), identity.identityGenesis);
+  messageMap.set(deviceKey.publicKey.toHex(), keyAdmit);
+  const deviceKeyChain = Keyring.buildKeyChain(deviceKey.publicKey, messageMap, []);
+
+  return {
+    ...identity,
+    deviceKey,
+    deviceKeyChain,
+    createCredentialsSigner: () => new CredentialsSigner(
+      identity.keyring,
+      identity.identityKey,
+      deviceKey,
+      deviceKeyChain
+    )
   };
 }

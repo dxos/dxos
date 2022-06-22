@@ -175,8 +175,7 @@ export class DataParty {
       this._networkManager,
       this._feedProvider,
       deviceKey.publicKey,
-      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key),
-      this._partyCore.processor.getActiveFeedSet()
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     await this._protocol.start([
