@@ -61,6 +61,78 @@ Each entry consists of:
 
 ### Credential message types
 
+#### Envelope 
+
+> See packages/common/protocols/src/proto/dxos/halo/party.proto
+
+Wraps another credential message specifying the party key and allowing to add more signatures.
+
+#### PartyGenesis
+
+> See packages/common/protocols/src/proto/dxos/halo/party.proto
+
+The start-of-authority record for the Party.
+Contains:
+- Party key.
+- Key of the initial feed to be admitted.
+- Key of the initial member to be admitted.
+
+Signed by the party key itself, as well as the subject keys.
+
+#### KeyAdmit
+
+> See packages/common/protocols/src/proto/dxos/halo/party.proto
+
+Admits a new member key (identity or device key) to the party.
+
+Must be signed by previously admitted member.
+
+#### FeedAdmit
+
+> See packages/common/protocols/src/proto/dxos/halo/party.proto
+
+Admit a single feed to the Party.
+This message must be signed by the feed key to be admitted, also by some other key which has already been admitted (usually by a device pseudonym key).
+
+FeedAdmit messages are used to incrementally build the Feed DAG.
+
+#### FeedGenesis
+
+> See packages/common/protocols/src/proto/dxos/halo/party.proto
+
+The start-of-authority record for the Feed.
+Contains information about the owner of the feed.
+The owner must be a key previously admitted to the Party
+
+> NOTE: Currently unused.
+
+#### IdentityInfo
+
+> See packages/common/protocols/src/proto/dxos/halo/identity.proto
+
+Additional, descriptive information about an Identity. Must be signed by the Identity's key.
+
+#### DeviceInfo
+
+> See packages/common/protocols/src/proto/dxos/halo/identity.proto
+
+Additional, descriptive information about a Device. Must be signed by the Device's key.
+
+#### Invitations
+
+> TODO: describe credentials used in invitations
+
+#### Auth
+
+Ephemeral credential message that is sent during handshake for replication authentication.
+
+Contains:
+ - Party key.
+ - Device key.
+ - Identity key.
+ - Feed key.
+ - Optional FeedAdmit credential to be notarized by the authenticator so that new peers can get their feeds included in the Feed DAG.
+
 ## Processes
 
 ### HALO creation
