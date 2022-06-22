@@ -9,10 +9,10 @@ import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } 
 import { failUndefined } from '@dxos/debug';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
-import { IdentityCredentials } from '../protocol/identity-credentials';
 
 const log = debug('dxos:echo-db:identity');
 

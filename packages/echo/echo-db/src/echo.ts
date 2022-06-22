@@ -376,7 +376,7 @@ export class ECHO {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity ?? raise(new IdentityNotInitializedError()));
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ?? raise(new IdentityNotInitializedError()));
 
     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }
