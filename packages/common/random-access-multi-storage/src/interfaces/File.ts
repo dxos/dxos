@@ -2,32 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-interface FileStat {
+export interface FileStat {
     size: number
   }
 
-interface CallBack<DataType> {
+interface Callback<DataType> {
   (err: Error | null, data?: DataType): void;
 }
 
 export interface FileInternal {
-  read(offset: number, size: number, cb?: CallBack<Buffer>): void;
+  read(offset: number, size: number, cb?: Callback<Buffer>): void;
 
-  write(offset: number, data: Buffer, cb?: CallBack<void>): void;
+  write(offset: number, data: Buffer, cb?: Callback<void>): void;
 
-  del(offset: number, data: Buffer, cb?: CallBack<void>): void;
+  del(offset: number, data: Buffer, cb?: Callback<void>): void;
 
-  stat(cb: CallBack<FileStat>): void;
+  stat(cb: Callback<FileStat>): void;
 
-  close(cb?: CallBack<void>): void;
+  close(cb?: Callback<void>): void;
 
-  destroy(cb?: CallBack<void>): void
+  destroy(cb?: Callback<void>): void
 }
 
 export class File {
   constructor (private readonly _fileInternal: FileInternal) {}
 
-  private _createPromise<Type> (fileMethod: (...args: any[]) => void, cb?: CallBack<Type>, ...args: (number | Buffer)[]): Promise<Type> {
+  private _createPromise<Type> (fileMethod: (...args: any[]) => void, cb?: Callback<Type>, ...args: (number | Buffer)[]): Promise<Type> {
     const promise = new Promise<Type>(
       (resolve, reject) => {
         fileMethod(...args, (err: Error | null, data?: Type) => {
@@ -44,27 +44,27 @@ export class File {
     return promise;
   }
 
-  read (offset: number, size: number, cb?: CallBack<Buffer>): Promise<Buffer> {
+  read (offset: number, size: number, cb?: Callback<Buffer>): Promise<Buffer> {
     return this._createPromise<Buffer>(this._fileInternal.read.bind(this._fileInternal), cb, offset, size);
   }
 
-  write (offset: number, data: Buffer, cb?: CallBack<void>): Promise<void> {
+  write (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
     return this._createPromise<void>(this._fileInternal.write.bind(this._fileInternal), cb, offset, data);
   }
 
-  del (offset: number, data: Buffer, cb?: CallBack<void>): Promise<void> {
+  del (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
     return this._createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, data);
   }
 
-  stat (cb?: CallBack<FileStat>): Promise<FileStat> {
+  stat (cb?: Callback<FileStat>): Promise<FileStat> {
     return this._createPromise<FileStat>(this._fileInternal.stat.bind(this._fileInternal), cb);
   }
 
-  close (cb?: CallBack<void>): Promise<void> {
+  close (cb?: Callback<void>): Promise<void> {
     return this._createPromise<void>(this._fileInternal.close.bind(this._fileInternal), cb);
   }
 
-  destroy (cb?: CallBack<void>): Promise<void> {
+  destroy (cb?: Callback<void>): Promise<void> {
     return this._createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);
   }
 }
