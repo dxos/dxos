@@ -57,7 +57,13 @@ Each entry consists of:
 - A signed credential message where the public key is the subject of the credential.
 - Zero or more parent KeyChains establishing the trust of the keys that signed the credential.
 
+Example:
+
+Parties admit identity keys as members. When a device signs a credential, it produces a signature using it's own device key and attaches a KeyChain containing a KeyAdmit message, admitting the device key to the HALO.
+
 > Q: What's the difference between including KeyChain as a parent of a different KeyChain vs having the credential message of that KeyChain entry be signed with the first KeyChain.
+
+> TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
 ### Credential message types
 
