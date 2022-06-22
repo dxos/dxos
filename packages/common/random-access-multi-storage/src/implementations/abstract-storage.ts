@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import pify from 'pify';
-
 import { File } from '../interfaces/File';
 import { IStorage } from '../interfaces/IStorage';
 import { StorageType } from '../interfaces/storage-types';
@@ -34,7 +32,7 @@ export abstract class AbstractStorage implements IStorage {
   private _close () {
     return Promise.all(
       Array.from(this._files.values())
-        .map(file => pify(file.close.bind(file))().catch((err: any) => console.error(err.message)))
+        .map(file => file.close().catch((error: any) => console.error(error.message)))
     );
   }
 
