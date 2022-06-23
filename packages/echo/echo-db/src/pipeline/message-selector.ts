@@ -60,15 +60,6 @@ export function createMessageSelector (
         if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
           return i;
         }
-      } else if (getPartyCredentialMessageType(halo) === PartyCredential.Type.FEED_ADMIT) {
-        if (admitsKeys(halo).find(key => key.equals(feedKey))) {
-          // TODO(marik-d): Calling `Keyring.signingKeys` is expensive. Is there any way to optimize/cache this?
-          for (const signedBy of Keyring.signingKeys(halo)) {
-            if (partyProcessor.isMemberKey(signedBy) || signedBy.equals(partyProcessor.partyKey)) {
-              return i;
-            }
-          }
-        }
       }
     }
 
