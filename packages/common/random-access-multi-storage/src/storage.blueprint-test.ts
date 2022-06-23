@@ -89,6 +89,26 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       await file2.close();
     });
 
+    it('reopen and check if data is the same', async () => {
+      // Open.
+      const storage = createStorage();
+      const fileName = randomText();
+      const data: Buffer = Buffer.from(randomText());
+      const file = storage.createOrOpen(fileName);
+
+      // Write & close.
+      await writeAndCheck(file, data);
+      await file.close();
+
+      // Open again.
+      const file2 = storage.createOrOpen(fileName);
+
+      // Read and check inside.
+      const dataFromFile = await file2.read(0, data.length);
+      expect(dataFromFile).toEqual(data);
+      await file2.close();
+    });
+
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async function () {
       const storage = createStorage();
