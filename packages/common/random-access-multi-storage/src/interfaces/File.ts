@@ -22,10 +22,24 @@ export interface FileInternal {
   close(cb?: Callback<void>): void;
 
   destroy(cb?: Callback<void>): void
+
+  closed: boolean;
+  destroyed: boolean;
 }
 
 export class File {
-  constructor (private readonly _fileInternal: FileInternal) {}
+  constructor (protected readonly _fileInternal: FileInternal, readonly name?: string) {}
+
+  isDestroyed () {
+    return this._fileInternal.destroyed;
+  }
+
+  reopen () {
+    if (this.isDestroyed()) {
+      throw new Error('File is destroyed');
+    }
+    this._fileInternal.closed = false;
+  }
 
   private _createPromise<Type> (fileMethod: (...args: any[]) => void, cb?: Callback<Type>, ...args: (number | Buffer)[]): Promise<Type> {
     const promise = new Promise<Type>(
