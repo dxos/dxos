@@ -19,10 +19,10 @@ export abstract class AbstractStorage implements IStorage {
     this._files = new Set();
   }
 
-  public createOrOpen (filename: string, opts = {}) {
+  public createOrOpen (filename: string, opts = {}): File {
     const file = this._create(filename, opts);
     this._files.add(file);
-    return file as any;
+    return file;
   }
 
   public async delete (filename: string) {
