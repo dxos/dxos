@@ -3,26 +3,26 @@
 //
 
 import { File } from '../interfaces/File';
-import { IStorage } from '../interfaces/IStorage';
+import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
 
 /**
  * Base class for all storage implementations.
  */
-export abstract class AbstractStorage implements IStorage {
+export abstract class AbstractStorage implements Storage {
   protected readonly _root: string;
-  protected readonly _files: Set<File>;
+  protected _files: Map<string, File>;
   public abstract type: StorageType
 
   constructor (root: string) {
     this._root = root;
-    this._files = new Set();
+    this._files = new Map<string, File>();
   }
 
-  public createOrOpen (filename: string, opts = {}) {
+  public createOrOpen (filename: string, opts = {}): File {
     const file = this._create(filename, opts);
-    this._files.add(file);
-    return file as any;
+    this._files.set(filename, file);
+    return file;
   }
 
   public async delete (filename: string) {
@@ -46,7 +46,7 @@ export abstract class AbstractStorage implements IStorage {
     }
   }
 
-  public abstract subDir (path: string): IStorage
+  public abstract subDir (path: string): Storage
   protected abstract _create (filename: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

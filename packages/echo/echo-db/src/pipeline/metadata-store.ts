@@ -8,7 +8,7 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -28,7 +28,7 @@ export class MetadataStore {
   };
 
   constructor (
-    private readonly _storage: IStorage
+    private readonly _storage: Storage
   ) {}
 
   get version (): number {

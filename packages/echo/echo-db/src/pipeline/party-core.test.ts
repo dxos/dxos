@@ -18,7 +18,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore, PartyFeedProvider, ReplicatorProtocolPluginFactory } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
 
 describe('PartyCore', () => {
@@ -29,10 +28,10 @@ describe('PartyCore', () => {
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -137,10 +136,10 @@ describe('PartyCore', () => {
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -256,10 +255,10 @@ describe('PartyCore', () => {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 
