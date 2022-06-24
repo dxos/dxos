@@ -6,6 +6,7 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
+  AccountCircle as ProfileIcon,
   Grain as ItemsIcon,
   Dns as StorageIcon,
   List as MessagesIcon,
@@ -24,16 +25,17 @@ import {
   CredentialMessagesPanel,
   FeedsPanel,
   ItemsPanel,
-  LoggingPanel,
   KeyringPanel,
+  LoggingPanel,
+  // NetworkPanel,
   PartiesPanel,
-  SignalPanel,
-  StoragePanel,
-  SwarmPanel,
-  SnapshotsPanel,
+  ProfilePanel,
   RpcTracePanel,
-  Section
-  // NetworkPanel
+  Section,
+  SignalPanel,
+  SnapshotsPanel,
+  StoragePanel,
+  SwarmPanel
 } from './containers';
 
 export const sections: Section[] = [
@@ -57,6 +59,12 @@ export const sections: Section[] = [
   {
     title: 'HALO',
     items: [
+      {
+        id: 'halo.profile',
+        title: 'Profile',
+        icon: <ProfileIcon />,
+        panel: <ProfilePanel />
+      },
       {
         id: 'halo.keyring',
         title: 'Keyring',
