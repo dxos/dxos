@@ -28,7 +28,7 @@ export interface FileInternal {
 }
 
 export class File {
-  constructor (protected readonly _fileInternal: FileInternal, readonly name?: string) {}
+  constructor (protected readonly _fileInternal: FileInternal) {}
 
   isDestroyed () {
     return this._fileInternal.destroyed;
