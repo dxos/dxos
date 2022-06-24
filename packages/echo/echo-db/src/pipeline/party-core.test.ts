@@ -248,43 +248,6 @@ describe('PartyCore', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });
 
-  test('self-admitting feed with a hint', async () => {
-    const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
-
-    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
-    const fullKey = keyring.getFullKey(feedKey.publicKey);
-    const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
-
-    await party.processor.takeHints([{
-      type: KeyType.FEED,
-      publicKey: feedKey.publicKey
-    }]);
-
-    await feed2.append({
-      halo: createFeedAdmitMessage(
-        keyring,
-        party.key,
-        feedKey.publicKey,
-        [partyKey]
-      )
-    });
-
-    const itemId = createId();
-    await feed2.append({
-      echo: {
-        itemId,
-        genesis: {
-          itemType: 'dxos:example',
-          modelType: ObjectModel.meta.type
-        },
-        timeframe: new Timeframe()
-      }
-    });
-
-    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
-  });
-
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
