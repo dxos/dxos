@@ -366,7 +366,7 @@ importers:
       expect: ~27.0.2
       mocha: ~8.4.0
       pify: ~5.0.0
-      random-access-file: ^2.1.0
+      random-access-file: ^2.2.1
       random-access-idb: ^1.2.1
       random-access-memory: ~3.1.2
       random-access-web: ^2.0.3
@@ -375,7 +375,7 @@ importers:
     dependencies:
       del: 5.1.0
       pify: 5.0.0
-      random-access-file: 2.2.0
+      random-access-file: 2.2.1
       random-access-idb: 1.2.1
       random-access-memory: 3.1.4
       random-access-web: 2.0.3
@@ -16498,7 +16498,7 @@ packages:
   /hypercore-default-storage/1.1.1:
     resolution: {integrity: sha512-y7dSX3VUT4I/X5Cj0h6hcKN2R+/QQIi1HnElnCqY3tQYbVaWYljdbVe3aBQIvkRCfOgWMfe2RbCLX4N78D5syg==}
     dependencies:
-      random-access-file: 2.2.0
+      random-access-file: 2.2.1
     optionalDependencies:
       fsctl: 1.0.0
 
@@ -19432,7 +19432,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -19884,7 +19884,7 @@ packages:
       brace-expansion: 1.1.11
 
   /minimist/0.0.8:
-    resolution: {integrity: sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=}
+    resolution: {integrity: sha512-miQKw5Hv4NS1Psg2517mV4e4dYNaO3++hjAvLOAzKqZ61rH8NS1SK+vbfBWZ5PY/Me/bEWhUwqMghEW5Fb9T7Q==}
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
@@ -22619,8 +22619,8 @@ packages:
       random-access-storage: 1.4.2
     dev: false
 
-  /random-access-file/2.2.0:
-    resolution: {integrity: sha512-B744003Mj7v3EcuPl9hCiB2Ot4aZjgtU2mV6yFY1THiWU/XfGf1uSadR+SlQdJcwHgAWeG7Lbos0aUqjtj8FQg==}
+  /random-access-file/2.2.1:
+    resolution: {integrity: sha512-RGU0xmDqdOyEiynob1KYSeh8+9c9Td1MJ74GT1viMEYAn8SJ9oBtWCXLsYZukCF46yududHOdM449uRYbzBrZQ==}
     dependencies:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.2
@@ -24090,7 +24090,7 @@ packages:
     dev: false
 
   /signed-varint/2.0.1:
-    resolution: {integrity: sha1-UKmYnafJjCxh2tEZvJdHDvhSgSk=}
+    resolution: {integrity: sha512-abgDPg1106vuZZOvw7cFwdCABddfJRz5akcCcchzTbhyhYnsG31y4AlZEgp315T7W3nQq5P4xeOm186ZiPVFzw==}
     dependencies:
       varint: 5.0.2
 
@@ -26099,7 +26099,7 @@ packages:
     resolution: {integrity: sha1-SQgpuULSSEY7KzUJeZXDv3NxmOk=}
 
   /varint/5.0.0:
-    resolution: {integrity: sha1-2Ca4n3SQcy+rwMDtaT7Uddyynr8=}
+    resolution: {integrity: sha512-gC13b/bWrqQoKY2EmROCZ+AR0jitc6DnDGaQ6Ls9QpKmuSgJB1eQ7H3KETtQm7qSdMWMKCmsshyCmUwMLh3OAA==}
 
   /varint/5.0.2:
     resolution: {integrity: sha512-lKxKYG6H03yCZUpAGOPOsMcGxd1RHCu1iKvEHYDPmTyq2HueGhD73ssNBqqQWfvYs04G9iUFRvmAVLW20Jw6ow==}
