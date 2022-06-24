@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { join } from 'path';
 import ram from 'random-access-memory';
 
 import { File } from '../interfaces';
@@ -16,7 +17,7 @@ export class RamStorage extends AbstractStorage {
   }
 
   subDir (path: string) {
-    return new RamStorage(`${this.rootPath}${path}`);
+    return new RamStorage(join(this.rootPath, path));
   }
 
   override createOrOpen (filename: string): File {

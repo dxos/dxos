@@ -127,35 +127,26 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     });
 
     it('subdirectories', async function () {
-      const rootStorage = createStorage();
+      // 1. Create storage and two subdirectories
+      const storage = createStorage();
+      const subStorage1 = storage.subDir('dir1');
+      const subStorage2 = storage.subDir('dir2');
 
-      // TODO(yivlad): Doesn't work for StorageType.NODE.
-      if (rootStorage.type === StorageType.NODE) {
-        this.skip();
-      }
-      const fileName = randomText();
-      const file1 = rootStorage.createOrOpen(fileName);
-
+      const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
-      await writeAndCheck(file1, buffer1);
-
-      const childStorage1 = rootStorage.subDir('child1');
-      const file2 = childStorage1.createOrOpen(fileName);
       const buffer2 = Buffer.from(randomText());
-      await writeAndCheck(file2, buffer2);
-      const bufferRead1 = await file1.read(0, buffer1.length);
-      expect(buffer1.equals(bufferRead1));
 
-      const childStorage2 = rootStorage.subDir('child2');
-      const file3 = childStorage2.createOrOpen(fileName);
-      const { size } = await file3.stat();
-      expect(size).toBe(0);
-      const buffer3 = Buffer.from(randomText());
-      await writeAndCheck(file3, buffer3);
-      const bufferRead2 = await file2.read(0, buffer2.length);
-      expect(buffer2.equals(bufferRead2));
+      // 2. Create a file in first subdirectory and write content
+      const file1 = subStorage1.createOrOpen(fileName);
+      await file1.write(0, buffer1);
 
-      await file1.close();
+      // 3. Create a file with the same name in the second subdir and write different content
+      const file2 = subStorage2.createOrOpen(fileName);
+      await file2.write(0, buffer2);
+
+      // 4. Check that they have corrent content.
+      expect(await file1.read(0, buffer1.length)).toEqual(buffer1);
+      expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
     it('destroys file', async function () {

@@ -59,7 +59,7 @@ function createPromise<ReturnType> (callbackFunc: (...args: any[]) => void, cb?:
         if (err) {
           reject(err);
         } else {
-          resolve(data!)
+          resolve(data!);
         }
       });
     });

@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { Callback, FileStat } from '../types';
 
 /**
@@ -15,7 +19,7 @@ export interface FileInternal {
   close(cb?: Callback<void>): void;
 
   destroy(cb?: Callback<void>): void
-  
+
   closed: boolean;
   destroyed: boolean;
 }

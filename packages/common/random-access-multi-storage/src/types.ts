@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 export interface FileStat {
   size: number
 }
