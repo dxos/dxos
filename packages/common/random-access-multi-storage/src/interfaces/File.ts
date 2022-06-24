@@ -16,6 +16,8 @@ export class File {
 
   /**
    * @internal
+   * Only to be used in RamStorage implementation.
+   * TODO(mykola): Don`t know if will work with others.
    */
   _reopen () {
     if (this._isDestroyed()) {
