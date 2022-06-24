@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { NodeStorage } from './implementations/file-storage';
+import { NodeStorage } from './implementations/node-storage';
 import { RamStorage } from './implementations/ram-storage';
 import { IStorage } from './interfaces/IStorage';
 import { StorageType } from './interfaces/storage-types';
