@@ -5,6 +5,7 @@
 import { File } from './File';
 import { StorageType } from './storage-types';
 
+// TODO(dmaretskyi): Rename to Storage.
 export interface IStorage {
   readonly type: StorageType
 

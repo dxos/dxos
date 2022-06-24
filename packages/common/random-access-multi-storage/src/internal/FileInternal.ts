@@ -1,0 +1,18 @@
+import { Callback, FileStat } from '../types';
+
+export interface FileInternal {
+  read(offset: number, size: number, cb?: Callback<Buffer>): void;
+
+  write(offset: number, data: Buffer, cb?: Callback<void>): void;
+
+  del(offset: number, data: Buffer, cb?: Callback<void>): void;
+
+  stat(cb: Callback<FileStat>): void;
+
+  close(cb?: Callback<void>): void;
+
+  destroy(cb?: Callback<void>): void
+  
+  closed: boolean;
+  destroyed: boolean;
+}
