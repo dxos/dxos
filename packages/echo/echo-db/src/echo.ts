@@ -112,9 +112,9 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    feedStorage = createStorage('snapshots', StorageType.RAM),
+    feedStorage = createStorage('feed', StorageType.RAM),
     snapshotStorage = createStorage('snapshots', StorageType.RAM),
-    metadataStorage = createStorage('snapshots', StorageType.RAM),
+    metadataStorage = createStorage('metadata', StorageType.RAM),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,

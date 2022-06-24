@@ -27,9 +27,9 @@ describe('HALO', () => {
 
     const networkManager = new NetworkManager();
     const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
-    const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
     const keyring = new Keyring();
-    const feedStore = new FeedStore(createStorage('snapshots', StorageType.RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,

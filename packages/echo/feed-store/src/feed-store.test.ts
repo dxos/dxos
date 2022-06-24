@@ -64,10 +64,10 @@ describe('FeedStore', () => {
   const keys = createKeyPairs();
 
   test('Config default', async () => {
-    const feedStore = await createFeedStore(createStorage('', StorageType.RAM));
+    const feedStore = await createFeedStore(createStorage('feed', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM));
+    const feedStore2 = new FeedStore(createStorage('feed', StorageType.RAM));
     expect(feedStore2).toBeInstanceOf(FeedStore);
   });
 
@@ -80,7 +80,7 @@ describe('FeedStore', () => {
     const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
       hypercore: customHypercore
     });
 
@@ -161,7 +161,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM));
+    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const { publicKey, secretKey } = createKeyPair();
@@ -172,7 +172,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
       hypercore: () => ({
         opened: true,
         ready (cb: () => void) {

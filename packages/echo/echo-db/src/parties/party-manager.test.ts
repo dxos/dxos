@@ -55,9 +55,9 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async () => {
   const keyring = new Keyring();
-  const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
-  const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+  const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
+  const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
+  const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
@@ -150,9 +150,9 @@ describe('Party manager', () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const keyring = new Keyring();
-    const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
