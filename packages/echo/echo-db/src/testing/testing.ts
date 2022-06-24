@@ -20,13 +20,12 @@ export const messageLogger = (tag: string) => (message: any) => {
 export interface TestOptions {
   verboseLogging?: boolean
   initialize?: boolean
-  storage?: any
+  storage?: IStorage
   keyStorage?: any
   networkManagerOptions?: NetworkManagerOptions
   // TODO(burdon): Group properties by hierarchical object.
   snapshots?: boolean
   snapshotInterval?: number
-  snapshotStorage?: IStorage
 }
 
 /**
@@ -35,17 +34,15 @@ export interface TestOptions {
 export const createTestInstance = async ({
   verboseLogging = false,
   initialize = false,
-  storage = createStorage('snapshots', StorageType.RAM),
+  storage = createStorage('', StorageType.RAM),
   keyStorage = undefined,
   networkManagerOptions,
-  snapshotStorage = createStorage('snapshots', StorageType.RAM),
   snapshots = true,
   snapshotInterval
 }: TestOptions = {}) => {
   const echo = new ECHO({
-    feedStorage: storage,
+    storage,
     keyStorage,
-    snapshotStorage,
     snapshotInterval,
     snapshots,
     networkManagerOptions,
