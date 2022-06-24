@@ -32,8 +32,8 @@ export class RamStorage extends AbstractStorage {
   protected _getFileIfOpened (filename: string) {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
-      if (file && !file.isDestroyed()) {
-        file.reopen();
+      if (file && !file._isDestroyed()) {
+        file._reopen();
         return file;
       }
     }
