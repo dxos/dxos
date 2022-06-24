@@ -16,7 +16,7 @@ import { isNode } from '../util';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapshotsEnabled = false) => {
+export const createStorageObjects = (config: defs.Runtime.Client.Storage) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     storageType,
@@ -38,10 +38,8 @@ export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapsh
   }
 
   return {
-    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : StorageType.RAM),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : StorageType.RAM),
-    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : StorageType.RAM)
+    storage: createStorage(`${path}/`, persistent ? toStorageType(storageType) : StorageType.RAM),
+    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
 };
 

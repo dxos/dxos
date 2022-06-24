@@ -8,13 +8,13 @@ import pify from 'pify';
 
 import { Lock } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import type { File, IStorage } from '@dxos/random-access-multi-storage';
+import type { File, Storage } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
-  storage: IStorage,
+  storage: Storage,
   key: PublicKey,
   hypercore: Hypercore,
   secretKey?: Buffer,
@@ -27,7 +27,7 @@ interface FeedDescriptorOptions {
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private readonly _storage: IStorage;
+  private readonly _storage: Storage;
   private readonly _key: PublicKey;
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
