@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } from '@dxos/credentials';
+import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
