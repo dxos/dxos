@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { IStorage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
@@ -20,7 +20,7 @@ export const messageLogger = (tag: string) => (message: any) => {
 export interface TestOptions {
   verboseLogging?: boolean
   initialize?: boolean
-  storage?: IStorage
+  storage?: Storage
   keyStorage?: any
   networkManagerOptions?: NetworkManagerOptions
   // TODO(burdon): Group properties by hierarchical object.

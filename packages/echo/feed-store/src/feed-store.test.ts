@@ -12,7 +12,7 @@ import tempy from 'tempy';
 
 import { sleep } from '@dxos/async';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
-import { IStorage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
+import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
@@ -25,7 +25,7 @@ interface KeyPair {
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
-const createFeedStore = (storage: IStorage, options = {}) => {
+const createFeedStore = (storage: Storage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
   return feedStore;
 };

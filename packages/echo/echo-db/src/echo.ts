@@ -15,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IStorage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
@@ -42,7 +42,7 @@ export interface EchoCreationOptions {
   /**
    * Storage to persist data. Defaults to in-memory.
    */
-   storage?: IStorage
+   storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.

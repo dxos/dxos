@@ -4,10 +4,10 @@
 
 import expect from 'expect';
 
-import { File, IStorage, StorageType } from './interfaces';
+import { File, Storage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
-export function storageTests (testGroupName: string, createStorage: () => IStorage) {
+export function storageTests (testGroupName: string, createStorage: () => Storage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {

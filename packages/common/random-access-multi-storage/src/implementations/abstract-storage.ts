@@ -3,13 +3,13 @@
 //
 
 import { File } from '../interfaces/File';
-import { IStorage } from '../interfaces/IStorage';
+import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
 
 /**
  * Base class for all storage implementations.
  */
-export abstract class AbstractStorage implements IStorage {
+export abstract class AbstractStorage implements Storage {
   protected readonly _root: string;
   protected _files: Map<string, File>;
   public abstract type: StorageType
@@ -46,7 +46,7 @@ export abstract class AbstractStorage implements IStorage {
     }
   }
 
-  public abstract subDir (path: string): IStorage
+  public abstract subDir (path: string): Storage
   protected abstract _create (filename: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

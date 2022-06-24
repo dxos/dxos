@@ -4,13 +4,13 @@
 
 import { NodeStorage } from './implementations/node-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { IStorage } from './interfaces/IStorage';
+import { Storage } from './interfaces/Storage';
 import { StorageType } from './interfaces/storage-types';
 
 export const createStorage = (
   root: string,
   type?: StorageType
-): IStorage => {
+): Storage => {
   if (type === undefined) {
     return new NodeStorage(root);
   }
