@@ -93,7 +93,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       // Open.
       const storage = createStorage();
       const fileName = randomText();
-      const data: Buffer = Buffer.from(randomText());
+      const data = Buffer.from(randomText());
       const file = storage.createOrOpen(fileName);
 
       // Write & close.

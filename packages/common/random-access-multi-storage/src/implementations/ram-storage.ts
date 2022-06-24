@@ -20,19 +20,28 @@ export class RamStorage extends AbstractStorage {
   }
 
   override createOrOpen (filename: string): File {
-    const existingFile = Array.from(this._files.values()).filter(file => file.name === filename).filter(file => !file.isDestroyed())[0];
+    const existingFile = this._getFileIfOpened(filename);
     if (existingFile) {
-      existingFile.reopen();
       return existingFile;
-    } else {
-      const file = this._create(filename);
-      this._files.add(file);
-      return file;
     }
+    const file = this._create();
+    this._files.set(filename, file);
+    return file;
   }
 
-  protected override _create (filename: string): File {
-    return new File(ram(), filename);
+  protected _getFileIfOpened (filename: string) {
+    if (this._files.has(filename)) {
+      const file = this._files.get(filename);
+      if (file && !file.isDestroyed()) {
+        file.reopen();
+        return file;
+      }
+    }
+    return null;
+  }
+
+  protected override _create (): File {
+    return new File(ram());
   }
 
   protected override async _destroy () {

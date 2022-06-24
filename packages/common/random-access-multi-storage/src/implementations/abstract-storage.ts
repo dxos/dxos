@@ -11,17 +11,17 @@ import { StorageType } from '../interfaces/storage-types';
  */
 export abstract class AbstractStorage implements IStorage {
   protected readonly _root: string;
-  protected readonly _files: Set<File>;
+  protected _files: Map<string, File>;
   public abstract type: StorageType
 
   constructor (root: string) {
     this._root = root;
-    this._files = new Set();
+    this._files = new Map<string, File>();
   }
 
   public createOrOpen (filename: string, opts = {}): File {
     const file = this._create(filename, opts);
-    this._files.add(file);
+    this._files.set(filename, file);
     return file;
   }
 
