@@ -30,10 +30,16 @@ export interface FileInternal {
 export class File {
   constructor (protected readonly _fileInternal: FileInternal) {}
 
+  /**
+   * @internal
+   */
   _isDestroyed () {
     return this._fileInternal.destroyed;
   }
 
+  /**
+   * @internal
+   */
   _reopen () {
     if (this._isDestroyed()) {
       throw new Error('File is destroyed');
