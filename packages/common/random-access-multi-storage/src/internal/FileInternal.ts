@@ -1,5 +1,8 @@
 import { Callback, FileStat } from '../types';
 
+/**
+ * Interface of file objects returned by `random-access-*` implementations.
+ */
 export interface FileInternal {
   read(offset: number, size: number, cb?: Callback<Buffer>): void;
 

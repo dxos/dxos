@@ -6,7 +6,7 @@ import assert from 'assert';
 import randomAccessIdb from 'random-access-idb';
 
 import { File, StorageType } from '../interfaces';
-import { FileInternal } from '../interfaces/File';
+import { FileInternal } from '../internal';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
