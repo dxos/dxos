@@ -5,13 +5,13 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/crypto';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
-import { createRamStorage } from '../util';
 import { MetadataStore } from './metadata-store';
 
 describe('MetadataStore in-memory', () => {
   it('Creates party and adds feeds to it', async () => {
-    const store = new MetadataStore(createRamStorage());
+    const store = new MetadataStore(createStorage('snapshots', StorageType.RAM));
     await store.load();
     expect(store.parties?.length).toBe(0);
 
@@ -33,7 +33,7 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Creates party when adding feed', async () => {
-    const store = new MetadataStore(createRamStorage());
+    const store = new MetadataStore(createStorage('snapshots', StorageType.RAM));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -45,7 +45,7 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Doesn\'t add same feed twice', async () => {
-    const store = new MetadataStore(createRamStorage());
+    const store = new MetadataStore(createStorage('snapshots', StorageType.RAM));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -60,7 +60,7 @@ describe('MetadataStore in-memory', () => {
 
   // TODO(yivlad): Doesn't work for now.
   it.skip('Resets storage', async () => {
-    const store = new MetadataStore(createRamStorage());
+    const store = new MetadataStore(createStorage('snapshots', StorageType.RAM));
 
     const partyKey = PublicKey.random();
     const feedKey = PublicKey.random();

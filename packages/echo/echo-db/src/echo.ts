@@ -15,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { IStorage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
@@ -27,7 +27,6 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
-import { createRamStorage } from './util';
 
 const log = debug('dxos:echo');
 const error = log.extend('error');
@@ -113,9 +112,9 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    feedStorage = createRamStorage(),
-    snapshotStorage = createRamStorage(),
-    metadataStorage = createRamStorage(),
+    feedStorage = createStorage('snapshots', StorageType.RAM),
+    snapshotStorage = createStorage('snapshots', StorageType.RAM),
+    metadataStorage = createStorage('snapshots', StorageType.RAM),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,

@@ -12,12 +12,12 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage } from '../util';
 import { HALO } from './halo';
 
 describe('HALO', () => {
@@ -26,10 +26,10 @@ describe('HALO', () => {
       .registerModel(ObjectModel);
 
     const networkManager = new NetworkManager();
-    const snapshotStore = new SnapshotStore(createRamStorage());
-    const metadataStore = new MetadataStore(createRamStorage());
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+    const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
     const keyring = new Keyring();
-    const feedStore = new FeedStore(createRamStorage(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('snapshots', StorageType.RAM), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,

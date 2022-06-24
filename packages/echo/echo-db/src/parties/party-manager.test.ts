@@ -38,7 +38,6 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createTestIdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
-import { createRamStorage } from '../util';
 import { PARTY_ITEM_TYPE } from './data-party';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
@@ -56,7 +55,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async () => {
   const keyring = new Keyring();
-  const metadataStore = new MetadataStore(createRamStorage());
+  const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
   const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
   const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
@@ -151,7 +150,7 @@ describe('Party manager', () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const keyring = new Keyring();
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('snapshots', StorageType.RAM));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
     const networkManager = new NetworkManager();
