@@ -1,5 +1,18 @@
 # Change Log
 
+### [2.33.4](https://www.github.com/dxos/protocols/compare/v2.33.3...v2.33.4) (2022-06-24)
+
+
+### Features
+
+* Disallow self-admitting feeds ([#1279](https://www.github.com/dxos/protocols/issues/1279)) ([24cf72a](https://www.github.com/dxos/protocols/commit/24cf72aec297081cfddd5a70ad94e537c39b1635))
+* **react-client-testing:** Moved dnd-components ([#1282](https://www.github.com/dxos/protocols/issues/1282)) ([021ead8](https://www.github.com/dxos/protocols/commit/021ead8967367cf30baa1f6e94fcb272ece2093d))
+
+
+### Bug Fixes
+
+* Make RamStorage persistent and storage subdirectories working ([#1276](https://www.github.com/dxos/protocols/issues/1276)) ([e8fe40a](https://www.github.com/dxos/protocols/commit/e8fe40a83ebd72376b8ed7f4274070d41fd5fa1d))
+
 ### [2.33.3](https://www.github.com/dxos/protocols/compare/v2.33.2...v2.33.3) (2022-06-22)
 
 
