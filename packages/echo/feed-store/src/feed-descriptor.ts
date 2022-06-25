@@ -19,6 +19,7 @@ interface FeedDescriptorOptions {
   hypercore: Hypercore,
   secretKey?: Buffer,
   valueEncoding?: ValueEncoding
+  disableSigning?: boolean
 }
 
 /**
@@ -33,6 +34,7 @@ export class FeedDescriptor {
   private readonly _valueEncoding?: ValueEncoding;
   private readonly _hypercore: Hypercore;
   private readonly _lock: Lock;
+  private readonly _disableSigning: boolean;
 
   private _feed: HypercoreFeed | null;
 
@@ -42,7 +44,8 @@ export class FeedDescriptor {
       key,
       secretKey,
       valueEncoding,
-      hypercore = defaultHypercore
+      hypercore = defaultHypercore,
+      disableSigning = true,
     } = options;
 
     this._storage = storage;
@@ -50,6 +53,7 @@ export class FeedDescriptor {
     this._hypercore = hypercore;
     this._key = key;
     this._secretKey = secretKey;
+    this._disableSigning = !!disableSigning;
 
     this._lock = new Lock();
 
@@ -127,7 +131,8 @@ export class FeedDescriptor {
       this._key.asBuffer(),
       {
         secretKey: this._secretKey,
-        valueEncoding: this._valueEncoding
+        valueEncoding: this._valueEncoding,
+        crypto: this._disableSigning ? MOCK_CRYPTO : undefined
       }
     );
 
@@ -141,3 +146,12 @@ export class FeedDescriptor {
 }
 
 export default FeedDescriptor;
+
+const MOCK_CRYPTO = {
+  sign: (data: any, secretKey: any, cb: any) => {
+    cb(null, Buffer.from(''));
+  },
+  verify: (signature: any, data: any, key: any, cb: any) => {
+    cb(null, true);
+  }
+};
