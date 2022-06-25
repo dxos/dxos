@@ -1,20 +1,24 @@
 import { ObjectModel } from "@dxos/object-model";
 import { ECHO } from "../echo"
 
-it.skip('Database benchmark', async () => {
-  const echo = new ECHO()
+const ITEMS = 100;
+const MUTATIONS = 1000;
+
+it.only('Database benchmark', async () => {
+  const echo = new ECHO({ snapshots: false })
   await echo.open();
   await echo.halo.createProfile()
   const party = await echo.createParty()
 
-  for(let i = 0; i < 10; i++) {
+  const start = Date.now();
+  for(let i = 0; i < ITEMS; i++) {
     const item = await party.database.createItem({ model: ObjectModel, type: 'test:item' })
 
-    console.log(i)
-
-    for(let j = 0; j < 1_000; j++) {
+    for(let j = 0; j < MUTATIONS; j++) {
       await item.model.set(`key${j % 100}`, `value-${j}`)
     }
+
+    console.log(`${i * MUTATIONS}/${ITEMS*MUTATIONS} ${((Date.now() - start) / ((i + 1) * MUTATIONS / 1000)).toFixed(1)} µs/mut ${((i + 1) * MUTATIONS / (Date.now() - start) * 1000).toFixed(1)} mut/s`)
   }
 
   await echo.close()
