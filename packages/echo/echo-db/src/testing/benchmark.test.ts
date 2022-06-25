@@ -4,7 +4,7 @@ import { ECHO } from "../echo"
 const ITEMS = 100;
 const MUTATIONS = 1000;
 
-it.only('Database benchmark', async () => {
+it.skip('Database benchmark', async () => {
   const echo = new ECHO({ snapshots: false })
   await echo.open();
   await echo.halo.createProfile()
