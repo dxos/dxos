@@ -1,42 +1,46 @@
-const Ref = Symbol('Ref')
+//
+// Copyright 2022 DXOS.org
+//
+
+const Ref = Symbol('Ref');
 
 interface Ref {
   [Ref]: true
   value: any
 }
 
-export function ref(value: any): Ref {
+export function ref (value: any): Ref {
   return {
     [Ref]: true,
     value
-  }
+  };
 }
 
-function isRef(value: any): value is Ref {
+function isRef (value: any): value is Ref {
   return value[Ref] === true;
 }
 
-export function codegen(args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, name: string, ctx: Record<string, any> = {}): (...args: any[]) => any {
-  const newCtx = { ...ctx }
+export function codegen (args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, name: string, ctx: Record<string, any> = {}): (...args: any[]) => any {
+  const newCtx = { ...ctx };
   let nextAnnon = 1;
 
-  let buf = ''
+  let buf = '';
   gen((parts, ...args) => {
     const preprocessArg = (arg: any) => {
-      if(isRef(arg)) {
+      if (isRef(arg)) {
         const name = `anon${nextAnnon++}`;
         newCtx[name] = arg.value;
-        return name
+        return name;
       } else {
         return arg;
       }
-    }
-    buf += parts.map((s, i) => s + (i < args.length ? preprocessArg(args[i]) : '')).join('') + '\n'
-  })
+    };
+    buf += parts.map((s, i) => s + (i < args.length ? preprocessArg(args[i]) : '')).join('') + '\n';
+  });
 
-  const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`
+  const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`;
 
   // console.log(code)
 
-  return Function(...Object.keys(newCtx), code)(...Object.values(newCtx))
+  return Function(...Object.keys(newCtx), code)(...Object.values(newCtx));
 }

@@ -45,7 +45,7 @@ export class FeedDescriptor {
       secretKey,
       valueEncoding,
       hypercore = defaultHypercore,
-      disableSigning = false,
+      disableSigning = false
     } = options;
 
     this._storage = storage;

@@ -5,7 +5,7 @@
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
 import { Codec } from './interface';
-import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
+import { BidirectionalMapingDescriptors } from './mapping';
 import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
 
@@ -26,8 +26,8 @@ export class ProtoCodec<T = any> implements Codec<T> {
     private readonly _mapping: BidirectionalMapingDescriptors,
     private readonly _schema: Schema<any>
   ) {
-    this._encodeMapper = createMessageMapper(this._type, this._mapping.encode)
-    this._decodeMapper = createMessageMapper(this._type, this._mapping.decode)
+    this._encodeMapper = createMessageMapper(this._type, this._mapping.encode);
+    this._decodeMapper = createMessageMapper(this._type, this._mapping.decode);
   }
 
   /**

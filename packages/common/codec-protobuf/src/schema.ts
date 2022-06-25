@@ -33,7 +33,7 @@ export class Schema<T, S = {}> {
     }
     const type = this._typesRoot.lookupType(typeName);
     this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
-    return this._codecCache[type.fullName]
+    return this._codecCache[type.fullName];
 
   }
 
@@ -43,7 +43,7 @@ export class Schema<T, S = {}> {
     }
     const type = this._typesRoot.lookupType(typeName);
     this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
-    return this._codecCache[type.fullName]
+    return this._codecCache[type.fullName];
   }
 
   getService<K extends keyof S & string> (name: K): ServiceDescriptor<S[K]> {
