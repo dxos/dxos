@@ -1,7 +1,7 @@
 import { ObjectModel } from "@dxos/object-model";
 import { ECHO } from "../echo"
 
-it.only('Database benchmark', async () => {
+it.skip('Database benchmark', async () => {
   const echo = new ECHO()
   await echo.open();
   await echo.halo.createProfile()
