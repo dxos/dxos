@@ -16,7 +16,7 @@ function isRef(value: any): value is Ref {
   return value[Ref] === true;
 }
 
-export function codegen(args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, ctx: Record<string, any> = {}): (...args: any[]) => any {
+export function codegen(args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, name: string, ctx: Record<string, any> = {}): (...args: any[]) => any {
   const newCtx = { ...ctx }
   let nextAnnon = 1;
 
@@ -34,7 +34,7 @@ export function codegen(args: string[], gen: (c: (parts: TemplateStringsArray, .
     buf += parts.map((s, i) => s + (i < args.length ? preprocessArg(args[i]) : '')).join('') + '\n'
   })
 
-  const code = `return (${args.join(', ')}) => {\n${buf}\n}`
+  const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`
 
   // console.log(code)
 

@@ -51,7 +51,7 @@ function createMessageMapperCached(type: pb.Type, substitutions: MapingDescripto
         } c`}`
       }
       c`return res;`
-    })
+    }, `${type.name}$map`)
   }
 
   return cache[type.fullName];
