@@ -18,7 +18,7 @@ function createMessageMapperCached (type: pb.Type, substitutions: MapingDescript
   if (!cache[type.fullName]) {
     // Indirection to allow for recursive message types.
     cache[type.fullName] = {} as any;
-    cache[type.fullName].map = codegen(['obj', 'extraArgs'], c => {
+    cache[type.fullName].map = codegen(`${type.name}$map`, ['obj', 'extraArgs'], c => {
       c`const res = {};`;
       for (const field of type.fieldsArray) {
         c`if(obj.${field.name} !== undefined && obj.${field.name} !== null) {`; {
@@ -56,7 +56,7 @@ function createMessageMapperCached (type: pb.Type, substitutions: MapingDescript
         } c`}`;
       }
       c`return res;`;
-    }, `${type.name}$map`);
+    });
   }
 
   return cache[type.fullName];
