@@ -90,5 +90,6 @@ export function codegen (name: string, args: string[], gen: (c: (parts: Template
 
   const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`;
 
+  // eslint-disable-next-line no-new-func
   return Function(...Object.keys(newCtx), code)(...Object.values(newCtx));
 }
