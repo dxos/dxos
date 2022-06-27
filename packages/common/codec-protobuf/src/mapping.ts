@@ -2,9 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import protobufjs from 'protobufjs';
-
 import { Substitutions } from './common';
 
 export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>

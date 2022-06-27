@@ -11,9 +11,9 @@ interface Ref {
 
 /**
  * Pass a JS value by reference rather then parsing it as code.
- * 
+ *
  * Usage example:
- * 
+ *
  * ```typescript
  * const double = x => x * 2;;
  * codegen('add', ['a', 'b'], c => {
@@ -21,9 +21,9 @@ interface Ref {
  *   c`return ${ref(double)}(c)`;
  * });
  * ```
- * 
+ *
  * would generate a function:
- * 
+ *
  * ```typescript
  * const double = x => x * 2;;
  * function add(a, b) {
@@ -45,9 +45,9 @@ function isRef (value: any): value is Ref {
 
 /**
  * DSL for runtime code generation.
- * 
+ *
  * Example:
- * 
+ *
  * ```typescript
  * const multiplier = 5;
  * codegen('add', ['a', 'b'], c => {
@@ -55,16 +55,16 @@ function isRef (value: any): value is Ref {
  *   c`return c * ${multiplier};`;
  * });
  * ```
- * 
+ *
  * would generate a function:
- * 
+ *
  * ```typescript
  * function add(a, b) {
  *   const c = a + b;
  *   return c * 5;
  * }
  * ```
- * 
+ *
  * @param name Function name. Will appear in stack traces.
  * @param args Names of function arguments.
  * @param gen Closure that builds the function source.
