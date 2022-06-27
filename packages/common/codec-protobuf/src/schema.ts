@@ -18,6 +18,8 @@ export class Schema<T, S = {}> {
 
   private readonly _mapping: BidirectionalMapingDescriptors;
 
+  private readonly _codecCache: Record<string, ProtoCodec> = {}
+
   constructor (
     private _typesRoot: protobufjs.Root,
     substitutions: Substitutions
@@ -30,7 +32,9 @@ export class Schema<T, S = {}> {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
     const type = this._typesRoot.lookupType(typeName);
-    return new ProtoCodec(type, this._mapping, this);
+    this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
+    return this._codecCache[type.fullName];
+
   }
 
   tryGetCodecForType (typeName: string): ProtoCodec {
@@ -38,7 +42,8 @@ export class Schema<T, S = {}> {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
     const type = this._typesRoot.lookupType(typeName);
-    return new ProtoCodec(type, this._mapping, this);
+    this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
+    return this._codecCache[type.fullName];
   }
 
   getService<K extends keyof S & string> (name: K): ServiceDescriptor<S[K]> {
