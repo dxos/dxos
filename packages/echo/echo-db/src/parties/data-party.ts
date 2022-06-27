@@ -21,6 +21,7 @@ import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, c
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
@@ -173,12 +174,12 @@ export class DataParty {
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
-      this._feedProvider,
       deviceKey.publicKey,
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     await this._protocol.start([
+      createReplicatorPlugin(this._feedProvider),
       createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
