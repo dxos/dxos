@@ -7,17 +7,16 @@ import leveljs from 'level-js';
 import memdown from 'memdown';
 
 import { defs } from '@dxos/config';
-import { createStorage } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
 import { InvalidConfigurationError } from '../api';
 import { isNode } from '../util';
 
-export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapshotsEnabled = false) => {
+export const createStorageObjects = (config: defs.Runtime.Client.Storage) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     storageType,
@@ -39,10 +38,8 @@ export const createStorageObjects = (config: defs.Runtime.Client.Storage, snapsh
   }
 
   return {
-    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : 'ram'),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : 'ram'),
-    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : 'ram')
+    storage: createStorage(`${path}/`, persistent ? toStorageType(storageType) : StorageType.RAM),
+    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
 };
 
@@ -65,11 +62,11 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
 const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
     case undefined: return undefined;
-    case StorageDriver.RAM: return 'ram';
-    case StorageDriver.CHROME: return 'chrome';
-    case StorageDriver.FIREFOX: return 'firefox';
-    case StorageDriver.IDB: return 'idb';
-    case StorageDriver.NODE: return 'node';
+    case StorageDriver.RAM: return StorageType.RAM;
+    case StorageDriver.CHROME: return StorageType.CHROME;
+    case StorageDriver.FIREFOX: return StorageType.FIREFOX;
+    case StorageDriver.IDB: return StorageType.IDB;
+    case StorageDriver.NODE: return StorageType.NODE;
     default: throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
   }
 };

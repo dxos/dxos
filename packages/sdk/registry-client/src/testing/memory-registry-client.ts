@@ -8,24 +8,25 @@ import { webcrypto as crypto } from 'crypto';
 
 import { ComplexMap } from '@dxos/util';
 
-import { Record as RawRecord, schema as dxnsSchema } from '../proto';
-import { RecordWithCid, RegistryClientBackend } from '../registry-client-backend';
 import {
   AccountKey,
+  Authority,
   CID,
-  Domain,
   DomainKey,
   DXN,
-  Resource
-} from '../types';
+  RecordWithCid,
+  RegistryClientBackend
+} from '../api';
+import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 
 /**
  * In-memory implementation of the registry client with statically specified records.
  * Useful for testing code which relies on the DXNS registry without connecting to a real node.
  */
+// TODO(wittjosiah): Support accounts and auctions in the memory registry.
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
-  readonly domains = new Map<string, Domain>();
-  readonly resources = new ComplexMap<DXN, Resource>(dxn => dxn.toString());
+  readonly authorities = new Map<string, Authority>();
+  readonly resources = new ComplexMap<DXN, CID>(dxn => dxn.toString());
   readonly records = new ComplexMap<CID, RawRecord>(cid => cid.toB58String());
 
   //
@@ -33,71 +34,69 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   //
 
   async getDomainKey (domainName: string): Promise<DomainKey> {
-    const domain = this.domains.get(domainName);
-    if (!domain) {
-      throw new Error('Domain not found');
+    const authority = this.authorities.get(domainName);
+    if (!authority) {
+      throw new Error('Authority not found');
     }
 
-    return domain.key;
+    return authority.key;
   }
 
-  async getDomains (): Promise<Domain[]> {
-    return Array.from(this.domains.values());
+  async listAuthorities (): Promise<Authority[]> {
+    return Array.from(this.authorities.values());
   }
 
-  async registerDomainKey (owner: AccountKey): Promise<DomainKey> {
+  async registerAuthority (owner: AccountKey): Promise<DomainKey> {
     const key = DomainKey.random();
-    this.domains.set(key.toString(), {
+    this.authorities.set(key.toString(), {
       key,
       owner: owner.toHex()
     });
+
     return key;
   }
 
-  async registerDomainName (domainName: string, owner: AccountKey): Promise<Domain> {
+  async registerDomainName (domainName: string, owner: AccountKey): Promise<Authority> {
     const key = DomainKey.random();
-    const domain = {
+    const authority = {
       key,
       name: domainName,
       owner: owner.toHex()
     };
-    this.domains.set(domainName, domain);
-    return domain;
+    this.authorities.set(domainName, authority);
+
+    return authority;
   }
 
   //
   // Resources
   //
 
-  async getResource (name: DXN): Promise<Resource | undefined> {
+  async getResource (name: DXN): Promise<CID | undefined> {
     return this.resources.get(name);
   }
 
-  async getResources (): Promise<Resource[]> {
-    return Array.from(this.resources.values());
+  async listResources (): Promise<[DXN, CID][]> {
+    return Array.from(this.resources.entries());
   }
 
   async registerResource (
     name: DXN,
     cid: CID | undefined,
-    owner: AccountKey,
-    tag: string
+    owner: AccountKey
   ): Promise<void> {
-    const domainName = name.domain ?? name.key?.toHex();
-    assert(domainName, 'DXN must have either domain or key');
-    const domain = this.domains.get(domainName);
+    assert(name.tag, 'Tag is required');
+    const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
+    const domain = this.authorities.get(domainName);
     if (domain?.owner !== owner.toHex()) {
       throw new Error('Domain owner mismatch');
     }
 
-    const resource = this.resources.get(name) ?? { name, tags: {} };
-    this.resources.set(name, {
-      ...resource,
-      tags: {
-        ...resource.tags,
-        [tag]: cid
-      }
-    });
+    if (cid) {
+      this.resources.set(name, cid);
+    } else {
+      this.resources.delete(name);
+    }
   }
 
   //
@@ -108,7 +107,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return { cid, ...this.records.get(cid) };
   }
 
-  async getRecords (): Promise<RecordWithCid[]> {
+  async listRecords (): Promise<RecordWithCid[]> {
     return Array.from(this.records.entries()).map(([cid, record]) => ({ cid, ...record }));
   }
 

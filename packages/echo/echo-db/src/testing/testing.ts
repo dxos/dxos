@@ -4,14 +4,12 @@
 
 import debug from 'debug';
 
-import { createKeyPair } from '@dxos/crypto';
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
-import { PartyInternal } from '../parties';
-import { createRamStorage } from '../util';
+import { DataParty } from '../parties';
 
 export const log = debug('dxos:echo-db:testing');
 
@@ -22,13 +20,12 @@ export const messageLogger = (tag: string) => (message: any) => {
 export interface TestOptions {
   verboseLogging?: boolean
   initialize?: boolean
-  storage?: any
+  storage?: Storage
   keyStorage?: any
   networkManagerOptions?: NetworkManagerOptions
   // TODO(burdon): Group properties by hierarchical object.
   snapshots?: boolean
   snapshotInterval?: number
-  snapshotStorage?: IStorage
 }
 
 /**
@@ -37,17 +34,15 @@ export interface TestOptions {
 export const createTestInstance = async ({
   verboseLogging = false,
   initialize = false,
-  storage = createRamStorage(),
+  storage = createStorage('', StorageType.RAM),
   keyStorage = undefined,
   networkManagerOptions,
-  snapshotStorage = createRamStorage(),
   snapshots = true,
   snapshotInterval
 }: TestOptions = {}) => {
   const echo = new ECHO({
-    feedStorage: storage,
+    storage,
     keyStorage,
-    snapshotStorage,
     snapshotInterval,
     snapshots,
     networkManagerOptions,
@@ -57,12 +52,7 @@ export const createTestInstance = async ({
 
   if (initialize) {
     await echo.open();
-    if (!echo.halo.identityKey) {
-      await echo.halo.createIdentity(createKeyPair());
-    }
-    if (!echo.halo.isInitialized) {
-      await echo.halo.create();
-    }
+    await echo.halo.createProfile();
   }
 
   return echo;
@@ -72,7 +62,7 @@ export const createTestInstance = async ({
  * Invites a test peer to the party.
  * @returns Party instance on provided test instance.
  */
-export const inviteTestPeer = async (party: PartyInternal, peer: ECHO): Promise<PartyInternal> => {
+export const inviteTestPeer = async (party: DataParty, peer: ECHO): Promise<DataParty> => {
   const invitation = await party.invitationManager.createInvitation({
     secretValidator: async () => true
   });

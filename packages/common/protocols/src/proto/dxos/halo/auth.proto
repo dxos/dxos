@@ -13,8 +13,18 @@ import "signed.proto";
  * The payload for a SignedMessage sent during handshake for replication authentication.
  */
 message Auth {
-  PubKey partyKey = 1;     // The publicKey of the target Party for these credentials.
-  PubKey deviceKey = 2;    // The publicKey of the authenticating Device.
-  PubKey identityKey = 3;  // The publicKey of the authenticating Identity.
-  PubKey feedKey = 4;      // The publicKey of the authenticating Identity.
+  /// The publicKey of the target Party for these credentials.
+  PubKey partyKey = 1;     
+  
+  /// The publicKey of the authenticating Device.
+  PubKey deviceKey = 2;    
+  
+  /// The publicKey of the authenticating Identity.
+  PubKey identityKey = 3;  
+  
+  /// The publicKey of the authenticating Identity.
+  PubKey feedKey = 4;      
+
+  /// FeedAdmit message to the should be written to a control feed in case the `feedKey` is not admitted to the party.
+  google.protobuf.Any feed_admit = 5;
 }

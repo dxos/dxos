@@ -1,5 +1,55 @@
 # Change Log
 
+### [2.33.4](https://www.github.com/dxos/protocols/compare/v2.33.3...v2.33.4) (2022-06-24)
+
+
+### Features
+
+* Disallow self-admitting feeds ([#1279](https://www.github.com/dxos/protocols/issues/1279)) ([24cf72a](https://www.github.com/dxos/protocols/commit/24cf72aec297081cfddd5a70ad94e537c39b1635))
+* **react-client-testing:** Moved dnd-components ([#1282](https://www.github.com/dxos/protocols/issues/1282)) ([021ead8](https://www.github.com/dxos/protocols/commit/021ead8967367cf30baa1f6e94fcb272ece2093d))
+
+
+### Bug Fixes
+
+* Make RamStorage persistent and storage subdirectories working ([#1276](https://www.github.com/dxos/protocols/issues/1276)) ([e8fe40a](https://www.github.com/dxos/protocols/commit/e8fe40a83ebd72376b8ed7f4274070d41fd5fa1d))
+
+### [2.33.3](https://www.github.com/dxos/protocols/compare/v2.33.2...v2.33.3) (2022-06-22)
+
+
+### Features
+
+* Multi process stress tests ([#1231](https://www.github.com/dxos/protocols/issues/1231)) ([138ca60](https://www.github.com/dxos/protocols/commit/138ca606f556416863ca02094cc1bf31ddba224a))
+
+
+### Bug Fixes
+
+* **schema:** Fix in schema validation && Add new testing fields. ([#1272](https://www.github.com/dxos/protocols/issues/1272)) ([18553f0](https://www.github.com/dxos/protocols/commit/18553f061467801d0cd6a62b75a5ac357119486e))
+
+### [2.33.2](https://www.github.com/dxos/protocols/compare/v2.33.1...v2.33.2) (2022-06-21)
+
+
+### Bug Fixes
+
+* **registry-client:** Allow DXN tag to be unset ([#1263](https://www.github.com/dxos/protocols/issues/1263)) ([18eaace](https://www.github.com/dxos/protocols/commit/18eaaced762f9341c3cd1536dce013f7343a903e))
+* **registry-client:** Don't replace dots when en/decoding DXN tags ([#1264](https://www.github.com/dxos/protocols/issues/1264)) ([c42403b](https://www.github.com/dxos/protocols/commit/c42403ba21cc6952f884d2e1f739cde9fc5e0b79))
+* **registry-client:** Polkadot registry list authorities misshape ([#1262](https://www.github.com/dxos/protocols/issues/1262)) ([8ff5a3c](https://www.github.com/dxos/protocols/commit/8ff5a3c5ebad18a94a1a4c90cbc12154a813f103))
+
+### [2.33.1](https://www.github.com/dxos/protocols/compare/v2.33.0...v2.33.1) (2022-06-21)
+
+
+### Features
+
+* Admit feeds to party from Authenticator ([#1243](https://www.github.com/dxos/protocols/issues/1243)) ([0a5ae2e](https://www.github.com/dxos/protocols/commit/0a5ae2e2fb3d195ac4bbf1714c030b9ba76661cb))
+* dnd-kit poc ([#1215](https://www.github.com/dxos/protocols/issues/1215)) ([5f79881](https://www.github.com/dxos/protocols/commit/5f79881c368e9539f10b8e51e318db49201e102c))
+* Track control feeds in FeedSetProvider ([#1239](https://www.github.com/dxos/protocols/issues/1239)) ([83d113f](https://www.github.com/dxos/protocols/commit/83d113fe8045f4aa5787fb1295fb5b7d796da630))
+* Use key types in echo metadata ([#1246](https://www.github.com/dxos/protocols/issues/1246)) ([5378ccd](https://www.github.com/dxos/protocols/commit/5378ccd56a5e2d5a4a0da41d5002a3b0b1f3a5e8))
+
+
+### Bug Fixes
+
+* Race condition in queryMembers ([#1260](https://www.github.com/dxos/protocols/issues/1260)) ([e48632f](https://www.github.com/dxos/protocols/commit/e48632f84a97875a81ce41130e6928c213c3b448))
+* **registry-client:** List resources ([#1257](https://www.github.com/dxos/protocols/issues/1257)) ([5df1655](https://www.github.com/dxos/protocols/commit/5df1655e9385f57ef59d59ff7121e2d911229173))
+
 ## [2.33.0](https://www.github.com/dxos/protocols/compare/v2.32.0...v2.33.0) (2022-06-13)
 
 

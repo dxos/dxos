@@ -39,17 +39,17 @@ Create a [RandomAccessStorage](https://github.com/random-access-storage/random-a
 Available storages:
 
 ```js
-import { STORAGE_CHROME, STORAGE_FIREFOX, ... } from '@dxos/random-access-multi-storage'
+import { StorageType, ... } from '@dxos/random-access-multi-storage'
 ```
 
 - `browser`
-  - `STORAGE_CHROME`: Store files using [random-access-chrome-file](https://github.com/dxos/random-access-chrome-file) and the [Chromium File System API](https://web.dev/native-file-system/). Default in Chrome.
-  - `STORAGE_FIREFOX`: Store files using [random-access-idb-mutable-file](https://github.com/random-access-storage/random-access-idb-mutable-file) and the [Firefox IDBMutableFile](https://developer.mozilla.org/en-US/docs/Web/API/IDBMutableFile). Default in Firefox.
-  - `STORAGE_IDB`: Store files in an IDB database using [random-access-idb](https://github.com/random-access-storage/random-access-idb). Fallback.
-  - `STORAGE_RAM`: [random-access-memory](https://github.com/random-access-storage/random-access-memory).
+  - `StorageType.CHROME`: Store files using [random-access-chrome-file](https://github.com/dxos/random-access-chrome-file) and the [Chromium File System API](https://web.dev/native-file-system/). Default in Chrome.
+  - `StorageType.FIREFOX`: Store files using [random-access-idb-mutable-file](https://github.com/random-access-storage/random-access-idb-mutable-file) and the [Firefox IDBMutableFile](https://developer.mozilla.org/en-US/docs/Web/API/IDBMutableFile). Default in Firefox.
+  - `StorageType.IDB`: Store files in an IDB database using [random-access-idb](https://github.com/random-access-storage/random-access-idb). Fallback.
+  - `StorageType.RAM`: [random-access-memory](https://github.com/random-access-storage/random-access-memory).
 - `node`
-  - `STORAGE_NODE`: Store files in the real filesystem [random-access-file](https://github.com/random-access-storage/random-access-file). Default.
-  - `STORAGE_RAM`: [random-access-memory](https://github.com/random-access-storage/random-access-memory).
+  - `StorageType.NODE`: Store files in the real filesystem [random-access-file](https://github.com/random-access-storage/random-access-file). Default.
+  - `StorageType.RAM`: [random-access-memory](https://github.com/random-access-storage/random-access-memory).
 
 ## Contributing
 

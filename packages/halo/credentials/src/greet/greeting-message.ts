@@ -10,11 +10,11 @@ const TYPE_URL_GREETING_COMMAND = 'dxos.credentials.greet.Command';
 
 /**
  * Create a Greeting 'BEGIN' command message.
- * @returns {{__type_url: string, command: *}}
+ * @returns {{'@type': string, command: *}}
  */
 export const createGreetingBeginMessage = (): WithTypeUrl<Command> => {
   return {
-    __type_url: TYPE_URL_GREETING_COMMAND,
+    '@type': TYPE_URL_GREETING_COMMAND,
     command: Command.Type.BEGIN,
     params: []
   };
@@ -28,7 +28,7 @@ export const createGreetingHandshakeMessage = (secret: Buffer, params = []): Wit
   assert(Array.isArray(params));
 
   return {
-    __type_url: TYPE_URL_GREETING_COMMAND,
+    '@type': TYPE_URL_GREETING_COMMAND,
     command: Command.Type.HANDSHAKE,
     params,
     secret
@@ -43,7 +43,7 @@ export const createGreetingNotarizeMessage = (secret: Buffer, credentialMessages
   assert(Array.isArray(credentialMessages));
 
   return {
-    __type_url: TYPE_URL_GREETING_COMMAND,
+    '@type': TYPE_URL_GREETING_COMMAND,
     command: Command.Type.NOTARIZE,
     params: credentialMessages,
     secret
@@ -57,7 +57,7 @@ export const createGreetingFinishMessage = (secret: Buffer): WithTypeUrl<Command
   assert(Buffer.isBuffer(secret), 'Secret is not a buffer.');
 
   return {
-    __type_url: TYPE_URL_GREETING_COMMAND,
+    '@type': TYPE_URL_GREETING_COMMAND,
     command: Command.Type.FINISH,
     secret,
     params: []
@@ -71,11 +71,11 @@ export const createGreetingClaimMessage = (invitationID: Buffer): WithTypeUrl<Co
   assert(Buffer.isBuffer(invitationID), 'invitationID is not a buffer.');
 
   return {
-    __type_url: TYPE_URL_GREETING_COMMAND,
+    '@type': TYPE_URL_GREETING_COMMAND,
     command: Command.Type.CLAIM,
     params: [
       {
-        __type_url: 'google.protobuf.BytesValue',
+        '@type': 'google.protobuf.BytesValue',
         value: invitationID
       }
     ]
@@ -86,14 +86,14 @@ export const createGreetingClaimMessage = (invitationID: Buffer): WithTypeUrl<Co
  * Crate a Greeting ClaimResponse message.
  * @param {Buffer} id   The ID of the new invitation.
  * @param {Buffer} rendezvousKey   The swarm key to use for Greeting.
- * @returns {{__type_url: string, payload: {__type_url: string, rendezvousKey: *, id: *}}}
+ * @returns {{'@type': string, payload: {'@type': string, rendezvousKey: *, id: *}}}
  */
 export const createGreetingClaimResponse = (id: Buffer, rendezvousKey: Buffer): WithTypeUrl<ClaimResponse> => {
   assert(id);
   assert(Buffer.isBuffer(rendezvousKey), 'rendezvousKey is not a buffer.');
 
   return {
-    __type_url: 'dxos.credentials.greet.ClaimResponse',
+    '@type': 'dxos.credentials.greet.ClaimResponse',
     id,
     rendezvousKey
   };

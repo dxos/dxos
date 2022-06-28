@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "2.33.0",
+  "version": "2.33.4",
   "private": true,
   "description": "Comprehensive set of demos.",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
     "@mui/lab": "^5.0.0-alpha.69",

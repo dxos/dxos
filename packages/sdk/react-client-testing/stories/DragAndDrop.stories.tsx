@@ -12,8 +12,8 @@ import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { DroppableTable, DroppableList, ListItem, ListItemDef, ProfileInitializer } from '../src';
-import { ColumnContainer, DragAndDropDebugPanel, ResetButton, StorybookContainer } from './helpers';
+import { ProfileInitializer } from '../src';
+import { ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem, ListItemDef, ResetButton, StorybookContainer } from './helpers';
 import { moveItemInArray, updateSourceAndTargetState } from './helpers/utils';
 
 export default {

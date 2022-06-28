@@ -2,25 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Domain } from '@dxos/registry-client';
+import { Authority } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  domains: Domain[],
+  authorities: Authority[],
   error?: unknown
 }
 
 /**
- * Returns the set of domains.
+ * Returns the set of authorities.
  */
-export const useDomains = (): Result => {
+export const useAuthorities = (): Result => {
   const registry = useRegistry();
-  const data = useAsync(() => registry?.getDomains(), []);
+  const data = useAsync(() => registry?.listAuthorities(), []);
 
   return {
-    domains: data.data,
+    authorities: data.data,
     error: data.error
   };
 };

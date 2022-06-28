@@ -1592,7 +1592,7 @@
 
   define(Color, color, {
     copy: function(channels) {
-      return Object.assign(new this.constructor, this, channels);
+      return Object.assign(new this.Orchestrator(undefined, config), this, channels);
     },
     displayable: function() {
       return this.rgb().displayable();

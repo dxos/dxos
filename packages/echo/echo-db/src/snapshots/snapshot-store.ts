@@ -4,11 +4,10 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 const log = debug('dxos:snapshot-store');
 
@@ -19,19 +18,19 @@ const log = debug('dxos:snapshot-store');
  */
 export class SnapshotStore {
   constructor (
-    private readonly _storage: IStorage
+    private readonly _storage: Storage
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
     const file = this._storage.createOrOpen(partyKey.toHex());
 
     try {
-      const { size } = await pify(file.stat.bind(file))();
+      const { size } = await file.stat();
       if (size === 0) {
         return undefined;
       }
 
-      const data = await pify(file.read.bind(file))(0, size);
+      const data = await file.read(0, size);
       return schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').decode(data);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
@@ -40,7 +39,7 @@ export class SnapshotStore {
         throw err;
       }
     } finally {
-      await pify(file.close.bind(file))();
+      await file.close();
     }
   }
 
@@ -50,9 +49,9 @@ export class SnapshotStore {
 
     try {
       const data = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
-      await pify(file.write.bind(file))(0, Buffer.from(data));
+      await file.write(0, Buffer.from(data));
     } finally {
-      await pify(file.close.bind(file))();
+      await file.close();
     }
   }
 

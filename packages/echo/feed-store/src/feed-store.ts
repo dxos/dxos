@@ -7,7 +7,7 @@ import defaultHypercore from 'hypercore';
 
 import { synchronized, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
@@ -45,7 +45,7 @@ export interface FeedStoreOptions {
  * into a persist repository storage.
  */
 export class FeedStore {
-  private _storage: IStorage;
+  private _storage: Storage;
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
@@ -59,7 +59,7 @@ export class FeedStore {
    * @param storage RandomAccessStorage to use by default by the feeds.
    * @param options Feedstore options.
    */
-  constructor (storage: IStorage, options: FeedStoreOptions = {}) {
+  constructor (storage: Storage, options: FeedStoreOptions = {}) {
     assert(storage, 'The storage is required.');
 
     this._storage = storage;

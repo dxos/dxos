@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { TimeframeClock } from '../database';
-import { PartyCore } from '../parties';
+import { PartyCore } from '../pipeline';
 import { SnapshotStore } from './snapshot-store';
 
 const log = debug('dxos:snapshot-generator');

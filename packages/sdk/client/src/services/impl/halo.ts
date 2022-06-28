@@ -48,21 +48,21 @@ export class HaloService implements IHaloService {
   }
 
   subscribeContacts (): Stream<Contacts> {
-    if (this.echo.halo.isInitialized) {
+    if (this.echo.halo.identity) {
       return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
     }
 
     // TODO(burdon): Explain non-initialized path.
     return new Stream(({ next }) => {
       // If profile does not exist, send an empty array.
-      if (!this.echo.halo.isInitialized) {
+      if (!this.echo.halo.identity) {
         next({ contacts: [] });
       }
 
       const subGroup = new SubscriptionGroup();
 
       setImmediate(async () => {
-        await this.echo.halo.identityReady.waitForCondition(() => this.echo.halo.isInitialized);
+        await this.echo.halo.identityReady.waitForCondition(() => !!this.echo.halo.identity);
 
         const resultSet = this.echo.halo.queryContacts();
         next({ contacts: resultSet.value });
@@ -75,14 +75,14 @@ export class HaloService implements IHaloService {
 
   async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
   async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getGlobalPreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     return {
       value: preferences?.getProperty(request.key)
     };
@@ -90,14 +90,14 @@ export class HaloService implements IHaloService {
 
   async setDevicePreference (request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
   async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
-    const preferences: ObjectModel | undefined = this.echo.halo.identity.preferences?.getDevicePreferences()?.model;
+    const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     return {
       value: preferences?.getProperty(request.key)
     };
