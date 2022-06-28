@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { join } from 'path';
 import randomAccessIdb from 'random-access-idb';
 
@@ -10,21 +9,10 @@ import { File, StorageType } from '../interfaces';
 import { FileInternal } from '../internal';
 import { AbstractStorage } from './abstract-storage';
 
-interface FileRegistryRecord {
-  /**
-   * Handle for open files with patched closed function which doesn't actually close the file.
-   */
-  file: File,
-  /**
-   * The actual file close funciton that is supposed to be called at the end of the storage lifecycle.
-   */
-  close: () => Promise<void>;
-}
-
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = StorageType.IDB;
   private _fileStorage: RandomAccessStorage;
-  private _fileRegistry: Map<string, FileRegistryRecord> = new Map();
+  private _fileRegistry: Map<string, File> = new Map<string, File>();
 
   constructor (protected rootPath: string) {
     super(rootPath);
@@ -35,38 +23,42 @@ export class IDbStorage extends AbstractStorage {
     return new IDbStorage(join(this.rootPath, path));
   }
 
-  protected override _create (filename: string): File {
-    // Looking up the file in the registry.
-    if (this._fileRegistry.has(filename)) {
-      const record = this._fileRegistry.get(filename);
-      assert(record, 'File registry is corrupt');
-      return record.file;
+  override createOrOpen (filename: string): File {
+    const existingFile = this._getFileIfOpened(filename);
+    if (existingFile) {
+      return existingFile;
     }
-    const file = new File(this._fileStorage(filename));
-
-    // Monkeypatch close function.
-    const defaultClose = file.close.bind(file) as any;
-    // Do not close the file - put it in the registry and reuse later.
-    // Caching file is necessary because in some cases IndexedDB dosen't handle reopening files well - so instead of reopening we can get already opened handle from the registry.
-    file.close = (cb: any) => cb?.(null);
-
-    this._fileRegistry.set(filename, { file, close: defaultClose });
-
+    const file = this._create(filename);
+    this._files.set(filename, file);
     return file;
+  }
+
+  protected _getFileIfOpened (filename: string) {
+    if (this._files.has(filename)) {
+      const file = this._files.get(filename);
+      if (file && !file._isDestroyed()) {
+        file._reopen();
+        return file;
+      }
+    }
+    return null;
+  }
+
+  protected override _create (filename: string): File {
+    return new File(this._fileStorage(filename));
   }
 
   protected override async _destroy () {
     // Closing all files in the registry.
-    await Promise.all(Array.from(this._fileRegistry.values()).map(({ close }) => close()));
 
     // eslint-disable-next-line no-undef
     return new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase(this._root);
       request.onupgradeneeded = () => {
-        resolve(); // TODO(unknown): Or reject?
+        reject(new Error('Couldn\'t clear indexedDB, because upgrade needed.'));
       };
       request.onblocked = () => {
-        resolve(); // TODO(unknown): Or reject?
+        reject(new Error('Couldn\'t clear indexedDB, because it is blocked'));
       };
       request.onsuccess = () => {
         resolve();
