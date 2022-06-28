@@ -130,6 +130,8 @@ Additional, descriptive information about a Device. Must be signed by the Device
 
 > TODO: describe credentials used in invitations
 
+Offline invitations are written as credential to the party control feed.
+
 #### Auth
 
 Ephemeral credential message that is sent during handshake for replication authentication.
