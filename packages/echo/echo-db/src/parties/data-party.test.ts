@@ -59,7 +59,7 @@ describe('DataParty', () => {
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
 
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
+    const feed = await party.getWriteFeed();
     await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
@@ -79,7 +79,7 @@ describe('DataParty', () => {
 
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
+    const feed = await party.getWriteFeed();
     await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
@@ -103,7 +103,7 @@ describe('DataParty', () => {
 
     const party = await createParty(identityA, partyKey.publicKey, []);
     await party.open();
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
+    const feed = await party.getWriteFeed();
     await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
@@ -128,7 +128,7 @@ describe('DataParty', () => {
 
     const partyA = await createParty(identityA, partyKey.publicKey, []);
     await partyA.open();
-    const feedA = await partyA.feedProvider.createOrOpenWritableFeed();
+    const feedA = await partyA.getWriteFeed();
     await partyA.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
@@ -164,7 +164,7 @@ describe('DataParty', () => {
 
     const partyA = await createParty(identityA, partyKeyA.publicKey, []);
     await partyA.open();
-    const feedA = await partyA.feedProvider.createOrOpenWritableFeed();
+    const feedA = await partyA.getWriteFeed();
     await partyA.writeCredentialsMessage(createPartyGenesisMessage(
       identityA.keyring,
       partyKeyA,

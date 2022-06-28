@@ -22,6 +22,7 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
+import { FeedDescriptor } from '@dxos/feed-store';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
@@ -126,11 +127,6 @@ export class DataParty {
     return this._invitationManager;
   }
 
-  // TODO(burdon): Remove?
-  get feedProvider (): PartyFeedProvider {
-    return this._feedProvider;
-  }
-
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
@@ -206,9 +202,9 @@ export class DataParty {
     return this;
   }
 
-  async getWriteFeedKey () {
+  async getWriteFeed (): Promise<FeedDescriptor> {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
-    return feed.key;
+    return feed;
   }
 
   writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {

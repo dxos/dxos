@@ -60,7 +60,7 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+    const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.writeCredentialsMessage(createPartyGenesisMessage(
@@ -119,10 +119,11 @@ export class PartyFactory {
 
     // Write the Feed genesis message.
     // TODO(dmaretskyi): Shouldn't be needed.
+    const writeFeed = await party.getWriteFeed();
     await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey,
-      await party.getWriteFeedKey(),
+      writeFeed.key,
       [identity.deviceKeyChain]
     ));
 
@@ -223,7 +224,7 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+    const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.writeCredentialsMessage(createPartyGenesisMessage(
