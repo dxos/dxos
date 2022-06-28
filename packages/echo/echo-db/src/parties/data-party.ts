@@ -19,9 +19,9 @@ import { InvitationFactory } from '../invitations';
 import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 

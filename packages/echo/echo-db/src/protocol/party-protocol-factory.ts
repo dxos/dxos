@@ -22,14 +22,14 @@ export class PartyProtocolFactory {
 
   private _started = false;
 
-  constructor(
+  constructor (
     private readonly _partyKey: PartyKey,
     private readonly _networkManager: NetworkManager,
     private readonly _peerId: PublicKey,
     private readonly _credentials: CredentialsProvider
   ) {}
 
-  async start(plugins: Plugin[]) {
+  async start (plugins: Plugin[]) {
     if (this._started) {
       return;
     }
@@ -53,7 +53,7 @@ export class PartyProtocolFactory {
     });
   }
 
-  async stop() {
+  async stop () {
     if (!this._started) {
       return;
     }
@@ -63,7 +63,7 @@ export class PartyProtocolFactory {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol(channel: any, opts: { initiator: boolean }, extraPlugins: Plugin[]) {
+  private _createProtocol (channel: any, opts: { initiator: boolean }, extraPlugins: Plugin[]) {
     const plugins: Plugin[] = [
       ...extraPlugins,
       this._presencePlugin

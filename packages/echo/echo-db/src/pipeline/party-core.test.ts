@@ -17,9 +17,9 @@ import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore } from './party-core';
-import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 
 describe('PartyCore', () => {
   const setup = async () => {

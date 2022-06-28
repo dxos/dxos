@@ -1,7 +1,13 @@
-import { keyToString } from "@dxos/crypto";
-import { Replicator } from "@dxos/protocol-plugin-replicator";
-import { PartyFeedProvider } from "../pipeline";
-import debug from 'debug'
+//
+// Copyright 2022 DXOS.org
+//
+
+import debug from 'debug';
+
+import { keyToString } from '@dxos/crypto';
+import { Replicator } from '@dxos/protocol-plugin-replicator';
+
+import { PartyFeedProvider } from '../pipeline';
 
 const log = debug('dxos:echo-db:protocol:replicator');
 

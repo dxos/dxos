@@ -17,10 +17,10 @@ import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
 import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
 import { Preferences } from './preferences';
-import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxos:item/halo/party-descriptor';
 export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxos:item/halo/contact-list';
