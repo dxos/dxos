@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } from '@dxos/credentials';
+import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
@@ -59,15 +59,6 @@ export function createMessageSelector (
         // TODO(telackey): Add check that this is for the right Party.
         if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
           return i;
-        }
-      } else if (getPartyCredentialMessageType(halo) === PartyCredential.Type.FEED_ADMIT) {
-        if (admitsKeys(halo).find(key => key.equals(feedKey))) {
-          // TODO(marik-d): Calling `Keyring.signingKeys` is expensive. Is there any way to optimize/cache this?
-          for (const signedBy of Keyring.signingKeys(halo)) {
-            if (partyProcessor.isMemberKey(signedBy) || signedBy.equals(partyProcessor.partyKey)) {
-              return i;
-            }
-          }
         }
       }
     }

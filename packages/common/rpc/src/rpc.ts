@@ -17,6 +17,7 @@ import { Any } from './proto/gen/google/protobuf';
 const DEFAULT_TIMEOUT = 3000;
 
 const log = debug('dxos:rpc');
+const error = log.extend('error');
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -196,6 +197,7 @@ export class RpcPeer {
       this._localStreams.delete(decoded.streamClose.id);
       stream.close();
     } else {
+      error(`Received malformed message: ${msg}`);
       throw new Error('Malformed message.');
     }
   }

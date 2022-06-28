@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-mesh",
-  "version": "2.33.3",
+  "version": "2.33.4",
   "private": true,
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -21,7 +21,7 @@
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@emotion/css": "^11.7.1",
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
     "@mui/material": "^5.4.2",
