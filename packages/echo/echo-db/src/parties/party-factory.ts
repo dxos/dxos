@@ -107,30 +107,6 @@ export class PartyFactory {
   }
 
   /**
-   * Constructs a party object and creates a local write feed for it.
-   * @param partyKey
-   * @param hints
-   */
-  async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
-    const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
-
-    const party = await this.constructParty(partyKey, hints);
-    await party.open();
-
-    // Write the Feed genesis message.
-    // TODO(dmaretskyi): Shouldn't be needed.
-    const writeFeed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createFeedAdmitMessage(
-      identity.keyring,
-      partyKey,
-      writeFeed.key,
-      [identity.deviceKeyChain]
-    ));
-
-    return party;
-  }
-
-  /**
    * Constructs a party object from an existing set of feeds.
    * @param partyKey
    * @param hints
@@ -197,7 +173,8 @@ export class PartyFactory {
 
     await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
-    const party = await this.addParty(partyKey, hints);
+    const party = await this.constructParty(partyKey, hints);
+    await party.open();
     await initiator.destroy();
 
     // Copy our signed IdentityInfo into the new Party.

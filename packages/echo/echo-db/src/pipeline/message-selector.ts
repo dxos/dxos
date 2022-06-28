@@ -56,10 +56,12 @@ export function createMessageSelector (
       }
 
       if (partyProcessor.genesisRequired) {
-        // TODO(telackey): Add check that this is for the right Party.
-        if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
-          return i;
-        }
+        try { // TODO(dmaretskyi): Get getPartyCredentialMessageType crashes for some reason.
+          // TODO(telackey): Add check that this is for the right Party.
+          if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
+            return i;
+          }
+        } catch {}
       }
     }
 
