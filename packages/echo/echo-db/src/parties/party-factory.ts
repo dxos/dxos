@@ -114,39 +114,17 @@ export class PartyFactory {
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
-    /*
-     * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
-     * mechanism is broken by not waiting on the messages to be processed before returning.
-     */
-
-    const feedProvider = this._feedProviderFactory(partyKey);
-    const { feed } = await feedProvider.createOrOpenWritableFeed();
-    const feedKeyPair = identity.keyring.getKey(feed.key);
-    assert(feedKeyPair, 'Keypair for writable feed not found.');
-    const party = new DataParty(
-      partyKey,
-      this._modelFactory,
-      this._snapshotStore,
-      feedProvider,
-      identity.createCredentialsSigner(),
-      identity.preferences,
-      this._networkManager,
-      hints,
-      undefined,
-      this._options
-    );
-
+    const party = await this.constructParty(partyKey, hints);
     await party.open();
-    const isHalo = identity.identityKey.publicKey.equals(partyKey);
-    const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
-    assert(signingKey, 'No device key or keychain.');
+
     // Write the Feed genesis message.
     await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey,
-      feedKeyPair.publicKey,
-      [signingKey]
+      await party.getWriteFeedKey(),
+      [identity.deviceKeyChain]
     ));
+    
     return party;
   }
 

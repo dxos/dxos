@@ -206,6 +206,11 @@ export class DataParty {
     return this;
   }
 
+  async getWriteFeedKey () {
+    const feed = await this._feedProvider.createOrOpenWritableFeed();
+    return feed.key;
+  }
+
   writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {
     return this._partyCore.writeCredentialsMessage(message)
   }
