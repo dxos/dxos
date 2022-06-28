@@ -9,14 +9,14 @@ export interface DevicesState {
   }[]
 }
 
-export function createNewState(identity: PublicKey): DevicesState {
+export function createDevicesState(identity: PublicKey): DevicesState {
   return {
     identity,
     devices: [],
   }
 }
 
-export function processCredential(state: DevicesState, credential: Credential): DevicesState {
+export function processDevicesCredential(state: DevicesState, credential: Credential): DevicesState {
   switch(credential.claim['@type']) {
     case 'dxos.halo.credentials.DeviceClaim': {
       const claim = credential.claim as DeviceClaim

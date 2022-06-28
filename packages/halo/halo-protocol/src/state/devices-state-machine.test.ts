@@ -1,6 +1,6 @@
 import { PublicKey } from "@dxos/crypto"
 import { Credential } from "../proto"
-import { createNewState, processCredential } from "./device-state-machine"
+import { createDevicesState, processDevicesCredential } from "./devices-state-machine"
 import expect from 'expect'
 
 describe('DeviceStateMachine', () => {
@@ -8,7 +8,7 @@ describe('DeviceStateMachine', () => {
     const identity = PublicKey.random()
     const device = PublicKey.random()
 
-    const state = createNewState(identity)
+    const state = createDevicesState(identity)
 
     const credential: Credential = {
       claim: {
@@ -21,7 +21,7 @@ describe('DeviceStateMachine', () => {
       }]
     }
 
-    const newState = processCredential(state, credential)
+    const newState = processDevicesCredential(state, credential)
     expect(newState.devices[0].key.equals(device)).toBeTruthy()
     expect(newState.devices[0].addedBy.equals(identity)).toBeTruthy()
   })
