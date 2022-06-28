@@ -118,13 +118,14 @@ export class PartyFactory {
     await party.open();
 
     // Write the Feed genesis message.
+    // TODO(dmaretskyi): Shouldn't be needed.
     await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey,
       await party.getWriteFeedKey(),
       [identity.deviceKeyChain]
     ));
-    
+
     return party;
   }
 
