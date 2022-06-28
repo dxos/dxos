@@ -5,10 +5,10 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyHint, KeyType } from '@dxos/credentials';
+import { KeyHint, KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -200,6 +200,11 @@ export class PartyCore {
     this._subscriptions.unsubscribe();
 
     return this;
+  }
+
+  writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {
+    assert(this._partyProcessor, 'Party not open');
+    return this._partyProcessor?.writeHaloMessage(message)
   }
 
   /**

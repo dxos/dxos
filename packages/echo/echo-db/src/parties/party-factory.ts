@@ -63,7 +63,7 @@ export class PartyFactory {
     const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
 
     // PartyGenesis (self-signed by Party).
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       identity.keyring,
       partyKey,
       writableFeed.key,
@@ -71,7 +71,7 @@ export class PartyFactory {
     );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.processor.writeHaloMessage(createEnvelopeMessage(
+    await party.writeCredentialsMessage(createEnvelopeMessage(
       identity.keyring,
       partyKey.publicKey,
       wrapMessage(identity.identityGenesis),
@@ -80,7 +80,7 @@ export class PartyFactory {
 
     // FeedAdmit (signed by the Device KeyChain).
     // TODO(dmaretskyi): Is this really needed since a feed is already admitted by party genesis message.
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey.publicKey,
       writableFeed.key,
@@ -89,7 +89,7 @@ export class PartyFactory {
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (identity.identityInfo) {
-      await party.processor.writeHaloMessage(createEnvelopeMessage(
+      await party.writeCredentialsMessage(createEnvelopeMessage(
         identity.keyring,
         partyKey.publicKey,
         wrapMessage(identity.identityInfo),
@@ -141,7 +141,7 @@ export class PartyFactory {
     const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
     assert(signingKey, 'No device key or keychain.');
     // Write the Feed genesis message.
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey,
       feedKeyPair.publicKey,
@@ -224,7 +224,7 @@ export class PartyFactory {
       // Copy our signed IdentityInfo into the new Party.
       const infoMessage = identity.identityInfo;
       if (infoMessage) {
-        await party.processor.writeHaloMessage(createEnvelopeMessage(
+        await party.writeCredentialsMessage(createEnvelopeMessage(
           identity.keyring,
           partyKey,
           wrapMessage(infoMessage),
@@ -250,7 +250,7 @@ export class PartyFactory {
     const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
 
     // PartyGenesis (self-signed by Party).
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       identity.keyring,
       partyKey,
       writableFeed.key,
@@ -258,7 +258,7 @@ export class PartyFactory {
     );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.processor.writeHaloMessage(createEnvelopeMessage(
+    await party.writeCredentialsMessage(createEnvelopeMessage(
       identity.keyring,
       partyKey.publicKey,
       wrapMessage(identity.identityGenesis),
@@ -266,7 +266,7 @@ export class PartyFactory {
     ));
 
     // FeedAdmit (signed by the Device KeyChain).
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       identity.keyring,
       partyKey.publicKey,
       writableFeed.key,
@@ -275,7 +275,7 @@ export class PartyFactory {
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (identity.identityInfo) {
-      await party.processor.writeHaloMessage(createEnvelopeMessage(
+      await party.writeCredentialsMessage(createEnvelopeMessage(
         identity.keyring,
         partyKey.publicKey,
         wrapMessage(identity.identityInfo),
@@ -285,7 +285,7 @@ export class PartyFactory {
 
     // const keyAdmitMessage = snapshot.halo?.messages?.[1];
     // assert(keyAdmitMessage);
-    // await party.processor.writeHaloMessage(createEnvelopeMessage(
+    // await party.writeCredentialsMessage(createEnvelopeMessage(
     //   identity.signer,
     //   partyKey.publicKey,
     //   keyAdmitMessage,
@@ -293,7 +293,7 @@ export class PartyFactory {
     // ));
 
     // for(const message of snapshot.halo?.messages?.slice(2) || []) {
-    //   await party.processor.writeHaloMessage(message);
+    //   await party.writeCredentialsMessage(message);
     // }
 
     // Write messages to create ECHO items.
