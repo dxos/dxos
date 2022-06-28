@@ -7,15 +7,15 @@ import { it as test } from 'mocha';
 
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
-import { createRamStorage } from '../util';
 import { SnapshotStore } from './snapshot-store';
 
 const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('SnapshotStore', () => {
   test('in-memory', async () => {
-    const store = new SnapshotStore(createRamStorage());
+    const store = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const key1 = createPublicKey();
     const key2 = createPublicKey();

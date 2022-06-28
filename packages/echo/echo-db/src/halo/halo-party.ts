@@ -17,6 +17,7 @@ import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
 import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { ContactManager } from './contact-manager';
 import { Preferences } from './preferences';
@@ -161,13 +162,13 @@ export class HaloParty {
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
-      this._feedProvider,
       peerId,
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     // Replication.
     await this._protocol.start([
+      createReplicatorPlugin(this._feedProvider),
       createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), peerId),
       createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);

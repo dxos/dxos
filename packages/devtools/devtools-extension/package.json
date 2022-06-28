@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "2.33.3",
+  "version": "2.33.4",
   "private": true,
   "license": "MIT",
   "author": "DXOS.org",
@@ -29,7 +29,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
     "@mui/lab": "^5.0.0-alpha.69",

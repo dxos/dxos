@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 const log = debug('dxos:snapshot-store');
 
@@ -18,7 +18,7 @@ const log = debug('dxos:snapshot-store');
  */
 export class SnapshotStore {
   constructor (
-    private readonly _storage: IStorage
+    private readonly _storage: Storage
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {

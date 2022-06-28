@@ -3,6 +3,7 @@
 //
 
 import del from 'del';
+import { join } from 'path';
 import raf from 'random-access-file';
 
 import { File } from '../interfaces';
@@ -17,7 +18,7 @@ export class NodeStorage extends AbstractStorage {
   }
 
   subDir (path: string) {
-    return new NodeStorage(`${this.rootPath}${path}`);
+    return new NodeStorage(join(this.rootPath, path));
   }
 
   _create (filename: string, opts: any = {}): File {

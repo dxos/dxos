@@ -27,7 +27,8 @@ void (async () => {
         join(srcDir, 'background.ts'),
         join(srcDir, 'content.ts'),
         join(srcDir, 'devtools.ts'),
-        join(srcDir, 'panel.ts')
+        join(srcDir, 'panel.ts'),
+        join(srcDir, 'sandbox.ts')
       ],
       outdir: distDir,
       write: true,

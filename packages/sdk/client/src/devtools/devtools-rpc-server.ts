@@ -25,7 +25,6 @@ const port: RpcPort = {
       }
 
       const message = event.data;
-
       if (
         typeof message !== 'object' ||
         message === null ||
