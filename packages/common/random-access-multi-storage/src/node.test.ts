@@ -29,10 +29,11 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
+    const storageDir = storage.directory('');
     expect(storage.type).toBe(StorageType.NODE);
 
     // Check write a file.
-    const file = storage.createOrOpen('file1');
+    const file = storageDir.createOrOpen('file1');
     await write(file);
     await expect(fs.access(path.join(directory, 'file1'), constants.F_OK)).resolves.toBeUndefined();
 

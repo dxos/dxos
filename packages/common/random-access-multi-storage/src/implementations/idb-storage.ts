@@ -5,55 +5,28 @@
 import { join } from 'path';
 import randomAccessIdb from 'random-access-idb';
 
-import { File, StorageType } from '../interfaces';
-import { FileInternal } from '../internal';
+import { StorageType } from '../interfaces';
+import { RandomAccessStorage } from '../types';
 import { AbstractStorage } from './abstract-storage';
+import { IDbDirectory } from './idb-directory';
 
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = StorageType.IDB;
-  private _fileStorage: RandomAccessStorage;
-  private _fileRegistry: Map<string, File> = new Map<string, File>();
+  readonly fileStorage: RandomAccessStorage;
 
-  constructor (protected rootPath: string) {
-    super(rootPath);
-    this._fileStorage = this._createFileStorage();
+  constructor (path: string) {
+    super(path);
+    this.fileStorage = this._createFileStorage();
   }
 
-  subDir (path: string) {
-    return new IDbStorage(join(this.rootPath, path));
-  }
-
-  override createOrOpen (filename: string): File {
-    const existingFile = this._getFileIfOpened(filename);
-    if (existingFile) {
-      return existingFile;
-    }
-    const file = this._create(filename);
-    this._files.set(filename, file);
-    return file;
-  }
-
-  protected _getFileIfOpened (filename: string) {
-    if (this._files.has(filename)) {
-      const file = this._files.get(filename);
-      if (file && !file._isDestroyed()) {
-        file._reopen();
-        return file;
-      }
-    }
-    return null;
-  }
-
-  protected override _create (filename: string): File {
-    return new File(this._fileStorage(filename));
+  _createDirectory (relativePath: string) {
+    return new IDbDirectory(join(this._path, relativePath), this);
   }
 
   protected override async _destroy () {
-    // Closing all files in the registry.
-
     // eslint-disable-next-line no-undef
     return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(this._root);
+      const request = indexedDB.deleteDatabase(this._path);
       request.onupgradeneeded = () => {
         reject(new Error('Couldn\'t clear indexedDB, because upgrade needed.'));
       };
@@ -70,16 +43,6 @@ export class IDbStorage extends AbstractStorage {
   }
 
   protected _createFileStorage () {
-    return randomAccessIdb(this._root);
+    return randomAccessIdb(this._path);
   }
-}
-
-interface RandomAccessStorage {
-  (file: string, opts?: {}): FileInternal;
-
-  root: string;
-
-  type: string;
-
-  destroy(): Promise<void>;
 }

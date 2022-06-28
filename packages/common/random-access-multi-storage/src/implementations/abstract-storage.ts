@@ -1,8 +1,9 @@
 //
 // Copyright 2021 DXOS.org
 //
+import { join } from 'path';
 
-import { File } from '../interfaces/File';
+import { Directory } from '../interfaces/Directory';
 import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
 
@@ -10,43 +11,51 @@ import { StorageType } from '../interfaces/storage-types';
  * Base class for all storage implementations.
  */
 export abstract class AbstractStorage implements Storage {
-  protected readonly _root: string;
-  protected _files: Map<string, File>;
+  protected readonly _path: string;
+  protected _directories: Map<string, Directory>;
   public abstract type: StorageType
 
-  constructor (root: string) {
-    this._root = root;
-    this._files = new Map<string, File>();
+  constructor (path: string) {
+    this._path = path;
+    this._directories = new Map<string, Directory>();
   }
 
-  public createOrOpen (filename: string, opts = {}): File {
-    const file = this._create(filename, opts);
-    this._files.set(filename, file);
-    return file;
-  }
-
-  public async delete (filename: string) {
-    throw new Error('not implemented');
-  }
-
-  private _close () {
-    return Promise.all(
-      Array.from(this._files.values())
-        .map(file => file.close().catch((error: any) => console.error(error.message)))
-    );
+  public directory (relativePath: string): Directory {
+    const fullPath = join(this._path, relativePath);
+    if (this._directories.has(fullPath)) {
+      return this._directories.get(fullPath)!;
+    } else {
+      const directory = this._createDirectory(relativePath);
+      this._directories.set(fullPath, directory);
+      return directory;
+    }
   }
 
   async destroy () {
     try {
-      await this._close();
+      await this._closeDirectories();
+      await this._destroyDirectories();
       await this._destroy();
-      this._files.clear();
+      this._directories.clear();
     } catch (error: any) {
       console.error(error);
     }
   }
 
-  public abstract subDir (path: string): Storage
-  protected abstract _create (filename: string, opts?: any): File;
+  private _closeDirectories () {
+    return Promise.all(
+      Array.from(this._directories.values())
+        .map(directory => directory._close().catch((error: any) => console.error(error.message)))
+    );
+  }
+
+  private _destroyDirectories () {
+    return Promise.all(
+      Array.from(this._directories.values())
+        .map(directory => directory._destroy().catch((error: any) => console.error(error.message)))
+    );
+  }
+
+  public abstract _createDirectory (relativePath: string): Directory
   protected abstract _destroy (): Promise<void>;
 }

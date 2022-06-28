@@ -21,15 +21,17 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
   describe(testGroupName, () => {
     it('open & close', async () => {
       const storage = createStorage();
+      const directory = storage.directory('');
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
       await file.close();
     });
 
     it('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(fileName);
 
       // eslint-disable-next-line unused-imports/no-unused-vars
       for (const _ of Array.from(Array(5))) {
@@ -43,10 +45,11 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('multiple files', async () => {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       const files = Array.from(Array(10))
         .map(() => randomText())
-        .map(fileName => storage.createOrOpen(fileName));
+        .map(fileName => directory.createOrOpen(fileName));
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
@@ -60,13 +63,14 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('reads from empty file', async function () {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       // TODO(yivlad): Doesn't work for node.
       if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const { size } = await file.stat();
       expect(size).toBe(0);
@@ -75,15 +79,16 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('reopen', async () => {
       // Open.
       const storage = createStorage();
+      const directory = storage.directory('');
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       // Write & close.
       await writeAndCheck(file, Buffer.from(randomText()));
       await file.close();
 
       // Open again.
-      const file2 = storage.createOrOpen('EchoMetadata');
+      const file2 = directory.createOrOpen('EchoMetadata');
       // Write & close.
       await writeAndCheck(file2, Buffer.from(randomText()));
       await file2.close();
@@ -94,14 +99,15 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const storage = createStorage();
       const fileName = randomText();
       const data = Buffer.from(randomText());
-      const file = storage.createOrOpen(fileName);
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(fileName);
 
       // Write & close.
       await writeAndCheck(file, data);
       await file.close();
 
       // Open again.
-      const file2 = storage.createOrOpen(fileName);
+      const file2 = directory.createOrOpen(fileName);
 
       // Read and check inside.
       const dataFromFile = await file2.read(0, data.length);
@@ -112,14 +118,15 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async function () {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await storage.delete(fileName);
+      await storage.destroy();
       const { size } = await file.stat();
       expect(size).toBe(0);
 
@@ -129,19 +136,19 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('subdirectories', async function () {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
-      const subStorage1 = storage.subDir('dir1');
-      const subStorage2 = storage.subDir('dir2');
+      const dir1 = storage.directory('dir1');
+      const dir2 = storage.directory('dir2');
 
       const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
       const buffer2 = Buffer.from(randomText());
 
       // 2. Create a file in first subdirectory and write content
-      const file1 = subStorage1.createOrOpen(fileName);
+      const file1 = dir1.createOrOpen(fileName);
       await file1.write(0, buffer1);
 
       // 3. Create a file with the same name in the second subdir and write different content
-      const file2 = subStorage2.createOrOpen(fileName);
+      const file2 = dir2.createOrOpen(fileName);
       await file2.write(0, buffer2);
 
       // 4. Check that they have corrent content.
@@ -151,6 +158,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('destroys file', async function () {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       // TODO(yivlad): Works only for StorageType.RAM.
       if (storage.type !== StorageType.RAM) {
@@ -158,14 +166,14 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       }
 
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
       await file.destroy();
 
-      const reopened = storage.createOrOpen(fileName);
+      const reopened = directory.createOrOpen(fileName);
       const { size } = await reopened.stat();
       expect(size).toBe(0);
       await reopened.close();

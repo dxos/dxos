@@ -7,8 +7,13 @@ export interface Directory{
   /**
    * @internal
    */
-  _closeFiles: () => Promise<void[]>
+  _close: () => Promise<void[]>
+
+  /**
+   * @internal
+   */
+   _destroy: () => Promise<void[]>
 
   createOrOpen: (filename: string, opts?: any) => File
-  directory: (path: string) => Directory
+  subDirectory: (path: string) => Directory
 }
