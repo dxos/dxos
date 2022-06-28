@@ -91,11 +91,11 @@ describe('Schemas', () => {
       .exec();
 
     const { entities: orgs } = party.database
-      .select({ type: TestType.Org })
+      .select({ type: builder.defaultSchemas[TestType.Org].schema })
       .exec();
 
     const { entities: people } = party.database
-      .select({ type: TestType.Person })
+      .select({ type: builder.defaultSchemas[TestType.Person].schema })
       .exec();
 
     [...orgs, ...people].forEach(item => {
