@@ -15,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
@@ -27,7 +27,6 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
-import { createRamStorage } from './util';
 
 const log = debug('dxos:echo');
 const error = log.extend('error');
@@ -39,25 +38,16 @@ export interface PartyFilter { }
  * Various options passed to `ECHO.create`.
  */
 export interface EchoCreationOptions {
+
   /**
-   * Storage used for feeds. Defaults to in-memory.
+   * Storage to persist data. Defaults to in-memory.
    */
-  feedStorage?: IStorage
+   storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.
    */
   keyStorage?: any
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  snapshotStorage?: IStorage
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -113,9 +103,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    feedStorage = createRamStorage(),
-    snapshotStorage = createRamStorage(),
-    metadataStorage = createRamStorage(),
+    storage = createStorage('', StorageType.RAM),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,
@@ -127,10 +115,10 @@ export class ECHO {
       .registerModel(ObjectModel);
 
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(snapshotStorage);
-    this._metadataStore = new MetadataStore(metadataStorage);
+    this._snapshotStore = new SnapshotStore(storage.subDir('snapshots'));
+    this._metadataStore = new MetadataStore(storage.subDir('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.subDir('feeds'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,

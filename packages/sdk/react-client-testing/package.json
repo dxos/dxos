@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client-testing",
-  "version": "2.33.3",
+  "version": "2.33.4",
   "description": "Tools for react testing.",
   "license": "MIT",
   "author": "DXOS.org",
@@ -33,7 +33,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.4.2",
     "@mui/lab": "^5.0.0-alpha.69",

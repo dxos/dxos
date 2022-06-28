@@ -16,9 +16,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore, PartyFeedProvider, ReplicatorProtocolPluginFactory } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
 
 describe('PartyCore', () => {
@@ -29,10 +29,10 @@ describe('PartyCore', () => {
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -137,10 +137,10 @@ describe('PartyCore', () => {
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -249,43 +249,6 @@ describe('PartyCore', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });
 
-  test('self-admitting feed with a hint', async () => {
-    const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
-
-    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
-    const fullKey = keyring.getFullKey(feedKey.publicKey);
-    const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
-
-    await party.processor.takeHints([{
-      type: KeyType.FEED,
-      publicKey: feedKey.publicKey
-    }]);
-
-    await feed2.append({
-      halo: createFeedAdmitMessage(
-        keyring,
-        party.key,
-        feedKey.publicKey,
-        [partyKey]
-      )
-    });
-
-    const itemId = createId();
-    await feed2.append({
-      echo: {
-        itemId,
-        genesis: {
-          itemType: 'dxos:example',
-          modelType: ObjectModel.meta.type
-        },
-        timeframe: new Timeframe()
-      }
-    });
-
-    await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
-  });
-
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
@@ -293,10 +256,10 @@ describe('PartyCore', () => {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
-    const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 
@@ -324,12 +287,8 @@ describe('PartyCore', () => {
     afterTest(async () => party2.close());
 
     createTestProtocolPair(
-      new ReplicatorProtocolPluginFactory(
-        peer1.partyFeedProvider
-      ).createPlugins().map(r => r.createExtension()),
-      new ReplicatorProtocolPluginFactory(
-        partyFeedProvider
-      ).createPlugins().map(r => r.createExtension())
+      [createReplicatorPlugin(peer1.partyFeedProvider).createExtension()],
+      [createReplicatorPlugin(partyFeedProvider).createExtension()]
     );
 
     const item1 = await peer1.party.database.createItem();

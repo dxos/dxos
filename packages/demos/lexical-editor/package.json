@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lexical-editor",
-  "version": "2.33.3",
+  "version": "2.33.4",
   "private": true,
   "description": "Lexical text editor.",
   "license": "MIT",
@@ -48,7 +48,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
     "@emotion/css": "^11.7.1",
-    "@emotion/react": "^11.4.1",
+    "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.3.0",
     "@lexical/react": "~0.2.5",
     "@types/debug": "^4.1.7",
