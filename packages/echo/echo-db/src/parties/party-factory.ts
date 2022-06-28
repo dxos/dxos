@@ -169,7 +169,6 @@ export class PartyFactory {
   }
 
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<DataParty> {
-    const haloInvitation = !!invitationDescriptor.identityKey;
     const originalInvitation = invitationDescriptor;
 
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
@@ -199,17 +198,15 @@ export class PartyFactory {
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();
-    if (!haloInvitation) {
-      // Copy our signed IdentityInfo into the new Party.
-      const infoMessage = identity.identityInfo;
-      if (infoMessage) {
-        await party.writeCredentialsMessage(createEnvelopeMessage(
-          identity.keyring,
-          partyKey,
-          wrapMessage(infoMessage),
-          [identity.deviceKeyChain]
-        ));
-      }
+
+    // Copy our signed IdentityInfo into the new Party.
+    if (identity.identityInfo) {
+      await party.writeCredentialsMessage(createEnvelopeMessage(
+        identity.keyring,
+        partyKey,
+        wrapMessage(identity.identityInfo),
+        [identity.deviceKeyChain]
+      ));
     }
 
     return party;
