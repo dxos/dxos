@@ -22,8 +22,7 @@ export function processDevicesCredential(state: DevicesState, credential: Creden
       const claim = credential.claim as DeviceClaim
       
       const issuer = credential.signatures?.find(sig => 
-        sig.signer?.equals(state.identity) ||
-        state.devices.some(device => device.key.equals(sig.signer!))
+        sig.signer?.equals(state.identity) || isAdmittedDevice(state, sig.signer!)
         )
       if(!issuer) return state
 
@@ -41,4 +40,8 @@ export function processDevicesCredential(state: DevicesState, credential: Creden
     default:
       return state
   }
+}
+
+export function isAdmittedDevice(state: DevicesState, key: PublicKey) {
+  return state.devices.some(device => device.key.equals(key))
 }

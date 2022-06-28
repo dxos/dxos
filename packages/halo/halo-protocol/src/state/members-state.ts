@@ -42,3 +42,6 @@ export function createMembersProcessor(isAuthorized: (key: PublicKey) => boolean
   }
 }
 
+export function isAdmittedMember(state: MembersState, key: PublicKey) {
+  return state.members.some(m => m.key.equals(key))
+}
