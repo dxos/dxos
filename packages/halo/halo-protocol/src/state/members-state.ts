@@ -1,5 +1,6 @@
 import { PublicKey } from "@dxos/crypto";
 import { Credential, DeviceClaim, MemberClaim } from "../proto";
+import { VerifiedCredential } from "../verified-credential";
 
 export interface MembersState {
   party: PublicKey
@@ -17,12 +18,10 @@ export function createMembersState(party: PublicKey): MembersState {
 }
 
 export function createMembersProcessor(isAuthorized: (key: PublicKey) => boolean) {
-  return (state: MembersState, credential: Credential): MembersState => {
+  return (state: MembersState, credential: VerifiedCredential): MembersState => {
     switch(credential.claim['@type']) {
       case 'dxos.halo.credentials.MemberClaim': {
-        const claim = credential.claim as MemberClaim
-        
-        const issuer = credential.signatures?.find(sig => isAuthorized(sig.signer!))
+        const issuer = credential.findProof(signer => isAuthorized(signer))
         if(!issuer) return state
   
         return {
@@ -30,7 +29,7 @@ export function createMembersProcessor(isAuthorized: (key: PublicKey) => boolean
           members: [
             ...state.members,
             {
-              key: claim.identity!,
+              key: credential.claim.identity!,
               addedBy: issuer.signer!,
             }
           ]

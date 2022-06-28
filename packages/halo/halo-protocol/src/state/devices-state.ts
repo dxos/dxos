@@ -1,5 +1,6 @@
 import { PublicKey } from "@dxos/crypto";
 import { Credential, DeviceClaim } from "../proto";
+import { VerifiedCredential } from "../verified-credential";
 
 export interface DevicesState {
   identity: PublicKey
@@ -16,14 +17,12 @@ export function createDevicesState(identity: PublicKey): DevicesState {
   }
 }
 
-export function processDevicesCredential(state: DevicesState, credential: Credential): DevicesState {
+export function processDevicesCredential(state: DevicesState, credential: VerifiedCredential): DevicesState {
   switch(credential.claim['@type']) {
     case 'dxos.halo.credentials.DeviceClaim': {
-      const claim = credential.claim as DeviceClaim
-      
-      const issuer = credential.signatures?.find(sig => 
-        sig.signer?.equals(state.identity) || isAdmittedDevice(state, sig.signer!)
-        )
+      const issuer = credential.findProof(signer => 
+        state.identity.equals(signer) || isAdmittedDevice(state, signer)
+      )
       if(!issuer) return state
 
       return {
@@ -31,7 +30,7 @@ export function processDevicesCredential(state: DevicesState, credential: Creden
         devices: [
           ...state.devices,
           {
-            key: claim.device!,
+            key: credential.claim.device!,
             addedBy: issuer.signer!,
           }
         ]

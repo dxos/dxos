@@ -2,6 +2,7 @@ import { PublicKey } from "@dxos/crypto"
 import { Credential } from "../proto"
 import { createDevicesState, processDevicesCredential } from "./devices-state"
 import expect from 'expect'
+import { VerifiedCredential } from "../verified-credential"
 
 describe('DevicesStateMachine', () => {
   it('can add devices', () => {
@@ -10,16 +11,16 @@ describe('DevicesStateMachine', () => {
 
     const state = createDevicesState(identity)
 
-    const credential: Credential = {
+    const credential = new VerifiedCredential({
       claim: {
         '@type': 'dxos.halo.credentials.DeviceClaim',
         identity,
         device
       },
-      signatures: [{
+      proofs: [{
         signer: identity
       }]
-    }
+    })
 
     const newState = processDevicesCredential(state, credential)
     expect(newState.devices[0].key.equals(device)).toBeTruthy()

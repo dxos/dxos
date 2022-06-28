@@ -1,5 +1,6 @@
 import { PublicKey } from "@dxos/crypto";
 import { Credential, DeviceClaim } from "../proto";
+import { VerifiedCredential } from "../verified-credential";
 import { createDevicesState, DevicesState, isAdmittedDevice, processDevicesCredential } from "./devices-state";
 import { createMembersProcessor, createMembersState, isAdmittedMember, MembersState } from "./members-state";
 
@@ -17,7 +18,7 @@ export function createPartyState(party: PublicKey): PartyState {
   }
 }
 
-export function processPartyCredential(state: PartyState, credential: Credential): PartyState {
+export function processPartyCredential(state: PartyState, credential: VerifiedCredential): PartyState {
   switch(credential.claim['@type']) {
     case 'dxos.halo.credentials.MemberClaim': {
       return {
@@ -28,14 +29,14 @@ export function processPartyCredential(state: PartyState, credential: Credential
       }
     }
     case 'dxos.halo.credentials.DeviceClaim': {
-      const claim = credential.claim as DeviceClaim
-      const memberState = state.memberDevices[claim.identity!.toHex()] ?? createDevicesState(claim.identity!)
+      const memberState = state.memberDevices[credential.claim.identity!.toHex()] ??
+        createDevicesState(credential.claim.identity!)
 
       return {
         ...state,
         memberDevices: {
           ...state.memberDevices,
-          [claim.identity!.toHex()]: processDevicesCredential(memberState, credential),
+          [credential.claim.identity!.toHex()]: processDevicesCredential(memberState, credential),
         }
       }
     }
