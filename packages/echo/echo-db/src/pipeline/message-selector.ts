@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../database';
-import { PartyProcessor } from './party-processor';
+import { PartyStateProvider } from './party-processor';
 
 const log = debug('dxos:echo-db:message-selector');
 
@@ -24,7 +24,7 @@ const log = debug('dxos:echo-db:message-selector');
  * @param timeframeClock
  */
 export function createMessageSelector (
-  partyProcessor: PartyProcessor,
+  partyProcessor: PartyStateProvider,
   timeframeClock: TimeframeClock
 ): MessageSelector {
   // TODO(telackey): Add KeyAdmit checks.
