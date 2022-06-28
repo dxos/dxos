@@ -1,0 +1,27 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo.credentials;
+
+import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+
+/// Claims that the device belongs to an identity.
+message DeviceClaim {
+  dxos.halo.keys.PubKey identity = 1;
+  dxos.halo.keys.PubKey device = 2;
+}
+
+/// Claims that the identity is a member of a party.
+message MemberClaim {
+  dxos.halo.keys.PubKey party = 1;
+  dxos.halo.keys.PubKey identity = 2;
+}
+
+/// Admits a feed to the party.
+message FeedAdmitClaim {
+  dxos.halo.keys.PubKey party = 1;
+  dxos.halo.keys.PubKey feed = 2;
+}
