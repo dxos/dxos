@@ -16,7 +16,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore, PartyFeedProvider, ReplicatorProtocolPluginFactory } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore } from './party-core';
 
@@ -286,12 +287,8 @@ describe('PartyCore', () => {
     afterTest(async () => party2.close());
 
     createTestProtocolPair(
-      new ReplicatorProtocolPluginFactory(
-        peer1.partyFeedProvider
-      ).createPlugins().map(r => r.createExtension()),
-      new ReplicatorProtocolPluginFactory(
-        partyFeedProvider
-      ).createPlugins().map(r => r.createExtension())
+      [createReplicatorPlugin(peer1.partyFeedProvider).createExtension()],
+      [createReplicatorPlugin(partyFeedProvider).createExtension()]
     );
 
     const item1 = await peer1.party.database.createItem();
