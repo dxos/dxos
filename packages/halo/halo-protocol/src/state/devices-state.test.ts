@@ -1,6 +1,6 @@
 import { PublicKey } from "@dxos/crypto"
 import { Credential } from "../proto"
-import { createDevicesState, processDevicesCredential } from "./devices-state-machine"
+import { createDevicesState, processDevicesCredential } from "./devices-state"
 import expect from 'expect'
 
 describe('DeviceStateMachine', () => {
