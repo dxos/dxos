@@ -202,13 +202,6 @@ export class HaloFactory {
     const halo = await this.constructParty(hints);
     await halo.open();
 
-    // Write the Feed genesis message.
-    await halo.writeCredentialsMessage(createFeedAdmitMessage(
-      credentialsSigner.signer,
-      partyKey,
-      await halo.getWriteFeedKey(),
-      [credentialsSigner.getDeviceKey()]
-    ));
     await initiator.destroy();
 
     await halo.database.createItem({
