@@ -3,7 +3,7 @@ import { Credential } from "../proto"
 import { createDevicesState, processDevicesCredential } from "./devices-state"
 import expect from 'expect'
 
-describe('DeviceStateMachine', () => {
+describe('DevicesStateMachine', () => {
   it('can add devices', () => {
     const identity = PublicKey.random()
     const device = PublicKey.random()
