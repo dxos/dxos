@@ -202,9 +202,9 @@ export class PartyCore {
     return this;
   }
 
-  writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {
+  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
     assert(this._partyProcessor, 'Party not open');
-    return this._partyProcessor?.writeHaloMessage(message)
+    return this._partyProcessor?.writeHaloMessage(message);
   }
 
   /**

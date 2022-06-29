@@ -9,6 +9,7 @@ import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -22,7 +23,6 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
-import { FeedDescriptor } from '@dxos/feed-store';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party';
 
@@ -207,8 +207,8 @@ export class DataParty {
     return feed;
   }
 
-  writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message)
+  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
+    return this._partyCore.writeCredentialsMessage(message);
   }
 
   get isActive (): boolean {

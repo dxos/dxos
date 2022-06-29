@@ -31,7 +31,7 @@ export interface CredentialProcessor {
 
 export interface PartyStateProvider {
   partyKey: PublicKey
-  
+
   /**
    * Whether PartyGenesis was already processed.
    */

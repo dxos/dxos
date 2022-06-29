@@ -196,8 +196,8 @@ export class HaloParty {
     return this;
   }
 
-  writeCredentialsMessage(message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message)
+  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
+    return this._partyCore.writeCredentialsMessage(message);
   }
 
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {

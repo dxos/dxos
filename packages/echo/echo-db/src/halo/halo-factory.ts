@@ -14,8 +14,7 @@ import {
   KeyType,
   Filter,
   SecretProvider,
-  KeyHint,
-  createFeedAdmitMessage
+  KeyHint
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';
@@ -193,12 +192,8 @@ export class HaloFactory {
     );
 
     await initiator.connect();
-    const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+    const { hints } = await initiator.redeemInvitation(secretProvider);
 
-    /*
-     * TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
-     * mechanism is broken by not waiting on the messages to be processed before returning.
-     */
     const halo = await this.constructParty(hints);
     await halo.open();
 
