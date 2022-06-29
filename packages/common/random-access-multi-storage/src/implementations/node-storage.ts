@@ -3,17 +3,17 @@
 //
 
 import del from 'del';
-import { join } from 'path';
 
 import { StorageType } from '../interfaces/storage-types';
+import { getFullPath } from '../utils';
 import { AbstractStorage } from './abstract-storage';
 import { NodeDirectory } from './node-directory';
 
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  _createDirectory (relativePath: string) {
-    return new NodeDirectory(join(this._path, relativePath), this);
+  _createDirectory (path: string) {
+    return new NodeDirectory(getFullPath(this._path, path), this);
   }
 
   async _destroy () {

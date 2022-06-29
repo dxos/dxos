@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { join } from 'path';
 import randomAccessIdb from 'random-access-idb';
 
 import { StorageType } from '../interfaces';
 import { RandomAccessStorage } from '../types';
+import { getFullPath } from '../utils';
 import { AbstractStorage } from './abstract-storage';
 import { IDbDirectory } from './idb-directory';
 
@@ -19,8 +19,8 @@ export class IDbStorage extends AbstractStorage {
     this.fileStorage = this._createFileStorage();
   }
 
-  _createDirectory (relativePath: string) {
-    return new IDbDirectory(join(this._path, relativePath), this);
+  _createDirectory (path: string) {
+    return new IDbDirectory(getFullPath(this._path, path), this);
   }
 
   protected override async _destroy () {

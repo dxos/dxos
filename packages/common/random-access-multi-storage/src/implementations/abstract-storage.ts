@@ -1,11 +1,11 @@
 //
 // Copyright 2021 DXOS.org
 //
-import { join } from 'path';
 
 import { Directory } from '../interfaces/Directory';
 import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
+import { getFullPath } from '../utils';
 
 /**
  * Base class for all storage implementations.
@@ -20,12 +20,12 @@ export abstract class AbstractStorage implements Storage {
     this._directories = new Map<string, Directory>();
   }
 
-  public directory (relativePath: string): Directory {
-    const fullPath = join(this._path, relativePath);
+  public directory (path: string): Directory {
+    const fullPath = getFullPath(this._path, path);
     if (this._directories.has(fullPath)) {
       return this._directories.get(fullPath)!;
     } else {
-      const directory = this._createDirectory(relativePath);
+      const directory = this._createDirectory(fullPath);
       this._directories.set(fullPath, directory);
       return directory;
     }
@@ -56,6 +56,6 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  public abstract _createDirectory (relativePath: string): Directory
+  public abstract _createDirectory (path: string): Directory
   protected abstract _destroy (): Promise<void>;
 }

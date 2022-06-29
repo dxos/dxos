@@ -1,9 +1,9 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { join } from 'path';
 
 import { File, Directory, Storage } from '../interfaces';
+import { getFullPath } from '../utils';
 
 export abstract class AbstractDirectory implements Directory {
   protected readonly _path: string;
@@ -16,8 +16,8 @@ export abstract class AbstractDirectory implements Directory {
     this._storage = storage;
   }
 
-  subDirectory (relativePath: string): Directory {
-    const fullPath = join(this._path, relativePath);
+  subDirectory (path: string): Directory {
+    const fullPath = getFullPath(this._path, path);
     return this._storage.directory(fullPath);
   }
 
