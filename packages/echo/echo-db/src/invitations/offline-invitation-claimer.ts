@@ -7,7 +7,6 @@ import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
 import {
-  Authenticator,
   ClaimResponse,
   Keyring,
   KeyType,
@@ -18,18 +17,18 @@ import {
   SecretInfo,
   SecretProvider,
   SecretValidator,
-  SignedMessage
+  SignedMessage,
+  codec
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
-import { Identity } from '../halo';
+import { InvalidInvitationError } from '../errors';
+import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { InvitationManager } from './invitation-manager';
+import { InvitationFactory } from './invitation-factory';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
@@ -132,9 +131,9 @@ export class OfflineInvitationClaimer {
   /**
    * Create a function for handling PartyInvitation claims on the indicated Party. This is used by members
    * of the Party for responding to attempts to claim an Invitation which has been written to the Party.
-   * @param {InvitationManager} invitationManager
+   * @param {InvitationFactory} invitationManager
    */
-  static createOfflineInvitationClaimHandler (invitationManager: InvitationManager) {
+  static createOfflineInvitationClaimHandler (invitationManager: InvitationFactory) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
       const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {
@@ -156,7 +155,7 @@ export class OfflineInvitationClaimer {
       });
 
       const secretValidator: SecretValidator = async (invitation, secret) => {
-        const { payload: authMessage } = Authenticator.decodePayload(secret);
+        const { payload: authMessage } = codec.decode(secret);
 
         return keyring.verify(<unknown>authMessage as SignedMessage) &&
           authMessage.signed.payload.partyKey.equals(invitation.id) &&
@@ -170,20 +169,18 @@ export class OfflineInvitationClaimer {
   }
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-  static createSecretProvider (identity: Identity): SecretProvider {
-    return async (info?: SecretInfo) => {
-      return Buffer.from(Authenticator.encodePayload(
-        /* The signed portion of the Auth message includes the ID and authNonce provided
+  static createSecretProvider (credentials: CredentialsSigner): SecretProvider {
+    return async (info?: SecretInfo) => Buffer.from(codec.encode(
+      /* The signed portion of the Auth message includes the ID and authNonce provided
          * by the `info` object. These values will be validated on the other end.
          */
-        createAuthMessage(
-          identity.signer,
+      createAuthMessage(
+        credentials.signer,
           info!.id.value,
-          identity.identityKey ?? raise(new IdentityNotInitializedError()),
-          identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
+          credentials.getIdentityKey(),
+          credentials.getDeviceSigningKeys(),
           undefined,
           info!.authNonce.value)
-      ));
-    };
+    ));
   }
 }

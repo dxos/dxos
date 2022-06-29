@@ -22,7 +22,8 @@ describe('Mutations', () => {
         name: 'DXOS',
         data: {
           value1: 1,
-          value2: 2.02
+          value2: 2.02,
+          value3: 2 ** 33
         }
       });
 
@@ -43,13 +44,19 @@ describe('Mutations', () => {
                     {
                       key: 'value1',
                       value: {
-                        int: 1
+                        int: '1'
                       }
                     },
                     {
                       key: 'value2',
                       value: {
                         float: 2.02
+                      }
+                    },
+                    {
+                      key: 'value3',
+                      value: {
+                        int: (2 ** 33).toString()
                       }
                     }
                   ]
@@ -65,6 +72,11 @@ describe('Mutations', () => {
   test('ValueUtil.applyValue null', () => {
     const object = ValueUtil.applyValue({ title: 'DXOS' }, 'title', ValueUtil.createMessage(null));
     expect(object.title).toBe(null);
+  });
+
+  test('ValueUtil.applyValue integer', () => {
+    const object = ValueUtil.applyValue({}, 'number', ValueUtil.createMessage(2 ** 33));
+    expect(object.number).toBe(2 ** 33);
   });
 
   // TODO(burdon): Test other scalars.

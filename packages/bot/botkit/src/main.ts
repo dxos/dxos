@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
-import { createApiPromise, RegistryClient } from '@dxos/registry-client';
+import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';
@@ -29,7 +29,7 @@ const main = async () => {
   let contentResolver: ContentResolver | undefined;
   if (dxnsServer) {
     const apiPromise = await createApiPromise(dxnsServer);
-    const registry = new RegistryClient(apiPromise);
+    const registry = new RegistryClient(new PolkadotRegistry(apiPromise));
     contentResolver = new DXNSContentResolver(registry);
   }
 

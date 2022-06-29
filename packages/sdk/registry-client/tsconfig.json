@@ -4,12 +4,16 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "paths": {
       "@polkadot/api/augment": [
-        "./src/interfaces/augment-api.ts"
+        "./src/polkadot/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
-        "./src/interfaces/augment-types.ts"
+        "./src/polkadot/interfaces/augment-types.ts"
       ],
       "sample-polkadotjs-typegen/*": [
         "./src/*"
@@ -28,6 +32,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -37,13 +44,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../client"
     },
     {
-      "path": "../config"
+      "path": "../../halo/credentials"
     }
   ]
 }

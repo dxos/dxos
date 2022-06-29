@@ -5,7 +5,8 @@
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
 import { Codec } from './interface';
-import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
+import { BidirectionalMapingDescriptors } from './mapping';
+import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
 
 export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
@@ -17,11 +18,17 @@ export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
 };
 
 export class ProtoCodec<T = any> implements Codec<T> {
+  private readonly _encodeMapper: Mapper;
+  private readonly _decodeMapper: Mapper;
+
   constructor (
     private readonly _type: protobufjs.Type,
     private readonly _mapping: BidirectionalMapingDescriptors,
     private readonly _schema: Schema<any>
-  ) {}
+  ) {
+    this._encodeMapper = createMessageMapper(this._type, this._mapping.encode);
+    this._decodeMapper = createMessageMapper(this._type, this._mapping.decode);
+  }
 
   /**
    * Underlying protobuf.js type descriptor.
@@ -42,13 +49,13 @@ export class ProtoCodec<T = any> implements Codec<T> {
   }
 
   encode (value: T): Uint8Array {
-    const sub = mapMessage(this._type, this._mapping.encode, value, [this._schema]);
+    const sub = this._encodeMapper(value, [this._schema]);
     return this._type.encode(sub).finish();
   }
 
   decode (data: Uint8Array): T {
     const obj = this._type.toObject(this._type.decode(data), OBJECT_CONVERSION_OPTIONS);
-    return mapMessage(this._type, this._mapping.decode, obj, [this._schema]);
+    return this._decodeMapper(obj, [this._schema]);
   }
 
   /**

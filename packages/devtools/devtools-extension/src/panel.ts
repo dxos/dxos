@@ -5,48 +5,55 @@
 import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-import { Event } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { defs } from '@dxos/config';
-import { initialize, Shell } from '@dxos/devtools';
-
-import { waitForDXOS, wrapPort } from './utils';
+import { waitForDXOS } from './utils';
 
 const log = debug('dxos:extension:panel');
 
-const clientReady = new Event<Client>();
+log('Initialize panel starting...');
 
-const shell: Shell = {
-  connect (onConnect) {
-    onConnect(clientReady);
-  },
+const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
+const sandbox = document.createElement('iframe');
+sandbox.src = `${window.location.origin}/sandbox.html`;
+window.document.body.appendChild(sandbox);
 
-  tabId: browser.devtools.inspectedWindow.tabId,
-
-  onReload (reloadFn) {
-    browser.devtools.network.onNavigated.addListener(reloadFn);
+window.addEventListener('message', async event => {
+  const message = event.data;
+  if (
+    typeof message !== 'object' ||
+    message === null ||
+    message.source !== 'sandbox'
+  ) {
+    return;
   }
-};
 
-const init = async () => {
-  initialize(shell);
+  if (message.data === 'open-rpc') {
+    log('Opening RPC Server...');
+    await waitForDXOS();
+    await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
 
-  log('Initialize client RPC server starting...');
-  const port = browser.runtime.connect({ name: `panel-${browser.devtools.inspectedWindow.tabId}` });
-  const rpcPort = wrapPort(port);
-  const client = new Client({
-    runtime: {
-      client: {
-        mode: defs.Runtime.Client.Mode.REMOTE
-      }
-    }
-  }, { rpcPort });
+    sandbox.contentWindow?.postMessage({
+      data: 'open-rpc',
+      source: 'panel'
+    }, '*');
 
-  await waitForDXOS();
-  await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
-  await client.initialize();
-  log('Initialized client RPC server finished.');
-  clientReady.emit(client);
-};
+    return;
+  }
 
-void init();
+  log('Received message from sandbox:', message);
+  port.postMessage(message);
+});
+
+port.onMessage.addListener(message => {
+  log('Received message from background:', message);
+
+  sandbox.contentWindow?.postMessage({
+    data: message.data,
+    source: 'panel'
+  }, '*');
+});
+
+browser.devtools.network.onNavigated.addListener(() => {
+  window.location.reload();
+});
+
+log('Initialized panel finished.');

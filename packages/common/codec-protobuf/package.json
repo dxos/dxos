@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "2.32.0",
+  "version": "2.33.4",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -33,12 +33,12 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "^4.6.6",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",

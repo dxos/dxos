@@ -15,9 +15,8 @@ export default {
   title: 'Wallet'
 };
 
-export const Popup = () => {
-  return (
-    <div style={{ backgroundColor: '#ccc', width: '100vw', height: '100vh' }}>
+export const Popup = () => (
+<div style={{ backgroundColor: '#ccc', width: '100vw', height: '100vh' }}>
       <div style={CONTAINER_STYLE}>
         <ThemeProvider theme={theme}>
           <ClientProvider>
@@ -28,8 +27,7 @@ export const Popup = () => {
         </ThemeProvider>
       </div>
     </div>
-  );
-};
+);
 
 const theme = createTheme();
 

@@ -17,6 +17,7 @@ import { Any } from './proto/gen/google/protobuf';
 const DEFAULT_TIMEOUT = 3000;
 
 const log = debug('dxos:rpc');
+const error = log.extend('error');
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -196,6 +197,7 @@ export class RpcPeer {
       this._localStreams.delete(decoded.streamClose.id);
       stream.close();
     } else {
+      error(`Received malformed message: ${msg}`);
       throw new Error('Malformed message.');
     }
   }
@@ -285,14 +287,14 @@ export class RpcPeer {
 
       const stack = new StackTrace();
 
-      function closeStream (error?: Error) {
+      const closeStream = (error?: Error) => {
         if (!error) {
           close();
         } else {
           error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
           close(error);
         }
-      }
+      };
 
       this._outgoingRequests.set(id, new RequestItem(onResponse, closeStream, true));
 
@@ -373,7 +375,7 @@ export class RpcPeer {
   }
 }
 
-function encodeError (err: any): ErrorResponse {
+const encodeError = (err: any): ErrorResponse => {
   if (typeof err === 'object' && err?.message) {
     return {
       name: err.name,
@@ -389,19 +391,19 @@ function encodeError (err: any): ErrorResponse {
       message: JSON.stringify(err)
     };
   }
-}
+};
 
 /**
  * Runs the callback in an exponentially increasing interval
  * @returns Callback to clear the interval.
  */
-function exponentialBackoffInterval (cb: () => void, initialInterval: number): () => void {
+const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
   let interval = initialInterval;
-  function repeat () {
+  const repeat = () => {
     cb();
     interval *= 2;
     timeoutId = setTimeout(repeat, interval);
-  }
+  };
   let timeoutId = setTimeout(repeat, interval);
   return () => clearTimeout(timeoutId);
-}
+};

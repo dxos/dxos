@@ -14,7 +14,7 @@ import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/m
 
 import { InvitationRequest, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
-import { Resource } from '@dxos/registry-client';
+import { ResourceSet } from '@dxos/registry-client';
 
 import { MemberRow } from './MemberRow';
 import { PendingInvitation } from './PendingInvitation';
@@ -43,7 +43,7 @@ export interface SharingDialogProps {
   onCreateInvitation: () => void
   onCancelInvitation: (invitation: InvitationRequest) => void
   onCreateOfflineInvitation?: () => void
-  onCreateBotInvitation?: (resource: Resource) => void
+  onCreateBotInvitation?: (resource: ResourceSet) => void
   onClose?: () => void
   createUrl?: (invitationCode: string) => string
 }
@@ -67,7 +67,7 @@ export const SharingDialog = ({
   onClose
 }: SharingDialogProps) => {
   const [memberType, setMemberType] = useState(MemberType.ONLINE);
-  const [bot, setBot] = useState<Resource>();
+  const [bot, setBot] = useState<ResourceSet>();
 
   const active = memberType === MemberType.ONLINE ||
     (memberType === MemberType.BOT && bot);

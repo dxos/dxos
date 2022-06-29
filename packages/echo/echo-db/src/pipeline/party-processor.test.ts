@@ -36,7 +36,7 @@ describe('party-processor', () => {
 
     const message: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
@@ -67,7 +67,7 @@ describe('party-processor', () => {
 
     const genesisMessage: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
@@ -78,7 +78,7 @@ describe('party-processor', () => {
     const feedKey2 = await keyring.createKeyRecord({ type: KeyType.FEED });
     const feedAdmit: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
@@ -106,7 +106,7 @@ describe('party-processor', () => {
 
     const genesisMessage: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
@@ -115,7 +115,7 @@ describe('party-processor', () => {
     await partyProcessor.processMessage(genesisMessage);
     const feedAdmit: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
@@ -129,7 +129,7 @@ describe('party-processor', () => {
 
     const keyAdmit: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 1
       },
       data: createEnvelopeMessage(keyring, partyKey.publicKey,
@@ -141,7 +141,7 @@ describe('party-processor', () => {
 
     const feedAdmit2: IHaloStream = {
       meta: {
-        feedKey: feedKey.publicKey.asUint8Array(),
+        feedKey: feedKey.publicKey,
         seq: 1
         // TODO(telackey): Should ownership data go here?
       },
@@ -170,7 +170,7 @@ describe('party-processor', () => {
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
-    const meta = (seq: number) => ({ feedKey: feedKey.publicKey.asUint8Array(), seq });
+    const meta = (seq: number) => ({ feedKey: feedKey.publicKey, seq });
 
     await partyProcessor.processMessage({
       meta: meta(0),

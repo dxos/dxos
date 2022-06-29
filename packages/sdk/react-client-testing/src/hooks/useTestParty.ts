@@ -32,7 +32,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
     if (builder) {
       setImmediate(async () => {
         await callback(builder);
-      }, []);
+      });
     }
   }, [builder, party]);
 
@@ -42,6 +42,4 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 /**
  * @param party
  */
-export const usePartyBuilder = (party?: Party) => {
-  return useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key.toHex()]);
-};
+export const usePartyBuilder = (party?: Party) => useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key.toHex()]);

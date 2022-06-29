@@ -59,26 +59,18 @@ export interface Plugin {
   createExtension: () => Extension;
 }
 
-export function createProtocolFactory (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) {
-  return protocolFactory({
-    getTopics: () => {
-      return [topic.asBuffer()];
-    },
-    session: { peerId: keyToString(peerId.asBuffer()) },
-    plugins
-  });
-}
+export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) => protocolFactory({
+  getTopics: () => [topic.asBuffer()],
+  session: { peerId: keyToString(peerId.asBuffer()) },
+  plugins
+});
 
 /**
  * Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
  * @deprecated Use `createProtocolFactory`.
  */
-export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => {
-  return protocolFactory({
-    getTopics: () => {
-      return [rendezvousKey];
-    },
-    session: { peerId: keyToString(peerId) },
-    plugins: [protocolPlugin]
-  });
-};
+export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => protocolFactory({
+  getTopics: () => [rendezvousKey],
+  session: { peerId: keyToString(peerId) },
+  plugins: [protocolPlugin]
+});

@@ -12,11 +12,11 @@ export const StoragePanel = () => {
   const client = useClient();
   const devtoolsHost = client.services.DevtoolsHost;
 
-  async function handleReset () {
+  const handleReset = async () => {
     if (window.confirm('RESET ALL DATA (CANNOT BE UNDONE)?')) {
       await devtoolsHost.resetStorage({});
     }
-  }
+  };
 
   return (
     <Box sx={{ padding: 1 }}>

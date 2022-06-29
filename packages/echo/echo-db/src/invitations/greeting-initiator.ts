@@ -8,7 +8,6 @@ import debug from 'debug';
 import { waitForEvent } from '@dxos/async';
 import {
   createEnvelopeMessage,
-  createFeedAdmitMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
   createGreetingHandshakeMessage,
@@ -20,13 +19,13 @@ import {
   Message,
   SecretProvider,
   WithTypeUrl,
-  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
+  SignedMessage
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
-import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -50,12 +49,12 @@ export class GreetingInitiator {
    * @param _identity
    * @param _invitationDescriptor
    * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
+   * @param _getMessagesToNotarize Returns a list of credential messages that the inviter will be asked to write into the control feed.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _identity: Identity,
     private readonly _invitationDescriptor: InvitationDescriptor,
-    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<PublicKey>
+    private readonly _getMessagesToNotarize: (partyKey: PublicKey, nonce: Uint8Array) => Promise<Message[]>
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }
@@ -115,7 +114,6 @@ export class GreetingInitiator {
   async redeemInvitation (secretProvider: SecretProvider) {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
-    const haloInvitation = !!this._invitationDescriptor.identityKey;
 
     const responderPeerId = Buffer.from(swarmKey);
 
@@ -149,55 +147,7 @@ export class GreetingInitiator {
     const { nonce } = handshakeResponse;
     const partyKey = handshakeResponse.partyKey;
 
-    const feedKey = await this._feedInitializer(partyKey);
-
-    const credentialMessages = [];
-    if (haloInvitation) {
-      assert(this._identity.deviceKey, 'Device key required');
-
-      // For the HALO, add the DEVICE directly.
-      credentialMessages.push(
-        createKeyAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          this._identity.deviceKey,
-          [],
-          nonce)
-      );
-
-      // And Feed, signed for by the FEED and the DEVICE.
-      credentialMessages.push(
-        createFeedAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          feedKey,
-          [this._identity.deviceKey],
-          nonce)
-      );
-    } else {
-      assert(this._identity.deviceKeyChain, 'Device key required');
-      assert(this._identity.identityGenesis, 'Identity genesis message required');
-
-      // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
-      credentialMessages.push(
-        createEnvelopeMessage(
-          this._identity.signer,
-          partyKey,
-          wrapMessage(this._identity.identityGenesis),
-          [this._identity.deviceKeyChain],
-          nonce)
-      );
-
-      // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
-      credentialMessages.push(
-        createFeedAdmitMessage(
-          this._identity.signer,
-          partyKey,
-          feedKey,
-          [this._identity.deviceKeyChain],
-          nonce)
-      );
-    }
+    const credentialMessages = await this._getMessagesToNotarize(PublicKey.from(partyKey), nonce);
 
     // Send the signed payload to the greeting responder.
     const notarizeResponse = await this._greeterPlugin.send(responderPeerId,
@@ -238,3 +188,33 @@ export class GreetingInitiator {
     log('Destroyed');
   }
 }
+
+/**
+ * Create credentials messages that should be written to invite new device to the HALO party.
+ */
+export const createHaloPartyAdmissionMessage = (
+  credentialsSigner: CredentialsSigner,
+  nonce: Uint8Array
+): Message => createKeyAdmitMessage(
+  credentialsSigner.signer,
+  credentialsSigner.getIdentityKey().publicKey,
+  credentialsSigner.getDeviceKey(),
+  [],
+  Buffer.from(nonce)
+);
+
+/**
+ * Create credentials messages that should be written to invite member to the data party.
+ */
+export const createDataPartyAdmissionMessages = (
+  credentialsSigner: CredentialsSigner,
+  partyKey: PublicKey,
+  identityGenesis: SignedMessage,
+  nonce: Uint8Array
+): Message => createEnvelopeMessage(
+  credentialsSigner.signer,
+  partyKey,
+  wrapMessage(identityGenesis),
+  [credentialsSigner.getDeviceSigningKeys()],
+  Buffer.from(nonce)
+);

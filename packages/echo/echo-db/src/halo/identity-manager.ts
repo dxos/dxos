@@ -6,11 +6,11 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
-import { Keyring, SecretProvider } from '@dxos/credentials';
+import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
 
 import { InvitationDescriptor } from '../invitations';
-import { MetadataStore } from '../metadata';
-import { PartyInternal } from '../parties';
+import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
@@ -21,7 +21,7 @@ const log = debug('dxos:echo-db:identity-manager');
  * Manages the keyring and HALO party.
  */
 export class IdentityManager {
-  private readonly _identity: Identity;
+  private _identity: Identity | undefined;
 
   public readonly ready = new Event();
 
@@ -29,48 +29,53 @@ export class IdentityManager {
     private readonly _keyring: Keyring,
     private readonly _haloFactory: HaloFactory,
     private readonly _metadataStore: MetadataStore
-  ) {
-    this._identity = Identity.fromKeyring(_keyring);
-  }
+  ) {}
 
-  get identity () {
+  get identity (): Identity | undefined {
     return this._identity;
   }
 
-  get initialized (): boolean {
-    const haloParty = this._identity.halo;
-    return haloParty !== undefined &&
-      haloParty.isOpen &&
-      !!haloParty!.memberKeys.length &&
-      !!haloParty!.identityGenesis &&
-      !!this._identity.deviceKeyChain;
-  }
-
-  private async _initialize (halo: PartyInternal) {
-    assert(this._identity.identityKey, 'No identity key.');
-    assert(this._identity.deviceKey, 'No device key.');
+  private async _initialize (halo: HaloParty) {
     assert(halo.isOpen, 'HALO must be open.');
 
-    const haloParty = new HaloParty(halo, this._identity.identityKey!.publicKey, this._identity.deviceKey.publicKey);
-    this._identity.setHalo(haloParty);
+    // Wait for the minimum set of keys and messages we need for proper function:
+    //
+    // - KeyAdmit message for the current device so we can build the device KeyChain.
+    // - Identity genesis so it can be copied into newly joined parties.
+    //
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+    await waitForCondition(() =>
+      halo.processor.isMemberKey(deviceKey.publicKey) &&
+      halo.identityGenesis
+    );
 
-    // Wait for the minimum set of keys and messages we need for proper function.
-    await waitForCondition(() => this.initialized);
-
-    log('HALO initialized.');
+    this._identity = new Identity(this._keyring, halo);
     this.ready.emit();
+    log('HALO initialized.');
+  }
+
+  async close () {
+    const identity = this._identity;
+    this._identity = undefined;
+
+    await identity?.halo.close();
+  }
+
+  getIdentityKey (): KeyRecord | undefined {
+    return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 
   @synchronized
   async loadFromStorage () {
-    if (this._identity.identityKey) {
-      if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
+    const identityKey = this.getIdentityKey();
+    if (identityKey) {
+      if (this._metadataStore.getParty(identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty(this._identity.identityKey.publicKey);
+        const halo = await this._haloFactory.constructParty([]);
         // Always open the HALO.
         await halo.open();
         await this._initialize(halo);
-      } else if (!this._identity.keyring.hasSecretKey(this._identity.identityKey)) {
+      } else if (!this._keyring.hasSecretKey(identityKey)) {
         throw new Error('HALO missing and identity key has no secret.');
       }
     }
@@ -80,8 +85,8 @@ export class IdentityManager {
    * Creates the Identity HALO.
    */
    @synchronized
-  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
-    assert(!this._identity.halo, 'HALO already exists.');
+  async createHalo (options: HaloCreationOptions = {}): Promise<HaloParty> {
+    assert(!this._identity, 'Identity already initialized.');
 
     const halo = await this._haloFactory.createHalo(options);
     await this._initialize(halo);
@@ -97,10 +102,9 @@ export class IdentityManager {
     */
    @synchronized
    async recoverHalo (seedPhrase: string) {
-     assert(!this._identity.halo, 'HALO already exists.');
-     assert(!this._identity.identityKey, 'Identity key already exists.');
+     assert(!this._identity, 'Identity already initialized.');
 
-     const halo = await this._haloFactory.recoverHalo(this.identity, seedPhrase);
+     const halo = await this._haloFactory.recoverHalo(seedPhrase);
      await this._initialize(halo);
      return halo;
    }
@@ -110,7 +114,7 @@ export class IdentityManager {
     */
    @synchronized
    async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-     assert(!this._identity.halo, 'HALO already exists.');
+     assert(!this._identity, 'Identity already initialized.');
 
      const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);
      await this._initialize(halo);

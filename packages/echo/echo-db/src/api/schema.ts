@@ -51,10 +51,8 @@ export class Schema {
   validate (model: ObjectModel) {
     return this.fields.every(field => {
       const value = model.get(field.key);
-      if (field.required) {
-        if (!value) {
-          return false;
-        }
+      if (!value) {
+        return !field.required;
       }
 
       if (field.type) {

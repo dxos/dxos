@@ -4,6 +4,7 @@ import "google/protobuf/empty.proto";
 
 import "./client.proto";
 import "./config.proto";
+import "./echo/feed.proto";
 import "./echo/invitation.proto";
 
 package dxos.bot;
@@ -11,10 +12,10 @@ package dxos.bot;
 // TODO(burdon): Rename.
 message BotPackageSpecifier {
   oneof kind {
-    string dxn = 1; // TODO(burdon): Deprecate.
+    /// DXN of the bot in the DXNS registry.
+    string name = 1;
     string ipfs_cid = 2;
     string local_path = 3;
-    string name = 4;
   }
 }
 
@@ -50,6 +51,8 @@ message Bot {
   }
 
   Runtime runtime = 6;
+
+  BotReport report = 7;
 }
 
 message GetBotsResponse {
@@ -84,6 +87,10 @@ message GetLogsRequest {
   string bot_id = 1;
 }
 
+message BotReport {
+  /// Details of the party the bot was spawned for.
+  dxos.client.PartyDetails party_details = 1;
+}
 
 /// Service that is used by clients to communicate with bot factory.
 service BotFactoryService {
@@ -111,6 +118,9 @@ message InitializeRequest {
 
   /// Invitation for the bot to join the target party.
   dxos.echo.InvitationDescriptor invitation = 2;
+
+  /// ID of the bot.
+  string id = 3;
 }
 
 message StartRequest {
@@ -123,7 +133,7 @@ service BotService {
   /// Initialize Client, create profile, and join a party.
   rpc Initialize(InitializeRequest) returns (google.protobuf.Empty);
 
-  /// Initialize Client.
+  /// Start an initialized bot.
   rpc Start(StartRequest) returns (google.protobuf.Empty);
 
   /// Custom commands sent to the bot factory.
@@ -131,4 +141,7 @@ service BotService {
 
   /// Stop the bot.
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  /// Send periodic reports of the bot's state.
+  rpc StartReporting(google.protobuf.Empty) returns (stream BotReport);
 }

@@ -14,9 +14,7 @@ const log = debug('dxos:test:signal');
 
 jest.setTimeout(100 * 1000);
 
-const checkDiscoveryUpdate = (brokers, check) => Promise.all(brokers.map(broker => {
-  return pEvent(broker.localBus, '$broker.discovery-update', () => check(broker));
-}));
+const checkDiscoveryUpdate = (brokers, check) => Promise.all(brokers.map((broker) => pEvent(broker.localBus, '$broker.discovery-update', () => check(broker))));
 
 // TODO(telackey): This test does not work for me.
 test.skip('join/leave/connection webrtc peer', async () => {
@@ -38,9 +36,7 @@ test.skip('join/leave/connection webrtc peer', async () => {
   const waitForJoin = checkDiscoveryUpdate(brokers, broker => {
     const { peerMap } = broker.shared;
 
-    return peerIds.reduce((prev, peerId) => {
-      return prev && peerMap.peers.find(p => p.topic.equals(topic) && p.id.equals(peerId));
-    }, true);
+    return peerIds.reduce((prev, peerId) => prev && peerMap.peers.find(p => p.topic.equals(topic) && p.id.equals(peerId)), true);
   });
 
   const waitForPeerConnections = new Promise(resolve => {

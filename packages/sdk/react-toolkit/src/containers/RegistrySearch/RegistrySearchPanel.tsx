@@ -7,17 +7,16 @@ import React, { useState } from 'react';
 import { Autocomplete, Box, TextField } from '@mui/material';
 
 import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
-import { CID, RegistryTypeRecord, Resource } from '@dxos/registry-client';
+import { RegistryType, ResourceSet } from '@dxos/registry-client';
 
-import { createTypeFilter, RegistrySearchModel } from './RegistrySearchModel';
-import { RegistryTypeFilter } from './RegistryTypeFilter';
+import { RegistrySearchModel } from './RegistrySearchModel';
 
 export interface RegistrySearchPanelProps {
   model: RegistrySearchModel
-  types?: RegistryTypeRecord[]
+  types?: RegistryType[]
   versions?: boolean
   clearOnSelect?: boolean
-  onSelect: (resource: Resource, version?: string) => void
+  onSelect: (resource: ResourceSet, version?: string) => void
 }
 
 /**
@@ -31,22 +30,19 @@ export const RegistrySearchPanel = ({
   clearOnSelect,
   onSelect
 }: RegistrySearchPanelProps) => {
-  const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
-  const [resource, setResource] = useState<Resource>();
+  // const [selectedTypes, setSelectedTypes] = useState<CID[]>([]);
+  const [resource, setResource] = useState<ResourceSet>();
 
-  const resourceVersions = Object.keys({
-    ...resource?.tags,
-    ...resource?.versions
-  });
+  const resourceTags = Object.keys(resource?.tags ?? {});
 
-  const handleTypeSelect = (types: CID[]) => {
-    setSelectedTypes(types);
-    model.setFilters([
-      createTypeFilter(types)
-    ]);
-  };
+  // const handleTypeSelect = (types: CID[]) => {
+  //   setSelectedTypes(types);
+  //   model.setFilters([
+  //     createTypeFilter(types)
+  //   ]);
+  // };
 
-  const handleResourceSelect = (selected: SearchResult<Resource>) => {
+  const handleResourceSelect = (selected: SearchResult<ResourceSet>) => {
     if (!versions) {
       onSelect(selected?.value);
       return;
@@ -64,13 +60,13 @@ export const RegistrySearchPanel = ({
 
   return (
     <Box>
-      {types.length !== 0 && (
+      {/* {types.length !== 0 && (
         <RegistryTypeFilter
           types={types}
           selected={selectedTypes}
           onSelectedChange={handleTypeSelect}
         />
-      )}
+      )} */}
 
       {(!versions || !resource) && (
         <SearchAutocomplete
@@ -87,7 +83,7 @@ export const RegistrySearchPanel = ({
           autoHighlight
           clearOnEscape
           openOnFocus
-          options={resourceVersions}
+          options={resourceTags}
           noOptionsText='No matches'
           onChange={(event, value) => value && handleVersionSelect(value)}
           renderInput={params => (

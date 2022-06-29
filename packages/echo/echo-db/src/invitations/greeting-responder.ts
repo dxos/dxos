@@ -19,8 +19,8 @@ import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo';
-import { PartyProcessor } from '../pipeline';
+import { CredentialWriter, PartyStateProvider } from '../pipeline';
+import { CredentialsSigner } from '../protocol/credentials-signer';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
@@ -57,8 +57,8 @@ export class GreetingResponder {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _partyProcessor: PartyProcessor,
-    private readonly _identity: Identity
+    private readonly _partyProcessor: CredentialWriter & PartyStateProvider,
+    private readonly _credentialsSigner: CredentialsSigner
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
@@ -193,7 +193,6 @@ export class GreetingResponder {
    */
   async _writeCredentialsToParty (messages: any[]) {
     assert(this._state === GreetingState.CONNECTED);
-    assert(this._identity.deviceKeyChain);
 
     /* These messages will be self-signed by keys not yet admitted to the Party,, so we cannot check
      * for a trusted key, only that the signatures are valid.
@@ -217,10 +216,10 @@ export class GreetingResponder {
       };
 
       const envelope = createEnvelopeMessage(
-        this._identity.signer,
+        this._credentialsSigner.signer,
         this._partyProcessor.partyKey,
         message,
-        [this._identity.deviceKeyChain]
+        [this._credentialsSigner.getDeviceSigningKeys()]
       );
 
       await this._partyProcessor.writeHaloMessage(envelope);
@@ -244,19 +243,15 @@ export class GreetingResponder {
   _gatherHints (): KeyHint[] {
     assert(this._state === GreetingState.SUCCEEDED);
 
-    const memberKeys = this._partyProcessor.memberKeys.map(publicKey => {
-      return {
-        publicKey,
-        type: KeyType.UNKNOWN
-      };
-    });
+    const memberKeys = this._partyProcessor.memberKeys.map((publicKey) => ({
+      publicKey,
+      type: KeyType.UNKNOWN
+    }));
 
-    const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
-      return {
-        publicKey,
-        type: KeyType.FEED
-      };
-    });
+    const memberFeeds = this._partyProcessor.feedKeys.map((publicKey) => ({
+      publicKey,
+      type: KeyType.FEED
+    }));
 
     return [...memberKeys, ...memberFeeds];
   }

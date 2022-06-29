@@ -31,13 +31,13 @@ afterEach(async () => {
 });
 
 describe('Schemas', () => {
-  it('creation of Schema', async () => async () => {
+  it('creation of Schema', async () => {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  it('add Schema field', async () => async () => {
+  it('add Schema field', async () => {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -49,7 +49,7 @@ describe('Schemas', () => {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  it('add Schema linked field', async () => async () => {
+  it('add Schema linked field', async () => {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -67,7 +67,10 @@ describe('Schemas', () => {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const items = await party.database.select().exec().entities;
+    const items = await party.database.select()
+      .filter(item => Boolean(item.type) && [orgSchema.name, personSchema.name].includes(item.type as string))
+      .exec()
+      .entities;
 
     [orgSchema, personSchema].forEach(schema => {
       items.forEach(item => {
@@ -76,7 +79,7 @@ describe('Schemas', () => {
     });
   });
 
-  it('Use schema to validate the fields of an item', () => async () => {
+  it('Use schema to validate the fields of an item', async () => {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,
@@ -88,11 +91,11 @@ describe('Schemas', () => {
       .exec();
 
     const { entities: orgs } = party.database
-      .select({ type: TestType.Org })
+      .select({ type: builder.defaultSchemas[TestType.Org].schema })
       .exec();
 
     const { entities: people } = party.database
-      .select({ type: TestType.Person })
+      .select({ type: builder.defaultSchemas[TestType.Person].schema })
       .exec();
 
     [...orgs, ...people].forEach(item => {
@@ -123,34 +126,32 @@ const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectMod
   const logKey = (id: string) => truncateKey(id, 4);
   const logString = (value: string) => truncate(value, 24, true);
 
-  const values = items.map(item => {
-    return fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
-      const value = item.model.get(key);
-      switch (type) {
-        case 'string': {
-          row[key] = chalk.green(logString(value));
-          break;
-        }
-
-        case 'ref': {
-          if (party) {
-            const { field } = ref!;
-            const item = party.database.getItem(value);
-            row[key] = chalk.red(logString(item?.model.get(field)));
-          } else {
-            row[key] = chalk.red(logKey(value));
-          }
-          break;
-        }
-
-        default: {
-          row[key] = value;
-        }
+  const values = items.map((item) => fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
+    const value = item.model.get(key);
+    switch (type) {
+      case 'string': {
+        row[key] = chalk.green(logString(value));
+        break;
       }
 
-      return row;
-    }, { id: chalk.blue(logKey(item.id)) });
-  });
+      case 'ref': {
+        if (party) {
+          const { field } = ref!;
+          const item = party.database.getItem(value);
+          row[key] = chalk.red(logString(item?.model.get(field)));
+        } else {
+          row[key] = chalk.red(logKey(value));
+        }
+        break;
+      }
+
+      default: {
+        row[key] = value;
+      }
+    }
+
+    return row;
+  }, { id: chalk.blue(logKey(item.id)) }));
 
   return columnify(values, { columns: ['id', ...columns] });
 };

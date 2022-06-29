@@ -3,17 +3,18 @@
 //
 
 import assert from 'assert';
-import pify from 'pify';
+import { join } from 'path';
 import randomAccessIdb from 'random-access-idb';
 
-import { IFile, StorageType, STORAGE_IDB } from '../interfaces';
+import { File, StorageType } from '../interfaces';
+import { FileInternal } from '../internal';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
   /**
    * Handle for open files with patched closed function which doesn't actually close the file.
    */
-  file: IFile,
+  file: File,
   /**
    * The actual file close funciton that is supposed to be called at the end of the storage lifecycle.
    */
@@ -21,7 +22,7 @@ interface FileRegistryRecord {
 }
 
 export class IDbStorage extends AbstractStorage {
-  public override type: StorageType = STORAGE_IDB;
+  public override type: StorageType = StorageType.IDB;
   private _fileStorage: RandomAccessStorage;
   private _fileRegistry: Map<string, FileRegistryRecord> = new Map();
 
@@ -31,20 +32,20 @@ export class IDbStorage extends AbstractStorage {
   }
 
   subDir (path: string) {
-    return new IDbStorage(`${this.rootPath}${path}`);
+    return new IDbStorage(join(this.rootPath, path));
   }
 
-  protected override _create (filename: string) {
+  protected override _create (filename: string): File {
     // Looking up the file in the registry.
     if (this._fileRegistry.has(filename)) {
       const record = this._fileRegistry.get(filename);
       assert(record, 'File registry is corrupt');
       return record.file;
     }
-    const file = this._fileStorage(filename);
+    const file = new File(this._fileStorage(filename));
 
     // Monkeypatch close function.
-    const defaultClose = pify(file.close.bind(file));
+    const defaultClose = file.close.bind(file) as any;
     // Do not close the file - put it in the registry and reuse later.
     // Caching file is necessary because in some cases IndexedDB dosen't handle reopening files well - so instead of reopening we can get already opened handle from the registry.
     file.close = (cb: any) => cb?.(null);
@@ -82,7 +83,7 @@ export class IDbStorage extends AbstractStorage {
 }
 
 interface RandomAccessStorage {
-  (file: string, opts?: {}): IFile;
+  (file: string, opts?: {}): FileInternal;
 
   root: string;
 

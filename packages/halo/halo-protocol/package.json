@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-protocol",
-  "version": "2.32.0",
+  "version": "2.33.4",
   "description": "DXOS HALO Protocol",
   "homepage": "https://github.com/dxos/halo/tree/master/packages/credentials#readme",
   "bugs": {
@@ -29,7 +29,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",

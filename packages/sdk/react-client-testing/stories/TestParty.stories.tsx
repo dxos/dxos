@@ -54,12 +54,10 @@ const Story = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
+export const Primary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <Story />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

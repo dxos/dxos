@@ -16,7 +16,7 @@ export interface BuildTestsOpts {
   checkLeaks: boolean
 }
 
-export async function buildTests (files: string[], opts: BuildTestsOpts) {
+export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
   const mainFile = join(opts.outDir, 'main.js');
   const mainContents = `
     import debug from 'debug';
@@ -63,4 +63,4 @@ export async function buildTests (files: string[], opts: BuildTestsOpts) {
       NodeModulesPlugin()
     ]
   });
-}
+};

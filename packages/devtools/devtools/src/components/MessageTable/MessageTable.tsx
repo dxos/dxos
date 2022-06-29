@@ -25,9 +25,7 @@ import { Table, TableCell } from '../Table';
 
 const colorHash = new ColorHash({ saturation: 0.5 });
 
-const color = (type: string) => {
-  return type === 'halo' ? colors.red[500] : colors.blue[500];
-};
+const color = (type: string) => type === 'halo' ? colors.red[500] : colors.blue[500];
 
 // TODO(burdon): Remove.
 const defaultGetType = (message: any) => {
@@ -47,7 +45,7 @@ const defaultGetType = (message: any) => {
 
   if (message.halo) {
     // TODO(burdon): Change namespace to dxos.halo.credentials?
-    if (message.halo.payload?.__type_url === 'dxos.credentials.SignedMessage') {
+    if (message.halo.payload?.['@type'] === 'dxos.credentials.SignedMessage') {
       return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
     } else {
       return message.halo.payload?.__type_url ?? 'halo.payload';

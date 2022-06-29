@@ -116,12 +116,12 @@ describe('Lock', () => {
   test('errors are propagated with stack traces', async () => {
     const lock = new Lock();
 
-    async function throwsError () {
+    const throwsError = async () => {
       throw new Error();
-    }
+    };
 
     let error: Error;
-    async function callLock () {
+    const callLock = async () => {
       try {
         await lock.executeSynchronized(async () => {
           await throwsError();
@@ -130,7 +130,7 @@ describe('Lock', () => {
         error = err;
         throw error;
       }
-    }
+    };
 
     await expect(() => callLock()).rejects.toThrowError();
 

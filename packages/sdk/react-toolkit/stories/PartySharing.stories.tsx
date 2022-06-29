@@ -2,19 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
+import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
-import { IRegistryClient } from '@dxos/registry-client';
+import { RegistryClient } from '@dxos/registry-client';
 
 import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
-import { Column, createMockRegistryWithBots } from './helpers';
+import { Column, createMockRegistryWithBot } from './helpers';
 
 export default {
   title: 'react-toolkit/PartySharing'
@@ -99,7 +100,16 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
 };
 
 export const Primary = () => {
-  const mockRegistry = useMemo<IRegistryClient>(createMockRegistryWithBots, []);
+  const [mockRegistry, setMockRegistry] = useState<RegistryClient>();
+
+  useAsyncEffect(async () => {
+    const registry = await createMockRegistryWithBot();
+    setMockRegistry(registry);
+  }, []);
+
+  if (!mockRegistry) {
+    return null;
+  }
 
   return (
     <FullScreen>

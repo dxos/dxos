@@ -9,22 +9,18 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 
 test('basic generator', async () => {
-  const generator = new ProtocolNetworkGenerator(async (topic, id) => {
-    return {
-      id,
-      createStream ({ initiator }) {
-        return new Protocol({
-          discoveryKey: topic,
-          initiator: !!initiator,
-          streamOptions: {
-            live: true
-          }
-        })
-          .init()
-          .stream;
+  const generator = new ProtocolNetworkGenerator(async (topic, id) => ({
+    id,
+    createStream: ({ initiator }) => new Protocol({
+      discoveryKey: topic,
+      initiator: !!initiator,
+      streamOptions: {
+        live: true
       }
-    };
-  });
+    })
+      .init()
+      .stream
+  }));
 
   generator.on('error', err => console.log(err));
 

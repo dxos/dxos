@@ -17,7 +17,7 @@ import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../database';
-import { PartyProcessor } from './party-processor';
+import { CredentialProcessor, PartyStateProvider } from './party-processor';
 
 interface Options {
   readLogger?: (msg: any) => void
@@ -55,16 +55,12 @@ export class Pipeline {
    * @param _options
    */
   constructor (
-    private readonly _partyProcessor: PartyProcessor,
+    private readonly _partyProcessor: CredentialProcessor & PartyStateProvider,
     private readonly _feedStorIterator: FeedStoreIterator,
     private readonly _timeframeClock: TimeframeClock,
     private readonly _feedWriter?: FeedWriter<FeedMessage>,
     private readonly _options: Options = {}
   ) {}
-
-  get partyKey () {
-    return this._partyProcessor.partyKey;
-  }
 
   get isOpen () {
     return this._inboundEchoStream !== undefined;
@@ -141,7 +137,7 @@ export class Pipeline {
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  memberKey: memberKey.asUint8Array(),
+                  memberKey,
                   timeframe: message.echo.timeframe ?? new Timeframe()
                 },
                 data: message.echo

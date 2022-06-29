@@ -8,7 +8,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import {
-  AccountClient
+  AccountsClient
 } from '../../src';
 import { setup } from './utils';
 
@@ -16,14 +16,14 @@ chai.use(chaiAsPromised);
 
 describe('Accounts Client', () => {
   let apiPromise: ApiPromise;
-  let accountsApi: AccountClient;
+  let accountsApi: AccountsClient;
   let alice: KeyringPair;
   let bob: KeyringPair;
 
   beforeEach(async () => {
     const setupResult = await setup();
     apiPromise = setupResult.apiPromise;
-    accountsApi = setupResult.accountsApi;
+    accountsApi = setupResult.accountsClient;
     alice = setupResult.alice;
     bob = setupResult.bob;
   });
@@ -44,11 +44,11 @@ describe('Accounts Client', () => {
   describe('Adding devices', () => {
     it('Can add a second device', async () => {
       const account = await accountsApi.createAccount();
-      expect(await accountsApi.isDeviceOfAccount(account, alice.address)).to.be.true;
-      expect(await accountsApi.isDeviceOfAccount(account, bob.address)).to.be.false;
+      expect(await accountsApi.belongsToAccount(account, alice.address)).to.be.true;
+      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.false;
 
-      await accountsApi.addDeviceToAccount(account, bob.address);
-      expect(await accountsApi.isDeviceOfAccount(account, bob.address)).to.be.true;
+      await accountsApi.addDevice(account, bob.address);
+      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.true;
     });
   });
 });

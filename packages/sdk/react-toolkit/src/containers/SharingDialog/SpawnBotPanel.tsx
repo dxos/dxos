@@ -6,12 +6,12 @@ import React from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
 import { useRegistry } from '@dxos/react-registry-client';
-import { Resource } from '@dxos/registry-client';
+import { ResourceSet } from '@dxos/registry-client';
 
-import { createTypeFilter, useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
+import { useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
 
 interface SpawnBotDialogProps {
-  onSelect: (resource: Resource) => void
+  onSelect: (resource: ResourceSet) => void
 }
 
 export const SpawnBotPanel = ({
@@ -24,10 +24,10 @@ export const SpawnBotPanel = ({
   useAsyncEffect(async () => {
     await model.initialize();
     // TODO(burdon): DXN of type?
-    const botType = model.types.find(type => type.messageName === '.dxos.type.Bot');
-    model.setFilters([
-      createTypeFilter([botType!.cid])
-    ]);
+    // const botType = model.types.find(type => type.type.messageName === '.dxos.type.Bot');
+    // model.setFilters([
+    //   createTypeFilter([botType!.cid])
+    // ]);
   }, []);
 
   return (

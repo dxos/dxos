@@ -3,17 +3,16 @@
 //
 
 import expect from 'expect';
-import pify from 'pify';
 
-import { IFile, IStorage, STORAGE_NODE, STORAGE_RAM } from './interfaces';
+import { File, Storage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
-export function storageTests (testGroupName: string, createStorage: () => IStorage) {
+export function storageTests (testGroupName: string, createStorage: () => Storage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
-  const writeAndCheck = async (file: IFile, data: Buffer, offset = 0) => {
-    await pify(file.write.bind(file))(offset, data);
-    const bufferRead = await pify(file.read.bind(file))(offset, data.length);
+  const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
+    await file.write(offset, data);
+    const bufferRead = await file.read(offset, data.length);
     const result = data.equals(bufferRead);
     expect(result).toBeTruthy();
   };
@@ -24,7 +23,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const storage = createStorage();
       const fileName = randomText();
       const file = storage.createOrOpen(fileName);
-      await pify(file.close.bind(file))();
+      await file.close();
     });
 
     it('open file, read & write', async () => {
@@ -39,7 +38,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
         await writeAndCheck(file, buffer, offset);
       }
 
-      await pify(file.close.bind(file))();
+      await file.close();
     });
 
     it('multiple files', async () => {
@@ -55,7 +54,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       }
 
       for (const file of files) {
-        await pify(file.close.bind(file))();
+        await file.close();
       }
     });
 
@@ -63,13 +62,13 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const storage = createStorage();
 
       // TODO(yivlad): Doesn't work for node.
-      if (storage.type === STORAGE_NODE) {
+      if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
       const file = storage.createOrOpen(fileName);
 
-      const { size } = await pify(file.stat.bind(file))();
+      const { size } = await file.stat();
       expect(size).toBe(0);
     });
 
@@ -81,17 +80,37 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
 
       // Write & close.
       await writeAndCheck(file, Buffer.from(randomText()));
-      await pify(file.close.bind(file))();
+      await file.close();
 
       // Open again.
       const file2 = storage.createOrOpen('EchoMetadata');
       // Write & close.
       await writeAndCheck(file2, Buffer.from(randomText()));
-      await pify(file2.close.bind(file2))();
+      await file2.close();
+    });
+
+    it('reopen and check if data is the same', async () => {
+      // Open.
+      const storage = createStorage();
+      const fileName = randomText();
+      const data = Buffer.from(randomText());
+      const file = storage.createOrOpen(fileName);
+
+      // Write & close.
+      await writeAndCheck(file, data);
+      await file.close();
+
+      // Open again.
+      const file2 = storage.createOrOpen(fileName);
+
+      // Read and check inside.
+      const dataFromFile = await file2.read(0, data.length);
+      expect(dataFromFile).toEqual(data);
+      await file2.close();
     });
 
     // TODO(yivlad): Not implemented.
-    it.skip('destroy clears all data', async function () {
+    it.skip('destroy clears all data', async () => {
       const storage = createStorage();
 
       const fileName = randomText();
@@ -101,49 +120,40 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       await writeAndCheck(file, buffer);
 
       await storage.delete(fileName);
-      const { size } = await pify(file.stat.bind(file))();
+      const { size } = await file.stat();
       expect(size).toBe(0);
 
-      await pify(file.close.bind(file))();
+      await file.close();
     });
 
-    it('subdirectories', async function () {
-      const rootStorage = createStorage();
+    it('subdirectories', async () => {
+      // 1. Create storage and two subdirectories
+      const storage = createStorage();
+      const subStorage1 = storage.subDir('dir1');
+      const subStorage2 = storage.subDir('dir2');
 
-      // TODO(yivlad): Doesn't work for STORAGE_NODE.
-      if (rootStorage.type === STORAGE_NODE) {
-        this.skip();
-      }
-      const fileName = randomText();
-      const file1 = rootStorage.createOrOpen(fileName);
-
+      const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
-      await writeAndCheck(file1, buffer1);
-
-      const childStorage1 = rootStorage.subDir('child1');
-      const file2 = childStorage1.createOrOpen(fileName);
       const buffer2 = Buffer.from(randomText());
-      await writeAndCheck(file2, buffer2);
-      const bufferRead1 = await pify(file1.read.bind(file1))(0, buffer1.length);
-      expect(buffer1.equals(bufferRead1));
 
-      const childStorage2 = rootStorage.subDir('child2');
-      const file3 = childStorage2.createOrOpen(fileName);
-      const { size } = await pify(file3.stat.bind(file3))();
-      expect(size).toBe(0);
-      const buffer3 = Buffer.from(randomText());
-      await writeAndCheck(file3, buffer3);
-      const bufferRead2 = await pify(file2.read.bind(file2))(0, buffer2.length);
-      expect(buffer2.equals(bufferRead2));
+      // 2. Create a file in first subdirectory and write content
+      const file1 = subStorage1.createOrOpen(fileName);
+      await file1.write(0, buffer1);
 
-      await pify(file1.close.bind(file1))();
+      // 3. Create a file with the same name in the second subdir and write different content
+      const file2 = subStorage2.createOrOpen(fileName);
+      await file2.write(0, buffer2);
+
+      // 4. Check that they have corrent content.
+      expect(await file1.read(0, buffer1.length)).toEqual(buffer1);
+      expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
     it('destroys file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): Works only for STORAGE_RAM.
-      if (storage.type !== STORAGE_RAM) {
+      // TODO(yivlad): Works only for StorageType.RAM.
+      if (storage.type !== StorageType.RAM) {
         this.skip();
       }
 
@@ -153,12 +163,12 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await pify(file.destroy.bind(file))();
+      await file.destroy();
 
       const reopened = storage.createOrOpen(fileName);
-      const { size } = await pify(reopened.stat.bind(reopened))();
+      const { size } = await reopened.stat();
       expect(size).toBe(0);
-      await pify(reopened.close.bind(reopened))();
+      await reopened.close();
     });
   });
 }

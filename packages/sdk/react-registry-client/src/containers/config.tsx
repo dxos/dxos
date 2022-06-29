@@ -3,7 +3,9 @@
 //
 
 import { Config, ConfigProvider } from '@dxos/config';
-import { AccountClient, createApiPromise, RegistryClient, SignTxFunction } from '@dxos/registry-client';
+import {
+  AccountsClient, createApiPromise, PolkadotAccounts, PolkadotRegistry, RegistryClient, SignTxFunction
+} from '@dxos/registry-client';
 import { getAsyncValue } from '@dxos/util';
 
 import { RegistryContext } from '../hooks';
@@ -20,8 +22,8 @@ export const createRegistryContext = async (
   }
 
   const apiPromise = await createApiPromise(server);
-  const registry = new RegistryClient(apiPromise, signFn);
-  const accounts = new AccountClient(apiPromise, signFn);
+  const registry = new RegistryClient(new PolkadotRegistry(apiPromise, signFn));
+  const accounts = new AccountsClient(new PolkadotAccounts(apiPromise, signFn));
 
   return {
     registry,

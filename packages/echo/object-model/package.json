@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.32.0",
+  "version": "2.33.4",
   "private": false,
   "description": "ECHO object model.",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "minisearch": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
@@ -37,7 +37,7 @@
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.set": "^4.3.6",
     "@types/mocha": "~8.2.2",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "faker": "^5.1.0",

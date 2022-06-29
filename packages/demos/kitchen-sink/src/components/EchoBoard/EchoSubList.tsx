@@ -71,9 +71,8 @@ export const EchoSubList = ({
           dense
           disablePadding
         >
-          {itemAdapter.linkedItems?.(item, type).map(item => {
-            return (
-              <ListItem
+          {itemAdapter.linkedItems?.(item, type).map((item) => (
+<ListItem
                 key={item.id}
                 dense
                 disableGutters
@@ -95,8 +94,7 @@ export const EchoSubList = ({
                   }}
                 />
               </ListItem>
-            );
-          })}
+          ))}
         </List>
       </Box>
     </>
