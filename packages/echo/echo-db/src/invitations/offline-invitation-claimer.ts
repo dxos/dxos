@@ -170,19 +170,17 @@ export class OfflineInvitationClaimer {
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
   static createSecretProvider (credentials: CredentialsSigner): SecretProvider {
-    return async (info?: SecretInfo) => {
-      return Buffer.from(codec.encode(
-        /* The signed portion of the Auth message includes the ID and authNonce provided
+    return async (info?: SecretInfo) => Buffer.from(codec.encode(
+      /* The signed portion of the Auth message includes the ID and authNonce provided
          * by the `info` object. These values will be validated on the other end.
          */
-        createAuthMessage(
-          credentials.signer,
+      createAuthMessage(
+        credentials.signer,
           info!.id.value,
           credentials.getIdentityKey(),
           credentials.getDeviceSigningKeys(),
           undefined,
           info!.authNonce.value)
-      ));
-    };
+    ));
   }
 }

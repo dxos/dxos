@@ -28,7 +28,7 @@ describe('SignalApi', () => {
   const signalApiPort2 = randomInt(10000, 50000);
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
-  before(async function () {
+  before(async () => {
     broker = await createTestBroker(signalApiPort);
     // code broker2 = await createTestBroker(signalApiPort2);
   });

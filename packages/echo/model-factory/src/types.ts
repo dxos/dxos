@@ -96,6 +96,7 @@ export type ModelConstructor<M extends Model> = (
 /**
  *
  */
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
 

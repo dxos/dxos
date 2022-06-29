@@ -45,12 +45,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
+export const Primary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

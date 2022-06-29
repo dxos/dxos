@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../database';
-import { PartyProcessor } from './party-processor';
+import { PartyStateProvider } from './party-processor';
 
 const log = debug('dxos:echo-db:message-selector');
 
@@ -23,47 +23,43 @@ const log = debug('dxos:echo-db:message-selector');
  * @param partyProcessor
  * @param timeframeClock
  */
-export function createMessageSelector (
-  partyProcessor: PartyProcessor,
-  timeframeClock: TimeframeClock
-): MessageSelector {
-  // TODO(telackey): Add KeyAdmit checks.
-  return candidates => {
-    // Check ECHO message candidates first since they are less expensive than HALO cancidates.
-    for (let i = 0; i < candidates.length; i++) {
-      const { data: { echo } } = candidates[i];
-      const feedKey = PublicKey.from(candidates[i].key);
-      if (!echo) {
-        continue;
-      }
-
-      assert(echo.timeframe);
-      if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
-        return i;
-      }
+export const createMessageSelector = (partyProcessor: PartyStateProvider, timeframeClock: TimeframeClock): MessageSelector => candidates => {
+  // Check ECHO message candidates first since they are less expensive than HALO cancidates.
+  for (let i = 0; i < candidates.length; i++) {
+    const { data: { echo } } = candidates[i];
+    const feedKey = PublicKey.from(candidates[i].key);
+    if (!echo) {
+      continue;
     }
 
-    // Check HALO message candidates.
-    for (let i = 0; i < candidates.length; i++) {
-      const { data: { halo } } = candidates[i];
-      const feedKey = PublicKey.from(candidates[i].key);
-      if (!halo) {
-        continue;
-      }
+    assert(echo.timeframe);
+    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
+      return i;
+    }
+  }
 
-      if (partyProcessor.isFeedAdmitted(feedKey)) {
-        return i;
-      }
+  // Check HALO message candidates.
+  for (let i = 0; i < candidates.length; i++) {
+    const { data: { halo } } = candidates[i];
+    const feedKey = PublicKey.from(candidates[i].key);
+    if (!halo) {
+      continue;
+    }
 
-      if (partyProcessor.genesisRequired) {
+    if (partyProcessor.isFeedAdmitted(feedKey)) {
+      return i;
+    }
+
+    if (partyProcessor.genesisRequired) {
+      try { // TODO(dmaretskyi): Get getPartyCredentialMessageType crashes for some reason.
         // TODO(telackey): Add check that this is for the right Party.
         if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
           return i;
         }
-      }
+      } catch { }
     }
+  }
 
-    // Not ready for this message yet.
-    log('Skipping...');
-  };
-}
+  // Not ready for this message yet.
+  log('Skipping...');
+};

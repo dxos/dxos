@@ -100,15 +100,13 @@ const ListStory = () => {
       type: TYPE_LIST
     });
 
-    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(async () => {
-      return await newParty?.database.createItem({
-        model: ObjectModel,
-        type: TYPE_LIST_ITEM,
-        props: {
-          title: faker.name.firstName()
-        }
-      });
-    }));
+    const res = await Promise.all(Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(async () => await newParty?.database.createItem({
+      model: ObjectModel,
+      type: TYPE_LIST_ITEM,
+      props: {
+        title: faker.name.firstName()
+      }
+    })));
 
     const newOrderedList = new OrderedList(listItem.model);
     await newOrderedList.init(res.map(item => item.id));
@@ -189,15 +187,13 @@ const ListStory = () => {
   );
 };
 
-export const List = () => {
-  return (
-    <ClientProvider>
+export const List = () => (
+<ClientProvider>
       <ProfileInitializer>
         <ListStory />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
 
 const MultipleListStory = () => {
   const client = useClient();
@@ -212,24 +208,20 @@ const MultipleListStory = () => {
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
 
-    const listItems = await Promise.all(Array.from({ length: 3 }).map(async () => {
-      return await newParty.database.createItem({
-        model: ObjectModel,
-        type: TYPE_LIST
-      });
-    }));
+    const listItems = await Promise.all(Array.from({ length: 3 }).map(async () => await newParty.database.createItem({
+      model: ObjectModel,
+      type: TYPE_LIST
+    })));
 
     const newOrderedLists: OrderedList[] = [];
     await Promise.all(listItems.map(async (listItem) => {
-      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => {
-        return await newParty?.database.createItem({
-          model: ObjectModel,
-          type: TYPE_LIST_ITEM,
-          props: {
-            title: faker.name.firstName()
-          }
-        });
-      }));
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => await newParty?.database.createItem({
+        model: ObjectModel,
+        type: TYPE_LIST_ITEM,
+        props: {
+          title: faker.name.firstName()
+        }
+      })));
       const newOrderedList = new OrderedList(listItem.model);
       await newOrderedList.init(createdItems.map(item => item.id));
       newOrderedLists.push(newOrderedList);
@@ -433,15 +425,13 @@ const MultipleListStory = () => {
   );
 };
 
-export const MultipleList = () => {
-  return (
-    <ClientProvider>
+export const MultipleList = () => (
+<ClientProvider>
       <ProfileInitializer>
         <MultipleListStory />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
 
 const TYPE_TEST_PERSON = 'example:type/person';
 const columns = [
@@ -552,16 +542,13 @@ const TableStory = () => {
     setColumnOrder(initialColumnOrder);
   };
 
-  const getRows = () => {
-    // TODO(kaplanski): Replace rowOrder with rowOrderedList.values triggering re-render.
-    return rowOrder!.map(itemId => {
-      const item = items.find(item => item.id === itemId);
-      if (item) {
-        return { id: item.id, ...item.model.toObject() };
-      }
-      return null;
-    }).filter(Boolean);
-  };
+  const getRows = () => rowOrder!.map(itemId => {
+    const item = items.find(item => item.id === itemId);
+    if (item) {
+      return { id: item.id, ...item.model.toObject() };
+    }
+    return null;
+  }).filter(Boolean);
 
   if (!table || !rowOrderedList) {
     return null;
@@ -595,15 +582,13 @@ const TableStory = () => {
   );
 };
 
-export const Table = () => {
-  return (
-    <ClientProvider>
+export const Table = () => (
+<ClientProvider>
       <ProfileInitializer>
         <TableStory />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
 
 const MultipleContainersStory = () => {
   const client = useClient();
@@ -635,18 +620,16 @@ const MultipleContainersStory = () => {
 
     const newOrderedLists: OrderedList[] = [];
     await Promise.all(containerItems.map(async (containerItem) => {
-      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => {
-        return await newParty?.database.createItem({
-          model: ObjectModel,
-          type: TYPE_TEST_PERSON,
-          props: {
-            title: faker.name.firstName(),
-            country: faker.address.country(),
-            role: faker.name.jobTitle(),
-            email: faker.internet.email()
-          }
-        });
-      }));
+      const createdItems = await Promise.all(Array.from({ length: faker.datatype.number({ min: 4, max: 20 }) }).map(async () => await newParty?.database.createItem({
+        model: ObjectModel,
+        type: TYPE_TEST_PERSON,
+        props: {
+          title: faker.name.firstName(),
+          country: faker.address.country(),
+          role: faker.name.jobTitle(),
+          email: faker.internet.email()
+        }
+      })));
       const newOrderedList = new OrderedList(containerItem.model);
       await newOrderedList.init(createdItems.map(item => item.id));
       newOrderedLists.push(newOrderedList);
@@ -875,12 +858,10 @@ const MultipleContainersStory = () => {
   );
 };
 
-export const MultipleContainers = () => {
-  return (
-    <ClientProvider>
+export const MultipleContainers = () => (
+<ClientProvider>
       <ProfileInitializer>
         <MultipleContainersStory />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

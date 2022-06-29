@@ -154,11 +154,11 @@ describe('FeedDescriptor', () => {
       secretKey,
       hypercore: () => ({
         opened: true,
-        on () {},
-        ready (cb: () => void) {
+        on: () => {},
+        ready: (cb: () => void) => {
           cb();
         },
-        close () {
+        close: () => {
           throw new Error('close error');
         }
       } as any)

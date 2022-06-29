@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-export const JsonPanel = ({ value }: { value: any }) => {
-  return (
-    <pre
+export const JsonPanel = ({ value }: { value: any }) => (
+<pre
       style={{
         margin: 0,
         // code whiteSpace: 'pre-wrap',
@@ -17,5 +16,4 @@ export const JsonPanel = ({ value }: { value: any }) => {
     >
       {JSON.stringify(value, undefined, 2)}
     </pre>
-  );
-};
+);

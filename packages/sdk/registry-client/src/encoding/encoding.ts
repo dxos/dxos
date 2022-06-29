@@ -12,13 +12,9 @@ import { FieldMapper, mapMessage } from './mapper';
 
 // TODO(marik-d): Descriptors are unused right now, either fix them or remove those methods.
 
-export function loadSchemaFromDescriptor (data: Uint8Array | FileDescriptorSet): protobuf.Root {
-  return (protobuf.Root as any).fromDescriptor(preprocessSchemaDescriptor(data));
-}
+export const loadSchemaFromDescriptor = (data: Uint8Array | FileDescriptorSet): protobuf.Root => (protobuf.Root as any).fromDescriptor(preprocessSchemaDescriptor(data));
 
-export function convertSchemaToDescriptor (root: protobuf.Root): FileDescriptorSet {
-  return (root as any).toDescriptor('proto3');
-}
+export const convertSchemaToDescriptor = (root: protobuf.Root): FileDescriptorSet => (root as any).toDescriptor('proto3');
 
 /**
  * Message extensions seem to be both inlined in the target type, and included separatelly in the descriptor,
@@ -26,7 +22,7 @@ export function convertSchemaToDescriptor (root: protobuf.Root): FileDescriptorS
  *
  * NOTE: This hack removes the extensions from the descriptor.
  */
-function preprocessSchemaDescriptor (descriptor: any): any {
+const preprocessSchemaDescriptor = (descriptor: any): any => {
   if (typeof descriptor === 'object') {
     if (Array.isArray(descriptor.extension) && descriptor.extension[0]?.name === 'hashOptions') {
       descriptor.extension = [];
@@ -38,19 +34,13 @@ function preprocessSchemaDescriptor (descriptor: any): any {
   }
 
   return descriptor;
-}
+};
 
-export function encodeProtobuf (root: protobuf.Root): string {
-  return JSON.stringify(root.toJSON());
-}
+export const encodeProtobuf = (root: protobuf.Root): string => JSON.stringify(root.toJSON());
 
-export function decodeProtobuf (json: string): protobuf.Root {
-  return protobuf.Root.fromJSON(JSON.parse(json));
-}
+export const decodeProtobuf = (json: string): protobuf.Root => protobuf.Root.fromJSON(JSON.parse(json));
 
-function getProtoTypeFromTypeRecord (record: RegistryType): protobuf.Type {
-  return record.type.protobufDefs.lookupType(record.type.messageName);
-}
+const getProtoTypeFromTypeRecord = (record: RegistryType): protobuf.Type => record.type.protobufDefs.lookupType(record.type.messageName);
 
 export type RecordExtension<T> = { '@type': CID } & Pick<T, Exclude<keyof T, '@type'>>
 
@@ -65,7 +55,7 @@ const OBJECT_CONVERSION_OPTIONS: protobuf.IConversionOptions = {
 
 const RECORD_EXTENSION_NAME: keyof TYPES = 'dxos.registry.Record.Extension';
 
-export async function decodeExtensionPayload (extension: Record.Extension, resolveType: (cid: CID) => Promise<RegistryType>): Promise<RecordExtension<any>> {
+export const decodeExtensionPayload = async (extension: Record.Extension, resolveType: (cid: CID) => Promise<RegistryType>): Promise<RecordExtension<any>> => {
   const mapper: FieldMapper = async (value, typeName) => {
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;
@@ -83,9 +73,9 @@ export async function decodeExtensionPayload (extension: Record.Extension, resol
     return { '@type': typeCid, ...(await mapMessage(dataType, mapper, dataJson)) };
   };
   return mapper(extension, RECORD_EXTENSION_NAME);
-}
+};
 
-export async function encodeExtensionPayload (data: RecordExtension<any>, resolveType: (cid: CID) => Promise<RegistryType>): Promise<Record.Extension> {
+export const encodeExtensionPayload = async (data: RecordExtension<any>, resolveType: (cid: CID) => Promise<RegistryType>): Promise<Record.Extension> => {
   const mapper: FieldMapper = async (value, typeName) => {
     if (typeName !== RECORD_EXTENSION_NAME) {
       return value;
@@ -104,9 +94,9 @@ export async function encodeExtensionPayload (data: RecordExtension<any>, resolv
   };
 
   return mapper(data, RECORD_EXTENSION_NAME);
-}
+};
 
-export function sanitizeExtensionData (data: unknown, expectedType: CID): RecordExtension<any> {
+export const sanitizeExtensionData = (data: unknown, expectedType: CID): RecordExtension<any> => {
   assert(typeof data === 'object' && data !== null);
   if (!('@type' in data)) {
     return { '@type': expectedType, ...data };
@@ -115,4 +105,4 @@ export function sanitizeExtensionData (data: unknown, expectedType: CID): Record
     assert(expectedType.equals(data['@type']));
     return data as RecordExtension<any>;
   }
-}
+};

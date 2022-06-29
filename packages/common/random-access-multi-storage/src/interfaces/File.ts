@@ -51,7 +51,7 @@ export class File {
   }
 }
 
-function createPromise<ReturnType> (callbackFunc: (...args: any[]) => void, cb?: Callback<ReturnType>, ...args: any[]): Promise<ReturnType> {
+const createPromise = <ReturnType>(callbackFunc: (...args: any[]) => void, cb?: Callback<ReturnType>, ...args: any[]): Promise<ReturnType> => {
   const promise = new Promise<ReturnType>(
     (resolve, reject) => {
       callbackFunc(...args, (err: Error | null, data?: ReturnType) => {
@@ -67,4 +67,4 @@ function createPromise<ReturnType> (callbackFunc: (...args: any[]) => void, cb?:
     promise.catch((_) => {});
   }
   return promise;
-}
+};

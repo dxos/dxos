@@ -89,15 +89,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
   // Share and replicate all known feeds.
   const repl = new Replicator({
-    load: async () => {
-      return [feed];
-    },
+    load: async () => [feed],
 
-    subscribe: (add: (feed: any) => void) => {
-      return feedStore.feedOpenedEvent.on((descriptor) => {
-        add(descriptor.feed);
-      });
-    },
+    subscribe: (add: (feed: any) => void) => feedStore.feedOpenedEvent.on((descriptor) => {
+      add(descriptor.feed);
+    }),
 
     replicate: async (feeds) => {
       const replicatedFeeds: HypercoreFeed[] = [];
@@ -128,13 +124,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 /**
  * Pipe two Protocol objects together.
  */
-const connect = (source: any, target: any) => {
-  return pump(source.stream, target.stream, source.stream) as any;
-};
+const connect = (source: any, target: any) => pump(source.stream, target.stream, source.stream) as any;
 
 type Node = { feed: HypercoreFeed, feedStore: FeedStore }
 
-async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
+const getMessages = async (sender: Node, receiver: Node): Promise<any[]> => {
   const { feed } = await receiver.feedStore.openReadOnlyFeed(PublicKey.from(sender.feed.key));
   assert(feed, 'Nodes not connected');
   const messages: any[] = [];
@@ -151,7 +145,7 @@ async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
       }
     });
   });
-}
+};
 
 it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();
