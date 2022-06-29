@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../database';
-import { PartyProcessor } from './party-processor';
+import { PartyStateProvider } from './party-processor';
 
 const log = debug('dxos:echo-db:message-selector');
 
@@ -23,7 +23,7 @@ const log = debug('dxos:echo-db:message-selector');
  * @param partyProcessor
  * @param timeframeClock
  */
-export const createMessageSelector = (partyProcessor: PartyProcessor, timeframeClock: TimeframeClock): MessageSelector => candidates => {
+export const createMessageSelector = (partyProcessor: PartyStateProvider, timeframeClock: TimeframeClock): MessageSelector => candidates => {
   // Check ECHO message candidates first since they are less expensive than HALO cancidates.
   for (let i = 0; i < candidates.length; i++) {
     const { data: { echo } } = candidates[i];
@@ -51,10 +51,12 @@ export const createMessageSelector = (partyProcessor: PartyProcessor, timeframeC
     }
 
     if (partyProcessor.genesisRequired) {
-      // TODO(telackey): Add check that this is for the right Party.
-      if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
-        return i;
-      }
+      try { // TODO(dmaretskyi): Get getPartyCredentialMessageType crashes for some reason.
+        // TODO(telackey): Add check that this is for the right Party.
+        if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
+          return i;
+        }
+      } catch { }
     }
   }
 

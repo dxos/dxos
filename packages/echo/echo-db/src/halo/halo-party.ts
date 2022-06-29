@@ -5,10 +5,10 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
+import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { Timeframe } from '@dxos/echo-protocol';
+import { Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -114,10 +114,6 @@ export class HaloParty {
     return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
-  get memberKeys () {
-    return this._partyCore.processor.memberKeys;
-  }
-
   get credentialMessages () {
     return this._partyCore.processor.credentialMessages;
   }
@@ -198,6 +194,10 @@ export class HaloParty {
     this.update.emit();
 
     return this;
+  }
+
+  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
+    return this._partyCore.writeCredentialsMessage(message);
   }
 
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {
