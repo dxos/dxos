@@ -11,13 +11,10 @@ import { getFullPath } from '../utils';
  * Base class for all storage implementations.
  */
 export abstract class AbstractStorage implements Storage {
-  protected readonly _path: string;
-  protected _directories: Map<string, Directory>;
+  protected _directories = new Map<string, Directory>();
   public abstract type: StorageType
 
-  constructor (path: string) {
-    this._path = path;
-    this._directories = new Map<string, Directory>();
+  constructor (protected readonly _path: string) {
   }
 
   public directory (path = ''): Directory {

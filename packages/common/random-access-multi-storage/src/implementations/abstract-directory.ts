@@ -6,15 +6,9 @@ import { File, Directory, Storage } from '../interfaces';
 import { getFullPath } from '../utils';
 
 export abstract class AbstractDirectory implements Directory {
-  protected readonly _path: string;
-  protected _files: Map<string, File>;
-  protected readonly _storage: Storage;
+  protected readonly _files = new Map<string, File>();
 
-  constructor (path: string, storage: Storage) {
-    this._path = path;
-    this._files = new Map<string, File>();
-    this._storage = storage;
-  }
+  constructor (protected readonly _path: string, protected readonly _storage: Storage) {}
 
   subDirectory (path: string): Directory {
     const fullPath = getFullPath(this._path, path);
