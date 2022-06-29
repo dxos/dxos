@@ -23,12 +23,10 @@ export const IconRadioGroup = ({
   children,
   value,
   onChange
-}: IconRadioGroupProps) => {
-  return (
-    <Box>
+}: IconRadioGroupProps) => (
+<Box>
       <IconRadioGroupContext.Provider value={{ value, onChange }}>
         {children}
       </IconRadioGroupContext.Provider>
     </Box>
-  );
-};
+);

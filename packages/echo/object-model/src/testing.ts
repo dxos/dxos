@@ -19,17 +19,15 @@ export const createTestObjectModel = (key = PublicKey.random(), itemId: ItemID =
   };
 
   const stateMachine = ObjectModel.meta.stateMachine();
-  const mutationWriter: MutationWriter<ObjectMutationSet> = async (mutation: ObjectMutationSet) => {
-    return {
-      feedKey: PublicKey.random() as FeedKey,
-      seq: debug.seq++,
-      waitToBeProcessed: async () => {
-        stateMachine.process(mutation, {
-          author: key
-        });
-      }
-    };
-  };
+  const mutationWriter: MutationWriter<ObjectMutationSet> = async (mutation: ObjectMutationSet) => ({
+    feedKey: PublicKey.random() as FeedKey,
+    seq: debug.seq++,
+    waitToBeProcessed: async () => {
+      stateMachine.process(mutation, {
+        author: key
+      });
+    }
+  });
 
   return {
     model: new ObjectModel(ObjectModel.meta, itemId, () => stateMachine.getState(), mutationWriter),

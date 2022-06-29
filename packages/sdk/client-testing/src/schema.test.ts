@@ -91,11 +91,11 @@ describe('Schemas', () => {
       .exec();
 
     const { entities: orgs } = party.database
-      .select({ type: TestType.Org })
+      .select({ type: builder.defaultSchemas[TestType.Org].schema })
       .exec();
 
     const { entities: people } = party.database
-      .select({ type: TestType.Person })
+      .select({ type: builder.defaultSchemas[TestType.Person].schema })
       .exec();
 
     [...orgs, ...people].forEach(item => {
@@ -126,34 +126,32 @@ const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectMod
   const logKey = (id: string) => truncateKey(id, 4);
   const logString = (value: string) => truncate(value, 24, true);
 
-  const values = items.map(item => {
-    return fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
-      const value = item.model.get(key);
-      switch (type) {
-        case 'string': {
-          row[key] = chalk.green(logString(value));
-          break;
-        }
-
-        case 'ref': {
-          if (party) {
-            const { field } = ref!;
-            const item = party.database.getItem(value);
-            row[key] = chalk.red(logString(item?.model.get(field)));
-          } else {
-            row[key] = chalk.red(logKey(value));
-          }
-          break;
-        }
-
-        default: {
-          row[key] = value;
-        }
+  const values = items.map((item) => fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
+    const value = item.model.get(key);
+    switch (type) {
+      case 'string': {
+        row[key] = chalk.green(logString(value));
+        break;
       }
 
-      return row;
-    }, { id: chalk.blue(logKey(item.id)) });
-  });
+      case 'ref': {
+        if (party) {
+          const { field } = ref!;
+          const item = party.database.getItem(value);
+          row[key] = chalk.red(logString(item?.model.get(field)));
+        } else {
+          row[key] = chalk.red(logKey(value));
+        }
+        break;
+      }
+
+      default: {
+        row[key] = value;
+      }
+    }
+
+    return row;
+  }, { id: chalk.blue(logKey(item.id)) }));
 
   return columnify(values, { columns: ['id', ...columns] });
 };

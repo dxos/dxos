@@ -12,19 +12,17 @@ import { CredentialsSigner } from './credentials-signer';
 
 const log = debug('dxos:echo-db:authenticator');
 
-export function createAuthenticator (partyProcessor: PartyProcessor, credentialsSigner: CredentialsSigner): Authenticator {
-  return new PartyAuthenticator(partyProcessor.state, async auth => {
-    if (auth.feedAdmit && auth.feedKey && !partyProcessor.isFeedAdmitted(auth.feedKey)) {
-      log(`Admitting feed of authenticated member: ${auth.feedKey}`);
-      await partyProcessor.writeHaloMessage(createEnvelopeMessage(
-        credentialsSigner.signer,
-        partyProcessor.partyKey,
-        auth.feedAdmit,
-        [credentialsSigner.getDeviceSigningKeys()]
-      ));
-    }
-  });
-}
+export const createAuthenticator = (partyProcessor: PartyProcessor, credentialsSigner: CredentialsSigner): Authenticator => new PartyAuthenticator(partyProcessor.state, async auth => {
+  if (auth.feedAdmit && auth.feedKey && !partyProcessor.isFeedAdmitted(auth.feedKey)) {
+    log(`Admitting feed of authenticated member: ${auth.feedKey}`);
+    await partyProcessor.writeHaloMessage(createEnvelopeMessage(
+      credentialsSigner.signer,
+      partyProcessor.partyKey,
+      auth.feedAdmit,
+      [credentialsSigner.getDeviceSigningKeys()]
+    ));
+  }
+});
 
 export interface CredentialsProvider {
   /**
@@ -33,24 +31,22 @@ export interface CredentialsProvider {
   get (): Buffer
 }
 
-export function createCredentialsProvider (credentialsSigner: CredentialsSigner, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
-  return {
-    get: () => {
-      const authMessage = createAuthMessage(
+export const createCredentialsProvider = (credentialsSigner: CredentialsSigner, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider => ({
+  get: () => {
+    const authMessage = createAuthMessage(
+      credentialsSigner.signer,
+      partyKey,
+      credentialsSigner.getIdentityKey(),
+      credentialsSigner.getDeviceSigningKeys(),
+      feedKey,
+      undefined,
+      createFeedAdmitMessage(
         credentialsSigner.signer,
         partyKey,
-        credentialsSigner.getIdentityKey(),
-        credentialsSigner.getDeviceSigningKeys(),
         feedKey,
-        undefined,
-        createFeedAdmitMessage(
-          credentialsSigner.signer,
-          partyKey,
-          feedKey,
-          [feedKey, credentialsSigner.getDeviceSigningKeys()]
-        )
-      );
-      return Buffer.from(codec.encode(authMessage));
-    }
-  };
-}
+        [feedKey, credentialsSigner.getDeviceSigningKeys()]
+      )
+    );
+    return Buffer.from(codec.encode(authMessage));
+  }
+});
