@@ -12,7 +12,8 @@ import {
   PartyState,
   Message as HaloMessage,
   IdentityEventType,
-  PartyEventType
+  PartyEventType,
+  SignedMessage
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
@@ -20,10 +21,33 @@ import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
 
+export interface CredentialWriter {
+  writeHaloMessage (message: HaloMessage): Promise<WriteReceipt>
+}
+
+export interface CredentialProcessor {
+  processMessage (message: IHaloStream): Promise<void>
+}
+
+export interface PartyStateProvider {
+  partyKey: PublicKey
+
+  /**
+   * Whether PartyGenesis was already processed.
+   */
+  genesisRequired: boolean
+  memberKeys: PublicKey[]
+  feedKeys: PublicKey[]
+  getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined
+  isFeedAdmitted (feedKey: FeedKey): boolean
+
+  getOfflineInvitation (invitationID: Buffer): SignedMessage | undefined
+}
+
 /**
  * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
-export class PartyProcessor {
+export class PartyProcessor implements CredentialWriter, CredentialProcessor, PartyStateProvider {
   private readonly _state: PartyState;
 
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
