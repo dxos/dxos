@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.28.7",
-    "@dxos/eslint-plugin": "~1.0.30",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
