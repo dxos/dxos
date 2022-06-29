@@ -67,21 +67,17 @@ class TestProvider implements Provider {
   }
 }
 
-export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => {
-  return useMemo<ProviderFactory>(() => {
-    return (id: string, yjsDocMap: Map<string, Doc>): Provider => {
-      log('constructed', id, yjsDocMap);
+export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
+  log('constructed', id, yjsDocMap);
 
-      // TODO(burdon): Get from text model (create ID externally).
-      // const doc = new Doc();
-      const doc = item.model.doc;
-      yjsDocMap.set(id, doc);
+  // TODO(burdon): Get from text model (create ID externally).
+  // const doc = new Doc();
+  const doc = item.model.doc;
+  yjsDocMap.set(id, doc);
 
-      // TODO(burdon): Initially has newlines.
-      // TODO(burdon): Typing at end of document has issues.
-      console.log('[', doc.getText().toString(), ']');
+  // TODO(burdon): Initially has newlines.
+  // TODO(burdon): Typing at end of document has issues.
+  console.log('[', doc.getText().toString(), ']');
 
-      return new TestProvider(id);
-    };
-  }, [item]);
-};
+  return new TestProvider(id);
+}, [item]);

@@ -123,11 +123,9 @@ export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTr
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
-  return new Transform({
-    objectMode: true,
-    transform: (chunk, enc, cb) => {
-      setTimeout(() => cb(null, chunk), delay);
-    }
-  });
-};
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => new Transform({
+  objectMode: true,
+  transform: (chunk, enc, cb) => {
+    setTimeout(() => cb(null, chunk), delay);
+  }
+});

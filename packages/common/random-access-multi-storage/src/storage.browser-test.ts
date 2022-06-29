@@ -16,7 +16,7 @@ describe('Tests for different storage types in different browsers', () => {
     storageTests(storageType, () => createStorage(ROOT_DIRECTORY, storageType));
   }
 
-  it(`Used ${StorageType.IDB} by default`, async function () {
+  it(`Used ${StorageType.IDB} by default`, async () => {
     const storage = createStorage(ROOT_DIRECTORY);
     expect(storage.type).toBe(StorageType.IDB);
   });

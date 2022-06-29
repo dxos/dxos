@@ -126,6 +126,4 @@ export class ProfileService implements IProfileService {
   }
 }
 
-export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {
-  return new ProfileService(echo);
-};
+export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => new ProfileService(echo);

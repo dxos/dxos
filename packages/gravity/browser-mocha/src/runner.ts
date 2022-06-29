@@ -32,7 +32,7 @@ export interface RunOptions {
   checkLeaks: boolean
 }
 
-export async function run (options: RunOptions) {
+export const run = async (options: RunOptions) => {
   if (options.setup) {
     await runSetup(options.setup);
   }
@@ -67,9 +67,9 @@ export async function run (options: RunOptions) {
   } else {
     console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
   }
-}
+};
 
-async function resolveFiles (globs: string[]): Promise<string[]> {
+const resolveFiles = async (globs: string[]): Promise<string[]> => {
   const results = await Promise.all(globs.map(pattern => promisify(glob)(pattern)));
   return Array.from(new Set(results.flat(1)));
-}
+};

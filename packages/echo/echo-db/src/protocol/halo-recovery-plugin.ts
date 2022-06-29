@@ -12,9 +12,7 @@ import { HaloRecoveryInitiator, InvitationFactory } from '../invitations';
  * Plugin is intended to be used in HALO party swarm.
  *
  */
-export function createHaloRecoveryPlugin (identityKey: PublicKey, invitationFactory: InvitationFactory, peerId: PublicKey) {
-  return new GreetingCommandPlugin(
-    peerId.asBuffer(),
-    HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityKey, invitationFactory)
-  );
-}
+export const createHaloRecoveryPlugin = (identityKey: PublicKey, invitationFactory: InvitationFactory, peerId: PublicKey) => new GreetingCommandPlugin(
+  peerId.asBuffer(),
+  HaloRecoveryInitiator.createHaloInvitationClaimHandler(identityKey, invitationFactory)
+);

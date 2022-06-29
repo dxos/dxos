@@ -27,11 +27,9 @@ export const DragAndDropDebugPanel = ({
     return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
   };
 
-  const reduceKeyLength = (order: {[key: string]: string}) => {
-    return Object.assign({}, ...Object.entries(order ?? {}).map(([leftId, rightId]) => ({
-      [getStringToDisplay(leftId)]: getStringToDisplay(rightId)
-    })));
-  };
+  const reduceKeyLength = (order: {[key: string]: string}) => Object.assign({}, ...Object.entries(order ?? {}).map(([leftId, rightId]) => ({
+    [getStringToDisplay(leftId)]: getStringToDisplay(rightId)
+  })));
 
   return (
     <pre style={{ margin: 0 }}>{JSON.stringify(reduceKeyLength(order), undefined, 2)}</pre>

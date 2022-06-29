@@ -8,7 +8,7 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { PartyProcessor } from '../pipeline';
+import { CredentialWriter, PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
@@ -19,7 +19,7 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
  */
 export class InvitationFactory {
   constructor (
-    private readonly _partyProcessor: PartyProcessor,
+    private readonly _partyProcessor: CredentialWriter & PartyStateProvider,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
     private readonly _credentialsSigner: CredentialsSigner,

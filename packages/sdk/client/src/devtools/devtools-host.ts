@@ -22,71 +22,41 @@ import {
 import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties';
 import { resetStorage } from './storage';
 
-export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents) : DevtoolsHost => {
-  return {
-    events: () => {
-      return new Stream<ClientAPIEvent>(({ next }) => {
-        events.ready.on(() => {
-          next({ ready: {} });
-        });
-      });
-    },
-    getConfig: async () => {
-      const config = getConfig(context);
-      return config;
-    },
-    resetStorage: async () => {
-      await resetStorage(context);
-    },
-    enableDebugLogging: async (request) => {
-      enableDebugLogging(context, request);
-      return {};
-    },
-    disableDebugLogging: async () => {
-      disableDebugLogging(context);
-      return {};
-    },
-    subscribeToKeyringKeys: () => {
-      return subscribeToKeyringKeys(context);
-    },
-    subscribeToCredentialMessages: (request) => {
-      return subscribeToCredentialMessages(context, request);
-    },
-    subscribeToParties: () => {
-      return subscribeToParties(context);
-    },
-    subscribeToItems: () => {
-      return subscribeToItems(context);
-    },
-    subscribeToFeeds: () => {
-      return subscribeToFeeds(context);
-    },
-    subscribeToFeed: (request) => {
-      return subscribeToFeed(context, request);
-    },
-    getPartySnapshot: async (request) => {
-      return getPartySnapshot(context, request);
-    },
-    savePartySnapshot: async (request) => {
-      return savePartySnapshot(context, request);
-    },
-    clearSnapshots: async () => {
-      await context.echo.snapshotStore.clear();
-    },
-    getNetworkPeers: async (request) => {
-      return getNetworkPeers(context, request);
-    },
-    subscribeToNetworkTopics: () => {
-      return subscribeToNetworkTopics(context);
-    },
-    subscribeToSignalStatus: () => {
-      return subscribeToNetworkStatus(context);
-    },
-    subscribeToSignalTrace: () => {
-      return subscribeToSignalTrace(context);
-    },
-    subscribeToSwarmInfo: () => {
-      return subscribeToSwarmInfo(context);
-    }
-  };
-};
+export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents): DevtoolsHost => ({
+  events: () => new Stream<ClientAPIEvent>(({ next }) => {
+    events.ready.on(() => {
+      next({ ready: {} });
+    });
+  }),
+  getConfig: async () => {
+    const config = getConfig(context);
+    return config;
+  },
+  resetStorage: async () => {
+    await resetStorage(context);
+  },
+  enableDebugLogging: async (request) => {
+    enableDebugLogging(context, request);
+    return {};
+  },
+  disableDebugLogging: async () => {
+    disableDebugLogging(context);
+    return {};
+  },
+  subscribeToKeyringKeys: () => subscribeToKeyringKeys(context),
+  subscribeToCredentialMessages: (request) => subscribeToCredentialMessages(context, request),
+  subscribeToParties: () => subscribeToParties(context),
+  subscribeToItems: () => subscribeToItems(context),
+  subscribeToFeeds: () => subscribeToFeeds(context),
+  subscribeToFeed: (request) => subscribeToFeed(context, request),
+  getPartySnapshot: async (request) => getPartySnapshot(context, request),
+  savePartySnapshot: async (request) => savePartySnapshot(context, request),
+  clearSnapshots: async () => {
+    await context.echo.snapshotStore.clear();
+  },
+  getNetworkPeers: async (request) => getNetworkPeers(context, request),
+  subscribeToNetworkTopics: () => subscribeToNetworkTopics(context),
+  subscribeToSignalStatus: () => subscribeToNetworkStatus(context),
+  subscribeToSignalTrace: () => subscribeToSignalTrace(context),
+  subscribeToSwarmInfo: () => subscribeToSwarmInfo(context)
+});

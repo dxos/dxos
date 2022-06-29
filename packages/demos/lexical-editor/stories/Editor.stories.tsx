@@ -40,17 +40,16 @@ const Container: FC<{
   children: ReactNode
 }> = ({
   children
-}) => {
-  return (
-    <div style={{
-      display: 'flex',
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      overflow: 'hidden'
-    }}>
+}) => (
+<div style={{
+  display: 'flex',
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+  overflow: 'hidden'
+}}>
       <div style={{
         display: 'flex',
         flex: 1,
@@ -60,8 +59,7 @@ const Container: FC<{
         {children}
       </div>
     </div>
-  );
-};
+);
 
 type InvitationInfo = {
   descriptor: InvitationDescriptor

@@ -15,9 +15,8 @@ export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
   contacts: any[],
   selected?: string,
   onSelect: (selected: string) => void
-}) => {
-  return (
-    <FormControl fullWidth>
+}) => (
+<FormControl fullWidth>
       <InputLabel id='contact-select-label'>Contact</InputLabel>
       <Select
         value={selected || ''}
@@ -33,5 +32,4 @@ export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
         ))}
       </Select>
     </FormControl>
-  );
-};
+);

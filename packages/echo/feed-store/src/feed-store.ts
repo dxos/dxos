@@ -133,7 +133,7 @@ export class FeedStore {
   }
 }
 
-function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
+const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;
   }
@@ -141,4 +141,4 @@ function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
     encode: (x: any) => Buffer.from(encoding.encode(x)),
     decode: encoding.decode.bind(encoding)
   };
-}
+};

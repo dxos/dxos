@@ -185,7 +185,7 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
+export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();
 
@@ -204,4 +204,4 @@ export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
   }
 
   return snapshots;
-}
+};

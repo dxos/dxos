@@ -51,7 +51,7 @@ describe('PartyCore', () => {
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -59,7 +59,7 @@ describe('PartyCore', () => {
     );
 
     // FeedAdmit (signed by the Device KeyChain).
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       keyring,
       partyKey.publicKey,
       feed.key,
@@ -120,7 +120,7 @@ describe('PartyCore', () => {
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
     const eventFired = feedStore.feedOpenedEvent.waitForCount(1);
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       keyring,
       party.key,
       feedKey.publicKey,
@@ -197,7 +197,7 @@ describe('PartyCore', () => {
     const fullKey = keyring.getFullKey(feedKey.publicKey);
     const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
 
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       keyring,
       party.key,
       feed2.key,
@@ -226,7 +226,7 @@ describe('PartyCore', () => {
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
 
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await party.writeCredentialsMessage(createFeedAdmitMessage(
       keyring,
       party.key,
       feedKey.publicKey,
@@ -273,7 +273,7 @@ describe('PartyCore', () => {
 
     const feed2 = await partyFeedProvider.createOrOpenWritableFeed();
 
-    await peer1.party.processor.writeHaloMessage(createFeedAdmitMessage(
+    await peer1.party.writeCredentialsMessage(createFeedAdmitMessage(
       peer1.keyring,
       peer1.party.key,
       feed2.key,
