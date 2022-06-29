@@ -28,7 +28,7 @@
     "tiny-lru": "^7.0.6"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.28",
+    "@dxos/eslint-plugin": "~1.0.29",
     "@dxos/network-generator": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
