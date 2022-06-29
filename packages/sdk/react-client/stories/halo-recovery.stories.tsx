@@ -108,9 +108,8 @@ const TestApp = () => {
   );
 };
 
-export const HaloRecovery = () => {
-  return (
-    <Container>
+export const HaloRecovery = () => (
+<Container>
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {/* Instantiated Client. */}
         <ClientProvider>
@@ -122,5 +121,4 @@ export const HaloRecovery = () => {
         </ClientProvider>
       </Box>
     </Container>
-  );
-};
+);

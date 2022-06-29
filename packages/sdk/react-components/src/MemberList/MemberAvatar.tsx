@@ -29,9 +29,7 @@ const COLORS = [
   amber[depth]
 ];
 
-const getColor = (publicKey: PublicKeyLike) => {
-  return COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
-};
+const getColor = (publicKey: PublicKeyLike) => COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
 
 // Same size as medium Icon.
 const avatarStyles = {

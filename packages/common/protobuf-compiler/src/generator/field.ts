@@ -11,7 +11,7 @@ import { types } from './types';
 
 const f = ts.factory;
 
-export function getFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
+export const getFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode => {
   if (field.repeated) {
     return f.createArrayTypeNode(getScalarFieldType(field, subs));
   } else if (field.map && field instanceof protobufjs.MapField) {
@@ -22,10 +22,10 @@ export function getFieldType (field: protobufjs.Field, subs: SubstitutionsMap): 
   } else {
     return getScalarFieldType(field, subs);
   }
-}
+};
 
-export function getScalarFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
+export const getScalarFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode => {
   assert(field.message);
   field.resolve();
   return types(field.resolvedType ?? field.type, field.message, subs);
-}
+};

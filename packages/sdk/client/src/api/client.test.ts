@@ -25,7 +25,7 @@ describe('Client', () => {
   //
   // Suite is called for local and remote client configurations.
   //
-  function testSuite (createClient: () => Promise<Client>) {
+  const testSuite = (createClient: () => Promise<Client>) => {
     describe('initialization', () => {
       test('initialize and destroy', async () => {
         const client = await createClient();
@@ -285,12 +285,10 @@ describe('Client', () => {
         expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
       });
     });
-  }
+  };
 
   describe('local', () => {
-    testSuite(async () => {
-      return new Client();
-    });
+    testSuite(async () => new Client());
   });
 
   describe('remote', () => {

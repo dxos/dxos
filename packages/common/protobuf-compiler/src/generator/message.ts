@@ -11,7 +11,7 @@ import { getFieldType } from './field';
 
 const f = ts.factory;
 
-export function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap) {
+export const createMessageDeclaration = (type: protobufjs.Type, subs: SubstitutionsMap) => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -36,9 +36,9 @@ export function createMessageDeclaration (type: protobufjs.Type, subs: Substitut
   }
 
   return attachDocComment(declaration, type.comment);
-}
+};
 
-function getFieldDocComment (field: protobufjs.Field) {
+const getFieldDocComment = (field: protobufjs.Field) => {
   const sections: string[] = [];
 
   if (field.comment) {
@@ -54,4 +54,4 @@ function getFieldDocComment (field: protobufjs.Field) {
   } else {
     return sections.join('\n\n');
   }
-}
+};

@@ -29,12 +29,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider config={ONLINE_CONFIG}>
+export const Primary = () => (
+<ClientProvider config={ONLINE_CONFIG}>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

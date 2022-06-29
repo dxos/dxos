@@ -29,9 +29,7 @@ const graphStyles = css`
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party, [(item) => {
-    return Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE;
-  }]);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE]);
 
   return (
     <EchoGraph
@@ -89,29 +87,25 @@ const AppWithEditor = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
+export const Primary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <FullScreen>
           <App />
         </FullScreen>
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
 
-export const Secondary = () => {
-  return (
-    <ClientProvider>
+export const Secondary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <FullScreen>
           <AppWithEditor />
         </FullScreen>
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
 
 const embedStyles = {
   boxSizing: 'border-box',
@@ -127,9 +121,8 @@ const embedStyles = {
   overflow: 'auto'
 };
 
-export const Embedded = () => {
-  return (
-    <ClientProvider>
+export const Embedded = () => (
+<ClientProvider>
       <ProfileInitializer>
         <FullScreen>
           <Box sx={embedStyles}>
@@ -138,5 +131,4 @@ export const Embedded = () => {
         </FullScreen>
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

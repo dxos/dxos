@@ -143,12 +143,12 @@ export const isPartyCredentialMessage = (message: Message | SignedMessage) => {
  * @return {boolean}
  * @private
  */
-export function isEnvelope (message: any) {
+export const isEnvelope = (message: any) => {
   assert(message);
   const type = message?.signed?.payload?.type;
   const envelope = message?.signed?.payload?.envelope;
   return type === PartyCredential.Type.ENVELOPE && envelope;
-}
+};
 
 /**
  * Is this a SignedMessage?
@@ -156,30 +156,28 @@ export function isEnvelope (message: any) {
  * @return {boolean}
  * @private
  */
-export function isSignedMessage (message: any): message is SignedMessage {
-  return message && message.signed && message.signed.payload && message.signatures && Array.isArray(message.signatures);
-}
+export const isSignedMessage = (message: any): message is SignedMessage => message && message.signed && message.signed.payload && message.signatures && Array.isArray(message.signatures);
 
 /**
  * Wraps a SignedMessage with a Message.
  */
 // TODO(burdon): Typespec is too loose.
-export function wrapMessage (message: Message | SignedMessage | Command | Auth): WithTypeUrl<Message> {
+export const wrapMessage = (message: Message | SignedMessage | Command | Auth): WithTypeUrl<Message> => {
   const payload = message as any;
   return { '@type': TYPE_URL_MESSAGE, payload } as WithTypeUrl<Message>;
-}
+};
 
 /**
  * Unwraps (if necessary) a Message to its contents.
  */
-export function unwrapMessage (message: any): any {
+export const unwrapMessage = (message: any): any => {
   let result: any = message;
   while (result.payload) { // TODO(burdon): Recursion!
     result = result.payload;
   }
 
   return result;
-}
+};
 
 /**
  * Unwrap a SignedMessage from its Envelopes.

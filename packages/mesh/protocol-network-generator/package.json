@@ -29,7 +29,7 @@
     "pump": "^3.0.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",

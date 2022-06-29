@@ -23,11 +23,9 @@ const baseTheme = createMuiTheme({
   }
 });
 
-export const Popup = () => {
-  return (
-    <ThemeProvider theme={baseTheme}>
+export const Popup = () => (
+<ThemeProvider theme={baseTheme}>
       <CssBaseline />
       <Root />
     </ThemeProvider>
-  );
-};
+);

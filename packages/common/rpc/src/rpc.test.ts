@@ -223,9 +223,9 @@ describe('RpcPeer', () => {
       const alice: RpcPeer = new RpcPeer({
         messageHandler: async (method, msg) => {
           expect(method).toEqual('RpcMethodName');
-          async function handlerFn (): Promise<never> {
+          const handlerFn = async (): Promise<never> => {
             throw new Error('My error');
-          }
+          };
 
           return await handlerFn();
         },
@@ -389,13 +389,9 @@ describe('RpcPeer', () => {
       let closeCalled = false;
       const alice = new RpcPeer({
         messageHandler: async msg => ({}),
-        streamHandler: (method, msg) => {
-          return new Stream<Any>(({ next, close }) => {
-            return () => {
-              closeCalled = true;
-            };
-          });
-        },
+        streamHandler: (method, msg) => new Stream<Any>(({ next, close }) => () => {
+          closeCalled = true;
+        }),
         port: alicePort
       });
 

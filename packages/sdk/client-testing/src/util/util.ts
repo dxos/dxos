@@ -12,8 +12,6 @@ export const array = (length: number) => Array.from({ length });
 
 export const times = <T> (length: number, constructor: (i: number) => T) => array(length).map((_, i) => constructor(i));
 
-export const enumFromString = <T> (type: { [s: string]: T}, value: string): T | undefined => {
-  return (Object.values(type) as unknown as string[]).includes(value) ? value as unknown as T : undefined;
-};
+export const enumFromString = <T>(type: { [s: string]: T}, value: string): T | undefined => (Object.values(type) as unknown as string[]).includes(value) ? value as unknown as T : undefined;
 
 export const capitalize = (text: string) => text.length ? text.charAt(0).toUpperCase() + text.slice(1) : text;

@@ -9,12 +9,9 @@ export const QRCode = ({
   value = ''
 }: {
   value: string
-}) => {
-  // https://www.npmjs.com/package/qrcode.react
-  return (
-    <QRCodeReact
+}) => (
+<QRCodeReact
       value={value}
       size={256}
     />
-  );
-};
+);

@@ -24,9 +24,8 @@ export const KeySelect = ({
   keys,
   selected,
   onChange
-}: KeySelectProps) => {
-  return (
-    <FormControl fullWidth variant='standard'>
+}: KeySelectProps) => (
+<FormControl fullWidth variant='standard'>
       <InputLabel id={id}>{label}</InputLabel>
       <Select
         id={id}
@@ -47,5 +46,4 @@ export const KeySelect = ({
         ))}
       </Select>
     </FormControl>
-  );
-};
+);

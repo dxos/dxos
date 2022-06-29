@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export function arraysEqual (a: Uint8Array, b: Uint8Array): boolean {
+export const arraysEqual = (a: Uint8Array, b: Uint8Array): boolean => {
   if (a.length !== b.length) {
     return false;
   }
@@ -14,4 +14,4 @@ export function arraysEqual (a: Uint8Array, b: Uint8Array): boolean {
   }
 
   return true;
-}
+};

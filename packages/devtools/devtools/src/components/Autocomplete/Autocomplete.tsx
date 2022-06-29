@@ -21,9 +21,8 @@ export const Autocomplete = ({
   value,
   options = [],
   onUpdate
-}: AutocompleteProps) => {
-  return (
-    <MuiAutocomplete
+}: AutocompleteProps) => (
+<MuiAutocomplete
       size='small'
       freeSolo
       autoComplete
@@ -43,5 +42,4 @@ export const Autocomplete = ({
         />
       )}
     />
-  );
-};
+);

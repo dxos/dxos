@@ -19,9 +19,8 @@ export interface EchoListProps {
 export const EchoList = ({
   items = [],
   itemAdapter
-}: EchoListProps) => {
-  return (
-    <BoxContainer expand column>
+}: EchoListProps) => (
+<BoxContainer expand column>
       <BoxContainer expand scrollY>
         <List
           dense
@@ -58,5 +57,4 @@ export const EchoList = ({
         </Typography>
       </Toolbar>
     </BoxContainer>
-  );
-};
+);

@@ -52,20 +52,18 @@ function * getRegisteredTypes (root: protobufjs.NamespaceBase): Generator<protob
   }
 }
 
-export function createTypeDictionary (root: protobufjs.NamespaceBase) {
-  return f.createInterfaceDeclaration(
-    undefined,
-    [f.createToken(ts.SyntaxKind.ExportKeyword)],
-    'TYPES',
-    undefined,
-    undefined,
-    Array.from(getRegisteredTypes(root))
-      .sort((b, a) => b.fullName.localeCompare(a.fullName))
-      .map(type => f.createPropertySignature(
-        undefined,
-        f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
-        undefined,
-        getTypeReference(type)
-      ))
-  );
-}
+export const createTypeDictionary = (root: protobufjs.NamespaceBase) => f.createInterfaceDeclaration(
+  undefined,
+  [f.createToken(ts.SyntaxKind.ExportKeyword)],
+  'TYPES',
+  undefined,
+  undefined,
+  Array.from(getRegisteredTypes(root))
+    .sort((b, a) => b.fullName.localeCompare(a.fullName))
+    .map(type => f.createPropertySignature(
+      undefined,
+      f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
+      undefined,
+      getTypeReference(type)
+    ))
+);

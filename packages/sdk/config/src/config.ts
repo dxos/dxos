@@ -19,7 +19,7 @@ type MappingSpec = Record<string, { path: string, type?: string }>;
  * @param {object} values
  * @return {object}
  */
-export function mapFromKeyValues (spec: MappingSpec, values: Record<string, any>) {
+export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>) => {
   const config = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
@@ -58,14 +58,14 @@ export function mapFromKeyValues (spec: MappingSpec, values: Record<string, any>
   }
 
   return config;
-}
+};
 
 /**
  * Maps the given flattend set of (key x values) onto a JSON object.
  * @param {object} spec
  * @param {object} values
  */
-export function mapToKeyValues (spec: MappingSpec, values: any) {
+export const mapToKeyValues = (spec: MappingSpec, values: any) => {
   const config: Record<string, any> = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
@@ -82,7 +82,7 @@ export function mapToKeyValues (spec: MappingSpec, values: any) {
   }
 
   return config;
-}
+};
 
 /**
  * Global configuration object.

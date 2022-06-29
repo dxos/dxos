@@ -26,22 +26,20 @@ export const getPeerId = (peer: Protocol) => {
   return peerId as string;
 };
 
-export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
-  return {
-    send: async (msg) => {
-      const extension = peer.getExtension(PluginRpc.extensionName);
-      assert(extension, 'Extension is not set');
-      await extension.send(msg);
-    },
-    subscribe: (cb) => {
-      const adapterCallback = (obj: SerializedObject) => {
-        cb(obj.data);
-      };
-      receive.on(adapterCallback);
-      return () => receive.off(adapterCallback);
-    }
-  };
-};
+export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
+  send: async (msg) => {
+    const extension = peer.getExtension(PluginRpc.extensionName);
+    assert(extension, 'Extension is not set');
+    await extension.send(msg);
+  },
+  subscribe: (cb) => {
+    const adapterCallback = (obj: SerializedObject) => {
+      cb(obj.data);
+    };
+    receive.on(adapterCallback);
+    return () => receive.off(adapterCallback);
+  }
+});
 
 export class PluginRpc {
   static extensionName = 'dxos.protocol.rpc';
