@@ -16,7 +16,7 @@ export const subscribeToFeeds = ({ echo }: DevtoolsServiceDependencies) => new S
     next({
       parties: parties.map(party => ({
         key: party.key,
-        feeds: party.feedProvider.getFeeds().map(feed => feed.key)
+        feeds: party.getFeeds().map(feed => feed.key)
       }))
     });
   };
@@ -56,13 +56,16 @@ export const subscribeToFeed = ({ echo }: DevtoolsServiceDependencies, { partyKe
       return;
     }
 
-    const { feed } = await party.feedProvider.createOrOpenReadOnlyFeed(feedKey);
+    const feed = await party.getFeeds().find(feed => feed.key.equals(feedKey));
+    if (!feed) {
+      return;
+    }
 
     // TODO(wittjosiah): Start from timeframe?
     // TODO(wittjosiah): Bidirectional lazy loading to feed into virtualized table.
     // Tail feed so as to not overload the browser.
     feedStream = new Readable({ objectMode: true })
-      .wrap(createBatchStream(feed, { live: true, start: Math.max(0, feed.length - 10) }));
+      .wrap(createBatchStream(feed.feed, { live: true, start: Math.max(0, feed.feed.length - 10) }));
 
     feedStream.on('data', blocks => {
       next({ blocks });

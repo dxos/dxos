@@ -203,8 +203,11 @@ export class DataParty {
   }
 
   async getWriteFeed (): Promise<FeedDescriptor> {
-    const feed = await this._feedProvider.createOrOpenWritableFeed();
-    return feed;
+    return this._feedProvider.createOrOpenWritableFeed();
+  }
+
+  getFeeds (): FeedDescriptor[] {
+    return this._feedProvider.getFeeds();
   }
 
   writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
