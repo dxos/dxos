@@ -11,7 +11,7 @@ import { StackTrace } from './stack-trace';
  * @param context Context description that would be included in the printed message.
  * @param body Action which is timed.
  */
-export async function warnAfterTimeout<T> (timeout: number, context: string, body: () => Promise<T>): Promise<T> {
+export const warnAfterTimeout = async <T>(timeout: number, context: string, body: () => Promise<T>): Promise<T> => {
   const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
     console.warn(
@@ -22,7 +22,7 @@ export async function warnAfterTimeout<T> (timeout: number, context: string, bod
   } finally {
     clearTimeout(timeoutId);
   }
-}
+};
 
 /**
  * A decorator that prints a warning to console if method execution time exceeds specified timeout.

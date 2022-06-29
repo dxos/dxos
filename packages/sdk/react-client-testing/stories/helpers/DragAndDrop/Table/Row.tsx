@@ -13,9 +13,8 @@ export interface RowProps {
 export const Row = ({
   row,
   style
-}: RowProps) => {
-  return (
-    <div style={style}>
+}: RowProps) => (
+<div style={style}>
       {row.getVisibleCells().map(cell => (
         <div
           key={cell.id}
@@ -29,5 +28,4 @@ export const Row = ({
         </div>
       ))}
     </div>
-  );
-};
+);

@@ -175,7 +175,8 @@ export class PartyManager {
     }
 
     log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
-    const party = await this._partyFactory.addParty(partyKey, hints);
+    const party = await this._partyFactory.constructParty(partyKey, hints);
+    await party.open();
     await this._metadataStore.addParty(party.key);
     this._setParty(party);
     return party;

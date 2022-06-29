@@ -22,12 +22,12 @@ export interface ExecMochaOpts {
  * @param forceClose
  * @param jsdom
  */
-export async function execMocha ({
+export const execMocha = async ({
   config,
   userArgs = [],
   forceClose,
   jsdom = false
-}: ExecMochaOpts) {
+}: ExecMochaOpts) => {
   const {
     tests: {
       src: defaultSources,
@@ -100,4 +100,4 @@ export async function execMocha ({
   ], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
-}
+};

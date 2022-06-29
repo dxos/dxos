@@ -32,16 +32,12 @@ interface Ref {
  * }
  * ```
  */
-export function ref (value: any): Ref {
-  return {
-    [Ref]: true,
-    value
-  };
-}
+export const ref = (value: any): Ref => ({
+  [Ref]: true,
+  value
+});
 
-function isRef (value: any): value is Ref {
-  return value[Ref] === true;
-}
+const isRef = (value: any): value is Ref => value[Ref] === true;
 
 /**
  * DSL for runtime code generation.
@@ -70,7 +66,7 @@ function isRef (value: any): value is Ref {
  * @param gen Closure that builds the function source.
  * @param ctx Optional record with context variables that will appear in function's scope.
  */
-export function codegen (name: string, args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, ctx: Record<string, any> = {}): (...args: any[]) => any {
+export const codegen = (name: string, args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, ctx: Record<string, any> = {}): (...args: any[]) => any => {
   const newCtx = { ...ctx };
   let nextAnnon = 1;
 
@@ -92,4 +88,4 @@ export function codegen (name: string, args: string[], gen: (c: (parts: Template
 
   // eslint-disable-next-line no-new-func
   return Function(...Object.keys(newCtx), code)(...Object.values(newCtx));
-}
+};

@@ -12,13 +12,11 @@ const TYPE_URL_GREETING_COMMAND = 'dxos.credentials.greet.Command';
  * Create a Greeting 'BEGIN' command message.
  * @returns {{'@type': string, command: *}}
  */
-export const createGreetingBeginMessage = (): WithTypeUrl<Command> => {
-  return {
-    '@type': TYPE_URL_GREETING_COMMAND,
-    command: Command.Type.BEGIN,
-    params: []
-  };
-};
+export const createGreetingBeginMessage = (): WithTypeUrl<Command> => ({
+  '@type': TYPE_URL_GREETING_COMMAND,
+  command: Command.Type.BEGIN,
+  params: []
+});
 
 /**
  * Create a Greeting 'HANDSHAKE' command message.

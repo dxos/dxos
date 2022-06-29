@@ -84,9 +84,8 @@ const User = ({ sharing, joining, remote }: UserProps) => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <FullScreen>
+export const Primary = () => (
+<FullScreen>
       <ErrorBoundary>
         <Box sx={{
           display: 'flex',
@@ -108,8 +107,7 @@ export const Primary = () => {
         </Box>
       </ErrorBoundary>
     </FullScreen>
-  );
-};
+);
 
 export const Remote = () => {
   const remoteConfig: ConfigProvider = {

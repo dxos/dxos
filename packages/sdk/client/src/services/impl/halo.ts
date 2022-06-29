@@ -104,6 +104,4 @@ export class HaloService implements IHaloService {
   }
 }
 
-export const createHaloService = ({ echo, signer }: CreateServicesOpts): HaloService => {
-  return new HaloService(echo, signer);
-};
+export const createHaloService = ({ echo, signer }: CreateServicesOpts): HaloService => new HaloService(echo, signer);

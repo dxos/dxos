@@ -31,10 +31,8 @@ export const ViewContainer = ({
   itemAdapter,
   selected,
   onCreateItem
-}: ViewContainerProps) => {
-  // TODO(burdon): Views lose state when not rendered, but graph has poor performance if other views are updated.
-  return (
-    <>
+}: ViewContainerProps) => (
+<>
       {value === ViewType.List && (
         <BoxContainer expand column>
           <EchoList
@@ -65,5 +63,4 @@ export const ViewContainer = ({
         </BoxContainer>
       )}
     </>
-  );
-};
+);

@@ -47,9 +47,7 @@ test('5 brokers full network connected', async () => {
 
   const brokers = [...Array(MAX_BROKERS).keys()].map(i => createBroker(topic, { port: 6000 + i, logger: false, hyperswarm: { bootstrap: false } }));
 
-  const waitForPresenceGraph = Promise.all(brokers.map(async broker => {
-    return pEvent(broker.localBus, '$broker.presence-update', (graph) => complete(broker.nodeID, graph, MAX_BROKERS));
-  }));
+  const waitForPresenceGraph = Promise.all(brokers.map(async (broker) => pEvent(broker.localBus, '$broker.presence-update', (graph) => complete(broker.nodeID, graph, MAX_BROKERS))));
 
   const waitForConnected = Promise.all(brokers.map(broker => {
     const nodes = brokers.filter(b => b.nodeID !== broker.nodeID).map(b => b.nodeID);

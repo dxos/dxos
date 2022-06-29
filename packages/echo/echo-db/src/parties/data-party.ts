@@ -5,10 +5,11 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
+import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -126,16 +127,6 @@ export class DataParty {
     return this._invitationManager;
   }
 
-  // TODO(burdon): Remove?
-  get feedProvider (): PartyFeedProvider {
-    return this._feedProvider;
-  }
-
-  get preferences (): PartyPreferences {
-    assert(this._preferences, 'Preferences not available.');
-    return this._preferences;
-  }
-
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
@@ -209,6 +200,18 @@ export class DataParty {
     this.update.emit();
 
     return this;
+  }
+
+  async getWriteFeed (): Promise<FeedDescriptor> {
+    return this._feedProvider.createOrOpenWritableFeed();
+  }
+
+  getFeeds (): FeedDescriptor[] {
+    return this._feedProvider.getFeeds();
+  }
+
+  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
+    return this._partyCore.writeCredentialsMessage(message);
   }
 
   get isActive (): boolean {

@@ -67,9 +67,7 @@ class PartyService implements IPartyService {
 
     const party = this.echo.getParty(request.partyKey);
     if (party) {
-      return new Stream(({ next }) => {
-        return party.update.on(() => update(next));
-      });
+      return new Stream(({ next }) => party.update.on(() => update(next)));
     } else {
       return new Stream(({ next }) => {
         let unsubscribeParty: () => void;
@@ -91,16 +89,14 @@ class PartyService implements IPartyService {
   }
 
   subscribeParties () {
-    return resultSetToStream(this.echo.queryParties(), (parties): SubscribePartiesResponse => {
-      return ({
-        parties: parties.map(party => ({
-          publicKey: party.key,
-          isOpen: party.isOpen,
-          isActive: party.isActive,
-          members: party.queryMembers().value
-        }))
-      });
-    });
+    return resultSetToStream(this.echo.queryParties(), (parties): SubscribePartiesResponse => ({
+      parties: parties.map(party => ({
+        publicKey: party.key,
+        isOpen: party.isOpen,
+        isActive: party.isActive,
+        members: party.queryMembers().value
+      }))
+    }));
   }
 
   async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
@@ -277,6 +273,4 @@ class PartyService implements IPartyService {
   }
 }
 
-export const createPartyService = ({ echo }: CreateServicesOpts): PartyService => {
-  return new PartyService(echo);
-};
+export const createPartyService = ({ echo }: CreateServicesOpts): PartyService => new PartyService(echo);

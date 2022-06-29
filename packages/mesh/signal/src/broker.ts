@@ -93,13 +93,13 @@ export const createBroker = (topic: Buffer, opts: CreateBrokerOpts = {}) => {
       port,
       version: packageJSON.version
     },
-    created (broker) {
+    created: (broker) => {
       broker.shared = {
         keyPair,
         peerMap: new PeerMap(keyPair.publicKey)
       };
     },
-    started (broker) {
+    started: (broker) => {
       broker.logger.info('SIGNAL_PROTOCOL_VERSION:', SIGNAL_PROTOCOL_VERSION);
       broker.logger.info('SIGNAL_PROTOCOL_TOPIC:', topic.toString('hex'));
 

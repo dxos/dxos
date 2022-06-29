@@ -105,15 +105,13 @@ export class WebrtcTransport implements Transport {
   }
 }
 
-export const createWebRtcTransportFactory = (webrtcConfig?: any): TransportFactory => {
-  return opts => new WebrtcTransport(
-    opts.initiator,
-    opts.stream,
-    opts.ownId,
-    opts.remoteId,
-    opts.sessionId,
-    opts.topic,
-    opts.sendSignal,
-    webrtcConfig
-  );
-};
+export const createWebRtcTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebrtcTransport(
+  opts.initiator,
+  opts.stream,
+  opts.ownId,
+  opts.remoteId,
+  opts.sessionId,
+  opts.topic,
+  opts.sendSignal,
+  webrtcConfig
+);

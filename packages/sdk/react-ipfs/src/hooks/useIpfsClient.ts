@@ -25,12 +25,10 @@ export const getIpfsUrl = (gateway: string, cid: CID, filename?: string) => {
  * - 5001 API
  */
 // TODO(kaplanski): Factor out IPFS related functionality to its own package.
-export const useIpfsClient = (url?: string) => {
-  return useMemo(() => {
-    if (!url) {
-      return undefined;
-    }
+export const useIpfsClient = (url?: string) => useMemo(() => {
+  if (!url) {
+    return undefined;
+  }
 
-    return create({ url });
-  }, [url]);
-};
+  return create({ url });
+}, [url]);

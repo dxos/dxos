@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { SignalApi } from '@dxos/network-manager';
 
-function getColor (state: SignalApi.State) {
+const getColor = (state: SignalApi.State) => {
   switch (state) {
     case SignalApi.State.CONNECTING:
     case SignalApi.State.RE_CONNECTING:
@@ -18,7 +18,7 @@ function getColor (state: SignalApi.State) {
     case SignalApi.State.CLOSED:
       return 'darkgray';
   }
-}
+};
 
 export interface SignalStatusProps {
   status: SignalApi.Status[]

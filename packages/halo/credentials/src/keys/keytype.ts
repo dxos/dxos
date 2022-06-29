@@ -6,6 +6,4 @@ import { KeyType } from '../proto/gen/dxos/halo/keys';
 
 export type SecretKey = Buffer;
 
-export const keyTypeName = (keyType: KeyType) => {
-  return KeyType[keyType];
-};
+export const keyTypeName = (keyType: KeyType) => KeyType[keyType];

@@ -15,11 +15,11 @@ const BANNER = (client: Client) => '\n' +
 
 let bannerPrinted = false;
 
-export function printBanner (client: Client) {
+export const printBanner = (client: Client) => {
   if (bannerPrinted) {
     return;
   }
 
   bannerPrinted = true;
   console.log(BANNER(client));
-}
+};

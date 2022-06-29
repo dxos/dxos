@@ -4,7 +4,7 @@
 
 import { RpcPort } from './rpc';
 
-export function createLinkedPorts (): [RpcPort, RpcPort] {
+export const createLinkedPorts = (): [RpcPort, RpcPort] => {
   let aliceReceive: RpcPort['send'] | undefined;
   let bobReceive: RpcPort['send'] | undefined;
 
@@ -22,4 +22,4 @@ export function createLinkedPorts (): [RpcPort, RpcPort] {
   };
 
   return [alice, bob];
-}
+};
