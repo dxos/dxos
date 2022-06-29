@@ -8,5 +8,5 @@ export * from './greeting-initiator';
 export * from './greeting-responder';
 export * from './halo-recovery-initiator';
 export * from './invitation-descriptor';
-export * from './invitation-manager';
+export * from './invitation-factory';
 export * from './offline-invitation-claimer';

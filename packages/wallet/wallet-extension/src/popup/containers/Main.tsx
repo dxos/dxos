@@ -9,7 +9,7 @@ import { Button } from '@mui/material';
 import { Config } from '@dxos/config';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
+import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
 export const Main = () => {
   const client = useClient();

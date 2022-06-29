@@ -3,15 +3,11 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "jest",
-    "node"
+  "exclude": [
+    "src/**/*.test.js"
   ],
   "include": [
     "src"
-  ],
-  "exclude": [
-    "src/**/*.test.js"
   ],
   "references": [
     {
@@ -26,5 +22,9 @@
     {
       "path": "../../common/random-access-multi-storage"
     }
+  ],
+  "types": [
+    "jest",
+    "node"
   ]
 }

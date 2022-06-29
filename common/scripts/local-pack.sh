@@ -1,5 +1,5 @@
 # rush update
-# rush build --to @dxos/react-framework
+# rush build --to @dxos/react-toolkit
 rush publish --include-all --pack -p
 
 HASH=$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 6)

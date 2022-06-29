@@ -140,7 +140,7 @@ export class Keyring implements Signer {
     });
 
     return {
-      __type_url: 'dxos.credentials.SignedMessage',
+      '@type': 'dxos.credentials.SignedMessage',
       signed,
       signatures
     };
@@ -162,7 +162,7 @@ export class Keyring implements Signer {
     assert(wrappedMessage, 'No such message.');
     const message = unwrapMessage(wrappedMessage);
     if (!message) {
-      throw Error('No such message.');
+      throw new Error('No such message.');
     }
 
     const chain: KeyChain = {
@@ -177,7 +177,7 @@ export class Keyring implements Signer {
 
     const signedBy = Keyring.signingKeys(message);
     if (!signedBy.find(key => key.equals(publicKey))) {
-      throw Error('Message not signed by expected key.');
+      throw new Error('Message not signed by expected key.');
     }
 
     for (const signer of signedBy) {
@@ -371,7 +371,7 @@ export class Keyring implements Signer {
 
     if (!overwrite) {
       if (this.hasKey(copy.publicKey)) {
-        throw Error('Refusing to overwrite existing key.');
+        throw new Error('Refusing to overwrite existing key.');
       }
     }
 
@@ -395,7 +395,7 @@ export class Keyring implements Signer {
 
     if (!overwrite) {
       if (this.hasKey(copy.publicKey)) {
-        throw Error('Refusing to overwrite existing key.');
+        throw new Error('Refusing to overwrite existing key.');
       }
     }
 
@@ -530,7 +530,7 @@ export class Keyring implements Signer {
   private _findFullKey (...filters: FilterFunction[]): KeyRecord | undefined {
     const matches = this._findFullKeys(...filters);
     if (matches.length > 1) {
-      throw Error(`Expected <= 1 matching keys; found ${matches.length}.`);
+      throw new Error(`Expected <= 1 matching keys; found ${matches.length}.`);
     }
     return matches.length ? matches[0] : undefined;
   }
@@ -564,7 +564,7 @@ export class Keyring implements Signer {
     });
 
     return canonicalStringify({
-      __type_url: 'dxos.credentials.keys.KeyRecordList',
+      '@type': 'dxos.credentials.keys.KeyRecordList',
       keys
     });
   }

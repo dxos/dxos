@@ -18,7 +18,7 @@ import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 
-import { Party as PartyProto } from '../../proto/gen/dxos/client';
+import { Party as PartyProto, PartyDetails } from '../../proto/gen/dxos/client';
 import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../services';
 import { streamToResultSet } from '../../util';
 import { InvitationRequest, InvitationProxy } from '../invitations';
@@ -50,6 +50,8 @@ export interface Party {
 
   setTitle (title: string): Promise<void>
   getTitle (): string
+
+  getDetails(): Promise<PartyDetails>
 
   get properties (): ObjectProperties
   /**
@@ -130,7 +132,7 @@ export class PartyProxy implements Party {
   // TODO(burdon): Invert party/database? (e.g., const db = client.connect()).
   get database (): Database {
     if (!this._database) {
-      throw Error('Party not open.');
+      throw new Error('Party not open.');
     }
 
     return this._database;
@@ -177,6 +179,10 @@ export class PartyProxy implements Party {
 
   async close () {
     await this._setOpen(false);
+  }
+
+  async getDetails (): Promise<PartyDetails> {
+    return this._serviceProvider.services.PartyService.getPartyDetails({ partyKey: this._key });
   }
 
   async _setOpen (open: boolean) {

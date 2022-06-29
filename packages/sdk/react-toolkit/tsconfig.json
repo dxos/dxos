@@ -1,0 +1,68 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../react-registry-client"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../bot/bot-factory-client"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../react-client-testing"
+    },
+    {
+      "path": "../react-components"
+    },
+    {
+      "path": "../registry-client"
+    }
+  ]
+}

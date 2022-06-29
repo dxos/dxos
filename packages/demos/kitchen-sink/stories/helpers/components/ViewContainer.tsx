@@ -9,7 +9,7 @@ import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components';
-import { EchoGraph, EchoGraphModel } from '@dxos/react-gem-components';
+import { EchoGraph, EchoGraphModel } from '@dxos/react-echo-graph';
 
 import { EchoBoard, EchoList } from '../../../src';
 import { graphStyles } from '../testing';
@@ -31,10 +31,8 @@ export const ViewContainer = ({
   itemAdapter,
   selected,
   onCreateItem
-}: ViewContainerProps) => {
-  // TODO(burdon): Views lose state when not rendered, but graph has poor performance if other views are updated.
-  return (
-    <>
+}: ViewContainerProps) => (
+<>
       {value === ViewType.List && (
         <BoxContainer expand column>
           <EchoList
@@ -65,5 +63,4 @@ export const ViewContainer = ({
         </BoxContainer>
       )}
     </>
-  );
-};
+);

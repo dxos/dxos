@@ -26,7 +26,7 @@
    * Specify one of: "pnpmVersion", "npmVersion", or "yarnVersion".  See the Rush documentation
    * for details about these alternatives.
    */
-  "pnpmVersion": "6.24.2",
+  "pnpmVersion": "7.1.7",
 
   // "npmVersion": "4.5.0",
   // "yarnVersion": "1.9.4",
@@ -604,14 +604,8 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-framework",
-      "projectFolder": "packages/sdk/react-framework",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/react-gem-components",
-      "projectFolder": "packages/sdk/react-gem-components",
+      "packageName": "@dxos/react-echo-graph",
+      "projectFolder": "packages/sdk/react-echo-graph",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -624,6 +618,12 @@
     {
       "packageName": "@dxos/react-registry-client",
       "projectFolder": "packages/sdk/react-registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/react-toolkit",
+      "projectFolder": "packages/sdk/react-toolkit",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -746,12 +746,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/protocol-plugin-messenger",
-      "projectFolder": "packages/mesh/protocol-plugin-messenger",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/protocol-plugin-replicator",
       "projectFolder": "packages/mesh/protocol-plugin-replicator",
       "shouldPublish": true,
@@ -821,6 +815,10 @@
     {
       "packageName": "@dxos/browser-tests",
       "projectFolder": "packages/gravity/browser-tests"
+    },
+    {
+      "packageName": "@dxos/gravity-orchestrator",
+      "projectFolder": "packages/gravity/orchestrator"
     },
 
     //

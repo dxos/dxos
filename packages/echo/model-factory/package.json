@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "2.31.7",
+  "version": "2.33.4",
   "description": "ECHO model factory.",
   "license": "MIT",
   "main": "dist/src/index.js",
@@ -20,11 +20,11 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.11.27",
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",

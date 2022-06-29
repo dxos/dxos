@@ -6,58 +6,48 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { InvalidStateError } from '@dxos/debug';
+import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
 import { DataServiceRouter } from './database';
-import { InvalidStorageVersionError } from './errors';
+import { IdentityNotInitializedError, InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
-import { MetadataStore, STORAGE_VERSION } from './metadata';
-import { OpenProgress, PartyFactory, PartyInternal, PartyManager } from './parties';
-import { PartyFeedProvider } from './pipeline';
+import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
+import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
-import { createRamStorage } from './util';
 
 const log = debug('dxos:echo');
 const error = log.extend('error');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PartyFilter {}
+export interface PartyFilter { }
 
 /**
  * Various options passed to `ECHO.create`.
  */
 export interface EchoCreationOptions {
+
   /**
-   * Storage used for feeds. Defaults to in-memory.
+   * Storage to persist data. Defaults to in-memory.
    */
-  feedStorage?: IStorage
+   storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.
    */
   keyStorage?: any
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  snapshotStorage?: IStorage
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -113,9 +103,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    feedStorage = createRamStorage(),
-    snapshotStorage = createRamStorage(),
-    metadataStorage = createRamStorage(),
+    storage = createStorage('', StorageType.RAM),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,
@@ -127,12 +115,12 @@ export class ECHO {
       .registerModel(ObjectModel);
 
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(snapshotStorage);
-    this._metadataStore = new MetadataStore(metadataStorage);
+    this._snapshotStore = new SnapshotStore(storage.subDir('snapshots'));
+    this._metadataStore = new MetadataStore(storage.subDir('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.subDir('feeds'), { valueEncoding: codec });
 
-    const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
+    const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,
       this._keyring,
       this._feedStore,
@@ -152,7 +140,7 @@ export class ECHO {
       this._networkManager,
       this._modelFactory,
       this._snapshotStore,
-      createFeedProvider,
+      feedProviderFactory,
       options
     );
 
@@ -163,18 +151,19 @@ export class ECHO {
       partyFactory
     );
 
-    // TODO(burdon): Why does this need both PartyManager and PartyFactory?
     this._halo = new HALO({
       keyring: this._keyring,
-      partyManager: this._partyManager,
-      partyFactory,
       networkManager: this._networkManager,
-      metadataStore: this._metadataStore
+      metadataStore: this._metadataStore,
+      feedProviderFactory: feedProviderFactory,
+      modelFactory: this._modelFactory,
+      snapshotStore: this._snapshotStore,
+      options
     });
 
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
-      if (this.halo.identity.halo?.isOpen) {
+      if (this.halo.identity?.halo.isOpen) {
         this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
@@ -237,6 +226,7 @@ export class ECHO {
    *
    * Previously active parties will be opened and will begin replication.
    */
+  @synchronized
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     if (this.isOpen) {
       return;
@@ -258,6 +248,7 @@ export class ECHO {
   /**
    * Closes the ECHO instance.
    */
+  @synchronized
   async close () {
     if (!this.isOpen) {
       return;
@@ -265,10 +256,8 @@ export class ECHO {
 
     this._subs.unsubscribe();
 
-    // TODO(marik-d): Should be `_identityManager.close()`.
     await this.halo.close();
 
-    // TODO(marik-d): Close network manager.
     await this._partyManager.close();
 
     await this._feedStore.close();
@@ -277,10 +266,10 @@ export class ECHO {
   }
 
   /**
-   * Removes all data and closes this ECHO instance.
-   *
-   * The instance will be in an unusable state at this point and a page refresh is recommended.
-   */
+  * Removes all data and closes this ECHO instance.
+  *
+  * The instance will be in an unusable state at this point and a page refresh is recommended.
+  */
   // TODO(burdon): Enable re-open.
   async reset () {
     await this.close();
@@ -315,7 +304,7 @@ export class ECHO {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<PartyInternal> {
+  async createParty (): Promise<DataParty> {
     await this.open();
 
     const party = await this._partyManager.createParty();
@@ -325,9 +314,9 @@ export class ECHO {
   }
 
   /**
-   * Clones an existing party from a snapshot.
-   * @param snapshot
-   */
+  * Clones an existing party from a snapshot.
+  * @param snapshot
+  */
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
@@ -338,10 +327,10 @@ export class ECHO {
   }
 
   /**
-   * Returns an individual party by it's key.
-   * @param {PartyKey} partyKey
-   */
-  getParty (partyKey: PartyKey): PartyInternal | undefined {
+  * Returns an individual party by it's key.
+  * @param {PartyKey} partyKey
+  */
+  getParty (partyKey: PartyKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -351,11 +340,11 @@ export class ECHO {
   }
 
   /**
-   * Queries for a set of Parties matching the optional filter.
-   * @param {PartyFilter} filter
-   */
+  * Queries for a set of Parties matching the optional filter.
+  * @param {PartyFilter} filter
+  */
   // eslint-disable-next-line unused-imports/no-unused-vars
-  queryParties (filter?: PartyFilter): ResultSet<PartyInternal> {
+  queryParties (filter?: PartyFilter): ResultSet<DataParty> {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
@@ -367,15 +356,15 @@ export class ECHO {
   }
 
   /**
-   * Joins a party that was created by another peer and starts replicating with it.
-   * @param invitationDescriptor Invitation descriptor passed from another peer.
-   * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
-   */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<PartyInternal> {
+  * Joins a party that was created by another peer and starts replicating with it.
+  * @param invitationDescriptor Invitation descriptor passed from another peer.
+  * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
+  */
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity);
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ?? raise(new IdentityNotInitializedError()));
 
     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }

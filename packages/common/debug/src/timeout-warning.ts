@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { getStackTrace } from './stack-trace';
+import { StackTrace } from './stack-trace';
 
 /**
  * Prints a warning to console if the action takes longer then specified timeout. No errors are thrown.
@@ -11,18 +11,18 @@ import { getStackTrace } from './stack-trace';
  * @param context Context description that would be included in the printed message.
  * @param body Action which is timed.
  */
-export async function warnAfterTimeout<T> (timeout: number, context: string, body: () => Promise<T>): Promise<T> {
-  const stackTrace = getStackTrace();
+export const warnAfterTimeout = async <T>(timeout: number, context: string, body: () => Promise<T>): Promise<T> => {
+  const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
     console.warn(
-      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stackTrace}`);
+      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stack.getStack()}`);
   }, timeout);
   try {
     return await body();
   } finally {
     clearTimeout(timeoutId);
   }
-}
+};
 
 /**
  * A decorator that prints a warning to console if method execution time exceeds specified timeout.

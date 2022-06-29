@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 const chalk = require('chalk');
 const copy = require('copy');
 const { build } = require('esbuild');
@@ -26,12 +24,11 @@ void (async () => {
   try {
     await build({
       entryPoints: [
-        join(srcDir, 'background/main.ts'),
-        join(srcDir, 'content-script/main.ts'),
-        join(srcDir, 'devtools/main.ts'),
-        join(srcDir, 'devtools-client-api/main.ts'),
-        join(srcDir, 'main-panel/main.ts'),
-        join(srcDir, 'popup/main.tsx')
+        join(srcDir, 'background.ts'),
+        join(srcDir, 'content.ts'),
+        join(srcDir, 'devtools.ts'),
+        join(srcDir, 'panel.ts'),
+        join(srcDir, 'sandbox.ts')
       ],
       outdir: distDir,
       write: true,

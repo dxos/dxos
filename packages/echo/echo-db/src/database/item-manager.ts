@@ -111,7 +111,7 @@ export class ItemManager {
       if (!meta.getInitMutation) {
         throw new Error('Model does not support initializer.');
       }
-      mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -156,7 +156,7 @@ export class ItemManager {
       if (!meta.getInitMutation) {
         throw new Error('Tried to provide initialization params to a model with no initializer.');
       }
-      mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -375,7 +375,7 @@ export class ItemManager {
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-function debounceEntityUpdateEvent (event: Event<Entity<any>>): Event<Entity<any>[]> {
+const debounceEntityUpdateEvent = (event: Event<Entity<any>>): Event<Entity<any>[]> => {
   const debouncedEvent = new Event<Entity<any>[]>();
 
   let firing = false;
@@ -395,4 +395,4 @@ function debounceEntityUpdateEvent (event: Event<Entity<any>>): Event<Entity<any
   }));
 
   return debouncedEvent;
-}
+};

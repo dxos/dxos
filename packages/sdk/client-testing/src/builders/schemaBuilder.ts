@@ -5,7 +5,7 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import { Database, Schema, SchemaDef, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
+import { Database, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
 import { TestType } from './partyBuilder';
@@ -13,7 +13,7 @@ import { TestType } from './partyBuilder';
 export const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
 
-export type SchemaFieldWithGenerator = SchemaField & { generator?: () => string }
+export type SchemaFieldWithGenerator = SchemaField & { generator?: () => string | number | boolean | SchemaRef }
 export type SchemaDefWithGenerator = Omit<SchemaDef, 'fields'> & { fields: SchemaFieldWithGenerator[] };
 
 const EXAMPLE_SCHEMA_ORG = 'example:type/schema/organization';
@@ -34,7 +34,8 @@ export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
       {
         key: 'collaborators',
         required: false,
-        generator: () => faker.datatype.number().toString()
+        type: 'number',
+        generator: () => faker.datatype.number()
       }
     ]
   },
@@ -53,6 +54,23 @@ export const DefaultSchemaDefs: { [schema: string]: SchemaDefWithGenerator } = {
           schema: EXAMPLE_SCHEMA_ORG,
           field: 'title'
         }
+      },
+      {
+        key: 'city',
+        required: false,
+        type: 'string',
+        generator: () => faker.address.cityName()
+      },
+      {
+        key: 'role',
+        required: false,
+        generator: () => faker.name.jobTitle()
+      },
+      {
+        key: 'active',
+        required: false,
+        type: 'boolean',
+        generator: () => false
       }
     ]
   }
@@ -129,12 +147,15 @@ export class SchemaBuilder {
  */
   async createData (customSchemas?: SchemaDefWithGenerator[], options: { [key: string]: number } = {}) {
     const schemas = customSchemas ?? Object.values(DefaultSchemaDefs);
+    const result = [];
     // Synchronous loop.
     for (const schema of schemas) {
       const count = options[schema.schema] ?? 0;
       if (count) {
-        await this.createItems(schema, count);
+        const schemaData = await this.createItems(schema, count);
+        result.push(schemaData);
       }
     }
+    return result;
   }
 }

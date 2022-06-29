@@ -36,9 +36,7 @@ const genericTest = async (network: Network) => {
 
 test('generate a grid topology', async () => {
   const generator = new NetworkGenerator({
-    async createPeer (id) {
-      return { id, name: `peer${id}` };
-    }
+    createPeer: async (id) => ({ id, name: `peer${id}` })
   });
 
   generator.error.on(err => console.log(err));
@@ -51,12 +49,8 @@ test('generate a grid topology', async () => {
 
 test('generate a balancedBinTree of 2 n', async () => {
   const generator = new NetworkGenerator({
-    async createPeer (id) {
-      return { id, name: `peer${id}` };
-    },
-    async createConnection (fromPeer, toPeer) {
-      return new PassThrough();
-    }
+    createPeer: async (id) => ({ id, name: `peer${id}` }),
+    createConnection: async (fromPeer, toPeer) => new PassThrough()
   });
 
   generator.error.on(err => console.log(err));
@@ -70,13 +64,11 @@ test('generate a balancedBinTree of 2 n', async () => {
 test('insert pre-made peers', async () => {
   let createPeerCalledCount = 0;
   const generator = new NetworkGenerator({
-    async createPeer (id) {
+    createPeer: async (id) => {
       createPeerCalledCount++;
       return { id, name: `peer${id}` };
     },
-    async createConnection (fromPeer, toPeer) {
-      return new PassThrough();
-    }
+    createConnection: async (fromPeer, toPeer) => new PassThrough()
   });
 
   generator.error.on(err => console.log(err));

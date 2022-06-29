@@ -15,7 +15,7 @@ const BROADCAST_CHANNEL = 0;
 const DIRECT_CHANNEL = 1;
 
 const packetCodec = {
-  encode (obj) {
+  encode: (obj) => {
     const length = Buffer.byteLength(obj.topic, 'utf8');
     const buf = Buffer.allocUnsafe(varint.encodingLength(length) + length + obj.data.length);
     varint.encode(length, buf);
@@ -23,7 +23,7 @@ const packetCodec = {
     obj.data.copy(buf, varint.encode.bytes + length);
     return buf;
   },
-  decode (buf) {
+  decode: (buf) => {
     const length = varint.decode(buf);
     const topic = buf.slice(varint.decode.bytes, varint.decode.bytes + length);
     const data = buf.slice(varint.decode.bytes + length);

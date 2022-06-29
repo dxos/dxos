@@ -6,7 +6,6 @@ import {
   ProviderAwareness, ProviderFactory, UserState
 } from '@lexical/react/LexicalCollaborationPlugin';
 import { Provider } from '@lexical/yjs';
-import assert from 'assert';
 import debug from 'debug';
 import { useMemo } from 'react';
 import { Doc } from 'yjs';
@@ -19,17 +18,11 @@ const log = debug('dxos:lexical:useProviderFactory');
 /**
  * User presence.
  */
-class TestProviderAwareness implements ProviderAwareness {
-  private readonly _callbacks = new Map<string, () => void>();
-  private readonly _states: UserState[] = [];
+class TestAwareness implements ProviderAwareness {
   private _state?: UserState;
 
-  constructor(
-    private readonly id: string
-  ) {}
-
   getStates () {
-    return this._states;
+    return [];
   }
 
   getLocalState () {
@@ -37,85 +30,54 @@ class TestProviderAwareness implements ProviderAwareness {
   }
 
   setLocalState (state: UserState) {
-    // log('TestAwareness.setLocalState', this.id, state);
     this._state = state;
+    log('TestAwareness.setLocalState', this._state);
   }
 
-  on (type: 'update', cb: () => void) {
-    // log('TestAwareness.on', this.id, type);
-    const existing = this._callbacks.get(type);
-    assert(existing === undefined || existing === cb);
-    this._callbacks.set(type, cb);
+  on (type: string, cb: () => void) {
+    log('TestAwareness.on', type);
   }
 
-  off (type: 'update', cb: () => void) {
-    // log('TestAwareness.off', this.id, type);
-    this._callbacks.delete(type);
+  off (type: string, cb: () => void) {
+    log('TestAwareness.on', type);
   }
 }
 
-// TODO(burdon): Add to "who is using YJS?": https://github.com/yjs/yjs/blob/40196ae0a3f0ae7b1e7912befbacb3a904068e7e/README.md#who-is-using-yjs
-//  - E.g., https://github.com/yousefED/matrix-crdt (Yousef)
-
-/**
- * Provider is an Observable defined by YJS (e.g., @yjs/y-websocket).
- */
 class TestProvider implements Provider {
-  private readonly _callbacks = new Map<string, (doc: Doc) => void>();
-
-  private _connected = false;
-  readonly awareness: ProviderAwareness;
+  readonly awareness = new TestAwareness();
 
   constructor (
-    readonly id: string,
-    readonly item: Item<TextModel>
-  ) {
-    this.awareness = new TestProviderAwareness(id);
-  }
+    private readonly id: string
+  ) {}
 
-  get doc (): Doc {
-    return this.item.model.doc;
-  }
-
-  async connect () {
+  connect () {
     log('TestProvider.connect', this.id);
-    // console.assert(!this._connected); // TODO(burdon): Called multiple times.
-    this._callbacks.get('reload')!(this.doc);
-    this._connected = true;
   }
 
   disconnect () {
     log('TestProvider.disconnect', this.id);
-    assert(this._connected);
-    this._connected = false;
   }
 
-  // TODO(burdon): Other event types (status, sync).
-
-  on (type: 'reload', cb: (doc: Doc) => void) {
-    // log('TestProvider.on', this.id, type);
-    assert(this._callbacks.get(type) === undefined);
-    this._callbacks.set(type, cb);
+  on (type: string, cb: (doc: Doc) => void) {
+    log('TestProvider.on', type);
   }
 
-  off (type: 'reload', cb: (doc: Doc) => void) {
-    // log('TestProvider.off', this.id, type);
-    this._callbacks.delete(type);
+  off (type: string, cb: (doc: Doc) => void) {
+    log('TestProvider.off', type);
   }
 }
 
-/**
- * Retunrs a provider factory for the given item.
- * @param item Document item.
- */
-export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => {
-  return useMemo<ProviderFactory>(() => {
-    return (id: string, docMap: Map<string, Doc>): Provider => {
-      const provider = new TestProvider(id, item);
-      // Defer setting document until connected.
-      docMap.set(id, new Doc());
-      log('constructed', id, docMap);
-      return provider;
-    };
-  }, [item]);
-};
+export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
+  log('constructed', id, yjsDocMap);
+
+  // TODO(burdon): Get from text model (create ID externally).
+  // const doc = new Doc();
+  const doc = item.model.doc;
+  yjsDocMap.set(id, doc);
+
+  // TODO(burdon): Initially has newlines.
+  // TODO(burdon): Typing at end of document has issues.
+  console.log('[', doc.getText().toString(), ']');
+
+  return new TestProvider(id);
+}, [item]);

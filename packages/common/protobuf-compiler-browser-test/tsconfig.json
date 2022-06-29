@@ -1,11 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "noEmit": true
+    "noEmit": true,
+    "outDir": "dist"
   },
-  "types": [
-    "mocha"
+  "include": [
+    "src",
+    "browser-test"
   ],
   "references": [
     {
@@ -18,8 +19,7 @@
       "path": "../protobuf-compiler"
     }
   ],
-  "include": [
-    "src",
-    "browser-test"
+  "types": [
+    "mocha"
   ]
 }

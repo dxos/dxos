@@ -5,8 +5,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { ClientProvider, ProfileInitializer } from '@dxos/react-client';
-import { useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider } from '@dxos/react-client';
+import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 
 // TODO(burdon): Move to src/demo.
 import { App } from './helpers';

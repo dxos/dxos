@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
+import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 
 import { ONLINE_CONFIG } from './config';
 
@@ -28,12 +29,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider config={ONLINE_CONFIG}>
+export const Primary = () => (
+<ClientProvider config={ONLINE_CONFIG}>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

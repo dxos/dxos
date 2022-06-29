@@ -4,20 +4,67 @@
 
 import expect from 'expect';
 
+// TODO(burdon): Rename TestRig and/or move to separate package.
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
 import { ObjectModel } from './object-model';
+import { validateKey } from './util';
 
 describe('ObjectModel', () => {
+  it('checks valid keys', () => {
+    const valid = [
+      'x',
+      'foo',
+      'foo_bar',
+      'foo.bar'
+    ];
+    for (const key of valid) {
+      expect(validateKey(key)).toEqual(key);
+    }
+
+    const invalid = [
+      '',
+      ' ',
+      '@',
+      'foo bar',
+      '.foo',
+      'foo.',
+      'foo..bar'
+    ];
+    for (const key of invalid) {
+      expect(() => validateKey(key)).toThrow();
+    }
+  });
+
   it('can set a property', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     await model.set('foo', 'bar');
     expect(model.get('foo')).toEqual('bar');
+
+    await model.set('baz', 2 ** 33);
+    expect(model.get('baz')).toEqual(2 ** 33);
   });
 
-  // TODO(burdon): Test setting undefined removes property.
+  it('can set a dot property', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = rig.createPeer();
+
+    await model.set('foo.bar', 100);
+    expect(model.get('foo')).toEqual({ bar: 100 });
+  });
+
+  it('can remove a property', async () => {
+    const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
+    const { model } = rig.createPeer();
+
+    await model.set('foo', 'bar');
+    expect(model.get('foo')).toEqual('bar');
+
+    await model.set('foo', undefined);
+    expect(model.get('foo')).toEqual(undefined);
+  });
 
   it('can set multiple properties using the builder pattern', async () => {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);

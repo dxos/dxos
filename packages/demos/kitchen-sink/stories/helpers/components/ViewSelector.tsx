@@ -26,9 +26,8 @@ interface ViewSelectorProps {
 export const ViewSelector = ({
   value,
   onChange
-}: ViewSelectorProps) => {
-  return (
-    <IconRadioGroup value={value} onChange={onChange}>
+}: ViewSelectorProps) => (
+<IconRadioGroup value={value} onChange={onChange}>
       <IconRadio data-id='test-button-view-list' value={ViewType.List} size='small'>
         <ListIcon />
       </IconRadio>
@@ -39,5 +38,4 @@ export const ViewSelector = ({
         <GraphIcon />
       </IconRadio>
     </IconRadioGroup>
-  );
-};
+);

@@ -131,6 +131,7 @@ export class PublicKey {
       return false;
     }
     let equal = true;
+    this._value;
     for (let i = 0; i < this._value.length; i++) {
       equal &&= this._value[i] === otherConverted._value[i];
     }

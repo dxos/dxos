@@ -7,28 +7,27 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { AccountKey, App, CID, createCID, DomainKey, DXN, IRegistryClient, schemaJson } from '../../src';
+import { AccountKey, App, CID, createCID, DomainKey, DXN, PolkadotRegistry, RegistryClient, schemaJson } from '../../src';
 import { setup } from './utils';
 
 chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
-const randomName = () => {
-  // Must start with a letter.
-  return `r${Math.random().toString(36).substring(2)}`;
-};
+const randomName = () => `r${Math.random().toString(36).substring(2)}`;
 
 describe('Registry Client', () => {
-  let registryApi: IRegistryClient;
+  let registryBackend: PolkadotRegistry;
+  let registryClient: RegistryClient;
   let apiPromise: ApiPromise;
   let account: AccountKey;
 
   beforeEach(async () => {
     const setupResult = await setup();
     apiPromise = setupResult.apiPromise;
-    registryApi = setupResult.registryApi;
-    account = await setupResult.accountsApi.createAccount();
+    registryBackend = setupResult.registryBackend;
+    registryClient = setupResult.registryClient;
+    account = await setupResult.accountsClient.createAccount();
   });
 
   afterEach(async () => {
@@ -37,31 +36,31 @@ describe('Registry Client', () => {
 
   describe('Types', () => {
     it('Adds type to registry', async () => {
-      const hash = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
+      const hash = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       expect(hash.value.length).to.be.greaterThan(0);
     });
 
     it('Retrieves a list of types', async () => {
-      const types = await registryApi.getTypeRecords();
+      const types = await registryClient.listTypeRecords();
       expect(types.length).to.be.greaterThan(0);
     });
 
     it('Retrieves type details', async () => {
-      const domainKey = await registryApi.registerDomain(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
-      const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-      await registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, typeCid);
+      const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
+      await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), typeCid, account);
 
-      const type = await registryApi.getTypeRecord(typeCid);
-      expect(type?.messageName).to.equal('.dxos.type.App');
-      expect(type?.protobufDefs.lookupType('.dxos.type.App')).to.not.be.undefined;
+      const typeRecord = await registryClient.getTypeRecord(typeCid);
+      expect(typeRecord?.type?.messageName).to.equal('.dxos.type.App');
+      expect(typeRecord?.type?.protobufDefs.lookupType('.dxos.type.App')).to.not.be.undefined;
     });
   });
 
   describe('Domains', () => {
     it('Retrieves a list of domains', async () => {
-      const domains = await registryApi.getDomains();
+      const domains = await registryClient.listAuthorities();
       expect(domains.length).to.be.greaterThan(0);
     });
   });
@@ -73,47 +72,43 @@ describe('Registry Client', () => {
     let domainKey: DomainKey;
 
     beforeEach(async () => {
-      appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
+      appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
-      contentCid = await registryApi.insertDataRecord({
+      contentCid = await registryClient.registerRecord({
         appName: 'Tasks App',
         appVersion: 5,
         hasSso: false
       }, appTypeCid);
 
-      domainKey = await registryApi.registerDomain(account);
-      await registryApi.updateResource(DXN.fromDomainKey(domainKey, appResourceName), account, contentCid);
+      domainKey = await registryClient.registerAuthority(account);
+      await registryClient.registerResource(DXN.fromDomainKey(domainKey, appResourceName, 'latest'), contentCid, account);
     });
 
     it('Retrieves a list of resources', async () => {
-      const resources = await registryApi.queryResources();
+      const resources = await registryClient.listResources();
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when matching, returns matching items', async () => {
-      const resources = await registryApi.queryResources({ text: appResourceName });
+      const resources = await registryClient.listResources({ text: appResourceName });
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when not matching, returns empty', async () => {
-      const resources = await registryApi.queryResources({ text: 'mybot' });
+      const resources = await registryClient.listResources({ text: 'mybot' });
       expect(resources).to.be.empty;
     });
 
     it('Retrieves a single resource', async () => {
       const id = DXN.fromDomainKey(domainKey, appResourceName);
-      const resource = await registryApi.getResource(id);
-      expect(resource).to.not.be.undefined;
-      expect(resource!.id.toString()).to.be.equal(id.toString());
-      expect(Object.keys(resource!.versions).length).to.equal(0);
-      expect(Object.keys(resource!.tags).length).to.equal(1);
-      expect(resource!.tags.latest?.toString()).to.be.equal(contentCid.toString());
+      const resource = await registryClient.getResource(id);
+      expect(resource!.toString()).to.be.equal(contentCid.toString());
     });
 
     it('Deletes a single resource', async () => {
-      const id = DXN.fromDomainKey(domainKey, appResourceName);
-      await registryApi.deleteResource(id, account);
-      const resource = await registryApi.getResource(id);
+      const name = DXN.fromDomainKey(domainKey, appResourceName, 'latest');
+      await registryClient.registerResource(name, undefined, account);
+      const resource = await registryClient.getResource(name);
       expect(resource).to.be.undefined;
     });
 
@@ -122,67 +117,51 @@ describe('Registry Client', () => {
       let version2: CID;
       let version3: CID;
       let version4: CID;
-      let versionedDxn: DXN;
+      let name: DXN;
 
       beforeEach(async () => {
-        version2 = await registryApi.insertDataRecord({
+        version2 = await registryClient.registerRecord({
           appName: 'Versioned App',
           appVersion: 2,
           hasSso: false
         }, appTypeCid);
-        version3 = await registryApi.insertDataRecord({
+        version3 = await registryClient.registerRecord({
           appName: 'Versioned App',
           appVersion: 3,
           hasSso: false
         }, appTypeCid);
-        version4 = await registryApi.insertDataRecord({
+        version4 = await registryClient.registerRecord({
           appName: 'Versioned App',
           appVersion: 4,
           hasSso: false
         }, appTypeCid);
 
-        versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
-        await registryApi.updateResource(versionedDxn, account, version2, { tags: ['beta'], version: '2.0.0' });
-        await registryApi.updateResource(versionedDxn, account, version3, { tags: ['alpha'], version: '3.0.0' });
-        await registryApi.updateResource(versionedDxn, account, version4); // Latest tag by default.
+        name = DXN.fromDomainKey(domainKey, versionedName);
+        await registryClient.registerResource(name.with({ tag: 'latest' }), version4, account);
+        await registryClient.registerResource(name.with({ tag: 'beta' }), version2, account);
+        await registryClient.registerResource(name.with({ tag: 'alpha' }), version3, account);
       });
 
       it('Properly Registers resource with tags and versions', async () => {
-        const resource = await registryApi.getResource(versionedDxn);
-        expect(resource).to.not.be.undefined;
-
-        expect(resource!.tags.latest?.toString()).to.be.equal(version4.toString());
-        expect(resource!.tags.alpha?.toString()).to.be.equal(version3.toString());
-        expect(resource!.tags.beta?.toString()).to.be.equal(version2.toString());
-
-        expect(resource!.versions['2.0.0']?.toString()).to.be.equal(version2.toString());
-        expect(resource!.versions['3.0.0']?.toString()).to.be.equal(version3.toString());
+        const latestCid = await registryClient.getResource(name);
+        expect(latestCid!.toString()).to.be.equal(version4.toString());
+        const alphaCid = await registryClient.getResource(name.with({ tag: 'alpha' }));
+        expect(alphaCid!.toString()).to.be.equal(version3.toString());
+        const betaCid = await registryClient.getResource(name.with({ tag: 'beta' }));
+        expect(betaCid!.toString()).to.be.equal(version2.toString());
       });
 
       it('queries by tag', async () => {
-        const resource = await registryApi.getResourceRecord(versionedDxn, 'alpha');
-        expect(resource).to.not.be.undefined;
-
-        expect(resource!.record.cid.toString()).to.be.equal(version3.toString());
-
-        expect(resource!.tag).to.be.equal('alpha');
-        expect(resource!.version).to.be.undefined;
-      });
-
-      it('queries by version', async () => {
-        const resource = await registryApi.getResourceRecord(versionedDxn, '3.0.0');
-        expect(resource).to.not.be.undefined;
-
-        expect(resource!.record.cid.toString()).to.be.equal(version3.toString());
-        expect(resource!.tag).to.be.undefined;
-        expect(resource!.version).to.be.equal('3.0.0');
+        const taggedDxn = DXN.fromDomainKey(domainKey, versionedName, 'alpha');
+        const record = await registryClient.getRecordByName(taggedDxn);
+        expect(record).to.not.be.undefined;
       });
     });
   });
 
   describe('Data records', () => {
     it('Register a record of your custom type', async () => {
-      const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       const appData: App = {
         repos: [],
@@ -190,18 +169,18 @@ describe('Registry Client', () => {
           entryPoint: './path/to/main.js'
         }
       };
-      const appCid = await registryApi.insertDataRecord(appData, appTypeCid);
+      const appCid = await registryClient.registerRecord(appData, appTypeCid);
 
-      const appRecord = await registryApi.getDataRecord(appCid);
-      expect(appRecord?.data).to.deep.equal({
+      const appRecord = await registryClient.getRecord(appCid);
+      expect(appRecord?.payload).to.deep.equal({
         '@type': appTypeCid,
         ...appData
       });
     });
 
     it('Register a record with nested extensions', async () => {
-      const serviceTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.Service');
-      const ipfsTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.IPFS');
+      const serviceTypeCid = await registryClient.registerTypeRecord('.dxos.type.Service', protoSchema);
+      const ipfsTypeCid = await registryClient.registerTypeRecord('.dxos.type.IPFS', protoSchema);
 
       const serviceData = {
         type: 'ipfs',
@@ -214,32 +193,31 @@ describe('Registry Client', () => {
           ]
         }
       };
-      const recordCid = await registryApi.insertDataRecord(serviceData, serviceTypeCid);
+      const recordCid = await registryClient.registerRecord(serviceData, serviceTypeCid);
 
-      const appRecord = await registryApi.getDataRecord(recordCid);
-      expect(appRecord?.data).to.deep.equal({
+      const appRecord = await registryClient.getRecord(recordCid);
+      expect(appRecord?.payload).to.deep.equal({
         '@type': serviceTypeCid,
         ...serviceData
       });
     });
 
     it('invalid records are ignored by list methods', async () => {
-      const cid = await registryApi.insertRawRecord(Buffer.from('100203', 'hex'));
+      const cid = await registryBackend.registerRecordBytes(Buffer.from('10200300040000', 'hex'));
 
-      const records = await registryApi.getRecords();
+      const records = await registryClient.listRecords();
       expect(records.every(record => !record.cid.equals(cid))).to.be.true;
 
-      const resources = await registryApi.queryResources();
+      const resources = await registryClient.listResources();
       expect(resources.every(resource => {
         const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '');
-        const versions = Object.values(resource.versions).map(version => version?.toString() ?? '');
-        return !tags.includes(cid.toString()) && !versions.includes(cid.toString());
+        return !tags.includes(cid.toString());
       })).to.be.true;
     });
 
     it('Records has date fields decoded properly', async () => {
-      for (const record of await registryApi.getRecords()) {
-        expect(record.meta.created?.toString()).to.not.equal('Invalid Date');
+      for (const record of await registryClient.listRecords()) {
+        expect(record.created?.toString()).to.not.equal('Invalid Date');
       }
     });
 
@@ -248,24 +226,24 @@ describe('Registry Client', () => {
       let botTypeCid: CID;
 
       beforeEach(async () => {
-        appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-        botTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.Bot');
+        appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
+        botTypeCid = await registryClient.registerTypeRecord('.dxos.type.Bot', protoSchema);
 
-        const appCid = await registryApi.insertDataRecord({
+        const appCid = await registryClient.registerRecord({
           appName: 'Tasks App',
           appVersion: 5,
           hasSso: false
         }, appTypeCid);
-        await registryApi.getDataRecord(appCid);
+        await registryClient.getRecord(appCid);
       });
 
       it('Queries records by type, when matching, returns matching items', async () => {
-        const records = await registryApi.getRecords({ type: appTypeCid });
+        const records = await registryClient.listRecords({ type: appTypeCid });
         expect(records.length).to.be.equal(1);
       });
 
       it('Queries records by type, when not matching, returns empty', async () => {
-        const resources = await registryApi.getRecords({ type: botTypeCid });
+        const resources = await registryClient.listRecords({ type: botTypeCid });
         expect(resources).to.be.empty;
       });
     });
@@ -273,33 +251,33 @@ describe('Registry Client', () => {
 
   describe('Register name', () => {
     it('Assigns a name to a type', async () => {
-      const domainKey = await registryApi.registerDomain(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
-      const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.App', protoSchema);
 
       await expect(
-        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), appTypeCid, account)
       ).to.be.fulfilled;
     });
 
     it('Does allow to overwrite already registered name', async () => {
-      const domainKey = await registryApi.registerDomain(account);
+      const domainKey = await registryClient.registerAuthority(account);
 
-      const appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
+      const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       await expect(
-        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), appTypeCid, account)
       ).to.be.fulfilled;
 
       await expect(
-        registryApi.updateResource(DXN.fromDomainKey(domainKey, randomName()), account, appTypeCid)
+        registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), appTypeCid, account)
       ).to.be.fulfilled;
     });
   });
 
   describe('Register domain', () => {
     it('Allows to register a free domain without a vanity name', async () => {
-      await expect(registryApi.registerDomain(account)).to.be.fulfilled;
+      await expect(registryClient.registerAuthority(account)).to.be.fulfilled;
     });
   });
 });

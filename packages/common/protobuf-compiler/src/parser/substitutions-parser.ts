@@ -17,19 +17,19 @@ export interface ImportDescriptor {
  */
 export type SubstitutionsMap = Partial<Record<string, string>>
 
-function getSubstitutionType (substitutionProperty: Symbol, typeChecker: TypeChecker) {
+const getSubstitutionType = (substitutionProperty: Symbol, typeChecker: TypeChecker) => {
   const substitutionType = typeChecker.getTypeOfSymbolAtLocation(substitutionProperty, substitutionProperty.getValueDeclarationOrThrow());
 
   const decode = substitutionType.getPropertyOrThrow('decode');
   const decodeType = typeChecker.getTypeOfSymbolAtLocation(decode, decode.getValueDeclarationOrThrow());
 
   return decodeType.getCallSignatures()[0].getReturnType();
-}
+};
 
 /**
  * Parse a protobuf-substitutions file and return a map of protobuf FQN => Typescript identifier.
  */
-export function parseSubstitutionsFile (fileName: string): SubstitutionsMap {
+export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
   const project = new Project({
     tsConfigFilePath: ts.findConfigFile(fileName, ts.sys.fileExists)
   });
@@ -49,4 +49,4 @@ export function parseSubstitutionsFile (fileName: string): SubstitutionsMap {
   }
 
   return substitutions;
-}
+};

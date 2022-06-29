@@ -7,9 +7,6 @@
     "src/**/*",
     "src/proto/*.json"
   ],
-  "types": [
-    "jest"
-  ],
   "references": [
     {
       "path": "../../common/async"
@@ -35,5 +32,8 @@
     {
       "path": "../../common/random-access-multi-storage"
     }
+  ],
+  "types": [
+    "jest"
   ]
 }

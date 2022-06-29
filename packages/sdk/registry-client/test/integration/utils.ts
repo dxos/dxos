@@ -11,14 +11,17 @@ import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import {
-  AccountClient,
   AuctionsClient,
   createApiPromise,
   createKeyring,
   ClientSigner,
   ClientSignerAdapter,
   RegistryClient,
-  SignTxFunction
+  SignTxFunction,
+  PolkadotRegistry,
+  AccountsClient,
+  PolkadotAccounts,
+  PolkadotAuctions
 } from '../../src';
 import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
@@ -44,16 +47,22 @@ export const setup = async () => {
   const signer = new ClientSigner(client, apiPromise.registry, alice.address);
   const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
 
-  const accountsApi = new AccountClient(apiPromise, signTx);
-  const auctionsApi = new AuctionsClient(apiPromise, signTx);
-  const registryApi = new RegistryClient(apiPromise, signTx);
+  const accountsBackend = new PolkadotAccounts(apiPromise, signTx);
+  const accountsClient = new AccountsClient(accountsBackend);
+  const auctionsBackend = new PolkadotAuctions(apiPromise, signTx);
+  const auctionsClient = new AuctionsClient(auctionsBackend);
+  const registryBackend = new PolkadotRegistry(apiPromise, signTx);
+  const registryClient = new RegistryClient(registryBackend);
 
   return {
     alice,
     bob,
     apiPromise,
-    accountsApi,
-    auctionsApi,
-    registryApi
+    accountsBackend,
+    accountsClient,
+    auctionsBackend,
+    auctionsClient,
+    registryBackend,
+    registryClient
   };
 };

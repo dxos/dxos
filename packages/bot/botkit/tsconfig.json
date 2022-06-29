@@ -3,14 +3,14 @@
   "compilerOptions": {
     "outDir": "dist"
   },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
   "include": [
     "src",
     "src/**/*.json",
     "stories"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules"
   ],
   "references": [
     {

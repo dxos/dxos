@@ -7,8 +7,8 @@ import React from 'react';
 
 import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
-import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider, useSelection } from '@dxos/react-client';
+import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoBoard } from '../src';
@@ -45,12 +45,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
+export const Primary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

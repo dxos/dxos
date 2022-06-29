@@ -7,9 +7,6 @@
     "src/**/*",
     "./package.json"
   ],
-  "types": [
-    "jest"
-  ],
   "references": [
     {
       "path": "../broadcast"
@@ -17,5 +14,8 @@
     {
       "path": "../../common/crypto"
     }
+  ],
+  "types": [
+    "jest"
   ]
 }

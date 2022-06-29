@@ -516,15 +516,13 @@ export class PartyState extends EventEmitter {
     publicKey = PublicKey.from(publicKey);
     const keyStr = publicKey.toHex();
 
-    const makeRecord = () => {
-      return {
-        type: KeyType.UNKNOWN,
-        trusted: true,
-        own: false,
-        ...attributes, // Let attributes clobber the defaults.
-        publicKey
-      };
-    };
+    const makeRecord = () => ({
+      type: KeyType.UNKNOWN,
+      trusted: true,
+      own: false,
+      ...attributes, // Let attributes clobber the defaults.
+      publicKey
+    });
 
     let keyRecord = this._keyring.getKey(publicKey);
     if (!keyRecord) {

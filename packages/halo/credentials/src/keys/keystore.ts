@@ -17,12 +17,8 @@ import { KeyRecord } from '../proto';
 const log = debug('dxos:halo:keys:keystore'); // eslint-disable-line unused-imports/no-unused-vars
 
 const marshaller = {
-  marshall (record: KeyRecord) {
-    return { ...record, publicKey: record.publicKey.asBuffer() };
-  },
-  unmarshall (raw: any): KeyRecord {
-    return { ...raw, publicKey: PublicKey.from(raw.publicKey) };
-  }
+  marshall: (record: KeyRecord) => ({ ...record, publicKey: record.publicKey.asBuffer() }),
+  unmarshall: (raw: any): KeyRecord => ({ ...raw, publicKey: PublicKey.from(raw.publicKey) })
 };
 
 /**

@@ -1,5 +1,116 @@
 # Change Log
 
+### [2.33.4](https://www.github.com/dxos/protocols/compare/v2.33.3...v2.33.4) (2022-06-24)
+
+
+### Features
+
+* Disallow self-admitting feeds ([#1279](https://www.github.com/dxos/protocols/issues/1279)) ([24cf72a](https://www.github.com/dxos/protocols/commit/24cf72aec297081cfddd5a70ad94e537c39b1635))
+* **react-client-testing:** Moved dnd-components ([#1282](https://www.github.com/dxos/protocols/issues/1282)) ([021ead8](https://www.github.com/dxos/protocols/commit/021ead8967367cf30baa1f6e94fcb272ece2093d))
+
+
+### Bug Fixes
+
+* Make RamStorage persistent and storage subdirectories working ([#1276](https://www.github.com/dxos/protocols/issues/1276)) ([e8fe40a](https://www.github.com/dxos/protocols/commit/e8fe40a83ebd72376b8ed7f4274070d41fd5fa1d))
+
+### [2.33.3](https://www.github.com/dxos/protocols/compare/v2.33.2...v2.33.3) (2022-06-22)
+
+
+### Features
+
+* Multi process stress tests ([#1231](https://www.github.com/dxos/protocols/issues/1231)) ([138ca60](https://www.github.com/dxos/protocols/commit/138ca606f556416863ca02094cc1bf31ddba224a))
+
+
+### Bug Fixes
+
+* **schema:** Fix in schema validation && Add new testing fields. ([#1272](https://www.github.com/dxos/protocols/issues/1272)) ([18553f0](https://www.github.com/dxos/protocols/commit/18553f061467801d0cd6a62b75a5ac357119486e))
+
+### [2.33.2](https://www.github.com/dxos/protocols/compare/v2.33.1...v2.33.2) (2022-06-21)
+
+
+### Bug Fixes
+
+* **registry-client:** Allow DXN tag to be unset ([#1263](https://www.github.com/dxos/protocols/issues/1263)) ([18eaace](https://www.github.com/dxos/protocols/commit/18eaaced762f9341c3cd1536dce013f7343a903e))
+* **registry-client:** Don't replace dots when en/decoding DXN tags ([#1264](https://www.github.com/dxos/protocols/issues/1264)) ([c42403b](https://www.github.com/dxos/protocols/commit/c42403ba21cc6952f884d2e1f739cde9fc5e0b79))
+* **registry-client:** Polkadot registry list authorities misshape ([#1262](https://www.github.com/dxos/protocols/issues/1262)) ([8ff5a3c](https://www.github.com/dxos/protocols/commit/8ff5a3c5ebad18a94a1a4c90cbc12154a813f103))
+
+### [2.33.1](https://www.github.com/dxos/protocols/compare/v2.33.0...v2.33.1) (2022-06-21)
+
+
+### Features
+
+* Admit feeds to party from Authenticator ([#1243](https://www.github.com/dxos/protocols/issues/1243)) ([0a5ae2e](https://www.github.com/dxos/protocols/commit/0a5ae2e2fb3d195ac4bbf1714c030b9ba76661cb))
+* dnd-kit poc ([#1215](https://www.github.com/dxos/protocols/issues/1215)) ([5f79881](https://www.github.com/dxos/protocols/commit/5f79881c368e9539f10b8e51e318db49201e102c))
+* Track control feeds in FeedSetProvider ([#1239](https://www.github.com/dxos/protocols/issues/1239)) ([83d113f](https://www.github.com/dxos/protocols/commit/83d113fe8045f4aa5787fb1295fb5b7d796da630))
+* Use key types in echo metadata ([#1246](https://www.github.com/dxos/protocols/issues/1246)) ([5378ccd](https://www.github.com/dxos/protocols/commit/5378ccd56a5e2d5a4a0da41d5002a3b0b1f3a5e8))
+
+
+### Bug Fixes
+
+* Race condition in queryMembers ([#1260](https://www.github.com/dxos/protocols/issues/1260)) ([e48632f](https://www.github.com/dxos/protocols/commit/e48632f84a97875a81ce41130e6928c213c3b448))
+* **registry-client:** List resources ([#1257](https://www.github.com/dxos/protocols/issues/1257)) ([5df1655](https://www.github.com/dxos/protocols/commit/5df1655e9385f57ef59d59ff7121e2d911229173))
+
+## [2.33.0](https://www.github.com/dxos/protocols/compare/v2.32.0...v2.33.0) (2022-06-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **registry-client:** Fix integration tests (#1230)
+
+### Features
+
+* Add method to query current processed timeframe of a party ([#1227](https://www.github.com/dxos/protocols/issues/1227)) ([641c5b5](https://www.github.com/dxos/protocols/commit/641c5b554ed85be0fcf378fe388591f5a9e6714a))
+* Bot reporting in BotFactory ([#1228](https://www.github.com/dxos/protocols/issues/1228)) ([7b087c8](https://www.github.com/dxos/protocols/commit/7b087c810ba9fb0f5596a412c08bc7f0aef49363))
+* initial Gravity orchestrator, simple tests ([#1225](https://www.github.com/dxos/protocols/issues/1225)) ([e93af3d](https://www.github.com/dxos/protocols/commit/e93af3d9175cc00c2d64f3f4058908de4e460226))
+* Pass bot IDs upon their initialization ([#1222](https://www.github.com/dxos/protocols/issues/1222)) ([c4d0622](https://www.github.com/dxos/protocols/commit/c4d0622258c0bcc6d3251bf36228c92e514d652d))
+* Support large integers in object-model ([#1218](https://www.github.com/dxos/protocols/issues/1218)) ([4fd0ca1](https://www.github.com/dxos/protocols/commit/4fd0ca1bf3330370d52236269812590c5a5bfe20))
+
+
+### Bug Fixes
+
+* **bot-factory-client:** Re-add getBot method ([#1234](https://www.github.com/dxos/protocols/issues/1234)) ([ebff6d2](https://www.github.com/dxos/protocols/commit/ebff6d2e8d32519f950a0eb59510c301b0c251e4))
+* Unexpectedly undefined item properties in kitchen sink demo ([#1224](https://www.github.com/dxos/protocols/issues/1224)) ([0d16db2](https://www.github.com/dxos/protocols/commit/0d16db2cf691162e85ed450be16d36b06487129d))
+* Upgrade pnpm to latest ([#1216](https://www.github.com/dxos/protocols/issues/1216)) ([feb0178](https://www.github.com/dxos/protocols/commit/feb0178ad3e345fe8b07e2e1c02602308c18a246))
+
+
+### Tests
+
+* **registry-client:** Fix integration tests ([#1230](https://www.github.com/dxos/protocols/issues/1230)) ([37f94a8](https://www.github.com/dxos/protocols/commit/37f94a88df014cd5bc4986e6889bd42c799b4ab0))
+
+## [2.32.0](https://www.github.com/dxos/protocols/compare/v2.31.7...v2.32.0) (2022-05-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client:** Move devtools hook into client (#1209)
+* Store data feed key as a separate field in metadata (#1211)
+* Resolve deadlocks in RPC package (#1210)
+* Rename react-framework to react-toolkit (#1188)
+
+### Features
+
+* **devtools:** Deleted items message && items details scrolling ([#1198](https://www.github.com/dxos/protocols/issues/1198)) ([415661f](https://www.github.com/dxos/protocols/commit/415661f870b11e978f689c687d4e5c1b2979346a))
+* **devtools:** Render panel before client is ready with a loader ([#1208](https://www.github.com/dxos/protocols/issues/1208)) ([a069510](https://www.github.com/dxos/protocols/commit/a069510460ee803bb3e48e7aed88eedef72d8640))
+* Dnd containers && DroppableList simplification ([#1207](https://www.github.com/dxos/protocols/issues/1207)) ([5d21ba6](https://www.github.com/dxos/protocols/commit/5d21ba6c7d86012b17aaf64c34f44fc1e1a5be2c))
+* DND List storybook ([#1194](https://www.github.com/dxos/protocols/issues/1194)) ([9afc174](https://www.github.com/dxos/protocols/commit/9afc174f8efaf72513e5b51145dfcc7bc70843fa))
+* DND stories - column reordering ([#1202](https://www.github.com/dxos/protocols/issues/1202)) ([03ec3f9](https://www.github.com/dxos/protocols/commit/03ec3f968f577ed04e315c3955d30bd6904ba933))
+* Drag and drop storybooks ([#1191](https://www.github.com/dxos/protocols/issues/1191)) ([c4a0ada](https://www.github.com/dxos/protocols/commit/c4a0adad843ffa4a50c79328e723ff91d63e1548))
+* ordered list for object model. ([#1185](https://www.github.com/dxos/protocols/issues/1185)) ([37cee8c](https://www.github.com/dxos/protocols/commit/37cee8c4a15c1f2abe617bb3ca08263617452ab7))
+* Simple DND List with no schema ([#1197](https://www.github.com/dxos/protocols/issues/1197)) ([f21022f](https://www.github.com/dxos/protocols/commit/f21022f79bb626298311d966dd00ae8a8cd5ad0c))
+* Store data feed key as a separate field in metadata ([#1211](https://www.github.com/dxos/protocols/issues/1211)) ([91798e6](https://www.github.com/dxos/protocols/commit/91798e6734cfbbd22936e9aca9eaecc438d9ab81))
+
+
+### Bug Fixes
+
+* demo lexical editor with text model. ([#1174](https://www.github.com/dxos/protocols/issues/1174)) ([dcd68d5](https://www.github.com/dxos/protocols/commit/dcd68d504db0b14c4836ec4d157534d3d4e273c4))
+* Rename react-framework to react-toolkit ([#1188](https://www.github.com/dxos/protocols/issues/1188)) ([60de85b](https://www.github.com/dxos/protocols/commit/60de85b7d2d89a9d39fb94d49bbee0630e9c553f))
+* Resolve deadlocks in RPC package ([#1210](https://www.github.com/dxos/protocols/issues/1210)) ([dd541a9](https://www.github.com/dxos/protocols/commit/dd541a91aefcf2c0a5f7acdbc5d2a3bfbac18e46))
+
+
+### Code Refactoring
+
+* **client:** Move devtools hook into client ([#1209](https://www.github.com/dxos/protocols/issues/1209)) ([3bea633](https://www.github.com/dxos/protocols/commit/3bea6337ae78ca093e4e856ee5fb30d2d1ef4427))
+
 ### [2.31.7](https://www.github.com/dxos/protocols/compare/v2.31.6...v2.31.7) (2022-05-05)
 
 

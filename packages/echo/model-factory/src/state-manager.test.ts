@@ -26,10 +26,10 @@ describe('StateManager', () => {
     expect(stateManager.modelMeta).toEqual(TestListModel.meta);
     expect(stateManager.model.messages).toEqual([]);
 
-    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message1' }));
+    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
 
-    stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutation.encode({ data: 'message2' }));
+    stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutationCodec.encode({ data: 'message2' }));
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
   });
 
@@ -37,10 +37,10 @@ describe('StateManager', () => {
     test('with model snapshots - TestListModel', () => {
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
-      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message1' }));
+      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
       const snapshot = stateManager.createSnapshot();
 
-      stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutation.encode({ data: 'message2' }));
+      stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutationCodec.encode({ data: 'message2' }));
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
 
       stateManager.resetToSnapshot(snapshot);
@@ -50,10 +50,10 @@ describe('StateManager', () => {
     test('with framework snapshots - TestListModel', () => {
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
-      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message1' }));
+      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
       const snapshot = stateManager.createSnapshot();
 
-      stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutation.encode({ data: 'message2' }));
+      stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutationCodec.encode({ data: 'message2' }));
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
 
       stateManager.resetToSnapshot(snapshot);
@@ -65,8 +65,8 @@ describe('StateManager', () => {
     const feedWriter = new MockFeedWriter<Uint8Array>();
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
     feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-      feedKey: meta.feedKey.asUint8Array(),
-      memberKey: PublicKey.random().asUint8Array(),
+      feedKey: meta.feedKey,
+      memberKey: PublicKey.random(),
       seq: meta.seq,
       timeframe: new Timeframe()
     }, message));
@@ -81,13 +81,13 @@ describe('StateManager', () => {
     expect(stateManager.initialized).toBe(false);
     expect(stateManager.modelType).toEqual(TestListModel.meta.type);
 
-    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message1' }));
+    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
     stateManager.initialize(TestListModel);
     expect(stateManager.initialized).toBe(true);
     expect(stateManager.model).toBeInstanceOf(TestListModel);
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
 
-    stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutation.encode({ data: 'message2' }));
+    stateManager.processMessage(createMeta(feedA, 1), TestListModel.meta.mutationCodec.encode({ data: 'message2' }));
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
   });
 
@@ -95,7 +95,7 @@ describe('StateManager', () => {
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
     const gotUpdate = stateManager.model.update.waitForCount(1);
-    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message1' }));
+    stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
 
     await promiseTimeout(gotUpdate, 100, new Error('timeout'));
   });
@@ -105,8 +105,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -122,8 +122,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -143,8 +143,8 @@ describe('StateManager', () => {
       const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey.asUint8Array(),
-        memberKey: PublicKey.random().asUint8Array(),
+        feedKey: meta.feedKey,
+        memberKey: PublicKey.random(),
         seq: meta.seq,
         timeframe: new Timeframe()
       }, message));
@@ -153,7 +153,7 @@ describe('StateManager', () => {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
 
       // Send a message that will be ordered first.
-      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutation.encode({ data: 'message2' }));
+      stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message2' }));
       expect(stateManager.model.messages).toEqual([{ data: 'message2' }, { data: 'message1' }]);
 
       await promise;
@@ -163,8 +163,8 @@ describe('StateManager', () => {
 });
 
 const createMeta = (feedKey: PublicKey, seq: number): MutationMetaWithTimeframe => ({
-  feedKey: feedKey.asUint8Array(),
-  memberKey: feedKey.asUint8Array(),
+  feedKey,
+  memberKey: feedKey,
   seq,
   timeframe: new Timeframe()
 });

@@ -1,34 +1,34 @@
 {
   "compilerOptions": {
-    "types": [
-      "node",
-      "mocha"
-    ],
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "composite": true,
-    "incremental": true,
     "declarationMap": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "ES2018",
     "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
     "lib": [
       "DOM",
       "ESNext",
       "ES6"
     ],
-    "outDir": "dist",
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "isolatedModules": true,
+    "moduleResolution": "node",
     "noEmit": true,
-    "jsx": "react-jsx"
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2018",
+    "types": [
+      "node",
+      "mocha"
+    ]
   },
   "include": [
     "playwright",
@@ -58,7 +58,7 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     }
   ]
 }

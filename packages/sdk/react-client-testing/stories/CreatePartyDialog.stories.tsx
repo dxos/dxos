@@ -12,9 +12,8 @@ export default {
   title: 'react-client-testing/CreatePartyDialog'
 };
 
-export const Primary = () => {
-  return (
-    <FullScreen>
+export const Primary = () => (
+<FullScreen>
       <CreatePartyDialog
         open
         onCreate={() => console.log('Create party')}
@@ -22,5 +21,4 @@ export const Primary = () => {
         onImport={() => console.log('Import Party')}
       />
     </FullScreen>
-  );
-};
+);

@@ -10,7 +10,6 @@ import { failUndefined } from '@dxos/debug';
 import { DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, LinkSnapshot } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
-import { jsonReplacer } from '@dxos/util';
 
 import { Entity, Item, Link } from '../api';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
@@ -46,7 +45,6 @@ export class ItemDemuxer {
     // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
-      log('Reading:', JSON.stringify(message, jsonReplacer));
       const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
       assert(itemId);
 
@@ -187,7 +185,7 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
+export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();
 
@@ -206,4 +204,4 @@ export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
   }
 
   return snapshots;
-}
+};

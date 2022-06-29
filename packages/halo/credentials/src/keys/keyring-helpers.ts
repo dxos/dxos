@@ -19,7 +19,7 @@ import { SecretKey } from './keytype';
  * Checks for a valid publicKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
-export function isValidPublicKey (key: PublicKeyLike, keyType?: KeyType): key is PublicKeyLike {
+export const isValidPublicKey = (key: PublicKeyLike, keyType?: KeyType): key is PublicKeyLike => {
   try {
     PublicKey.from(key);
     if (keyType && [KeyType.PARTY, KeyType.IDENTITY, KeyType.FEED, KeyType.DEVICE].includes(keyType)) {
@@ -29,12 +29,13 @@ export function isValidPublicKey (key: PublicKeyLike, keyType?: KeyType): key is
   } catch (e: any) {
   }
   return false;
-}
+};
 
 /**
  * Checks for a valid publicKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function assertValidPublicKey (key: PublicKeyLike, keyType?: KeyType): asserts key is PublicKeyLike {
   assert(key);
   assert(isValidPublicKey(key, keyType));
@@ -44,6 +45,7 @@ export function assertValidPublicKey (key: PublicKeyLike, keyType?: KeyType): as
  * Checks for a valid secretKey Buffer.
  */
 // TODO(burdon): Move to dxos/crypto.
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function assertValidSecretKey (key?: SecretKey, keyType?: KeyType): asserts key is SecretKey {
   assert(key);
   if (keyType && [KeyType.PARTY, KeyType.IDENTITY, KeyType.FEED, KeyType.DEVICE].includes(keyType)) {
@@ -55,6 +57,7 @@ export function assertValidSecretKey (key?: SecretKey, keyType?: KeyType): asser
  * Checks for a valid publicKey/secretKey KeyPair.
  */
 // TODO(burdon): Move to dxos/crypto.
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function assertValidKeyPair (keyRecord: any): asserts keyRecord is KeyPair {
   const { publicKey, secretKey, type } = keyRecord;
   assertValidPublicKey(publicKey, type);
@@ -128,39 +131,36 @@ export const createKeyRecord = (attributes: Partial<KeyRecord> = {},
  * Utility method to produce stable output for signing/verifying.
  */
 // TODO(burdon): Factor out.
-export const canonicalStringify = (obj: any) => {
-  return stableStringify(obj, {
-    /* The point of signing and verifying is not that the internal, private state of the objects be
+export const canonicalStringify = (obj: any) => stableStringify(obj, {
+  /* The point of signing and verifying is not that the internal, private state of the objects be
      * identical, but that the public contents can be verified not to have been altered. For that reason,
-     * really private fields (indicated by '__') are not included in the signature. In practice, this skips __type_url,
-     * and it also gives a mechanism for attaching other attributes to an object without breaking the signature.
+     * really private fields (indicated by '__') are not included in the signature.
+     * This gives a mechanism for attaching other attributes to an object without breaking the signature.
+     * We also skip @type.
      */
-    replacer: (key: any, value: any) => {
-      if (key.toString().startsWith('__')) {
-        return undefined;
-      }
-      if (value) {
-        if (PublicKey.isPublicKey(value)) {
-          return value.toHex();
-        }
-        if (Buffer.isBuffer(value)) {
-          return value.toString('hex');
-        }
-        if (value instanceof Uint8Array || (value.data && value.type === 'Buffer')) {
-          return Buffer.from(value).toString('hex');
-        }
-      }
-      return value;
+  replacer: (key: any, value: any) => {
+    if (key.toString().startsWith('__') || key.toString() === '@type') {
+      return undefined;
     }
-  });
-};
+    if (value) {
+      if (PublicKey.isPublicKey(value)) {
+        return value.toHex();
+      }
+      if (Buffer.isBuffer(value)) {
+        return value.toString('hex');
+      }
+      if (value instanceof Uint8Array || (value.data && value.type === 'Buffer')) {
+        return Buffer.from(value).toString('hex');
+      }
+    }
+    return value;
+  }
+});
 
 /**
  * Is object `key` a KeyChain?
  */
-export const isKeyChain = (key: any = {}): key is KeyChain => {
-  return isValidPublicKey(key.publicKey) && key.message && key.message.signed && Array.isArray(key.message.signatures);
-};
+export const isKeyChain = (key: any = {}): key is KeyChain => isValidPublicKey(key.publicKey) && key.message && key.message.signed && Array.isArray(key.message.signatures);
 
 /**
  * Checks conformity and normalizes the KeyRecord. (Used before storing, so that only well-formed records are stored.)

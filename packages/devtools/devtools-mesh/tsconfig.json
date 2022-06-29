@@ -1,10 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM"
-    ]
+    ],
+    "outDir": "dist"
   },
   "include": [
     "src",
@@ -27,7 +27,7 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     }
   ]
 }

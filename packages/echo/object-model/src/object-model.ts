@@ -8,8 +8,9 @@ import get from 'lodash.get';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 
-import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
+import { MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
+import { validateKey } from './util';
 
 export type ObjectModelState = Record<string, any>
 
@@ -52,12 +53,7 @@ export class MutationBuilder {
   ) {}
 
   set (key: string, value: any) {
-    this._mutations.push({
-      operation: ObjectMutation.Operation.SET,
-      key,
-      value: ValueUtil.createMessage(value)
-    });
-
+    this._mutations.push(MutationUtil.createFieldMutation(key, value));
     return this;
   }
 
@@ -70,8 +66,8 @@ export class MutationBuilder {
  * Defines generic object accessor.
  */
 export interface ObjectProperties {
-  get (key: string, defaultValue?: any): any
-  set (key: string, value: any): Promise<void>
+  get (key: string, defaultValue?: unknown): any
+  set (key: string, value: unknown): Promise<void>
 }
 
 /**
@@ -81,13 +77,13 @@ export interface ObjectProperties {
 export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
-    mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
     stateMachine: () => new ObjectModelStateMachine(),
+    mutationCodec: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
       return {
-        mutations: createMultiFieldMutationSet(obj)
+        mutations: MutationUtil.createMultiFieldMutation(obj)
       };
     },
 
@@ -105,34 +101,16 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     return new MutationBuilder(this);
   }
 
-  get (key: string, defaultValue: any = undefined) {
-    return this.getProperty(key, defaultValue);
-  }
-
-  async set (key: string, value: any) {
-    await this.setProperty(key, value);
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  getProperty (key: string, defaultValue: any = undefined): any {
+  get (key: string, defaultValue?: unknown) {
+    validateKey(key);
     return cloneDeep(get(this._getState(), key, defaultValue));
   }
 
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  async setProperty (key: string, value: any) {
+  async set (key: string, value: unknown) {
+    validateKey(key);
     await this._makeMutation({
       mutations: [
-        {
-          operation: ObjectMutation.Operation.SET,
-          key,
-          value: ValueUtil.createMessage(value)
-        }
+        MutationUtil.createFieldMutation(key, value)
       ]
     });
   }
@@ -141,9 +119,25 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * @deprecated
    */
   // TODO(burdon): Remove.
+  getProperty (key: string, defaultValue: any = undefined): any {
+    return this.get(key, defaultValue);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
+  async setProperty (key: string, value: any) {
+    await this.set(key, value);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   async setProperties (properties: any) {
     await this._makeMutation({
-      mutations: createMultiFieldMutationSet(properties)
+      mutations: MutationUtil.createMultiFieldMutation(properties)
     });
   }
 

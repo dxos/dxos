@@ -1,18 +1,17 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ES6"
-    ],
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "jsx": "react",
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
     "rootDir": "src"
   },
   "include": [
-    "scripts",
     "src",
     "stories"
   ],
@@ -45,7 +44,7 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../../common/rpc"

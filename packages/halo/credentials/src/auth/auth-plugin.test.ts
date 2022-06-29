@@ -16,10 +16,10 @@ import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto
 import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';
-import { codec, codecLoop, KeyType } from '../proto';
+import { codec, codecLoop, KeyType, SignedMessage } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';
@@ -42,17 +42,15 @@ const createTestKeyring = async () => {
 /**
  * A test Authenticator that checks for the signature of a pre-determined key.
  */
-class ExpectedKeyAuthenticator extends Authenticator {
+class ExpectedKeyAuthenticator implements Authenticator {
   constructor (
     private _keyring: Keyring,
     private _expectedKey: PublicKey
-  ) {
-    super();
-  }
+  ) {}
 
-  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type.
+  async authenticate (credentials: SignedMessage) {
     if (this._keyring.verify(credentials)) {
-      if (this._expectedKey.equals(credentials.signatures[0].key)) {
+      if (this._expectedKey.equals(credentials.signatures![0].key)) {
         return true;
       }
     }
@@ -72,7 +70,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   const append = pify(feed.append.bind(feed));
@@ -91,15 +89,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
   // Share and replicate all known feeds.
   const repl = new Replicator({
-    load: async () => {
-      return [feed];
-    },
+    load: async () => [feed],
 
-    subscribe: (add: (feed: any) => void) => {
-      return feedStore.feedOpenedEvent.on((descriptor) => {
-        add(descriptor.feed);
-      });
-    },
+    subscribe: (add: (feed: any) => void) => feedStore.feedOpenedEvent.on((descriptor) => {
+      add(descriptor.feed);
+    }),
 
     replicate: async (feeds) => {
       const replicatedFeeds: HypercoreFeed[] = [];
@@ -130,13 +124,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 /**
  * Pipe two Protocol objects together.
  */
-const connect = (source: any, target: any) => {
-  return pump(source.stream, target.stream, source.stream) as any;
-};
+const connect = (source: any, target: any) => pump(source.stream, target.stream, source.stream) as any;
 
 type Node = { feed: HypercoreFeed, feedStore: FeedStore }
 
-async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
+const getMessages = async (sender: Node, receiver: Node): Promise<any[]> => {
   const { feed } = await receiver.feedStore.openReadOnlyFeed(PublicKey.from(sender.feed.key));
   assert(feed, 'Nodes not connected');
   const messages: any[] = [];
@@ -153,7 +145,7 @@ async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
       }
     });
   });
-}
+};
 
 it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();

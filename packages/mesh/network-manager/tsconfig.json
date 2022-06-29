@@ -7,9 +7,6 @@
     "src",
     "tests-setup.js"
   ],
-  "types": [
-    "mocha"
-  ],
   "references": [
     {
       "path": "../../common/async"
@@ -41,5 +38,8 @@
     {
       "path": "../../common/testutils"
     }
+  ],
+  "types": [
+    "mocha"
   ]
 }

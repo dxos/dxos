@@ -3,10 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": [
-    "node",
-    "@types/mocha"
-  ],
   "include": [
     "src",
     "test",
@@ -34,5 +30,9 @@
     {
       "path": "../../mesh/signal"
     }
+  ],
+  "types": [
+    "node",
+    "@types/mocha"
   ]
 }

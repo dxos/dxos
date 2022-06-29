@@ -7,19 +7,19 @@
       "DOM",
       "ESNext"
     ],
-    "types": [
-      "node",
-      "mocha"
-    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
+    "removeComments": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
+    "strict": true,
     "target": "ES2018",
-    "removeComments": false,
-    "strict": true
+    "types": [
+      "node",
+      "mocha"
+    ]
   },
   "include": [
     "src",
@@ -29,6 +29,9 @@
   "references": [
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
     },
     {
       "path": "../../sdk/config"
@@ -58,10 +61,13 @@
       "path": "../../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../../sdk/react-echo-graph"
     },
     {
-      "path": "../../sdk/react-gem-components"
+      "path": "../../sdk/react-ipfs"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../../common/util"

@@ -5,8 +5,8 @@
 import faker from 'faker';
 import React from 'react';
 
-import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
-import { itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { ClientProvider, useSelection } from '@dxos/react-client';
+import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoList } from '../src';
@@ -33,12 +33,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
+export const Primary = () => (
+<ClientProvider>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);

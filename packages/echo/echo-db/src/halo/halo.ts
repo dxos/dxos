@@ -8,12 +8,15 @@ import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
-import { MetadataStore } from '../metadata';
-import { PartyFactory, OpenProgress, PartyManager } from '../parties';
+import { OpenProgress } from '../parties';
+import { MetadataStore, PartyOptions, PartyFeedProvider } from '../pipeline';
+import { SnapshotStore } from '../snapshots';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
@@ -28,10 +31,12 @@ export interface ProfileInfo {
 
 export interface HaloConfiguration {
   keyring: Keyring,
-  partyFactory: PartyFactory,
   networkManager: NetworkManager,
-  partyManager: PartyManager,
-  metadataStore: MetadataStore
+  metadataStore: MetadataStore,
+  modelFactory: ModelFactory,
+  snapshotStore: SnapshotStore,
+  feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
+  options: PartyOptions
 }
 
 /**
@@ -39,23 +44,28 @@ export interface HaloConfiguration {
  */
 export class HALO {
   private readonly _keyring: Keyring;
-  private readonly _partyManager: PartyManager;
   private readonly _identityManager: IdentityManager;
+
+  private _isOpen = false;
 
   constructor ({
     keyring,
-    partyManager,
-    partyFactory,
     networkManager,
-    metadataStore
+    metadataStore,
+    modelFactory,
+    snapshotStore,
+    feedProviderFactory,
+    options
   }: HaloConfiguration) {
     this._keyring = keyring;
-    this._partyManager = partyManager;
 
     const haloFactory = new HaloFactory(
-      partyFactory,
       networkManager,
-      this._keyring
+      modelFactory,
+      snapshotStore,
+      feedProviderFactory,
+      keyring,
+      options
     );
 
     this._identityManager = new IdentityManager(this._keyring, haloFactory, metadataStore);
@@ -77,7 +87,7 @@ export class HALO {
    * Whether the current identity manager has been initialized.
    */
   get isInitialized (): boolean {
-    return this._identityManager.initialized;
+    return this._isOpen;
   }
 
   /**
@@ -98,7 +108,7 @@ export class HALO {
    * User's IDENTITY keypair.
    */
   get identityKey (): KeyRecord | undefined {
-    return this.identity.identityKey;
+    return this.identity?.identityKey;
   }
 
   /**
@@ -106,7 +116,7 @@ export class HALO {
    */
   // TODO(burdon): Rename username (here and in data structure).
   get identityDisplayName (): string | undefined {
-    return this.identity.displayName;
+    return this.identity?.displayName;
   }
 
   /**
@@ -121,6 +131,7 @@ export class HALO {
    *
    * Loads the saved identity from disk. Is called by client.
    */
+  @synchronized
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
@@ -129,14 +140,17 @@ export class HALO {
     await this._identityManager.loadFromStorage();
 
     onProgressCallback?.({ haloOpened: true });
+
+    this._isOpen = true;
   }
 
   /**
    * Closes HALO. Automatically called when client is destroyed.
    */
+  @synchronized
   async close () {
-    // TODO(marik-d): Should be `_identityManager.close()`.
-    await this.identity.halo?.close();
+    this._isOpen = false;
+    await this._identityManager.close();
   }
 
   /**
@@ -155,13 +169,12 @@ export class HALO {
    *
    * NOTE: This method does not initialize the HALO party.
    */
-  // TODO(burdon): Why is this separate from createHalo?
-  async createIdentity (keyPair: KeyPair) {
+  private async _createIdentityKeypair (keyPair: KeyPair) {
     const { publicKey, secretKey } = keyPair;
     assert(publicKey, 'Invalid publicKey');
     assert(secretKey, 'Invalid secretKey');
 
-    if (this.identity.identityKey) {
+    if (this.identity?.identityKey) {
       // TODO(burdon): Bad API: Semantics change based on options.
       // TODO(burdon): `createProfile` isn't part of this package.
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
@@ -173,28 +186,25 @@ export class HALO {
   /**
    * Creates the initial HALO party.
    */
-  // TODO(burdon): Return Halo API object?
-  async create (displayName?: string) {
+  private async _createHaloParty (displayName?: string) {
     // TODO(burdon): Why not assert?
-    if (this.identity.halo) {
-      throw new Error('HALO party already exists');
-    }
-    if (!this.identity.identityKey) {
-      throw new Error('Cannot create HALO. Identity key not found.');
+    if (this.identity) {
+      throw new Error('Identity already initialized');
     }
 
+    const identityKey = this._identityManager.getIdentityKey() ?? raise(new Error('Cannot create HALO. Identity key not found.'));
     await this._identityManager.createHalo({
-      identityDisplayName: displayName || this.identity.identityKey.publicKey.humanize()
+      identityDisplayName: displayName || identityKey.publicKey.humanize()
     });
   }
 
   /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
+  // TODO(dmaretskyi): Do not return HALO party here.
   async recover (seedPhrase: string) {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
-    assert(!this.identity.halo, 'HALO already exists.');
-    assert(!this.identity.identityKey, 'Identity key already exists.');
+    assert(!this.identity?.halo, 'HALO already exists.');
+    assert(!this.identity?.identityKey, 'Identity key already exists.');
 
     return this._identityManager.recoverHalo(seedPhrase);
   }
@@ -202,9 +212,9 @@ export class HALO {
   /**
    * Joins an existing identity HALO by invitation.
    */
+  // TODO(dmaretskyi): Do not return HALO party here.
   async join (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(this._partyManager.isOpen, 'ECHO not open.');
-    assert(!this.identity.halo, 'HALO already exists.');
+    assert(!this.identity?.halo, 'HALO already exists.');
 
     return this._identityManager.joinHalo(invitationDescriptor, secretProvider);
   }
@@ -213,9 +223,8 @@ export class HALO {
    * Create an invitation to an exiting identity HALO.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
-    assert(this.identity.halo, 'HALO not initialized.');
-
-    return this.identity.halo.invitationManager.createInvitation(authenticationDetails, options);
+    assert(this.identity?.halo, 'HALO not initialized.');
+    return this.identity.halo.createInvitation(authenticationDetails, options);
   }
 
   /**
@@ -223,7 +232,7 @@ export class HALO {
    */
   // TODO(burdon): Expose ContactManager directly.
   queryContacts (): ResultSet<Contact> {
-    assert(this.identity.contacts, 'HALO not initialized.');
+    assert(this.identity?.contacts, 'HALO not initialized.');
 
     return this.identity.contacts.queryContacts();
   }
@@ -245,8 +254,8 @@ export class HALO {
     }
 
     const keyPair = publicKey ? { publicKey: Buffer.from(publicKey), secretKey: Buffer.from(secretKey!) } : createKeyPair();
-    await this.createIdentity(keyPair);
-    await this.create(username);
+    await this._createIdentityKeypair(keyPair);
+    await this._createHaloParty(username);
 
     const profile = this.getProfile();
     assert(profile);

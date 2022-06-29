@@ -9,13 +9,10 @@ import { unwrapEnvelopes, extractContents, unwrapMessage, wrapMessage } from '..
 import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage, WithTypeUrl } from '../proto';
 
 /**
- * Return the __type_url, if present.
+ * Return the @type, if present.
  * @param message
  */
-function getTypeUrl (message: any) {
-  // eslint-disable-next-line camelcase
-  return message?.__type_url;
-}
+const getTypeUrl = (message: any) => message?.['@type'];
 
 /**
  * Creates a DeviceInfo SignedMessage.
@@ -26,7 +23,7 @@ export const createDeviceInfoMessage = (keyring: Keyring, displayName: string, d
   assert(deviceKey);
 
   const message: WithTypeUrl<DeviceInfo> = {
-    __type_url: 'dxos.credentials.identity.DeviceInfo',
+    '@type': 'dxos.credentials.identity.DeviceInfo',
     publicKey: deviceKey.publicKey,
     displayName
   };
@@ -43,7 +40,7 @@ export const createIdentityInfoMessage = (keyring: Keyring, displayName: string,
   assert(identityKey);
 
   const message: WithTypeUrl<IdentityInfo> = {
-    __type_url: 'dxos.credentials.identity.IdentityInfo',
+    '@type': 'dxos.credentials.identity.IdentityInfo',
     publicKey: identityKey.publicKey,
     displayName
   };

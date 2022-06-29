@@ -5,23 +5,66 @@
 import assert from 'assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/crypto';
 import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
 
 import { Model } from './model';
-import { StateMachine } from './state-machine';
 
-// TODO(burdon): Replace with DXN.
+// TODO(burdon): Replace with DXN (push to core protocol def).
 export type ModelType = string
 
-// TODO(burdon): Refactor.
+// TODO(burdon): Document.
+export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any
+
+// TODO(burdon): Document.
+export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any
+
+/**
+ *
+ */
+export type ModelMessage<T> = {
+  meta: MutationMetaWithTimeframe
+  mutation: T
+}
+
+export interface MutationWriteReceipt extends WriteReceipt {
+  waitToBeProcessed(): Promise<void>
+}
+
+export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>
+
+/**
+ *
+ */
+// TODO(burdon): Rename and document.
+export interface MutationProcessMeta {
+  author: PublicKey
+}
+
+/**
+ * Manages state and state transitions vis mutations.
+ */
+export interface StateMachine<TState, TMutation, TSnapshot> {
+  getState(): TState
+  reset(snapshot: TSnapshot): void
+  process(mutation: TMutation, meta: MutationProcessMeta): void
+  snapshot(): TSnapshot
+}
+
+/**
+ * Model configuration.
+ */
+// TODO(burdon): Rethink this concept. Remove static field from model.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
   // TODO(marik-d): Specify generic type param here to match model's expected message type.
-  mutation: Codec<TMutation>
+  mutationCodec: Codec<TMutation>
 
+  // Snapshot codecs are distinct from the mutation codecs.
   snapshotCodec?: Codec<TSnasphot>
 
+  // Manages state and state transitions vis mutations.
   stateMachine: () => StateMachine<TState, TMutation, TSnasphot>
 
   /**
@@ -36,21 +79,27 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   getInitMutation? (props: any): Promise<any | null>
 }
 
-export type ModelConstructor<M extends Model> = (new (
-  meta: ModelMeta,
-  itemId: ItemID,
-  getState: () => StateOf<M>,
-  MutationWriter?: MutationWriter<MutationOf<M>>,
-) => M) &
-  { meta: ModelMeta };
+/**
+ *
+ */
+export type ModelConstructor<M extends Model> = (
+  new (
+    meta: ModelMeta,
+    itemId: ItemID,
+    getState: () => StateOf<M>,
+    MutationWriter?: MutationWriter<MutationOf<M>>,
+  ) => M
+) & {
+  meta: ModelMeta
+};
 
-export type ModelMessage<T> = {
-  meta: MutationMetaWithTimeframe,
-  mutation: T
-}
-
+/**
+ *
+ */
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
+
   // TODO(burdon): Convert to assert (too verbose).
   if (!model.meta) {
     throw new TypeError('Invalid model: missing static `meta` field.');
@@ -58,17 +107,7 @@ export function validateModelClass (model: any): asserts model is ModelConstruct
   if (!model.meta.type) {
     throw new TypeError('Invalid model: missing type URL.');
   }
-  if (!model.meta.mutation) {
+  if (!model.meta.mutationCodec) {
     throw new TypeError('Invalid model: missing mutation codec.');
   }
 }
-
-export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any;
-
-export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any;
-
-export interface MutationWriteReceipt extends WriteReceipt {
-  waitToBeProcessed(): Promise<void>
-}
-
-export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>

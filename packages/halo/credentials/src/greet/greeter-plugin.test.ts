@@ -95,9 +95,7 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
 /**
  * Connect two Protocols together.
  */
-const connect = (source: Protocol, target: Protocol) => {
-  return pump(source.stream, target.stream, source.stream);
-};
+const connect = (source: Protocol, target: Protocol) => pump(source.stream, target.stream, source.stream);
 
 it('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));
@@ -123,7 +121,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   // Present the invitation (by showing up).
   {
     const command = {
-      __type_url: 'dxos.credentials.greet.Command',
+      '@type': 'dxos.credentials.greet.Command',
       command: Command.Type.BEGIN
     };
 
@@ -133,7 +131,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   // Obtain the nonce and partyKey from the HANDSHAKE response.
   const { nonce, partyKey } = await (async () => {
     const command = {
-      __type_url: 'dxos.credentials.greet.Command',
+      '@type': 'dxos.credentials.greet.Command',
       command: Command.Type.HANDSHAKE,
       secret: await secretProvider(),
       params: []
@@ -149,7 +147,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const command = {
-      __type_url: 'dxos.credentials.greet.Command',
+      '@type': 'dxos.credentials.greet.Command',
       command: Command.Type.NOTARIZE,
       secret: await secretProvider(),
       params: [
@@ -173,7 +171,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
 
   const oneway = true;
   await plugin.send(rendezvousKey, {
-    __type_url: 'dxos.credentials.greet.Command',
+    '@type': 'dxos.credentials.greet.Command',
     command: Command.Type.FINISH,
     secret: await secretProvider(),
     params: []

@@ -7,34 +7,10 @@ import columnify from 'columnify';
 
 import { Party } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
-import { Item } from '@dxos/echo-db';
+import { Item, SchemaField } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-// TODO(burdon): Factor out schema utils (to ObjectModel).
-
-export const TYPE_SCHEMA = 'dxos:type/schema';
-
-export type FieldType = 'string' | 'number' | 'boolean' | 'ref'
-
 // TODO(burdon): Protobuf definitions.
-
-export type SchemaFieldRef = {
-  schema: string
-  field: string
-}
-
-export type SchemaField = {
-  key: string
-  type?: FieldType
-  required: boolean
-  ref?: SchemaFieldRef
-  // TODO(burdon): Repeated.
-}
-
-export type Schema = {
-  schema: string
-  fields: SchemaField[]
-}
 
 /**
  * Validate item matches schema.
@@ -84,34 +60,32 @@ export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[
   const logKey = (id: string) => truncateKey(id, 4);
   const logString = (value: string) => truncate(value, 24, true);
 
-  const values = items.map(item => {
-    return fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
-      const value = item.model.get(key);
-      switch (type) {
-        case 'string': {
-          row[key] = chalk.green(logString(value));
-          break;
-        }
-
-        case 'ref': {
-          if (party) {
-            const { field } = ref!;
-            const item = party.database.getItem(value);
-            row[key] = chalk.red(logString(item?.model.get(field)));
-          } else {
-            row[key] = chalk.red(logKey(value));
-          }
-          break;
-        }
-
-        default: {
-          row[key] = value;
-        }
+  const values = items.map((item) => fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
+    const value = item.model.get(key);
+    switch (type) {
+      case 'string': {
+        row[key] = chalk.green(logString(value));
+        break;
       }
 
-      return row;
-    }, { id: chalk.blue(logKey(item.id)) });
-  });
+      case 'ref': {
+        if (party) {
+          const { field } = ref!;
+          const item = party.database.getItem(value);
+          row[key] = chalk.red(logString(item?.model.get(field)));
+        } else {
+          row[key] = chalk.red(logKey(value));
+        }
+        break;
+      }
+
+      default: {
+        row[key] = value;
+      }
+    }
+
+    return row;
+  }, { id: chalk.blue(logKey(item.id)) }));
 
   return columnify(values, { columns: ['id', ...columns] });
 };

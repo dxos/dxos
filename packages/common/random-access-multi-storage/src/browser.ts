@@ -5,9 +5,10 @@
 import { FirefoxStorage } from './implementations/firefox-storage';
 import { IDbStorage } from './implementations/idb-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { IStorage } from './interfaces/IStorage';
-import { STORAGE_RAM, STORAGE_IDB, STORAGE_CHROME, STORAGE_FIREFOX, StorageType } from './interfaces/storage-types';
+import { Storage } from './interfaces/Storage';
+import { StorageType } from './interfaces/storage-types';
 
+export { StorageType };
 // Extensions to manage and inspect storage.
 // https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search
 // https://chrome.google.com/webstore/detail/clear-cache-for-chrome/lcebokhepdpopanpieoopnjiehmoabfp?hl=en-US
@@ -19,19 +20,19 @@ export const createStorage = (
   if (type === undefined) {
     return defaultBrowserImplementation(root);
   }
-  if (type === STORAGE_RAM) {
+  if (type === StorageType.RAM) {
     return new RamStorage(root);
   }
-  if (type === STORAGE_IDB || type === STORAGE_CHROME) {
+  if (type === StorageType.IDB || type === StorageType.CHROME) {
     return new IDbStorage(root);
   }
-  if (type === STORAGE_FIREFOX) {
+  if (type === StorageType.FIREFOX) {
     return new FirefoxStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);
 };
 
-const defaultBrowserImplementation = (root: string): IStorage => {
+const defaultBrowserImplementation = (root: string): Storage => {
   if ((window as any).IDBMutableFile) {
     return new FirefoxStorage(root);
   }

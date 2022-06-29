@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { IQuery, RegistryRecord } from '@dxos/registry-client';
+import { Filter, RegistryRecord } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
@@ -15,9 +15,9 @@ interface Result {
 /**
  * Returns matching records.
  */
-export const useRecords = (query?: IQuery): Result => {
+export const useRecords = (filter?: Filter): Result => {
   const registry = useRegistry();
-  const data = useAsync(() => registry?.getRecords(query), [], [query]);
+  const data = useAsync(() => registry?.listRecords(filter), [], [filter]);
 
   return {
     records: data.data,
