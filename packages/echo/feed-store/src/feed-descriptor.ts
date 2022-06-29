@@ -8,13 +8,13 @@ import pify from 'pify';
 
 import { Lock } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import type { File, Storage } from '@dxos/random-access-multi-storage';
+import type { Directory, File } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
-  storage: Storage,
+  directory: Directory,
   key: PublicKey,
   hypercore: Hypercore,
   secretKey?: Buffer,
@@ -27,7 +27,7 @@ interface FeedDescriptorOptions {
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private readonly _storage: Storage;
+  private readonly _directory: Directory;
   private readonly _key: PublicKey;
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
@@ -38,14 +38,14 @@ export class FeedDescriptor {
 
   constructor (options: FeedDescriptorOptions) {
     const {
-      storage,
+      directory,
       key,
       secretKey,
       valueEncoding,
       hypercore = defaultHypercore
     } = options;
 
-    this._storage = storage;
+    this._directory = directory;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
     this._key = key;
@@ -117,7 +117,7 @@ export class FeedDescriptor {
    */
   private _createStorage (dir = ''): (name: string) => File {
     return (name) => {
-      return this._storage.createOrOpen(`${dir}/${name}`);
+      return this._directory.createOrOpen(`${dir}/${name}`);
     };
   }
 

@@ -77,7 +77,8 @@ describe('FeedStore', () => {
     });
 
     const storage = createStorage('', StorageType.RAM);
-    const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
+    const directory = storage.directory('');
+    const database = hypertrie(directory.createOrOpen.bind(directory), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
     const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {

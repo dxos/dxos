@@ -20,7 +20,7 @@ export abstract class AbstractStorage implements Storage {
     this._directories = new Map<string, Directory>();
   }
 
-  public directory (path: string): Directory {
+  public directory (path: string = ''): Directory {
     const fullPath = getFullPath(this._path, path);
     if (this._directories.has(fullPath)) {
       return this._directories.get(fullPath)!;

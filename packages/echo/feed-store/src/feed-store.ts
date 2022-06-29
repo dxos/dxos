@@ -114,7 +114,7 @@ export class FeedStore {
     const { key, secretKey } = options;
 
     const descriptor = new FeedDescriptor({
-      storage: this._storage,
+      directory: this._storage.directory(),
       key,
       secretKey,
       valueEncoding: this._valueEncoding,
