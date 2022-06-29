@@ -19,7 +19,7 @@ export class IDbStorage extends AbstractStorage {
     this.fileStorage = this._createFileStorage();
   }
 
-  _createDirectory (path: string) {
+  directory (path = '') {
     return new IDbDirectory(getFullPath(this._path, path), this);
   }
 

@@ -11,7 +11,7 @@ import { RamDirectory } from './ram-directory';
 export class RamStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  _createDirectory (path: string): Directory {
+  directory (path = ''): Directory {
     return new RamDirectory(getFullPath(this._path, path), this);
   }
 

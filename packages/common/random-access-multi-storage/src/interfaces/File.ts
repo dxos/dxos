@@ -16,7 +16,7 @@ export class File {
 
   /**
    * @internal
-   * Only to be used in RamStorage implementation.
+   * Only to be used in RamStorage and IDb implementation.
    * TODO(mykola): Don`t know if will work with others.
    */
   _reopen () {

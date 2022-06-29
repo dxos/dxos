@@ -2,57 +2,59 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Directory } from '../interfaces/Directory';
+import { Directory, File } from '../interfaces';
 import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
-import { getFullPath } from '../utils';
 
 /**
  * Base class for all storage implementations.
  */
 export abstract class AbstractStorage implements Storage {
-  protected readonly _directories = new Map<string, Directory>();
+  protected readonly _files = new Map<string, File>();
   public abstract type: StorageType
 
   constructor (protected readonly _path: string) {
   }
 
-  public directory (path = ''): Directory {
-    const fullPath = getFullPath(this._path, path);
-    if (this._directories.has(fullPath)) {
-      return this._directories.get(fullPath)!;
-    } else {
-      const directory = this._createDirectory(fullPath);
-      this._directories.set(fullPath, directory);
-      return directory;
+  _getFileIfExists (filename: string): File | null {
+    if (this._files.has(filename)) {
+      const file = this._files.get(filename);
+      if (file && !file._isDestroyed()) {
+        return file;
+      }
     }
+    return null;
+  }
+
+  _addFile (filename: string, file: File) {
+    this._files.set(filename, file);
   }
 
   async destroy () {
     try {
-      await this._closeDirectories();
-      await this._destroyDirectories();
+      await this._closeFiles();
+      await this._destroyFiles();
       await this._destroy();
-      this._directories.clear();
+      this._files.clear();
     } catch (error: any) {
       console.error(error);
     }
   }
 
-  private _closeDirectories () {
+  private _closeFiles () {
     return Promise.all(
-      Array.from(this._directories.values())
-        .map(directory => directory._close().catch((error: any) => console.error(error.message)))
+      Array.from(this._files.values())
+        .map(file => file.close().catch((error: any) => console.error(error.message)))
     );
   }
 
-  private _destroyDirectories () {
+  private _destroyFiles () {
     return Promise.all(
-      Array.from(this._directories.values())
-        .map(directory => directory._destroy().catch((error: any) => console.error(error.message)))
+      Array.from(this._files.values())
+        .map(file => file.destroy().catch((error: any) => console.error(error.message)))
     );
   }
 
-  public abstract _createDirectory (path: string): Directory
+  public abstract directory (path?: string): Directory;
   protected abstract _destroy (): Promise<void>;
 }
