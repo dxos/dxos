@@ -2,21 +2,27 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Export other key API classes?
+
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
+  Database,
   Entity,
   Item,
-  Link,
-  Database,
-  Selection,
-  SelectionResult,
   ItemFilterDeleted,
   InvitationDescriptor,
   InvitationDescriptorType,
+  Link,
   OpenProgress,
   PartyMember,
-  ResultSet
+  ResultSet, // TODO(burdon): Remove?
+  Selection,
+  SelectionResult
 } from '@dxos/echo-db';
+
+export {
+  Model
+} from '@dxos/model-factory';
 
 export * as proto from './proto/gen';
 
