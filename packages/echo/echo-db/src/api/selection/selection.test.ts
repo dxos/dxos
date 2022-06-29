@@ -24,9 +24,7 @@ const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
 const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
 
-const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) => {
-  return new Item(null as any, id, type, createModel(id), undefined, parent);
-};
+const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) => new Item(null as any, id, type, createModel(id), undefined, parent);
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
   const link = new Link(null as any, id, type, createModel(id), {
@@ -262,17 +260,11 @@ describe('Selection', () => {
     test('complex reducer', () => {
       const query = createReducer({ numItems: 0, numLinks: 0 })
         .filter({ type: ITEM_ORG })
-        .call((items: Item[], { numItems, ...rest }) => {
-          return { ...rest, numItems: numItems + items.length, stage: 'a' };
-        })
+        .call((items: Item[], { numItems, ...rest }) => ({ ...rest, numItems: numItems + items.length, stage: 'a' }))
         .children({ type: ITEM_PROJECT })
-        .call((items: Item[], { numItems, ...rest }) => {
-          return { ...rest, numItems: numItems + items.length, stage: 'b' };
-        })
+        .call((items: Item[], { numItems, ...rest }) => ({ ...rest, numItems: numItems + items.length, stage: 'b' }))
         .links({ type: LINK_MEMBER })
-        .call((links: Link[], { numLinks, ...rest }) => {
-          return { ...rest, numLinks: numLinks + links.length, stage: 'c' };
-        })
+        .call((links: Link[], { numLinks, ...rest }) => ({ ...rest, numLinks: numLinks + links.length, stage: 'c' }))
         .target()
         .exec();
 

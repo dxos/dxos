@@ -84,25 +84,21 @@ export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predic
   }
 };
 
-export const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> => {
-  return link => (!filter.type || testOneOrMultiple(filter.type, link.type));
-};
+export const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> => link => (!filter.type || testOneOrMultiple(filter.type, link.type));
 
 export const createQueryOptionsFilter = ({
   deleted = ItemFilterDeleted.HIDE_DELETED
-}: QueryOptions): Predicate<Entity> => {
-  return entity => {
-    if (entity.model === null) {
-      return false;
-    }
+}: QueryOptions): Predicate<Entity> => entity => {
+  if (entity.model === null) {
+    return false;
+  }
 
-    switch (deleted) {
-      case ItemFilterDeleted.HIDE_DELETED:
-        return !(entity instanceof Item) || !entity.deleted;
-      case ItemFilterDeleted.SHOW_DELETED:
-        return true;
-      case ItemFilterDeleted.SHOW_DELETED_ONLY:
-        return entity instanceof Item && entity.deleted;
-    }
-  };
+  switch (deleted) {
+    case ItemFilterDeleted.HIDE_DELETED:
+      return !(entity instanceof Item) || !entity.deleted;
+    case ItemFilterDeleted.SHOW_DELETED:
+      return true;
+    case ItemFilterDeleted.SHOW_DELETED_ONLY:
+      return entity instanceof Item && entity.deleted;
+  }
 };

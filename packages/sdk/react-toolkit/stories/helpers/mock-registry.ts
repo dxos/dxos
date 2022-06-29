@@ -6,9 +6,7 @@ import assert from 'assert';
 
 import { MemoryRegistryClientBackend, registerMockTypes, RegistryClient } from '@dxos/registry-client';
 
-export const createMockRegistry = () => {
-  return new RegistryClient(new MemoryRegistryClientBackend());
-};
+export const createMockRegistry = () => new RegistryClient(new MemoryRegistryClientBackend());
 
 // TODO(burdon): Move to registry-client testing package.
 export const createMockRegistryWithBot = async () => {

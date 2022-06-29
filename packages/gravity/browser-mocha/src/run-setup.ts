@@ -4,7 +4,7 @@
 
 import { resolve } from 'path';
 
-export async function runSetup (setupFilePath: string) {
+export const runSetup = async (setupFilePath: string) => {
   console.log('Running setup script.');
   const before = Date.now();
 
@@ -13,4 +13,4 @@ export async function runSetup (setupFilePath: string) {
   await setupFn();
 
   console.log(`Setup script finished in ${Date.now() - before} ms.`);
-}
+};

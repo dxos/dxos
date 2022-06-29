@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export function testTimeout<T> (promise: Promise<T>, timeout = 500): Promise<T> {
+export const testTimeout = <T>(promise: Promise<T>, timeout = 500): Promise<T> => {
   const error = new Error('Test timed out');
   let cancelTimeout: any;
 
@@ -22,4 +22,4 @@ export function testTimeout<T> (promise: Promise<T>, timeout = 500): Promise<T> 
   ]).finally(() => {
     cancelTimeout();
   });
-}
+};

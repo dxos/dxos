@@ -11,7 +11,7 @@ export interface BidirectionalMapingDescriptors {
   decode: MapingDescriptors,
 }
 
-export function createMappingDescriptors (substitutions: Substitutions): BidirectionalMapingDescriptors {
+export const createMappingDescriptors = (substitutions: Substitutions): BidirectionalMapingDescriptors => {
   const encode: MapingDescriptors = {};
   const decode: MapingDescriptors = {};
   for (const type of Object.keys(substitutions)) {
@@ -22,4 +22,4 @@ export function createMappingDescriptors (substitutions: Substitutions): Bidirec
     encode,
     decode
   };
-}
+};

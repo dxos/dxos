@@ -11,11 +11,11 @@ describe('Network manager', () => {
   describe('WebRTC transport', () => {
     let broker: Awaited<ReturnType<typeof createTestBroker>>;
 
-    before(async function () {
+    before(async () => {
       broker = await createTestBroker(12098);
     });
 
-    after(async function () {
+    after(async () => {
       await broker?.stop();
     });
 

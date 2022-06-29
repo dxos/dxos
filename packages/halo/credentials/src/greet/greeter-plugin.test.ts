@@ -95,9 +95,7 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
 /**
  * Connect two Protocols together.
  */
-const connect = (source: Protocol, target: Protocol) => {
-  return pump(source.stream, target.stream, source.stream);
-};
+const connect = (source: Protocol, target: Protocol) => pump(source.stream, target.stream, source.stream);
 
 it('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));

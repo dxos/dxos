@@ -11,14 +11,13 @@ export interface PanelProps {
   children?: ReactNode
 }
 
-export const Panel = ({ children, controls }: PanelProps) => {
-  return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      overflow: 'hidden'
-    }}>
+export const Panel = ({ children, controls }: PanelProps) => (
+<Box sx={{
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  overflow: 'hidden'
+}}>
       {controls && (
         <Box sx={{
           padding: 1,
@@ -35,5 +34,4 @@ export const Panel = ({ children, controls }: PanelProps) => {
         {children}
       </Box>
     </Box>
-  );
-};
+);

@@ -14,9 +14,8 @@ import { SubscribeToPartiesResponse } from '../../proto';
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
 
-const TimeFrame = ({ value }: { value: Timeframe }) => {
-  return (
-    <div>
+const TimeFrame = ({ value }: { value: Timeframe }) => (
+<div>
       {value.frames().map(([key, seq]) => (
         <div key={key.toHex()}>
           <span>{truncateKey(key.toHex(), 8)}</span>&nbsp;
@@ -24,16 +23,14 @@ const TimeFrame = ({ value }: { value: Timeframe }) => {
         </div>
       ))}
     </div>
-  );
-};
+);
 
 export interface PartyTableProps {
   parties: SubscribeToPartiesResponse.PartyInfo[]
 }
 
-export const PartyTable = ({ parties }: PartyTableProps) => {
-  return (
-    <Table
+export const PartyTable = ({ parties }: PartyTableProps) => (
+<Table
       stickyHeader
       size='small'
     >
@@ -48,9 +45,8 @@ export const PartyTable = ({ parties }: PartyTableProps) => {
         </TableRow>
       </TableHead>
       <TableBody>
-        {parties.map(({ key, isOpen, isActive, feedKeys, timeframe }) => {
-          return (
-            <TableRow key={key}>
+        {parties.map(({ key, isOpen, isActive, feedKeys, timeframe }) => (
+<TableRow key={key}>
               <TableCell>
                 <HashIcon value={key!} />
               </TableCell>
@@ -72,9 +68,7 @@ export const PartyTable = ({ parties }: PartyTableProps) => {
                 )}
               </TableCell>
             </TableRow>
-          );
-        })}
+        ))}
       </TableBody>
     </Table>
-  );
-};
+);

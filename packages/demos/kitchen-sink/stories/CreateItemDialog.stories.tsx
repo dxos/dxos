@@ -15,9 +15,8 @@ export default {
   title: 'KitchenSink/CreateItemDialog'
 };
 
-export const Primary = () => {
-  return (
-    <FullScreen>
+export const Primary = () => (
+<FullScreen>
       <CreateItemDialog
         open
         type={TestType.Org}
@@ -26,8 +25,7 @@ export const Primary = () => {
         onCancel={() => {}}
       />
     </FullScreen>
-  );
-};
+);
 
 export const Secondary = () => {
   const handleCreate = (type?: string, title?: string) => {

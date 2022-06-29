@@ -20,9 +20,8 @@ export interface KeyTableProps {
   keys: KeyRecord[]
 }
 
-export const KeyTable = ({ keys }: KeyTableProps) => {
-  return (
-    <Table
+export const KeyTable = ({ keys }: KeyTableProps) => (
+<Table
       stickyHeader
       size='small'
     >
@@ -60,5 +59,4 @@ export const KeyTable = ({ keys }: KeyTableProps) => {
         })}
       </TableBody>
     </Table>
-  );
-};
+);

@@ -37,12 +37,10 @@ const App = ({ grid }: AppProps) => {
  * Component embedded within MDX.
  * @constructor
  */
-export const GraphShowcase = (options: AppProps) => {
-  return (
-    <ClientProvider>
+export const GraphShowcase = (options: AppProps) => (
+<ClientProvider>
       <ProfileInitializer>
         <App {...options} />
       </ProfileInitializer>
     </ClientProvider>
-  );
-};
+);
