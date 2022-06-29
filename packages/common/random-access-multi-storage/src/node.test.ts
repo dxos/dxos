@@ -46,6 +46,19 @@ describe('testing node storage types', () => {
     expect(() => createStorage('error', StorageType.IDB)).toThrow(/Unsupported storage/);
   });
 
+  it('file exists and destroyes in subDirectory', async () => {
+    const directory = temp();
+    const storage = createStorage(directory);
+    const storageDir = storage.directory('dir');
+    const storageSubDirectory = storageDir.subDirectory('sub');
+    const file = storageSubDirectory.createOrOpen('file');
+    await write(file);
+    await expect(fs.access(path.join(directory, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
+
+    await storage.destroy();
+    await expect(fs.access(directory, constants.F_OK)).rejects.toThrow(/ENOENT/);
+  });
+
   storageTests(StorageType.RAM, () => createStorage(ROOT_DIRECTORY, StorageType.RAM));
   storageTests(StorageType.NODE, () => createStorage(ROOT_DIRECTORY, StorageType.NODE));
 });

@@ -156,6 +156,20 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
+    it('write in directory/subDirectory/file', async () => {
+      const storage = createStorage();
+      const dir = storage.directory('directory');
+      const subDir = dir.subDirectory('subDirectory');
+
+      const file = subDir.createOrOpen('file');
+      const buffer = Buffer.from(randomText());
+      await file.write(0, buffer);
+
+      const readBuffer = await file.read(0, buffer.length);
+      expect(readBuffer).toEqual(buffer);
+      await file.close();
+    });
+
     it('destroys file', async function () {
       const storage = createStorage();
       const directory = storage.directory('');
