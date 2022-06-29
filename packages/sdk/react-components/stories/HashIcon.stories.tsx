@@ -15,13 +15,12 @@ export default {
   component: HashIcon
 };
 
-export const Primary = () => {
-  return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      padding: 1
-    }}>
+export const Primary = () => (
+<Box sx={{
+  display: 'flex',
+  flexDirection: 'column',
+  padding: 1
+}}>
       {Array.from({ length: 16 }).map((_, i) => {
         const value = PublicKey.random().toHex();
         return (
@@ -34,5 +33,4 @@ export const Primary = () => {
         );
       })}
     </Box>
-  );
-};
+);

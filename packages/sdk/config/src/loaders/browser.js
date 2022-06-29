@@ -13,19 +13,13 @@ const fetchBound = fetch;
 
 const CONFIG_ENDPOINT = '/config/config.json';
 
-export const LocalStorage = (item = 'options') => {
-  return JSON.parse(window.localStorage.getItem(item) || '{}');
-};
+export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage.getItem(item) || '{}');
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
   return !dynamic ? __CONFIG_DYNAMICS__ : (await fetchBound(`${publicUrl}${CONFIG_ENDPOINT}`)).json();
 };
 
-export const Envs = () => {
-  return __CONFIG_ENVS__;
-};
+export const Envs = () => __CONFIG_ENVS__;
 
-export const Defaults = () => {
-  return __CONFIG_DEFAULTS__;
-};
+export const Defaults = () => __CONFIG_DEFAULTS__;

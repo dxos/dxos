@@ -24,9 +24,8 @@ export const EchoBoard = ({
   items = [],
   itemAdapter,
   onCreateItem
-}: EchoBoardProps) => {
-  return (
-    <Grid
+}: EchoBoardProps) => (
+<Grid
       container
       spacing={2}
       sx={{
@@ -69,5 +68,4 @@ export const EchoBoard = ({
         );
       }).filter(Boolean)}
     </Grid>
-  );
-};
+);

@@ -10,19 +10,17 @@ const f = ts.factory;
 
 export type DeclarationFullName = string[];
 
-export function getFullNestedTypeName (type: pb.ReflectionObject): DeclarationFullName {
+export const getFullNestedTypeName = (type: pb.ReflectionObject): DeclarationFullName => {
   if (type.parent && type.parent instanceof pb.Type) {
     return [...getFullNestedTypeName(type.parent), type.name];
   } else {
     return [type.name];
   }
-}
+};
 
-function isType (obj: pb.ReflectionObject): obj is (pb.Type | pb.Enum | pb.Service) {
-  return obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
-}
+const isType = (obj: pb.ReflectionObject): obj is (pb.Type | pb.Enum | pb.Service) => obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
 
-export function getNamespaceName (type: pb.ReflectionObject): DeclarationFullName {
+export const getNamespaceName = (type: pb.ReflectionObject): DeclarationFullName => {
   if (type.parent) {
     if (!isType(type)) {
       return [...getNamespaceName(type.parent), type.name];
@@ -32,9 +30,9 @@ export function getNamespaceName (type: pb.ReflectionObject): DeclarationFullNam
   } else {
     return [];
   }
-}
+};
 
-export function getRelativeName (target: DeclarationFullName, base: DeclarationFullName): DeclarationFullName {
+export const getRelativeName = (target: DeclarationFullName, base: DeclarationFullName): DeclarationFullName => {
   // TODO(marik-d): Optimization: Remove recursion.
   if (target.length === 1 || base.length === 1) {
     return target;
@@ -43,42 +41,36 @@ export function getRelativeName (target: DeclarationFullName, base: DeclarationF
   } else {
     return target;
   }
-}
+};
 
-export function convertNameToIdentifier (name: DeclarationFullName): ts.QualifiedName | ts.Identifier {
+export const convertNameToIdentifier = (name: DeclarationFullName): ts.QualifiedName | ts.Identifier => {
   if (name.length === 1) {
     return f.createIdentifier(name[0]);
   } else {
     return f.createQualifiedName(convertNameToIdentifier(name.slice(0, -1)), name[name.length - 1]);
   }
-}
+};
 
-export function stringifyFullyQualifiedName (name: DeclarationFullName) {
-  return name.join('.');
-}
+export const stringifyFullyQualifiedName = (name: DeclarationFullName) => name.join('.');
 
-export function normalizeFullyQualifiedName (name: string) {
+export const normalizeFullyQualifiedName = (name: string) => {
   if (name.startsWith('.')) {
     return name.slice(1);
   } else {
     return name;
   }
-}
+};
 
-export function parseFullyQualifiedName (name: string): DeclarationFullName {
+export const parseFullyQualifiedName = (name: string): DeclarationFullName => {
   const norm = normalizeFullyQualifiedName(name);
   return norm.split('.');
-}
+};
 
-export function namesEqual (a: DeclarationFullName, b: DeclarationFullName) {
-  return a.length === b.length && a.every((_, i) => a[i] === b[i]);
-}
+export const namesEqual = (a: DeclarationFullName, b: DeclarationFullName) => a.length === b.length && a.every((_, i) => a[i] === b[i]);
 
-export function getSafeNamespaceIdentifier (name: DeclarationFullName) {
-  return name.join('_');
-}
+export const getSafeNamespaceIdentifier = (name: DeclarationFullName) => name.join('_');
 
-export function splitSchemaIntoNamespaces (root: pb.Namespace): Map<string, pb.ReflectionObject[]> {
+export const splitSchemaIntoNamespaces = (root: pb.Namespace): Map<string, pb.ReflectionObject[]> => {
   const res = new Map<string, pb.ReflectionObject[]>();
 
   const namespace = normalizeFullyQualifiedName(root.fullName);
@@ -101,4 +93,4 @@ export function splitSchemaIntoNamespaces (root: pb.Namespace): Map<string, pb.R
   }
 
   return res;
-}
+};

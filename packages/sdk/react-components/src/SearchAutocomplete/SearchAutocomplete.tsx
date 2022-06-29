@@ -25,9 +25,7 @@ export const SearchAutocomplete = ({
   groupBy
 }: SearchAutocompleteProps<any>) => {
   const [results, setResults] = useState(model.results);
-  useEffect(() => {
-    return model.subscribe(values => setResults(values));
-  }, [model]);
+  useEffect(() => model.subscribe(values => setResults(values)), [model]);
 
   // TODO(burdon): Features:
   //  - Filtered list.

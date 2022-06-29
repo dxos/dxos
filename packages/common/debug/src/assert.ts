@@ -10,6 +10,4 @@
  * It's recomended to check the type URL mannuly beforehand or use `assertAnyType` instead.
  * @param value
  */
-export function checkType<T> (value: T): T {
-  return value;
-}
+export const checkType = <T>(value: T): T => value;

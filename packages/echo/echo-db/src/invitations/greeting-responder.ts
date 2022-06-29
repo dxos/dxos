@@ -243,19 +243,15 @@ export class GreetingResponder {
   _gatherHints (): KeyHint[] {
     assert(this._state === GreetingState.SUCCEEDED);
 
-    const memberKeys = this._partyProcessor.memberKeys.map(publicKey => {
-      return {
-        publicKey,
-        type: KeyType.UNKNOWN
-      };
-    });
+    const memberKeys = this._partyProcessor.memberKeys.map((publicKey) => ({
+      publicKey,
+      type: KeyType.UNKNOWN
+    }));
 
-    const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
-      return {
-        publicKey,
-        type: KeyType.FEED
-      };
-    });
+    const memberFeeds = this._partyProcessor.feedKeys.map((publicKey) => ({
+      publicKey,
+      type: KeyType.FEED
+    }));
 
     return [...memberKeys, ...memberFeeds];
   }

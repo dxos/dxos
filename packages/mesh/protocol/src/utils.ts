@@ -8,7 +8,7 @@ import { HumanHasher } from '@dxos/crypto';
 
 const hasher = new HumanHasher();
 
-export function keyToHuman (key: Buffer, prefix?: string) {
+export const keyToHuman = (key: Buffer, prefix?: string) => {
   assert(Buffer.isBuffer(key));
 
   const name = hasher.humanize(key.toString('hex'));
@@ -17,4 +17,4 @@ export function keyToHuman (key: Buffer, prefix?: string) {
   }
 
   return name;
-}
+};

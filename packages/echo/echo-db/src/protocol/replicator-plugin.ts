@@ -22,12 +22,10 @@ export const createReplicatorPlugin = (feedProvider: PartyFeedProvider) =>
       return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
     },
 
-    subscribe: (addFeedToReplicatedSet: (feed: any) => void) => {
-      return feedProvider.feedOpened.on(async (feed) => {
-        log(`Adding feed: ${feed.key.toHex()}`);
-        addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
-      });
-    },
+    subscribe: (addFeedToReplicatedSet: (feed: any) => void) => feedProvider.feedOpened.on(async (feed) => {
+      log(`Adding feed: ${feed.key.toHex()}`);
+      addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
+    }),
 
     replicate: async (remoteFeeds, info) => {
       // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.

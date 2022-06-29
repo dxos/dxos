@@ -40,20 +40,20 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
   });
 
   return {
-    subscribe (next) {
+    subscribe: (next) => {
       const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
       };
     },
-    async load () {
+    load: async () => {
       const feeds = onLoad(feedStore);
       return feeds.map(
         feed => encodeFeed(feed)
       );
     },
-    async replicate (feeds: FeedData[]) {
+    replicate: async (feeds: FeedData[]) => {
       const hypercoreFeeds = await Promise.all(feeds.map(async (feed) => {
         const { key } = decodeFeed(feed);
 
@@ -90,27 +90,21 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 
   return {
     id: peerId,
-    getFeedsNum () {
-      return Array.from((feedStore as any)._descriptors.values()).length;
-    },
-    createStream ({ initiator }) {
-      return new Protocol({
-        initiator: !!initiator,
-        discoveryKey: discoveryKey(topic),
-        streamOptions: {
-          live: true
-        },
-        userSession: { peerId: 'session1' }
-      })
-        .setContext({ name: 'foo' })
-        .setExtensions([replicator.createExtension()])
-        .init()
-        .stream;
-    },
-    append (msg: any) {
-      return append(msg);
-    },
-    getMessages () {
+    getFeedsNum: () => Array.from((feedStore as any)._descriptors.values()).length,
+    createStream: ({ initiator }) => new Protocol({
+      initiator: !!initiator,
+      discoveryKey: discoveryKey(topic),
+      streamOptions: {
+        live: true
+      },
+      userSession: { peerId: 'session1' }
+    })
+      .setContext({ name: 'foo' })
+      .setExtensions([replicator.createExtension()])
+      .init()
+      .stream,
+    append: (msg: any) => append(msg),
+    getMessages: () => {
       const messages: any[] = [];
       const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor.feed)));
       stream.on('data', (data: any[]) => {
@@ -126,9 +120,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
         });
       });
     },
-    isClosed () {
-      return closed;
-    }
+    isClosed: () => closed
   };
 });
 
@@ -147,9 +139,7 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
     expect(network.peers.length).toBe(15);
 
     await waitForExpect(() => {
-      const result = network.peers.reduce((prev: boolean, peer: any) => {
-        return prev && peer.getFeedsNum() === network.peers.length;
-      }, true);
+      const result = network.peers.reduce((prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length, true);
 
       expect(result).toBe(true);
     }, 4500, 1000);

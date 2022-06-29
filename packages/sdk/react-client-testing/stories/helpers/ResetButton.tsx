@@ -10,14 +10,13 @@ interface ResetButtonProps {
 
 export const ResetButton = ({
   onReset
-}: ResetButtonProps) => {
-  return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-      height: 'fit-content'
-    }}>
+}: ResetButtonProps) => (
+<div style={{
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+  height: 'fit-content'
+}}>
       <button
         onClick={onReset}
         style={{
@@ -30,5 +29,4 @@ export const ResetButton = ({
         Reset
       </button>
     </div>
-  );
-};
+);
