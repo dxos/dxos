@@ -25,9 +25,7 @@ import { Table, TableCell } from '../Table';
 
 const colorHash = new ColorHash({ saturation: 0.5 });
 
-const color = (type: string) => {
-  return type === 'halo' ? colors.red[500] : colors.blue[500];
-};
+const color = (type: string) => type === 'halo' ? colors.red[500] : colors.blue[500];
 
 // TODO(burdon): Remove.
 const defaultGetType = (message: any) => {

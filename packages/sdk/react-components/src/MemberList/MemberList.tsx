@@ -15,9 +15,8 @@ import { MemberAvatar } from './MemberAvatar';
  */
 export const MemberList = ({ members }: {
   members: PartyMember[]
-}) => {
-  return (
-    <Box
+}) => (
+<Box
       sx={{
         display: 'flex',
         flexDirection: 'row'
@@ -29,5 +28,4 @@ export const MemberList = ({ members }: {
         ))}
       </AvatarGroup>
     </Box>
-  );
-};
+);

@@ -9,7 +9,7 @@ import { schema, ConfigObject } from './proto';
 
 const configRootType = schema.getCodecForType('dxos.config.Config');
 
-export function sanitizeConfig (value: any): ConfigObject {
+export const sanitizeConfig = (value: any): ConfigObject => {
   if (!('version' in value)) {
     throw new InvalidConfigError('Version not specified');
   }
@@ -30,13 +30,13 @@ export function sanitizeConfig (value: any): ConfigObject {
   }
 
   return value;
-}
+};
 
 interface Context {
   errors: string[]
 }
 
-function visitMessage (type: Type, value: any, path: string, context: Context) {
+const visitMessage = (type: Type, value: any, path: string, context: Context) => {
   for (const key of Object.keys(value)) {
     if (!type.fields[key]) {
       context.errors.push(`Unexpected key: ${path}.${key}`);
@@ -58,9 +58,9 @@ function visitMessage (type: Type, value: any, path: string, context: Context) {
       value[key] = sanitizeEnum(field.resolvedType, value[key], `${path}.${key}`, context);
     }
   }
-}
+};
 
-function sanitizeEnum (type: Enum, value: any, path: string, context: Context): any {
+const sanitizeEnum = (type: Enum, value: any, path: string, context: Context): any => {
   if (type.valuesById[value]) {
     return value;
   }
@@ -77,4 +77,4 @@ function sanitizeEnum (type: Enum, value: any, path: string, context: Context): 
   context.errors.push(`Invalid enum value: value=${JSON.stringify(value)} enum=${type.fullName} path=${path}`);
 
   return value;
-}
+};

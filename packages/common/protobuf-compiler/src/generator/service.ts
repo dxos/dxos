@@ -13,15 +13,15 @@ import { types, getTypeReference } from './types';
 
 const f = ts.factory;
 
-function getRpcTypes (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] {
+const getRpcTypes = (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] => {
   method.resolve();
   return [
     types(method.resolvedRequestType ?? method.requestType, service, subs),
     types(method.resolvedResponseType ?? method.responseType, service, subs)
   ];
-}
+};
 
-function createRpcMethodType (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) {
+const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) => {
   assert(!method.requestStream, 'Streaming RPC requests are not supported.');
 
   const [requestType, responseType] = getRpcTypes(method, service, subs);
@@ -43,9 +43,9 @@ function createRpcMethodType (method: protobufjs.Method, service: protobufjs.Ser
       [responseType]
     )
   );
-}
+};
 
-export function createServiceDeclaration (type: protobufjs.Service, subs: SubstitutionsMap): ts.InterfaceDeclaration {
+export const createServiceDeclaration = (type: protobufjs.Service, subs: SubstitutionsMap): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -67,7 +67,7 @@ export function createServiceDeclaration (type: protobufjs.Service, subs: Substi
   );
 
   return type.comment ? attachDocComment(declaration, type.comment) : declaration;
-}
+};
 
 function * getServices (root: protobufjs.NamespaceBase): Generator<protobufjs.Service> {
   for (const obj of root.nestedArray) {
@@ -80,24 +80,20 @@ function * getServices (root: protobufjs.NamespaceBase): Generator<protobufjs.Se
   }
 }
 
-export function createServicesDictionary (root: protobufjs.NamespaceBase) {
-  return f.createInterfaceDeclaration(
-    undefined,
-    [f.createToken(ts.SyntaxKind.ExportKeyword)],
-    'SERVICES',
-    undefined,
-    undefined,
-    Array.from(getServices(root))
-      .sort((b, a) => b.fullName.localeCompare(a.fullName))
-      .map(type => f.createPropertySignature(
-        undefined,
-        f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
-        undefined,
-        getTypeReference(type)
-      ))
-  );
-}
+export const createServicesDictionary = (root: protobufjs.NamespaceBase) => f.createInterfaceDeclaration(
+  undefined,
+  [f.createToken(ts.SyntaxKind.ExportKeyword)],
+  'SERVICES',
+  undefined,
+  undefined,
+  Array.from(getServices(root))
+    .sort((b, a) => b.fullName.localeCompare(a.fullName))
+    .map(type => f.createPropertySignature(
+      undefined,
+      f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
+      undefined,
+      getTypeReference(type)
+    ))
+);
 
-function mapRpcMethodName (name: string) {
-  return name[0].toLocaleLowerCase() + name.substring(1);
-}
+const mapRpcMethodName = (name: string) => name[0].toLocaleLowerCase() + name.substring(1);

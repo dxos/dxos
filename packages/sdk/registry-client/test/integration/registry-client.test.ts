@@ -14,10 +14,7 @@ chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
-const randomName = () => {
-  // Must start with a letter.
-  return `r${Math.random().toString(36).substring(2)}`;
-};
+const randomName = () => `r${Math.random().toString(36).substring(2)}`;
 
 describe('Registry Client', () => {
   let registryBackend: PolkadotRegistry;

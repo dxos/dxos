@@ -57,13 +57,7 @@ export const createSelection = <R>(
  * @param update
  * @param value Initial reducer value.
  */
-export const createItemSelection = <R>(
-  root: Item<any>,
-  update: Event<Entity[]>,
-  value: R
-): Selection<Item<any>, R> => {
-  return new Selection(() => [[root], value], update, root, value !== undefined);
-};
+export const createItemSelection = <R>(root: Item<any>, update: Event<Entity[]>, value: R): Selection<Item<any>, R> => new Selection(() => [[root], value], update, root, value !== undefined);
 
 /**
  * Selections are used to construct database subscriptions.

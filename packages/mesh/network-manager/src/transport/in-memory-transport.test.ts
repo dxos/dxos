@@ -17,7 +17,7 @@ import { InMemoryTransport } from './in-memory-transport';
 //     Cannot log after tests are done. Did you forget to wait for something async in your test?
 //     Attempted to log "Ignoring unsupported ICE candidate.".
 
-function createPair () {
+const createPair = () => {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();
   const peer2Id = PublicKey.random();
@@ -50,7 +50,7 @@ function createPair () {
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
-}
+};
 
 describe('InMemoryTransport', () => {
   it('establish connection and send data through with protocol', async () => {

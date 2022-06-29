@@ -14,62 +14,58 @@ const log = debug('dxos:extension:sandbox');
 
 const clientReady = new Event<Client>();
 
-const windowPort = (): RpcPort => {
-  return {
-    send: async message => window.parent.postMessage({
-      data: Array.from(message),
-      source: 'sandbox'
-    }, window.location.origin),
-    subscribe: callback => {
-      const handler = (event: MessageEvent<any>) => {
-        const message = event.data;
-        if (
-          typeof message !== 'object' ||
-          message === null ||
-          message.source !== 'panel'
-        ) {
-          return;
-        }
-
-        log('Received message from panel:', message);
-        callback(new Uint8Array(message.data));
-      };
-
-      window.addEventListener('message', handler);
-      return () => window.removeEventListener('message', handler);
-    }
-  };
-};
-
-const waitForRpc = async () => {
-  return new Promise<void>(resolve => {
-    const handler = (event: MessageEvent) => {
+const windowPort = (): RpcPort => ({
+  send: async message => window.parent.postMessage({
+    data: Array.from(message),
+    source: 'sandbox'
+  }, window.location.origin),
+  subscribe: callback => {
+    const handler = (event: MessageEvent<any>) => {
       const message = event.data;
       if (
         typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'panel'
+          message === null ||
+          message.source !== 'panel'
       ) {
         return;
       }
 
-      if (message.data === 'open-rpc') {
-        log('Panel RPC port ready.');
-        window.removeEventListener('message', handler);
-        resolve();
-      }
+      log('Received message from panel:', message);
+      callback(new Uint8Array(message.data));
     };
 
     window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }
+});
 
-    log('Sandbox RPC port ready.');
+const waitForRpc = async () => new Promise<void>(resolve => {
+  const handler = (event: MessageEvent) => {
+    const message = event.data;
+    if (
+      typeof message !== 'object' ||
+        message === null ||
+        message.source !== 'panel'
+    ) {
+      return;
+    }
 
-    window.parent.postMessage({
-      data: 'open-rpc',
-      source: 'sandbox'
-    }, window.location.origin);
-  });
-};
+    if (message.data === 'open-rpc') {
+      log('Panel RPC port ready.');
+      window.removeEventListener('message', handler);
+      resolve();
+    }
+  };
+
+  window.addEventListener('message', handler);
+
+  log('Sandbox RPC port ready.');
+
+  window.parent.postMessage({
+    data: 'open-rpc',
+    source: 'sandbox'
+  }, window.location.origin);
+});
 
 const init = async () => {
   initializeDevtools(clientReady);

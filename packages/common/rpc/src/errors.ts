@@ -16,14 +16,14 @@ export class SerializedRpcError extends Error {
   }
 }
 
-function preprocessStack (stack: string) {
+const preprocessStack = (stack: string) => {
   const match = /^\s+at/gm.exec(stack);
   if (!match) {
     return stack;
   }
 
   return stack.slice(match.index);
-}
+};
 
 /**
  * Thrown when request was terminated because the RPC endpoint has been closed.

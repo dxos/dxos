@@ -10,11 +10,9 @@ import { codegen, ref } from './codegen';
 
 export type Mapper = (obj: any, extraArgs: any[]) => any;
 
-export function createMessageMapper (type: pb.Type, substitutions: MapingDescriptors): Mapper {
-  return createMessageMapperCached(type, substitutions, {}).map;
-}
+export const createMessageMapper = (type: pb.Type, substitutions: MapingDescriptors): Mapper => createMessageMapperCached(type, substitutions, {}).map;
 
-function createMessageMapperCached (type: pb.Type, substitutions: MapingDescriptors, cache: Record<string, { map: Mapper }>) {
+const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescriptors, cache: Record<string, { map: Mapper }>) => {
   if (!cache[type.fullName]) {
     // Indirection to allow for recursive message types.
     cache[type.fullName] = {} as any;
@@ -60,4 +58,4 @@ function createMessageMapperCached (type: pb.Type, substitutions: MapingDescript
   }
 
   return cache[type.fullName];
-}
+};

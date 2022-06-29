@@ -17,10 +17,8 @@ interface ListItemProps {
 export const ListItem = ({
   item,
   style = {}
-}: ListItemProps) => {
-  return (
-    <div style={style}>
+}: ListItemProps) => (
+<div style={style}>
       {item.title}
     </div>
-  );
-};
+);

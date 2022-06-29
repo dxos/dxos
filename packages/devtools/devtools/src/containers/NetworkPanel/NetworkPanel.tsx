@@ -21,12 +21,10 @@ interface Topic {
   label: string
 }
 
-const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
-  return {
-    topic: PublicKey.from(topic.topic!).toHex(),
-    label: topic.label!
-  };
-};
+const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => ({
+  topic: PublicKey.from(topic.topic!).toHex(),
+  label: topic.label!
+});
 
 export const NetworkPanel = () => {
   const client = useClient();
