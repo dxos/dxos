@@ -116,7 +116,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     });
 
     // TODO(yivlad): Not implemented.
-    it.skip('destroy clears all data', async function () {
+    it.skip('destroy clears all data', async () => {
       const storage = createStorage();
       const directory = storage.directory('');
 
@@ -133,7 +133,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.close();
     });
 
-    it('subdirectories', async function () {
+    it('subdirectories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
       const dir1 = storage.directory('dir1');

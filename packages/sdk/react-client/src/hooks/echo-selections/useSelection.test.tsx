@@ -23,9 +23,7 @@ const useTestComponents = async () => {
   await client.halo.createProfile();
 
   const party = await client.echo.createParty();
-  const items = await Promise.all(Array.from({ length: count }).map(async () => {
-    return await party.database.createItem({ type: TYPE_EXAMPLE });
-  }));
+  const items = await Promise.all(Array.from({ length: count }).map(async () => await party.database.createItem({ type: TYPE_EXAMPLE })));
   expect(items.length).toBe(count);
 
   return { client, party };

@@ -65,9 +65,8 @@ const TestApp = () => {
     return undefined;
   }
 
-  const TestComponent = () => {
-    return (
-      <Box>
+  const TestComponent = () => (
+<Box>
         <Box>
           <Button onClick={() => setTrigger(ErrorType.Invalid)}>
             Render
@@ -97,8 +96,7 @@ const TestApp = () => {
           </Box>
         )}
       </Box>
-    );
-  };
+  );
 
   return (
     <Box sx={{ padding: 2 }}>

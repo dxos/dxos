@@ -153,8 +153,8 @@ export class Stream<T> {
  *
  * NOTE: Copied from @dxos/debug to avoid circular dependency.
  */
-function throwUnhandledRejection (error: Error) {
+const throwUnhandledRejection = (error: Error) => {
   setTimeout(() => {
     throw error;
   });
-}
+};

@@ -19,9 +19,8 @@ export type TableProps = MuiTableProps
 /**
  * Scrolling table.
  */
-export const Table = ({ children, ...props }: TableProps) => {
-  return (
-    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+export const Table = ({ children, ...props }: TableProps) => (
+<Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       <TableContainer sx={{ height: '100%' }}>
         <MuiTable
           stickyHeader
@@ -42,8 +41,7 @@ export const Table = ({ children, ...props }: TableProps) => {
         </MuiTable>
       </TableContainer>
     </Box>
-  );
-};
+);
 
 interface TableCellProps extends MuiTableCellProps {
   monospace?: boolean;

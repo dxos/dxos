@@ -18,9 +18,8 @@ export default {
   title: 'Playground'
 };
 
-const DevTools = ({ port }: { port: RpcPort }) => {
-  return (
-    <ErrorBoundary>
+const DevTools = ({ port }: { port: RpcPort }) => (
+<ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ClientProvider
@@ -39,19 +38,16 @@ const DevTools = ({ port }: { port: RpcPort }) => {
         </ClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
-  );
-};
+);
 
 // TODO(burdon): ErrorBoundary with indicator.
-export const Controls = () => {
-  return (
-    <FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
+export const Controls = () => (
+<FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
       <ClientProvider>
         <PlaygroundControls />
       </ClientProvider>
     </FullScreen>
-  );
-};
+);
 
 export const Primary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);

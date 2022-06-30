@@ -19,9 +19,7 @@ const createFeed = async () => {
   return feed;
 };
 
-const append = (feed: HypercoreFeed, message: any) => {
-  return pify(feed.append.bind(feed))(message);
-};
+const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
 describe('Batch stream', () => {
   test('Single message', async () => {

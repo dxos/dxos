@@ -46,7 +46,7 @@ export interface PeerGraphProps {
 export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
   const [data, setData] = useState<any>({ nodes: [], links: [] });
 
-  function buildGraph (peers: PeerInfo[]) {
+  const buildGraph = (peers: PeerInfo[]) => {
     const nodes: any[] = []; const links: any[] = [];
     for (const peer of peers) {
       nodes.push({
@@ -65,7 +65,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
     }
 
     return { nodes, links };
-  }
+  };
 
   useEffect(() => {
     setData(buildGraph(peers));

@@ -30,35 +30,27 @@ const createFeedStore = (storage: Storage, options = {}) => {
   return feedStore;
 };
 
-async function createDefault () {
+const createDefault = async () => {
   const directory = tempy.directory();
 
   return {
     directory,
     feedStore: createFeedStore(createStorage(directory, StorageType.NODE), { valueEncoding: 'utf-8' })
   };
-}
-
-async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, FeedDescriptor>> {
-  return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
-  )));
-}
-
-function append (feed: HypercoreFeed, message: any) {
-  return pify(feed.append.bind(feed))(message);
-}
-
-function head (feed: HypercoreFeed) {
-  return pify(feed.head.bind(feed))();
-}
-
-const createKeyPairs = () => {
-  return Object.fromEntries<KeyPair>(feedNames.map(feed => {
-    const { publicKey, secretKey } = createKeyPair();
-    return [feed, { key: PublicKey.from(publicKey), secretKey }];
-  }));
 };
+
+const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>): Promise<Record<string, FeedDescriptor>> => Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
+  [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
+)));
+
+const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
+
+const head = (feed: HypercoreFeed) => pify(feed.head.bind(feed))();
+
+const createKeyPairs = () => Object.fromEntries<KeyPair>(feedNames.map(feed => {
+  const { publicKey, secretKey } = createKeyPair();
+  return [feed, { key: PublicKey.from(publicKey), secretKey }];
+}));
 
 describe('FeedStore', () => {
   const keys = createKeyPairs();
@@ -72,9 +64,7 @@ describe('FeedStore', () => {
   });
 
   test('Config default + custom database + custom hypercore', async () => {
-    const customHypercore = jest.fn((...args) => {
-      return hypercore(args[0], args[1], args[2]);
-    });
+    const customHypercore = jest.fn((...args) => hypercore(args[0], args[1], args[2]));
 
     const storage = createStorage('', StorageType.RAM);
     const directory = storage.directory('');
@@ -176,11 +166,11 @@ describe('FeedStore', () => {
     const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
       hypercore: () => ({
         opened: true,
-        ready (cb: () => void) {
+        ready: (cb: () => void) => {
           cb();
         },
-        on () {},
-        close () {
+        on: () => {},
+        close: () => {
           throw new Error('close error');
         }
       })

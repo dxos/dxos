@@ -15,18 +15,18 @@ export const registryTypes: RegistryTypes = Object
   .values(definitions)
   .reduce((res: any, { types }: any): object => ({ ...res, ...types }), {}) as unknown as RegistryTypes;
 
-export async function createKeyring (options?: KeyringOptions): Promise<Keyring> {
+export const createKeyring = async (options?: KeyringOptions): Promise<Keyring> => {
   // The keyring need to be created AFTER api is created or we need to wait for WASM init.
   // https://polkadot.js.org/docs/api/start/keyring#creating-a-keyring-instance
   await cryptoWaitReady();
   return new Keyring(options ?? { type: 'sr25519' });
-}
+};
 
 /**
  * Creates an API primitive that holds the connection, transaction and querying of substrate node.
  * @param endpoint URI of the substrate node.
  */
-export async function createApiPromise (endpoint: string) {
+export const createApiPromise = async (endpoint: string) => {
   const provider = new WsProvider(endpoint);
   return await new ApiPromise({ provider, types: registryTypes, rpc: jsonrpc }).isReady;
-}
+};

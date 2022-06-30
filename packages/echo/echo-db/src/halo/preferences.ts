@@ -159,16 +159,13 @@ export class Preferences {
   subscribeToJoinedPartyList (callback: (parties: JoinedParty[]) => void): () => void {
     const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
 
-    const converter = (partyDesc: Item<any>) => {
-      // TODO(burdon): Define type.
-      return {
-        partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
-        keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
-          ...hint,
-          publicKey: PublicKey.from(hint.publicKey)
-        } as KeyHint))
-      };
-    };
+    const converter = (partyDesc: Item<any>) => ({
+      partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
+      keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
+        ...hint,
+        publicKey: PublicKey.from(hint.publicKey)
+      } as KeyHint))
+    });
 
     const result = database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
 

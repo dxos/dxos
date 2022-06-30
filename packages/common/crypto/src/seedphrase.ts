@@ -12,9 +12,7 @@ import { createKeyPair } from './keys';
 /**
  * Generate bip39 seed phrase (aka mnemonic).
  */
-export const generateSeedPhrase = (): string => {
-  return generateMnemonic();
-};
+export const generateSeedPhrase = (): string => generateMnemonic();
 
 /**
  * Generate key pair from seed phrase.

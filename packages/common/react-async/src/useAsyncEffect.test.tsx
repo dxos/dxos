@@ -11,11 +11,9 @@ import waitForExpect from 'wait-for-expect';
 
 import { useAsyncEffect } from './useAsyncEffect';
 
-const doAsync = async <T, > (value: T) => {
-  return await new Promise<T>((resolve) => {
-    resolve(value);
-  });
-};
+const doAsync = async <T, >(value: T) => await new Promise<T>((resolve) => {
+  resolve(value);
+});
 
 const Test = () => {
   const [value, setValue] = useState<string>();

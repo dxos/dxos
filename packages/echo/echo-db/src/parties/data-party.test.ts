@@ -61,8 +61,8 @@ describe('DataParty', () => {
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
 
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    const feed = await party.getWriteFeed();
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -81,8 +81,8 @@ describe('DataParty', () => {
 
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    const feed = await party.getWriteFeed();
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -105,8 +105,8 @@ describe('DataParty', () => {
 
     const party = await createParty(identityA, partyKey.publicKey, []);
     await party.open();
-    const feed = await party.feedProvider.createOrOpenWritableFeed();
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+    const feed = await party.getWriteFeed();
+    await party.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -130,14 +130,14 @@ describe('DataParty', () => {
 
     const partyA = await createParty(identityA, partyKey.publicKey, []);
     await partyA.open();
-    const feedA = await partyA.feedProvider.createOrOpenWritableFeed();
-    await partyA.processor.writeHaloMessage(createPartyGenesisMessage(
+    const feedA = await partyA.getWriteFeed();
+    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
       feedA.key,
       partyKey
     ));
-    await partyA.processor.writeHaloMessage(createKeyAdmitMessage(
+    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
       keyring,
       partyKey.publicKey,
       identityA.identityKey,
@@ -166,14 +166,14 @@ describe('DataParty', () => {
 
     const partyA = await createParty(identityA, partyKeyA.publicKey, []);
     await partyA.open();
-    const feedA = await partyA.feedProvider.createOrOpenWritableFeed();
-    await partyA.processor.writeHaloMessage(createPartyGenesisMessage(
+    const feedA = await partyA.getWriteFeed();
+    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
       identityA.keyring,
       partyKeyA,
       feedA.key,
       partyKeyA
     ));
-    await partyA.processor.writeHaloMessage(createKeyAdmitMessage(
+    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
       identityA.keyring,
       partyKeyA.publicKey,
       identityA.identityKey,

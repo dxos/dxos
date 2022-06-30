@@ -22,10 +22,10 @@ export type TestPeer = Awaited<ReturnType<typeof createTestInstance>>;
 
 export type WithTestMeta<T> = T & { testMeta: TestPeer }
 
-function addTestMeta<T> (obj: T, meta: TestPeer): WithTestMeta<T> {
+const addTestMeta = <T>(obj: T, meta: TestPeer): WithTestMeta<T> => {
   (obj as any).testMeta = meta;
   return obj as any;
-}
+};
 
 /**
  * Creates a number of test ECHO instances and a party that's shared between all of them.
