@@ -21,7 +21,7 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
+  const fs = new FeedStore(createStorage('.benchmark').directory(), { valueEncoding: 'utf8' });
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
   suite.beforeAll(() => {

@@ -26,7 +26,7 @@ interface KeyPair {
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
 const createFeedStore = (storage: Storage, options = {}) => {
-  const feedStore = new FeedStore(storage, options);
+  const feedStore = new FeedStore(storage.directory(), options);
   return feedStore;
 };
 
@@ -67,7 +67,7 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('feed', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore2 = new FeedStore(createStorage('feed', StorageType.RAM).directory());
     expect(feedStore2).toBeInstanceOf(FeedStore);
   });
 
