@@ -3,13 +3,10 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { Storage } from '@dxos/random-access-multi-storage';
-
-const log = debug('dxos:snapshot-store');
+import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
  * Stores party snapshots. Takes any `random-access-storage` compatible backend.
@@ -18,11 +15,11 @@ const log = debug('dxos:snapshot-store');
  */
 export class SnapshotStore {
   constructor (
-    private readonly _storage: Storage
+    private readonly _directory: Directory
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
-    const file = this._storage.createOrOpen(partyKey.toHex());
+    const file = this._directory.createOrOpen(partyKey.toHex());
 
     try {
       const { size } = await file.stat();
@@ -45,7 +42,7 @@ export class SnapshotStore {
 
   async save (snapshot: PartySnapshot) {
     assert(snapshot.partyKey);
-    const file = this._storage.createOrOpen(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
+    const file = this._directory.createOrOpen(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
 
     try {
       const data = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
@@ -57,9 +54,7 @@ export class SnapshotStore {
 
   /**
    * Removes all data.
+   * TODO(mykola): does nothing;
    */
-  async clear () {
-    log('Clearing all snapshots..');
-    await this._storage.destroy();
-  }
+  async clear () {}
 }

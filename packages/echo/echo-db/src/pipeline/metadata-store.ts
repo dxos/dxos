@@ -3,12 +3,11 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -16,8 +15,6 @@ import { Storage } from '@dxos/random-access-multi-storage';
  * Should be incremented every time there's a breaking change to the stored data.
  */
 export const STORAGE_VERSION = 1;
-
-const log = debug('dxos:snapshot-store');
 
 export class MetadataStore {
   private _metadata: EchoMetadata = {
@@ -28,7 +25,7 @@ export class MetadataStore {
   };
 
   constructor (
-    private readonly _storage: Storage
+    private readonly _directory: Directory
   ) {}
 
   get version (): number {
@@ -47,7 +44,7 @@ export class MetadataStore {
    * Loads metadata from persistent storage.
    */
   async load (): Promise<void> {
-    const file = this._storage.createOrOpen('EchoMetadata');
+    const file = this._directory.createOrOpen('EchoMetadata');
     try {
       const { size } = await file.stat();
       if (size === 0) {
@@ -75,7 +72,7 @@ export class MetadataStore {
       updated: new Date()
     };
 
-    const file = this._storage.createOrOpen('EchoMetadata');
+    const file = this._directory.createOrOpen('EchoMetadata');
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
@@ -83,14 +80,6 @@ export class MetadataStore {
     } finally {
       await file.close();
     }
-  }
-
-  /**
-   * Clears storage - doesn't work for now.
-   */
-  async clear (): Promise<void> {
-    log('Clearing all echo metadata...');
-    await this._storage.destroy();
   }
 
   /**
