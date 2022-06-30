@@ -26,7 +26,7 @@ interface KeyPair {
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
 const createFeedStore = (storage: Storage, options = {}) => {
-  const feedStore = new FeedStore(storage.directory(), options);
+  const feedStore = new FeedStore(storage.directory('feed'), options);
   return feedStore;
 };
 
@@ -64,10 +64,10 @@ describe('FeedStore', () => {
   const keys = createKeyPairs();
 
   test('Config default', async () => {
-    const feedStore = await createFeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore = await createFeedStore(createStorage('', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('feed', StorageType.RAM).directory());
+    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM).directory('feed'));
     expect(feedStore2).toBeInstanceOf(FeedStore);
   });
 
@@ -81,7 +81,7 @@ describe('FeedStore', () => {
     const database = hypertrie(directory.createOrOpen.bind(directory), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
       hypercore: customHypercore
     });
 
@@ -162,7 +162,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore = createFeedStore(createStorage('', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const { publicKey, secretKey } = createKeyPair();
@@ -173,7 +173,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
       hypercore: () => ({
         opened: true,
         ready (cb: () => void) {
