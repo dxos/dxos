@@ -14,12 +14,12 @@ export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
   directory (path = ''): Directory {
-    return new Directory(getFullPath(this._path, path), (filename:string, path:string, opts: any = {}) => {
-      return new File(raf(filename, {
+    return new Directory(getFullPath(this._path, path), (filename:string, path:string, opts: any = {}) =>
+      new File(raf(filename, {
         directory: path,
         ...opts
-      }));
-    });
+      }))
+    );
   }
 
   async _destroy () {
