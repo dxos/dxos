@@ -12,7 +12,7 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapsho
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 
 import { Entity, Item, Link } from '../api';
-import { UnknownModelError } from '../errors';
+import { UnknownModelError } from '../packlets/errors';
 
 const log = debug('dxos:echo-db:item-manager');
 

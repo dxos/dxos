@@ -10,7 +10,7 @@ import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import * as proto from '@dxos/echo-protocol';
 
-import { InvalidInvitationError } from '../errors';
+import { InvalidInvitationError } from '../packlets/errors';
 
 // Re-exporting type enum from protobuf definitions.
 export import InvitationDescriptorType = proto.InvitationDescriptor.Type;

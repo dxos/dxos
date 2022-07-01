@@ -21,11 +21,11 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { IdentityNotInitializedError } from '../errors';
 import {
   createDataPartyAdmissionMessages,
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
+import { IdentityNotInitializedError } from '../packlets/errors';
 import { PartyFeedProvider, PartyOptions } from '../pipeline';
 import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';

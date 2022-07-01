@@ -13,7 +13,7 @@ import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Database, Item, ResultSet } from '../api';
-import { IdentityNotInitializedError } from '../errors';
+import { IdentityNotInitializedError } from '../packlets/errors';
 import { DataParty } from '../parties';
 import {
   HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty

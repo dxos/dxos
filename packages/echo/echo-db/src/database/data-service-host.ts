@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-protocol';
 
 import { Item, Link } from '../api';
-import { EntityNotFoundError } from '../errors';
+import { EntityNotFoundError } from '../packlets/errors';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
