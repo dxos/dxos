@@ -29,7 +29,6 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
-    const storageDir = storage.directory('dir');
     expect(storage.type).toBe(StorageType.NODE);
   });
 
