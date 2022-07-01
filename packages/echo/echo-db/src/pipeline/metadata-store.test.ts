@@ -73,7 +73,7 @@ describe('MetadataStore in-memory', () => {
     expect(store.parties?.[0].feedKeys?.length).toBe(1);
     expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
 
-    await storage.destroy();
+    await store.clear();
     expect(store.parties?.length).toEqual(0);
   });
 });

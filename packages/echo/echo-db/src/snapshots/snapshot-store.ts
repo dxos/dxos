@@ -3,11 +3,13 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { Directory } from '@dxos/random-access-multi-storage';
 
+const log = debug('dxos:snapshot-store');
 /**
  * Stores party snapshots. Takes any `random-access-storage` compatible backend.
  *
@@ -54,7 +56,9 @@ export class SnapshotStore {
 
   /**
    * Removes all data.
-   * TODO(mykola): does nothing;
    */
-  async clear () {}
+  async clear () {
+    log('Clearing all snapshots..');
+    await this._directory.destroy();
+  }
 }

@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
@@ -15,6 +16,8 @@ import { Directory } from '@dxos/random-access-multi-storage';
  * Should be incremented every time there's a breaking change to the stored data.
  */
 export const STORAGE_VERSION = 1;
+
+const log = debug('dxos:snapshot-store');
 
 export class MetadataStore {
   private _metadata: EchoMetadata = {
@@ -80,6 +83,14 @@ export class MetadataStore {
     } finally {
       await file.close();
     }
+  }
+
+  /**
+   * Clears storage - doesn't work for now.
+   */
+  async clear (): Promise<void> {
+    log('Clearing all echo metadata...');
+    await this._directory.destroy();
   }
 
   /**
