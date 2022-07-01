@@ -41,6 +41,7 @@
     "@mui/system": "^5.4.2",
     "@tanstack/react-table": "^8.0.0-beta.3",
     "@types/faker": "^5.5.1",
+    "@types/mocha": "~8.2.2",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "@dnd-kit/core": "^6.0.3",
@@ -48,10 +49,13 @@
     "@dnd-kit/sortable": "^7.0.0",
     "@dnd-kit/utilities": "^3.2.0",
     "eslint": "^7.12.1",
+    "expect": "~27.0.2",
     "faker": "^5.1.0",
+    "raf": "^3.4.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "wait-for-expect": "^3.0.2"
   },
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",
@@ -64,5 +68,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain": {
+    "forceCloseTests": true,
+    "jsdom": true,
+    "testingFramework": "mocha"
   }
 }
