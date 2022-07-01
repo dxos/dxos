@@ -12,40 +12,17 @@ import { AbstractStorage } from './abstract-storage';
 export class RamStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  constructor (protected rootPath: string) {
-    super(rootPath);
-  }
-
-  subDir (path: string) {
-    return new RamStorage(join(this.rootPath, path));
-  }
-
-  override createOrOpen (filename: string): File {
-    const existingFile = this._getFileIfOpened(filename);
+  protected _createFile (filename: string, path: string): File {
+    const fullPath = join(path, filename);
+    const existingFile = this._getFileIfExists(fullPath);
     if (existingFile) {
-      return existingFile;
+      existingFile._reopen();
+      return existingFile!;
     }
-    const file = this._create();
-    this._files.set(filename, file);
+    const file = new File(ram());
+    this._addFile(fullPath, file);
     return file;
   }
 
-  protected _getFileIfOpened (filename: string) {
-    if (this._files.has(filename)) {
-      const file = this._files.get(filename);
-      if (file && !file._isDestroyed()) {
-        file._reopen();
-        return file;
-      }
-    }
-    return null;
-  }
-
-  protected override _create (): File {
-    return new File(ram());
-  }
-
-  protected override async _destroy () {
-    await Promise.all(Array.from(this._files.values()).map(file => file.destroy()));
-  }
+  protected override async _destroy () { }
 }
