@@ -87,7 +87,7 @@ describe('DataParty', () => {
       partyKey
     ));
 
-    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner());
+    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner(), party.credentialsWriter);
     const credentialsProvider = createCredentialsProvider(identity.createCredentialsSigner(), party.key, feed.key);
 
     const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
@@ -110,7 +110,7 @@ describe('DataParty', () => {
       feed.key,
       partyKey
     ));
-    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner());
+    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner(), party.credentialsWriter);
 
     const identityB = await deriveTestDeviceCredentials(identityA);
     const credentialsProvider = createCredentialsProvider(identityB.createCredentialsSigner(), party.key, feed.key);

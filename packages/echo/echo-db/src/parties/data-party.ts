@@ -127,6 +127,10 @@ export class DataParty {
     return this._invitationManager;
   }
 
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
+  }
+
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
@@ -152,6 +156,7 @@ export class DataParty {
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -171,7 +176,7 @@ export class DataParty {
 
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner, this.credentialsWriter), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 

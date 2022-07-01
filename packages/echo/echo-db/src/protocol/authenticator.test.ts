@@ -24,7 +24,6 @@ describe('authenticator', () => {
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     const feed = new MockFeedWriter();
-    partyProcessor.setOutboundStream(feed);
     await partyProcessor.processMessage({
       data: createPartyGenesisMessage(
         keyring,
@@ -53,7 +52,7 @@ describe('authenticator', () => {
       meta: {} as any
     });
 
-    const authenticator = createAuthenticator(partyProcessor, signer);
+    const authenticator = createAuthenticator(partyProcessor, signer, null as any);
     const credential = createAuthMessage(
       keyring,
       partyKey.publicKey,

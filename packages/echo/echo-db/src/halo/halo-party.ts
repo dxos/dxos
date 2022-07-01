@@ -146,6 +146,7 @@ export class HaloParty {
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -165,7 +166,11 @@ export class HaloParty {
     // Replication.
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), peerId),
+      createAuthPlugin(createAuthenticator(
+        this._partyCore.processor,
+        this._credentialsSigner,
+        this._partyCore.credentialsWriter
+      ), peerId),
       createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);
 

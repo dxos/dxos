@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { KeyHint, KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -99,6 +99,11 @@ export class PartyCore {
     return feed;
   }
 
+  get credentialsWriter (): FeedWriter<HaloMessage> {
+    assert(this._pipeline?.outboundHaloStream, 'Party not open');
+    return this._pipeline?.outboundHaloStream;
+  }
+
   /**
    * Opens the pipeline and connects the streams.
    */
@@ -146,11 +151,6 @@ export class PartyCore {
 
     // TODO(burdon): Support read-only parties.
     const [readStream, writeStream] = await this._pipeline.open();
-
-    // Must happen after open.
-    if (this._pipeline.outboundHaloStream) {
-      this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
-    }
 
     //
     // Database
@@ -203,8 +203,7 @@ export class PartyCore {
   }
 
   writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    assert(this._partyProcessor, 'Party not open');
-    return this._partyProcessor?.writeHaloMessage(message);
+    return this.credentialsWriter.write(message);
   }
 
   /**
