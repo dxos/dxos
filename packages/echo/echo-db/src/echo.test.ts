@@ -13,10 +13,10 @@ import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from './api';
 import { ECHO } from './echo';
 import { Contact } from './halo';
 import { defaultInvitationAuthenticator } from './invitations';
+import { Item } from './packlets/database';
 import { inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:test');

@@ -10,9 +10,11 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { DatabaseBackend, DataServiceHost, ItemManager } from '../database';
+import { DataServiceHost } from './data-service-host';
+import { DatabaseBackend } from './database-backend';
 import { Entity } from './entity';
 import { Item } from './item';
+import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
