@@ -5,10 +5,10 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -127,6 +127,10 @@ export class DataParty {
     return this._invitationManager;
   }
 
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
+  }
+
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
@@ -152,6 +156,7 @@ export class DataParty {
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -171,7 +176,7 @@ export class DataParty {
 
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner, this.credentialsWriter), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 
@@ -208,10 +213,6 @@ export class DataParty {
 
   getFeeds (): FeedDescriptor[] {
     return this._feedProvider.getFeeds();
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message);
   }
 
   get isActive (): boolean {
