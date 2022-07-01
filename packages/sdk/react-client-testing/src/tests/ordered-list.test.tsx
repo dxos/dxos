@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import faker from 'faker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
@@ -34,14 +34,14 @@ const useTestComponents = async () => {
 const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: OrderedList}) => {
   const [order, setOrder] = useState(orderedList.values);
 
+  useEffect(() => console.log(order), [order]);
+
   const handleChangeOrder = async () => {
-    console.log(order);
     const newOrder = [
       order[1],
       order[0],
       ...order.slice(2)
     ];
-    console.log(newOrder);
     await orderedList.init(newOrder);
     setOrder(newOrder);
   };
