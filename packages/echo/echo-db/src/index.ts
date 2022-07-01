@@ -4,10 +4,11 @@
 
 export { codec } from '@dxos/echo-protocol';
 
-export * from './api';
 export * from './packlets/database';
-export * from './echo';
 export * from './packlets/errors';
+
+export * from './api';
+export * from './echo';
 export * from './halo';
 export * from './invitations';
 export * from './protocol';
