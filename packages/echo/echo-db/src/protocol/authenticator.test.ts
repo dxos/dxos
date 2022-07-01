@@ -6,7 +6,6 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createAuthMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { MockFeedWriter } from '@dxos/echo-protocol';
 
 import { PartyProcessor } from '../pipeline';
 import { createAuthenticator } from './authenticator';
@@ -23,7 +22,6 @@ describe('authenticator', () => {
     const signer = CredentialsSigner.createDirectDeviceSigner(keyring);
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
-    const feed = new MockFeedWriter();
     await partyProcessor.processMessage({
       data: createPartyGenesisMessage(
         keyring,

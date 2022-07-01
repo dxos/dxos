@@ -5,10 +5,10 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -213,10 +213,6 @@ export class DataParty {
 
   getFeeds (): FeedDescriptor[] {
     return this._feedProvider.getFeeds();
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message);
   }
 
   get isActive (): boolean {

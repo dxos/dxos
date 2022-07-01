@@ -5,10 +5,10 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -122,6 +122,10 @@ export class HaloParty {
     return this._partyCore.processor.feedKeys;
   }
 
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
+  }
+
   async getWriteFeedKey () {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
     return feed.key;
@@ -199,10 +203,6 @@ export class HaloParty {
     this.update.emit();
 
     return this;
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message);
   }
 
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {

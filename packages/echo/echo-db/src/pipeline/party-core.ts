@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { KeyHint, KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -200,10 +200,6 @@ export class PartyCore {
     this._subscriptions.unsubscribe();
 
     return this;
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this.credentialsWriter.write(message);
   }
 
   /**

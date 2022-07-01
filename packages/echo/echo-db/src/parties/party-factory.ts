@@ -63,7 +63,7 @@ export class PartyFactory {
     const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       identity.keyring,
       partyKey,
       writableFeed.key,
@@ -71,7 +71,7 @@ export class PartyFactory {
     );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.writeCredentialsMessage(createEnvelopeMessage(
+    await party.credentialsWriter.write(createEnvelopeMessage(
       identity.keyring,
       partyKey.publicKey,
       wrapMessage(identity.identityGenesis),
@@ -80,7 +80,7 @@ export class PartyFactory {
 
     // FeedAdmit (signed by the Device KeyChain).
     // TODO(dmaretskyi): Is this really needed since a feed is already admitted by party genesis message.
-    await party.writeCredentialsMessage(createFeedAdmitMessage(
+    await party.credentialsWriter.write(createFeedAdmitMessage(
       identity.keyring,
       partyKey.publicKey,
       writableFeed.key,
@@ -89,7 +89,7 @@ export class PartyFactory {
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (identity.identityInfo) {
-      await party.writeCredentialsMessage(createEnvelopeMessage(
+      await party.credentialsWriter.write(createEnvelopeMessage(
         identity.keyring,
         partyKey.publicKey,
         wrapMessage(identity.identityInfo),
@@ -179,7 +179,7 @@ export class PartyFactory {
 
     // Copy our signed IdentityInfo into the new Party.
     if (identity.identityInfo) {
-      await party.writeCredentialsMessage(createEnvelopeMessage(
+      await party.credentialsWriter.write(createEnvelopeMessage(
         identity.keyring,
         partyKey,
         wrapMessage(identity.identityInfo),
@@ -204,7 +204,7 @@ export class PartyFactory {
     const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       identity.keyring,
       partyKey,
       writableFeed.key,
@@ -212,7 +212,7 @@ export class PartyFactory {
     );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.writeCredentialsMessage(createEnvelopeMessage(
+    await party.credentialsWriter.write(createEnvelopeMessage(
       identity.keyring,
       partyKey.publicKey,
       wrapMessage(identity.identityGenesis),
@@ -220,7 +220,7 @@ export class PartyFactory {
     ));
 
     // FeedAdmit (signed by the Device KeyChain).
-    await party.writeCredentialsMessage(createFeedAdmitMessage(
+    await party.credentialsWriter.write(createFeedAdmitMessage(
       identity.keyring,
       partyKey.publicKey,
       writableFeed.key,
@@ -229,7 +229,7 @@ export class PartyFactory {
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (identity.identityInfo) {
-      await party.writeCredentialsMessage(createEnvelopeMessage(
+      await party.credentialsWriter.write(createEnvelopeMessage(
         identity.keyring,
         partyKey.publicKey,
         wrapMessage(identity.identityInfo),
