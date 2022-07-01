@@ -5,6 +5,7 @@
 import { Directory, File } from '../interfaces';
 import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
+import { getFullPath } from '../utils';
 
 /**
  * Base class for all storage implementations.
@@ -14,6 +15,13 @@ export abstract class AbstractStorage implements Storage {
   public abstract type: StorageType
 
   constructor (protected readonly _path: string) {
+  }
+
+  public directory (path = ''): Directory {
+    return new Directory(
+      getFullPath(this._path, path),
+      this._createFile.bind(this),
+      this._destroyFilesInPath.bind(this));
   }
 
   _getFileIfExists (filename: string): File | null {
@@ -32,29 +40,37 @@ export abstract class AbstractStorage implements Storage {
 
   async destroy () {
     try {
-      await this._closeFiles();
-      await this._destroyFiles();
+      await this._closeFilesInPath('');
+      await this._destroyFilesInPath('');
       await this._destroy();
-      this._files.clear();
     } catch (error: any) {
       console.error(error);
     }
   }
 
-  private _closeFiles () {
+  protected _closeFilesInPath (path: string) {
+    const filesInPath = this._selectFilesInPath(path);
     return Promise.all(
-      Array.from(this._files.values())
+      Array.from(filesInPath.values())
         .map(file => file.close().catch((error: any) => console.error(error.message)))
     );
   }
 
-  private _destroyFiles () {
-    return Promise.all(
-      Array.from(this._files.values())
+  protected _destroyFilesInPath (path: string) {
+    const filesInPath = this._selectFilesInPath(path);
+    const destroyPromise = Promise.all(
+      Array.from(filesInPath.values())
         .map(file => file.destroy().catch((error: any) => console.error(error.message)))
     );
+    Array.from(filesInPath.keys()).forEach(filePath => this._files.delete(filePath));
+    return destroyPromise;
   }
 
-  public abstract directory (path?: string): Directory;
+  protected _selectFilesInPath (path: string): Map<string, File> {
+    const fullPath = getFullPath(this._path, path);
+    return new Map([...this._files].filter(([filePath, _]) => filePath.includes(fullPath)));
+  }
+
+  protected abstract _createFile (filename: string, path: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

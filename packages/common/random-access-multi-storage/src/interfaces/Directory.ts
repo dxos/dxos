@@ -6,7 +6,9 @@ import { File } from './File';
 
 export class Directory {
 
-  constructor (protected readonly _path: string, protected readonly _createFile: (filename: string, path: string, opts?: any) => File) {}
+  constructor (protected readonly _path: string,
+     protected readonly _createFile: (filename: string, path: string, opts?: any) => File,
+      protected readonly _destroyDirectory: (path: string) => Promise<void[]>) { }
 
   createOrOpen (filename: string, opts?: any): File {
     const file = this._createFile(filename, this._path, opts);
@@ -14,6 +16,10 @@ export class Directory {
   }
 
   subDirectory (path: string): Directory {
-    return new Directory(getFullPath(this._path, path), this._createFile);
+    return new Directory(getFullPath(this._path, path), this._createFile, this._destroyDirectory);
+  }
+
+  async destroy () {
+    return this._destroyDirectory(this._path);
   }
 }

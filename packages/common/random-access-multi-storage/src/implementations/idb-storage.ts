@@ -5,9 +5,8 @@
 import { join } from 'path';
 import randomAccessIdb from 'random-access-idb';
 
-import { Directory, StorageType, File } from '../interfaces';
+import { StorageType, File } from '../interfaces';
 import { RandomAccessStorage } from '../types';
-import { getFullPath } from '../utils';
 import { AbstractStorage } from './abstract-storage';
 
 export class IDbStorage extends AbstractStorage {
@@ -19,18 +18,16 @@ export class IDbStorage extends AbstractStorage {
     this._fileStorage = this._createFileStorage();
   }
 
-  directory (path = ''): Directory {
-    return new Directory(getFullPath(this._path, path), (filename: string, path: string) => {
-      const fullPath = join(path, filename);
-      const existingFile = this._getFileIfExists(fullPath);
-      if (existingFile) {
-        existingFile._reopen();
-        return existingFile;
-      }
-      const file = new File(this._fileStorage(fullPath));
-      this._addFile(fullPath, file);
-      return file;
-    });
+  protected _createFile (filename: string, path: string): File {
+    const fullPath = join(path, filename);
+    const existingFile = this._getFileIfExists(fullPath);
+    if (existingFile) {
+      existingFile._reopen();
+      return existingFile;
+    }
+    const file = new File(this._fileStorage(fullPath));
+    this._addFile(fullPath, file);
+    return file;
   }
 
   protected override async _destroy () {
