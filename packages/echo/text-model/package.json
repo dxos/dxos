@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.32",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",

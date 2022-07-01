@@ -32,7 +32,7 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.32",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/js-yaml": "^4.0.5",

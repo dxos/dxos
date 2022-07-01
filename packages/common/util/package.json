@@ -22,7 +22,7 @@
     "@types/node": "^16.11.27"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.32",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "eslint": "^7.12.1",
