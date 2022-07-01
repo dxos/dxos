@@ -31,6 +31,7 @@ import {
 import { KeyStore } from './keystore';
 import { Signer } from './signer';
 import { SimpleMetrics, createMeter } from './simple-metrics';
+import { failUndefined } from '@dxos/debug';
 
 const metrics = new SimpleMetrics();
 const meter = createMeter(metrics);
@@ -665,7 +666,11 @@ export class Keyring implements Signer {
    * KeyChains are not supported.
    */
   @meter
-  rawSign (data: Buffer, keyRecord: KeyRecord) {
+  rawSign (data: Buffer, keyRecord: KeyRecord | PublicKey) {
+    if(keyRecord instanceof PublicKey) {
+      keyRecord = this.getKey(keyRecord) ?? failUndefined()
+    }
+
     assert(Buffer.isBuffer(data), 'Data to sign is not a buffer.');
     assert(keyRecord);
     assertValidPublicKey(keyRecord.publicKey);

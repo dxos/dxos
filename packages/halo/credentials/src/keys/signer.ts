@@ -22,5 +22,5 @@ export interface Signer {
    * Sign the data with the indicated key and return the signature.
    * KeyChains are not supported.
    */
-  rawSign (data: Buffer, keyRecord: KeyRecord): Buffer;
+  rawSign (data: Buffer, keyRecord: KeyRecord | PublicKey): Buffer;
 }

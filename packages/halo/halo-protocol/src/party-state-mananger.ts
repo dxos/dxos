@@ -1,10 +1,14 @@
-import { PublicKey } from "@dxos/crypto";
+import { PublicKey, verify } from "@dxos/crypto";
 import { failUndefined } from "@dxos/debug";
 import { assert } from "console";
-import { AuthChallenge, AuthResponse, Credential } from "./proto";
+import { AuthChallenge, AuthResponse, Credential, Proof, SignedData } from "./proto";
 import { isAdmittedMember } from "./state/members-state";
 import { createPartyState, isPartyMemberIdentityOrDevice, isAdmittedMemberWithDevice, PartyState, processPartyCredential } from "./state/party-state";
 import { VerifiedCredential } from "./verified-credential";
+import debug from 'debug'
+import { verifyProof } from "./crypto";
+
+const log = debug('dxos:halo-protocol:party-state-manager')
 
 export class PartyStateManager {
   private _state: PartyState;
@@ -26,10 +30,14 @@ export class PartyStateManager {
 
     // Must be signed by the device
     const proof = auth.findProof(signer => signer.equals(auth.claim.device ?? failUndefined()))
-    assert(proof)
+    if(!proof) {
+      return false
+    }
 
     // Must have correct challenge
-    assert(Buffer.from(proof?.nonce ?? failUndefined()).equals(challenge.nonce ?? failUndefined()))
+    if(!Buffer.from(proof?.nonce ?? failUndefined()).equals(challenge.nonce ?? failUndefined())) {
+      return false
+    }
 
     // Validate party membership.
     const state = await this._getDerivedState(response.supporting ?? [])
@@ -49,8 +57,19 @@ export class PartyStateManager {
   }
 
   private async _verifyCredential(credential: Credential): Promise<VerifiedCredential> {
-    // TODO(dmaretskyi): Verify signatures.
-    return new VerifiedCredential(credential);
+    const validProofs: Proof[] = []
+    for(const proof of credential.proofs ?? []) {
+      if(await verifyProof(credential, proof)) {
+        validProofs.push(proof)
+      } else {
+        log(`Invalid proof by key: ${proof.signer}`)
+      }
+    }
+
+    return new VerifiedCredential({
+      ...credential,
+      proofs: validProofs,
+    });
   }
 
   /**

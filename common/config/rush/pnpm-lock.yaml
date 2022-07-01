@@ -1760,26 +1760,38 @@ importers:
   ../../packages/halo/halo-protocol:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.27
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/json-stable-stringify': ^1.0.32
       '@types/mocha': ~8.2.2
+      '@types/node': ^16.11.27
+      debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
+      json-stable-stringify: ^1.0.1
       typescript: ^4.5.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      '@types/debug': 4.1.7
+      '@types/json-stable-stringify': 1.0.33
+      debug: 4.3.3
+      json-stable-stringify: 1.0.1
     devDependencies:
       '@dxos/eslint-plugin': 1.0.27_nv27fge2mo5alj7g7fxbwkxkv4
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
       eslint: 7.32.0
       expect: 27.0.6
       typescript: 4.5.3
@@ -9107,7 +9119,6 @@ packages:
 
   /@types/json-stable-stringify/1.0.33:
     resolution: {integrity: sha512-qEWiQff6q2tA5gcJGWwzplQcXdJtm+0oy6IHGHzlOf3eFAkGE/FIPXZK9ofWgNSHVp8AFFI33PJJshS0ei3Gvw==}
-    dev: true
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha1-7ihweulOEdK4J7y+UnC86n8+ce4=}
@@ -18520,7 +18531,7 @@ packages:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
   /json-stable-stringify/1.0.1:
-    resolution: {integrity: sha1-mnWdOcXy/1A/1TAGRu1EX4jE+a8=}
+    resolution: {integrity: sha512-i/J297TW6xyj7sDFa7AmBPkQvLIxWr2kKPWI26tXydnZrzVAocNqn5DMNT1Mzk0vit1V5UkRM7C1KdVNp7Lmcg==}
     dependencies:
       jsonify: 0.0.0
     dev: false
@@ -18562,7 +18573,7 @@ packages:
       graceful-fs: 4.2.8
 
   /jsonify/0.0.0:
-    resolution: {integrity: sha1-LHS27kHZPKUbe1qu6PUDYx0lKnM=}
+    resolution: {integrity: sha512-trvBk1ki43VZptdBI5rIlG4YOzyeH/WefQt5rj1grasPn4iiZWKet8nkgc4GlsAylaztn0qZfUYOiTsASJFdNA==}
     dev: false
 
   /jsonwebtoken/8.5.1:
