@@ -8,7 +8,6 @@ import faker from 'faker';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
-import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { Client, Item } from '@dxos/client';
@@ -50,7 +49,7 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
     <ul onClick={handleChangeOrder}>
       {order.map(id => (
         <li key={id}>
-          {items.find(item => item.id === id)!.model.get('name')}
+          {items.find(item => item.id === id)!.id}
         </li>
       ))}
     </ul>
@@ -84,12 +83,16 @@ describe.only('OrderedList', () => {
     });
 
     const ul = document.querySelector('ul');
-    ul?.childNodes.forEach(node => console.log(node.textContent));
+    expect(ul?.childElementCount).toEqual(3);
+    ul?.childNodes.forEach((node, i) => {
+      console.log(node.textContent);
+      expect(node.textContent).toBe(orderedList.values[i]);
+    });
+
     ul?.click();
-    await sleep(100);
-    await waitForExpect(() => {
-      expect(ul?.childElementCount).toEqual(3);
-      ul?.childNodes.forEach(node => console.log(node.textContent));
+    ul?.childNodes.forEach((node, i) => {
+      console.log(node.textContent);
+      expect(node.textContent).toBe(orderedList.values[i]);
     });
   });
 });
