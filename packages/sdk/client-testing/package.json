@@ -31,7 +31,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.32",
+    "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",

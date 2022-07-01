@@ -20,7 +20,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.32",
+    "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/node": "^16.11.27",
