@@ -18,6 +18,12 @@ export class NodeStorage extends AbstractStorage {
     );
   }
 
+  protected override async _destroyFilesInPath (path: string) {
+    const destroyPromise = super._destroyFilesInPath(path);
+    await del(this._path);
+    return destroyPromise;
+  }
+
   async _destroy () {
     await del(this._path);
   }

@@ -29,15 +29,32 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
-    const storageDir = storage.directory('');
+    const storageDir = storage.directory('dir');
     expect(storage.type).toBe(StorageType.NODE);
+  });
 
-    // Check write a file.
-    const file = storageDir.createOrOpen('file1');
+  it('check if creates file', async () => {
+    const directory = temp();
+    const storage = createStorage(directory);
+    const storageDir = storage.directory('dir');
+
+    const file = storageDir.createOrOpen('file');
     await write(file);
-    await expect(fs.access(path.join(directory, 'file1'), constants.F_OK)).resolves.toBeUndefined();
+    await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
+  });
 
-    // Check destroy.
+  it('check if destroys directory and storage', async () => {
+    const directory = temp();
+    const storage = createStorage(directory);
+    const storageDir = storage.directory('dir');
+
+    const file = storageDir.createOrOpen('file');
+    await write(file);
+    // Check dir destroy.
+    await storageDir.destroy();
+    await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
+
+    // Check storage destroy.
     await storage.destroy();
     await expect(fs.access(directory, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
