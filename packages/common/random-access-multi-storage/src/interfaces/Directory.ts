@@ -6,9 +6,10 @@ import { File } from './File';
 
 export class Directory {
 
-  constructor (protected readonly _path: string,
-     protected readonly _createFile: (filename: string, path: string, opts?: any) => File,
-      protected readonly _destroyDirectory: (path: string) => Promise<void[]>) { }
+  constructor (private readonly _path: string,
+    private readonly _createFile: (filename: string, path: string, opts?: any) => File,
+    private readonly _destroyDirectory: (path: string) => Promise<void[]>
+  ) { }
 
   createOrOpen (filename: string, opts?: any): File {
     const file = this._createFile(filename, this._path, opts);

@@ -24,7 +24,7 @@ export abstract class AbstractStorage implements Storage {
       this._destroyFilesInPath.bind(this));
   }
 
-  _getFileIfExists (filename: string): File | null {
+  protected _getFileIfExists (filename: string): File | null {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
       if (file && !file._isDestroyed()) {
@@ -34,7 +34,7 @@ export abstract class AbstractStorage implements Storage {
     return null;
   }
 
-  _addFile (filename: string, file: File) {
+  protected _addFile (filename: string, file: File) {
     this._files.set(filename, file);
   }
 
@@ -48,7 +48,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected _closeFilesInPath (path: string) {
+  private _closeFilesInPath (path: string) {
     const filesInPath = this._selectFilesInPath(path);
     return Promise.all(
       Array.from(filesInPath.values())
@@ -66,7 +66,7 @@ export abstract class AbstractStorage implements Storage {
     return destroyPromise;
   }
 
-  protected _selectFilesInPath (path: string): Map<string, File> {
+  private _selectFilesInPath (path: string): Map<string, File> {
     const fullPath = getFullPath(this._path, path);
     return new Map([...this._files].filter(([filePath, _]) => filePath.includes(fullPath)));
   }
