@@ -11,8 +11,10 @@ import { DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, LinkSnapshot } fro
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 
-import { Entity, Item, Link } from '../api';
+import { Entity } from './entity';
+import { Item } from './item';
 import { ItemManager, ModelConstructionOptions } from './item-manager';
+import { Link } from './link';
 
 const log = debug('dxos:echo-db:item-demuxer');
 

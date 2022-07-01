@@ -19,11 +19,11 @@ import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-s
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
-import { DataServiceRouter } from './database';
-import { IdentityNotInitializedError, InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
+import { DataServiceRouter } from './packlets/database';
+import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
