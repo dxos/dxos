@@ -1,0 +1,25 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo.credentials;
+
+import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+import "credential.proto";
+
+message AuthChallenge {
+  bytes nonce = 1;
+}
+
+message AuthResponse {
+  /// Must contain AuthClaim signed with the nonce from the challenge.
+  Credential auth = 1;
+
+  /// Supporting credentials to etablish the chain of trust to the device.
+  repeated Credential supporting = 2;
+
+  /// Additional credentials that should be written to the control feed upon successful authentication (e.g., FeedAdmit credentials).
+  repeated Credential to_notarize = 3;
+}

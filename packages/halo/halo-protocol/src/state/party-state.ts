@@ -29,8 +29,7 @@ export function processPartyCredential(state: PartyState, credential: VerifiedCr
       }
     }
     case 'dxos.halo.credentials.DeviceClaim': {
-      const memberState = state.memberDevices[credential.claim.identity!.toHex()] ??
-        createDevicesState(credential.claim.identity!)
+      const memberState = getDevicesState(state, credential.claim.identity!)
 
       return {
         ...state,
@@ -45,6 +44,10 @@ export function processPartyCredential(state: PartyState, credential: VerifiedCr
   }
 }
 
+export function getDevicesState(state: PartyState, identity: PublicKey): DevicesState {
+  return state.memberDevices[identity.toHex()] ?? createDevicesState(identity)
+}
+
 export function isPartyMemberIdentityOrDevice(state: PartyState, key: PublicKey) {
   if(isAdmittedMember(state.members, key)) {
     return true
@@ -53,4 +56,13 @@ export function isPartyMemberIdentityOrDevice(state: PartyState, key: PublicKey)
   return Object.values(state.memberDevices).some(s =>
     isAdmittedDevice(s, key) && isAdmittedMember(state.members, s.identity)
   )
+}
+
+export function isAdmittedMemberWithDevice(state: PartyState, identity: PublicKey, device: PublicKey) {
+  if(!isAdmittedMember(state.members, identity)) {
+    return false
+  }
+
+  const memberState = getDevicesState(state, identity)
+  return isAdmittedDevice(memberState, device)
 }
