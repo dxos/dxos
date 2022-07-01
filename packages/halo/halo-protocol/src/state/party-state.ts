@@ -2,19 +2,22 @@ import { PublicKey } from "@dxos/crypto";
 import { Credential, DeviceClaim } from "../proto";
 import { VerifiedCredential } from "../verified-credential";
 import { createDevicesState, DevicesState, isAdmittedDevice, processDevicesCredential } from "./devices-state";
+import { createFeedsProcessor, createFeedsState, FeedsState } from "./feed-state";
 import { createMembersProcessor, createMembersState, isAdmittedMember, MembersState } from "./members-state";
 
 export interface PartyState {
   party: PublicKey
   members: MembersState
   memberDevices: Record<string, DevicesState>
+  feeds: FeedsState,
 }
 
 export function createPartyState(party: PublicKey): PartyState {
   return {
     party,
     members: createMembersState(party),
-    memberDevices: {}
+    memberDevices: {},
+    feeds: createFeedsState(party)
   }
 }
 
@@ -37,6 +40,14 @@ export function processPartyCredential(state: PartyState, credential: VerifiedCr
           ...state.memberDevices,
           [credential.claim.identity!.toHex()]: processDevicesCredential(memberState, credential),
         }
+      }
+    }
+    case 'dxos.halo.credentials.FeedAdmitClaim': {
+      return {
+        ...state,
+        feeds: createFeedsProcessor(key => 
+          key.equals(state.party) || isPartyMemberIdentityOrDevice(state, key)
+        )(state.feeds, credential)
       }
     }
     default:

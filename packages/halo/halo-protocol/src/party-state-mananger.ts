@@ -7,6 +7,7 @@ import { createPartyState, isPartyMemberIdentityOrDevice, isAdmittedMemberWithDe
 import { VerifiedCredential } from "./verified-credential";
 import debug from 'debug'
 import { verifyProof } from "./crypto";
+import { FeedInfo } from "./state/feed-state";
 
 const log = debug('dxos:halo-protocol:party-state-manager')
 
@@ -54,6 +55,10 @@ export class PartyStateManager {
 
   isAdmittedMemberWithDevice(identity: PublicKey, device: PublicKey) {
     return isAdmittedMemberWithDevice(this._state, identity, device)
+  }
+
+  getFeeds(): FeedInfo[] {
+    return this._state.feeds.feeds
   }
 
   private async _verifyCredential(credential: Credential): Promise<VerifiedCredential> {
