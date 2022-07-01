@@ -19,7 +19,7 @@ import {
 } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { PartyNotFoundError } from '../packlets/errors';
+import { PartyNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
 const log = debug('dxos:echo-db:data-service-router');

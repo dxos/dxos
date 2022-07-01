@@ -5,7 +5,7 @@
 export { codec } from '@dxos/echo-protocol';
 
 export * from './api';
-export * from './database';
+export * from './packlets/database';
 export * from './echo';
 export * from './packlets/errors';
 export * from './halo';

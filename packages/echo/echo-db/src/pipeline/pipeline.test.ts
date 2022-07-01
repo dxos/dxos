@@ -15,7 +15,7 @@ import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 

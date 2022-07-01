@@ -9,7 +9,7 @@ import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credential
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { PartyStateProvider } from './party-processor';
 
 const log = debug('dxos:echo-db:message-selector');

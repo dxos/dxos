@@ -32,8 +32,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
-import { Item } from '../api';
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
+import { Item } from '../packlets/database';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createTestIdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';

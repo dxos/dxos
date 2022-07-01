@@ -7,9 +7,9 @@ import assert from 'assert';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, StateManager } from '@dxos/model-factory';
 
-import { ItemManager } from '../database';
 import { Entity } from './entity';
 import { Item } from './item';
+import { ItemManager } from './item-manager';
 
 export interface LinkData {
   sourceId: ItemID
