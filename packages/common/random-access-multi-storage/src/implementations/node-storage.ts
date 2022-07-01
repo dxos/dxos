@@ -3,7 +3,6 @@
 //
 
 import del from 'del';
-import { join } from 'path';
 import raf from 'random-access-file';
 
 import { File } from '../interfaces';
@@ -13,22 +12,19 @@ import { AbstractStorage } from './abstract-storage';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  constructor (protected rootPath: string) {
-    super(rootPath);
+  protected _createFile (filename: string, path: string, opts: any = {}): File {
+    return new File(
+      raf(filename, { directory: path, ...opts })
+    );
   }
 
-  subDir (path: string) {
-    return new NodeStorage(join(this.rootPath, path));
-  }
-
-  _create (filename: string, opts: any = {}): File {
-    return new File(raf(filename, {
-      directory: this._root,
-      ...opts
-    }));
+  protected override async _destroyFilesInPath (path: string) {
+    const destroyPromise = super._destroyFilesInPath(path);
+    await del(this._path);
+    return destroyPromise;
   }
 
   async _destroy () {
-    await del(this._root);
+    await del(this._path);
   }
 }

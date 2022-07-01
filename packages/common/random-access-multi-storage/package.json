@@ -22,13 +22,13 @@
     "del": "^5.1.0",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
-    "random-access-idb": "^1.2.1",
+    "random-access-idb": "^1.2.2",
     "random-access-memory": "~3.1.2",
     "random-access-web": "^2.0.3"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",

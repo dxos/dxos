@@ -4,18 +4,22 @@
 
 import debug from 'debug';
 
-import { Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
-import { FeedKey, PartyKey } from '@dxos/echo-protocol';
+import { Message as HaloMessage, Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
+import { FeedKey, FeedWriter, PartyKey } from '@dxos/echo-protocol';
 
 import { PartyProcessor } from '../pipeline';
 import { CredentialsSigner } from './credentials-signer';
 
 const log = debug('dxos:echo-db:authenticator');
 
-export const createAuthenticator = (partyProcessor: PartyProcessor, credentialsSigner: CredentialsSigner): Authenticator => new PartyAuthenticator(partyProcessor.state, async auth => {
+export const createAuthenticator = (
+  partyProcessor: PartyProcessor,
+  credentialsSigner: CredentialsSigner,
+  credentialsWriter: FeedWriter<HaloMessage>
+): Authenticator => new PartyAuthenticator(partyProcessor.state, async auth => {
   if (auth.feedAdmit && auth.feedKey && !partyProcessor.isFeedAdmitted(auth.feedKey)) {
     log(`Admitting feed of authenticated member: ${auth.feedKey}`);
-    await partyProcessor.writeHaloMessage(createEnvelopeMessage(
+    await credentialsWriter.write(createEnvelopeMessage(
       credentialsSigner.signer,
       partyProcessor.partyKey,
       auth.feedAdmit,

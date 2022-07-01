@@ -93,21 +93,21 @@ export class HaloFactory {
      *    B. Device key (the first "member" of the Identity's HALO).
      *    C. Feed key (the feed owned by the Device).
      */
-    await halo.writeCredentialsMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
+    await halo.credentialsWriter.write(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
     /* 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
      *    message will be copied into other Parties which we create or join.
      */
-    await halo.writeCredentialsMessage(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
+    await halo.credentialsWriter.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
 
     if (options.identityDisplayName) {
       // 4. Write the IdentityInfo message with descriptive details (eg, display name).
-      await halo.writeCredentialsMessage(createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey));
+      await halo.credentialsWriter.write(createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey));
     }
 
     if (options.deviceDisplayName) {
       // 5. Write the DeviceInfo message with descriptive details (eg, display name).
-      await halo.writeCredentialsMessage(createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey));
+      await halo.credentialsWriter.write(createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey));
     }
 
     // Create special properties item.

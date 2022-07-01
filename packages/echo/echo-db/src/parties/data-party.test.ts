@@ -23,9 +23,11 @@ import { DataParty } from './data-party';
 
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
-    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
-    const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
-    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+
+    const storage = createStorage('', StorageType.RAM);
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
@@ -60,7 +62,7 @@ describe('DataParty', () => {
     await party.open();
 
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -80,14 +82,14 @@ describe('DataParty', () => {
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
       partyKey
     ));
 
-    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner());
+    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner(), party.credentialsWriter);
     const credentialsProvider = createCredentialsProvider(identity.createCredentialsSigner(), party.key, feed.key);
 
     const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
@@ -104,13 +106,13 @@ describe('DataParty', () => {
     const party = await createParty(identityA, partyKey.publicKey, []);
     await party.open();
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
       partyKey
     ));
-    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner());
+    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner(), party.credentialsWriter);
 
     const identityB = await deriveTestDeviceCredentials(identityA);
     const credentialsProvider = createCredentialsProvider(identityB.createCredentialsSigner(), party.key, feed.key);
@@ -129,13 +131,13 @@ describe('DataParty', () => {
     const partyA = await createParty(identityA, partyKey.publicKey, []);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
-    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
+    await partyA.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feedA.key,
       partyKey
     ));
-    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
+    await partyA.credentialsWriter.write(createKeyAdmitMessage(
       keyring,
       partyKey.publicKey,
       identityA.identityKey,
@@ -165,13 +167,13 @@ describe('DataParty', () => {
     const partyA = await createParty(identityA, partyKeyA.publicKey, []);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
-    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
+    await partyA.credentialsWriter.write(createPartyGenesisMessage(
       identityA.keyring,
       partyKeyA,
       feedA.key,
       partyKeyA
     ));
-    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
+    await partyA.credentialsWriter.write(createKeyAdmitMessage(
       identityA.keyring,
       partyKeyA.publicKey,
       identityA.identityKey,

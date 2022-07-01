@@ -19,11 +19,11 @@ import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-s
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
-import { DataServiceRouter } from './database';
-import { IdentityNotInitializedError, InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
+import { DataServiceRouter } from './packlets/database';
+import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
@@ -87,6 +87,7 @@ export class ECHO {
   private readonly _halo: HALO;
   private readonly _keyring: Keyring;
 
+  private readonly _storage: Storage;
   private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
@@ -114,11 +115,12 @@ export class ECHO {
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
+    this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(storage.subDir('snapshots'));
-    this._metadataStore = new MetadataStore(storage.subDir('metadata'));
+    this._snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    this._metadataStore = new MetadataStore(storage.directory('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(storage.subDir('feeds'), { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.directory('feeds'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,
@@ -275,26 +277,14 @@ export class ECHO {
     await this.close();
 
     try {
-      if (this._feedStore.storage.destroy) {
-        await this._feedStore.storage.destroy();
+      if (this._storage.destroy) {
+        await this._storage.destroy();
       }
     } catch (err: any) {
-      error('Error clearing feed storage:', err);
+      error('Error clearing storage:', err);
     }
 
     await this.halo.reset();
-
-    try {
-      await this._snapshotStore.clear();
-    } catch (err: any) {
-      error('Error clearing snapshot storage:', err);
-    }
-
-    try {
-      await this._metadataStore.clear();
-    } catch (err: any) {
-      error('Error clearing metadata storage:', err);
-    }
   }
 
   //

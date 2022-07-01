@@ -15,7 +15,7 @@ import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
@@ -25,7 +25,7 @@ const log = debug('dxos:echo:pipeline:test');
 describe('pipeline', () => {
   test('streams', async () => {
     const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
     const feedReadStream = new FeedStoreIterator(feedSelector, () => 0, new Timeframe());
@@ -87,7 +87,7 @@ describe('pipeline', () => {
 
   test('writing', async () => {
     const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();

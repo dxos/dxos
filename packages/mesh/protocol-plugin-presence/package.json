@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",

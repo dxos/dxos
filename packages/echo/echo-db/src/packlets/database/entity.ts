@@ -7,7 +7,7 @@ import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta, StateManager } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ItemManager } from '../database';
+import { ItemManager } from './item-manager';
 
 /**
  * Base class for all ECHO entitities.
