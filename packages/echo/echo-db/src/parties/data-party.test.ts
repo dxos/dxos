@@ -23,9 +23,11 @@ import { DataParty } from './data-party';
 
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
-    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
-    const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
-    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+
+    const storage = createStorage('', StorageType.RAM);
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);

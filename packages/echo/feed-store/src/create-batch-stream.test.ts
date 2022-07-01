@@ -13,7 +13,7 @@ import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 
 const createFeed = async () => {
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: 'utf-8' });
+  const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: 'utf-8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   return feed;
