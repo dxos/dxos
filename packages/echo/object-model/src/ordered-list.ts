@@ -6,7 +6,6 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { ObjectModel } from './object-model';
 
