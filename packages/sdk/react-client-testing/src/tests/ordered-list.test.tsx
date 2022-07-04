@@ -73,7 +73,7 @@ afterEach(() => {
   rootContainer = null;
 });
 
-describe.only('OrderedList', () => {
+describe('OrderedList', () => {
   it('reorders.', async () => {
     const { party, items } = await useTestComponents();
     const list = await party.database.createItem({
