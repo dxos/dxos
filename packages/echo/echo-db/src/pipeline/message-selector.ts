@@ -40,13 +40,14 @@ export const createMessageSelector = (partyProcessor: PartyStateProvider, timefr
 
   // Check HALO message candidates.
   for (let i = 0; i < candidates.length; i++) {
-    const { data: { halo } } = candidates[i];
+    const { data: { timeframe, halo } } = candidates[i];
     const feedKey = PublicKey.from(candidates[i].key);
     if (!halo) {
       continue;
     }
 
-    if (partyProcessor.isFeedAdmitted(feedKey)) {
+    assert(timeframe);
+    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
       return i;
     }
 

@@ -149,7 +149,6 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const keyring = new Keyring();
@@ -191,7 +190,15 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identity.identityKey) });
+      feedStream.write({ 
+        timeframe: new Timeframe(),
+        halo: createPartyGenesisMessage(
+          keyring,
+          partyKey,
+          feedKey.publicKey,
+          identity.identityKey
+        ), 
+      });
       feedStream.write({
         timeframe: new Timeframe(),
         echo: checkType<EchoEnvelope>({
