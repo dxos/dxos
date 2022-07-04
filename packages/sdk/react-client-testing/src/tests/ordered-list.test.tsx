@@ -41,8 +41,8 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
       order[0],
       ...order.slice(2)
     ];
-    await orderedList.init(newOrder);
     setOrder(newOrder);
+    await orderedList.init(newOrder);
   };
 
   return (
@@ -90,6 +90,7 @@ describe.only('OrderedList', () => {
     });
 
     ul?.click();
+    await sleep(100);
     ul?.childNodes.forEach((node, i) => {
       console.log(node.textContent);
       expect(node.textContent).toBe(orderedList.values[i]);
