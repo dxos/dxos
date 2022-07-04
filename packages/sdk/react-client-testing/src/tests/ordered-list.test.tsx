@@ -5,13 +5,13 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import faker from 'faker';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 
-import { sleep } from '@dxos/async';
 import { Client, Item } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
+import { SubscriptionGroup } from '@dxos/util';
 
 const useTestComponents = async () => {
   const config = {};
@@ -31,9 +31,15 @@ const useTestComponents = async () => {
 };
 
 const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: OrderedList}) => {
+  const subscriptions = useMemo(() => new SubscriptionGroup(), []);
   const [order, setOrder] = useState(orderedList.values);
 
-  useEffect(() => console.log(order), [order]);
+  useEffect(() => {
+    setOrder(() => orderedList.values);
+    const unsuscribeOrderedListListener = orderedList.orderedUpdated.on(() => setOrder(orderedList.values));
+    subscriptions.push(unsuscribeOrderedListListener);
+    return () => subscriptions.unsubscribe();
+  }, [orderedList]);
 
   const handleChangeOrder = async () => {
     const newOrder = [
@@ -41,7 +47,6 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
       order[0],
       ...order.slice(2)
     ];
-    setOrder(newOrder);
     await orderedList.init(newOrder);
   };
 
@@ -85,14 +90,11 @@ describe.only('OrderedList', () => {
     const ul = document.querySelector('ul');
     expect(ul?.childElementCount).toEqual(3);
     ul?.childNodes.forEach((node, i) => {
-      console.log(node.textContent);
       expect(node.textContent).toBe(orderedList.values[i]);
     });
 
     ul?.click();
-    await sleep(100);
     ul?.childNodes.forEach((node, i) => {
-      console.log(node.textContent);
       expect(node.textContent).toBe(orderedList.values[i]);
     });
   });

@@ -4,7 +4,9 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { ObjectModel } from './object-model';
 
@@ -13,6 +15,8 @@ import { ObjectModel } from './object-model';
  */
 export class OrderedList {
   private _values: ItemID[] = [];
+
+  readonly orderedUpdated = new Event<string[]>()
 
   constructor (
     private readonly _model: ObjectModel,
@@ -59,6 +63,7 @@ export class OrderedList {
       }
     }
 
+    this.orderedUpdated.emit(this.values);
     return this;
   }
 
