@@ -61,7 +61,7 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   );
 };
 
-let rootContainer: any;
+let rootContainer: HTMLDivElement | null;
 
 beforeEach(() => {
   rootContainer = document.createElement('div');
@@ -69,7 +69,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.body.removeChild(rootContainer);
+  document.body.removeChild(rootContainer as HTMLDivElement);
   rootContainer = null;
 });
 
