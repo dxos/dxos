@@ -16,7 +16,8 @@ export const useRegistrySearchModel = (
   filters: SearchFilter[] = [],
   deps: any[] = []
 ) => {
-  return useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  const searchModel = useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  return searchModel;
 };
 
 export const getTypeName = ({ type }: RegistryType) => {
