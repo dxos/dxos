@@ -38,7 +38,7 @@
     "signal-promise": "^1.0.3"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.7",

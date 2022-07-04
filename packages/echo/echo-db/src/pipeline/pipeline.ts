@@ -16,7 +16,7 @@ import {
 import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { CredentialProcessor, PartyStateProvider } from './party-processor';
 
 interface Options {

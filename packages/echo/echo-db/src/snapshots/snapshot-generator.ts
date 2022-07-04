@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { PartyCore } from '../pipeline';
 import { SnapshotStore } from './snapshot-store';
 
