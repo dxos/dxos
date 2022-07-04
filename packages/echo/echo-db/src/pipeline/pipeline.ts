@@ -109,6 +109,8 @@ export class Pipeline {
         try {
           const { data: message } = block;
 
+          this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
+
           //
           // HALO
           //
@@ -125,7 +127,6 @@ export class Pipeline {
           //
 
           if (message.echo) {
-            this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
             const memberKey = this._partyProcessor.getFeedOwningMember(PublicKey.from(block.key));
             assert(memberKey, `Ownership of feed ${keyToString(block.key)} could not be determined.`);
 
