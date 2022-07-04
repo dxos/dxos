@@ -30,14 +30,14 @@ export class File {
   }
 
   /**
-   * Reads Buffer from file starting from offset to offset+size.
+   * Read Buffer from file starting from offset to offset+size.
    */
   read (offset: number, size: number, cb?: Callback<Buffer>): Promise<Buffer> {
     return createPromise<Buffer>(this._fileInternal.read.bind(this._fileInternal), cb, offset, size);
   }
 
   /**
-   * Writes Buffer into file starting from offset.
+   * Write Buffer into file starting from offset.
    */
   write (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.write.bind(this._fileInternal), cb, offset, data);
@@ -54,7 +54,7 @@ export class File {
    * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
    *
    * // Truncate it at offset 1 with size 2.
-   * await file.del(1, 2); // Truncates, file will have content Buffer([a]) because 1 + 2 >= 3.
+   * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
   del (offset: number, size: number, cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, size);
