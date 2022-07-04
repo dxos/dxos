@@ -134,7 +134,6 @@ describe('pipeline', () => {
       genesis: {
         itemType: 'foo'
       },
-      timeframe: expect.any(Timeframe)
     });
   });
 });

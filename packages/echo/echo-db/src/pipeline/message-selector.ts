@@ -26,14 +26,14 @@ const log = debug('dxos:echo-db:message-selector');
 export const createMessageSelector = (partyProcessor: PartyStateProvider, timeframeClock: TimeframeClock): MessageSelector => candidates => {
   // Check ECHO message candidates first since they are less expensive than HALO cancidates.
   for (let i = 0; i < candidates.length; i++) {
-    const { data: { echo } } = candidates[i];
+    const { data: { timeframe, echo } } = candidates[i];
     const feedKey = PublicKey.from(candidates[i].key);
     if (!echo) {
       continue;
     }
 
-    assert(echo.timeframe);
-    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
+    assert(timeframe);
+    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
       return i;
     }
   }

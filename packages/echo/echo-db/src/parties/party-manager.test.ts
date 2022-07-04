@@ -193,13 +193,13 @@ describe('Party manager', () => {
       const feedStream = createWritableFeedStream(feed);
       feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identity.identityKey) });
       feedStream.write({
+        timeframe: new Timeframe(),
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',
           genesis: {
             itemType: PARTY_ITEM_TYPE,
             modelType: ObjectModel.meta.type
           },
-          timeframe: new Timeframe()
         })
       });
     }
