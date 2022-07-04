@@ -4,11 +4,14 @@
 import { getFullPath } from '../utils';
 import { File } from './File';
 
+/**
+ * The small class to remember the path of subdirectories in Storage.
+ */
 export class Directory {
 
   constructor (private readonly _path: string,
     private readonly _createFile: (filename: string, path: string, opts?: any) => File,
-    private readonly _destroyDirectory: (path: string) => Promise<void[]>
+    private readonly _destroyFilesInPath: (path: string) => Promise<void[]>
   ) { }
 
   createOrOpen (filename: string, opts?: any): File {
@@ -17,10 +20,13 @@ export class Directory {
   }
 
   subDirectory (path: string): Directory {
-    return new Directory(getFullPath(this._path, path), this._createFile, this._destroyDirectory);
+    return new Directory(getFullPath(this._path, path), this._createFile, this._destroyFilesInPath);
   }
 
+  /**
+   * Delete all files in the directory and all its subdirectories.
+   */
   async destroy () {
-    return this._destroyDirectory(this._path);
+    return this._destroyFilesInPath(this._path);
   }
 }
