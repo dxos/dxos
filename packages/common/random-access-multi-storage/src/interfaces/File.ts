@@ -5,7 +5,7 @@ import { FileInternal } from '../internal';
 import { Callback, FileStat } from '../types';
 
 /**
- * Wrapper class that implements the promises API for the File callbacks API
+ * Handle to the file allowing read/write access to the data in the file.
  */
 export class File {
   constructor (protected readonly _fileInternal: FileInternal) {}
@@ -44,10 +44,20 @@ export class File {
   }
 
   /**
-   * Will truncate the file if offset + data.length is larger than the current file length. Is otherwise a noop.
+   * Truncate the file at offset if offset + length >= the current file length. Otherwise, do nothing.
+   * Throws 'Not deletable' in IDb realization.
+   * 
+   * Example:
+   * // There is file with content Buffer([a, b, c]) at 0 offset.
+   * 
+   * // Truncate it at offset 1 with size 1.
+   * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
+   * 
+   * // Truncate it at offset 1 with size 2.
+   * await file.del(1, 2); // Truncates, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  del (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, data);
+  del (offset: number, size: number, cb?: Callback<void>): Promise<void> {
+    return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, size);
   }
 
   stat (cb?: Callback<FileStat>): Promise<FileStat> {
@@ -59,7 +69,7 @@ export class File {
   }
 
   /**
-   * Completly delete file.
+   * Delete the file.
    */
   destroy (cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);

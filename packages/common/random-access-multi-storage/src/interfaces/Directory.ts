@@ -5,7 +5,7 @@ import { getFullPath } from '../utils';
 import { File } from './File';
 
 /**
- * The small class to remember the path of subdirectories in Storage.
+ * Handle to a directory in the storage file system.
  */
 export class Directory {
 
