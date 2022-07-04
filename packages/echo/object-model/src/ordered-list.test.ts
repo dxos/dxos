@@ -9,7 +9,7 @@ import { OrderedList } from './ordered-list';
 import { createTestObjectModel } from './testing';
 
 describe('OrderedList', () => {
-  test('update', async () => {
+  test('refresh', async () => {
     const { model } = createTestObjectModel();
     const list = new OrderedList(model, 'order');
 
@@ -22,7 +22,7 @@ describe('OrderedList', () => {
         'x': 'a'
       });
 
-      list.update();
+      list.refresh();
       expect(list.values).toEqual(['x', 'a', 'b', 'c', 'd', 'e']);
     }
 
@@ -34,7 +34,7 @@ describe('OrderedList', () => {
         'b': 'c'
       });
 
-      list.update();
+      list.refresh();
       expect(list.values).toEqual(['a', 'b', 'c', 'x', 'y']);
     }
   });
