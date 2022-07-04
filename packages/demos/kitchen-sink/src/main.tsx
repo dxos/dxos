@@ -8,8 +8,7 @@ import ReactDOM from 'react-dom';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 
-// TODO(burdon): Move to src/demo.
-import { App } from './helpers';
+import { App } from './components';
 
 const Main = () => {
   const party = useTestParty();

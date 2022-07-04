@@ -6,19 +6,15 @@ import React, { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
 import { ItemID } from '@dxos/echo-protocol';
-import { ObjectModel } from '@dxos/object-model';
 import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-echo-graph';
 
-import { ThemeProvider } from '../../../src';
-import { useQuery } from '../data';
-import { AppBar } from './AppBar';
-import { CreateItemButton } from './CreateItemButton';
-import { ViewContainer } from './ViewContainer';
-import { ViewType } from './ViewSelector';
-
-// TODO(burdon): Move to src.
+import { useQuery } from '../../data'; // TODO(burdon): Pass into App.
+import { AppBar } from '../AppBar';
+import { CreateItemButton } from '../CreateItem';
+import { ThemeProvider } from '../Theme';
+import { ViewContainer, ViewType } from '../View';
 
 interface AppProps {
   party: Party
@@ -68,11 +64,10 @@ export const App = ({
     }
 
     void party.database.createItem({
-      model: ObjectModel, // TODO(burdon): Set as default.
       type,
       parent: parentId,
       props: {
-        title
+        name: title // TODO(burdon): Use adapter.
       }
     });
   };

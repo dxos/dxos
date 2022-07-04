@@ -9,7 +9,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { itemAdapter, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
-import { graphStyles } from '../';
+import { graphStyles } from '../src';
 
 faker.seed(100);
 
@@ -38,9 +38,9 @@ const App = ({ grid }: AppProps) => {
  * @constructor
  */
 export const GraphShowcase = (options: AppProps) => (
-<ClientProvider>
-      <ProfileInitializer>
-        <App {...options} />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <App {...options} />
+    </ProfileInitializer>
+  </ClientProvider>
 );
