@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/crypto';
 import { Timeframe } from './timeframe';
 
 export const timeframeSubstitutions = {
-  'dxos.echo.feed.TimeframeVector': {
+  'dxos.echo.timeframe.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
     }),
