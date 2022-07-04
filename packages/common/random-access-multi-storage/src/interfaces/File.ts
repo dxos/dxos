@@ -46,13 +46,13 @@ export class File {
   /**
    * Truncate the file at offset if offset + length >= the current file length. Otherwise, do nothing.
    * Throws 'Not deletable' in IDb realization.
-   * 
+   *
    * Example:
    * // There is file with content Buffer([a, b, c]) at 0 offset.
-   * 
+   *
    * // Truncate it at offset 1 with size 1.
    * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
-   * 
+   *
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncates, file will have content Buffer([a]) because 1 + 2 >= 3.
    */

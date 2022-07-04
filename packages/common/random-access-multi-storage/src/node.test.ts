@@ -49,7 +49,7 @@ describe('testing node storage types', () => {
 
     const file = storageDir.createOrOpen('file');
     await write(file);
-    
+
     // Check dir destroy.
     await storageDir.destroy();
     await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);

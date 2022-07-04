@@ -209,7 +209,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('del data from file', async function () {
       const storage = createStorage();
       if (storage.type === StorageType.IDB) {
-        // File.del() throws 'Not deletable' error for IDb. 
+        // File.del() throws 'Not deletable' error for IDb.
         this.skip();
       }
       const directory = storage.directory('');
