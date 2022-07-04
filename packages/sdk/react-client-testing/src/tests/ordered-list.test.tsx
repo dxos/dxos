@@ -13,7 +13,7 @@ import { Client, Item } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
 
-const useTestComponents = async () => {
+const createTestComponents = async () => {
   const config = {};
   const client = new Client(config);
   await client.initialize();
@@ -74,8 +74,8 @@ afterEach(() => {
 });
 
 describe('OrderedList', () => {
-  it('reorders.', async () => {
-    const { party, items } = await useTestComponents();
+  it('reorders', async () => {
+    const { party, items } = await createTestComponents();
     const list = await party.database.createItem({
       model: ObjectModel,
       type: 'example:type/list'
