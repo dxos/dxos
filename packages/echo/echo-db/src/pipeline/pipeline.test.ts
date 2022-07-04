@@ -133,7 +133,7 @@ describe('pipeline', () => {
       itemId: '123',
       genesis: {
         itemType: 'foo'
-      },
+      }
     });
   });
 });

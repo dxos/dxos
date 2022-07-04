@@ -265,7 +265,7 @@ export class PartyFactory {
           itemMutation: {
             parentId: item.parentId
           },
-          snapshot: item.model,
+          snapshot: item.model
         }
       };
       await feedWriter.write(message);

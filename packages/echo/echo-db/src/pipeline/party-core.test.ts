@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 import { promiseTimeout } from '@dxos/async';
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
+import { checkType } from '@dxos/debug';
 import { codec, FeedMessage, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
@@ -20,7 +21,6 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore } from './party-core';
-import { checkType } from '@dxos/debug';
 
 describe('PartyCore', () => {
   const setup = async () => {
@@ -183,7 +183,7 @@ describe('PartyCore', () => {
         genesis: {
           itemType: 'dxos:example',
           modelType: ObjectModel.meta.type
-        },
+        }
       }
     }));
 
@@ -213,7 +213,7 @@ describe('PartyCore', () => {
         genesis: {
           itemType: 'dxos:example',
           modelType: ObjectModel.meta.type
-        },
+        }
       }
     }));
 
@@ -243,7 +243,7 @@ describe('PartyCore', () => {
         genesis: {
           itemType: 'dxos:example',
           modelType: ObjectModel.meta.type
-        },
+        }
       }
     }));
 

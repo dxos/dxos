@@ -190,14 +190,14 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ 
+      feedStream.write({
         timeframe: new Timeframe(),
         halo: createPartyGenesisMessage(
           keyring,
           partyKey,
           feedKey.publicKey,
           identity.identityKey
-        ), 
+        )
       });
       feedStream.write({
         timeframe: new Timeframe(),
@@ -206,7 +206,7 @@ describe('Party manager', () => {
           genesis: {
             itemType: PARTY_ITEM_TYPE,
             modelType: ObjectModel.meta.type
-          },
+          }
         })
       });
     }

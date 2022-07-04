@@ -21,14 +21,13 @@ export const parseAndGenerateSchema = async (substitutionsModule: ModuleSpecifie
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   const root = await pb.load(protoFiles);
 
-  for(const fqn of Object.keys(substitutions)) {
-    if(!root.lookup(fqn)) {
+  for (const fqn of Object.keys(substitutions)) {
+    if (!root.lookup(fqn)) {
       throw new Error(`No protobuf definition found matching the substitution: ${fqn}`);
     }
   }
 
   logger.logParsedSubstitutions(substitutions);
-
 
   await generateSchema({
     schema: root,
