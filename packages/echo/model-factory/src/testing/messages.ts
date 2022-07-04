@@ -7,8 +7,8 @@ import { schema, FeedMessage, ItemID, Timeframe } from '@dxos/echo-protocol';
 export const createSetPropertyMutation = (
   itemId: ItemID, key: string, value: string, timeframe?: Timeframe
 ): FeedMessage => ({
+  timeframe,
   echo: {
-    timeframe,
     itemId,
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation').encode({
       key,

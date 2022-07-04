@@ -26,9 +26,9 @@ export const createItemGenesis = (itemId: ItemID, itemType: ItemType): FeedMessa
 export const createTestItemMutation = (
   itemId: ItemID, key: string, value: string, timeframe?: Timeframe
 ): FeedMessage => ({
+  timeframe,
   echo: {
     itemId,
-    timeframe,
     mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation').encode({
       key,
       value
