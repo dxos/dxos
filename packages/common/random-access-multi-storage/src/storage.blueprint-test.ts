@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 
 import { File, Storage, StorageType } from './interfaces';
@@ -191,6 +192,39 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const { size } = await reopened.stat();
       expect(size).toBe(0);
       await reopened.close();
+    });
+
+    it('destroy directory', async () => {
+      const storage = createStorage();
+      const directory = storage.directory('');
+      const file = directory.createOrOpen('file');
+
+      const buffer = Buffer.from(randomText());
+      await writeAndCheck(file, buffer);
+
+      await directory.destroy();
+      await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
+    });
+
+    it('del data from file', async function () {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        // File.del() throws 'Not deletable' error for IDb. 
+        this.skip();
+      }
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(randomText());
+
+      const buffer1 = Buffer.from(randomText());
+      await file.write(0, buffer1);
+      const buffer2 = Buffer.from(randomText());
+      await file.write(buffer1.length, buffer2);
+      expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
+
+      await file.del(buffer1.length, buffer2.length);
+      expect((await file.stat()).size).toBe(buffer1.length);
+      expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
+      await assert.rejects(async () => await file.read(buffer1.length, buffer2.length), Error, 'Could not satisfy length');
     });
   });
 }
