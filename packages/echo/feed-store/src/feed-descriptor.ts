@@ -5,6 +5,7 @@
 import assert from 'assert';
 import defaultHypercore from 'hypercore';
 import pify from 'pify';
+import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
@@ -125,13 +126,13 @@ export class FeedDescriptor {
       const file = this._directory.createOrOpen(`${dir}/${name}`);
       // Separation between our internal File API and Hypercore's.
       return {
-        read: file.read.bind(file),
-        write: file.write.bind(file),
-        del: file.truncate.bind(file),
-        stat: file.stat.bind(file),
-        close: file.close.bind(file),
-        destroy: file.delete.bind(file)
-      };
+        read: callbackify(file.read.bind(file)),
+        write: callbackify(file.write.bind(file)),
+        del: callbackify(file.truncate.bind(file)),
+        stat: callbackify(file.stat.bind(file)),
+        close: callbackify(file.close.bind(file)),
+        destroy: callbackify(file.delete.bind(file))
+      } as HypercoreFile;
     };
   }
 
