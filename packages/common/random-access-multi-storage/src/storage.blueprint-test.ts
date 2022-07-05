@@ -171,7 +171,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.close();
     });
 
-    it('destroys file', async function () {
+    it('delete file', async function () {
       const storage = createStorage();
       const directory = storage.directory('');
 
@@ -186,7 +186,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await file.destroy();
+      await file.delete();
 
       const reopened = directory.createOrOpen(fileName);
       const { size } = await reopened.stat();
@@ -194,7 +194,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await reopened.close();
     });
 
-    it('destroy directory', async () => {
+    it('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.directory('');
       const file = directory.createOrOpen('file');
@@ -202,14 +202,14 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await directory.destroy();
+      await directory.delete();
       await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
     });
 
-    it('del data from file', async function () {
+    it('truncate file', async function () {
       const storage = createStorage();
       if (storage.type === StorageType.IDB) {
-        // File.del() throws 'Not deletable' error for IDb.
+        // File.truncate() throws 'Not deletable' error for IDb.
         this.skip();
       }
       const directory = storage.directory('');
@@ -221,7 +221,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.write(buffer1.length, buffer2);
       expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
 
-      await file.del(buffer1.length, buffer2.length);
+      await file.truncate(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
       expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
       await assert.rejects(async () => await file.read(buffer1.length, buffer2.length), Error, 'Could not satisfy length');
