@@ -54,7 +54,7 @@ export class HaloParty {
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
+    private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe: Timeframe | undefined,
     _options: PartyOptions
   ) {
@@ -145,7 +145,7 @@ export class HaloParty {
     }
 
     await this._partyCore.open({
-      keyHints: this._hints,
+      feedHints: this._feedHints,
       initialTimeframe: this._initialTimeframe,
     });
 

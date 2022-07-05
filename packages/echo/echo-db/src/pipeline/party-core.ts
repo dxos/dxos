@@ -30,9 +30,9 @@ export interface PartyOptions {
 
 export interface OpenOptions {
   /**
-   * Key hints needed to bootstrap the party.
+   * Keys of initial feeds needed to bootstrap the party.
    */
-  keyHints?: KeyHint[]
+  feedHints?: PublicKey[]
   /**
    * Timeframe to start processing feed messages from.
    */
@@ -125,7 +125,7 @@ export class PartyCore {
   @timed(1_000)
   async open (options: OpenOptions = {}) {
     const {
-      keyHints = [],
+      feedHints = [],
       initialTimeframe,
       targetTimeframe,
     } = options;
@@ -149,8 +149,8 @@ export class PartyCore {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
     
-    if (keyHints.length > 0) {
-      await this._partyProcessor.takeHints(keyHints);
+    if (feedHints.length > 0) {
+      await this._partyProcessor.takeHints(feedHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
     }
 
     //

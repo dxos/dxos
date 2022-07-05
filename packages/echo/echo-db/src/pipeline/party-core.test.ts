@@ -161,7 +161,7 @@ describe('PartyCore', () => {
 
     const feedOpened = feedStore.feedOpenedEvent.waitForCount(1);
 
-    await party.open({ keyHints: [{ type: KeyType.FEED, publicKey: otherFeedKey }] });
+    await party.open({ feedHints: [otherFeedKey] });
     afterTest(async () => party.close());
 
     await feedOpened;
@@ -282,10 +282,7 @@ describe('PartyCore', () => {
     ));
 
     await party2.open({
-      keyHints: [{
-        publicKey: peer1.feedKey,
-        type: KeyType.FEED
-      }]
+      feedHints: [peer1.feedKey]
     });
     afterTest(async () => party2.close());
 

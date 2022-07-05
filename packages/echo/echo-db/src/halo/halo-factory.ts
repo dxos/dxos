@@ -54,7 +54,7 @@ export class HaloFactory {
     private readonly _options: PartyOptions = {}
   ) {}
 
-  async constructParty (hints: KeyHint[]): Promise<HaloParty> {
+  async constructParty (feedHints: PublicKey[]): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
     const halo = new HaloParty(
@@ -63,7 +63,7 @@ export class HaloFactory {
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      hints,
+      feedHints,
       undefined,
       this._options
     );
@@ -194,7 +194,7 @@ export class HaloFactory {
     await initiator.connect();
     const { hints } = await initiator.redeemInvitation(secretProvider);
 
-    const halo = await this.constructParty(hints);
+    const halo = await this.constructParty(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
     await halo.open();
 
     await initiator.destroy();

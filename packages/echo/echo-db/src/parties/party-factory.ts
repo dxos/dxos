@@ -111,7 +111,7 @@ export class PartyFactory {
    * @param partyKey
    * @param hints
    */
-  async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
+  async constructParty (partyKey: PartyKey, feedHints: PublicKey[] = [], initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
@@ -128,7 +128,7 @@ export class PartyFactory {
       identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,
-      hints,
+      feedHints,
       initialTimeframe,
       this._options
     );
@@ -173,7 +173,7 @@ export class PartyFactory {
 
     await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
-    const party = await this.constructParty(partyKey, hints);
+    const party = await this.constructParty(partyKey, hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
     await party.open();
     await initiator.destroy();
 

@@ -22,7 +22,7 @@ import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
 describe('DataParty', () => {
-  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
+  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, feedHints: PublicKey[]) => {
 
     const storage = createStorage('', StorageType.RAM);
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
@@ -40,7 +40,7 @@ describe('DataParty', () => {
       identity.createCredentialsSigner(),
       identity.preferences,
       networkManager,
-      hints
+      feedHints
     );
   };
 
@@ -148,9 +148,7 @@ describe('DataParty', () => {
     ));
 
     const identityB = await deriveTestDeviceCredentials(identityA);
-    const partyB = await createParty(identityB, partyKey.publicKey, [
-      { type: KeyType.FEED, publicKey: feedA.key }
-    ]);
+    const partyB = await createParty(identityB, partyKey.publicKey, [feedA.key]);
     await partyB.open();
 
     await partyA.database.createItem({ type: 'test:item-a' });
@@ -200,7 +198,7 @@ describe('DataParty', () => {
     await initiator.connect();
     const { partyKey: partyKeyB, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
     expect(partyKeyB.equals(partyKeyA.publicKey));
-    const partyB = await createParty(identityB, partyKeyB, hintsB);
+    const partyB = await createParty(identityB, partyKeyB, hintsB.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
     await partyB.open();
     await initiator.destroy();
 

@@ -20,7 +20,8 @@ import {
   SecretProvider,
   WithTypeUrl,
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
-  SignedMessage
+  SignedMessage,
+  KeyHint
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
@@ -111,7 +112,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider) {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: KeyHint[] }> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 

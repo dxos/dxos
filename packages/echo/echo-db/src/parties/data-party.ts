@@ -57,7 +57,7 @@ export class DataParty {
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
+    private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
@@ -152,7 +152,7 @@ export class DataParty {
     }
 
     await this._partyCore.open({
-      keyHints: this._hints,
+      feedHints: this._feedHints,
       initialTimeframe: this._initialTimeframe,
     });
 
