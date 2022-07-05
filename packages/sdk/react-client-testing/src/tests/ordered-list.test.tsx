@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 
+import { sleep } from '@dxos/async';
 import { Client, Item } from '@dxos/client';
 import { ObjectModel, OrderedList } from '@dxos/object-model';
 import { SubscriptionGroup } from '@dxos/util';
@@ -94,6 +95,7 @@ describe('OrderedList', () => {
     });
 
     ul?.click();
+    await sleep(100); // It does not render quick enough.
     ul?.childNodes.forEach((node, i) => {
       expect(node.textContent).toBe(orderedList.values[i]);
     });
