@@ -148,11 +148,7 @@ export class PartyCore {
     this._subscriptions.push(this._partyProcessor.feedAdded.on(feed => {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
-
-    // Hint at our own writable feed.
-    // TODO(dmaretskyi): Does not seem like it should be required, but without it replication between devices (B -> A) breaks.
-    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
-
+    
     if (keyHints.length > 0) {
       await this._partyProcessor.takeHints(keyHints);
     }

@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, KeyHint, Keyring, KeyType, codec as haloCodec } from '@dxos/credentials';
+import { createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, KeyHint, Keyring, KeyType, codec as haloCodec, createFeedAdmitMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -88,6 +88,7 @@ describe('DataParty', () => {
       feed.key,
       partyKey
     ));
+    await party.processor.feedAdded.waitForCount(1)
 
     const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner(), party.credentialsWriter);
     const credentialsProvider = createCredentialsProvider(identity.createCredentialsSigner(), party.key, feed.key);
@@ -112,6 +113,8 @@ describe('DataParty', () => {
       feed.key,
       partyKey
     ));
+    await party.processor.feedAdded.waitForCount(1)
+
     const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner(), party.credentialsWriter);
 
     const identityB = await deriveTestDeviceCredentials(identityA);
