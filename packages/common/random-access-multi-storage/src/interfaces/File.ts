@@ -4,6 +4,9 @@
 import { FileInternal } from '../internal';
 import { Callback, FileStat } from '../types';
 
+/**
+ * Handle to the file allowing read/write access to the data in the file.
+ */
 export class File {
   constructor (protected readonly _fileInternal: FileInternal) {}
 
@@ -26,16 +29,35 @@ export class File {
     this._fileInternal.closed = false;
   }
 
+  /**
+   * Read Buffer from file starting from offset to offset+size.
+   */
   read (offset: number, size: number, cb?: Callback<Buffer>): Promise<Buffer> {
     return createPromise<Buffer>(this._fileInternal.read.bind(this._fileInternal), cb, offset, size);
   }
 
+  /**
+   * Write Buffer into file starting from offset.
+   */
   write (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.write.bind(this._fileInternal), cb, offset, data);
   }
 
-  del (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, data);
+  /**
+   * Truncate the file at offset if offset + length >= the current file length. Otherwise, do nothing.
+   * Throws 'Not deletable' in IDb realization.
+   *
+   * Example:
+   * // There is file with content Buffer([a, b, c]) at 0 offset.
+   *
+   * // Truncate it at offset 1 with size 1.
+   * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
+   *
+   * // Truncate it at offset 1 with size 2.
+   * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
+   */
+  del (offset: number, size: number, cb?: Callback<void>): Promise<void> {
+    return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, size);
   }
 
   stat (cb?: Callback<FileStat>): Promise<FileStat> {
@@ -46,6 +68,9 @@ export class File {
     return createPromise<void>(this._fileInternal.close.bind(this._fileInternal), cb);
   }
 
+  /**
+   * Delete the file.
+   */
   destroy (cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);
   }

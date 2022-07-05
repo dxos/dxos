@@ -9,6 +9,9 @@ import { File } from '../interfaces';
 import { StorageType } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
+/**
+ * Storage interface implementation for RAM.
+ */
 export class RamStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 

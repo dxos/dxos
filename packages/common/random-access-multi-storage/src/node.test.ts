@@ -32,7 +32,7 @@ describe('testing node storage types', () => {
     expect(storage.type).toBe(StorageType.NODE);
   });
 
-  it('check if creates file', async () => {
+  it('create file', async () => {
     const directory = temp();
     const storage = createStorage(directory);
     const storageDir = storage.directory('dir');
@@ -42,16 +42,26 @@ describe('testing node storage types', () => {
     await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
   });
 
-  it('check if destroys directory and storage', async () => {
+  it('destroy directory', async () => {
     const directory = temp();
     const storage = createStorage(directory);
     const storageDir = storage.directory('dir');
 
     const file = storageDir.createOrOpen('file');
     await write(file);
+
     // Check dir destroy.
     await storageDir.destroy();
     await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
+  });
+
+  it('destroy storage', async () => {
+    const directory = temp();
+    const storage = createStorage(directory);
+    const storageDir = storage.directory('dir');
+
+    const file = storageDir.createOrOpen('file');
+    await write(file);
 
     // Check storage destroy.
     await storage.destroy();
