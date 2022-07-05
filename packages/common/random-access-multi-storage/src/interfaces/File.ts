@@ -56,7 +56,7 @@ export class File {
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  del (offset: number, size: number, cb?: Callback<void>): Promise<void> {
+  truncate (offset: number, size: number, cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, size);
   }
 
@@ -71,7 +71,7 @@ export class File {
   /**
    * Delete the file.
    */
-  destroy (cb?: Callback<void>): Promise<void> {
+  delete (cb?: Callback<void>): Promise<void> {
     return createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);
   }
 }
