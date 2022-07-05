@@ -127,10 +127,10 @@ export class FeedDescriptor {
       return {
         read: file.read.bind(file),
         write: file.write.bind(file),
-        del: file.del.bind(file),
+        del: file.truncate.bind(file),
         stat: file.stat.bind(file),
         close: file.close.bind(file),
-        destroy: file.destroy.bind(file)
+        destroy: file.delete.bind(file)
       };
     };
   }
