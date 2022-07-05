@@ -123,7 +123,7 @@ export class FeedDescriptor {
   private _createStorage (dir = ''): (name: string) => HypercoreFile {
     return (name) => {
       const file = this._directory.createOrOpen(`${dir}/${name}`);
-      // Separatoration between our internal File API and Hypercore's.
+      // Separation between our internal File API and Hypercore's.
       return {
         read: file.read.bind(file),
         write: file.write.bind(file),
@@ -172,7 +172,7 @@ const MOCK_CRYPTO = {
 interface HypercoreFile {
   read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
   write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
-  del (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
+  del (offset: number, size: number, cb?: (err: Error | null) => void): void;
   stat (cb: (err: Error | null, data?: {size: number}) => void): void;
   close (cb?: (err: Error | null) => void): void;
   destroy (cb?: (err: Error | null) => void): void;
