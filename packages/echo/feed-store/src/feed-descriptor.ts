@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { Lock } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import type { Directory, File } from '@dxos/random-access-multi-storage';
+import type { Directory } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
@@ -119,9 +119,19 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => File {
+
+  private _createStorage (dir = ''): (name: string) => HypercoreFile {
     return (name) => {
-      return this._directory.createOrOpen(`${dir}/${name}`);
+      const file = this._directory.createOrOpen(`${dir}/${name}`);
+      // Separatoration between our internal File API and Hypercore's.
+      return {
+        read: file.read.bind(file),
+        write: file.write.bind(file),
+        del: file.del.bind(file),
+        stat: file.stat.bind(file),
+        close: file.close.bind(file),
+        destroy: file.destroy.bind(file)
+      };
     };
   }
 
@@ -155,3 +165,15 @@ const MOCK_CRYPTO = {
     cb(null, true);
   }
 };
+
+/**
+ * File API that hypercore uses to read/write from storage.
+ */
+interface HypercoreFile {
+  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
+  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
+  del (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
+  stat (cb: (err: Error | null, data?: {size: number}) => void): void;
+  close (cb?: (err: Error | null) => void): void;
+  destroy (cb?: (err: Error | null) => void): void;
+}
