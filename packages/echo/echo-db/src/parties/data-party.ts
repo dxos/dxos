@@ -58,7 +58,7 @@ export class DataParty {
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
-    _initialTimeframe?: Timeframe,
+    private readonly _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
     this._partyCore = new PartyCore(
@@ -67,7 +67,6 @@ export class DataParty {
       modelFactory,
       snapshotStore,
       this._credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -152,7 +151,10 @@ export class DataParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    await this._partyCore.open({
+      keyHints: this._hints,
+      initialTimeframe: this._initialTimeframe,
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,

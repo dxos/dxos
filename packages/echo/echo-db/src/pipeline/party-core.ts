@@ -28,6 +28,22 @@ export interface PartyOptions {
   snapshotInterval?: number;
 }
 
+export interface OpenOptions {
+  /**
+   * Key hints needed to bootstrap the party.
+   */
+  keyHints?: KeyHint[]
+  /**
+   * Timeframe to start processing feed messages from.
+   */
+  initialTimeframe?: Timeframe
+  /**
+   * Timeframe which must be reached until further processing.
+   * PartyCore.open will block until this timeframe is reached.
+   */
+  targetTimeframe?: Timeframe
+}
+
 /**
  * Encapsulates core components needed by a party:
  * - ECHO database with item-manager & item-demuxer.
@@ -55,7 +71,6 @@ export class PartyCore {
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _memberKey: PublicKey,
-    private readonly _initialTimeframe?: Timeframe,
     private readonly _options: PartyOptions = {}
   ) { }
 
@@ -108,12 +123,18 @@ export class PartyCore {
    */
   @synchronized
   @timed(1_000)
-  async open (keyHints: KeyHint[] = []) {
+  async open (options: OpenOptions = {}) {
+    const {
+      keyHints = [],
+      initialTimeframe,
+      targetTimeframe,
+    } = options;
+
     if (this.isOpen) {
       return this;
     }
 
-    this._timeframeClock = new TimeframeClock(this._initialTimeframe);
+    this._timeframeClock = new TimeframeClock(initialTimeframe);
 
     // Open all feeds known from metadata and open or create a writable feed to the party.
     await this._feedProvider.openKnownFeeds();
@@ -142,7 +163,7 @@ export class PartyCore {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
-      this._initialTimeframe
+      initialTimeframe,
     );
 
     this._pipeline = new Pipeline(
