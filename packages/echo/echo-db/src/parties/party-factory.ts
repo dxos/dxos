@@ -254,6 +254,7 @@ export class PartyFactory {
     const feedWriter = createFeedWriter(writableFeed.feed);
     for (const item of snapshot.database?.items || []) {
       const message: FeedMessage = {
+        timeframe: new Timeframe(),
         echo: {
           itemId: item.itemId ?? failUndefined(),
           genesis: {
@@ -264,8 +265,7 @@ export class PartyFactory {
           itemMutation: {
             parentId: item.parentId
           },
-          snapshot: item.model,
-          timeframe: new Timeframe()
+          snapshot: item.model
         }
       };
       await feedWriter.write(message);

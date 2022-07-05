@@ -45,8 +45,8 @@ describe('feed store iterator', () => {
 
       // Create list of allowed candidates.
       const next = candidates.map((candidate, i) => {
-        assert(candidate.data?.echo?.timeframe);
-        const { data: { echo: { timeframe } } } = candidate;
+        assert(candidate.data?.timeframe);
+        const { data: { timeframe } } = candidate;
         const dependencies = Timeframe.dependencies(timeframe, currentTimeframe);
         if (!dependencies.isEmpty()) {
           return undefined;
@@ -58,7 +58,7 @@ describe('feed store iterator', () => {
       // TODO(burdon): Create test for this (eg, feed with depedencies hasn't synced yet).
       if (!next.length) {
         log('Waiting for dependencies...', candidates.map((candidate, i) => ({
-          i, timeframe: candidate?.data?.echo?.timeframe
+          i, timeframe: candidate?.data?.timeframe
         })));
         return undefined;
       }
@@ -122,7 +122,7 @@ describe('feed store iterator', () => {
       for await (const message of iterator) {
         assert(message.data?.echo?.mutation);
 
-        const { key: feedKey, seq, data: { echo: { itemId, timeframe, mutation } } } = message;
+        const { key: feedKey, seq, data: { timeframe, echo: { itemId, mutation } } } = message;
         assert(itemId);
         assert(timeframe);
         assert(mutation);

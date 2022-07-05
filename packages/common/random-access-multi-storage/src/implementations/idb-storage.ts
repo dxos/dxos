@@ -9,6 +9,9 @@ import { StorageType, File } from '../interfaces';
 import { RandomAccessStorage } from '../types';
 import { AbstractStorage } from './abstract-storage';
 
+/**
+ * Storage interface implementation for index DB.
+ */
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = StorageType.IDB;
   private readonly _fileStorage: RandomAccessStorage;
