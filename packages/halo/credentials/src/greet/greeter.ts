@@ -262,7 +262,7 @@ export class Greeter {
     return {
       '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
-      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!),
+      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!)
     };
   }
 }

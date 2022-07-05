@@ -21,7 +21,6 @@ import {
   WithTypeUrl,
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   SignedMessage,
-  KeyHint,
   NotarizeResponse
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';

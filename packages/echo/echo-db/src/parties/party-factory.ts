@@ -9,7 +9,6 @@ import {
   createEnvelopeMessage,
   createFeedAdmitMessage,
   createPartyGenesisMessage,
-  KeyHint,
   KeyType,
   SecretProvider,
   wrapMessage

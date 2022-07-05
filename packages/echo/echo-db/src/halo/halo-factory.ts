@@ -13,8 +13,7 @@ import {
   Keyring,
   KeyType,
   Filter,
-  SecretProvider,
-  KeyHint
+  SecretProvider
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';

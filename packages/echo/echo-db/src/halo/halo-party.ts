@@ -146,7 +146,7 @@ export class HaloParty {
 
     await this._partyCore.open({
       feedHints: this._feedHints,
-      initialTimeframe: this._initialTimeframe,
+      initialTimeframe: this._initialTimeframe
     });
 
     this._invitationManager = new InvitationFactory(

@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyHint, KeyType, Message as HaloMessage } from '@dxos/credentials';
+import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
@@ -127,7 +127,7 @@ export class PartyCore {
     const {
       feedHints = [],
       initialTimeframe,
-      targetTimeframe,
+      targetTimeframe
     } = options;
 
     if (this.isOpen) {
@@ -148,7 +148,7 @@ export class PartyCore {
     this._subscriptions.push(this._partyProcessor.feedAdded.on(feed => {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
-    
+
     if (feedHints.length > 0) {
       await this._partyProcessor.takeHints(feedHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
     }
@@ -159,7 +159,7 @@ export class PartyCore {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
-      initialTimeframe,
+      initialTimeframe
     );
 
     this._pipeline = new Pipeline(

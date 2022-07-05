@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
@@ -153,7 +152,7 @@ export class DataParty {
 
     await this._partyCore.open({
       feedHints: this._feedHints,
-      initialTimeframe: this._initialTimeframe,
+      initialTimeframe: this._initialTimeframe
     });
 
     this._invitationManager = new InvitationFactory(
