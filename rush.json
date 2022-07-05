@@ -783,7 +783,7 @@
     },
 
     //
-    // tutorials
+    // demos
     //
 
     {
@@ -797,6 +797,10 @@
     {
       "packageName": "@dxos/lexical-editor",
       "projectFolder": "packages/demos/lexical-editor"
+    },
+    {
+      "packageName": "@dxos/todos",
+      "projectFolder": "packages/demos/todos"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",
