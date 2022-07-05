@@ -73,7 +73,7 @@ export class OrderedList {
     const builder = this._model.builder();
 
     // Reset.
-    await builder.set(this._property, undefined);
+    builder.set(this._property, undefined);
 
     // Set initial order.
     if (values && values.length >= 2) {
@@ -85,8 +85,9 @@ export class OrderedList {
       }
     }
 
-    await builder.commit();
-    this.update();
+    const commited = builder.commit();
+    this.refresh();
+    await commited;
     return this._values;
   }
 
@@ -112,8 +113,9 @@ export class OrderedList {
         builder.set(`${this._property}.${next}`, last);
       }
 
-      await builder.commit();
+      const commited = builder.commit();
       this.refresh();
+      await commited;
     }
 
     return this._values;
@@ -136,8 +138,9 @@ export class OrderedList {
       }
     }
 
-    await builder.commit();
+    const commited = builder.commit();
     this.refresh();
+    await commited;
     return this._values;
   }
 }
