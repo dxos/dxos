@@ -194,7 +194,7 @@ export class HaloFactory {
     await initiator.connect();
     const { hints } = await initiator.redeemInvitation(secretProvider);
 
-    const halo = await this.constructParty(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
+    const halo = await this.constructParty(hints);
     await halo.open();
 
     await initiator.destroy();

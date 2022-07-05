@@ -173,7 +173,7 @@ export class PartyFactory {
 
     await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
-    const party = await this.constructParty(partyKey, hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
+    const party = await this.constructParty(partyKey, hints);
     await party.open();
     await initiator.destroy();
 

@@ -198,7 +198,7 @@ describe('DataParty', () => {
     await initiator.connect();
     const { partyKey: partyKeyB, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
     expect(partyKeyB.equals(partyKeyA.publicKey));
-    const partyB = await createParty(identityB, partyKeyB, hintsB.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!));
+    const partyB = await createParty(identityB, partyKeyB, hintsB);
     await partyB.open();
     await initiator.destroy();
 

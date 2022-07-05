@@ -21,7 +21,8 @@ import {
   WithTypeUrl,
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   SignedMessage,
-  KeyHint
+  KeyHint,
+  NotarizeResponse
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
@@ -112,7 +113,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: KeyHint[] }> {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -151,7 +152,7 @@ export class GreetingInitiator {
     const credentialMessages = await this._getMessagesToNotarize(PublicKey.from(partyKey), nonce);
 
     // Send the signed payload to the greeting responder.
-    const notarizeResponse = await this._greeterPlugin.send(responderPeerId,
+    const notarizeResponse: NotarizeResponse = await this._greeterPlugin.send(responderPeerId,
       createGreetingNotarizeMessage(secret, credentialMessages as WithTypeUrl<Message>[]));
 
     //
@@ -172,7 +173,7 @@ export class GreetingInitiator {
     this._state = GreetingState.SUCCEEDED;
     return {
       partyKey,
-      hints: notarizeResponse.hints
+      hints: notarizeResponse.feedHints ?? []
     };
   }
 
