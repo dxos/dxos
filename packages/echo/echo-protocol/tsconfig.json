@@ -14,22 +14,22 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../common/crypto"
-    },
-    {
-      "path": "../feed-store"
     },
     {
       "path": "../../common/protocols"
     },
     {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../../common/util"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../feed-store"
     }
   ]
 }
