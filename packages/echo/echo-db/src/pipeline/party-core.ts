@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyHint, KeyType, Message as HaloMessage } from '@dxos/credentials';
+import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
@@ -26,6 +26,22 @@ export interface PartyOptions {
   // snapshots: { enabled: true, interval: 100 } }
   snapshots?: boolean;
   snapshotInterval?: number;
+}
+
+export interface OpenOptions {
+  /**
+   * Keys of initial feeds needed to bootstrap the party.
+   */
+  feedHints?: PublicKey[]
+  /**
+   * Timeframe to start processing feed messages from.
+   */
+  initialTimeframe?: Timeframe
+  /**
+   * Timeframe which must be reached until further processing.
+   * PartyCore.open will block until this timeframe is reached.
+   */
+  targetTimeframe?: Timeframe
 }
 
 /**
@@ -55,7 +71,6 @@ export class PartyCore {
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _memberKey: PublicKey,
-    private readonly _initialTimeframe?: Timeframe,
     private readonly _options: PartyOptions = {}
   ) { }
 
@@ -108,12 +123,17 @@ export class PartyCore {
    */
   @synchronized
   @timed(1_000)
-  async open (keyHints: KeyHint[] = []) {
+  async open (options: OpenOptions = {}) {
+    const {
+      feedHints = [],
+      initialTimeframe
+    } = options;
+
     if (this.isOpen) {
       return this;
     }
 
-    this._timeframeClock = new TimeframeClock(this._initialTimeframe);
+    this._timeframeClock = new TimeframeClock(initialTimeframe);
 
     // Open all feeds known from metadata and open or create a writable feed to the party.
     await this._feedProvider.openKnownFeeds();
@@ -128,12 +148,8 @@ export class PartyCore {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
 
-    // Hint at our own writable feed.
-    // TODO(dmaretskyi): Does not seem like it should be required, but without it replication between devices (B -> A) breaks.
-    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: writableFeed.key }]);
-
-    if (keyHints.length > 0) {
-      await this._partyProcessor.takeHints(keyHints);
+    if (feedHints.length > 0) {
+      await this._partyProcessor.takeHints(feedHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
     }
 
     //
@@ -142,7 +158,7 @@ export class PartyCore {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
-      this._initialTimeframe
+      initialTimeframe
     );
 
     this._pipeline = new Pipeline(

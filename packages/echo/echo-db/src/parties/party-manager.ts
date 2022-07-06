@@ -157,11 +157,9 @@ export class PartyManager {
 
   /**
    * Construct a party object and start replicating with the remote peer that created that party.
-   * @param partyKey
-   * @param hints
    */
   @synchronized
-  async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
+  async addParty (partyKey: PartyKey, feedHints: PublicKey[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -174,8 +172,8 @@ export class PartyManager {
       return this._parties.get(partyKey);
     }
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
-    const party = await this._partyFactory.constructParty(partyKey, hints);
+    log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
+    const party = await this._partyFactory.constructParty(partyKey, feedHints);
     await party.open();
     await this._metadataStore.addParty(party.key);
     this._setParty(party);

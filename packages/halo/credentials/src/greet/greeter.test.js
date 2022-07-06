@@ -107,8 +107,7 @@ it('Good invitation', async () => {
 
     const response = await greeter.handleMessage(message.payload, invitation.id, randomBytes());
 
-    expect(response.hints.keys).toEqual(hints.keys);
-    expect(response.hints.feeds).toEqual(hints.feeds);
+    expect(response.feedHints).toEqual(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey));
 
     // The `FINISH` command informs the Greeter the Invitee is done.
     {
