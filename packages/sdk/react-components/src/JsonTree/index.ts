@@ -3,4 +3,3 @@
 //
 
 export * from './JsonTreeView';
-export * from './SimpleJsonTreeView';

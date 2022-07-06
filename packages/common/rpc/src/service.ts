@@ -87,8 +87,8 @@ export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options
   const rpc: S = {} as S;
   for (const serviceName of Object.keys(descriptors) as (keyof S)[]) {
     rpc[serviceName] = descriptors[serviceName].createClient({
-      call: (method, req) => peer.call(`${serviceName}.${method}`, req),
-      callStream: (method, req) => peer.callStream(`${serviceName}.${method}`, req)
+      call: (method, req) => peer.call(`${String(serviceName)}.${method}`, req),
+      callStream: (method, req) => peer.callStream(`${String(serviceName)}.${method}`, req)
     });
   }
 

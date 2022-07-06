@@ -36,7 +36,14 @@ function readPackage(packageJson, context) {
     packageJson.dependencies['@mapbox/node-pre-gyp'] = '1.0.3';
   } else if (packageJson.name === '@hot-loader/react-dom') {
     // Package has an unneccessarily strict peer dep of 17.0.1
-    packageJson.peerDependencies['react'] = '^17.0.0'
+    packageJson.peerDependencies['react'] = '^18.0.0'
+  } else if (packageJson.name === 'react-resize-aware') {
+    // https://github.com/FezVrasta/react-resize-aware/issues/59
+    packageJson.peerDependencies['react'] = '^18.0.0'
+  } else if (packageJson.name === '@mui/styles') {
+    // Can be removed once tutorials-tasks-app is removed or upgraded to MUI5.
+    packageJson.peerDependencies['react'] = '^18.0.0'
+    packageJson.peerDependencies['@types/react'] = '^18.0.0'
   } else if (packageJson.name === 'create-react-context' || packageJson.name === '@reach/router') {
     // Packages haven't been updated, see:
     // - https://github.com/jamiebuilds/create-react-context/pull/33
