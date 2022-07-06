@@ -163,7 +163,7 @@ describe('Party manager', () => {
       modelFactory,
       snapshotStore,
       feedProviderFactory,
-      metadataStore,
+      metadataStore
     );
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
 

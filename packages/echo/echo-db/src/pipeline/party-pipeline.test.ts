@@ -266,7 +266,7 @@ describe('PartyPipeline', () => {
     }
 
     const timeframe = party.timeframe;
-    expect(timeframe.isEmpty()).toBeFalsy()
+    expect(timeframe.isEmpty()).toBeFalsy();
 
     await party.close();
     await party.open({ feedHints: [feedKey], targetTimeframe: timeframe });

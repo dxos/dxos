@@ -144,7 +144,7 @@ export class DataParty {
   /**
    * @internal
    */
-  _setFeedHints(feedHints: PublicKey[]) {
+  _setFeedHints (feedHints: PublicKey[]) {
     this._feedHints = feedHints;
   }
 
@@ -160,18 +160,18 @@ export class DataParty {
 
     // TODO(dmaretskyi): May be undefined in some tests.
     const party = this._metadataStore.getParty(this._partyCore.key);
-    
+
     await this._partyCore.open({
       feedHints: this._feedHints,
       initialTimeframe: this._initialTimeframe,
-      targetTimeframe: party?.latestTimeframe,
+      targetTimeframe: party?.latestTimeframe
     });
 
     // Keep updating latest reached timeframe in the metadata.
     // This timeframe will be waited for when opening the party next time.
     this._partyCore.timeframeUpdate.on(timeframe => {
-      this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
-    })
+      void this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,

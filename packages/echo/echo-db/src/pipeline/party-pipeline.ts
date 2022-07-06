@@ -12,8 +12,8 @@ import { createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey,
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
 import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '.';
+import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
@@ -127,7 +127,7 @@ export class PartyPipeline {
     const {
       feedHints = [],
       initialTimeframe,
-      targetTimeframe,
+      targetTimeframe
     } = options;
 
     if (this.isOpen) {
@@ -173,7 +173,7 @@ export class PartyPipeline {
     //
     // Database
     //
-    
+
     const databaseBackend = new FeedDatabaseBackend(this._pipeline.outboundEchoStream, this._databaseSnapshot, { snapshots: true });
     this._database = new Database(
       this._modelFactory,
@@ -198,7 +198,7 @@ export class PartyPipeline {
       );
     }
 
-    if(targetTimeframe) {
+    if (targetTimeframe) {
       await this._timeframeClock.waitUntilReached(targetTimeframe);
     }
 
@@ -256,6 +256,4 @@ export class PartyPipeline {
   }
 }
 
-function createFeedSelector(partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector {
-  return feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);
-}
+const createFeedSelector = (partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector => feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);

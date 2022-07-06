@@ -62,7 +62,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
     }
   }
 
-  get echoProcessor() {
+  get echoProcessor () {
     return this._echoProcessor;
   }
 

@@ -31,7 +31,7 @@ describe('DataParty', () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
-    const writableFeed = await partyFeedProvider.createOrOpenWritableFeed()
+    const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
     const party = new DataParty(
       partyKey,
@@ -41,7 +41,7 @@ describe('DataParty', () => {
       metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
-      networkManager,
+      networkManager
     );
     party._setFeedHints([...feedHints, writableFeed.key]);
     return party;
@@ -92,17 +92,17 @@ describe('DataParty', () => {
       partyKey
     ));
 
-    for(let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       await party.database.createItem({ type: 'test:item' });
     }
 
     await party.close();
     await party.open();
-    
+
     expect(party.database.select({ type: 'test:item' }).exec().entities).toHaveLength(10);
 
     await party.close();
-  })
+  });
 
   test('authenticates its own credentials', async () => {
     const keyring = new Keyring();

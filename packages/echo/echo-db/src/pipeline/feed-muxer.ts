@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import { Readable } from 'stream';
 
 import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
@@ -13,11 +12,10 @@ import { checkType } from '@dxos/debug';
 import {
   createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter, Timeframe
 } from '@dxos/echo-protocol';
-import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
 
 import { EchoProcessor, TimeframeClock } from '../packlets/database';
-import { CredentialProcessor, PartyProcessor, PartyStateProvider } from './party-processor';
+import { CredentialProcessor, PartyStateProvider } from './party-processor';
 
 interface Options {
   readLogger?: (msg: any) => void
@@ -34,7 +32,7 @@ export class FeedMuxer {
   private readonly _errors = new Event<Error>();
 
   private _isOpen = false;
-  
+
   /**
    * Messages to write into pipeline (e.g., mutations from model).
    */
@@ -98,7 +96,7 @@ export class FeedMuxer {
     return this._errors;
   }
 
-  setEchoProcessor(processor: EchoProcessor) {
+  setEchoProcessor (processor: EchoProcessor) {
     this._echoProcessor = processor;
   }
 
@@ -113,7 +111,7 @@ export class FeedMuxer {
    *         Feed
    */
   async open (): Promise<FeedWriter<EchoEnvelope> | undefined> {
-    const { readLogger, writeLogger } = this._options;
+    const { readLogger } = this._options;
 
     // This will exit cleanly once FeedStoreIterator is closed.
     setImmediate(async () => {
@@ -122,7 +120,6 @@ export class FeedMuxer {
 
         try {
           const { data: message } = block;
-
 
           //
           // HALO

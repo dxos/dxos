@@ -29,7 +29,7 @@ export class TimeframeClock {
     return !gaps.isEmpty();
   }
 
-  async waitUntilReached(target: Timeframe) {
-    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty())
+  async waitUntilReached (target: Timeframe) {
+    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
   }
 }

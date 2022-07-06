@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Readable } from 'stream';
-
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';

@@ -9,8 +9,7 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import { createId, PublicKey } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { createFeedWriter, createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
-import { createTransform } from '@dxos/feed-store';
+import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -96,12 +95,14 @@ describe('Item demuxer', () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
-    const itemManager = new ItemManager(modelFactory, PublicKey.random(), { async write(message) {
-      processEchoMessage(message);
-      return {feedKey: PublicKey.random(), seq: 0}
-    },});
+    const itemManager = new ItemManager(modelFactory, PublicKey.random(), {
+      write: async (message) => {
+        void processEchoMessage(message);
+        return { feedKey: PublicKey.random(), seq: 0 };
+      }
+    });
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
-    const processor = itemDemuxer.open()
+    const processor = itemDemuxer.open();
     const processEchoMessage = (message: EchoEnvelope) => processor({
       meta: {
         feedKey: PublicKey.random(),
@@ -110,15 +111,15 @@ describe('Item demuxer', () => {
         timeframe: new Timeframe()
       },
       data: message
-    })
+    });
 
-    processEchoMessage(checkType<EchoEnvelope>({
+    void processEchoMessage(checkType<EchoEnvelope>({
       itemId: 'foo',
       genesis: {
         modelType: TestModel.meta.type
       }
     }));
-    processEchoMessage(checkType<EchoEnvelope>({
+    void processEchoMessage(checkType<EchoEnvelope>({
       itemId: 'bar',
       genesis: {
         modelType: ObjectModel.meta.type

@@ -10,14 +10,14 @@ import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
+import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';
-import { PartyProcessor } from './party-processor';
 import { FeedMuxer } from './feed-muxer';
+import { PartyProcessor } from './party-processor';
 
 const log = debug('dxos:echo:pipeline:test');
 
@@ -66,13 +66,11 @@ describe('FeedMuxer', () => {
     const echoProcessor = async (message: IEchoStream) => {
       log('Processed:', JSON.stringify(message, jsonReplacer, 2));
       updateCounter();
-    }
+    };
 
     const pipeline = new FeedMuxer(partyProcessor, feedReadStream, new TimeframeClock());
     pipeline.setEchoProcessor(echoProcessor);
     await pipeline.open();
-
-  
 
     //
     // Write directly to feed store.
@@ -109,10 +107,10 @@ describe('FeedMuxer', () => {
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
 
-    const echoMessages: IEchoStream[] = []
+    const echoMessages: IEchoStream[] = [];
     const echoProcessor = async (msg: IEchoStream) => {
-      echoMessages.push(msg)
-    }
+      echoMessages.push(msg);
+    };
 
     const pipeline = new FeedMuxer(
       partyProcessor,
@@ -122,7 +120,6 @@ describe('FeedMuxer', () => {
     );
     pipeline.setEchoProcessor(echoProcessor);
     await pipeline.open();
-
 
     await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
     await waitForCondition(() => !partyProcessor.genesisRequired);

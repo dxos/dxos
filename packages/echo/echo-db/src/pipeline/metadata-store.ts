@@ -159,7 +159,7 @@ export class MetadataStore {
     return !!party.feedKeys?.find(fk => feedKey.equals(fk));
   }
 
-  async setTimeframe(partyKey: PublicKey, timeframe: Timeframe) {
+  async setTimeframe (partyKey: PublicKey, timeframe: Timeframe) {
     const party = this.getParty(partyKey) ?? failUndefined();
     party.latestTimeframe = timeframe;
     await this._save();

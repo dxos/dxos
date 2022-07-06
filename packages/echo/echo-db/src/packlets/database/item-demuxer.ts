@@ -8,7 +8,6 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, LinkSnapshot } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 
 import { Entity } from './entity';

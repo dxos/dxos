@@ -127,7 +127,7 @@ export class PartyFactory {
       this._metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
-      this._networkManager,      
+      this._networkManager,
       initialTimeframe,
       this._options
     );
@@ -200,7 +200,7 @@ export class PartyFactory {
 
     const writableFeed = await party.getWriteFeed();
     // Hint at the newly created writable feed so that we can start replicating from it.
-    party._setFeedHints([writableFeed.key])
+    party._setFeedHints([writableFeed.key]);
 
     // Connect the pipeline.
     await party.open();
