@@ -22,7 +22,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { createHaloPartyAdmissionMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
-import { PartyFeedProvider, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PipelineOptions } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
 import {
@@ -50,19 +50,20 @@ export class HaloFactory {
     private readonly _snapshotStore: SnapshotStore,
     private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _keyring: Keyring,
-    private readonly _options: PartyOptions = {}
+    private readonly _options: PipelineOptions = {}
   ) {}
 
   async constructParty (feedHints: PublicKey[]): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
+    const writableFeed = await feedProvider.createOrOpenWritableFeed();
     const halo = new HaloParty(
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      feedHints,
+      [...feedHints, writableFeed.key],
       undefined,
       this._options
     );

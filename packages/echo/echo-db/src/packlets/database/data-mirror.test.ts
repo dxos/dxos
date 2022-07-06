@@ -26,8 +26,8 @@ describe('DataMirror', () => {
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), feed);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, { snapshots: true });
 
-    const stream = itemDemuxer.open();
-    feed.written.on(([msg, meta]) => stream.write({
+    const process = itemDemuxer.open();
+    feed.written.on(([msg, meta]) => process({
       data: msg,
       meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe() }
     } as any));

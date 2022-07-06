@@ -8,7 +8,6 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, LinkSnapshot } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 
 import { Entity } from './entity';
@@ -21,6 +20,8 @@ const log = debug('dxos:echo-db:item-demuxer');
 export interface ItemDemuxerOptions {
   snapshots?: boolean
 }
+
+export type EchoProcessor = (message: IEchoStream) => Promise<void>
 
 /**
  * Creates a stream that consumes `IEchoStream` messages and routes them to the associated items.
@@ -35,7 +36,7 @@ export class ItemDemuxer {
     private readonly _options: ItemDemuxerOptions = {}
   ) {}
 
-  open (): NodeJS.WritableStream {
+  open (): EchoProcessor {
     this._modelFactory.registered.on(async model => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item._stateManager.modelType === model.meta.type) {
@@ -46,7 +47,7 @@ export class ItemDemuxer {
 
     // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
-    return createWritable<IEchoStream>(async (message: IEchoStream) => {
+    return async (message: IEchoStream) => {
       const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
       assert(itemId);
 
@@ -111,7 +112,7 @@ export class ItemDemuxer {
       }
 
       this.mutation.emit(message);
-    });
+    };
   }
 
   createSnapshot (): DatabaseSnapshot {

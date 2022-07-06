@@ -31,17 +31,20 @@ describe('DataParty', () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
+    const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
-    return new DataParty(
+    const party = new DataParty(
       partyKey,
       modelFactory,
       snapshotStore,
       partyFeedProvider,
+      metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
-      networkManager,
-      feedHints
+      networkManager
     );
+    party._setFeedHints([...feedHints, writableFeed.key]);
+    return party;
   };
 
   test('open & close', async () => {
@@ -70,6 +73,33 @@ describe('DataParty', () => {
     ));
 
     await party.database.createItem({ type: 'test:item' });
+
+    await party.close();
+  });
+
+  test('data is immediately available after re-opening', async () => {
+    const keyring = new Keyring();
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await createParty(identity, partyKey.publicKey, []);
+    await party.open();
+
+    const feed = await party.getWriteFeed();
+    await party.credentialsWriter.write(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ));
+
+    for (let i = 0; i < 10; i++) {
+      await party.database.createItem({ type: 'test:item' });
+    }
+
+    await party.close();
+    await party.open();
+
+    expect(party.database.select({ type: 'test:item' }).exec().entities).toHaveLength(10);
 
     await party.close();
   });

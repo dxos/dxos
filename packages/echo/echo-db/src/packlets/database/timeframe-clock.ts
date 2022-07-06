@@ -28,4 +28,8 @@ export class TimeframeClock {
     const gaps = Timeframe.dependencies(timeframe, this._timeframe);
     return !gaps.isEmpty();
   }
+
+  async waitUntilReached (target: Timeframe) {
+    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
+  }
 }

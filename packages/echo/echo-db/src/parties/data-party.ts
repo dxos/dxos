@@ -17,7 +17,7 @@ import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
 import { Database, Item } from '../packlets/database';
-import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions, MetadataStore } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -42,25 +42,26 @@ export interface PartyMember {
 export class DataParty {
   public readonly update = new Event<void>();
 
-  private readonly _partyCore: PartyCore;
+  private readonly _partyCore: PartyPipeline;
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
+  private _feedHints: PublicKey[] = []
 
   constructor (
     partyKey: PartyKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
+    private readonly _metadataStore: MetadataStore,
     private readonly _credentialsSigner: CredentialsSigner,
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe?: Timeframe,
-    _options: PartyOptions = {}
+    _options: PipelineOptions = {}
   ) {
-    this._partyCore = new PartyCore(
+    this._partyCore = new PartyPipeline(
       partyKey,
       _feedProvider,
       modelFactory,
@@ -141,6 +142,13 @@ export class DataParty {
   }
 
   /**
+   * @internal
+   */
+  _setFeedHints (feedHints: PublicKey[]) {
+    this._feedHints = feedHints;
+  }
+
+  /**
    * Opens the pipeline and connects the streams.
    */
   @synchronized
@@ -150,9 +158,19 @@ export class DataParty {
       return this;
     }
 
+    // TODO(dmaretskyi): May be undefined in some tests.
+    const party = this._metadataStore.getParty(this._partyCore.key);
+
     await this._partyCore.open({
       feedHints: this._feedHints,
-      initialTimeframe: this._initialTimeframe
+      initialTimeframe: this._initialTimeframe,
+      targetTimeframe: party?.latestTimeframe
+    });
+
+    // Keep updating latest reached timeframe in the metadata.
+    // This timeframe will be waited for when opening the party next time.
+    this._partyCore.timeframeUpdate.on(timeframe => {
+      void this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
     });
 
     this._invitationManager = new InvitationFactory(
@@ -197,6 +215,9 @@ export class DataParty {
     if (!this.isOpen) {
       return this;
     }
+
+    // Save the latest reached timeframe.
+    await this._metadataStore.setTimeframe(this._partyCore.key, this._partyCore.timeframe);
 
     await this._partyCore.close();
     await this._protocol?.stop();
