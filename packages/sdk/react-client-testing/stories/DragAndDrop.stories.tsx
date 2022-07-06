@@ -116,6 +116,10 @@ const ListStory = () => {
 
     setList(listItem);
     setParty(newParty);
+
+    return () => {
+      orderedList?.destroy();
+    };
   }, []);
 
   // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
@@ -238,6 +242,10 @@ const MultipleListStory = () => {
       id: orderedList.id,
       values: orderedList.values
     })));
+
+    return () => {
+      orderedLists?.forEach(orderedList => orderedList.destroy());
+    };
   }, []);
 
   const getListItems = (listId: string) => {
@@ -503,6 +511,11 @@ const TableStory = () => {
     setColumnOrder(newColumnOrderedList.values);
     setInitialRowOrder(newRowOrderedList.values);
     setInitialColumnOrder(newColumnOrderedList.values);
+
+    return () => {
+      rowOrderedList?.destroy();
+      columnOrderedList?.destroy();
+    };
   }, []);
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
@@ -653,6 +666,10 @@ const MultipleContainersStory = () => {
     setColumnOrderedList(newColumnOrderedList);
     setColumnOrder(newColumnOrderedList.values);
     setInitialColumnOrder(newColumnOrderedList.values);
+
+    return () => {
+      orderedLists?.forEach(orderedList => orderedList.destroy());
+    };
   }, []);
 
   const getContainerItems = (containerId: string) => {
