@@ -13,8 +13,7 @@ import {
   Keyring,
   KeyType,
   Filter,
-  SecretProvider,
-  KeyHint
+  SecretProvider
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';
@@ -54,7 +53,7 @@ export class HaloFactory {
     private readonly _options: PartyOptions = {}
   ) {}
 
-  async constructParty (hints: KeyHint[]): Promise<HaloParty> {
+  async constructParty (feedHints: PublicKey[]): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
     const halo = new HaloParty(
@@ -63,7 +62,7 @@ export class HaloFactory {
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      hints,
+      feedHints,
       undefined,
       this._options
     );
