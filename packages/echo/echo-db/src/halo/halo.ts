@@ -15,7 +15,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { OpenProgress } from '../parties';
-import { MetadataStore, PartyOptions, PartyFeedProvider } from '../pipeline';
+import { MetadataStore, PipelineOptions, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
@@ -36,7 +36,7 @@ export interface HaloConfiguration {
   modelFactory: ModelFactory,
   snapshotStore: SnapshotStore,
   feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
-  options: PartyOptions
+  options: PipelineOptions
 }
 
 /**

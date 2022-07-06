@@ -143,6 +143,7 @@ export class ECHO {
       this._modelFactory,
       this._snapshotStore,
       feedProviderFactory,
+      this._metadataStore,
       options
     );
 
