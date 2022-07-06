@@ -18,7 +18,7 @@ import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
-export interface PartyOptions {
+export interface PipelineOptions {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
@@ -71,7 +71,7 @@ export class PartyPipeline {
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _memberKey: PublicKey,
-    private readonly _options: PartyOptions = {}
+    private readonly _options: PipelineOptions = {}
   ) { }
 
   get key (): PartyKey {

@@ -17,7 +17,7 @@ import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
 import { Database, Item } from '../packlets/database';
-import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -58,7 +58,7 @@ export class DataParty {
     private readonly _networkManager: NetworkManager,
     private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe?: Timeframe,
-    _options: PartyOptions = {}
+    _options: PipelineOptions = {}
   ) {
     this._partyCore = new PartyPipeline(
       partyKey,
