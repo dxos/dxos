@@ -56,10 +56,12 @@ export class PartyFactory {
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
     const party = await this.constructParty(partyKey.publicKey);
 
+    const writableFeed = await party.getWriteFeed();
+    // Hint at the newly created writable feed so that we can start replicating from it.
+    party._setFeedHints([writableFeed.key]);
+
     // Connect the pipeline.
     await party.open();
-
-    const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.credentialsWriter.write(createPartyGenesisMessage(
@@ -110,12 +112,8 @@ export class PartyFactory {
    * @param partyKey
    * @param hints
    */
-  async constructParty (partyKey: PartyKey, feedHints: PublicKey[] = [], initialTimeframe?: Timeframe) {
+  async constructParty (partyKey: PartyKey, initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
-
-    // TODO(marik-d): Support read-only parties if this feed doesn't exist?
-    const feedProvider = this._feedProviderFactory(partyKey);
-    const writeFeed = await feedProvider.createOrOpenWritableFeed();
 
     //
     // Create the party.
@@ -124,12 +122,10 @@ export class PartyFactory {
       partyKey,
       this._modelFactory,
       this._snapshotStore,
-      feedProvider,
+      this._feedProviderFactory(partyKey),
       identity.createCredentialsSigner(),
       identity.preferences,
-      this._networkManager,
-      // TODO(dmaretskyi): Don't do this here. In general case we don't need to hint at our own writable feed.
-      [...feedHints, writeFeed.key],
+      this._networkManager,      
       initialTimeframe,
       this._options
     );
@@ -137,11 +133,11 @@ export class PartyFactory {
     return party;
   }
 
-  async constructPartyFromSnapshot (snapshot: PartySnapshot, feedHints: PublicKey[] = []) {
+  async constructPartyFromSnapshot (snapshot: PartySnapshot) {
     assert(snapshot.partyKey);
     log(`Constructing ${humanize(snapshot.partyKey)} from snapshot at ${JSON.stringify(snapshot.timeframe)}.`);
 
-    const party = await this.constructParty(PublicKey.from(snapshot.partyKey), feedHints, snapshot.timeframe);
+    const party = await this.constructParty(PublicKey.from(snapshot.partyKey), snapshot.timeframe);
     await party.restoreFromSnapshot(snapshot);
     return party;
   }
@@ -174,7 +170,8 @@ export class PartyFactory {
 
     await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
-    const party = await this.constructParty(partyKey, hints);
+    const party = await this.constructParty(partyKey);
+    party._setFeedHints(hints);
     await party.open();
     await initiator.destroy();
 
@@ -199,10 +196,12 @@ export class PartyFactory {
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
     const party = await this.constructParty(partyKey.publicKey);
 
+    const writableFeed = await party.getWriteFeed();
+    // Hint at the newly created writable feed so that we can start replicating from it.
+    party._setFeedHints([writableFeed.key])
+
     // Connect the pipeline.
     await party.open();
-
-    const writableFeed = await party.getWriteFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.credentialsWriter.write(createPartyGenesisMessage(

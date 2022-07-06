@@ -33,7 +33,7 @@ describe('DataParty', () => {
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
     const writableFeed = await partyFeedProvider.createOrOpenWritableFeed()
 
-    return new DataParty(
+    const party = new DataParty(
       partyKey,
       modelFactory,
       snapshotStore,
@@ -41,8 +41,9 @@ describe('DataParty', () => {
       identity.createCredentialsSigner(),
       identity.preferences,
       networkManager,
-      [...feedHints, writableFeed.key],
     );
+    party._setFeedHints([...feedHints, writableFeed.key]);
+    return party;
   };
 
   test('open & close', async () => {

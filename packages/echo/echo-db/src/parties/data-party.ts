@@ -46,6 +46,7 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
+  private _feedHints: PublicKey[] = []
 
   constructor (
     partyKey: PartyKey,
@@ -56,7 +57,6 @@ export class DataParty {
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe?: Timeframe,
     _options: PipelineOptions = {}
   ) {
@@ -138,6 +138,13 @@ export class DataParty {
     const item = await this.getPropertiesItem();
     await item.model.set(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
+  }
+
+  /**
+   * @internal
+   */
+  _setFeedHints(feedHints: PublicKey[]) {
+    this._feedHints = feedHints;
   }
 
   /**
