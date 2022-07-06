@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
-import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '../pipeline';
+import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '.';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
@@ -52,7 +52,7 @@ export interface OpenOptions {
  *
  * The core class also handles the combined ECHO and HALO state snapshots.
  */
-export class PartyCore {
+export class PartyPipeline {
   /**
    * Snapshot to be restored from when party.open() is called.
    */

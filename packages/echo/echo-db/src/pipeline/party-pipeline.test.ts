@@ -17,12 +17,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '.';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
-import { PartyCore } from './party-core';
+import { PartyPipeline } from './party-pipeline';
 
-describe('PartyCore', () => {
+describe('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
@@ -39,7 +39,7 @@ describe('PartyCore', () => {
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
 
-    const party = new PartyCore(
+    const party = new PartyPipeline(
       partyKey.publicKey,
       partyFeedProvider,
       modelFactory,
@@ -149,7 +149,7 @@ describe('PartyCore', () => {
 
     const otherFeedKey = PublicKey.random();
 
-    const party = new PartyCore(
+    const party = new PartyPipeline(
       partyKey.publicKey,
       partyFeedProvider,
       modelFactory,
@@ -264,7 +264,7 @@ describe('PartyCore', () => {
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 
-    const party2 = new PartyCore(
+    const party2 = new PartyPipeline(
       peer1.party.key,
       partyFeedProvider,
       modelFactory,
