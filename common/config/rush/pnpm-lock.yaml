@@ -3533,7 +3533,7 @@ packages:
       '@babel/compat-data': 7.16.4
       '@babel/core': 7.12.3
       '@babel/helper-validator-option': 7.14.5
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       semver: 6.3.0
     dev: false
 
@@ -3546,7 +3546,7 @@ packages:
       '@babel/compat-data': 7.16.4
       '@babel/core': 7.13.10
       '@babel/helper-validator-option': 7.14.5
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       semver: 6.3.0
     dev: true
 
@@ -3559,7 +3559,7 @@ packages:
       '@babel/compat-data': 7.16.4
       '@babel/core': 7.13.16
       '@babel/helper-validator-option': 7.14.5
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       semver: 6.3.0
 
   /@babel/helper-compilation-targets/7.16.3_@babel+core@7.16.0:
@@ -3571,7 +3571,7 @@ packages:
       '@babel/compat-data': 7.16.4
       '@babel/core': 7.16.0
       '@babel/helper-validator-option': 7.14.5
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       semver: 6.3.0
     dev: true
 
@@ -3584,7 +3584,7 @@ packages:
       '@babel/compat-data': 7.16.4
       '@babel/core': 7.16.5
       '@babel/helper-validator-option': 7.14.5
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       semver: 6.3.0
 
   /@babel/helper-compilation-targets/7.18.6_@babel+core@7.12.3:
@@ -11044,7 +11044,7 @@ packages:
     resolution: {integrity: sha512-eM9d/swFopRt5gdJ7jrpCwgvEMIayITpojhkkSMRsFHYuH5bkSQ4p/9qTEHtmNudUZh22Tehu7I6CxAW0IXTKA==}
     hasBin: true
     dependencies:
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       caniuse-lite: 1.0.30001286
       normalize-range: 0.1.2
       num2fraction: 1.2.2
@@ -11735,6 +11735,7 @@ packages:
       escalade: 3.1.1
       node-releases: 2.0.1
       picocolors: 1.0.0
+    dev: false
 
   /browserslist/4.21.1:
     resolution: {integrity: sha512-Nq8MFCSrnJXSc88yliwlzQe3qNe3VntIjhsArW9IJOEPSHNx23FalwApUVbzAWABLhYJJ7y8AynWI/XM8OdfjQ==}
@@ -12043,6 +12044,7 @@ packages:
 
   /caniuse-lite/1.0.30001286:
     resolution: {integrity: sha512-zaEMRH6xg8ESMi2eQ3R4eZ5qw/hJiVsO/HlLwniIwErij0JDr9P+8V4dtx1l+kLq6j3yy8l8W4fst1lBnat5wQ==}
+    dev: false
 
   /caniuse-lite/1.0.30001363:
     resolution: {integrity: sha512-HpQhpzTGGPVMnCjIomjt+jvyUu8vNFo3TaDiZ/RcoTrlOq/5+tC8zHdsbgFB6MxmaY+jCpsH09aD80Bb4Ow3Sg==}
@@ -14306,6 +14308,7 @@ packages:
 
   /electron-to-chromium/1.4.16:
     resolution: {integrity: sha512-BQb7FgYwnu6haWLU63/CdVW+9xhmHls3RCQUFiV4lvw3wimEHTVcUk2hkuZo76QhR8nnDdfZE7evJIZqijwPdA==}
+    dev: false
 
   /electron-to-chromium/1.4.180:
     resolution: {integrity: sha512-7at5ash3FD9U5gPa3/wPr6OdiZd/zBjvDZaaHBpcqFOFUhZiWnb7stkqk8xUFL9H9nk7Yok5vCCNK8wyC/+f8A==}
@@ -21649,6 +21652,7 @@ packages:
 
   /node-releases/2.0.1:
     resolution: {integrity: sha512-CqyzN6z7Q6aMeF/ktcMVTzhAHCEpf8SOarwpzpf8pNBY2k5/oM34UHldUwp8VKI7uxct2HxSRdJjBaZeESzcxA==}
+    dev: false
 
   /node-releases/2.0.5:
     resolution: {integrity: sha512-U9h1NLROZTq9uE1SNffn6WuPDg8icmi3ns4rEl/oTfIle4iLjTliCzgTsbaIFMq/Xn078/lfY/BL0GWZ+psK4Q==}
@@ -22628,13 +22632,13 @@ packages:
       postcss-selector-parser: 6.0.7
     dev: false
 
-  /postcss-browser-comments/3.0.0_browserslist@4.18.1:
+  /postcss-browser-comments/3.0.0_browserslist@4.21.1:
     resolution: {integrity: sha512-qfVjLfq7HFd2e0HW4s1dvU8X080OZdG46fFbIBFjW7US7YPDcWfRvdElvwMJr2LI6hMmD+7LnH2HcmXTs+uOig==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
       browserslist: ^4
     dependencies:
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       postcss: 7.0.39
     dev: false
 
@@ -23057,9 +23061,9 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       '@csstools/normalize.css': 10.1.0
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       postcss: 7.0.39
-      postcss-browser-comments: 3.0.0_browserslist@4.18.1
+      postcss-browser-comments: 3.0.0_browserslist@4.21.1
       sanitize.css: 10.0.0
     dev: false
 
@@ -23098,7 +23102,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       autoprefixer: 9.8.8
-      browserslist: 4.18.1
+      browserslist: 4.21.1
       caniuse-lite: 1.0.30001286
       css-blank-pseudo: 0.1.4
       css-has-pseudo: 0.10.0
