@@ -17,7 +17,7 @@ import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';
-import { CredentialProcessor, PartyStateProvider } from './party-processor';
+import { CredentialProcessor, PartyProcessor, PartyStateProvider } from './party-processor';
 
 interface Options {
   readLogger?: (msg: any) => void
@@ -28,8 +28,9 @@ const log = debug('dxos:echo-db:pipeline');
 
 /**
  * Manages the inbound and outbound message streams for an individual party.
+ * Reads messages from individual feeds and splits them into ECHO and HALO streams.
  */
-export class Pipeline {
+export class FeedMuxer {
   private readonly _errors = new Event<Error>();
 
   /**

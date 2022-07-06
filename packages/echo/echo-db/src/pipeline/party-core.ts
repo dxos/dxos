@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
-import { createMessageSelector, PartyProcessor, PartyFeedProvider, Pipeline } from '../pipeline';
+import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '../pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
@@ -61,7 +61,7 @@ export class PartyCore {
   private readonly _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
-  private _pipeline?: Pipeline;
+  private _pipeline?: FeedMuxer;
   private _partyProcessor?: PartyProcessor;
   private _timeframeClock?: TimeframeClock;
 
@@ -162,7 +162,7 @@ export class PartyCore {
       initialTimeframe
     );
 
-    this._pipeline = new Pipeline(
+    this._pipeline = new FeedMuxer(
       this._partyProcessor, iterator, this._timeframeClock, createFeedWriter(writableFeed.feed), this._options);
 
     // TODO(burdon): Support read-only parties.

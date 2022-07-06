@@ -17,12 +17,12 @@ import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';
 import { PartyProcessor } from './party-processor';
-import { Pipeline } from './pipeline';
+import { FeedMuxer } from './feed-muxer';
 
 const log = debug('dxos:echo:pipeline:test');
 
 // TODO(burdon): Test read-only.
-describe('pipeline', () => {
+describe('FeedMuxer', () => {
   test('streams', async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
@@ -56,7 +56,7 @@ describe('pipeline', () => {
         seq: 0
       }
     });
-    const pipeline = new Pipeline(partyProcessor, feedReadStream, new TimeframeClock());
+    const pipeline = new FeedMuxer(partyProcessor, feedReadStream, new TimeframeClock());
     const [readStream] = await pipeline.open();
     expect(readStream).toBeTruthy();
 
@@ -105,7 +105,7 @@ describe('pipeline', () => {
     });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
-    const pipeline = new Pipeline(
+    const pipeline = new FeedMuxer(
       partyProcessor,
       feedReadStream,
       new TimeframeClock(),
