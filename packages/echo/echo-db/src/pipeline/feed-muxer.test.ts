@@ -56,9 +56,6 @@ describe('FeedMuxer', () => {
         seq: 0
       }
     });
-    const pipeline = new FeedMuxer(partyProcessor, feedReadStream, new TimeframeClock());
-    const [readStream] = await pipeline.open();
-    expect(readStream).toBeTruthy();
 
     //
     // Pipeline consumer.
@@ -66,10 +63,16 @@ describe('FeedMuxer', () => {
     //
     const numMessages = 5;
     const [counter, updateCounter] = latch(numMessages);
-    readStream.pipe(createWritable<IEchoStream>(async message => {
+    const echoProcessor = async (message: IEchoStream) => {
       log('Processed:', JSON.stringify(message, jsonReplacer, 2));
       updateCounter();
-    }));
+    }
+
+    const pipeline = new FeedMuxer(partyProcessor, feedReadStream, new TimeframeClock());
+    pipeline.setEchoProcessor(echoProcessor);
+    await pipeline.open();
+
+  
 
     //
     // Write directly to feed store.
@@ -105,16 +108,21 @@ describe('FeedMuxer', () => {
     });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
+
+    const echoMessages: IEchoStream[] = []
+    const echoProcessor = async (msg: IEchoStream) => {
+      echoMessages.push(msg)
+    }
+
     const pipeline = new FeedMuxer(
       partyProcessor,
       feedReadStream,
       new TimeframeClock(),
       createFeedWriter(feed)
     );
+    pipeline.setEchoProcessor(echoProcessor);
     await pipeline.open();
 
-    const writable = new WritableArray();
-    pipeline.inboundEchoStream!.pipe(writable);
 
     await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
     await waitForCondition(() => !partyProcessor.genesisRequired);
@@ -126,10 +134,10 @@ describe('FeedMuxer', () => {
       }
     });
 
-    await waitForCondition(() => writable.objects.length === 1);
+    await waitForCondition(() => echoMessages.length === 1);
 
     expect(partyProcessor.genesisRequired).toEqual(false);
-    expect((writable.objects[0] as any).data).toEqual({
+    expect((echoMessages[0] as any).data).toEqual({
       itemId: '123',
       genesis: {
         itemType: 'foo'

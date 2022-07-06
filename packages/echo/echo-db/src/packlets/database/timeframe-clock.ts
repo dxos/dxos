@@ -30,6 +30,6 @@ export class TimeframeClock {
   }
 
   async waitUntilReached(target: Timeframe) {
-    await this.update.waitFor(current => Timeframe.dependencies(target, current).isEmpty())
+    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty())
   }
 }

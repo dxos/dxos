@@ -216,6 +216,9 @@ export class DataParty {
       return this;
     }
 
+    // Save the latest reached timeframe.
+    await this._metadataStore.setTimeframe(this._partyCore.key, this._partyCore.timeframe);
+
     await this._partyCore.close();
     await this._protocol?.stop();
 

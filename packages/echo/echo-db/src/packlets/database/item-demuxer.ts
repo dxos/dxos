@@ -22,6 +22,8 @@ export interface ItemDemuxerOptions {
   snapshots?: boolean
 }
 
+export type EchoProcessor = (message: IEchoStream) => Promise<void>
+
 /**
  * Creates a stream that consumes `IEchoStream` messages and routes them to the associated items.
  * @param itemManager
@@ -35,7 +37,7 @@ export class ItemDemuxer {
     private readonly _options: ItemDemuxerOptions = {}
   ) {}
 
-  open (): NodeJS.WritableStream {
+  open (): EchoProcessor {
     this._modelFactory.registered.on(async model => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item._stateManager.modelType === model.meta.type) {
@@ -46,7 +48,7 @@ export class ItemDemuxer {
 
     // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
-    return createWritable<IEchoStream>(async (message: IEchoStream) => {
+    return async (message: IEchoStream) => {
       const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
       assert(itemId);
 
@@ -111,7 +113,7 @@ export class ItemDemuxer {
       }
 
       this.mutation.emit(message);
-    });
+    };
   }
 
   createSnapshot (): DatabaseSnapshot {

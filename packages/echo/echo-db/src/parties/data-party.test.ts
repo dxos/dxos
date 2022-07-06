@@ -77,6 +77,33 @@ describe('DataParty', () => {
     await party.close();
   });
 
+  test('data is immediately available after re-opening', async () => {
+    const keyring = new Keyring();
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await createParty(identity, partyKey.publicKey, []);
+    await party.open();
+
+    const feed = await party.getWriteFeed();
+    await party.credentialsWriter.write(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ));
+
+    for(let i = 0; i < 10; i++) {
+      await party.database.createItem({ type: 'test:item' });
+    }
+
+    await party.close();
+    await party.open();
+    
+    expect(party.database.select({ type: 'test:item' }).exec().entities).toHaveLength(10);
+
+    await party.close();
+  })
+
   test('authenticates its own credentials', async () => {
     const keyring = new Keyring();
     const identity = await createTestIdentityCredentials(keyring);

@@ -162,22 +162,29 @@ export class PartyPipeline {
     );
 
     this._pipeline = new FeedMuxer(
-      this._partyProcessor, iterator, this._timeframeClock, createFeedWriter(writableFeed.feed), this._options);
+      this._partyProcessor,
 
-    // TODO(burdon): Support read-only parties.
-    const [readStream, writeStream] = await this._pipeline.open();
+      iterator,
+      this._timeframeClock,
+      createFeedWriter(writableFeed.feed),
+      this._options
+    );
 
     //
     // Database
     //
-
+    
+    const databaseBackend = new FeedDatabaseBackend(this._pipeline.outboundEchoStream, this._databaseSnapshot, { snapshots: true });
     this._database = new Database(
       this._modelFactory,
-      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
+      databaseBackend,
       this._memberKey
     );
 
+    // Open pipeline and connect it to the database.
     await this._database.initialize();
+    this._pipeline.setEchoProcessor(databaseBackend.echoProcessor);
+    await this._pipeline.open();
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
@@ -192,7 +199,7 @@ export class PartyPipeline {
     }
 
     if(targetTimeframe) {
-      this._timeframeClock.waitUntilReached(targetTimeframe);
+      await this._timeframeClock.waitUntilReached(targetTimeframe);
     }
 
     return this;

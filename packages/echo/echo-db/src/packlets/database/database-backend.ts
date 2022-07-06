@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
-import { ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
+import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo-db:database-backend');
@@ -42,12 +42,11 @@ export interface DatabaseBackend {
  * Write operations result in mutations being written to the outgoing stream.
  */
 export class FeedDatabaseBackend implements DatabaseBackend {
-  private _itemDemuxerInboundStream!: NodeJS.WritableStream
+  private _echoProcessor!: EchoProcessor;
   private _itemManager!: ItemManager;
   private _itemDemuxer!: ItemDemuxer;
 
   constructor (
-    private readonly _inboundStream: NodeJS.ReadableStream,
     private readonly _outboundStream: FeedWriter<EchoEnvelope> | undefined,
     private readonly _snapshot?: DatabaseSnapshot,
     private readonly _options: ItemDemuxerOptions = {}
@@ -56,16 +55,18 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   async open (itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
     this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
-    this._itemDemuxerInboundStream = this._itemDemuxer.open();
-    this._inboundStream.pipe(this._itemDemuxerInboundStream);
+    this._echoProcessor = this._itemDemuxer.open();
 
     if (this._snapshot) {
       await this._itemDemuxer.restoreFromSnapshot(this._snapshot);
     }
   }
 
+  get echoProcessor() {
+    return this._echoProcessor;
+  }
+
   async close () {
-    this._inboundStream?.unpipe(this._itemDemuxerInboundStream);
   }
 
   get isReadOnly (): boolean {

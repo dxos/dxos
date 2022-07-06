@@ -16,7 +16,7 @@ import {
 import { createReadable } from '@dxos/feed-store';
 import { jsonReplacer } from '@dxos/util';
 
-import { TimeframeClock } from '../packlets/database';
+import { EchoProcessor, TimeframeClock } from '../packlets/database';
 import { CredentialProcessor, PartyProcessor, PartyStateProvider } from './party-processor';
 
 interface Options {
@@ -33,11 +33,8 @@ const log = debug('dxos:echo-db:pipeline');
 export class FeedMuxer {
   private readonly _errors = new Event<Error>();
 
-  /**
-   * Messages to be consumed from the pipeline (e.g., mutations to model).
-   */
-  private _inboundEchoStream: Readable | undefined;
-
+  private _isOpen = false;
+  
   /**
    * Messages to write into pipeline (e.g., mutations from model).
    */
@@ -47,6 +44,8 @@ export class FeedMuxer {
    * Halo message stream to write into pipeline.
    */
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
+
+  private _echoProcessor: EchoProcessor | undefined
 
   /**
    * @param _partyProcessor Processes HALO messages to update party state.
@@ -61,18 +60,30 @@ export class FeedMuxer {
     private readonly _timeframeClock: TimeframeClock,
     private readonly _feedWriter?: FeedWriter<FeedMessage>,
     private readonly _options: Options = {}
-  ) {}
+  ) {
+    if (this._feedWriter) {
+      const loggingWriter = mapFeedWriter<FeedMessage, FeedMessage>(async msg => {
+        this._options.writeLogger?.(msg);
+        return msg;
+      }, this._feedWriter);
+
+      this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({
+        timeframe: this._timeframeClock.timeframe,
+        echo: message
+      }), loggingWriter);
+      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({
+        timeframe: this._timeframeClock.timeframe,
+        halo: message
+      }), loggingWriter);
+    }
+  }
 
   get isOpen () {
-    return this._inboundEchoStream !== undefined;
+    return this._isOpen;
   }
 
   get readOnly () {
     return this._outboundEchoStream === undefined;
-  }
-
-  get inboundEchoStream () {
-    return this._inboundEchoStream;
   }
 
   get outboundEchoStream () {
@@ -87,6 +98,10 @@ export class FeedMuxer {
     return this._errors;
   }
 
+  setEchoProcessor(processor: EchoProcessor) {
+    this._echoProcessor = processor;
+  }
+
   /**
    * Create inbound and outbound pipielines.
    * https://nodejs.org/api/stream.html#stream_stream_pipeline_source_transforms_destination_callback
@@ -97,10 +112,8 @@ export class FeedMuxer {
    *       Transform(dxos.echo.IEchoEnvelope => dxos.IFeedMessage): update clock
    *         Feed
    */
-  async open (): Promise<[NodeJS.ReadableStream, FeedWriter<EchoEnvelope>?]> {
+  async open (): Promise<FeedWriter<EchoEnvelope> | undefined> {
     const { readLogger, writeLogger } = this._options;
-
-    this._inboundEchoStream = createReadable();
 
     // This will exit cleanly once FeedStoreIterator is closed.
     setImmediate(async () => {
@@ -110,7 +123,6 @@ export class FeedMuxer {
         try {
           const { data: message } = block;
 
-          this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
 
           //
           // HALO
@@ -134,8 +146,8 @@ export class FeedMuxer {
             // Validate messge.
             const { itemId } = message.echo;
             if (itemId) {
-              assert(this._inboundEchoStream);
-              this._inboundEchoStream.push(checkType<IEchoStream>({
+              assert(this._echoProcessor);
+              await this._echoProcessor(checkType<IEchoStream>({
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
@@ -151,6 +163,8 @@ export class FeedMuxer {
             // TODO(burdon): Can we throw and have the pipeline log (without breaking the stream)?
             log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
           }
+
+          this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
         } catch (err: any) {
           console.error('Error in message processing.');
           console.error(err);
@@ -158,30 +172,7 @@ export class FeedMuxer {
       }
     });
 
-    //
-    // Processes outbound messages (piped to the feed).
-    // Sets the current timeframe.
-    //
-    if (this._feedWriter) {
-      const loggingWriter = mapFeedWriter<FeedMessage, FeedMessage>(async msg => {
-        writeLogger?.(msg);
-        return msg;
-      }, this._feedWriter);
-
-      this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({
-        timeframe: this._timeframeClock.timeframe,
-        echo: message
-      }), loggingWriter);
-      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({
-        timeframe: this._timeframeClock.timeframe,
-        halo: message
-      }), loggingWriter);
-    }
-
-    return [
-      this._inboundEchoStream,
-      this._outboundEchoStream
-    ];
+    return this._outboundEchoStream;
   }
 
   /**
@@ -191,11 +182,9 @@ export class FeedMuxer {
   async close () {
     await this._feedStorIterator.close();
 
-    if (this._inboundEchoStream) {
-      this._inboundEchoStream.destroy();
-      this._inboundEchoStream = undefined;
-    }
-
     this._outboundEchoStream = undefined;
+    this._outboundHaloStream = undefined;
+    this._echoProcessor = undefined;
+    this._isOpen = false;
   }
 }
