@@ -35,8 +35,8 @@
     "eslint": "^7.12.1",
     "faker": "^5.1.0",
     "js-yaml": "^4.1.0",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.5.2",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.2",
     "uniq": "^1.0.1"
   },
   "publishConfig": {
