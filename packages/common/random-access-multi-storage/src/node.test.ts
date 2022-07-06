@@ -42,7 +42,7 @@ describe('testing node storage types', () => {
     await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
   });
 
-  it('destroy directory', async () => {
+  it('delete directory', async () => {
     const directory = temp();
     const storage = createStorage(directory);
     const storageDir = storage.directory('dir');
@@ -51,7 +51,7 @@ describe('testing node storage types', () => {
     await write(file);
 
     // Check dir destroy.
-    await storageDir.destroy();
+    await storageDir.delete();
     await expect(fs.access(path.join(directory, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
