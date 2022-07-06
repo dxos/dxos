@@ -16,7 +16,7 @@ import { useSelection } from './useSelection';
 const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
-const useTestComponents = async () => {
+const createTestComponents = async () => {
   const config = {};
   const client = new Client(config);
   await client.initialize();
@@ -55,7 +55,7 @@ afterEach(() => {
 
 describe.only('useSelection', () => {
   it('gets updated items selection', async () => {
-    const { party } = await useTestComponents();
+    const { party } = await createTestComponents();
     act(() => {
       ReactDOM.render(<UseSelectionTestComponent party={party} />, rootContainer);
     });
