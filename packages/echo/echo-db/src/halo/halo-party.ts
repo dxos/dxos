@@ -14,7 +14,7 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
-import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
 import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -41,7 +41,7 @@ export interface JoinedParty {
 export class HaloParty {
   public readonly update = new Event<void>();
 
-  private readonly _partyCore: PartyCore;
+  private readonly _partyCore: PartyPipeline;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
 
@@ -56,9 +56,9 @@ export class HaloParty {
     private readonly _networkManager: NetworkManager,
     private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe: Timeframe | undefined,
-    _options: PartyOptions
+    _options: PipelineOptions
   ) {
-    this._partyCore = new PartyCore(
+    this._partyCore = new PartyPipeline(
       _credentialsSigner.getIdentityKey().publicKey,
       _feedProvider,
       modelFactory,

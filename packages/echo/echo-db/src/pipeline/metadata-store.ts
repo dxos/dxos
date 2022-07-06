@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
+import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
@@ -157,5 +157,11 @@ export class MetadataStore {
       return false;
     }
     return !!party.feedKeys?.find(fk => feedKey.equals(fk));
+  }
+
+  async setTimeframe (partyKey: PublicKey, timeframe: Timeframe) {
+    const party = this.getParty(partyKey) ?? failUndefined();
+    party.latestTimeframe = timeframe;
+    await this._save();
   }
 }

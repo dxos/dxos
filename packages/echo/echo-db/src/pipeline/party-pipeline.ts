@@ -8,17 +8,17 @@ import { synchronized } from '@dxos/async';
 import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '.';
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
-import { createMessageSelector, PartyProcessor, PartyFeedProvider, Pipeline } from '../pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
-export interface PartyOptions {
+export interface PipelineOptions {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
@@ -52,7 +52,7 @@ export interface OpenOptions {
  *
  * The core class also handles the combined ECHO and HALO state snapshots.
  */
-export class PartyCore {
+export class PartyPipeline {
   /**
    * Snapshot to be restored from when party.open() is called.
    */
@@ -61,7 +61,7 @@ export class PartyCore {
   private readonly _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
-  private _pipeline?: Pipeline;
+  private _pipeline?: FeedMuxer;
   private _partyProcessor?: PartyProcessor;
   private _timeframeClock?: TimeframeClock;
 
@@ -71,7 +71,7 @@ export class PartyCore {
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _memberKey: PublicKey,
-    private readonly _options: PartyOptions = {}
+    private readonly _options: PipelineOptions = {}
   ) { }
 
   get key (): PartyKey {
@@ -126,7 +126,8 @@ export class PartyCore {
   async open (options: OpenOptions = {}) {
     const {
       feedHints = [],
-      initialTimeframe
+      initialTimeframe,
+      targetTimeframe
     } = options;
 
     if (this.isOpen) {
@@ -135,8 +136,6 @@ export class PartyCore {
 
     this._timeframeClock = new TimeframeClock(initialTimeframe);
 
-    // Open all feeds known from metadata and open or create a writable feed to the party.
-    await this._feedProvider.openKnownFeeds();
     const writableFeed = await this._feedProvider.createOrOpenWritableFeed();
 
     if (!this._partyProcessor) {
@@ -158,26 +157,34 @@ export class PartyCore {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
+      createFeedSelector(this._partyProcessor, feedHints),
       initialTimeframe
     );
 
-    this._pipeline = new Pipeline(
-      this._partyProcessor, iterator, this._timeframeClock, createFeedWriter(writableFeed.feed), this._options);
+    this._pipeline = new FeedMuxer(
+      this._partyProcessor,
 
-    // TODO(burdon): Support read-only parties.
-    const [readStream, writeStream] = await this._pipeline.open();
+      iterator,
+      this._timeframeClock,
+      createFeedWriter(writableFeed.feed),
+      this._options
+    );
 
     //
     // Database
     //
 
+    const databaseBackend = new FeedDatabaseBackend(this._pipeline.outboundEchoStream, this._databaseSnapshot, { snapshots: true });
     this._database = new Database(
       this._modelFactory,
-      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
+      databaseBackend,
       this._memberKey
     );
 
+    // Open pipeline and connect it to the database.
     await this._database.initialize();
+    this._pipeline.setEchoProcessor(databaseBackend.echoProcessor);
+    await this._pipeline.open();
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
@@ -189,6 +196,10 @@ export class PartyCore {
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
       );
+    }
+
+    if (targetTimeframe) {
+      await this._timeframeClock.waitUntilReached(targetTimeframe);
     }
 
     return this;
@@ -244,3 +255,5 @@ export class PartyCore {
     this._databaseSnapshot = snapshot.database;
   }
 }
+
+const createFeedSelector = (partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector => feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);

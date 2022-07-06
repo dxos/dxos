@@ -707,10 +707,6 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await partyA.database
-      .select({ type: 'example:item/test' })
-      .exec()
-      .update.waitFor(result => result.entities.length > 0);
     expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length).toEqual(1);
   }).timeout(10_000);
 

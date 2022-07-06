@@ -17,12 +17,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore, PartyFeedProvider } from '../pipeline';
+import { MetadataStore, PartyFeedProvider } from '.';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
-import { PartyCore } from './party-core';
+import { PartyPipeline } from './party-pipeline';
 
-describe('PartyCore', () => {
+describe('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
@@ -39,7 +39,7 @@ describe('PartyCore', () => {
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
 
-    const party = new PartyCore(
+    const party = new PartyPipeline(
       partyKey.publicKey,
       partyFeedProvider,
       modelFactory,
@@ -48,7 +48,7 @@ describe('PartyCore', () => {
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
-    await party.open();
+    await party.open({ feedHints: [feed.key] });
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
@@ -88,7 +88,7 @@ describe('PartyCore', () => {
   });
 
   test('create item with parent and then reload', async () => {
-    const { party } = await setup();
+    const { party, feedKey } = await setup();
 
     {
       const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
@@ -103,7 +103,7 @@ describe('PartyCore', () => {
     }
 
     await party.close();
-    await party.open();
+    await party.open({ feedHints: [feedKey] });
 
     {
       await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
@@ -149,7 +149,7 @@ describe('PartyCore', () => {
 
     const otherFeedKey = PublicKey.random();
 
-    const party = new PartyCore(
+    const party = new PartyPipeline(
       partyKey.publicKey,
       partyFeedProvider,
       modelFactory,
@@ -250,6 +250,28 @@ describe('PartyCore', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });
 
+  test('wait to reach specific timeframe', async () => {
+    const { party, feedKey } = await setup();
+
+    {
+      const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
+      const child = await party.database.createItem({
+        model: ObjectModel,
+        parent: parent.id,
+        type: 'child'
+      });
+
+      expect(child.parent).toEqual(parent);
+      expect(parent.children).toContain(child);
+    }
+
+    const timeframe = party.timeframe;
+    expect(timeframe.isEmpty()).toBeFalsy();
+
+    await party.close();
+    await party.open({ feedHints: [feedKey], targetTimeframe: timeframe });
+  });
+
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
@@ -264,7 +286,7 @@ describe('PartyCore', () => {
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 
-    const party2 = new PartyCore(
+    const party2 = new PartyPipeline(
       peer1.party.key,
       partyFeedProvider,
       modelFactory,
