@@ -18,25 +18,25 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../common/crypto"
-    },
-    {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-rpc"
     },
     {
       "path": "../../common/protocols"
     },
     {
       "path": "../../common/rpc"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-rpc"
     },
     {
       "path": "../../sdk/client"

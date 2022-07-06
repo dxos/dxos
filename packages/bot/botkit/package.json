@@ -26,6 +26,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -37,8 +38,7 @@
     "esbuild": "^0.11.23",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
-    "tail": "~2.2.4",
-    "@dxos/echo-protocol": "workspace:*"
+    "tail": "~2.2.4"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

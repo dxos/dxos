@@ -9,7 +9,6 @@ import {
   createEnvelopeMessage,
   createFeedAdmitMessage,
   createPartyGenesisMessage,
-  KeyHint,
   KeyType,
   SecretProvider,
   wrapMessage
@@ -111,7 +110,7 @@ export class PartyFactory {
    * @param partyKey
    * @param hints
    */
-  async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
+  async constructParty (partyKey: PartyKey, feedHints: PublicKey[] = [], initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
@@ -128,7 +127,7 @@ export class PartyFactory {
       identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,
-      hints,
+      feedHints,
       initialTimeframe,
       this._options
     );

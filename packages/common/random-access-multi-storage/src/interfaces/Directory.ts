@@ -26,7 +26,7 @@ export class Directory {
   /**
    * Delete all files in the directory and all its subdirectories.
    */
-  async destroy () {
+  async delete () {
     return this._destroyFilesInPath(this._path);
   }
 }

@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
@@ -57,8 +56,8 @@ export class DataParty {
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
-    _initialTimeframe?: Timeframe,
+    private readonly _feedHints: PublicKey[] = [],
+    private readonly _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
     this._partyCore = new PartyCore(
@@ -67,7 +66,6 @@ export class DataParty {
       modelFactory,
       snapshotStore,
       this._credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -152,7 +150,10 @@ export class DataParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    await this._partyCore.open({
+      feedHints: this._feedHints,
+      initialTimeframe: this._initialTimeframe
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,

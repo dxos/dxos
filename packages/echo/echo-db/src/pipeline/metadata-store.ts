@@ -90,7 +90,7 @@ export class MetadataStore {
    */
   async clear (): Promise<void> {
     log('Clearing all echo metadata...');
-    await this._directory.destroy();
+    await this._directory.delete();
   }
 
   /**
