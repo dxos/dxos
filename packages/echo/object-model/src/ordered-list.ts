@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
@@ -15,13 +14,14 @@ import { ObjectModel } from './object-model';
 export class OrderedList {
   private _values: ItemID[] = [];
 
-  readonly update = new Event<string[]>()
+  private _unsubscribe: () => void;
 
   constructor (
     private readonly _model: ObjectModel,
     private readonly _property = 'order'
   ) {
     this.refresh();
+    this._unsubscribe = this._model.update.on(() => this.refresh());
   }
 
   get id () {
@@ -33,6 +33,10 @@ export class OrderedList {
    */
   get values () {
     return this._values;
+  }
+
+  destroy () {
+    this._unsubscribe();
   }
 
   /**
@@ -62,7 +66,6 @@ export class OrderedList {
       }
     }
 
-    this.update.emit(this.values);
     return this;
   }
 
