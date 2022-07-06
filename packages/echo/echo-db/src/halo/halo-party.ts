@@ -54,8 +54,8 @@ export class HaloParty {
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
-    _initialTimeframe: Timeframe | undefined,
+    private readonly _feedHints: PublicKey[] = [],
+    private readonly _initialTimeframe: Timeframe | undefined,
     _options: PartyOptions
   ) {
     this._partyCore = new PartyCore(
@@ -64,7 +64,6 @@ export class HaloParty {
       modelFactory,
       snapshotStore,
       _credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -145,7 +144,10 @@ export class HaloParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    await this._partyCore.open({
+      feedHints: this._feedHints,
+      initialTimeframe: this._initialTimeframe
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,

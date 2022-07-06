@@ -140,10 +140,7 @@ describe('Party manager', () => {
     const feedStream = createWritableFeedStream(feed);
     feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
 
-    await partyManager.addParty(partyKey.publicKey, [{
-      type: KeyType.FEED,
-      publicKey: PublicKey.from(feed.key)
-    }]);
+    await partyManager.addParty(partyKey.publicKey, [PublicKey.from(feed.key)]);
 
     await update;
   });
