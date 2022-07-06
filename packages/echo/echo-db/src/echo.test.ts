@@ -834,6 +834,21 @@ describe('ECHO', () => {
     expect(members[1].displayName).toBe('B');
   });
 
+  test('optimistic mutations on ObjectModel', async () => {
+    const echo = await setup({ createProfile: true, displayName: 'A' });
+    const party = await echo.createParty();
+    const item = await party.database.createItem({ model: ObjectModel });
+
+    const committed = item.model
+      .builder()
+      .set('key', 'value')
+      .commit();
+    expect(item.model.get('key')).toEqual('value');
+
+    await committed;
+    expect(item.model.get('key')).toEqual('value');
+  });
+
   // TODO(burdon): Fix.
   // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork.
   // I don't seem to be receiving an update after which `party.title` holds correct value.

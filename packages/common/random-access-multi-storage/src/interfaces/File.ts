@@ -1,8 +1,10 @@
 //
 // Copyright 2022 DXOS.org
 //
+import { promisify } from 'util';
+
 import { FileInternal } from '../internal';
-import { Callback, FileStat } from '../types';
+import { FileStat } from '../types';
 
 /**
  * Handle to the file allowing read/write access to the data in the file.
@@ -32,15 +34,15 @@ export class File {
   /**
    * Read Buffer from file starting from offset to offset+size.
    */
-  read (offset: number, size: number, cb?: Callback<Buffer>): Promise<Buffer> {
-    return createPromise<Buffer>(this._fileInternal.read.bind(this._fileInternal), cb, offset, size);
+  read (offset: number, size: number): Promise<Buffer> {
+    return promisify(this._fileInternal.read.bind(this._fileInternal))(offset, size) as Promise<Buffer>;
   }
 
   /**
    * Write Buffer into file starting from offset.
    */
-  write (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.write.bind(this._fileInternal), cb, offset, data);
+  write (offset: number, data: Buffer): Promise<void> {
+    return promisify(this._fileInternal.write.bind(this._fileInternal))(offset, data) as Promise<void>;
   }
 
   /**
@@ -56,40 +58,22 @@ export class File {
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  del (offset: number, size: number, cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, size);
+  truncate (offset: number, size: number): Promise<void> {
+    return promisify(this._fileInternal.del.bind(this._fileInternal))(offset, size) as Promise<void>;
   }
 
-  stat (cb?: Callback<FileStat>): Promise<FileStat> {
-    return createPromise<FileStat>(this._fileInternal.stat.bind(this._fileInternal), cb);
+  stat (): Promise<FileStat> {
+    return promisify(this._fileInternal.stat.bind(this._fileInternal))() as Promise<FileStat>;
   }
 
-  close (cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.close.bind(this._fileInternal), cb);
+  close (): Promise<void> {
+    return promisify(this._fileInternal.close.bind(this._fileInternal))() as Promise<void>;
   }
 
   /**
    * Delete the file.
    */
-  destroy (cb?: Callback<void>): Promise<void> {
-    return createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);
+  delete (): Promise<void> {
+    return promisify(this._fileInternal.destroy.bind(this._fileInternal))() as Promise<void>;
   }
 }
-
-const createPromise = <ReturnType>(callbackFunc: (...args: any[]) => void, cb?: Callback<ReturnType>, ...args: any[]): Promise<ReturnType> => {
-  const promise = new Promise<ReturnType>(
-    (resolve, reject) => {
-      callbackFunc(...args, (err: Error | null, data?: ReturnType) => {
-        cb?.(err, data);
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data!);
-        }
-      });
-    });
-  if (cb) {
-    promise.catch((_) => {});
-  }
-  return promise;
-};
