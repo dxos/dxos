@@ -59,6 +59,6 @@ export class SnapshotStore {
    */
   async clear () {
     log('Clearing all snapshots..');
-    await this._directory.destroy();
+    await this._directory.delete();
   }
 }

@@ -6,7 +6,6 @@
 
 import assert from 'assert';
 import hypercore from 'hypercore';
-import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
 
@@ -61,25 +60,6 @@ describe('FeedStore', () => {
 
     const feedStore2 = new FeedStore(createStorage('', StorageType.RAM).directory('feed'));
     expect(feedStore2).toBeInstanceOf(FeedStore);
-  });
-
-  test('Config default + custom database + custom hypercore', async () => {
-    const customHypercore = jest.fn((...args) => hypercore(args[0], args[1], args[2]));
-
-    const storage = createStorage('', StorageType.RAM);
-    const directory = storage.directory('');
-    const database = hypertrie(directory.createOrOpen.bind(directory), { valueEncoding: 'json' });
-    database.list = jest.fn((_, cb) => cb(null, []));
-
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
-      hypercore: customHypercore
-    });
-
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    await feedStore.openReadOnlyFeed(PublicKey.random());
-
-    expect(customHypercore.mock.calls.length).toBe(1);
   });
 
   test('Create feed', async () => {

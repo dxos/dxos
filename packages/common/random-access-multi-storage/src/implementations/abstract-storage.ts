@@ -60,7 +60,7 @@ export abstract class AbstractStorage implements Storage {
     const filesInPath = this._selectFilesInPath(path);
     const destroyPromise = Promise.all(
       Array.from(filesInPath.values())
-        .map(file => file.destroy().catch((error: any) => console.error(error.message)))
+        .map(file => file.delete().catch((error: any) => console.error(error.message)))
     );
     Array.from(filesInPath.keys()).forEach(filePath => this._files.delete(filePath));
     return destroyPromise;
