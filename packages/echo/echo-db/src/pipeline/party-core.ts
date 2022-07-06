@@ -126,8 +126,7 @@ export class PartyCore {
   async open (options: OpenOptions = {}) {
     const {
       feedHints = [],
-      initialTimeframe,
-      targetTimeframe
+      initialTimeframe
     } = options;
 
     if (this.isOpen) {
