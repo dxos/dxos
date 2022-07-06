@@ -21,7 +21,7 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
-describe.only('DataParty', () => {
+describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, feedHints: PublicKey[]) => {
 
     const storage = createStorage('', StorageType.RAM);
@@ -31,6 +31,7 @@ describe.only('DataParty', () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
+    const writableFeed = await partyFeedProvider.createOrOpenWritableFeed()
 
     return new DataParty(
       partyKey,
@@ -40,7 +41,7 @@ describe.only('DataParty', () => {
       identity.createCredentialsSigner(),
       identity.preferences,
       networkManager,
-      feedHints
+      [...feedHints, writableFeed.key],
     );
   };
 

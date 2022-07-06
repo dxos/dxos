@@ -115,6 +115,7 @@ export class PartyFactory {
 
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
     const feedProvider = this._feedProviderFactory(partyKey);
+    const writeFeed = await feedProvider.createOrOpenWritableFeed();
 
     //
     // Create the party.
@@ -127,7 +128,8 @@ export class PartyFactory {
       identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,
-      feedHints,
+      // TODO(dmaretskyi): Don't do this here. In general case we don't need to hint at our own writable feed.
+      [...feedHints, writeFeed.key],
       initialTimeframe,
       this._options
     );
@@ -135,11 +137,11 @@ export class PartyFactory {
     return party;
   }
 
-  async constructPartyFromSnapshot (snapshot: PartySnapshot) {
+  async constructPartyFromSnapshot (snapshot: PartySnapshot, feedHints: PublicKey[] = []) {
     assert(snapshot.partyKey);
     log(`Constructing ${humanize(snapshot.partyKey)} from snapshot at ${JSON.stringify(snapshot.timeframe)}.`);
 
-    const party = await this.constructParty(PublicKey.from(snapshot.partyKey), [], snapshot.timeframe);
+    const party = await this.constructParty(PublicKey.from(snapshot.partyKey), feedHints, snapshot.timeframe);
     await party.restoreFromSnapshot(snapshot);
     return party;
   }

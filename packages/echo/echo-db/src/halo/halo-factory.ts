@@ -56,13 +56,14 @@ export class HaloFactory {
   async constructParty (feedHints: PublicKey[]): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
+    const writableFeed = await feedProvider.createOrOpenWritableFeed();
     const halo = new HaloParty(
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      feedHints,
+      [...feedHints, writableFeed.key],
       undefined,
       this._options
     );

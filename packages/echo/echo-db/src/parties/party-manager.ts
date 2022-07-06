@@ -9,7 +9,7 @@ import unionWith from 'lodash.unionwith';
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { timed } from '@dxos/debug';
+import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
@@ -94,9 +94,12 @@ export class PartyManager {
       const partyKey = partyKeys[i];
       if (!this._parties.has(partyKey)) {
         const snapshot = await this._snapshotStore.load(partyKey);
+
+        const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
+
         const party = snapshot
-          ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
-          : await this._partyFactory.constructParty(partyKey);
+          ? await this._partyFactory.constructPartyFromSnapshot(snapshot, metadata.feedKeys)
+          : await this._partyFactory.constructParty(partyKey, metadata.feedKeys);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
