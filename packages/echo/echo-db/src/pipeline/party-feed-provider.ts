@@ -8,7 +8,7 @@ import debug from 'debug';
 import { Event, synchronized } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
+import { FeedSelector, FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { ComplexMap } from '@dxos/util';
 
@@ -103,8 +103,8 @@ export class PartyFeedProvider {
     return feed;
   }
 
-  async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
-    const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
+  async createIterator (messageSelector: MessageSelector, feedSelector: FeedSelector, initialTimeframe?: Timeframe) {
+    const iterator = new FeedStoreIterator(feedSelector, messageSelector, initialTimeframe ?? new Timeframe());
     for (const feed of this._feeds.values()) {
       iterator.addFeedDescriptor(feed);
     }

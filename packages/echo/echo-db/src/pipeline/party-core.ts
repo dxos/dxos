@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { createFeedWriter, DatabaseSnapshot, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -126,7 +126,7 @@ export class PartyCore {
   async open (options: OpenOptions = {}) {
     const {
       feedHints = [],
-      initialTimeframe
+      initialTimeframe,
     } = options;
 
     if (this.isOpen) {
@@ -158,6 +158,7 @@ export class PartyCore {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
+      createFeedSelector(this._partyProcessor, feedHints),
       initialTimeframe
     );
 
@@ -243,4 +244,8 @@ export class PartyCore {
 
     this._databaseSnapshot = snapshot.database;
   }
+}
+
+function createFeedSelector(partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector {
+  return feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);
 }

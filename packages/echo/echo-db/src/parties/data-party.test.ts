@@ -21,7 +21,7 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
-describe('DataParty', () => {
+describe.only('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, feedHints: PublicKey[]) => {
 
     const storage = createStorage('', StorageType.RAM);

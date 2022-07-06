@@ -48,7 +48,7 @@ describe('PartyCore', () => {
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
-    await party.open();
+    await party.open({ feedHints: [feed.key] });
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
@@ -88,7 +88,7 @@ describe('PartyCore', () => {
   });
 
   test('create item with parent and then reload', async () => {
-    const { party } = await setup();
+    const { party, feedKey } = await setup();
 
     {
       const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
@@ -103,7 +103,7 @@ describe('PartyCore', () => {
     }
 
     await party.close();
-    await party.open();
+    await party.open({ feedHints: [feedKey] });
 
     {
       await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
