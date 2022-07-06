@@ -71,6 +71,7 @@ const setup = async () => {
     modelFactory,
     snapshotStore,
     feedProviderFactory,
+    metadataStore,
     {
       writeLogger: messageLogger('<<<'),
       readLogger: messageLogger('>>>')
@@ -161,7 +162,8 @@ describe('Party manager', () => {
       networkManager,
       modelFactory,
       snapshotStore,
-      feedProviderFactory
+      feedProviderFactory,
+      metadataStore,
     );
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
 

@@ -250,6 +250,28 @@ describe('PartyPipeline', () => {
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });
 
+  test('wait to reach specific timeframe', async () => {
+    const { party, feedKey } = await setup();
+
+    {
+      const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
+      const child = await party.database.createItem({
+        model: ObjectModel,
+        parent: parent.id,
+        type: 'child'
+      });
+
+      expect(child.parent).toEqual(parent);
+      expect(parent.children).toContain(child);
+    }
+
+    const timeframe = party.timeframe;
+    expect(timeframe.isEmpty()).toBeFalsy()
+
+    await party.close();
+    await party.open({ feedHints: [feedKey], targetTimeframe: timeframe });
+  });
+
   test('two instances replicating', async () => {
     const peer1 = await setup();
 

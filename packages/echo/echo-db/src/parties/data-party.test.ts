@@ -38,6 +38,7 @@ describe('DataParty', () => {
       modelFactory,
       snapshotStore,
       partyFeedProvider,
+      metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
       networkManager,

@@ -25,7 +25,7 @@ import {
   GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
-import { PartyFeedProvider, PipelineOptions } from '../pipeline';
+import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
 import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
@@ -42,6 +42,7 @@ export class PartyFactory {
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
+    private readonly _metadataStore: MetadataStore,
     private readonly _options: PipelineOptions = {}
   ) {}
 
@@ -123,6 +124,7 @@ export class PartyFactory {
       this._modelFactory,
       this._snapshotStore,
       this._feedProviderFactory(partyKey),
+      this._metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
       this._networkManager,      

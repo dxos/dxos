@@ -127,6 +127,7 @@ export class PartyPipeline {
     const {
       feedHints = [],
       initialTimeframe,
+      targetTimeframe,
     } = options;
 
     if (this.isOpen) {
@@ -188,6 +189,10 @@ export class PartyPipeline {
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
       );
+    }
+
+    if(targetTimeframe) {
+      this._timeframeClock.waitUntilReached(targetTimeframe);
     }
 
     return this;

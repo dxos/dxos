@@ -17,7 +17,7 @@ import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
 import { Database, Item } from '../packlets/database';
-import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions, MetadataStore } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -53,6 +53,7 @@ export class DataParty {
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
+    private readonly _metadataStore: MetadataStore,
     private readonly _credentialsSigner: CredentialsSigner,
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
@@ -157,10 +158,20 @@ export class DataParty {
       return this;
     }
 
+    // TODO(dmaretskyi): May be undefined in some tests.
+    const party = this._metadataStore.getParty(this._partyCore.key);
+    
     await this._partyCore.open({
       feedHints: this._feedHints,
-      initialTimeframe: this._initialTimeframe
+      initialTimeframe: this._initialTimeframe,
+      targetTimeframe: party?.latestTimeframe,
     });
+
+    // Keep updating latest reached timeframe in the metadata.
+    // This timeframe will be waited for when opening the party next time.
+    this._partyCore.timeframeUpdate.on(timeframe => {
+      this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
+    })
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
