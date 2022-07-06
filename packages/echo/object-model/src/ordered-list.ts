@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
@@ -13,6 +14,8 @@ import { ObjectModel } from './object-model';
  */
 export class OrderedList {
   private _values: ItemID[] = [];
+
+  update = new Event<ItemID[]>();
 
   private _unsubscribe: () => void;
 
@@ -66,6 +69,7 @@ export class OrderedList {
       }
     }
 
+    this.update.emit(this.values);
     return this;
   }
 
