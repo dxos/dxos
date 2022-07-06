@@ -161,7 +161,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
 
     // Send them to the greeter.
     const notarizeResponse = await plugin.send(rendezvousKey, command);
-    expect(notarizeResponse.hints).toEqual(hints);
+    expect(notarizeResponse.feedHints).toEqual(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey));
 
     // In the real world, the response would be signed in an envelope by the Greeter, but in this test it is not altered.
     const written = await writePromise;
