@@ -135,8 +135,6 @@ export class PartyPipeline {
 
     this._timeframeClock = new TimeframeClock(initialTimeframe);
 
-    // Open all feeds known from metadata and open or create a writable feed to the party.
-    await this._feedProvider.openKnownFeeds();
     const writableFeed = await this._feedProvider.createOrOpenWritableFeed();
 
     if (!this._partyProcessor) {

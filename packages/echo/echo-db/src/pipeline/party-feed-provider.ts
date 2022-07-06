@@ -34,19 +34,6 @@ export class PartyFeedProvider {
   }
 
   @synchronized
-  async openKnownFeeds () {
-    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
-      if (!this._feeds.has(feedKey)) {
-        const fullKey = this._keyring.getFullKey(feedKey);
-        const feed = fullKey?.secretKey
-          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
-          : await this._feedStore.openReadOnlyFeed(feedKey);
-        this._trackFeed(feed);
-      }
-    }
-  }
-
-  @synchronized
   async createOrOpenWritableFeed () {
     const partyMetadata = this._metadataStore.getParty(this._partyKey);
     if (!partyMetadata?.dataFeedKey) {
