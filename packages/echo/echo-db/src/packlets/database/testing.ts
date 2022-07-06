@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Readable } from 'stream';
-
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -15,12 +13,11 @@ import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
-  const inboundStream = new Readable({ read: () => {}, objectMode: true });
-  feed.written.on(([data, meta]) => inboundStream.push({ data, meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe([[meta.feedKey, meta.seq]]) } }));
-
+  const backend = new FeedDatabaseBackend(feed, undefined, { snapshots: true });
+  feed.written.on(([data, meta]) => backend.echoProcessor({ data, meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe([[meta.feedKey, meta.seq]]) } }));
   const database = new Database(
     modelFactory,
-    new FeedDatabaseBackend(inboundStream, feed, undefined, { snapshots: true }),
+    backend,
     PublicKey.random()
   );
 
