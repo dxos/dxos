@@ -2,14 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { File } from './File';
+import { Directory } from './Directory';
 import { StorageType } from './storage-types';
 
 export interface Storage {
   readonly type: StorageType
-
-  createOrOpen: (filename: string, opts?: any) => File
-  delete: (filename: string) => Promise<void>
-  subDir (path: string): Storage
+  directory: (path?: string) => Directory
   destroy: () => Promise<void>
 }

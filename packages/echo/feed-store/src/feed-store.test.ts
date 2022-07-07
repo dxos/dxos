@@ -6,7 +6,6 @@
 
 import assert from 'assert';
 import hypercore from 'hypercore';
-import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
 
@@ -26,7 +25,7 @@ interface KeyPair {
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
 const createFeedStore = (storage: Storage, options = {}) => {
-  const feedStore = new FeedStore(storage, options);
+  const feedStore = new FeedStore(storage.directory('feed'), options);
   return feedStore;
 };
 
@@ -56,29 +55,11 @@ describe('FeedStore', () => {
   const keys = createKeyPairs();
 
   test('Config default', async () => {
-    const feedStore = await createFeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore = await createFeedStore(createStorage('', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM).directory('feed'));
     expect(feedStore2).toBeInstanceOf(FeedStore);
-  });
-
-  test('Config default + custom database + custom hypercore', async () => {
-    const customHypercore = jest.fn((...args) => hypercore(args[0], args[1], args[2]));
-
-    const storage = createStorage('', StorageType.RAM);
-    const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
-    database.list = jest.fn((_, cb) => cb(null, []));
-
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
-      hypercore: customHypercore
-    });
-
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    await feedStore.openReadOnlyFeed(PublicKey.random());
-
-    expect(customHypercore.mock.calls.length).toBe(1);
   });
 
   test('Create feed', async () => {
@@ -151,7 +132,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM));
+    const feedStore = createFeedStore(createStorage('', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const { publicKey, secretKey } = createKeyPair();
@@ -162,7 +143,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = createFeedStore(createStorage('feed', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
       hypercore: () => ({
         opened: true,
         ready: (cb: () => void) => {

@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, KeyHint, Keyring, KeyType, codec as haloCodec } from '@dxos/credentials';
+import { createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, Keyring, KeyType, codec as haloCodec } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -22,24 +22,29 @@ import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
 describe('DataParty', () => {
-  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, hints: KeyHint[]) => {
-    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
-    const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
-    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, feedHints: PublicKey[]) => {
+
+    const storage = createStorage('', StorageType.RAM);
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
+    const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
-    return new DataParty(
+    const party = new DataParty(
       partyKey,
       modelFactory,
       snapshotStore,
       partyFeedProvider,
+      metadataStore,
       identity.createCredentialsSigner(),
       identity.preferences,
-      networkManager,
-      hints
+      networkManager
     );
+    party._setFeedHints([...feedHints, writableFeed.key]);
+    return party;
   };
 
   test('open & close', async () => {
@@ -60,7 +65,7 @@ describe('DataParty', () => {
     await party.open();
 
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
@@ -68,6 +73,33 @@ describe('DataParty', () => {
     ));
 
     await party.database.createItem({ type: 'test:item' });
+
+    await party.close();
+  });
+
+  test('data is immediately available after re-opening', async () => {
+    const keyring = new Keyring();
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party = await createParty(identity, partyKey.publicKey, []);
+    await party.open();
+
+    const feed = await party.getWriteFeed();
+    await party.credentialsWriter.write(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feed.key,
+      partyKey
+    ));
+
+    for (let i = 0; i < 10; i++) {
+      await party.database.createItem({ type: 'test:item' });
+    }
+
+    await party.close();
+    await party.open();
+
+    expect(party.database.select({ type: 'test:item' }).exec().entities).toHaveLength(10);
 
     await party.close();
   });
@@ -80,14 +112,15 @@ describe('DataParty', () => {
     const party = await createParty(identity, partyKey.publicKey, []);
     await party.open();
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
       partyKey
     ));
+    await party.processor.feedAdded.waitForCount(1);
 
-    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner());
+    const authenticator = createAuthenticator(party.processor, identity.createCredentialsSigner(), party.credentialsWriter);
     const credentialsProvider = createCredentialsProvider(identity.createCredentialsSigner(), party.key, feed.key);
 
     const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
@@ -104,13 +137,15 @@ describe('DataParty', () => {
     const party = await createParty(identityA, partyKey.publicKey, []);
     await party.open();
     const feed = await party.getWriteFeed();
-    await party.writeCredentialsMessage(createPartyGenesisMessage(
+    await party.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feed.key,
       partyKey
     ));
-    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner());
+    await party.processor.feedAdded.waitForCount(1);
+
+    const authenticator = createAuthenticator(party.processor, identityA.createCredentialsSigner(), party.credentialsWriter);
 
     const identityB = await deriveTestDeviceCredentials(identityA);
     const credentialsProvider = createCredentialsProvider(identityB.createCredentialsSigner(), party.key, feed.key);
@@ -129,13 +164,13 @@ describe('DataParty', () => {
     const partyA = await createParty(identityA, partyKey.publicKey, []);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
-    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
+    await partyA.credentialsWriter.write(createPartyGenesisMessage(
       keyring,
       partyKey,
       feedA.key,
       partyKey
     ));
-    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
+    await partyA.credentialsWriter.write(createKeyAdmitMessage(
       keyring,
       partyKey.publicKey,
       identityA.identityKey,
@@ -143,9 +178,7 @@ describe('DataParty', () => {
     ));
 
     const identityB = await deriveTestDeviceCredentials(identityA);
-    const partyB = await createParty(identityB, partyKey.publicKey, [
-      { type: KeyType.FEED, publicKey: feedA.key }
-    ]);
+    const partyB = await createParty(identityB, partyKey.publicKey, [feedA.key]);
     await partyB.open();
 
     await partyA.database.createItem({ type: 'test:item-a' });
@@ -165,13 +198,13 @@ describe('DataParty', () => {
     const partyA = await createParty(identityA, partyKeyA.publicKey, []);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
-    await partyA.writeCredentialsMessage(createPartyGenesisMessage(
+    await partyA.credentialsWriter.write(createPartyGenesisMessage(
       identityA.keyring,
       partyKeyA,
       feedA.key,
       partyKeyA
     ));
-    await partyA.writeCredentialsMessage(createKeyAdmitMessage(
+    await partyA.credentialsWriter.write(createKeyAdmitMessage(
       identityA.keyring,
       partyKeyA.publicKey,
       identityA.identityKey,

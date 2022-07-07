@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
@@ -14,11 +15,13 @@ import { ObjectModel } from './object-model';
 export class OrderedList {
   private _values: ItemID[] = [];
 
+  readonly update = new Event<string[]>()
+
   constructor (
     private readonly _model: ObjectModel,
     private readonly _property = 'order'
   ) {
-    this.update();
+    this.refresh();
   }
 
   get id () {
@@ -36,7 +39,7 @@ export class OrderedList {
    * Refresh list from properties.
    */
   // TODO(burdon): Add more tests for edge cases.
-  update () {
+  refresh () {
     this._values = [];
     const properties = this._model.get(this._property) ?? {};
     for (const [left, right] of Object.entries(properties)) {
@@ -59,6 +62,7 @@ export class OrderedList {
       }
     }
 
+    this.update.emit(this.values);
     return this;
   }
 
@@ -69,7 +73,7 @@ export class OrderedList {
     const builder = this._model.builder();
 
     // Reset.
-    await builder.set(this._property, undefined);
+    builder.set(this._property, undefined);
 
     // Set initial order.
     if (values && values.length >= 2) {
@@ -81,8 +85,9 @@ export class OrderedList {
       }
     }
 
-    await builder.commit();
-    this.update();
+    const commited = builder.commit();
+    this.refresh();
+    await commited;
     return this._values;
   }
 
@@ -108,8 +113,9 @@ export class OrderedList {
         builder.set(`${this._property}.${next}`, last);
       }
 
-      await builder.commit();
-      this.update();
+      const commited = builder.commit();
+      this.refresh();
+      await commited;
     }
 
     return this._values;
@@ -132,8 +138,9 @@ export class OrderedList {
       }
     }
 
-    await builder.commit();
-    this.update();
+    const commited = builder.commit();
+    this.refresh();
+    await commited;
     return this._values;
   }
 }

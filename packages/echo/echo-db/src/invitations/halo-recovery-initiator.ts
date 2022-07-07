@@ -22,7 +22,7 @@ import {
 import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { InvalidInvitationError } from '../errors';
+import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
