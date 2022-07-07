@@ -1,6 +1,4 @@
-# HALO Credentials Spec
-
-## Introduction
+# HALO Spec
 
 Users maintain a HALO, which encompasses their identity and access control rights to digital assets withint the DXOS ecosystem.
 These rights are expressed cryptographically secure, privacy respecting, and machine-verifiable credentials.
