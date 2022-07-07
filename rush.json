@@ -490,6 +490,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/log",
+      "projectFolder": "packages/common/log",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/protocols",
       "projectFolder": "packages/common/protocols",
       "shouldPublish": true,
