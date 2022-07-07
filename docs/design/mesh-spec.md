@@ -1,6 +1,6 @@
 # MESH Spec
 
-MESH is a set of technologies that enable messaging across the DXOS network.
+MESH is a set of protocols and technologies that enable resilient peer-to-peer networks.
 
 
 ## Terminology
@@ -25,7 +25,9 @@ Mechanism by which peers discovery each other and connect to a swarm.
 
 Signaling enables two or more peers to discovery and conntect to each other forming a swarm.
 
-<br/> ![Signaling](./diagrams/mesh-signal.drawio.svg)
+<br/> 
+
+![Signaling](./diagrams/mesh-signal.drawio.svg)
 
 
 ### Notes/Issues
@@ -55,3 +57,18 @@ Signaling enables two or more peers to discovery and conntect to each other form
 ### Issues
 
 - https://github.com/dxos/protocols/issues/1316
+
+
+<br/><br/><br/><br/>
+
+# Deprecated
+
+Networking and replication mechanisms.
+
+Peers can join swarms where WebRTC connections are esablished to other peers. 
+This can allow for replication within a pary, invitations, and bot-factory communication.
+
+Signal servers are hosted on KUBEs and are used to establish WebRTC connections.
+
+Each connections has an associated `Protocol` object with it which defines the protocol capabilities in the form of extensions.
+Extensions are generally created by plugins which implement the custom networking logic for different aspects of the stack: replication, authentication, invitaitons, presense, RPC and so on.

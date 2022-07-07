@@ -1,4 +1,46 @@
-# Epochs Spec
+# ECHO Spec
+
+ECHO (The Eventually Consistent Hierrarhical Object-store) is a peer-to-peer database.
+
+
+## Terminology
+
+***Party*** -
+Context for collaboration and data replication.
+
+***Feed*** -
+Append-only hash-linked datastructure containing immutable messages.
+
+***Item*** -
+Globally addressable data object.
+
+***Model*** -
+Type-specific API associated with a data Item.
+
+***Timeframe*** -
+Monotonic sequence number used to order messages across multiple feeds.
+
+
+## Objects
+
+- Identity
+- Hierarchy
+
+## Links
+
+## Models and State Machines
+
+- Pipeline fan-in/out
+
+## Schema
+
+## Queries
+
+- Traversal
+- Filtering
+- Subscriptions
+
+## Epochs
 
 Epochs are blocks of contiguous messages spanning all peers within a party.
 They enable compression for quicker startup, and provide "sync" points for consensus and consistency.
@@ -6,8 +48,6 @@ They enable compression for quicker startup, and provide "sync" points for conse
 Timeframes provide a common reference point for mutations across the feeds within a party.
 However, when peers are partitioned, they start to diverge from each other.
 TODO(burdon): Write up branch anaolgy.
-
-## Implementation
 
 ### Control feeds
 
@@ -74,3 +114,48 @@ ISSUES
 
 
 
+
+
+<br/><br/><br/><br/>
+
+# Deprecated
+
+
+Processes mutations and snapshots to maintain a set of items and links with models.
+ECHO is a hierrahical graph database where items a stored in a tree structure, connected by links.
+Each item or link has state-machine and a model.
+
+- TODO: Set-out basic design-doc process and structure
+- TODO: Notes from White paper Google doc
+- TODO: Packlets to enforce layer isolation?
+  - Factor out ECHO/HALO dispatch (e.g., make PartyManager, Database pluggable)
+
+- Party Manager
+  - DAG of feeds
+  - DAG of user claims
+
+- Describe basic 3-stage pipeline
+  - Disambiguation ECHO, HALO, MESH
+
+- Genesis feed
+  - Control feeds
+  - Credentials (transitive claims)
+  - Separate wholistic tests
+
+- Snaphosts/Epochs
+
+- Time travel/Undo
+  - Git/blockchain analogies
+
+- HALO groups
+
+- Light-weight parties (isolation, esp. relating to epochs/undo)
+  - Consider party with 1 chess game and 100 coordinated items
+
+- Cross-party linking
+
+- Typed Object models (schema as first-class entities)
+
+- ECHO store without HALO?
+
+- Async client/service architecture
