@@ -14,12 +14,13 @@ import {
   KeyType,
   SecretProvider,
   SecretValidator
+  , Message as HaloMessage
 } from '@dxos/credentials';
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
-import { SwarmKey } from '@dxos/echo-protocol';
+import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { CredentialWriter, PartyStateProvider } from '../pipeline';
+import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -57,8 +58,9 @@ export class GreetingResponder {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _partyProcessor: CredentialWriter & PartyStateProvider,
-    private readonly _credentialsSigner: CredentialsSigner
+    private readonly _partyProcessor: PartyStateProvider,
+    private readonly _credentialsSigner: CredentialsSigner,
+    private readonly _credentialsWriter: FeedWriter<HaloMessage>
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
@@ -222,7 +224,7 @@ export class GreetingResponder {
         [this._credentialsSigner.getDeviceSigningKeys()]
       );
 
-      await this._partyProcessor.writeHaloMessage(envelope);
+      await this._credentialsWriter.write(envelope);
 
       // Wait for keys to be admitted.
       await waitForCondition(() => admittedKeys.every(hasKey));

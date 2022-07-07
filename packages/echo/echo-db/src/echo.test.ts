@@ -13,10 +13,10 @@ import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { Item } from './api';
 import { ECHO } from './echo';
 import { Contact } from './halo';
 import { defaultInvitationAuthenticator } from './invitations';
+import { Item } from './packlets/database';
 import { inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:test');
@@ -707,10 +707,6 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await partyA.database
-      .select({ type: 'example:item/test' })
-      .exec()
-      .update.waitFor(result => result.entities.length > 0);
     expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length).toEqual(1);
   }).timeout(10_000);
 
@@ -832,6 +828,21 @@ describe('ECHO', () => {
 
     expect(members[0].displayName).toBe('A');
     expect(members[1].displayName).toBe('B');
+  });
+
+  test('optimistic mutations on ObjectModel', async () => {
+    const echo = await setup({ createProfile: true, displayName: 'A' });
+    const party = await echo.createParty();
+    const item = await party.database.createItem({ model: ObjectModel });
+
+    const committed = item.model
+      .builder()
+      .set('key', 'value')
+      .commit();
+    expect(item.model.get('key')).toEqual('value');
+
+    await committed;
+    expect(item.model.get('key')).toEqual('value');
   });
 
   // TODO(burdon): Fix.

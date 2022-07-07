@@ -20,13 +20,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../client"
-    },
-    {
-      "path": "../client-testing"
-    },
-    {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -35,16 +35,16 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../client"
+    },
+    {
+      "path": "../client-testing"
     },
     {
       "path": "../react-client"
     },
     {
       "path": "../react-components"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }
