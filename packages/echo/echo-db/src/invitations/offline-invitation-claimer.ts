@@ -70,8 +70,8 @@ export class OfflineInvitationClaimer {
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, async () => false);
 
     log('Connecting');
-    const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      () => this._greeterPlugin?.peers.length, timeout);
+    const peerJoinedWaiter = waitForEvent(
+      this._greeterPlugin, 'peer:joined', () => !!this._greeterPlugin?.peers.length, timeout);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),

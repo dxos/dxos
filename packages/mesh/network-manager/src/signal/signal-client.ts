@@ -44,7 +44,6 @@ export class SignalClient {
   private _clientCleanup: (() => void)[] = [];
 
   readonly statusChanged = new Event<SignalApi.Status>();
-
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
 
   /**

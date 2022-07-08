@@ -206,7 +206,7 @@ export class Swarm {
       .then(answer => {
         log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
         if (connection.state !== ConnectionState.INITIAL) {
-          log('Ignoring answer');
+          log('Ignoring answer.');
           return;
         }
 
@@ -225,12 +225,13 @@ export class Swarm {
       .catch(err => {
         this.errors.raise(err);
       });
+
     this._topology.update();
   }
 
   private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
     log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
-    assert(!this._connections.has(remoteId), 'Peer already connected');
+    assert(!this._connections.has(remoteId), 'Peer already connected.');
 
     const connection = new Connection(
       this._topic,
@@ -255,12 +256,14 @@ export class Swarm {
 
     void connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
       log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
-      // Connection might have been already closed or replace by a different one. Only remove the connection if it has the same session id.
+      // Connection might have been already closed or replace by a different one.
+      // Only remove the connection if it has the same session id.
       if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
         this._connections.delete(remoteId);
         this.connectionRemoved.emit(connection);
       }
     });
+
     return connection;
   }
 
@@ -270,6 +273,7 @@ export class Swarm {
     if (!connection) {
       return;
     }
+
     this._connections.delete(peerId);
     await connection.close();
   }
