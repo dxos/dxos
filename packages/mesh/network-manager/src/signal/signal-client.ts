@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';
 
-const log = debug('dxos:network-manager:signal-api');
+const log = debug('dxos:network-manager:signal-client');
 
 const DEFAULT_RECONNECT_TIMEOUT = 1000;
 
