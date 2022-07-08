@@ -4,6 +4,8 @@
 
 /* eslint-disable jest/no-export, jest/no-disabled-tests, jest/expect-expect, jest/valid-title */
 
+import { EventEmitter } from 'events';
+
 import { promiseTimeout } from './async';
 
 /**
@@ -13,14 +15,16 @@ import { promiseTimeout } from './async';
  * @param {string} eventName
  * @param {Function} callback
  */
-export const onEvent = (eventEmitter, eventName, callback) => {
+export const onEvent = (eventEmitter: EventEmitter, eventName: string, callback: (args: any) => void) => {
   eventEmitter.on(eventName, callback);
-
   return () => eventEmitter.off(eventName, callback);
 };
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Remove.
-export const addListener = (eventEmitter, eventName, callback) => {
+export const addListener = (eventEmitter: EventEmitter, eventName: string, callback: () => void) => {
   const off = onEvent(eventEmitter, eventName, callback);
   return {
     remove: () => off()
@@ -36,7 +40,13 @@ export const addListener = (eventEmitter, eventName, callback) => {
  * @param {unknown} [error]
  * @returns {Promise<unknown>}
  */
-export const waitForEvent = (eventEmitter, eventName, test, timeout, error) => {
+export const waitForEvent = (
+  eventEmitter: EventEmitter,
+  eventName: string,
+  test?: (args: any) => boolean,
+  timeout?: number,
+  error?: Error | string
+): Promise<any> => {
   let off;
 
   const promise = new Promise((resolve) => {
