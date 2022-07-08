@@ -232,6 +232,7 @@ export class SignalApi {
   }
 }
 
+// TODO(burdon): Why create namespace?
 export namespace SignalApi {
   export enum State {
     /** Connection is being established. */

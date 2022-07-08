@@ -44,6 +44,8 @@ The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.or
 Signaling enables two or more peers to discover and conntect to each other forming a peer-to-peer swarm.
 Peers may exist on multiple platforms, including browser and mobile applications, Web services (including bots), and tools (including the CLI and other terminal applications).
 
+### Signaling Server
+
 Peers connect to a configurable signaling server, typically running on a KUBE node.
 The signaling server maintains a DHT that contains a transient map of discovery keys onto a set of peer keys.
 This DHT is replicated across all signaling servers; entries in the DHT expire after a given TTL.
@@ -55,19 +57,29 @@ This DHT is replicated across all signaling servers; entries in the DHT expire a
 The signaling server implements a socket based endpoint that allows peers to join and leave swarms, and to send and receive messages to and from other peers.
 
 
-### Parties
+### Swarms and Parties
 
-Peers use the signaling server to join parties using the hash of the party key as the discovery key.
+Peers use the signaling server to connect and exchange data with other peers that belong to the same ECHO party.
+The hash of the party key as the discovery key.
+Each peer maintains a map of connections, which may implement different transports (e.g., WebRTC).
+The transport pipes data to a stream.
 
-> - TODO(burdon): Reference HALO authentication/party admission.
-> - TODO(burdon): Reference ECHO `hypercore`, `@dxos/protocol` replication.
+<br/> 
 
+![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
+
+<br/> 
+
+> - How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)?
+> - Reference HALO authentication/party admission.
+> - Reference ECHO `hypercore`, `@dxos/protocol` replication; [NOISE](https://noiseprotocol.org/noise.html)?
+> - Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
+> - Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star 
 
 ### Issues
 
 > - Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)?
-> - Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
-> - Leverage [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star protocol.
+protocol.
 > - MST swarm/routing.
 > - Scope of replication for signaling servers (i.e., subnet/realm vs. global DXNS network?) Security considerations. Peers configured with multiple signal servers (one per network)?
 > - Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of party invitations).

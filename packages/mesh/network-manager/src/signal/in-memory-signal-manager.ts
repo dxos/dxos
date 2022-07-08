@@ -54,7 +54,7 @@ export class InMemorySignalManager implements SignalManager {
     return state.connections.get(msg.remoteId)!._onOffer(msg);
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalApi.SignalMessage) {
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
     state.connections.get(msg.remoteId)!.onSignal.emit(msg);
   }

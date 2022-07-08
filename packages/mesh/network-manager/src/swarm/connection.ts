@@ -45,6 +45,9 @@ export enum ConnectionState {
   CLOSED = 'CLOSED',
 }
 
+/**
+ * Represents a connection to a remote peer.
+ */
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
 
