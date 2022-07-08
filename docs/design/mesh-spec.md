@@ -30,6 +30,18 @@ Signaling enables two or more peers to discovery and conntect to each other form
 ![Signaling](./diagrams/mesh-signal.drawio.svg)
 
 
+## Issues
+
+- https://github.com/dxos/protocols/issues/1316 (Protobuf spec).
+
+
+
+
+<br/><br/><br/><br/>
+
+# Deprecated
+
+
 ### Notes/Issues
 
 - Requirements (Browser, Server/bots, CLI, Mobile; data/video; transport agnostic: WebRTC/WSS, etc.)
@@ -54,14 +66,7 @@ Signaling enables two or more peers to discovery and conntect to each other form
 - Encryption (WebRTC)
 - Presence?
 
-### Issues
 
-- https://github.com/dxos/protocols/issues/1316
-
-
-<br/><br/><br/><br/>
-
-# Deprecated
 
 Networking and replication mechanisms.
 
