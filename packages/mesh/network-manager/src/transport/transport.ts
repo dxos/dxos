@@ -15,7 +15,7 @@ export interface Transport {
   closed: Event
   connected: Event
   errors: ErrorStream
-  signal (msg: SignalApi.SignalMessage): void
+  signal (msg: SignalApi.SignalMessage): Promise<void>
   close (): Promise<void>
 }
 
@@ -41,4 +41,4 @@ export interface TransportOptions {
   sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>
 }
 
-export type TransportFactory = (options: TransportOptions) => Transport;
+export type TransportFactory = (options: TransportOptions) => Transport

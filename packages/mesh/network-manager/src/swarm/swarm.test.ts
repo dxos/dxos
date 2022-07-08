@@ -26,6 +26,7 @@ class MockSignalConnection implements SignalConnection {
   ) {}
 
   lookup (topic: PublicKey) {}
+
   async offer (msg: SignalApi.SignalMessage) {
     await sleep(this._delay);
     return this._swarm().onOffer(msg);

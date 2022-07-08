@@ -17,7 +17,7 @@ const DEFAULT_RECONNECT_TIMEOUT = 1000;
 /**
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
-export class SignalApi {
+export class SignalClient {
   private _state = SignalApi.State.CONNECTING;
 
   private _lastError?: Error;
@@ -79,9 +79,9 @@ export class SignalApi {
 
       this._lastError = error;
       this._setState(SignalApi.State.DISCONNECTED);
-
       this._reconnect();
     }
+
     this._client.addHandler('offer', (message: any) => this._onOffer({
       id: PublicKey.from(message.id),
       remoteId: PublicKey.from(message.remoteId),
@@ -89,6 +89,7 @@ export class SignalApi {
       sessionId: PublicKey.from(message.sessionId),
       data: message.data
     }));
+
     this._client.subscribe('signal', (msg: SignalApi.SignalMessage) => this._onSignal({
       id: PublicKey.from(msg.id),
       remoteId: PublicKey.from(msg.remoteId),
@@ -103,6 +104,7 @@ export class SignalApi {
       this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
       this._setState(SignalApi.State.CONNECTED);
     }));
+
     this._clientCleanup.push(this._client.error.on(error => {
       log(`Socket error: ${error.message}`);
       if (this._state === SignalApi.State.CLOSED) {
@@ -118,6 +120,7 @@ export class SignalApi {
 
       this._reconnect();
     }));
+
     this._clientCleanup.push(this._client.disconnected.on(() => {
       log('Socket disconnected');
       // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
@@ -130,9 +133,9 @@ export class SignalApi {
       }
 
       this._setState(SignalApi.State.DISCONNECTED);
-
       this._reconnect();
     }));
+
     this._clientCleanup.push(this._client.commandTrace.on(trace => this.commandTrace.emit(trace)));
   }
 
@@ -274,18 +277,18 @@ export namespace SignalApi {
   // TODO(marik-d): Define more concrete types for offer/answer.
   export interface SignalMessage {
     id: PublicKey
-    remoteId: PublicKey,
-    topic: PublicKey,
-    sessionId: PublicKey,
-    data: SignalData,
+    remoteId: PublicKey
+    topic: PublicKey
+    sessionId: PublicKey
+    data: SignalData
   }
 
   export interface OfferMessage {
     id: PublicKey
-    remoteId: PublicKey,
-    topic: PublicKey,
-    sessionId: PublicKey,
-    data: SignalData,
+    remoteId: PublicKey
+    topic: PublicKey
+    sessionId: PublicKey
+    data: SignalData
   }
 
   export interface Answer {
