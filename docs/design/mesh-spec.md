@@ -15,7 +15,7 @@ The Interactive Connectivity Establishment ([ICE](https://en.wikipedia.org/wiki/
 Context for collaboration and data replication.
 
 ***Discovery Key*** - 
-Hash of the party public key.
+Public key used as the connection context for peers joining the swarm.
 
 ***NAT*** -
 Network Address Translation ([NAT](https://en.wikipedia.org/wiki/Network_address_translation)) provides a public IP address to devices behind a router.
@@ -33,10 +33,10 @@ The Session Traversal Utilities for NAT ([STUN](https://en.wikipedia.org/wiki/ST
 Transient peer-to-peer network of connected peers.
 
 ***TURN*** -
-The Traversal Using Relays around NAT ([TURN](https://en.wikipedia.org/wiki/TURN)) server router restrictions by opening a connection with a TURN server and relaying all information through that server.
+The Traversal Using Relays around NAT ([TURN](https://en.wikipedia.org/wiki/TURN)) server is used to relay data packets to bypass router restrictions if necessary.
 
 ***WebRTC*** -
-The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)) API enables Javascript applications running within a browser to open peer-to-peer connections with each other. WebRTC uses the ICE protocols to accomplish this.
+The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)) API enables Javascript applications running within a browser to open peer-to-peer connections with each other. WebRTC uses the ICE protocols.
 
 
 ## Signaling
