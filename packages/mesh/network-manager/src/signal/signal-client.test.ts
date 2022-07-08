@@ -11,7 +11,8 @@ import { PublicKey } from '@dxos/crypto';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-import { SignalApi, SignalClient } from './signal-api';
+import { SignalApi } from './signal-api';
+import { SignalClient } from './signal-client';
 
 describe('SignalApi', () => {
   let topic: PublicKey;
@@ -20,7 +21,7 @@ describe('SignalApi', () => {
   let api1: SignalClient;
   let api2: SignalClient;
 
-  let broker: Awaited<ReturnType<typeof createTestBroker>>;
+  let broker1: Awaited<ReturnType<typeof createTestBroker>>;
   const signalApiPort1 = randomInt(10000, 50000);
   const signalApiUrl1 = 'http://0.0.0.0:' + signalApiPort1;
 
@@ -29,8 +30,8 @@ describe('SignalApi', () => {
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
   before(async () => {
-    broker = await createTestBroker(signalApiPort1);
-    // code broker2 = await createTestBroker(signalApiPort2);
+    broker1 = await createTestBroker(signalApiPort1);
+    // broker2 = await createTestBroker(signalApiPort2);
   });
 
   beforeEach(() => {
@@ -42,7 +43,7 @@ describe('SignalApi', () => {
   after(async function () {
     this.timeout(0);
     await api1.close();
-    await broker.stop();
+    await broker1.stop();
     // code await broker2.stop();
   });
 

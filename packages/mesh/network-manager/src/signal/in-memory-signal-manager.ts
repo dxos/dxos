@@ -8,8 +8,8 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { SignalManager } from './interface';
 import { SignalApi } from './signal-api';
+import { SignalManager } from './signal-manager';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();

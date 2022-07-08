@@ -7,9 +7,6 @@ import { PublicKey } from '@dxos/crypto';
 
 import { SignalApi } from './signal-api';
 
-// TODO(burdon): Rename file and reconcile with SignalApi.
-
-// TODO(burdon): Document methods.
 export interface SignalConnection {
   lookup (topic: PublicKey): void
   offer (msg: SignalApi.SignalMessage): Promise<SignalApi.Answer>
