@@ -21,26 +21,54 @@ Type-specific API associated with a data Item.
 Monotonic sequence number used to order messages across multiple feeds.
 
 
-## Objects
+## Overview
+
+ECHO is a decentralized graph database. 
+
+The diagram below illustrates the data processing pipeline.
+
+![Pipeline](./diagrams/echo-pipeline.drawio.svg)
+
+
+### Message Ordering
+
+#### Timeframes
+
+- Messages are written with the peer's current timeframe. This creates a partial order.
+- Message ordering is determined by available feeds and the timeframes associated with messages.
+- Clients may process messages in different order (potential discrepancies are rectified downstream by the models).
+- DAG; require party key and first feed key.
+
+
+TODO(burdon): Diagram.
+
+
+
+
+
+
+
+
+### Objects
 
 - Identity
 - Hierarchy
 
-## Links
+### Links
 
-## Models and State Machines
+### Models and State Machines
 
 - Pipeline fan-in/out
 
-## Schema
+### Schema
 
-## Queries
+### Queries
 
 - Traversal
 - Filtering
 - Subscriptions
 
-## Epochs
+### Epochs
 
 Epochs are blocks of contiguous messages spanning all peers within a party.
 They enable compression for quicker startup, and provide "sync" points for consensus and consistency.
@@ -49,19 +77,19 @@ Timeframes provide a common reference point for mutations across the feeds withi
 However, when peers are partitioned, they start to diverge from each other.
 TODO(burdon): Write up branch anaolgy.
 
-### Control feeds
+#### Control feeds
 
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
 - Each peer has a writable control feed in addition to its data (ECHO) feed.
 - Control feeds can be read and processed independently from data feeds.
 - They are piped into PartyStateMachine.
 
-### Epoch genesis
+#### Epoch genesis
 
 - When a peer wants to start a new epoch they write an `EpochGensisMessage` into the control feed.
 - It contains the timeframe of when the new epoch starts and CID of the data snapshot at that timeframe.
 
-### Snapshots
+#### Snapshots
 
 - Snapshots allow peers to bootstrap the ECHO state machine from that point in time without reading feed messages before it.
 - Snapshots are content-addressed blobs consisting of a hierarchical set of reified HALO and ECHO models.
@@ -120,6 +148,7 @@ ISSUES
 
 # Deprecated
 
+![Architecture](./diagrams/echo-architecture.drawio.svg)
 
 Processes mutations and snapshots to maintain a set of items and links with models.
 ECHO is a hierrahical graph database where items a stored in a tree structure, connected by links.
