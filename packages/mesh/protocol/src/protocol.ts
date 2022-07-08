@@ -61,6 +61,7 @@ export interface ProtocolOptions {
 /**
  * Wraps a hypercore-protocol object.
  */
+// TODO(burdon): Must rename this class.
 export class Protocol {
   private _isOpen = false;
 

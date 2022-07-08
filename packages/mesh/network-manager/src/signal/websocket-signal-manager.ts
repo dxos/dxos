@@ -143,7 +143,7 @@ export class WebsocketSignalManager implements SignalManager {
     return Array.from(this._servers.values())[0].offer(msg);
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalApi.SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {
       void server.signal(msg);

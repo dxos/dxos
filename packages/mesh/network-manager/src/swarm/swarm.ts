@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { SignalApi } from '../signal';
+import { SignalApi, SignalConnection } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
@@ -31,9 +31,7 @@ export class Swarm {
   readonly id = PublicKey.random();
 
   private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
-
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
-
   private readonly _peerCandidatesUpdated = new Event();
 
   get connections () {
@@ -62,10 +60,8 @@ export class Swarm {
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
-    private readonly _protocol: ProtocolProvider,
-    private readonly _sendOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
-    private readonly _sendSignal: (message: SignalApi.SignalMessage) => Promise<void>,
-    private readonly _lookup: () => void,
+    private readonly _protocolProvider: ProtocolProvider,
+    private readonly _signalConnection: SignalConnection,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
@@ -185,7 +181,7 @@ export class Swarm {
         this._topology.update();
       },
       lookup: () => {
-        this._lookup();
+        this._signalConnection.lookup(this._topic);
       }
     };
   }
@@ -199,7 +195,7 @@ export class Swarm {
     const sessionId = PublicKey.random();
 
     const connection = this._createConnection(true, remoteId, sessionId);
-    this._sendOffer({
+    this._signalConnection.offer({
       id: this._ownPeerId,
       remoteId,
       sessionId,
@@ -241,8 +237,8 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      this._sendSignal,
-      this._protocol({ channel: discoveryKey(this._topic), initiator }),
+      (msg: SignalApi.SignalMessage) => this._signalConnection.signal(msg),
+      this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
 
