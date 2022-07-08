@@ -9,8 +9,9 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
-import { SignalManager } from './interface';
-import { SignalApi, SignalClient } from './signal-api';
+import { SignalApi } from './signal-api';
+import { SignalClient } from './signal-client';
+import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
@@ -18,14 +19,13 @@ export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
-  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(x => x.toHex());
+  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(topic => topic.toHex());
 
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconcileTimeoutId?: NodeJS.Timeout;
 
   readonly statusChanged = new Event<SignalApi.Status[]>();
-
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
 
   constructor (
@@ -37,7 +37,7 @@ export class WebsocketSignalManager implements SignalManager {
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async (msg) => this._onOffer(msg),
+        async msg => this._onOffer(msg),
         async msg => {
           this.onSignal.emit(msg);
         }
