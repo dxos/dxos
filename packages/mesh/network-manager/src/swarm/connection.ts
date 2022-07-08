@@ -50,13 +50,10 @@ export enum ConnectionState {
  */
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
-
   private _transport: Transport | undefined;
-
   private _bufferedSignals: SignalApi.SignalMessage[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
-
   readonly errors = new ErrorStream();
 
   constructor (
@@ -113,12 +110,13 @@ export class Connection {
 
     // Replay signals that were received before transport was created.
     for (const signal of this._bufferedSignals) {
-      this._transport.signal(signal);
+      void this._transport.signal(signal); // TODO(burdon): Remove async?
     }
+
     this._bufferedSignals = [];
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalApi.SignalMessage) {
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
@@ -137,7 +135,7 @@ export class Connection {
 
     assert(this._transport, 'Connection not ready to accept signals.');
     log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data.type}`);
-    this._transport.signal(msg);
+    await this._transport.signal(msg);
   }
 
   @synchronized
