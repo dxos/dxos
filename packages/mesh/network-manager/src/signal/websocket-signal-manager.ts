@@ -10,12 +10,12 @@ import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
 import { SignalManager } from './interface';
-import { SignalApi } from './signal-api';
+import { SignalApi, SignalClient } from './signal-api';
 
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
 export class WebsocketSignalManager implements SignalManager {
-  private readonly _servers = new Map<string, SignalApi>();
+  private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(x => x.toHex());
@@ -35,7 +35,7 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalApi(
+      const server = new SignalClient(
         host,
         async (msg) => this._onOffer(msg),
         async msg => {

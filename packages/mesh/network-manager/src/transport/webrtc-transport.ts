@@ -89,7 +89,7 @@ export class WebRTCTransport implements Transport {
     return this._peer;
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalApi.SignalMessage) {
     assert(this._peer, 'Connection not ready to accept signals.');
     this._peer.signal(msg.data);
   }

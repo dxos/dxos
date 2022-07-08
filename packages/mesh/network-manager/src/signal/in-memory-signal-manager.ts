@@ -13,11 +13,8 @@ import { SignalApi } from './signal-api';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
-
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-
   readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
-
   readonly onSignal = new Event<SignalApi.SignalMessage>();
 
   constructor (
@@ -62,6 +59,7 @@ export class InMemorySignalManager implements SignalManager {
   async destroy () {}
 }
 
+// TODO(burdon): Remove global state.
 // This is global state for the in-memory signal manager.
 const state = {
   // Mapping from topic to set of peers.

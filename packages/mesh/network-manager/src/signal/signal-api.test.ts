@@ -11,25 +11,25 @@ import { PublicKey } from '@dxos/crypto';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-import { SignalApi } from './signal-api';
+import { SignalApi, SignalClient } from './signal-api';
 
 describe('SignalApi', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
-  let api: SignalApi;
-  let api2: SignalApi;
+  let api1: SignalClient;
+  let api2: SignalClient;
 
   let broker: Awaited<ReturnType<typeof createTestBroker>>;
-  const signalApiPort = randomInt(10000, 50000);
-  const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
+  const signalApiPort1 = randomInt(10000, 50000);
+  const signalApiUrl1 = 'http://0.0.0.0:' + signalApiPort1;
 
   // code let broker2: ReturnType<typeof createBroker>;
   const signalApiPort2 = randomInt(10000, 50000);
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
   before(async () => {
-    broker = await createTestBroker(signalApiPort);
+    broker = await createTestBroker(signalApiPort1);
     // code broker2 = await createTestBroker(signalApiPort2);
   });
 
@@ -41,27 +41,27 @@ describe('SignalApi', () => {
 
   after(async function () {
     this.timeout(0);
-    await api.close();
+    await api1.close();
     await broker.stop();
     // code await broker2.stop();
   });
 
   test('join', async () => {
-    api = new SignalApi(signalApiUrl, (async () => {}) as any, async () => {});
+    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, async () => {});
 
-    const join = await api.join(topic, peer1);
+    const join = await api1.join(topic, peer1);
     expect(join).toEqual([peer1]);
 
-    const join2 = await api.join(topic, peer2);
+    const join2 = await api1.join(topic, peer2);
     expect(join2).toEqual([peer1, peer2]);
   }).timeout(1_000);
 
   test('offer', async () => {
     const offerMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<SignalApi.Answer>>()
       .resolvesTo({ accept: true });
-    api = new SignalApi(signalApiUrl, offerMock, async () => {});
+    api1 = new SignalClient(signalApiUrl1, offerMock, async () => {});
 
-    await api.join(topic, peer1);
+    await api1.join(topic, peer1);
 
     const offer: SignalApi.SignalMessage = {
       data: { foo: 'bar' } as any,
@@ -70,7 +70,7 @@ describe('SignalApi', () => {
       sessionId: PublicKey.random(),
       topic
     };
-    const offerResult = await api.offer(offer);
+    const offerResult = await api1.offer(offer);
     expect(offerResult).toEqual({ accept: true });
     expect(offerMock).toHaveBeenCalledWith([offer]);
   }).timeout(5_000);
@@ -78,9 +78,9 @@ describe('SignalApi', () => {
   test('signal', async () => {
     const signalMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
       .resolvesTo();
-    api = new SignalApi(signalApiUrl, (async () => {}) as any, signalMock);
+    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, signalMock);
 
-    await api.join(topic, peer1);
+    await api1.join(topic, peer1);
 
     const msg: SignalApi.SignalMessage = {
       id: peer2,
@@ -89,7 +89,7 @@ describe('SignalApi', () => {
       topic,
       data: { foo: 'bar' } as any
     };
-    await api.signal(msg);
+    await api1.signal(msg);
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
@@ -98,10 +98,10 @@ describe('SignalApi', () => {
 
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.
-    api = new SignalApi(signalApiUrl, (async () => {}) as any, async () => {});
-    api2 = new SignalApi(signalApiUrl2, (async () => {}) as any, async () => {});
+    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, async () => {});
+    api2 = new SignalClient(signalApiUrl2, (async () => {}) as any, async () => {});
 
-    await api.join(topic, peer1);
+    await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
     await waitForExpect(async () => {
@@ -110,7 +110,7 @@ describe('SignalApi', () => {
     }, 4_000);
 
     await waitForExpect(async () => {
-      const peers = await api.lookup(topic);
+      const peers = await api1.lookup(topic);
       expect(peers.length).toEqual(2);
     }, 4_000);
   }).timeout(5_000);
@@ -122,10 +122,10 @@ describe('SignalApi', () => {
     const signalMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
       .resolvesTo();
 
-    api = new SignalApi(signalApiUrl, offerMock, async () => {});
-    api2 = new SignalApi(signalApiUrl2, (async () => {}) as any, signalMock);
+    api1 = new SignalClient(signalApiUrl1, offerMock, async () => {});
+    api2 = new SignalClient(signalApiUrl2, (async () => {}) as any, signalMock);
 
-    await api.join(topic, peer1);
+    await api1.join(topic, peer1);
     await sleep(3000);
     await api2.join(topic, peer2);
 
@@ -146,7 +146,7 @@ describe('SignalApi', () => {
       topic,
       data: { foo: 'bar' } as any
     };
-    await api.signal(msg);
+    await api1.signal(msg);
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
