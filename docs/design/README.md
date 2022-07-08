@@ -8,3 +8,4 @@ DXOS consists primarily of the following core protocols.
 | [HALO](./halo-spec.md) | Identity, credentials, and access control. |
 | [MESH](./mesh-spec.md) | Resilient peer-to-peer networks.           |
 
+See this [guide](https://github.com/dxos/eng/wiki/Guides-~-Writing-Documentation) to writing documentation.
