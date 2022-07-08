@@ -20,13 +20,14 @@ export class WebsocketSignalManager implements SignalManager {
 
   /** Topics joined: topic => peerId */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(topic => topic.toHex());
-
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconcileTimeoutId?: NodeJS.Timeout;
 
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
+  readonly onSignal = new Event<SignalApi.SignalMessage>();
 
   constructor (
     private readonly _hosts: string[],
@@ -38,10 +39,9 @@ export class WebsocketSignalManager implements SignalManager {
       const server = new SignalClient(
         host,
         async msg => this._onOffer(msg),
-        async msg => {
-          this.onSignal.emit(msg);
-        }
+        async msg => this.onSignal.emit(msg)
       );
+
       this._servers.set(host, server);
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
       server.commandTrace.on(trace => this.commandTrace.emit(trace));
@@ -154,8 +154,4 @@ export class WebsocketSignalManager implements SignalManager {
   async destroy () {
     await Promise.all(Array.from(this._servers.values()).map(server => server.close()));
   }
-
-  peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
-
-  onSignal = new Event<SignalApi.SignalMessage>();
 }

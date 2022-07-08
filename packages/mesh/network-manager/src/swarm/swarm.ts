@@ -144,7 +144,8 @@ export class Swarm {
       log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.id}`);
       return;
     }
-    connection.signal(message);
+
+    await connection.signal(message);
   }
 
   async setTopology (newTopology: Topology) {

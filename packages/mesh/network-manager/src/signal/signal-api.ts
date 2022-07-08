@@ -6,6 +6,8 @@ import { SignalData } from 'simple-peer';
 
 import { PublicKey } from '@dxos/crypto';
 
+// TODO(burdon): Define message types as protobuf.
+
 export namespace SignalApi {
   export enum State {
     /** Connection is being established. */
@@ -44,17 +46,7 @@ export namespace SignalApi {
     error?: string
   }
 
-  // TODO(marik-d): Define more concrete types for offer/answer.
   export type SignalMessage = {
-    id: PublicKey
-    remoteId: PublicKey
-    topic: PublicKey
-    sessionId: PublicKey
-    data: SignalData
-  }
-
-  // TODO(burdon): Not used.
-  export type OfferMessage = {
     id: PublicKey
     remoteId: PublicKey
     topic: PublicKey

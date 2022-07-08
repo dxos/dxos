@@ -15,7 +15,7 @@ export interface Transport {
   closed: Event
   connected: Event
   errors: ErrorStream
-  signal (msg: SignalApi.SignalMessage): Promise<void>
+  signal (msg: SignalApi.SignalMessage): Promise<void> // TODO(burdon): Remove async?
   close (): Promise<void>
 }
 
@@ -38,7 +38,7 @@ export interface TransportOptions {
   /**
    * Send a signal message to remote peer.
    */
-  sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>
+  sendSignal: (msg: SignalApi.SignalMessage) => Promise<void> // TODO(burdon): Remove async?
 }
 
 export type TransportFactory = (options: TransportOptions) => Transport

@@ -29,6 +29,7 @@ export class InMemorySignalManager implements SignalManager {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet(x => x.toHex()));
     }
+
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
 
@@ -39,6 +40,7 @@ export class InMemorySignalManager implements SignalManager {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet(x => x.toHex()));
     }
+
     state.swarms.get(topic)!.delete(peerId);
   }
 
@@ -59,11 +61,12 @@ export class InMemorySignalManager implements SignalManager {
   async destroy () {}
 }
 
-// TODO(burdon): Remove global state.
+// TODO(burdon): Remove global singleton.
 // This is global state for the in-memory signal manager.
 const state = {
   // Mapping from topic to set of peers.
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(x => x.toHex()),
+
   // Map of connections for each peer for signaling.
   connections: new ComplexMap<PublicKey, InMemorySignalManager>(x => x.toHex())
 };
