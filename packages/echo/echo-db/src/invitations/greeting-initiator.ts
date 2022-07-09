@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
 import {
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   createEnvelopeMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
@@ -19,7 +20,6 @@ import {
   Message,
   SecretProvider,
   WithTypeUrl,
-  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
@@ -47,10 +47,9 @@ export class GreetingInitiator {
 
   /**
    * @param _networkManager
-   * @param _identity
    * @param _invitationDescriptor
-   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
-   * @param _getMessagesToNotarize Returns a list of credential messages that the inviter will be asked to write into the control feed.
+   * @param _getMessagesToNotarize
+   *  Returns a list of credential messages that the inviter will be asked to write into the control feed.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
@@ -94,7 +93,8 @@ export class GreetingInitiator {
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
 
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
+      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId),
+      timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),

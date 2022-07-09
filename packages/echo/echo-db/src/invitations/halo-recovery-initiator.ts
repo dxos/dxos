@@ -23,7 +23,7 @@ import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { InvalidInvitationError } from '../packlets/errors';
-import { CredentialsSigner } from '../protocol/credentials-signer';
+import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -72,8 +72,8 @@ export class HaloRecoveryInitiator {
     this._greeterPlugin = new GreetingCommandPlugin(this._peerId, async () => false);
 
     log('Connecting');
-    const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      () => this._greeterPlugin?.peers.length, timeout);
+    const peerJoinedWaiter = waitForEvent(
+      this._greeterPlugin, 'peer:joined', () => !!this._greeterPlugin?.peers.length, timeout);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),

@@ -79,8 +79,8 @@ export class InMemoryTransport implements Transport {
     return this._sessionId;
   }
 
-  signal (msg: SignalApi.SignalMessage): void {
-    // Does nothing.
+  async signal (msg: SignalApi.SignalMessage) {
+    // No-op.
   }
 
   async close (): Promise<void> {
