@@ -4,21 +4,19 @@
 
 import { throwUnhandledRejection } from '@dxos/debug';
 
-// TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
-
 export type Effect = () => (() => void) | undefined;
 
 /**
  * Effect that's been added to a specific Event.
  */
 interface MaterializedEffect {
-  effect: Effect,
+  effect: Effect
   cleanup: (() => void) | undefined
 }
 
 interface EventEmitterLike {
-  on(event: string, cb: (data: any) => void): void;
-  off(event: string, cb: (data: any) => void): void;
+  on(event: string, cb: (data: any) => void): void
+  off(event: string, cb: (data: any) => void): void
 }
 
 /**
@@ -51,6 +49,7 @@ interface EventEmitterLike {
  * 6. Removes the cases where event names intersect when used in cases with inheritance.
  * 7. Remove the need to namespace events when developing a class with events that will be used as a base-class.
  */
+// TODO(burdon): Rename EventListener.
 export class Event<T = void> implements ReadOnlyEvent<T> {
   static wrap<T> (emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();

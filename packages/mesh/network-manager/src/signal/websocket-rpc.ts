@@ -25,19 +25,13 @@ const RPC_TIMEOUT = 3_000;
  */
 export class WebsocketRpc {
   private readonly _connectTrigger = new Trigger();
-
   private readonly _socket: WebSocket;
-
   private readonly _rpc: any;
-
   private _messageId = Date.now();
 
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-
   readonly connected = new Event();
-
   readonly disconnected = new Event();
-
   readonly error = new Event<Error>();
 
   /**
@@ -58,6 +52,7 @@ export class WebsocketRpc {
         this.error.emit(err);
       }
     };
+
     this._socket.onclose = async () => {
       log(`Disconnected ${this._host}`);
       this.disconnected.emit();
@@ -67,10 +62,12 @@ export class WebsocketRpc {
         this.error.emit(err);
       }
     };
+
     this._socket.onerror = e => {
       log(`Signal socket error ${this._host} ${e.message}`);
       this.error.emit(e.error ?? new Error(e.message));
     };
+
     this._rpc = nanomessagerpc({
       send: async (data: Uint8Array) => {
         await this._connectTrigger.wait();
