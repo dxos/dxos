@@ -11,7 +11,7 @@ import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { getPartyCredentialMessageType } from '../party';
-import { PartyCredential, Message, KeyHint, Command } from '../proto';
+import { PartyCredential, Message, KeyHint, Command, NotarizeResponse, WithTypeUrl, KeyType } from '../proto';
 import { PeerId } from '../typedefs';
 import {
   ERR_GREET_INVALID_COMMAND,
@@ -220,7 +220,7 @@ export class Greeter {
     };
   }
 
-  async _handleNotarize (invitation: Invitation, params: any[]) {
+  async _handleNotarize (invitation: Invitation, params: any[]): Promise<WithTypeUrl<NotarizeResponse>> {
     if (!invitation.handshook || invitation.notarized) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, 'Out-of-order command sequence.');
     }
@@ -262,7 +262,7 @@ export class Greeter {
     return {
       '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
-      hints
+      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!)
     };
   }
 }

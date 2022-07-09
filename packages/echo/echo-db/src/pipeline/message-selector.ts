@@ -9,7 +9,7 @@ import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credential
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../database';
+import { TimeframeClock } from '../packlets/database';
 import { PartyStateProvider } from './party-processor';
 
 const log = debug('dxos:echo-db:message-selector');
@@ -26,27 +26,28 @@ const log = debug('dxos:echo-db:message-selector');
 export const createMessageSelector = (partyProcessor: PartyStateProvider, timeframeClock: TimeframeClock): MessageSelector => candidates => {
   // Check ECHO message candidates first since they are less expensive than HALO cancidates.
   for (let i = 0; i < candidates.length; i++) {
-    const { data: { echo } } = candidates[i];
+    const { data: { timeframe, echo } } = candidates[i];
     const feedKey = PublicKey.from(candidates[i].key);
     if (!echo) {
       continue;
     }
 
-    assert(echo.timeframe);
-    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
+    assert(timeframe);
+    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
       return i;
     }
   }
 
   // Check HALO message candidates.
   for (let i = 0; i < candidates.length; i++) {
-    const { data: { halo } } = candidates[i];
+    const { data: { timeframe, halo } } = candidates[i];
     const feedKey = PublicKey.from(candidates[i].key);
     if (!halo) {
       continue;
     }
 
-    if (partyProcessor.isFeedAdmitted(feedKey)) {
+    assert(timeframe);
+    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
       return i;
     }
 

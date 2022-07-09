@@ -19,7 +19,7 @@ const log = debug('dxos:network-manager:swarm:transport:webrtc');
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
-export class WebrtcTransport implements Transport {
+export class WebRTCTransport implements Transport {
   private _peer: SimplePeer;
 
   readonly closed = new Event();
@@ -35,7 +35,7 @@ export class WebrtcTransport implements Transport {
     private readonly _remoteId: PublicKey,
     private readonly _sessionId: PublicKey,
     private readonly _topic: PublicKey,
-    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => void,
     private readonly _webrtcConfig?: any
   ) {
     log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
@@ -89,7 +89,7 @@ export class WebrtcTransport implements Transport {
     return this._peer;
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalApi.SignalMessage) {
     assert(this._peer, 'Connection not ready to accept signals.');
     this._peer.signal(msg.data);
   }
@@ -101,11 +101,12 @@ export class WebrtcTransport implements Transport {
   }
 
   private async _disconnectStreams () {
-    this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream); // TODO(rzadp): Find a way of unpiping this?
+    // TODO(rzadp): Find a way of unpiping this?
+    this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream);
   }
 }
 
-export const createWebRtcTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebrtcTransport(
+export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebRTCTransport(
   opts.initiator,
   opts.stream,
   opts.ownId,

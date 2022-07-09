@@ -10,25 +10,19 @@ import { File } from '../interfaces';
 import { StorageType } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
+/**
+ * Storage interface implementation for Node.
+ */
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  constructor (protected rootPath: string) {
-    super(rootPath);
-  }
-
-  subDir (path: string) {
-    return new NodeStorage(join(this.rootPath, path));
-  }
-
-  _create (filename: string, opts: any = {}): File {
-    return new File(raf(filename, {
-      directory: this._root,
-      ...opts
-    }));
+  protected _createFile (filename: string, path: string, opts: any = {}): File {
+    const file = new File(raf(filename, { directory: path, ...opts }));
+    this._addFile(join(path, filename), file);
+    return file;
   }
 
   async _destroy () {
-    await del(this._root);
+    await del(this._path);
   }
 }

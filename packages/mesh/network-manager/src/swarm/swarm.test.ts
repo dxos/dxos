@@ -12,50 +12,57 @@ import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
+import { SignalApi, SignalConnection } from '../signal';
 import { FullyConnectedTopology } from '../topology';
-import { createWebRtcTransportFactory, WebrtcTransport } from '../transport';
+import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
 
 const log = debug('dxos:network-manager:swarm:test');
+
+class MockSignalConnection implements SignalConnection {
+  constructor (
+    readonly _swarm: () => Swarm,
+    readonly _delay = 10
+  ) {}
+
+  lookup (topic: PublicKey) {}
+
+  async offer (msg: SignalApi.SignalMessage) {
+    await sleep(this._delay);
+    return this._swarm().onOffer(msg);
+  }
+
+  async signal (msg: SignalApi.SignalMessage) {
+    await sleep(this._delay);
+    await this._swarm().onSignal(msg);
+  }
+}
 
 const setup = () => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
+
   const swarm1: Swarm = new Swarm(
     topic,
     peerId1,
     new FullyConnectedTopology(),
     () => new Protocol(),
-    async msg => {
-      await sleep(10); // Simulating network delay.
-      return swarm2.onOffer(msg);
-    },
-    async msg => {
-      await sleep(10); // Simulating network delay.
-      await swarm2.onSignal(msg);
-    },
-    () => {},
-    createWebRtcTransportFactory(),
+    new MockSignalConnection(() => swarm2),
+    createWebRTCTransportFactory(),
     undefined
   );
+
   const swarm2: Swarm = new Swarm(
     topic,
     peerId2,
     new FullyConnectedTopology(),
     () => new Protocol(),
-    async msg => {
-      await sleep(10); // Simulating network delay.
-      return swarm1.onOffer(msg);
-    },
-    async msg => {
-      await sleep(10); // Simulating network delay.
-      await swarm1.onSignal(msg);
-    },
-    () => {},
-    createWebRtcTransportFactory(),
+    new MockSignalConnection(() => swarm1),
+    createWebRTCTransportFactory(),
     undefined
   );
+
   afterTest(async () => {
     await swarm1.destroy();
     await swarm2.destroy();
@@ -84,10 +91,10 @@ test('connects two peers in a swarm', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
+  (swarm2Connection.transport as WebRTCTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
+  (swarm1Connection.transport as WebRTCTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
@@ -126,10 +133,10 @@ test('second peer discovered after delay', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
+  (swarm2Connection.transport as WebRTCTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
+  (swarm1Connection.transport as WebRTCTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });

@@ -33,4 +33,10 @@ message PartyMetadata {
 
   /// Key of the wriatable data feed.
   PubKey dataFeedKey = 3;
+
+  /// Key of the wriatable control feed.
+  PubKey controlFeedKey = 4;
+
+  // Latest timeframe reached while processing party messages.
+  TimeframeVector latestTimeframe = 5;
 }

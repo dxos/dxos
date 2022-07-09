@@ -61,6 +61,7 @@ export interface ProtocolOptions {
 /**
  * Wraps a hypercore-protocol object.
  */
+// TODO(burdon): Must rename this class.
 export class Protocol {
   private _isOpen = false;
 
@@ -126,6 +127,7 @@ export class Protocol {
         }
       }
     });
+
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
@@ -330,7 +332,7 @@ export class Protocol {
     this.handshake.emit(this);
     this._connected = true;
 
-    // TODO(unknown): Redo this.
+    // TODO: Redo this.
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {

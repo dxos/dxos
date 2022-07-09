@@ -13,12 +13,12 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { WebrtcTransport } from './webrtc-transport';
+import { WebRTCTransport } from './webrtc-transport';
 
-describe('WebrtcTransport', () => {
+describe('WebRTCTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const connection = new WebrtcTransport(
+    const connection = new WebRTCTransport(
       true,
       new Duplex(),
       PublicKey.random(),
@@ -50,7 +50,7 @@ describe('WebrtcTransport', () => {
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-    const connection1 = new WebrtcTransport(
+    const connection1 = new WebRTCTransport(
       true,
       protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
       peer1Id,
@@ -67,7 +67,7 @@ describe('WebrtcTransport', () => {
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-    const connection2 = new WebrtcTransport(
+    const connection2 = new WebRTCTransport(
       false,
       protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
       peer2Id,

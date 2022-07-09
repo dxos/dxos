@@ -12,7 +12,7 @@ import { schema, ItemID, MockFeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
-import { ItemDemuxer, ItemManager } from '../database';
+import { ItemDemuxer, ItemManager } from '../packlets/database';
 import { createTestInstance } from '../testing';
 
 const log = debug('dxos:snapshot:test');

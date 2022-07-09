@@ -5,19 +5,19 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Database, Item, ResultSet } from '../api';
+import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
-import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { Database, Item } from '../packlets/database';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions, MetadataStore } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -42,31 +42,31 @@ export interface PartyMember {
 export class DataParty {
   public readonly update = new Event<void>();
 
-  private readonly _partyCore: PartyCore;
+  private readonly _partyCore: PartyPipeline;
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
+  private _feedHints: PublicKey[] = []
 
   constructor (
     partyKey: PartyKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
+    private readonly _metadataStore: MetadataStore,
     private readonly _credentialsSigner: CredentialsSigner,
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
-    _initialTimeframe?: Timeframe,
-    _options: PartyOptions = {}
+    private readonly _initialTimeframe?: Timeframe,
+    _options: PipelineOptions = {}
   ) {
-    this._partyCore = new PartyCore(
+    this._partyCore = new PartyPipeline(
       partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
       this._credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -127,6 +127,10 @@ export class DataParty {
     return this._invitationManager;
   }
 
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
+  }
+
   get title () {
     return this._preferences?.getLastKnownTitle();
   }
@@ -135,6 +139,13 @@ export class DataParty {
     const item = await this.getPropertiesItem();
     await item.model.set(PARTY_TITLE_PROPERTY, title);
     await this._preferences?.setLastKnownTitle(title);
+  }
+
+  /**
+   * @internal
+   */
+  _setFeedHints (feedHints: PublicKey[]) {
+    this._feedHints = feedHints;
   }
 
   /**
@@ -147,11 +158,25 @@ export class DataParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    // TODO(dmaretskyi): May be undefined in some tests.
+    const party = this._metadataStore.getParty(this._partyCore.key);
+
+    await this._partyCore.open({
+      feedHints: this._feedHints,
+      initialTimeframe: this._initialTimeframe,
+      targetTimeframe: party?.latestTimeframe
+    });
+
+    // Keep updating latest reached timeframe in the metadata.
+    // This timeframe will be waited for when opening the party next time.
+    this._partyCore.timeframeUpdate.on(timeframe => {
+      void this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -171,7 +196,7 @@ export class DataParty {
 
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner, this.credentialsWriter), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 
@@ -191,6 +216,9 @@ export class DataParty {
       return this;
     }
 
+    // Save the latest reached timeframe.
+    await this._metadataStore.setTimeframe(this._partyCore.key, this._partyCore.timeframe);
+
     await this._partyCore.close();
     await this._protocol?.stop();
 
@@ -208,10 +236,6 @@ export class DataParty {
 
   getFeeds (): FeedDescriptor[] {
     return this._feedProvider.getFeeds();
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message);
   }
 
   get isActive (): boolean {

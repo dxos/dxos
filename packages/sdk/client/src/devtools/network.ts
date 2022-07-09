@@ -25,6 +25,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => n
       close(err);
     }
   };
+
   hook.networkManager.signal.statusChanged.on(update);
   update();
 });

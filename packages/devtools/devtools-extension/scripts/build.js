@@ -24,12 +24,12 @@ void (async () => {
   try {
     await build({
       entryPoints: [
-        join(srcDir, 'background.ts'),
-        join(srcDir, 'content.ts'),
-        join(srcDir, 'devtools.ts'),
-        join(srcDir, 'panel.ts'),
-        join(srcDir, 'sandbox.ts')
-      ],
+        'background.ts',
+        'content.ts',
+        'devtools.ts',
+        'panel.ts',
+        'sandbox.ts'
+      ].map(entryPoint => join(srcDir, entryPoint)),
       outdir: distDir,
       write: true,
       bundle: true,
