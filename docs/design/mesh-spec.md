@@ -81,12 +81,17 @@ Each peer maintains a map of connections, which may implement different transpor
 
 ![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
 
-<br/> 
+### Hypercore Protocol
+
+The [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protocol) x
+
+
 
 > - How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)? How does bi-directionality work?
 > - Reference HALO authentication/party admission.
-> - Reference ECHO `hypercore`, `@dxos/protocol` replication; [NOISE](https://noiseprotocol.org/noise.html)?
-> - https://github.com/hypercore-protocol/hypercore
+> - Reference ECHO `hypercore`, `@dxos/protocol` replication; [Noise](https://noiseprotocol.org/noise.html)?
+> - https://github.com/hypercore-protocol/hypercore-protocol
+> - https://github.com/mafintosh/simple-hypercore-protocol/blob/master/schema.proto
 > - https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf
 > - Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
 > - Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star 
