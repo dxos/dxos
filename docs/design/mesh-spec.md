@@ -83,8 +83,7 @@ Each peer maintains a map of connections, which may implement different transpor
 
 ### Hypercore Protocol
 
-The [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protocol) x
-
+The [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protocol) XXX.
 
 
 > - How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)? How does bi-directionality work?
