@@ -1,9 +1,13 @@
 # MESH Spec
 
-MESH is a set of protocols and technologies that enable resilient peer-to-peer networks.
+MESH is a set of protocols and components that enable resilient peer-to-peer networks.
+The MESH infrastructure supports client application networks (e.g., parties), signaling, and server-to-server networks.
 
 
 ## Terminology
+
+***Discovery Key*** - 
+Public key used as the connection context for peers joining the swarm.
 
 ***Hypercore*** -
 The [Hypercore protocol](https://hypercore-protocol.org) is a peer-to-peer data replication mechanism build on top of signed append-only hash-linked logs.
@@ -11,14 +15,11 @@ The [Hypercore protocol](https://hypercore-protocol.org) is a peer-to-peer data 
 ***ICE*** -
 The Interactive Connectivity Establishment ([ICE](https://en.wikipedia.org/wiki/Interactive_Connectivity_Establishment)) protocols enables peers (including applications running within a browser) to establish direct connections with each other.
 
-***Party*** -
-Context for collaboration and data replication.
-
-***Discovery Key*** - 
-Public key used as the connection context for peers joining the swarm.
-
 ***NAT*** -
 Network Address Translation ([NAT](https://en.wikipedia.org/wiki/Network_address_translation)) provides a public IP address to devices behind a router.
+
+***Party*** -
+Context for collaboration and data replication.
 
 ***Peer*** -
 Participant in a swarm. Each peer has a long-lived public key.
@@ -57,26 +58,7 @@ This DHT is replicated across all signaling servers; entries in the DHT expire a
 The signaling server implements a socket based endpoint that allows peers to join and leave swarms, and to send and receive messages to and from other peers.
 
 
-### Swarms and Parties
-
-Peers use the signaling server to connect and exchange data with other peers that belong to the same ECHO party.
-The hash of the party key as the discovery key.
-Each peer maintains a map of connections, which may implement different transports (e.g., WebRTC).
-The transport pipes data to a stream.
-
-<br/> 
-
-![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
-
-<br/> 
-
-> - How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)?
-> - Reference HALO authentication/party admission.
-> - Reference ECHO `hypercore`, `@dxos/protocol` replication; [NOISE](https://noiseprotocol.org/noise.html)?
-> - Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
-> - Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star 
-
-### Issues
+### Signaling Protocol
 
 > - Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)?
 protocol.
@@ -87,3 +69,24 @@ protocol.
 > - Guaranteed message delivery (or just ACK)? AXE for reliable streams? QUIC, SPDY?
 > - Presence management (separate from in-party swarm presence?)
 > - Security considerations (e.g., encryption, authentication, key exchange, hash party/device keys, TTLs)
+
+
+### Client Swarms
+
+Peers use the signaling server to connect and exchange data with other peers that belong to the same ECHO party.
+The hash of the party key as the discovery key.
+Each peer maintains a map of connections, which may implement different transports (e.g., WebRTC).
+
+<br/> 
+
+![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
+
+<br/> 
+
+> - How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)? How does bi-directionality work?
+> - Reference HALO authentication/party admission.
+> - Reference ECHO `hypercore`, `@dxos/protocol` replication; [NOISE](https://noiseprotocol.org/noise.html)?
+> - https://github.com/hypercore-protocol/hypercore
+> - https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf
+> - Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
+> - Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star 
