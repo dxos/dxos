@@ -6,17 +6,14 @@ import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
-export type Item = {
-  id: string
-  title: string
-}
+import { Item, ItemID, PartyKey} from '../types';
 
-export const ListItem: FC<{
+const ItemListItem: FC<{
   item?: Item,
-  onSubmit?: (id: string | undefined, text: string) => void
+  onUpdate?: (itemId: ItemID | undefined, text: string) => void
 }> = ({
   item,
-  onSubmit
+  onUpdate
 }) => {
   const { isFocused } = useFocus();
   const [text, setText] = useState(item?.title);
@@ -27,7 +24,7 @@ export const ListItem: FC<{
         setText('');
       }
 
-      onSubmit?.(item?.id, text);
+      onUpdate?.(item?.id, text);
     }
   }
 
@@ -39,9 +36,10 @@ export const ListItem: FC<{
 
   return (
     <Box>
-      <Text color='green'>{isFocused ? '> ' : '- '}</Text>
+      <Text color='green'>{isFocused ? '> ' : item ? '  ' : '+ '}</Text>
       {isFocused && (
         <TextInput
+          placeholder='Create item'
           value={text || ''}
           onChange={setText}
           onSubmit={handleSubmit}
@@ -53,9 +51,11 @@ export const ListItem: FC<{
   );
 };
 
-export const List: FC<{
+export const ItemList: FC<{
+  partyKey: PartyKey,
   onExit: () => void
 }> = ({
+  partyKey,
   onExit
 }) => {
   const [list, setList] = useState<Item[]>([]);
@@ -67,11 +67,11 @@ export const List: FC<{
 
   useInput((input, key) => {
     if (key.escape) {
-      onExit()
+      onExit();
     }
   });
 
-  const handleSubmit = (id: string | undefined, text: string) => {
+  const handleUpdate = (id: ItemID | undefined, text: string) => {
     if (id) {
       setList(list => {
         const newList = list.map(item => {
@@ -97,20 +97,20 @@ export const List: FC<{
 
   return (
     <Box flexDirection='column'>
+      <Box marginBottom={1}>
+        <Text>Party: {partyKey}</Text>
+      </Box>
+
       {list.map(item => (
-        <ListItem
+        <ItemListItem
           key={item.id}
           item={item}
-          onSubmit={handleSubmit}
+          onUpdate={handleUpdate}
         />
       ))}
 
-      {list.length === 0 && (
-        <Text>Enter item:</Text>
-      )}
-
-      <ListItem
-        onSubmit={handleSubmit}
+      <ItemListItem
+        onUpdate={handleUpdate}
       />
     </Box>
   );

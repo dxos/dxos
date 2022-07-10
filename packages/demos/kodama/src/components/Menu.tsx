@@ -20,7 +20,7 @@ const MenuItem: FC<{ option: Option, onSelect: () => void }> = ({ option, onSele
 
   return (
     <Box>
-      <Text color='green'>{isFocused ? '> ' : '  '}</Text>
+      <Text color='red'>{isFocused ? '> ' : '  '}</Text>
       <Text>{option.label}</Text>
     </Box>
   );

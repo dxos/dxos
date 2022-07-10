@@ -6,16 +6,20 @@ import { render, useApp } from 'ink';
 import React, { useEffect, useState } from 'react';
 import yargs from 'yargs';
 
-import { List, Menu } from './components';
-
-// TODO(burdon): Rename "echo"
+import { Menu, PartyList } from './components';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
-
 // https://www.npmjs.com/package/ink
-// TODO(burdon): https://github.com/privatenumber/ink-task-list
 
+// TODO(burdon): Profile.
+// TODO(burdon): Parties view.
+// TODO(burdon): Items view.
+// TODO(burdon): Invitations.
+
+/**
+ * Top-level app with menu.
+ */
 const App = () => {
   const [mode, setMode] = useState<string>();
   const { exit } = useApp();
@@ -33,13 +37,14 @@ const App = () => {
 
     case 'parties': {
       return (
-        <List onExit={() => setMode(undefined)} />
+        <PartyList onExit={() => setMode(undefined)} />
       );
     }
 
     default: {
       return (
         <Menu
+          onSelect={(id: string | null) => setMode(id || 'exit')}
           options={[
             {
               id: 'parties', label: 'View parties'
@@ -51,16 +56,15 @@ const App = () => {
               id: 'exit', label: 'Exit'
             }
           ]}
-
-          onSelect={(id: string | null) => {
-            setMode(id || 'exit');
-          }}
         />
       );
     }
   }
 }
 
+/**
+ * Command line parser.
+ */
 const main = () => {
   yargs
     .scriptName('kodama')
