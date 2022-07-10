@@ -6,9 +6,10 @@ import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
-import { ItemList } from './ItemList';
+import { Party, PartyKey } from '@dxos/client';
+import { useClient, useParties } from '@dxos/react-client';
 
-import { Party, PartyKey } from '../types';
+import { ItemList } from './ItemList';
 
 const PartyListItem: FC<{
   party?: Party,
@@ -19,8 +20,8 @@ const PartyListItem: FC<{
   onUpdate,
   onSelect
 }) => {
-  const { isFocused } = useFocus({ id: party?.key }); // TODO(burdon): to String and set focus on return.
-  const [text, setText] = useState(party?.title);
+  const { isFocused } = useFocus({ id: party?.key.toHex() });
+  const [text, setText] = useState(party?.getProperty('title'));
 
   const handleSubmit = (text: string) => {
     if (text.trim().length) {
@@ -28,7 +29,7 @@ const PartyListItem: FC<{
         setText('');
       }
 
-      if (text !== party?.title) {
+      if (text !== party?.getProperty('title')) {
         onUpdate?.(party?.key, text);
       } else {
         onSelect?.(party?.key);
@@ -41,13 +42,13 @@ const PartyListItem: FC<{
       <Text color='blue'>{isFocused ? '> ' : party ? '  ' : '+ '}</Text>
       {isFocused && (
         <TextInput
-          placeholder='Create party'
+          placeholder={ party ? undefined : 'Create party' }
           value={text || ''}
           onChange={setText}
           onSubmit={handleSubmit}
         />
       ) || party && (
-        <Text>{party.title}</Text>
+        <Text>{text}</Text>
       )}
     </Box>
   );
@@ -58,9 +59,10 @@ export const PartyList: FC<{
 }> = ({
   onExit
 }) => {
-  const [list, setList] = useState<Party[]>([]);
   const [partyKey, setPartyKey] = useState<PartyKey>();
-	const { focus, focusNext } = useFocusManager();
+	const { focus, focusNext, focusPrevious } = useFocusManager();
+  const parties = useParties();
+  const client = useClient();
 
   // TODO(burdon): Focus last party key (on return).
   useEffect(() => {
@@ -71,32 +73,24 @@ export const PartyList: FC<{
     if (!partyKey && key.escape) {
       onExit();
     }
+    if (key.upArrow) {
+      focusPrevious();
+    }
+    if (key.downArrow) {
+      focusNext();
+    }
   });
 
   const handleUpdate = (partyKey: PartyKey | undefined, text: string) => {
     if (partyKey) {
-      setList(list => {
-        const newList = list.map(party => {
-          if (party.key === partyKey) {
-            return {
-              ...party,
-              title: text
-            }
-          } else {
-            return party;
-          }
-        });
-
-        return [...newList];
-      });
+      const party = parties.find(party => party.key.equals(partyKey));
+      party!.setProperty('title', text);
     } else {
-      const party = {
-        key: String(Date.now()),
-        title: text
-      };
-
-      setList(list => [...list, party]);
-      setPartyKey(party.key);
+      setImmediate(async () => {
+        const party = await client.echo.createParty();
+        party.setProperty('title', text);
+        setPartyKey(party.key);
+      });
     }
   }
 
@@ -113,14 +107,18 @@ export const PartyList: FC<{
 
   return (
     <Box flexDirection='column'>
-      {list.map(party => (
-        <PartyListItem
-          key={party.key}
-          party={party}
-          onSelect={(partyKey: PartyKey) => setPartyKey(partyKey)}
-          onUpdate={handleUpdate}
-        />
-      ))}
+      {parties.length !== 0 && (
+        <Box flexDirection='column' marginBottom={1}>
+          {parties.map(party => (
+            <PartyListItem
+              key={party.key.toHex()}
+              party={party}
+              onSelect={(partyKey: PartyKey) => setPartyKey(partyKey)}
+              onUpdate={handleUpdate}
+            />
+          ))}
+        </Box>
+      )}
 
       <PartyListItem
         onUpdate={handleUpdate}

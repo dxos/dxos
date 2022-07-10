@@ -23,7 +23,8 @@
     "ink": "^3.2.0",
     "ink-text-input": "~4.0.3",
     "react": "^18.1.0",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "@dxos/react-async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",

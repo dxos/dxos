@@ -702,6 +702,7 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
@@ -717,6 +718,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-testing': link:../../sdk/client-testing
       '@dxos/config': link:../../sdk/config
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0

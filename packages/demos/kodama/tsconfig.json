@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

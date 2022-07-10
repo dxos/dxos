@@ -18,6 +18,15 @@ export {
   ResultSet
 } from '@dxos/echo-db';
 
+export {
+  ItemID,
+  PartyKey
+} from '@dxos/echo-protocol';
+
+export {
+  ObjectModel
+} from '@dxos/object-model';
+
 export * as proto from './proto/gen';
 
 export * from './api';

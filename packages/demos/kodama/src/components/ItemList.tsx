@@ -6,17 +6,20 @@ import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Item, ItemID, PartyKey} from '../types';
+import { Item, ItemID, ObjectModel, PartyKey } from '@dxos/client';
+import { useParty, useSelection } from '@dxos/react-client';
+
+const TYPE_ITEM = 'dxos:type/item';
 
 const ItemListItem: FC<{
-  item?: Item,
+  item?: Item<ObjectModel>,
   onUpdate?: (itemId: ItemID | undefined, text: string) => void
 }> = ({
   item,
   onUpdate
 }) => {
   const { isFocused } = useFocus();
-  const [text, setText] = useState(item?.title);
+  const [text, setText] = useState(item?.model.get('title'));
 
   const handleSubmit = (text: string) => {
     if (text.trim().length) {
@@ -39,13 +42,13 @@ const ItemListItem: FC<{
       <Text color='green'>{isFocused ? '> ' : item ? '  ' : '+ '}</Text>
       {isFocused && (
         <TextInput
-          placeholder='Create item'
+          placeholder={item ? undefined : 'Create item'}
           value={text || ''}
           onChange={setText}
           onSubmit={handleSubmit}
         />
       ) || (
-        <Text>{item?.title}</Text>
+        <Text>{text}</Text>
       )}
     </Box>
   );
@@ -58,56 +61,63 @@ export const ItemList: FC<{
   partyKey,
   onExit
 }) => {
-  const [list, setList] = useState<Item[]>([]);
-	const { focusNext } = useFocusManager();
+	const { focusNext, focusPrevious } = useFocusManager();
+  const party = useParty(partyKey)!;
+
+  // TODO(burdon): Clean-up API (e.g., default value).
+  const items = useSelection(party?.select().filter({ type: TYPE_ITEM }), [partyKey]) ?? [];
 
   useEffect(() => {
     focusNext();
-  }, []);
+  }, [party]);
 
   useInput((input, key) => {
     if (key.escape) {
       onExit();
     }
+    if (key.upArrow) {
+      focusPrevious();
+    }
+    if (key.downArrow) {
+      focusNext();
+    }
   });
 
-  const handleUpdate = (id: ItemID | undefined, text: string) => {
-    if (id) {
-      setList(list => {
-        const newList = list.map(item => {
-          if (item.id === id) {
-            return {
-              ...item,
-              title: text
-            }
-          } else {
-            return item;
-          }
-        });
-
-        return [...newList];
-      });
+  const handleUpdate = (itemId: ItemID | undefined, text: string) => {
+    if (itemId) {
+      const item = party.database.getItem(itemId)!;
+      item.model.set('title', text);
     } else {
-      setList(list => [...list, {
-        id: String(Date.now()),
-        title: text
-      }]);
+      party.database.createItem({
+        type: TYPE_ITEM,
+        props: {
+          title: text
+        }
+      });
     }
+  }
+
+  if (!party) {
+    return null;
   }
 
   return (
     <Box flexDirection='column'>
       <Box marginBottom={1}>
-        <Text>Party: {partyKey}</Text>
+        <Text>Party: {party.getProperty('title')}</Text>
       </Box>
 
-      {list.map(item => (
-        <ItemListItem
-          key={item.id}
-          item={item}
-          onUpdate={handleUpdate}
-        />
-      ))}
+      {items.length !== 0 && (
+        <Box flexDirection='column' marginBottom={1}>
+          {items.map(item => (
+            <ItemListItem
+              key={item.id}
+              item={item}
+              onUpdate={handleUpdate}
+            />
+          ))}
+        </Box>
+      )}
 
       <ItemListItem
         onUpdate={handleUpdate}
