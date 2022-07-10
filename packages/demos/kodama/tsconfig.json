@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "es2019"
+    ],
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    }
+  ]
+}

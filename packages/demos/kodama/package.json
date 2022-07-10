@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/kodama",
+  "version": "2.33.4",
+  "description": "Command line for ECHO.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "bin": {
+    "echo": "bin/echo.js"
+  },
+  "main": "dist/src/main.js",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "kodama": "ts-node src/main.tsx",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/client-testing": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "ink": "^3.2.0",
+    "ink-text-input": "~4.0.3",
+    "react": "^18.1.0",
+    "yargs": "~16.2.0"
+  },
+  "devDependencies": {
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/node": "^16.11.27",
+    "@types/react": "^18.0.9",
+    "@types/yargs": "~16.0.1",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.2",
+    "nodemon": "~2.0.19"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "forceCloseTests": true,
+    "testingFramework": "mocha"
+  }
+}
