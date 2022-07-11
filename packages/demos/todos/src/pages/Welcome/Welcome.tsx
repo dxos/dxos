@@ -161,9 +161,8 @@ const Welcome = () => {
         sx={{
           display: 'flex',
           gap: '1em',
-          height: 'calc(100% - 8px)',
+          height: '100%',
           width: 'fit-content',
-          marginTop: 1,
           padding: '1em'
         }}
       >
