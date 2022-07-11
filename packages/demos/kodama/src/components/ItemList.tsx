@@ -2,125 +2,38 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
-import TextInput from 'ink-text-input';
-import React, { FC, useEffect, useState } from 'react';
+import { Box, Text } from 'ink';
+import React, { FC } from 'react';
 
-import { Item, ItemID, ObjectModel, Party, PartyKey } from '@dxos/client';
-import { useMembers, useParty, useSelection } from '@dxos/react-client';
+import { Party } from '@dxos/client';
+import { useSelection } from '@dxos/react-client';
 
-import { ShareParty } from './ShareParty';
+import { List } from './List';
 
+const LABEL_PROPERTY = 'name'; // TODO(burdon): To make compatable with kitchen-sink/client-test.
 const TYPE_ITEM = 'dxos:type/item';
 
-const PartyInfo: FC<{
-  party: Party
-}> = ({
-  party
-}) => {
-  const members = useMembers(party);
-
-  return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='blue'>Party</Text>
-      <Box>
-        <Text color='blue'>  Title: </Text>
-        <Text>{party.getProperty('title')}</Text>
-      </Box>
-      <Box>
-        <Text color='blue'>  Public Key: </Text>
-        <Text>{party.key.toHex()}</Text>
-      </Box>
-
-      <Text color='blue'>  Members:</Text>
-      {members.map(member => (
-        <Text key={member.publicKey.toHex()}>  - {member.displayName}</Text>
-      ))}
-    </Box>
-  );
-};
-
-const ItemListItem: FC<{
-  item?: Item<ObjectModel>,
-  onUpdate?: (itemId: ItemID | undefined, text: string) => void
-}> = ({
-  item,
-  onUpdate
-}) => {
-  const { isFocused } = useFocus();
-  const [text, setText] = useState(item?.model.get('title'));
-
-  // TODO(burdon): Delete item (meta-delete).
-  // TODO(burdon): Hierarchical item editor.
-  // TODO(burdon): Hierarchical properties editor.
-
-  const handleSubmit = (text: string) => {
-    if (text.trim().length) {
-      if (!item) {
-        setText('');
-      }
-
-      onUpdate?.(item?.id, text);
-    }
-  };
-
-  useEffect(() => {
-    if (text) {
-      handleSubmit(text);
-    }
-  }, [isFocused]);
-
-  return (
-    <Box>
-      <Text color='green'>{isFocused ? '> ' : item ? '  ' : '+ '}</Text>
-      {isFocused && (
-        <TextInput
-          value={text || ''}
-          onChange={setText}
-          onSubmit={handleSubmit}
-        />
-      )}
-      {!isFocused && (
-        <Text>{text}</Text>
-      )}
-    </Box>
-  );
-};
-
 export const ItemList: FC<{
-  partyKey: PartyKey,
-  onExit: () => void
+  party: Party,
+  type?: string
 }> = ({
-  partyKey,
-  onExit
+  party,
+  type = TYPE_ITEM
 }) => {
-  const { focusNext } = useFocusManager();
-  const party = useParty(partyKey)!;
-  const [pending, setPending] = useState(false);
+  // TODO(burdon): Select should not return party item by default.
+  // TODO(burdon): Clean-up API (e.g., provide default value as empty list).
+  // TODO(burdon): Not updated if model properties change.
+  const items = useSelection(party?.select().filter({ type }), [party, type]) ?? [];
 
-  // TODO(burdon): Clean-up API (e.g., default value).
-  // TODO(burdon): Not updated if model properties change (e.g., set title).
-  const items = useSelection(party?.select().filter({ type: TYPE_ITEM }), [partyKey]) ?? [];
-
-  useEffect(() => {
-    focusNext();
-  }, [party]);
-
-  useInput((input, key) => {
-    if (key.escape) {
-      onExit();
-    }
-  });
-
-  const handleUpdate = (itemId: ItemID | undefined, text: string) => {
-    if (itemId) {
-      const item = party.database.getItem(itemId)!;
-      item.model.set('title', text);
+  const handleUpdate = (data: { id?: string, text: string }) => {
+    if (data.id) {
+      const item = party.database.getItem(data.id)!;
+      item.model.set(LABEL_PROPERTY, data.text);
     } else {
       void party.database.createItem({
-        type: TYPE_ITEM,
+        type,
         props: {
-          title: text
+          [LABEL_PROPERTY]: data.text
         }
       });
     }
@@ -131,29 +44,14 @@ export const ItemList: FC<{
   }
 
   return (
-    <Box flexDirection='column'>
-      <PartyInfo party={party} />
-
-      {!pending && (
-        <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-          <Text color='green'>Items</Text>
-          {items.map(item => (
-            <ItemListItem
-              key={item.id}
-              item={item}
-              onUpdate={handleUpdate}
-            />
-          ))}
-
-          <ItemListItem
-            onUpdate={handleUpdate}
-          />
-        </Box>
-      )}
-
-      <ShareParty
-        party={party}
-        onStateChanged={setPending}
+    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+      <Text color='green'>Items ({type})</Text>
+      <List
+        onUpdate={handleUpdate}
+        items={items.map(item => ({
+          id: item.id,
+          text: item.model.get(LABEL_PROPERTY) // TODO(burdon): Hack (need schema).
+        }))}
       />
     </Box>
   );
