@@ -11,8 +11,9 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components';
 import { EchoGraph, EchoGraphModel } from '@dxos/react-echo-graph';
 
-import { EchoBoard, EchoList } from '../../../src';
-import { graphStyles } from '../testing';
+import { EchoBoard } from '../EchoBoard';
+import { EchoList } from '../EchoList';
+import { graphStyles } from '../Theme';
 import { ViewType } from './ViewSelector';
 
 interface ViewContainerProps {
