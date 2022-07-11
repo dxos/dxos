@@ -48,7 +48,7 @@ export const JoinParty: FC<{
   });
 
   return (
-    <Box flexDirection='column'>
+    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
       {!invitation && (
         <TextInput
           placeholder='Enter invitation'

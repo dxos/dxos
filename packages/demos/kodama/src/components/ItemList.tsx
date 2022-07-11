@@ -6,14 +6,39 @@ import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Item, ItemID, ObjectModel, PartyKey } from '@dxos/client';
+import { Item, ItemID, ObjectModel, Party, PartyKey } from '@dxos/client';
 import { useMembers, useParty, useSelection } from '@dxos/react-client';
 
-import { PartyInvitation } from './PartyInvitation';
+import { ShareParty } from './ShareParty';
 
 const TYPE_ITEM = 'dxos:type/item';
 
-// TODO(burdon): Display members.
+const PartyInfo: FC<{
+  party: Party
+}> = ({
+  party
+}) => {
+  const members = useMembers(party);
+
+  return (
+    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+      <Text color='blue'>Party</Text>
+      <Box>
+        <Text color='blue'>  Title: </Text>
+        <Text>{party.getProperty('title')}</Text>
+      </Box>
+      <Box>
+        <Text color='blue'>  Public Key: </Text>
+        <Text>{party.key.toHex()}</Text>
+      </Box>
+
+      <Text color='blue'>  Members:</Text>
+      {members.map(member => (
+        <Text key={member.publicKey.toHex()}>  - {member.displayName}</Text>
+      ))}
+    </Box>
+  );
+};
 
 const ItemListItem: FC<{
   item?: Item<ObjectModel>,
@@ -24,6 +49,10 @@ const ItemListItem: FC<{
 }) => {
   const { isFocused } = useFocus();
   const [text, setText] = useState(item?.model.get('title'));
+
+  // TODO(burdon): Delete item (meta-delete).
+  // TODO(burdon): Hierarchical item editor.
+  // TODO(burdon): Hierarchical properties editor.
 
   const handleSubmit = (text: string) => {
     if (text.trim().length) {
@@ -66,7 +95,6 @@ export const ItemList: FC<{
 }) => {
 	const { focusNext } = useFocusManager();
   const party = useParty(partyKey)!;
-  const members = useMembers(party);
   const [pending, setPending] = useState(false);
 
   // TODO(burdon): Clean-up API (e.g., default value).
@@ -103,27 +131,10 @@ export const ItemList: FC<{
 
   return (
     <Box flexDirection='column'>
-      <Text color='blue'>Party</Text>
-      <Box flexDirection='column' marginBottom={1}>
-        <Box>
-          <Text>- Title:      </Text>
-          <Text>{party.getProperty('title')}</Text>
-        </Box>
-        <Box>
-          <Text>- Public Key: </Text>
-          <Text>{party.key.toHex()}</Text>
-        </Box>
-      </Box>
-
-      <Text color='blue'>Members</Text>
-      <Box flexDirection='column' marginBottom={1}>
-        {members.map(member => (
-          <Text key={member.publicKey.toHex()}>- {member.displayName}</Text>
-        ))}
-      </Box>
+      <PartyInfo party={party} />
 
       {!pending && (
-        <>
+        <Box flexDirection='column' borderStyle='single' borderColor='#333'>
           <Text color='green'>Items</Text>
           {items.map(item => (
             <ItemListItem
@@ -136,15 +147,13 @@ export const ItemList: FC<{
           <ItemListItem
             onUpdate={handleUpdate}
           />
-        </>
+        </Box>
       )}
 
-      <Box flexDirection='column' marginTop={1}>
-        <PartyInvitation
-          party={party}
-          onStateChanged={setPending}
-        />
-      </Box>
+      <ShareParty
+        party={party}
+        onStateChanged={setPending}
+      />
     </Box>
   );
 };

@@ -26,6 +26,7 @@ const MenuItem: FC<{ option: Option, onSelect: () => void }> = ({ option, onSele
   );
 };
 
+// TODO(burdon): https://github.com/vadimdemedes/ink-select-input
 export const Menu: FC<{
   options: Option[],
   onSelect: (id: string | null) => void

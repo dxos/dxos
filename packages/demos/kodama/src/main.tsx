@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { render, useApp } from 'ink';
+import { Box, render, useApp } from 'ink';
 import React, { useEffect, useState } from 'react';
 import yargs from 'yargs';
 
@@ -10,7 +10,7 @@ import { PartyKey } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 
-import { JoinParty, Menu, PartyList } from './components';
+import { JoinParty, Menu, PartyList, Profile } from './components';
 
 // TODO(burdon): Lint issue.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -97,20 +97,22 @@ const App = () => {
 
     default: {
       return (
-        <Menu
-          onSelect={(id: string | null) => setMode(id || 'exit')}
-          options={[
-            {
-              id: 'parties', label: 'View parties'
-            },
-            {
-              id: 'join', label: 'Join party'
-            },
-            {
-              id: 'exit', label: 'Exit'
-            }
-          ]}
-        />
+        <Box marginTop={1}>
+          <Menu
+            onSelect={(id: string | null) => setMode(id || 'exit')}
+            options={[
+              {
+                id: 'parties', label: 'View parties'
+              },
+              {
+                id: 'join', label: 'Join party'
+              },
+              {
+                id: 'exit', label: 'Exit'
+              }
+            ]}
+          />
+        </Box>
       );
     }
   }
@@ -131,6 +133,7 @@ const main = () => {
       handler: async (argv) => {
         const { waitUntilExit } = render((
           <ClientProvider config={config}>
+            <Profile />
             <App />
           </ClientProvider>
         ));

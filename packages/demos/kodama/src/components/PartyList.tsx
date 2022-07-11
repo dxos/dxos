@@ -39,7 +39,7 @@ const PartyListItem: FC<{
 
   return (
     <Box>
-      <Text color='blue'>{isFocused ? '> ' : party ? '  ' : '+ '}</Text>
+      <Text color='green'>{isFocused ? '> ' : party ? '  ' : '+ '}</Text>
       {isFocused && (
         <TextInput
           placeholder={ party ? undefined : 'Create party' }
@@ -62,7 +62,7 @@ export const PartyList: FC<{
   onExit
 }) => {
   const [partyKey, setPartyKey] = useState<PartyKey | undefined>(controlledPartyKey);
-	const { focus, focusNext, focusPrevious } = useFocusManager();
+	const { focusNext, focusPrevious } = useFocusManager();
   const parties = useParties();
   const client = useClient();
 
@@ -108,18 +108,21 @@ export const PartyList: FC<{
   }
 
   return (
-    <Box flexDirection='column'>
+    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
       {parties.length !== 0 && (
-        <Box flexDirection='column' marginBottom={1}>
-          {parties.map(party => (
-            <PartyListItem
-              key={party.key.toHex()}
-              party={party}
-              onSelect={(partyKey: PartyKey) => setPartyKey(partyKey)}
-              onUpdate={handleUpdate}
-            />
-          ))}
-        </Box>
+        <>
+          <Text color='green'>Parties</Text>
+          <Box flexDirection='column' marginBottom={1}>
+            {parties.map(party => (
+              <PartyListItem
+                key={party.key.toHex()}
+                party={party}
+                onSelect={(partyKey: PartyKey) => setPartyKey(partyKey)}
+                onUpdate={handleUpdate}
+              />
+            ))}
+          </Box>
+        </>
       )}
 
       <PartyListItem
