@@ -706,14 +706,17 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@types/copy-paste': ^1.1.30
+      '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/yargs': ~16.0.1
       copy-paste: ~1.3.0
       eslint: ^7.12.1
+      expect: ~27.0.2
       ink: ^3.2.0
       ink-spinner: ~4.0.3
       ink-text-input: ~4.0.3
+      mocha: ~8.4.0
       nodemon: ~2.0.19
       react: ^18.1.0
       ts-node: ^10.8.2
@@ -735,10 +738,13 @@ importers:
       '@dxos/eslint-plugin': 1.0.33_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/copy-paste': 1.1.30
+      '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
       eslint: 7.32.0
+      expect: 27.0.6
+      mocha: 8.4.0
       nodemon: 2.0.19
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
@@ -10508,7 +10514,7 @@ packages:
     dev: false
 
   /ansi-regex/2.1.1:
-    resolution: {integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=}
+    resolution: {integrity: sha512-TIGnTpdo+E3+pCyAluZvtED5p5wCqLdezCyhPZzKPcxvFplEt4i+W7OONCKgeZFT3+y5NZZfOOS/Bdcanm1MYA==}
     engines: {node: '>=0.10.0'}
 
   /ansi-regex/4.1.0:
@@ -12268,7 +12274,7 @@ packages:
     dev: false
 
   /code-point-at/1.1.0:
-    resolution: {integrity: sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=}
+    resolution: {integrity: sha512-RpAVKQA5T63xEj6/giIbUEtZwJ4UFIc3ZtvEkiaUERylqe8xb5IvqcgOurZLahv93CLKfxcw5YI+DZcUBRyLXA==}
     engines: {node: '>=0.10.0'}
 
   /codecs/2.2.0:
@@ -18028,7 +18034,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   /is-fullwidth-code-point/1.0.0:
-    resolution: {integrity: sha1-754xOG8DGn8NZDr4L95QxFfvAMs=}
+    resolution: {integrity: sha512-1pqUqRjkhPJ9miNq9SwMfdvi6lBJcd6eFxvfaivQhaH3SgisfiuudvFntdKOmxuee/77l+FPjKrQjWvmPjWrRw==}
     engines: {node: '>=0.10.0'}
     dependencies:
       number-is-nan: 1.0.1
@@ -18865,12 +18871,12 @@ packages:
     resolution: {integrity: sha512-OMRqRNd9E0DkBLZpFtZkAGYOXl6ZpoMtQJWTAREJKDOFa0M6ptB7L67tp+cszMBkvSgKOhNtQp2Vbcz3ZZKo/w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
-      '@babel/code-frame': 7.16.0
+      '@babel/code-frame': 7.18.6
       '@jest/types': 27.4.2
       '@types/stack-utils': 2.0.1
       chalk: 4.1.2
       graceful-fs: 4.2.8
-      micromatch: 4.0.4
+      micromatch: 4.0.5
       pretty-format: 27.4.2
       slash: 3.0.0
       stack-utils: 2.0.5
@@ -21784,7 +21790,7 @@ packages:
     dev: false
 
   /number-is-nan/1.0.1:
-    resolution: {integrity: sha1-CXtgK1NCKlIsGvuHkDGDNpQaAR0=}
+    resolution: {integrity: sha512-4jbtZXNAsfZbAHiiqjLPBiCl16dES1zI4Hpzzxw61Tk+loF+sBDBKx1ICKKKwIqQ7M0mFn1TmkN7euSncWgHiQ==}
     engines: {node: '>=0.10.0'}
 
   /nwsapi/2.2.0:
@@ -22331,7 +22337,7 @@ packages:
     engines: {node: '>=8'}
 
   /path-is-absolute/1.0.1:
-    resolution: {integrity: sha1-F0uSaHNVNP+8es5r9TpanhtcX18=}
+    resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
     engines: {node: '>=0.10.0'}
 
   /path-is-inside/1.0.2:
@@ -24158,7 +24164,7 @@ packages:
     resolution: {integrity: sha512-cMhu7c/8rdhkHXWsY+osBhfSy0JikwpHK/5+imo+LpeasTF8ouErHrlYkwT0++njiyuDvc7OFY5T3ukvZ8qmFQ==}
     engines: {node: '>=8.10.0'}
     dependencies:
-      picomatch: 2.3.0
+      picomatch: 2.3.1
 
   /readdirp/3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
@@ -25829,7 +25835,7 @@ packages:
     dev: false
 
   /string-width/1.0.2:
-    resolution: {integrity: sha1-EYvfW4zcUaKn5w0hHgfisLmxB9M=}
+    resolution: {integrity: sha512-0XsVpQLnVCXHJfyEs8tC0zpTVIr5PKKsQtkT29IwupnPTjtPmQ3xT/4yCREF9hYkV/3M3kzcUTSAZT6a6h81tw==}
     engines: {node: '>=0.10.0'}
     dependencies:
       code-point-at: 1.1.0
@@ -25925,7 +25931,7 @@ packages:
       is-regexp: 1.0.0
 
   /strip-ansi/3.0.1:
-    resolution: {integrity: sha1-ajhfuIU9lS1f8F0Oiq+UJ43GPc8=}
+    resolution: {integrity: sha512-VhumSSbBqDTP8p2ZLKj40UjBCV4+v8bUSEpUb4KjRgWk9pbqGF4REFj6KEagidb2f/M6AzC0EmFyDNGaw9OCzg==}
     engines: {node: '>=0.10.0'}
     dependencies:
       ansi-regex: 2.1.1
