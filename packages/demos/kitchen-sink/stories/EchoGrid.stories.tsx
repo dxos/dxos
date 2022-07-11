@@ -9,8 +9,7 @@ import { ClientProvider, useSelection } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoGrid } from '../src';
-import { tableStyles } from './helpers';
+import { EchoGrid, tableStyles } from '../src';
 
 export default {
   title: 'KitchenSink/EchoGrid'

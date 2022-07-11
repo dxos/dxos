@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "dist",
     "removeComments": false,

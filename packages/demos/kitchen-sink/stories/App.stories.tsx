@@ -8,7 +8,7 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
 import { Snackbar } from '@mui/material';
 
-import { Party, InvitationDescriptor } from '@dxos/client';
+import { InvitationDescriptor, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
@@ -16,7 +16,11 @@ import { useFileDownload } from '@dxos/react-components';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { usePartySerializer } from '@dxos/react-toolkit';
 
-import { ONLINE_CONFIG, App } from './helpers';
+import { App } from '../src';
+// TODO(burdon): Lint issue.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import config from '../src/config.yml';
 
 export default {
   title: 'KitchenSink/App'
@@ -144,7 +148,7 @@ export const Secondary = () => {
   };
 
   return (
-    <ClientProvider config={ONLINE_CONFIG}>
+    <ClientProvider config={config}>
       <ProfileInitializer>
         <Story />
       </ProfileInitializer>

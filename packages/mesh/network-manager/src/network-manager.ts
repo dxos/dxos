@@ -176,6 +176,7 @@ export interface SwarmOptions {
    * Swarm topic.
    */
   topic: PublicKey,
+
   /**
    * This node's peer id.
    */
