@@ -800,6 +800,7 @@ importers:
       '@mui/utils': ^5.8.0
       '@react-hook/event': ^1.2.6
       '@trivago/prettier-plugin-sort-imports': ^3.2.0
+      '@types/faker': ^5.5.1
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
@@ -809,6 +810,7 @@ importers:
       eslint: ^7.12.1
       eslint-plugin-react: ^7.30.0
       eslint-plugin-react-hooks: ^4.5.0
+      faker: ^5.1.0
       https-localhost: ^4.7.1
       is-mobile: ^3.1.1
       lint-staged: ^12.4.2
@@ -849,6 +851,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@trivago/prettier-plugin-sort-imports': 3.2.0_prettier@2.6.2
+      '@types/faker': 5.5.9
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
@@ -858,6 +861,7 @@ importers:
       eslint: 7.32.0
       eslint-plugin-react: 7.30.1_eslint@7.32.0
       eslint-plugin-react-hooks: 4.6.0_eslint@7.32.0
+      faker: 5.5.3
       https-localhost: 4.7.1
       lint-staged: 12.5.0
       prettier: 2.6.2
