@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kodama",
-  "version": "2.33.4",
+  "version": "2.33.5",
   "description": "Command line for ECHO.",
   "license": "MIT",
   "author": "DXOS.org",
@@ -19,22 +19,22 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "ink": "^3.2.0",
+    "ink-spinner": "~4.0.3",
     "ink-text-input": "~4.0.3",
     "react": "^18.1.0",
-    "yargs": "~16.2.0",
-    "@dxos/react-async": "workspace:*",
-    "ink-spinner": "~4.0.3"
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/yargs": "~16.0.1",
+    "nodemon": "~2.0.19",
     "ts-node": "^10.8.2",
-    "typescript": "^4.7.2",
-    "nodemon": "~2.0.19"
+    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"
