@@ -54,7 +54,7 @@ export const PartyList: FC<{
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='green'>Parties</Text>
+      <Text color='green'>ECHO Parties</Text>
       <List
         onUpdate={handleUpdate}
         items={parties.map(party => ({
