@@ -3,6 +3,7 @@
 //
 
 import { Box, render, useApp } from 'ink';
+import SelectInput from 'ink-select-input';
 import React, { useEffect, useState } from 'react';
 import yargs from 'yargs';
 
@@ -10,7 +11,7 @@ import { PartyKey } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 
-import { JoinParty, Menu, PartyList, Profile } from './components';
+import { JoinParty, PartyList, Profile } from './components';
 
 // TODO(burdon): Lint issue.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -98,17 +99,17 @@ const App = () => {
     default: {
       return (
         <Box marginTop={1}>
-          <Menu
-            onSelect={(id: string | null) => setMode(id || 'exit')}
-            options={[
+          <SelectInput
+            onSelect={item => setMode(item.value)}
+            items={[
               {
-                id: 'parties', label: 'View parties'
+                value: 'parties', label: 'View parties'
               },
               {
-                id: 'join', label: 'Join party'
+                value: 'join', label: 'Join party'
               },
               {
-                id: 'exit', label: 'Exit'
+                value: 'exit', label: 'Exit'
               }
             ]}
           />
@@ -131,6 +132,11 @@ const main = () => {
     .command({
       command: '*',
       handler: async (argv) => {
+        // TODO(burdon): Util to clear screen.
+        process.stdout.write(
+          process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H'
+        );
+
         const { waitUntilExit } = render((
           <ClientProvider config={config}>
             <Profile />

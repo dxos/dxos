@@ -22,22 +22,29 @@ export const JoinParty: FC<{
   const [invitation, setInvitation] = useState<PartyInvitation>();
 
   const handleDecode = () => {
-    const stripped = descriptor!.replace(/[\W]/g, '');
-    const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
-    setInvitation(invitation);
+    try {
+      // Detect if JSON.
+      // TODO(burdon): Detect URL.
+      // TODO(burdon): Define JSON type.
+      const { encodedInvitation, secret } = JSON.parse(descriptor!);
+      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
+      void handleSubmit(invitation, secret);
+    } catch (err) {
+      const stripped = descriptor!.replace(/[\W]/g, '');
+      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
+      setInvitation(invitation);
+    }
   };
 
-  const handleSubmit = async () => {
-    if (secret) {
+  const handleSubmit = async (invitation: PartyInvitation, secret: string) => {
+    try {
+      // TODO(burdon): Exception not caught.
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
-
-      try {
-        const party = await invitation!.getParty();
-        onExit(party.key);
-      } catch (err) {
-        onExit();
-      }
+      const party = await invitation!.getParty();
+      onExit(party.key);
+    } catch (err) {
+      onExit();
     }
   };
 
@@ -49,7 +56,7 @@ export const JoinParty: FC<{
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      {!invitation && (
+      {!invitation && !processing && (
         <TextInput
           placeholder='Enter invitation'
           value={descriptor ?? ''}
@@ -63,7 +70,7 @@ export const JoinParty: FC<{
           placeholder='Enter code'
           value={secret ?? ''}
           onChange={setSecret}
-          onSubmit={handleSubmit}
+          onSubmit={() => handleSubmit(invitation!, secret!)}
         />
       )}
 

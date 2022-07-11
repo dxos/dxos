@@ -714,7 +714,9 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       ink: ^3.2.0
+      ink-select-input: ~4.2.1
       ink-spinner: ~4.0.3
+      ink-tab: ~4.2.0
       ink-text-input: ~4.0.3
       mocha: ~8.4.0
       nodemon: ~2.0.19
@@ -730,7 +732,9 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       copy-paste: 1.3.0
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
       ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
+      ink-tab: 4.2.0_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       react: 18.2.0
       yargs: 16.2.0
@@ -10685,6 +10689,11 @@ packages:
     resolution: {integrity: sha512-L3hKV5R/p5o81R7O02IGnwpDmkp6E982XhtbuwSe3O4qOtMMMtodicASA1Cny2U+aCXcNpml+m4dPsvsJ3jatg==}
     engines: {node: '>=0.10.0'}
 
+  /arr-rotate/1.0.0:
+    resolution: {integrity: sha512-yOzOZcR9Tn7enTF66bqKorGGH0F36vcPaSWg8fO0c0UYb3LX3VMXj5ZxEqQLNOecAhlRJ7wYZja5i4jTlnbIfQ==}
+    engines: {node: '>=4'}
+    dev: false
+
   /arr-union/3.1.0:
     resolution: {integrity: sha1-45sJrqne+Gao8gbiiK9jkZuuOcQ=}
     engines: {node: '>=0.10.0'}
@@ -17555,6 +17564,20 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /ink-select-input/4.2.1_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-WvlrYdwmdnD6/nE/9mNhaaanTQOKmwy/hT/vuAqbDec3PUQBQ8Pkwszii/8eGvDTx5bGiUHu18P9D5IoB/ERaw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      ink: ^3.0.5
+      react: '>=16.0.0'
+    dependencies:
+      arr-rotate: 1.0.0
+      figures: 3.2.0
+      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      lodash.isequal: 4.5.0
+      react: 18.2.0
+    dev: false
+
   /ink-spinner/4.0.3_ink@3.2.0+react@18.2.0:
     resolution: {integrity: sha512-uJ4nbH00MM9fjTJ5xdw0zzvtXMkeGb0WV6dzSWvFv2/+ks6FIhpkt+Ge/eLdh0Ah6Vjw5pLMyNfoHQpRDRVFbQ==}
     engines: {node: '>=10'}
@@ -17567,12 +17590,23 @@ packages:
       react: 18.2.0
     dev: false
 
+  /ink-tab/4.2.0_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-KrvNWrebGCXWbGf74QE0XYKYGUCa0dEgHGa3B4VJK3PQh8+wXycQeGnl1s/kq3OokWOmMyfkc/BTPgulxjXspQ==}
+    peerDependencies:
+      ink: ^3.0.0
+      react: '>=16.0.0'
+    dependencies:
+      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
   /ink-text-input/4.0.3_ink@3.2.0+react@18.2.0:
     resolution: {integrity: sha512-eQD01ik9ltmNoHmkeQ2t8LszYkv2XwuPSUz3ie/85qer6Ll/j0QSlSaLNl6ENHZakBHdCBVZY04iOXcLLXA0PQ==}
     engines: {node: '>=10'}
     peerDependencies:
       ink: ^3.0.0-3
-      react: '>=17.0.0'
+      react: '>=16.0.0'
     dependencies:
       chalk: 4.1.2
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
@@ -17585,7 +17619,7 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       '@types/react': '>=16.8.0'
-      react: '>=17.0.0'
+      react: '>=16.0.0'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -19987,6 +20021,10 @@ packages:
   /lodash.isboolean/3.0.3:
     resolution: {integrity: sha1-bC4XHbKiV82WgC/UOwGyDV9YcPY=}
     dev: true
+
+  /lodash.isequal/4.5.0:
+    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    dev: false
 
   /lodash.isinteger/4.0.4:
     resolution: {integrity: sha1-YZwK89A/iwTDH1iChAt3sRzWg0M=}
@@ -23895,7 +23933,7 @@ packages:
     resolution: {integrity: sha512-nK6kgY28HwrMNwDnMui3dvm3rCFjZrcGiuwLc5COUipBK5hWHLOxMJhSnSomirqWwjPBJKV1QcbkI0VJr7Gl1Q==}
     engines: {node: '>=0.10.0'}
     peerDependencies:
-      react: '>=17.0.0'
+      react: '>=16.0.0'
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
