@@ -32,6 +32,11 @@ const sharedTheme = {
       },
     },
   },
+  mixins: {
+    contentContainer: {
+      padding: 1
+    }
+  }
 } as ThemeOptions; // the reason for this casting is deepmerge return type
 // TODO (Suren): replace mui-utils-deepmerge with lodash or ramda deepmerge
 

@@ -163,7 +163,7 @@ const Welcome = () => {
           gap: '1em',
           height: '100%',
           width: 'fit-content',
-          padding: '1em'
+          padding: theme.mixins.contentContainer.padding
         }}
       >
         <DndContext
