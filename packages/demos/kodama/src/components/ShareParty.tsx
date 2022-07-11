@@ -39,7 +39,7 @@ export const ShareParty: FC<{
       const handleDone = () => {
         setInvitation(undefined);
         onStateChanged(false);
-      }
+      };
       invitation.canceled.on(handleDone);
       invitation.finished.on(handleDone);
       invitation.error.on(handleDone);
@@ -69,4 +69,4 @@ export const ShareParty: FC<{
       )}
     </Box>
   );
-}
+};

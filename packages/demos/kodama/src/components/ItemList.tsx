@@ -62,7 +62,7 @@ const ItemListItem: FC<{
 
       onUpdate?.(item?.id, text);
     }
-  }
+  };
 
   useEffect(() => {
     if (text) {
@@ -79,7 +79,8 @@ const ItemListItem: FC<{
           onChange={setText}
           onSubmit={handleSubmit}
         />
-      ) || (
+      )}
+      {!isFocused && (
         <Text>{text}</Text>
       )}
     </Box>
@@ -93,7 +94,7 @@ export const ItemList: FC<{
   partyKey,
   onExit
 }) => {
-	const { focusNext } = useFocusManager();
+  const { focusNext } = useFocusManager();
   const party = useParty(partyKey)!;
   const [pending, setPending] = useState(false);
 
@@ -116,14 +117,14 @@ export const ItemList: FC<{
       const item = party.database.getItem(itemId)!;
       item.model.set('title', text);
     } else {
-      party.database.createItem({
+      void party.database.createItem({
         type: TYPE_ITEM,
         props: {
           title: text
         }
       });
     }
-  }
+  };
 
   if (!party) {
     return null;

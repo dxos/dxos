@@ -25,7 +25,7 @@ export const JoinParty: FC<{
     const stripped = descriptor!.replace(/[\W]/g, '');
     const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
     setInvitation(invitation);
-  }
+  };
 
   const handleSubmit = async () => {
     if (secret) {
@@ -77,4 +77,4 @@ export const JoinParty: FC<{
       )}
     </Box>
   );
-}
+};

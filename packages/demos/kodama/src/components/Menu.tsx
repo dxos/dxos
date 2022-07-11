@@ -34,11 +34,11 @@ export const Menu: FC<{
   options = [],
   onSelect
 }) => {
-	const { focusNext, focusPrevious } = useFocusManager();
+  const { focusNext, focusPrevious } = useFocusManager();
 
   useInput((input, key) => {
     if (key.escape) {
-      onSelect(null)
+      onSelect(null);
     }
     if (key.upArrow) {
       focusPrevious();
@@ -54,11 +54,13 @@ export const Menu: FC<{
 
   return (
     <Box flexDirection='column'>
-      {options.map(option => <MenuItem
+      {options.map(option => (
+<MenuItem
         key={option.id}
         option={option}
         onSelect={() => onSelect(option.id)}
-      />)}
+      />
+      ))}
     </Box>
   );
 };

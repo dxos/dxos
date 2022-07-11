@@ -35,7 +35,7 @@ const PartyListItem: FC<{
         onSelect?.(party?.key);
       }
     }
-  }
+  };
 
   return (
     <Box>
@@ -47,7 +47,8 @@ const PartyListItem: FC<{
           onChange={setText}
           onSubmit={handleSubmit}
         />
-      ) || party && (
+      )}
+      {!isFocused && party && (
         <Text>{text}</Text>
       )}
     </Box>
@@ -62,7 +63,7 @@ export const PartyList: FC<{
   onExit
 }) => {
   const [partyKey, setPartyKey] = useState<PartyKey | undefined>(controlledPartyKey);
-	const { focusNext, focusPrevious } = useFocusManager();
+  const { focusNext, focusPrevious } = useFocusManager();
   const parties = useParties();
   const client = useClient();
 
@@ -86,15 +87,15 @@ export const PartyList: FC<{
   const handleUpdate = (partyKey: PartyKey | undefined, text: string) => {
     if (partyKey) {
       const party = parties.find(party => party.key.equals(partyKey));
-      party!.setProperty('title', text);
+      void party!.setProperty('title', text);
     } else {
       setImmediate(async () => {
         const party = await client.echo.createParty();
-        party.setProperty('title', text);
+        void party.setProperty('title', text);
         setPartyKey(party.key);
       });
     }
-  }
+  };
 
   if (partyKey) {
     return (

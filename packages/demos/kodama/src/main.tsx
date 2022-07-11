@@ -89,7 +89,7 @@ const App = () => {
           partyKey={partyKey}
           onExit={() => {
             setPartyKey(undefined);
-            setMode(undefined)
+            setMode(undefined);
           }}
         />
       );
@@ -139,7 +139,7 @@ const main = () => {
         ));
 
         await waitUntilExit();
-        process.exit()
+        process.exit();
       }
     })
     .help()
