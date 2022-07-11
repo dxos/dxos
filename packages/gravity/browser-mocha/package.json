@@ -33,7 +33,7 @@
     "esbuild": "^0.11.23",
     "glob": "~7.1.6",
     "pkg-up": "^3.1.0",
-    "playwright": "^1.7.0",
+    "playwright": "^1.14.1",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
