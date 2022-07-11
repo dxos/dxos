@@ -15,7 +15,7 @@ export const Profile = () => {
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='blue'>Profile</Text>
+      <Text color='blue'>HALO Profile</Text>
       <Box>
         <Text color='blue'>  Username: </Text>
         <Text>{profile.username}</Text>
