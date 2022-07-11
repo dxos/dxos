@@ -3,7 +3,8 @@
   "compilerOptions": {
     "jsx": "react",
     "lib": [
-      "es2019"
+      "DOM",
+      "ESNext"
     ],
     "outDir": "dist"
   },

@@ -708,6 +708,7 @@ importers:
       '@types/react': ^18.0.9
       '@types/yargs': ~16.0.1
       ink: ^3.2.0
+      ink-spinner: ~4.0.3
       ink-text-input: ~4.0.3
       nodemon: ~2.0.19
       react: ^18.1.0
@@ -721,6 +722,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       react: 18.2.0
       yargs: 16.2.0
@@ -17799,6 +17801,18 @@ packages:
     resolution: {integrity: sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA==}
     engines: {node: '>=10'}
     dev: true
+
+  /ink-spinner/4.0.3_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-uJ4nbH00MM9fjTJ5xdw0zzvtXMkeGb0WV6dzSWvFv2/+ks6FIhpkt+Ge/eLdh0Ah6Vjw5pLMyNfoHQpRDRVFbQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      ink: '>=3.0.5'
+      react: '>=16.8.2'
+    dependencies:
+      cli-spinners: 2.6.1
+      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      react: 18.2.0
+    dev: false
 
   /ink-text-input/4.0.3_ink@3.2.0+react@18.2.0:
     resolution: {integrity: sha512-eQD01ik9ltmNoHmkeQ2t8LszYkv2XwuPSUz3ie/85qer6Ll/j0QSlSaLNl6ENHZakBHdCBVZY04iOXcLLXA0PQ==}

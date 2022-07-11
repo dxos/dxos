@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+const { yamlPlugin } = require('esbuild-plugin-yaml');
+
 const {
   FixMemdownPlugin,
   NodeGlobalsPolyfillPlugin,
@@ -13,7 +15,8 @@ module.exports = {
   plugins: [
     FixMemdownPlugin(),
     NodeGlobalsPolyfillPlugin(),
-    NodeModulesPlugin()
+    NodeModulesPlugin(),
+    yamlPlugin()
   ],
   outdir: 'out',
   overrides: {

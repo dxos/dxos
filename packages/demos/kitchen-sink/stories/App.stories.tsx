@@ -8,7 +8,7 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
 import { Snackbar } from '@mui/material';
 
-import { Party, InvitationDescriptor } from '@dxos/client';
+import { InvitationDescriptor, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';

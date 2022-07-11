@@ -6,19 +6,39 @@ import { render, useApp } from 'ink';
 import React, { useEffect, useState } from 'react';
 import yargs from 'yargs';
 
+import { PartyKey } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 
-import { Menu, PartyList } from './components';
+import { JoinParty, Menu, PartyList } from './components';
+
+// TODO(burdon): Lint issue.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+// import config from './config.yml';
+const config = {
+  runtime: {
+    services: {
+      ipfs: {
+        server: 'https://ipfs-pub1.kube.dxos.network'
+      },
+      signal: {
+        server: 'wss://demo.kube.dxos.network/dxos/signal'
+      },
+      ice: [
+        {
+          urls: 'turn:demo.kube.dxos.network:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        }
+      ]
+    }
+  }
+};
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
-
-// TODO(burdon): ClientProvider, Profile.
-// TODO(burdon): Parties view.
-// TODO(burdon): Items view.
-// TODO(burdon): Invitations.
 
 /**
  * Top-level app with menu.
@@ -26,7 +46,8 @@ import { Menu, PartyList } from './components';
 const App = () => {
   const client = useClient();
   const profile = useProfile();
-  const [mode, setMode] = useState<string>();
+  const [mode, setMode] = useState<string>(); // TODO(burdon): Enum.
+  const [partyKey, setPartyKey] = useState<PartyKey>();
   const { exit } = useApp();
 
   // TODO(burdon): Create test profile.
@@ -51,9 +72,26 @@ const App = () => {
       return null;
     }
 
+    case 'join': {
+      return (
+        <JoinParty
+          onExit={(partyKey?: PartyKey) => {
+            setPartyKey(partyKey);
+            setMode(partyKey ? 'parties' : undefined);
+          }}
+        />
+      );
+    }
+
     case 'parties': {
       return (
-        <PartyList onExit={() => setMode(undefined)} />
+        <PartyList
+          partyKey={partyKey}
+          onExit={() => {
+            setPartyKey(undefined);
+            setMode(undefined)
+          }}
+        />
       );
     }
 
@@ -91,9 +129,6 @@ const main = () => {
     .command({
       command: '*',
       handler: async (argv) => {
-        // TODO(burdon): Load config.
-        const config = {};
-
         const { waitUntilExit } = render((
           <ClientProvider config={config}>
             <App />

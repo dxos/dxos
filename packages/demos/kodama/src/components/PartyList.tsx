@@ -55,11 +55,13 @@ const PartyListItem: FC<{
 };
 
 export const PartyList: FC<{
+  partyKey?: PartyKey,
   onExit: () => void
 }> = ({
+  partyKey: controlledPartyKey,
   onExit
 }) => {
-  const [partyKey, setPartyKey] = useState<PartyKey>();
+  const [partyKey, setPartyKey] = useState<PartyKey | undefined>(controlledPartyKey);
 	const { focus, focusNext, focusPrevious } = useFocusManager();
   const parties = useParties();
   const client = useClient();

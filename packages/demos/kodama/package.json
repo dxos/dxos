@@ -24,7 +24,8 @@
     "ink-text-input": "~4.0.3",
     "react": "^18.1.0",
     "yargs": "~16.2.0",
-    "@dxos/react-async": "workspace:*"
+    "@dxos/react-async": "workspace:*",
+    "ink-spinner": "~4.0.3"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
