@@ -1,15 +1,17 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import ThemeIcon from '@mui/icons-material/InvertColors';
 import MenuIcon from '@mui/icons-material/Menu';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Toolbar from '@mui/material/Toolbar';
-import Tooltip from '@mui/material/Tooltip';
+import {
+  Alert,
+  AlertTitle,
+  AppBar,
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Toolbar,
+  Tooltip
+} from '@mui/material';
 
 import { FlexBox } from '@/components/styled';
 import { repository, title } from '@/config';

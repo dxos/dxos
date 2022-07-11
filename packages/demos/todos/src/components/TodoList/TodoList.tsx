@@ -1,95 +1,65 @@
-import { useState } from 'react';
+import { CSSProperties } from 'react';
 import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
 import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { TodoListItem } from './TodoListItem';
-import { TodoItem } from './models';
+import { TodoItem, TodoList as TodoListDef } from './models';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-  DragEndEvent,
-  Active,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Typography } from '@mui/material';
+
 export type TodoListProps = {
-  items?: TodoItem[];
-  onCreate?: (s: string) => any;
-  onChecked?: (item: TodoItem, value: boolean) => any;
-  onTitleChanged?: (item: TodoItem, value: string) => any;
-  onDrop?: (e: DragEndEvent) => any;
+  list: TodoListDef
+  onCreate?: (s: string) => any
+  onChecked?: (item: TodoItem, value: boolean) => any
+  onTitleChanged?: (item: TodoItem, value: string) => any
+  style?: CSSProperties
 };
 
 export function TodoList(props: TodoListProps) {
-  const { items, onCreate, onChecked, onTitleChanged, onDrop } = { items: [], ...props };
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-  const submitOnEnter: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (e.key == 'Enter') {
-      const input = e.target as HTMLInputElement;
-      const val = input?.value;
-      onCreate?.(val);
-      input.value = '';
-    }
-  };
-  const [dragging, setDragging] = useState<Active | null>(null);
+  const { list, onCreate, onChecked, onTitleChanged, style } = { ...props };
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: list.id ?? '',
+    data: list,
+  });
   return (
-    <Box>
+    <Box
+      ref={setNodeRef}
+      sx={{
+        height: '100%',
+        width: '20em',
+        overflowY: 'auto',
+        transform: CSS.Transform.toString(transform),
+        transition,
+        ...style
+      }}
+      {...attributes}
+    >
+      <Box display='flex' alignItems='center' justifyContent='space-between' marginRight='1em'>
+        <Typography sx={{ padding: '1em' }}>{list.title}</Typography>
+        <DragHandleIcon
+          sx={{
+            cursor: 'grab'
+          }}
+          {...listeners}
+        />
+      </Box>
       <List>
         <TodoListItem onSubmit={(e) => onCreate?.(e)} />
-        {/* <ListItem key={'new-item'}>
-          <ListItemButton>
-            <ListItemIcon>
-              <CheckBoxOutlineBlankIcon />
-            </ListItemIcon>
-            <ListItemText>
-              <TextField
-                variant="standard"
-                placeholder="type here"
-                autoFocus
-                onKeyUp={submitOnEnter}
-              />
-            </ListItemText>
-          </ListItemButton>
-        </ListItem> */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={({ active }) => setDragging(active)}
-          onDragEnd={onDrop}
-        >
-          <SortableContext items={items} strategy={verticalListSortingStrategy}>
-            {items?.map((item) => (
-              <TodoListItem
-                item={item}
-                key={item.id}
-                onChecked={(e) => onChecked?.(item, e)}
-                onTitleChanged={(v) => onTitleChanged?.(item, v)}
-              />
-            ))}
-          </SortableContext>
-          <DragOverlay>
-            {dragging ? <TodoListItem item={dragging.data.current as TodoItem} dragging /> : null}
-          </DragOverlay>
-        </DndContext>
+        <SortableContext id={list.id} items={list.items} strategy={verticalListSortingStrategy}>
+          {list.items?.map(item => (
+            <TodoListItem
+              item={item}
+              key={item.id}
+              onChecked={(e) => onChecked?.(item, e)}
+              onTitleChanged={(v) => onTitleChanged?.(item, v)}
+            />
+          ))}
+        </SortableContext>
       </List>
     </Box>
   );

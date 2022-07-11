@@ -34,37 +34,62 @@ export function TodoListItem(props: TodoItemProps) {
         transition,
         background: theme.palette.background.paper,
       }}
-      secondaryAction={<DragHandleIcon sx={{ cursor: 'grab' }} />}
+      secondaryAction={Boolean(item) && (
+        <DragHandleIcon
+          sx={{
+            cursor: 'grab'
+          }}
+          {...listeners}
+        />
+      )}
       {...attributes}
-      {...listeners}
     >
-      <ListItemButton>
+      {item && (
         <ListItemIcon>
           <Checkbox
             edge="start"
             checked={!!item?.completedAt}
             disableRipple
             onChange={(e) => onChecked?.(e.target.checked)}
-          />
-        </ListItemIcon>
-        <ListItemText>
-          <TextField
-            variant="standard"
-            disabled={!!item?.completedAt}
-            defaultValue={item?.title}
-            placeholder={'start typing'}
-            onChange={(e) => onTitleChanged?.(e.target.value)}
-            onKeyUp={(e) => {
-              if (e.key == 'Enter') {
-                const input = e.target as HTMLInputElement;
-                const val = input?.value;
-                onSubmit?.(val);
-                input.value = '';
-              }
+            sx={{
+              display: item ? 'flex' : 'none'
             }}
           />
-        </ListItemText>
-      </ListItemButton>
+        </ListItemIcon>
+      )}
+      <ListItemText>
+        <TextField
+          variant="standard"
+          disabled={!!item?.completedAt}
+          defaultValue={item?.title}
+          placeholder={'Start typing'}
+          InputProps={{
+            spellCheck: 'false',
+            sx: {
+              border: 'none',
+              "input": {
+                textOverflow: 'ellipsis',
+              },
+              "&&&:before": {
+                borderBottom: "none"
+              },
+              "&&:after": {
+                  borderBottom: "none"
+              }
+            }
+          }}
+          onChange={(e) => onTitleChanged?.(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key == 'Enter') {
+              const input = e.target as HTMLInputElement;
+              if (input.value) {
+                onSubmit?.(input.value);
+                input.value = '';
+              }
+            }
+          }}
+        />
+      </ListItemText>
     </ListItem>
   );
 }
