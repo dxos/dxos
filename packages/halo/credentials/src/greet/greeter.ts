@@ -46,7 +46,12 @@ export class Greeter {
    * @param {function} [partyWriter] Callback function to write messages to the Party.
    * @param {function} [hintProvider] Callback function to gather feed and key hints to give to the invitee.
    */
-  constructor (partyKey?: PublicKeyLike, partyWriter?: PartyWriter, hintProvider?: HintProvider) {
+  constructor (
+    partyKey?: PublicKeyLike,
+    private readonly _genesisFeedKey?: PublicKey,
+    partyWriter?: PartyWriter,
+    hintProvider?: HintProvider,
+  ) {
     if (partyKey || partyWriter || hintProvider) {
       assert(partyKey);
       assert(partyWriter);
@@ -259,10 +264,12 @@ export class Greeter {
     const hints = await this._hintProvider(params);
 
     await invitation.notarize();
+    assert(this._genesisFeedKey)
     return {
       '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
-      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!)
+      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!),
+      genesisFeed: this._genesisFeedKey,
     };
   }
 }

@@ -21,11 +21,13 @@ const createKeyring = async () => {
   await keyring.createKeyRecord({ type: KeyType.PARTY });
   await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   await keyring.createKeyRecord({ type: KeyType.DEVICE });
+  await keyring.createKeyRecord({ type: KeyType.FEED });
   return keyring;
 };
 
 const createGreeter = (keyring, hints = []) => new Greeter(
   keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
+  keyring.findKey(Filter.matches({ type: KeyType.FEED })).publicKey,
   messages => messages,
   () => hints
 );

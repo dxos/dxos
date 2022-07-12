@@ -23,7 +23,7 @@ const log = debug('dxos:halo:greet');
 /**
  * Create the Greeter with Plugin and Protocol.
  */
-const createGreeter = async (targetPartyKey: PublicKeyLike) => {
+const createGreeter = async (targetPartyKey: PublicKeyLike, genesisFeedKey: PublicKey) => {
   const [writePromise, outerResolve] = trigger<Message[]>();
 
   const hints = [
@@ -35,6 +35,7 @@ const createGreeter = async (targetPartyKey: PublicKeyLike) => {
 
   const greeter = new Greeter(
     targetPartyKey,
+    genesisFeedKey,
     async messages => {
       outerResolve(messages);
       return messages;
@@ -99,6 +100,7 @@ const connect = (source: Protocol, target: Protocol) => pump(source.stream, targ
 
 it('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));
+  const genesisFeedKey = PublicKey.from(randomBytes(32));
   const secret = '0000';
 
   const secretProvider: SecretProvider = async () => Buffer.from(secret);
@@ -106,7 +108,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
 
   const {
     protocol: greeterProtocol, greeter, rendezvousKey, hints, writePromise
-  } = await createGreeter(targetPartyKey);
+  } = await createGreeter(targetPartyKey, genesisFeedKey);
 
   const invitation = await greeter.createInvitation(targetPartyKey, secretValidator, secretProvider);
 
@@ -161,6 +163,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
 
     // Send them to the greeter.
     const notarizeResponse = await plugin.send(rendezvousKey, command);
+    expect(notarizeResponse.genesisFeed).toEqual(genesisFeedKey);
     expect(notarizeResponse.feedHints).toEqual(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey));
 
     // In the real world, the response would be signed in an envelope by the Greeter, but in this test it is not altered.
