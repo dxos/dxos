@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
 import React, { FC } from 'react';
 
 import { Party } from '@dxos/client';
@@ -45,8 +45,9 @@ export const ItemList: FC<{
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='green'>Items ({type})</Text>
       <List
+        title={`Items [${type}]`}
+        showCount
         onUpdate={handleUpdate}
         items={items.map(item => ({
           id: item.id,
