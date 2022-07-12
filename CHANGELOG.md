@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.33.6](https://www.github.com/dxos/protocols/compare/v2.33.5...v2.33.6) (2022-07-12)
+
+
+### Features
+
+* dynamic config. ([#1329](https://www.github.com/dxos/protocols/issues/1329)) ([4581830](https://www.github.com/dxos/protocols/commit/45818305c5a22a77dca02305d0c5997748a2c190))
+* kodama CLI with selector. ([#1327](https://www.github.com/dxos/protocols/issues/1327)) ([21302cb](https://www.github.com/dxos/protocols/commit/21302cba285bb43ac1032850ad788c483601344e))
+
 ### [2.33.5](https://www.github.com/dxos/protocols/compare/v2.33.4...v2.33.5) (2022-07-11)
 
 
