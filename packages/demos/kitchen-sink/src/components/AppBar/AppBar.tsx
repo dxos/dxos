@@ -13,8 +13,8 @@ import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mu
 
 import { ExportAction, ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
 
-import { Searchbar } from '../../../src';
-import { ViewSelector } from './ViewSelector';
+import { Searchbar } from '../Searchbar';
+import { ViewSelector } from '../View';
 
 interface AppBarProps {
   view: string

@@ -795,6 +795,10 @@
       "projectFolder": "packages/demos/kitchen-sink"
     },
     {
+      "packageName": "@dxos/kodama",
+      "projectFolder": "packages/demos/kodama"
+    },
+    {
       "packageName": "@dxos/lexical-editor",
       "projectFolder": "packages/demos/lexical-editor"
     },

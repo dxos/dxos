@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "2.33.4",
+  "version": "2.33.6",
   "private": true,
   "description": "Comprehensive set of demos.",
   "license": "MIT",
@@ -80,6 +80,7 @@
     "concurrently": "~7.0.0",
     "dotenv": "^8.2.0",
     "electron": "~18.0.4",
+    "esbuild-plugin-yaml": "~0.0.1",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
