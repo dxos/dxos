@@ -25,25 +25,25 @@ export const KeySelect = ({
   selected,
   onChange
 }: KeySelectProps) => (
-<FormControl fullWidth variant='standard'>
-      <InputLabel id={id}>{label}</InputLabel>
-      <Select
-        id={id}
-        label={label}
-        variant='standard'
-        value={selected?.toHex() ?? ''}
-        onChange={event => onChange(keys.find(key => key.equals(event.target.value)))}
-      >
-        {keys.map(key => (
-          <MenuItem key={key.toHex()} value={key.toHex()}>
-            <Box sx={{ display: 'flex' }}>
-              <HashIcon value={key.toHex()} />
-              <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
-                {truncateKey(key.toHex(), 8)}
-              </Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+  <FormControl fullWidth variant='standard'>
+    <InputLabel id={id}>{label}</InputLabel>
+    <Select
+      id={id}
+      label={label}
+      variant='standard'
+      value={selected?.toHex() ?? ''}
+      onChange={event => onChange(keys.find(key => key.equals(event.target.value)))}
+    >
+      {keys.map(key => (
+        <MenuItem key={key.toHex()} value={key.toHex()}>
+          <Box sx={{ display: 'flex' }}>
+            <HashIcon value={key.toHex()} />
+            <Typography variant='h6' sx={{ marginLeft: 2, fontFamily: 'monospace' }}>
+              {truncateKey(key.toHex(), 8)}
+            </Typography>
+          </Box>
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
 );

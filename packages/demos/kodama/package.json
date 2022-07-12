@@ -23,7 +23,11 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "copy-paste": "~1.3.0",
@@ -37,7 +41,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",

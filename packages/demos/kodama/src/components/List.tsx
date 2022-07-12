@@ -13,7 +13,7 @@ export type ListItem = {
 
 const ListItem: FC<{
   item?: ListItem,
-  selected: boolean,
+  selected?: boolean,
   onUpdate: (item: { id?: string, text: string }) => void
 }> = ({
   item,
@@ -33,11 +33,15 @@ const ListItem: FC<{
           <Text>{'> '}</Text>
           <TextInput
             value={text ?? ''}
-            onChange={setText}
+            focus={selected}
+            onChange={(text: string) => selected && setText(text)}
             onSubmit={(text: string) => {
-              onUpdate({ id: item?.id, text });
-              if (!item?.id) {
-                setText('');
+              const str = text.trim();
+              if (str.length) {
+                onUpdate({ id: item?.id, text: str });
+                if (!item?.id) {
+                  selected && setText('');
+                }
               }
             }}
           />
@@ -81,17 +85,15 @@ export const List: FC<{
         />
       ))}
 
-      <Box>
-        <ListItem
-          selected={index === -1}
-          onUpdate={item => {
-            onUpdate(item);
-            if (!item.id) {
-              setIndex(-1);
-            }
-          }}
-        />
-      </Box>
+      <ListItem
+        selected={index === -1}
+        onUpdate={item => {
+          onUpdate(item);
+          if (!item.id) {
+            setIndex(-1);
+          }
+        }}
+      />
     </Box>
   );
 };

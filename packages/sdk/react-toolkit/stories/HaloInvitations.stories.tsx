@@ -85,28 +85,28 @@ const User = ({ sharing, joining, remote }: UserProps) => {
 };
 
 export const Primary = () => (
-<FullScreen>
-      <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
-          <ClientProvider>
-            <ProfileInitializer>
-              <Column>
-                <User sharing />
-              </Column>
-            </ProfileInitializer>
-          </ClientProvider>
-
-          <ClientProvider>
+  <FullScreen>
+    <ErrorBoundary>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-around'
+      }}>
+        <ClientProvider>
+          <ProfileInitializer>
             <Column>
-              <User joining />
+              <User sharing />
             </Column>
-          </ClientProvider>
-        </Box>
-      </ErrorBoundary>
-    </FullScreen>
+          </ProfileInitializer>
+        </ClientProvider>
+
+        <ClientProvider>
+          <Column>
+            <User joining />
+          </Column>
+        </ClientProvider>
+      </Box>
+    </ErrorBoundary>
+  </FullScreen>
 );
 
 export const Remote = () => {

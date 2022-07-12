@@ -9,7 +9,7 @@ import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
-import { subscribeToFeed, subscribeToFeeds } from './feeds';
+import { subscribeToFeeds, subscribeToFeedBlocks } from './feeds';
 import { subscribeToItems } from './items';
 import { subscribeToCredentialMessages, subscribeToKeyringKeys } from './keys';
 import {
@@ -22,15 +22,17 @@ import {
 import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties';
 import { resetStorage } from './storage';
 
-export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents): DevtoolsHost => ({
+export const createDevtoolsHost = (
+  context: DevtoolsServiceDependencies,
+  events: DevtoolsHostEvents
+): DevtoolsHost => ({
   events: () => new Stream<ClientAPIEvent>(({ next }) => {
     events.ready.on(() => {
       next({ ready: {} });
     });
   }),
   getConfig: async () => {
-    const config = getConfig(context);
-    return config;
+    return getConfig(context);
   },
   resetStorage: async () => {
     await resetStorage(context);
@@ -45,10 +47,10 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
   },
   subscribeToKeyringKeys: () => subscribeToKeyringKeys(context),
   subscribeToCredentialMessages: (request) => subscribeToCredentialMessages(context, request),
-  subscribeToParties: () => subscribeToParties(context),
+  subscribeToParties: (request) => subscribeToParties(context, request),
   subscribeToItems: () => subscribeToItems(context),
-  subscribeToFeeds: () => subscribeToFeeds(context),
-  subscribeToFeed: (request) => subscribeToFeed(context, request),
+  subscribeToFeeds: (request) => subscribeToFeeds(context, request),
+  subscribeToFeedBlocks: (request) => subscribeToFeedBlocks(context, request),
   getPartySnapshot: async (request) => getPartySnapshot(context, request),
   savePartySnapshot: async (request) => savePartySnapshot(context, request),
   clearSnapshots: async () => {

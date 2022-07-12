@@ -51,6 +51,7 @@ export interface Party {
   setTitle (title: string): Promise<void>
   getTitle (): string
 
+  // TODO(burdon): Rename (info?)
   getDetails(): Promise<PartyDetails>
 
   get properties (): ObjectProperties
@@ -112,7 +113,7 @@ export class PartyProxy implements Party {
     }
   }
 
-  // TODO(burdon): Getter require by react hook.
+  // TODO(burdon): Getter required by react hook.
   get invitationProxy () {
     return this._invitationProxy;
   }
