@@ -2,120 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, render, useApp } from 'ink';
-import React, { useEffect, useState } from 'react';
+import fs from 'fs';
+import { render } from 'ink';
+import yaml from 'js-yaml';
+import * as process from 'process';
+import React from 'react';
 import yargs from 'yargs';
 
-import { PartyKey } from '@dxos/client';
-import { useAsyncEffect } from '@dxos/react-async';
-import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
+import { ConfigObject } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
 
-import { JoinParty, Menu, PartyList, Profile } from './components';
-
-// TODO(burdon): Lint issue.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-// import config from './config.yml';
-const config = {
-  runtime: {
-    services: {
-      ipfs: {
-        server: 'https://ipfs-pub1.kube.dxos.network'
-      },
-      signal: {
-        server: 'wss://demo.kube.dxos.network/dxos/signal'
-      },
-      ice: [
-        {
-          urls: 'turn:demo.kube.dxos.network:3478',
-          username: 'dxos',
-          credential: 'dxos'
-        }
-      ]
-    }
-  }
-};
+import { App } from './App';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
 
-/**
- * Top-level app with menu.
- */
-const App = () => {
-  const client = useClient();
-  const profile = useProfile();
-  const [mode, setMode] = useState<string>(); // TODO(burdon): Enum.
-  const [partyKey, setPartyKey] = useState<PartyKey>();
-  const { exit } = useApp();
-
-  // TODO(burdon): Create test profile.
-  useAsyncEffect(async () => {
-    if (!profile) {
-      await client.halo.createProfile();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (mode === 'exit') {
-      exit();
-    }
-  }, [mode]);
-
-  if (!profile) {
-    return null;
-  }
-
-  switch (mode) {
-    case 'exit': {
-      return null;
-    }
-
-    case 'join': {
-      return (
-        <JoinParty
-          onExit={(partyKey?: PartyKey) => {
-            setPartyKey(partyKey);
-            setMode(partyKey ? 'parties' : undefined);
-          }}
-        />
-      );
-    }
-
-    case 'parties': {
-      return (
-        <PartyList
-          partyKey={partyKey}
-          onExit={() => {
-            setPartyKey(undefined);
-            setMode(undefined);
-          }}
-        />
-      );
-    }
-
-    default: {
-      return (
-        <Box marginTop={1}>
-          <Menu
-            onSelect={(id: string | null) => setMode(id || 'exit')}
-            options={[
-              {
-                id: 'parties', label: 'View parties'
-              },
-              {
-                id: 'join', label: 'Join party'
-              },
-              {
-                id: 'exit', label: 'Exit'
-              }
-            ]}
-          />
-        </Box>
-      );
-    }
-  }
+// TODO(burdon): Util to clear screen.
+const clear = () => {
+  process.stdout.write(
+    process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H'
+  );
 };
 
 /**
@@ -124,16 +31,20 @@ const App = () => {
 const main = () => {
   yargs
     .scriptName('kodama')
-    .option('invitation', {
-      description: 'Interactive party invitation',
-      type: 'string'
+    .option('config', {
+      description: 'Config file',
+      type: 'string',
+      default: `${process.cwd()}/config/config.yml`
     })
     .command({
       command: '*',
-      handler: async (argv) => {
+      handler: async ({ config: configFile }: { config: string }) => {
+        // TODO(burdon): Config persistent profile.
+        const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
+        clear();
+
         const { waitUntilExit } = render((
           <ClientProvider config={config}>
-            <Profile />
             <App />
           </ClientProvider>
         ));
