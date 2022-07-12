@@ -58,6 +58,7 @@ function readPackage(packageJson, context) {
     }
 
     case 'ink':
+    case 'ink-markdown':
     case 'ink-select-input':
     case 'ink-tab':
     case 'ink-text-input':

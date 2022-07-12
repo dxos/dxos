@@ -5,18 +5,18 @@
   "license": "MIT",
   "author": "DXOS.org",
   "bin": {
-    "echo": "bin/echo.js"
+    "echo": "bin/kodama.js"
   },
   "files": [
     "bin",
-    "src",
-    "dist"
+    "config",
+    "dist",
+    "src"
   ],
-  "main": "dist/src/main.js",
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "kodama": "ts-node src/main.tsx",
+    "debug": "yarn build && ./bin/kodama.js",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -32,6 +32,7 @@
     "ink-spinner": "~4.0.3",
     "ink-tab": "~4.2.0",
     "ink-text-input": "~4.0.3",
+    "js-yaml": "^4.1.0",
     "react": "^18.1.0",
     "yargs": "~16.2.0"
   },
@@ -39,6 +40,7 @@
     "@dxos/eslint-plugin": "~1.0.33",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/copy-paste": "^1.1.30",
+    "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",

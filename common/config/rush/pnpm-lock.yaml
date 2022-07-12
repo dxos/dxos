@@ -706,6 +706,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
@@ -718,6 +719,7 @@ importers:
       ink-spinner: ~4.0.3
       ink-tab: ~4.2.0
       ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
       mocha: ~8.4.0
       nodemon: ~2.0.19
       react: ^18.1.0
@@ -736,12 +738,14 @@ importers:
       ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
       ink-tab: 4.2.0_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
+      js-yaml: 4.1.0
       react: 18.2.0
       yargs: 16.2.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.33_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15

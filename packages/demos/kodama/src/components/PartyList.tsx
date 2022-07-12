@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
@@ -12,21 +12,13 @@ import { List } from './List';
 import { PartyView } from './PartyView';
 
 export const PartyList: FC<{
-  partyKey?: PartyKey,
-  onExit: () => void
+  partyKey?: PartyKey
 }> = ({
-  partyKey: controlledPartyKey,
-  onExit
+  partyKey: controlledPartyKey
 }) => {
   const [partyKey, setPartyKey] = useState<PartyKey | undefined>(controlledPartyKey);
   const parties = useParties();
   const client = useClient();
-
-  useInput((input, key) => {
-    if (!partyKey && key.escape) {
-      onExit();
-    }
-  });
 
   const handleUpdate = (data: { id?: string | undefined, text: string }) => {
     if (partyKey) {
