@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './Config';
 export * from './ItemList';
 export * from './JoinParty';
 export * from './PartyInfo';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import TextInput from 'ink-text-input';
 import React, { FC, useState } from 'react';
@@ -11,9 +11,9 @@ import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export const JoinParty: FC<{
-  onExit: (partyKey?: PartyKey) => void
+  onJoin: (partyKey?: PartyKey) => void
 }> = ({
-  onExit
+  onJoin
 }) => {
   const client = useClient();
   const [descriptor, setDescriptor] = useState<string>();
@@ -42,17 +42,11 @@ export const JoinParty: FC<{
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
       const party = await invitation!.getParty();
-      onExit(party.key);
+      onJoin(party.key);
     } catch (err) {
-      onExit();
+      onJoin();
     }
   };
-
-  useInput((input, key) => {
-    if (key.escape) {
-      onExit();
-    }
-  });
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
