@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Swarm topic.

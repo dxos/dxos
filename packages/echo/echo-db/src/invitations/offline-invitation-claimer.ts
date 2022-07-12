@@ -20,8 +20,9 @@ import {
   SignedMessage,
   codec
 } from '@dxos/credentials';
-import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
+import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';

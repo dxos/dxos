@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './common';
+export * from './buffer-patch';
 export * from './codec';
-export * from './substitutions';
+export * from './common';
+export * from './interface';
 export * from './schema';
 export * from './service';
-export * from './buffer-patch';
 export * from './stream';
-export * from './interface';
+export * from './substitutions';

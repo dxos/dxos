@@ -4,7 +4,7 @@
 
 import Moleculer from 'moleculer';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { createBroker } from './broker';
 

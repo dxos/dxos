@@ -37,6 +37,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/debug": "^4.1.7",

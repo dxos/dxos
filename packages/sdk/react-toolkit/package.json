@@ -21,6 +21,7 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
     "@emotion/css": "^11.7.1",

@@ -5,8 +5,8 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ConnectionState } from './connection';

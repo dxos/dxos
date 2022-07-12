@@ -16,7 +16,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 import { KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   ClientSigner,

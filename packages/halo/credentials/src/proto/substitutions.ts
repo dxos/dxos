@@ -3,7 +3,7 @@
 //
 
 import { anySubstitutions } from '@dxos/codec-protobuf';
-import { publicKeySubstitutions } from '@dxos/crypto';
+import { publicKeySubstitutions } from '@dxos/protocols';
 
 export default {
   ...anySubstitutions,

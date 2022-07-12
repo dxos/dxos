@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { randomBytes } from './keys';
 import { PublicKey } from './public-key';
 
 const KEY_HEX = '2c28f0d08ccc5340aee02655675be5796227a28d27b9704df34b7d8b2d9fddc7';
@@ -13,7 +12,6 @@ it('formatting', () => {
   expect(PublicKey.isPublicKey(key)).toEqual(true);
   PublicKey.assertValidPublicKey(key);
 
-  expect(key.humanize()).toEqual('lemon-nitrogen-sixteen-undress');
   expect(key.toHex()).toEqual(KEY_HEX);
 });
 
@@ -54,7 +52,7 @@ it('equals', () => {
   )).toEqual(true);
 
   expect(PublicKey.equals(
-    PublicKey.from(randomBytes()),
-    PublicKey.from(randomBytes())
+    PublicKey.random(),
+    PublicKey.random()
   )).toEqual(false);
 });

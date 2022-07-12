@@ -4,7 +4,8 @@
 
 import assert from 'assert';
 
-import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { assertValidPublicKey, Signer } from '../keys';
 import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';

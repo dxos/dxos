@@ -5,8 +5,8 @@
 import { Box, Text } from 'ink';
 import React, { FC } from 'react';
 
-import { PublicKey } from '@dxos/crypto';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 export const Feeds: FC<{

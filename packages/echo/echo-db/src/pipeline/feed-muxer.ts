@@ -7,11 +7,12 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import {
   createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter, Timeframe
 } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 import { EchoProcessor, TimeframeClock } from '../packlets/database';

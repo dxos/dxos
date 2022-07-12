@@ -9,7 +9,8 @@ import defaultHypercore from 'hypercore';
 import pify from 'pify';
 import tempy from 'tempy';
 
-import { PublicKey, createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';

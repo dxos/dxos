@@ -6,10 +6,11 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, trigger } from '@dxos/async';
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter, ModelSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
+import { PublicKey } from '@dxos/protocols';
 
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';

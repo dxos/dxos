@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';

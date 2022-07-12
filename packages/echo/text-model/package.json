@@ -33,7 +33,7 @@
     "yjs": "^13.4.1"
   },
   "devDependencies": {
-    "@dxos/crypto": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",

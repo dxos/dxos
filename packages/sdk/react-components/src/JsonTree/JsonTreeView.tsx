@@ -13,8 +13,9 @@ import {
 import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
 import { Box, Typography, styled, useTheme } from '@mui/material';
 
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 
 //
 // Calculate all IDs.

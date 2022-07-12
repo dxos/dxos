@@ -6,9 +6,9 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client';
 

@@ -4,8 +4,9 @@
 
 import pify from 'pify';
 
-import { createKeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { codec, FeedMessage } from '../proto';
