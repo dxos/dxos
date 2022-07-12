@@ -47,6 +47,29 @@ describe('SignalApi', () => {
     // code await broker2.stop();
   });
 
+  test('message between 2 clients', async () => {
+    const signalMock1 = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
+      .resolvesTo();
+    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, signalMock1);
+    api2 = new SignalClient(signalApiUrl1, (async () => {}) as any, (async () => {}) as any);
+
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+
+    const msg: SignalApi.SignalMessage = {
+      id: peer2,
+      remoteId: peer1,
+      sessionId: PublicKey.random(),
+      topic,
+      data: { foo: 'bar' } as any
+    };
+    await api2.signal(msg);
+
+    await waitForExpect(() => {
+      expect(signalMock1).toHaveBeenCalledWith([msg]);
+    }, 4_000);
+  }).timeout(5_000);
+
   test('join', async () => {
     api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, async () => {});
 
