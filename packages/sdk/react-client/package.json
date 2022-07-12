@@ -12,7 +12,7 @@
     "build:book": "toolchain build:book",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
+    "test": "toolchain test && npm run test:playwright",
     "test:playwright": "playwright test --config ./tests/playwright/config.ts"
   },
   "dependencies": {
