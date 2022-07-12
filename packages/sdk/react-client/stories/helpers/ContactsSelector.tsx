@@ -16,20 +16,20 @@ export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
   selected?: string,
   onSelect: (selected: string) => void
 }) => (
-<FormControl fullWidth>
-      <InputLabel id='contact-select-label'>Contact</InputLabel>
-      <Select
-        value={selected || ''}
-        label='Contact'
-        labelId='contact-select-label'
-        onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
-      >
-        <MenuItem value='' />
-        {contacts.map(contact => (
-          <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
-            {contact.displayName}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+  <FormControl fullWidth>
+    <InputLabel id='contact-select-label'>Contact</InputLabel>
+    <Select
+      value={selected || ''}
+      label='Contact'
+      labelId='contact-select-label'
+      onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
+    >
+      <MenuItem value='' />
+      {contacts.map(contact => (
+        <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
+          {contact.displayName}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
 );

@@ -32,12 +32,11 @@ describe('Client Services', () => {
       afterTest(() => invitee.client.destroy());
 
       await inviter.services.ProfileService.createProfile({ username: 'test-user' });
-
       const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
         inviter.services.ProfileService.createInvitation().subscribe(resolve, reject);
       });
-      assert(invitation.descriptor);
 
+      assert(invitation.descriptor);
       const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
         invitee.services.ProfileService.acceptInvitation(invitation.descriptor!).subscribe(resolve, reject);
       });
@@ -52,9 +51,9 @@ describe('Client Services', () => {
         if (inviteeProfile.profile?.username === 'test-user') {
           inviteeProfileTrigger();
         }
-      }, error => {
-        if (!(error instanceof RpcClosedError)) {
-          throw error;
+      }, err => {
+        if (!(err instanceof RpcClosedError)) {
+          throw err;
         }
       });
       await inviteeProfileLatch;

@@ -17,6 +17,7 @@ export const streamToResultSet = <T, U>(stream: Stream<T>, map: (arg?: T) => U[]
   stream.subscribe(data => {
     lastItem = data;
     event.emit();
-  }, () => {});
+  });
+
   return new ResultSet(event, () => map(lastItem));
 };

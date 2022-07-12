@@ -30,9 +30,13 @@ export const JoinParty: FC<{
       const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
-      const stripped = descriptor!.replace(/[\W]/g, '');
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
-      setInvitation(invitation);
+      try {
+        const stripped = descriptor!.replace(/[\W]/g, '');
+        const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
+        setInvitation(invitation);
+      } catch (err) {
+        setDescriptor(undefined);
+      }
     }
   };
 

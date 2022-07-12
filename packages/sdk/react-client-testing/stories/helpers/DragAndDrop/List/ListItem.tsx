@@ -18,7 +18,7 @@ export const ListItem = ({
   item,
   style = {}
 }: ListItemProps) => (
-<div style={style}>
-      {item.title}
-    </div>
+  <div style={style}>
+    {item.title}
+  </div>
 );

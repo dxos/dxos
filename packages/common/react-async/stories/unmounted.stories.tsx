@@ -44,7 +44,7 @@ const TestApp = () => {
 };
 
 export const Primary = () => (
-<div style={{ padding: 16 }}>
-      <TestApp />
-    </div>
+  <div style={{ padding: 16 }}>
+    <TestApp />
+  </div>
 );

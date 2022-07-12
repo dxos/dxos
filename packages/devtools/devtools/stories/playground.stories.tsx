@@ -19,34 +19,34 @@ export default {
 };
 
 const DevTools = ({ port }: { port: RpcPort }) => (
-<ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ClientProvider
-          config={{
-            runtime: {
-              client: {
-                mode: defs.Runtime.Client.Mode.REMOTE
-              }
+  <ErrorBoundary>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ClientProvider
+        config={{
+          runtime: {
+            client: {
+              mode: defs.Runtime.Client.Mode.REMOTE
             }
-          }}
-          options={{
-            rpcPort: port
-          }}
-        >
-          <PanelsContainer sections={sections} />
-        </ClientProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+          }
+        }}
+        options={{
+          rpcPort: port
+        }}
+      >
+        <PanelsContainer sections={sections} />
+      </ClientProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 // TODO(burdon): ErrorBoundary with indicator.
 export const Controls = () => (
-<FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
-      <ClientProvider>
-        <PlaygroundControls />
-      </ClientProvider>
-    </FullScreen>
+  <FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
+    <ClientProvider>
+      <PlaygroundControls />
+    </ClientProvider>
+  </FullScreen>
 );
 
 export const Primary = () => {
