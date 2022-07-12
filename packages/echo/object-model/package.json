@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.33.5",
+  "version": "2.33.6",
   "private": false,
   "description": "ECHO object model.",
   "license": "MIT",

@@ -396,7 +396,7 @@ importers:
 
   ../../packages/common/react-async:
     specifiers:
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/mocha': ~8.2.2
@@ -517,8 +517,8 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
-      '@dxos/esbuild-server': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-server': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -535,7 +535,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -581,8 +581,8 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
-      '@dxos/esbuild-server': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-server': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -625,7 +625,7 @@ importers:
       it-all: 1.0.6
       mobile-detect: ~1.4.5
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       robotjs: ~0.6.0
@@ -773,8 +773,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
-      '@dxos/esbuild-server': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-server': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -804,7 +804,7 @@ importers:
       expect: ~27.0.2
       lexical: ~0.2.5
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -946,8 +946,8 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
-      '@dxos/esbuild-server': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-server': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
@@ -967,7 +967,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       react-scripts: 4.0.3
@@ -1025,7 +1025,7 @@ importers:
       '@dxos/devtools-mesh': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1119,7 +1119,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -1211,7 +1211,7 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -1679,7 +1679,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/glob': ~7.1.3
@@ -1691,7 +1691,7 @@ importers:
       eslint: ^7.12.1
       glob: ~7.1.6
       pkg-up: ^3.1.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       typescript: ^4.7.2
       uuid: ^8.3.2
       yargs: ~16.2.0
@@ -2609,13 +2609,14 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
+      '@playwright/test': ^1.14.1
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.7
@@ -2631,6 +2632,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       level-js: ^5.0.2
+      playwright: ^1.14.1
       raf: ^3.4.1
       react: ^18.1.0
       react-dom: ^18.1.0
@@ -2659,6 +2661,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
+      '@playwright/test': 1.23.2
       '@testing-library/react': 11.2.7_biqbaboplfbrettd7655fr4n2y
       '@testing-library/react-hooks': 5.1.2_e2ahcdagsdonc2lnwoylqhejci
       '@types/debug': 4.1.7
@@ -2672,6 +2675,7 @@ importers:
       eslint: 7.32.0
       expect: 27.0.6
       level-js: 5.0.2
+      playwright: 1.17.1
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -2691,7 +2695,7 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2765,7 +2769,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@emotion/css': ^11.7.1
@@ -2845,7 +2849,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -2906,7 +2910,7 @@ importers:
   ../../packages/sdk/react-ipfs:
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -2938,7 +2942,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/registry-client': workspace:*
@@ -2986,7 +2990,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3158,7 +3162,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3186,7 +3190,7 @@ importers:
       expect: ~27.0.2
       faker: ^5.1.0
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.1.0
@@ -3245,7 +3249,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.9
+      '@dxos/esbuild-plugins': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -3302,7 +3306,7 @@ importers:
 
   ../../toolchains/toolchain-node-library:
     specifiers:
-      '@dxos/esbuild-server': ~2.28.9
+      '@dxos/esbuild-server': ~2.28.10
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': ~1.4.2
@@ -7064,7 +7068,7 @@ packages:
       jest-haste-map: 26.6.2
       jest-regex-util: 26.0.0
       jest-util: 26.6.2
-      micromatch: 4.0.5
+      micromatch: 4.0.4
       pirates: 4.0.4
       slash: 3.0.0
       source-map: 0.6.1
@@ -7932,6 +7936,15 @@ packages:
       mkdirp: 1.0.4
       rimraf: 3.0.2
     dev: false
+
+  /@playwright/test/1.23.2:
+    resolution: {integrity: sha512-umaEAIwQGfbezixg3raSOraqbQGSqZP988sOaMdpA2wj3Dr6ykOscrMukyK3U6edxhpS0N8kguAFZoHwCEfTig==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@types/node': 16.11.27
+      playwright-core: 1.23.2
+    dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin/0.4.3_iuu3iat45jetoshmqy6ruoxpeq:
     resolution: {integrity: sha512-br5Qwvh8D2OQqSXpd1g/xqXKnK0r+Jz6qVKBbWmpUcrbGOxUrf39V5oZ1876084CGn18uMdR5uvPqBv9UqtBjQ==}
@@ -10439,7 +10452,7 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -10735,7 +10748,6 @@ packages:
       es-abstract: 1.19.1
       get-intrinsic: 1.1.1
       is-string: 1.0.7
-    dev: false
 
   /array-includes/3.1.5:
     resolution: {integrity: sha512-iSDYZMMyTPkiFasVqfuAQnWAYcvO/SeBSCGKePoEthjp4LEMTe4uLc7b025o4jAZpHhihh8xPo99TNWUWWkGDQ==}
@@ -10776,8 +10788,8 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
-      define-properties: 1.1.4
-      es-abstract: 1.20.1
+      define-properties: 1.1.3
+      es-abstract: 1.19.1
 
   /array.prototype.flatmap/1.3.0:
     resolution: {integrity: sha512-PZC9/8TKAIxcWKdyeb77EzULHPrIX/tIZebLJUQOMR1OwYosT8yggdfWScfTBCDj5utONvOuPQQumYsU2ULbkg==}
@@ -11619,7 +11631,7 @@ packages:
       buffer-fill: 1.0.0
 
   /buffer-crc32/0.2.13:
-    resolution: {integrity: sha1-DTM+PwDqxQqhRUq9MO+MKl2ackI=}
+    resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
   /buffer-equal-constant-time/1.0.1:
     resolution: {integrity: sha1-+OcRMvf/5uAaXJaXpMbz5I1cyBk=}
@@ -12245,7 +12257,7 @@ packages:
     dev: true
 
   /clone-response/1.0.2:
-    resolution: {integrity: sha1-0dyXOSAxTfZ/vrlCI7TuNQI56Ws=}
+    resolution: {integrity: sha512-yjLXh88P599UOyPTFX0POsd7WxnbsVsGohcwzHOLspIhhpalPw1BcqED8NblyZLKcGrL8dTgMlcaZxV2jAD41Q==}
     dependencies:
       mimic-response: 1.0.1
 
@@ -14770,7 +14782,7 @@ packages:
     resolution: {integrity: sha512-0En0w03NRVMn9Uiyn8YRPDKvWjxCWkslUEhGNTdGx15RvPJYQ+lbOlqrlNI2vEAs4pDYK4f/HN2TbDmk5TP0iw==}
     dependencies:
       debug: 3.2.7
-      resolve: 1.22.1
+      resolve: 1.20.0
     transitivePeerDependencies:
       - supports-color
 
@@ -14857,7 +14869,7 @@ packages:
         optional: true
     dependencies:
       '@typescript-eslint/parser': 4.33.0_hxadhbs2xogijvk7vq4t2azzbu
-      array-includes: 3.1.5
+      array-includes: 3.1.4
       array.prototype.flat: 1.2.5
       debug: 2.6.9
       doctrine: 2.1.0
@@ -14865,11 +14877,11 @@ packages:
       eslint-import-resolver-node: 0.3.6
       eslint-module-utils: 2.7.3_lkzaig2qiyp6elizstfbgvzhie
       has: 1.0.3
-      is-core-module: 2.9.0
+      is-core-module: 2.8.0
       is-glob: 4.0.3
       minimatch: 3.1.2
       object.values: 1.1.5
-      resolve: 1.22.1
+      resolve: 1.20.0
       tsconfig-paths: 3.12.0
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
@@ -14888,7 +14900,7 @@ packages:
         optional: true
     dependencies:
       '@typescript-eslint/parser': 5.30.5_hxadhbs2xogijvk7vq4t2azzbu
-      array-includes: 3.1.5
+      array-includes: 3.1.4
       array.prototype.flat: 1.2.5
       debug: 2.6.9
       doctrine: 2.1.0
@@ -14896,11 +14908,11 @@ packages:
       eslint-import-resolver-node: 0.3.6
       eslint-module-utils: 2.7.3_ea34krk32wbcqzxapvwr7rsjs4
       has: 1.0.3
-      is-core-module: 2.9.0
+      is-core-module: 2.8.0
       is-glob: 4.0.3
       minimatch: 3.1.2
       object.values: 1.1.5
-      resolve: 1.22.1
+      resolve: 1.20.0
       tsconfig-paths: 3.12.0
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
@@ -15681,7 +15693,7 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.3
+      debug: 4.3.4
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -15799,7 +15811,7 @@ packages:
       bser: 2.1.1
 
   /fd-slicer/1.1.0:
-    resolution: {integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=}
+    resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
     dependencies:
       pend: 1.2.0
 
@@ -17201,7 +17213,7 @@ packages:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -17297,7 +17309,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -17771,7 +17783,7 @@ packages:
     engines: {node: '>=8'}
 
   /ip/1.1.5:
-    resolution: {integrity: sha1-vd7XARQpCCjAoDnnLvJfWq7ENUo=}
+    resolution: {integrity: sha512-rBtCAQAJm8A110nbwn6YdveUnuZH3WrC36IwkRXxDnq53JvXA2NVQvB7IHyKomxK1MJ4VDNw3UtFDdXQ+AvLYA==}
 
   /ipaddr.js/1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -18180,7 +18192,7 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
-      define-properties: 1.1.4
+      define-properties: 1.1.3
 
   /is-natural-number/4.0.1:
     resolution: {integrity: sha1-q5124dtM7VHjXeDHLr7PCfc0zeg=}
@@ -18683,7 +18695,7 @@ packages:
       jest-resolve: 26.6.2
       jest-util: 26.6.2
       jest-validate: 26.6.2
-      micromatch: 4.0.5
+      micromatch: 4.0.4
       pretty-format: 26.6.2
     transitivePeerDependencies:
       - bufferutil
@@ -18717,7 +18729,7 @@ packages:
       jest-resolve: 26.6.2
       jest-util: 26.6.2
       jest-validate: 26.6.2
-      micromatch: 4.0.5
+      micromatch: 4.0.4
       pretty-format: 26.6.2
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
     transitivePeerDependencies:
@@ -18812,7 +18824,7 @@ packages:
       jest-serializer: 26.6.2
       jest-util: 26.6.2
       jest-worker: 26.6.2
-      micromatch: 4.0.5
+      micromatch: 4.0.4
       sane: 4.1.0
       walker: 1.0.8
     optionalDependencies:
@@ -18914,7 +18926,7 @@ packages:
       '@types/stack-utils': 2.0.1
       chalk: 4.1.2
       graceful-fs: 4.2.8
-      micromatch: 4.0.5
+      micromatch: 4.0.4
       pretty-format: 26.6.2
       slash: 3.0.0
       stack-utils: 2.0.5
@@ -19007,7 +19019,7 @@ packages:
       jest-pnp-resolver: 1.2.2_jest-resolve@26.6.2
       jest-util: 26.6.2
       read-pkg-up: 7.0.1
-      resolve: 1.22.1
+      resolve: 1.20.0
       slash: 3.0.0
 
   /jest-runner/26.6.3:
@@ -20803,7 +20815,7 @@ packages:
     engines: {node: '>=8.6'}
     dependencies:
       braces: 3.0.2
-      picomatch: 2.3.1
+      picomatch: 2.3.0
 
   /micromatch/4.0.5:
     resolution: {integrity: sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==}
@@ -21876,7 +21888,7 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
-      define-properties: 1.1.4
+      define-properties: 1.1.3
 
   /object-keys/0.4.0:
     resolution: {integrity: sha1-KKaq50KN0sOpLz2V8hM13SBOAzY=}
@@ -21942,8 +21954,8 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
-      define-properties: 1.1.4
-      es-abstract: 1.20.1
+      define-properties: 1.1.3
+      es-abstract: 1.19.1
 
   /obliterator/1.6.1:
     resolution: {integrity: sha512-9WXswnqINnnhOG/5SLimUlzuU1hFJUc8zkwyD59Sd+dPOMf05PmnYG/d6Q7HZ+KmgkZJa1PxRso6QdM3sTNHig==}
@@ -22456,7 +22468,7 @@ packages:
       sha.js: 2.4.11
 
   /pend/1.2.0:
-    resolution: {integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=}
+    resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
 
   /performance-now/2.1.0:
     resolution: {integrity: sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=}
@@ -22473,6 +22485,10 @@ packages:
 
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
+
+  /picomatch/2.3.0:
+    resolution: {integrity: sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==}
+    engines: {node: '>=8.6'}
 
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
@@ -22573,7 +22589,7 @@ packages:
     hasBin: true
     dependencies:
       commander: 8.3.0
-      debug: 4.3.3
+      debug: 4.3.4
       extract-zip: 2.0.1
       https-proxy-agent: 5.0.0
       jpeg-js: 0.4.3
@@ -22592,6 +22608,12 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  /playwright-core/1.23.2:
+    resolution: {integrity: sha512-UGbutIr0nBALDHWW/HcXfyK6ZdmefC99Moo4qyTr89VNIkYZuDrW8Sw554FyFUamcFSdKOgDPk6ECSkofGIZjQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
 
   /playwright/1.17.1:
     resolution: {integrity: sha512-DisCkW9MblDJNS3rG61p8LiLA2WA7IY/4A4W7DX4BphWe/HuWjKmGQptuk4NVIh5UuSwXpW/jaH2+ZgjHs3GMA==}
@@ -24614,7 +24636,7 @@ packages:
     dev: false
 
   /retry/0.12.0:
-    resolution: {integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=}
+    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
     engines: {node: '>= 4'}
 
   /reusify/1.0.4:
@@ -25492,7 +25514,7 @@ packages:
     engines: {node: '>= 10'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.3
+      debug: 4.3.4
       socks: 2.6.1
     transitivePeerDependencies:
       - supports-color
@@ -28560,7 +28582,7 @@ packages:
       yargs-parser: 5.0.1
 
   /yauzl/2.10.0:
-    resolution: {integrity: sha1-x+sXyT4RLLEIb6bY5R+wZnt5pfk=}
+    resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
