@@ -42,7 +42,7 @@ describe('SignalMessager', () => {
     await broker1.stop();
   });
 
-  test.only('message between 2 clients', async () => {
+  test('message between 2 clients', async () => {
 
     const signalMock1 = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
     .resolvesTo();
@@ -73,5 +73,44 @@ describe('SignalMessager', () => {
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg]);
     }, 4_000);
+  }).timeout(5_000);
+
+  test('offer/answer', async () => {
+    const signalMock1 = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>().resolvesTo();
+    const messanger1 = new ReliableMessager(
+      (payload: SignalApi.SignalMessage) => api1.signal(payload),
+      signalMock1
+    );
+    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, (message: SignalApi.SignalMessage) => messanger1.reciveMessage(message));
+    
+    const messanger2 = new ReliableMessager(
+      (payload: SignalApi.SignalMessage) => api2.signal(payload), 
+      (() => {}) as any
+    );
+    api2 = new SignalClient(signalApiUrl1, (async () => {}) as any, (message: SignalApi.SignalMessage) => messanger2.reciveMessage(message));
+
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+
+    const sessionId = PublicKey.random();
+    const msg: SignalApi.SignalMessage = {
+      id: peer2,
+      remoteId: peer1,
+      sessionId: sessionId,
+      topic,
+      data: { foo: 'bar' } as any
+    };
+    const answer = await messanger2.offer(msg);
+
+    const expectedAns = {accept: true};
+    const ansMsg: SignalApi.SignalMessage = {
+      id: peer1,
+      remoteId: peer2,
+      sessionId: sessionId,
+      topic,
+      data: { answer: expectedAns } as any
+    };
+    await messanger1.signal(ansMsg);
+    expect(answer).toEqual(expectedAns);
   }).timeout(5_000);
 });
