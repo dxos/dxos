@@ -30,6 +30,10 @@ export interface PipelineOptions {
 
 export interface OpenOptions {
   /**
+   * Initial feed that contains PartyGenesis message and acts as the root for the feed DAG.
+   */
+  genesisFeedKey: PublicKey
+  /**
    * Keys of initial feeds needed to bootstrap the party.
    */
   feedHints?: PublicKey[]

@@ -19,6 +19,11 @@ export const STORAGE_VERSION = 1;
 
 const log = debug('dxos:snapshot-store');
 
+export interface AddPartyOptions {
+  key: PublicKey
+  genesisFeed: PublicKey
+}
+
 export class MetadataStore {
   private _metadata: EchoMetadata = {
     version: STORAGE_VERSION,

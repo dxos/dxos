@@ -46,7 +46,11 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
+
+  // TODO(dmaretskyi): Remove.
   private _feedHints: PublicKey[] = []
+  
+  private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
     partyKey: PartyKey,
@@ -149,6 +153,13 @@ export class DataParty {
   }
 
   /**
+   * @internal
+   */
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;;
+  }
+
+  /**
    * Opens the pipeline and connects the streams.
    */
   @synchronized
@@ -161,7 +172,9 @@ export class DataParty {
     // TODO(dmaretskyi): May be undefined in some tests.
     const party = this._metadataStore.getParty(this._partyCore.key);
 
+    assert(this._genesisFeedKey);
     await this._partyCore.open({
+      genesisFeedKey: this._genesisFeedKey,
       feedHints: this._feedHints,
       initialTimeframe: this._initialTimeframe,
       targetTimeframe: party?.latestTimeframe

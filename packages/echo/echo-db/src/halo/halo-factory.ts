@@ -84,6 +84,7 @@ export class HaloFactory {
     const feedKey = await halo.getWriteFeedKey();
     const feedKeyPair = this._keyring.getKey(feedKey);
     assert(feedKeyPair);
+    halo._setGenesisFeedKey(feedKey);
 
     // Connect the pipeline.
     await halo.open();
@@ -195,6 +196,7 @@ export class HaloFactory {
     const { hints } = await initiator.redeemInvitation(secretProvider);
 
     const halo = await this.constructParty(hints);
+    // TODO(dmaretskyi): Set genesis feed key from invitation data.
     await halo.open();
 
     await initiator.destroy();
