@@ -55,9 +55,9 @@ const Story = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <Story />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <Story />
+    </ProfileInitializer>
+  </ClientProvider>
 );

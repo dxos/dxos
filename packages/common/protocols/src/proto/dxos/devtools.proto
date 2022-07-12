@@ -8,17 +8,22 @@ package dxos.devtools;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+
 import "./echo/feed.proto";
 import "./echo/snapshot.proto";
 import "./halo/keys.proto";
 import "./halo/signed.proto";
 import "./rpc.proto";
 
+//
+// DevtoolsHost
+//
+
 service DevtoolsHost {
   //
   // General
   //
-  
+
   // Subscribe to server-to-client events.
   rpc Events(google.protobuf.Empty) returns (stream Event);
 
@@ -28,7 +33,6 @@ service DevtoolsHost {
   rpc ResetStorage(ResetStorageRequest) returns (google.protobuf.Empty);
 
   rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
-
   rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
 
   //
@@ -44,12 +48,9 @@ service DevtoolsHost {
   //
 
   rpc SubscribeToParties(SubscribeToPartiesRequest) returns (stream SubscribeToPartiesResponse);
-
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
-
   rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
-
-  rpc SubscribeToFeed(SubscribeToFeedRequest) returns (stream SubscribeToFeedResponse);
+  rpc SubscribeToFeedBlocks(SubscribeToFeedBlocksRequest) returns (stream SubscribeToFeedBlocksResponse);
 
   rpc GetPartySnapshot(GetPartySnapshotRequest) returns (GetPartySnapshotResponse);
   rpc SavePartySnapshot(SavePartySnapshotRequest) returns (SavePartySnapshotResponse);
@@ -60,13 +61,9 @@ service DevtoolsHost {
   //
 
   rpc GetNetworkPeers(GetNetworkPeersRequest) returns (GetNetworkPeersResponse);
-
   rpc SubscribeToNetworkTopics(google.protobuf.Empty) returns (stream SubscribeToNetworkTopicsResponse);
-
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
-
   rpc SubscribeToSignalTrace(google.protobuf.Empty) returns (stream SubscribeToSignalTraceResponse);
-
   rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
 }
 
@@ -83,6 +80,8 @@ message GetConfigResponse {
   string config = 1;
 }
 
+// EnableDebugLogging
+
 message EnableDebugLoggingRequest {
   string namespaces = 1;
 }
@@ -90,6 +89,8 @@ message EnableDebugLoggingRequest {
 message EnableDebugLoggingResponse {
   string enabledNamespaces = 1;
 }
+
+// DisableDebugLogging
 
 message DisableDebugLoggingRequest {
   string namespaces = 1;
@@ -99,11 +100,15 @@ message DisableDebugLoggingResponse {
   string enabledNamespaces = 1;
 }
 
+// SubscribeToKeyringKeys
+
 message SubscribeToKeyringKeysRequest {}
 
 message SubscribeToKeyringKeysResponse {
   repeated KeyRecord keys = 1;
 }
+
+// SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
   PubKey partyKey = 1;
@@ -113,7 +118,11 @@ message SubscribeToCredentialMessagesResponse {
   repeated SignedMessage messages = 1;
 }
 
+// ResetStorage
+
 message ResetStorageRequest {}
+
+// GetNetworkPeers
 
 message GetNetworkPeersRequest {
   bytes topic = 1;
@@ -125,28 +134,33 @@ message GetNetworkPeersResponse {
 
     // PeerState enum.
     string state = 2;
-  
+
     repeated bytes connections = 3;
   }
 
   repeated PeerInfo peers = 1;
 }
 
-message SubscribeToPartiesRequest {}
+// SubscribeToParties
+
+message SubscribeToPartiesRequest {
+  repeated PubKey partyKeys = 1;
+}
 
 message SubscribeToPartiesResponse {
   message PartyInfo {
-    string key = 1;
+    PubKey key = 1;
     bool isOpen = 2;
     bool isActive = 3;
-    int32 feedKeys = 4;
-    map<string, string> properties = 5;
-
-    TimeframeVector timeframe = 10;
+    TimeframeVector timeframe = 4;
+    repeated PubKey feeds = 5;
+    map<string, string> properties = 6;
   }
 
   repeated PartyInfo parties = 1;
 }
+
+// SubscribeToItems
 
 message SubscribeToItemsRequest {}
 
@@ -155,24 +169,32 @@ message SubscribeToItemsResponse {
   string data = 1;
 }
 
-message SubscribeToFeedsRequest {}
+// SubscribeToFeeds
+
+message SubscribeToFeedsRequest {
+  PubKey partyKey = 1;
+  repeated PubKey feedKeys = 2;
+}
 
 message SubscribeToFeedsResponse {
-  message Party {
-    PubKey key = 1;
-    repeated PubKey feeds = 2;
+  message Feed {
+    PubKey feedKey = 1;
+    int32 length = 2;
   }
 
-  repeated Party parties = 1;
+  repeated Feed feeds = 1;
 }
 
-message SubscribeToFeedRequest {
+// SubscribeToFeedMessages
+
+message SubscribeToFeedBlocksRequest {
   PubKey partyKey = 1;
   PubKey feedKey = 2;
+  int32 maxBlocks = 3;
 }
 
-message SubscribeToFeedResponse {
-  message EchoFeedBlock {
+message SubscribeToFeedBlocksResponse {
+  message Block {
     bytes key = 1;
     int32 seq = 2;
     bool sync = 3;
@@ -180,8 +202,10 @@ message SubscribeToFeedResponse {
     FeedMessage data = 5;
   }
 
-  repeated EchoFeedBlock blocks = 1;
+  repeated Block blocks = 1;
 }
+
+// GetPartySnapshot
 
 message GetPartySnapshotRequest {
   required PubKey partyKey = 1;
@@ -191,6 +215,8 @@ message GetPartySnapshotResponse {
   PartySnapshot snapshot = 1;
 }
 
+// SavePartySnapshot
+
 message SavePartySnapshotRequest {
   required PubKey partyKey = 1;
 }
@@ -199,7 +225,11 @@ message SavePartySnapshotResponse {
   PartySnapshot snapshot = 1;
 }
 
+// ClearSnapshots
+
 message ClearSnapshotsRequest {}
+
+// SubscribeToNetworkTopics
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
@@ -210,16 +240,18 @@ message SubscribeToNetworkTopicsResponse {
   repeated Topic topics = 1;
 }
 
+// SubscribeToSignalStatus
+
 message SubscribeToSignalStatusResponse {
   message SignalServer {
     string host = 1;
 
     // SignalApi.State enum.
     string state = 2;
-    
+
     string error = 3;
 
-    // Number of milliseconds before reconnection. 
+    // Number of milliseconds before reconnection.
     // TODO(dmaretskyi): Represent as absolute timestamp.
     int32 reconnectIn = 4;
 
@@ -231,10 +263,14 @@ message SubscribeToSignalStatusResponse {
   repeated SignalServer servers = 1;
 }
 
+// SubscribeToSignalTrace
+
 message SubscribeToSignalTraceResponse {
   // JSON-encoded events.
   repeated string events = 1;
 }
+
+// SubscribeToSwarmInfo
 
 message SubscribeToSwarmInfoRequest {}
 
@@ -261,11 +297,17 @@ message SubscribeToSwarmInfoResponse {
   repeated SwarmInfo data = 1;
 }
 
-message SetTracingOptionsRequest {
-  bool enable = 1;
-}
+//
+// TracingService
+//
 
 service TracingService {
   rpc SetTracingOptions(SetTracingOptionsRequest) returns (google.protobuf.Empty);
   rpc SubscribeToRpcTrace (google.protobuf.Empty) returns (stream RpcMessage);
+}
+
+// SetTracingOptions
+
+message SetTracingOptionsRequest {
+  bool enable = 1;
 }

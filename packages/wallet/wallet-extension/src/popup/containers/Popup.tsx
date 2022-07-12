@@ -24,8 +24,8 @@ const baseTheme = createMuiTheme({
 });
 
 export const Popup = () => (
-<ThemeProvider theme={baseTheme}>
-      <CssBaseline />
-      <Root />
-    </ThemeProvider>
+  <ThemeProvider theme={baseTheme}>
+    <CssBaseline />
+    <Root />
+  </ThemeProvider>
 );
