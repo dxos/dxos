@@ -5,11 +5,11 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
 import { Directory } from '@dxos/random-access-multi-storage';
-import { synchronized } from '@dxos/async';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -87,14 +87,16 @@ export class MetadataStore {
       // Truncate the rest of the file.
       {
         const { size } = await file.stat();
-        if(size > encoded.length) {
+        if (size > encoded.length) {
           await file.truncate(encoded.length, size);
         }
       }
 
       // Sanity check.
       const { size } = await file.stat();
-      if(size !== encoded.length) console.log('SANITY!')
+      if (size !== encoded.length) {
+        console.log('SANITY!');
+      }
       assert(size === encoded.length);
     } finally {
       await file.close();

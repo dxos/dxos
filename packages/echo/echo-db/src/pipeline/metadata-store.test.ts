@@ -8,7 +8,6 @@ import { PublicKey } from '@dxos/crypto';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { MetadataStore } from './metadata-store';
-import { Timeframe } from '@dxos/echo-protocol';
 
 describe('MetadataStore in-memory', () => {
   it('Creates party and adds feeds to it', async () => {
@@ -78,7 +77,7 @@ describe('MetadataStore in-memory', () => {
     expect(store.parties?.length).toEqual(0);
   });
 
-  it.only('not corrupted', async () => {    
+  it('not corrupted', async () => {
     const storage = createStorage('', StorageType.RAM);
     const dir = storage.directory('metadata');
     const metadataStore = new MetadataStore(dir);
