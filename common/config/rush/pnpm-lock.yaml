@@ -533,7 +533,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -623,7 +623,7 @@ importers:
       it-all: 1.0.6
       mobile-detect: ~1.4.5
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       robotjs: ~0.6.0
@@ -794,7 +794,7 @@ importers:
       expect: ~27.0.2
       lexical: ~0.2.5
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -957,7 +957,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-dom: ^18.1.0
       react-scripts: 4.0.3
@@ -1681,7 +1681,7 @@ importers:
       eslint: ^7.12.1
       glob: ~7.1.6
       pkg-up: ^3.1.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       typescript: ^4.7.2
       uuid: ^8.3.2
       yargs: ~16.2.0
@@ -2605,6 +2605,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
+      '@playwright/test': ^1.14.1
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.7
@@ -2620,6 +2621,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       level-js: ^5.0.2
+      playwright: ^1.14.1
       raf: ^3.4.1
       react: ^18.1.0
       react-dom: ^18.1.0
@@ -2647,6 +2649,7 @@ importers:
       '@dxos/eslint-plugin': 1.0.33_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
+      '@playwright/test': 1.23.2
       '@testing-library/react': 11.2.7_biqbaboplfbrettd7655fr4n2y
       '@testing-library/react-hooks': 5.1.2_e2ahcdagsdonc2lnwoylqhejci
       '@types/debug': 4.1.7
@@ -2660,6 +2663,7 @@ importers:
       eslint: 7.32.0
       expect: 27.0.6
       level-js: 5.0.2
+      playwright: 1.17.1
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -3174,7 +3178,7 @@ importers:
       expect: ~27.0.2
       faker: ^5.1.0
       mocha: ~8.4.0
-      playwright: ^1.7.0
+      playwright: ^1.14.1
       react: ^18.1.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.1.0
@@ -7921,6 +7925,15 @@ packages:
       rimraf: 3.0.2
     dev: false
 
+  /@playwright/test/1.23.2:
+    resolution: {integrity: sha512-umaEAIwQGfbezixg3raSOraqbQGSqZP988sOaMdpA2wj3Dr6ykOscrMukyK3U6edxhpS0N8kguAFZoHwCEfTig==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      '@types/node': 16.11.27
+      playwright-core: 1.23.2
+    dev: true
+
   /@pmmmwh/react-refresh-webpack-plugin/0.4.3_iuu3iat45jetoshmqy6ruoxpeq:
     resolution: {integrity: sha512-br5Qwvh8D2OQqSXpd1g/xqXKnK0r+Jz6qVKBbWmpUcrbGOxUrf39V5oZ1876084CGn18uMdR5uvPqBv9UqtBjQ==}
     engines: {node: '>= 10.x'}
@@ -10427,7 +10440,7 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -11606,7 +11619,7 @@ packages:
       buffer-fill: 1.0.0
 
   /buffer-crc32/0.2.13:
-    resolution: {integrity: sha1-DTM+PwDqxQqhRUq9MO+MKl2ackI=}
+    resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
   /buffer-equal-constant-time/1.0.1:
     resolution: {integrity: sha1-+OcRMvf/5uAaXJaXpMbz5I1cyBk=}
@@ -15667,7 +15680,7 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.3
+      debug: 4.3.4
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -15785,7 +15798,7 @@ packages:
       bser: 2.1.1
 
   /fd-slicer/1.1.0:
-    resolution: {integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=}
+    resolution: {integrity: sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==}
     dependencies:
       pend: 1.2.0
 
@@ -17283,7 +17296,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
 
@@ -17757,7 +17770,7 @@ packages:
     engines: {node: '>=8'}
 
   /ip/1.1.5:
-    resolution: {integrity: sha1-vd7XARQpCCjAoDnnLvJfWq7ENUo=}
+    resolution: {integrity: sha512-rBtCAQAJm8A110nbwn6YdveUnuZH3WrC36IwkRXxDnq53JvXA2NVQvB7IHyKomxK1MJ4VDNw3UtFDdXQ+AvLYA==}
 
   /ipaddr.js/1.9.1:
     resolution: {integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==}
@@ -22442,7 +22455,7 @@ packages:
       sha.js: 2.4.11
 
   /pend/1.2.0:
-    resolution: {integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=}
+    resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
 
   /performance-now/2.1.0:
     resolution: {integrity: sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=}
@@ -22563,7 +22576,7 @@ packages:
     hasBin: true
     dependencies:
       commander: 8.3.0
-      debug: 4.3.3
+      debug: 4.3.4
       extract-zip: 2.0.1
       https-proxy-agent: 5.0.0
       jpeg-js: 0.4.3
@@ -22582,6 +22595,12 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  /playwright-core/1.23.2:
+    resolution: {integrity: sha512-UGbutIr0nBALDHWW/HcXfyK6ZdmefC99Moo4qyTr89VNIkYZuDrW8Sw554FyFUamcFSdKOgDPk6ECSkofGIZjQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
 
   /playwright/1.17.1:
     resolution: {integrity: sha512-DisCkW9MblDJNS3rG61p8LiLA2WA7IY/4A4W7DX4BphWe/HuWjKmGQptuk4NVIh5UuSwXpW/jaH2+ZgjHs3GMA==}
@@ -24604,7 +24623,7 @@ packages:
     dev: false
 
   /retry/0.12.0:
-    resolution: {integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=}
+    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
     engines: {node: '>= 4'}
 
   /reusify/1.0.4:
@@ -25482,7 +25501,7 @@ packages:
     engines: {node: '>= 10'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.3
+      debug: 4.3.4
       socks: 2.6.1
     transitivePeerDependencies:
       - supports-color
@@ -28550,7 +28569,7 @@ packages:
       yargs-parser: 5.0.1
 
   /yauzl/2.10.0:
-    resolution: {integrity: sha1-x+sXyT4RLLEIb6bY5R+wZnt5pfk=}
+    resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
