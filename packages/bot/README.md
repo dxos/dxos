@@ -187,7 +187,7 @@ module:
   name: dxos:bot.exmaple
   description: Example bot
   author: DXOS.org
-  license: AGPL-3.0
+  license: MIT
   repository: 'https://github.com/dxos/example'
 
 build:
