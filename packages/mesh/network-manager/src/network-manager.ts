@@ -7,8 +7,8 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';

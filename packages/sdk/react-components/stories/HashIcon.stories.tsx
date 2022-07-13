@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { CopyText, HashIcon } from '../src';
 

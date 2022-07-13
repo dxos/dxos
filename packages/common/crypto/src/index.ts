@@ -8,4 +8,3 @@ export * from './human-hash';
 export * from './keys';
 export * from './seedphrase';
 export * from './validator';
-export * from './public-key';

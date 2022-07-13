@@ -5,10 +5,10 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { DataService } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
+import { PublicKey } from '@dxos/protocols';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';

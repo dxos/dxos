@@ -5,8 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKeyLike, PublicKey } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { PublicKeyLike, PublicKey } from '@dxos/protocols';
 import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';

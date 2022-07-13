@@ -11,7 +11,8 @@ import {
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
 import { PartyMember } from '@dxos/client';
-import { PublicKeyLike, humanize } from '@dxos/crypto';
+import { humanize } from '@dxos/crypto';
+import { PublicKeyLike } from '@dxos/protocols';
 
 const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;

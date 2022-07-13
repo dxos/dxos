@@ -4,6 +4,7 @@
 
 import { inspect } from 'util';
 
+import { humanize } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedKey } from '../types';
@@ -62,13 +63,13 @@ export class Timeframe {
 
   toJSON () {
     return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
-      frames[key.humanize()] = seq;
+      frames[humanize(key)] = seq;
       return frames;
     }, {});
   }
 
   toString () {
-    return `(${this.frames().map(([key, seq]) => `${key.humanize()} => ${seq}`).join(', ')})`;
+    return `(${this.frames().map(([key, seq]) => `${humanize(key)} => ${seq}`).join(', ')})`;
   }
 
   /**

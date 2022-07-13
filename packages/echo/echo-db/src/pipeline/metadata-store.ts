@@ -6,9 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 /**

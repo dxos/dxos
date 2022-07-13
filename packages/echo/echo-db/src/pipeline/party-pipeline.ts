@@ -6,10 +6,10 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { KeyType, Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
+import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '.';

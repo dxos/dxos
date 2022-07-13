@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import distance from 'xor-distance';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
 

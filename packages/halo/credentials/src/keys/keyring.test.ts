@@ -7,7 +7,8 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { createKeyPair, keyToString, randomBytes, verify, PublicKey } from '@dxos/crypto';
+import { createKeyPair, keyToString, randomBytes, verify } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { KeyType, schema } from '../proto';
 import { Filter } from './filter';
