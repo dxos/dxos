@@ -68,7 +68,7 @@ describe('SignalMessager', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: {foo: 'bar'} }
+      data: { signal: { json: '{"asd": "asd"}' } }
     };
     await messenger2.signal(msg);
 

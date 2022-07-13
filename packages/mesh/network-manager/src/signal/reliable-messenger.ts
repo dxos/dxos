@@ -34,7 +34,7 @@ export class ReliableMessenger {
   }
 
   async signal (message: Message): Promise<void> {
-    assert(message.data.signal);
+    assert(message.data?.signal);
     await this._sendMessage(message);
   }
 
