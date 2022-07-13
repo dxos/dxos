@@ -19,19 +19,12 @@ To get started install the `dx` shell command.
 # NPM
 npm i -g @dxos/dx
 
-<<<<<<< HEAD
 # OS/X
 brew install dx
 ```
 
 > - TODO: dx is still available.
 
-=======
-# OSX
-brew install dx
-```
-
->>>>>>> main
 
 ### 2.1 Decentralized Identity (HALO)
 
