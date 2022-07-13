@@ -11,7 +11,6 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates } from '@dnd-ki
 import { TodoList as TodoListDef } from '@/components/TodoList/models';
 import { TodoListItem } from '@/components/TodoList/TodoListItem';
 
-const randomString = () => Math.random().toString(16).slice(2, 6);
 const TEST_LISTS_NUMBER = 10;
 
 const Welcome = () => {
@@ -194,7 +193,7 @@ const Welcome = () => {
                       ...l,
                       items: [
                         {
-                          id: randomString(),
+                          id: faker.datatype.uuid(),
                           title: s,
                           createdAt: new Date(),
                         },
