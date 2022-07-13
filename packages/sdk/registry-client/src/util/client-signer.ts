@@ -10,7 +10,7 @@ import assert from 'assert';
 
 import { Client, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
 import { KeyRecord, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Plugin to sign HALO messages.

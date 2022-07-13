@@ -64,7 +64,7 @@ export const RegistryProvider = ({
  * @deprecated
  */
 export const RegistryInitializer = ({ children, config = {} }: RegistryProviderProps) => (
-<RegistryProvider config={config}>
-      {children}
-    </RegistryProvider>
+  <RegistryProvider config={config}>
+    {children}
+  </RegistryProvider>
 );

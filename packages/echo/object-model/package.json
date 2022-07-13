@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.33.4",
+  "version": "2.33.6",
   "private": false,
   "description": "ECHO object model.",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "minisearch": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",

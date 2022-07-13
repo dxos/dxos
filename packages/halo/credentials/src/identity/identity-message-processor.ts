@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { isDeviceInfoMessage, isIdentityInfoMessage } from '../identity';
 import { Keyring, assertValidPublicKey } from '../keys';

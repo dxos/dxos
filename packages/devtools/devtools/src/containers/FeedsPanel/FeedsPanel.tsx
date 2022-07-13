@@ -4,31 +4,29 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { PublicKey } from '@dxos/crypto';
-import { useClient, useParties } from '@dxos/react-client';
+import { PublicKey } from '@dxos/protocols';
+import { useDevtools, useParties, useStream } from '@dxos/react-client';
 
 import { KeySelect, MessageTable, Panel } from '../../components';
-import { useStream } from '../../hooks';
 
 export const FeedsPanel = () => {
-  const client = useClient();
+  const devtoolsHost = useDevtools();
   const parties = useParties();
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
-  const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToFeeds({})) ?? {};
+
+  const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
   const partyFeeds = useMemo(
     () => remoteParties?.find(({ key }) => selectedPartyKey && key?.equals(selectedPartyKey))?.feeds ?? [],
     [remoteParties, selectedPartyKey]
   );
 
-  const devtoolsHost = client.services.DevtoolsHost;
-
-  // TODO(wittjosiah): EchoFeedBlock.
+  // TODO(wittjosiah): FeedBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeed({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
-    [selectedPartyKey, selectedFeed]
-  ) ?? {};
+    () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
+    {}, [selectedPartyKey, selectedFeed]
+  );
 
   useEffect(() => {
     if (blocks) {

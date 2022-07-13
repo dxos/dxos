@@ -5,7 +5,7 @@
 import debug from 'debug';
 import moment from 'moment';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { isSignedMessage, PartyState } from '../party';
 import { Auth, SignedMessage } from '../proto';

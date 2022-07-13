@@ -5,12 +5,12 @@
 import assert from 'assert';
 
 import { Event, latch } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceHost, ClientServiceProvider } from '../../services';
@@ -119,12 +119,14 @@ export class EchoProxy implements Echo {
 
             partyProxy._processPartyUpdate(party);
             this._partiesChanged.emit();
-          }, () => {});
+          });
+
           this._subscriptions.push(() => partyStream.close());
         }
       }
+
       this._partiesChanged.emit();
-    }, () => {});
+    });
 
     this._subscriptions.push(() => partiesStream.close());
 

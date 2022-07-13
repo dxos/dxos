@@ -5,9 +5,9 @@
 import assert from 'assert';
 
 import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';

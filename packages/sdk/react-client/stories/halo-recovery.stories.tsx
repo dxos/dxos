@@ -109,16 +109,16 @@ const TestApp = () => {
 };
 
 export const HaloRecovery = () => (
-<Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
-        {/* Instantiated Client. */}
-        <ClientProvider>
-          <TestApp />
-        </ClientProvider>
+  <Container>
+    <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
+      {/* Instantiated Client. */}
+      <ClientProvider>
+        <TestApp />
+      </ClientProvider>
 
-        <ClientProvider>
-          <TestApp />
-        </ClientProvider>
-      </Box>
-    </Container>
+      <ClientProvider>
+        <TestApp />
+      </ClientProvider>
+    </Box>
+  </Container>
 );

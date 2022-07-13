@@ -12,10 +12,11 @@ import pify from 'pify';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
+import { keyToString, randomBytes, createKeyPair } from '@dxos/crypto';
 import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';

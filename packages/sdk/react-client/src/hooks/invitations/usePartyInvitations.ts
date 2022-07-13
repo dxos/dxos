@@ -3,7 +3,7 @@
 //
 
 import { PartyProxy } from '@dxos/client';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { useParty } from '../echo-queries';
 import { useInvitations } from './useInvitations';

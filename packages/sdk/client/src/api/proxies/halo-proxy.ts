@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { KeyRecord } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';
@@ -192,14 +192,16 @@ export class HaloProxy implements Halo {
     profileStream.subscribe(data => {
       this._profile = data.profile;
       this.profileChanged.emit();
-    }, () => {});
+    });
+
     this._subscriptions.push(() => profileStream.close());
 
     const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     contactsStream.subscribe(data => {
       this._contacts = data.contacts as PartyMember[];
       this._contactsChanged.emit();
-    }, () => {});
+    });
+
     this._subscriptions.push(() => contactsStream.close());
 
     await Promise.all([gotProfile, gotContacts]);

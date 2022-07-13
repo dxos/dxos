@@ -3,7 +3,7 @@
 //
 
 import { GreetingCommandPlugin } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { HaloRecoveryInitiator, InvitationFactory } from '../invitations';
 

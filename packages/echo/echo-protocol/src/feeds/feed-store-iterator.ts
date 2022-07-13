@@ -7,8 +7,9 @@ import debug from 'debug';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/protocols';
 
 import { Timeframe } from '../spacetime';
 import { FeedBlock } from '../types';
@@ -22,8 +23,8 @@ const STALL_TIMEOUT = 1000;
  * - Construction separate from open.
  */
 
-export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
-export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
+export type MessageSelector = (candidates: FeedBlock[]) => number | undefined
+export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time

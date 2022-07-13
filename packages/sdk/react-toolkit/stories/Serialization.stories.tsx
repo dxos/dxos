@@ -56,11 +56,11 @@ const ImportStory = () => {
 };
 
 export const ImportParty = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <ImportStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <ImportStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const ExportStory = () => {
@@ -95,9 +95,9 @@ const ExportStory = () => {
 };
 
 export const ExportParty = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <ExportStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <ExportStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );

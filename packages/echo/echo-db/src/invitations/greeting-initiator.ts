@@ -23,8 +23,9 @@ import {
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';

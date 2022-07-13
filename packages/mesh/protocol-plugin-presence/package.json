@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.33.4",
+  "version": "2.33.6",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",

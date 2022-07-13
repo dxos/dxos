@@ -8,7 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import { Client, defaultConfig } from '@dxos/client';
 import { KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   AuctionsClient,

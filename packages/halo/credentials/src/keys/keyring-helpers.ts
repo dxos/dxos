@@ -9,7 +9,8 @@
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
 
-import { createKeyPair, KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/crypto';
+import { createKeyPair, KeyPair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { KeyChain, KeyRecord, KeyType, createDateTimeString } from '../proto';
 import { MakeOptional } from '../typedefs';
