@@ -32,6 +32,9 @@ Create your identity.
 
 ```bash
 > dx halo init --username Alice
+Record your recovery seed phrase:
+[ circle wool lesson trick sail ... ]
+
 > dx whoami
 Alice
 
@@ -39,6 +42,8 @@ Alice
 id_dxos
 id_dxos.pub
 ```
+
+> - TODO(burdon): Password to encrypt local HALO.
 
 
 #### 2.1.2 Social Networks
@@ -60,19 +65,23 @@ Alternativerly, create a QR code and send this to your friend.
 Created: ~/dxos-qr.png
 ```
 
-Connect to the MESH network.
+> - TODO: Link contains token but also link to download client.
+
+Connect to the MESH network and ACK the incoming friend requests.
+
+> - TODO: Interactive vs. non-interactive mode?
 
 ```bash
 > dx mesh connect
 $ 808 KUBE nodes.
 $ ACK friend request from Bob? [y/n]
-$ Enter 2FA: 1234
+$ Enter token: 1234
 ```
 
-ACK the incoming friend requests.
+List friends stored in your HALO address book.
 
 ```bash
-> dx halo friends
+> dx halo contacts
 $ Bob
 ```
 
