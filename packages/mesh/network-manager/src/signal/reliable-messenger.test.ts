@@ -15,13 +15,12 @@ import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { ReliableMessenger } from './reliable-messenger';
 import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
+import { afterTest } from '@dxos/testutils';
 
-describe('SignalMessager', () => {
+describe('SignalMessenger', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
-  let api1: SignalClient;
-  let api2: SignalClient;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
   const signalApiPort1 = randomInt(10000, 50000);
@@ -39,25 +38,37 @@ describe('SignalMessager', () => {
 
   after(async function () {
     this.timeout(0);
-    await api1.close();
     await broker1.stop();
   });
 
-  test('signaling between 2 clients', async () => {
-    const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const messenger1 = new ReliableMessenger(
-      (message: Message) => api1.signal(message as SignalApi.SignalMessage),
-      signalMock1,
-      (() => {}) as any
+  const createSignalClientAndReliableMessenger = async (
+    signalApiUrl: string, 
+    onSignal: (msg: Message) => Promise<void> = (async () => {}) as any,
+    onOffer: (msg: Message) => Promise<Answer> = async () => ({ accept: true })
+  ) => {
+    let api: SignalClient;
+    const messenger: ReliableMessenger = new ReliableMessenger(
+      //todo(mykola): added catch to avoid not finished request.
+      (msg: Message) => api.signal(msg as SignalApi.SignalMessage).catch((_) => {}), 
+      onSignal, 
+      onOffer
     );
-    api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, (message: Message) => messenger1.receiveMessage(message));
+    api = new SignalClient(
+      signalApiUrl, 
+      (async () => {}) as any, 
+      async (msg: Message) => {messenger.receiveMessage(msg);}
+    );
+    afterTest (() => api.close());
+    return {
+      api,
+      messenger,
+    }
+  };
 
-    const messenger2 = new ReliableMessenger(
-      (message: Message) => api2.signal(message as SignalApi.SignalMessage),
-      (() => {}) as any,
-      (() => {}) as any
-    );
-    api2 = new SignalClient(signalApiUrl1, (async () => {}) as any, (message: Message) => messenger2.receiveMessage(message));
+  test.only('signaling between 2 clients', async () => {
+    const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const { api: api1 } = await createSignalClientAndReliableMessenger(signalApiUrl1, signalMock1);
+    const { api: api2, messenger: messenger2 } = await createSignalClientAndReliableMessenger(signalApiUrl1);
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -76,48 +87,28 @@ describe('SignalMessager', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test('offer/answer', async () => {
-    // const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const messenger1 = new ReliableMessenger(
-      (message: Message) => api1.signal(message as SignalApi.SignalMessage),
-      (async () => {}) as any,
-      async (message: Message) => ({ accept: true })
+  test.only('offer/answer', async () => {
+    const {api: api1, messenger: messenger1} = await createSignalClientAndReliableMessenger(
+      signalApiUrl1, 
+      (async () => {}) as any, 
+      async () => ({ accept: true })
     );
-    api1 = new SignalClient(
-      signalApiUrl1,
-      (async () => {}) as any,
-      (message: Message) => {
-        console.log('onSignal1', message);
-        return messenger1.receiveMessage(message);
-      });
-
-    const messenger2 = new ReliableMessenger(
-      (message: Message) => api2.signal(message as SignalApi.SignalMessage),
-      (() => {}) as any,
-      async (message: Message) => new Promise<Answer>(
-        (resolve, reject) => resolve({ accept: true })
-      )
+    const {api: api2} = await createSignalClientAndReliableMessenger(
+      signalApiUrl1, 
+      (async () => {}) as any, 
+      async () => ({ accept: true })
     );
-    api2 = new SignalClient(
-      signalApiUrl1,
-      (async () => {}) as any,
-      (message: Message) => {
-        console.log('onSignal2', message);
-        return messenger2.receiveMessage(message);
-      });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const sessionId = PublicKey.random();
-    const msg: Message = {
+    const answer = await messenger1.offer({
       id: peer1,
       remoteId: peer2,
-      sessionId: sessionId,
+      sessionId: PublicKey.random(),
       topic,
       data: { offer: { } }
-    };
-    const answer = await messenger1.offer(msg);
+    });
     expect(answer).toEqual({ accept: true });
   });
 });

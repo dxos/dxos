@@ -25,7 +25,7 @@ export class ReliableMessenger {
 
   async receiveMessage (message: Message): Promise<void> {
     if (message.data?.offer) {
-      await this._resolveOffer(message);
+      await this._handleOffer(message);
     } else if (message.data?.answer) {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
@@ -49,15 +49,15 @@ export class ReliableMessenger {
 
   private async _resolveAnswers (message: Message): Promise<void> {
     assert(message.sessionId);
-    const offer = this._offerRecords.get(message.sessionId);
-    if (offer) {
+    const offerRecord = this._offerRecords.get(message.sessionId);
+    if (offerRecord) {
       this._offerRecords.delete(message.sessionId);
       assert(message.data?.answer);
-      offer.resolve(message.data.answer);
+      offerRecord.resolve(message.data.answer);
     }
   }
 
-  private async _resolveOffer (message: Message): Promise<void> {
+  private async _handleOffer (message: Message): Promise<void> {
     const answer = await this._onOffer(message);
     const answerMessage = {
       id: message.remoteId,
