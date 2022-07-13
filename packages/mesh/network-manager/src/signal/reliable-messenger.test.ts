@@ -81,9 +81,7 @@ describe('SignalMessager', () => {
     const messenger1 = new ReliableMessenger(
       (message: Message) => api1.signal(message as SignalApi.SignalMessage),
       (async () => {}) as any,
-      async (message: Message) => new Promise<Answer>(
-        (resolve, reject) => resolve({ accept: true })
-      )
+      async (message: Message) => ({ accept: true })
     );
     api1 = new SignalClient(
       signalApiUrl1,
@@ -120,7 +118,6 @@ describe('SignalMessager', () => {
       data: { offer: { } }
     };
     const answer = await messenger1.offer(msg);
-    const expectedAns = { accept: true };
-    expect(answer).toEqual(expectedAns);
+    expect(answer).toEqual({ accept: true });
   });
 });
