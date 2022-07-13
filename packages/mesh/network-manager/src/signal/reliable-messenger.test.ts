@@ -7,7 +7,7 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 import { randomInt } from '@dxos/util';
@@ -57,7 +57,7 @@ describe('SignalMessenger', () => {
     api = new SignalClient(
       signalApiUrl,
       (async () => {}) as any,
-      async (msg: Message) => messenger.receiveMessage(msg)
+      async (msg: SignalApi.SignalMessage) => messenger.receiveMessage(msg as Message)
     );
     afterTest(() => api.close());
     return {

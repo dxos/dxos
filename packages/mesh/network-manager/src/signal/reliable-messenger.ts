@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
