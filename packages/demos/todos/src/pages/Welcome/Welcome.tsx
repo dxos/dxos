@@ -43,7 +43,16 @@ const Welcome = () => {
     if (!lists.length || !active || !over?.data.current) {
       return;
     }
-
+    
+    if ((over.id as string).split('-')[0] === 'list') {
+      // reorderList();
+      const listIds = lists.map(list => list.id);
+      const overIndex = listIds.indexOf(over.id as string);
+      const activeIndex = listIds.indexOf(active.id as string);
+      const newLists = arrayMove(lists, activeIndex, overIndex);
+      setLists(newLists);
+      return;
+    }
     
     const sourceList = lists.find(list => list.items.filter(item => item.id === active.id).length);
     const targetList = lists.find(list => list.id === over.data.current!.sortable.containerId);
@@ -88,13 +97,9 @@ const Welcome = () => {
   };
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    console.log(over);
     if (!over) {
       return;
     }
-
-    // const activeContainer = currentOrders.find(currentOrder => currentOrder.values.includes(active.id as string));
-    // const overContainer = currentOrders.find(currentOrder => currentOrder.values.includes(overId as string));
 
     const activeList = lists.find(list => list.items.filter(item => item.id === active.id).length);
     const overList = lists.find(list => list.items.filter(item => item.id === over.id).length);
