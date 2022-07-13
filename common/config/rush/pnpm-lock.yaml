@@ -1990,12 +1990,14 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/browser-mocha': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.33
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
@@ -2022,11 +2024,13 @@ importers:
       xor-distance: ^2.0.0
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/mesh-protocol': link:../protocol
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       '@koush/wrtc': 0.5.3
       assert: 2.0.0
