@@ -99,9 +99,19 @@ const Welcome = () => {
     if (!over) {
       return;
     }
+    
+    if ((over.id as string).split('-')[0] === 'list') {
+      // reorderList();
+      const listIds = lists.map(list => list.id);
+      const overIndex = listIds.indexOf(over.id as string);
+      const activeIndex = listIds.indexOf(active.id as string);
+      const newLists = arrayMove(lists, activeIndex, overIndex);
+      setLists(newLists);
+      return;
+    }
 
-    const activeList = lists.find(list => list.items.filter(item => item.id === active.id).length);
-    const overList = lists.find(list => list.items.filter(item => item.id === over.id).length);
+    const activeList = lists.find(list => list.items.some(item => item.id === active.id));
+    const overList = lists.find(list => list.items.some(item => item.id === over.id));
 
     if (!overList || !activeList) {
       return;
@@ -118,7 +128,7 @@ const Welcome = () => {
           if (list.id === activeList.id) {
             return {
               ...list,
-              items: overItems.filter(item => item.id !== active.id)
+              items: activeList.items.filter(item => item.id !== active.id)
             };
           }
           if (list.id === overList.id) {
@@ -126,7 +136,7 @@ const Welcome = () => {
               ...list,
               items: [
                 ...list.items.slice(0, newIndex),
-                overList.items[overIndex],
+                activeList.items.find(item => item.id === active.id),
                 ...list.items.slice(newIndex)
               ]
             };
