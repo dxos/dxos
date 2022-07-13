@@ -160,6 +160,7 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
+      esbuild: ^0.11.23
       eslint: ^7.12.1
       jest: ^26.6.3
       lodash.merge: ^4.6.2
@@ -179,6 +180,7 @@ importers:
       '@types/jest': 26.0.24
       '@types/lodash.merge': 4.6.6
       '@types/node': 16.11.27
+      esbuild: 0.11.23
       eslint: 7.32.0
       jest: 26.6.3_ts-node@10.8.2
       ts-jest: 26.5.6_rnfpnlbz3wqspag7uftsmccrvy

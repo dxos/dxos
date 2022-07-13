@@ -3,14 +3,14 @@
   "version": "2.33.8",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --emitDeclarationOnly && node build.js",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test",
     "lint": "eslint '{src,test}/**/*.ts'",
     "test": "jest 2>&1"
@@ -39,6 +39,7 @@
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.11.27",
+    "esbuild": "^0.11.23",
     "eslint": "^7.12.1",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",
