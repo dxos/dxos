@@ -261,6 +261,7 @@ export class Client {
    * Registers a new ECHO model.
    * @deprecated
    */
+  // TODO(burdon): Remove (moved to echo).
   registerModel (constructor: ModelConstructor<any>): this {
     this._echo.modelFactory.registerModel(constructor);
     return this;

@@ -14,6 +14,7 @@ const config = {
   baseUrl: 'http://localhost:8080/#/'
 };
 
+// TODO(burdon): Import App from src/main?
 const baseUrl = `${config.baseUrl}__story/stories-App-stories-tsx`;
 
 describe('Grid demo', function () {

@@ -76,4 +76,21 @@ describe('MetadataStore in-memory', () => {
     await store.clear();
     expect(store.parties?.length).toEqual(0);
   });
+
+  it('not corrupted', async () => {
+    const storage = createStorage('', StorageType.RAM);
+    const dir = storage.directory('metadata');
+    const metadataStore = new MetadataStore(dir);
+
+    // writing something in metadataStore to save.
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+
+    // using same directory to test if truncates.
+    const metadataStore2 = new MetadataStore(dir);
+    // should owerride previous data.
+    await metadataStore2.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore2.load();
+  });
 });

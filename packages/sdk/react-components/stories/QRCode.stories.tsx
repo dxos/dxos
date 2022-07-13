@@ -13,7 +13,7 @@ export default {
 };
 
 export const Primary = () => (
-<Container>
-      <QRCode value='https://dxos.org' />
-    </Container>
+  <Container>
+    <QRCode value='https://dxos.org' />
+  </Container>
 );

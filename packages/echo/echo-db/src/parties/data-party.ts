@@ -81,7 +81,7 @@ export class DataParty {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeeds().length,
+      feedKeys: this._feedProvider.getFeeds().length, // TODO(burdon): feeds.
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };

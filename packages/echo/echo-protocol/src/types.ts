@@ -61,17 +61,17 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
   seq: block.seq
 });
 
-export type FeedBlock = IFeedGenericBlock<FeedMessage>;
+export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
 export interface IHaloStream {
-  meta: FeedMeta;
+  meta: FeedMeta
   // TODO(telackey): Rename `dxos.halo.IHaloEnvelope`.
-  data: HaloMessage;
+  data: HaloMessage
 }
 
 export interface IEchoStream {
-  meta: MutationMetaWithTimeframe;
-  data: EchoEnvelope;
+  meta: MutationMetaWithTimeframe
+  data: EchoEnvelope
 }
 
 //

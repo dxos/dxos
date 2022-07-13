@@ -3,3 +3,4 @@
 //
 
 export * from './useResultSet';
+export * from './useStream';
