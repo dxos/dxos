@@ -65,7 +65,7 @@ describe('SignalMessenger', () => {
     }
   };
 
-  test.only('signaling between 2 clients', async () => {
+  test('signaling between 2 clients', async () => {
     const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
     const { api: api1 } = await createSignalClientAndReliableMessenger(signalApiUrl1, signalMock1);
     const { api: api2, messenger: messenger2 } = await createSignalClientAndReliableMessenger(signalApiUrl1);
@@ -87,7 +87,7 @@ describe('SignalMessenger', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test.only('offer/answer', async () => {
+  test('offer/answer', async () => {
     const {api: api1, messenger: messenger1} = await createSignalClientAndReliableMessenger(
       signalApiUrl1, 
       (async () => {}) as any, 
@@ -110,5 +110,70 @@ describe('SignalMessenger', () => {
       data: { offer: { } }
     });
     expect(answer).toEqual({ accept: true });
+  });
+  
+  test('signaling between 3 clients', async () => {
+    const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const {api: api1, messenger: messenger1} = await createSignalClientAndReliableMessenger(
+      signalApiUrl1, 
+      signalMock1, 
+      async () => ({ accept: true })
+    );
+    const signalMock2 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const {api: api2, messenger: messenger2} = await createSignalClientAndReliableMessenger(
+      signalApiUrl1, 
+      signalMock2, 
+      async () => ({ accept: true })
+    );
+    const signalMock3 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const {api: api3, messenger: messenger3} = await createSignalClientAndReliableMessenger(
+      signalApiUrl1, 
+      signalMock3, 
+      async () => ({ accept: true })
+    );
+
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+    const peer3 = PublicKey.random();
+    await api3.join(topic, peer3);
+    
+    // sending signal from peer1 to peer3.
+    const msg1to3 = {
+      id: peer1,
+      remoteId: peer3,
+      sessionId: PublicKey.random(),
+      topic,
+      data: { signal: { json: "1to3" } }
+    }
+    await messenger1.signal(msg1to3);
+    await waitForExpect(() => {
+      expect(signalMock3).toHaveBeenCalledWith([msg1to3]);
+    }, 4_000);
+
+    // sending signal from peer2 to peer3.
+    const msg2to3 = {
+      id: peer2,
+      remoteId: peer3,
+      sessionId: PublicKey.random(),
+      topic,
+      data: { signal: { json: "2to3" } }
+    }
+    await messenger2.signal(msg2to3);
+    await waitForExpect(() => {
+      expect(signalMock3).toHaveBeenCalledWith([msg2to3]);
+    }, 4_000);
+
+    // sending signal from peer3 to peer1.
+    const msg3to1 = {
+      id: peer3,
+      remoteId: peer1,
+      sessionId: PublicKey.random(),
+      topic,
+      data: { signal: { json: "3to1" } }
+    }
+    await messenger3.signal(msg3to1);
+    await waitForExpect(() => {
+      expect(signalMock1).toHaveBeenCalledWith([msg3to1]);
+    }, 4_000);
   });
 });
