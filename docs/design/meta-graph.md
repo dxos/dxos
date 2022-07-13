@@ -7,7 +7,7 @@ It consists of multiple interconnected decentralized networks:
 1. Agents (people and bots): HALO.
 2. Service Hubs: KUBE and MESH.
 3. Data: ECHO.
-4. Metadata: DXNS.
+4. Naming Service: DXNS.
 
 
 
@@ -147,8 +147,9 @@ Create a read-only feed for the party.
 https://example.com/echo/Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u
 ```
 
-> - TODO: ECHO feeds; KUBE servers support WebSub.
-> - TODO: IPLD graph.
+> - TODO: ECHO streams/feeds; KUBE servers support WebSub.
+> - TODO: IPLD graph: ECHO + IPFS.
+> - TODO: Messaging.
 
 
 ### 2.3 Decentralized Services (KUBE + MESH)
@@ -173,7 +174,11 @@ Ping the daemon.
 > - TODO: List services .well-known
 
 
-### 2.4 Decentralized Registry (DXNS)
+### 2.4 Decentralized Naming Service (DXNS)
+
+```bash
+> dx ns list
+```
 
 > - TODO: Discovery.
 > - TODO: Security concerns?
@@ -185,5 +190,9 @@ Ping the daemon.
 - [Keybase](https://keybase.io)
 - [Diaspora](https://diasporafoundation.org/)
 - [WebSub](https://www.w3.org/TR/websub)
-- OpenId
-- DIDs
+- [IPLD](https://ipld.io)
+- [Decentralized Identifiers](https://www.w3.org/TR/did-core)
+- [Verifiable Credentials](https://www.w3.org/TR/vc-data-model)
+- [Semantic Web](https://www.w3.org/standards/semanticweb)
+- [Solid](https://solidproject.org)
+  
