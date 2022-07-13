@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import TextField from '@mui/material/TextField';
@@ -12,12 +10,13 @@ import { TodoItem } from './models';
 import Checkbox from '@mui/material/Checkbox';
 
 export type TodoItemProps = {
-  dragging?: boolean;
-  item?: TodoItem;
-  onTitleChanged?: (val: string) => any;
-  onChecked?: (newState: boolean) => any;
-  onSubmit?: (val: string) => any;
+  dragging?: boolean
+  item?: TodoItem
+  onTitleChanged?: (val: string) => void
+  onChecked?: (newState: boolean) => void
+  onSubmit?: (val: string) => void
 };
+
 export function TodoListItem(props: TodoItemProps) {
   const { item, onTitleChanged, onChecked, onSubmit, dragging } = props;
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({

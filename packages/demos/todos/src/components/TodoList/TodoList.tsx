@@ -14,9 +14,9 @@ import { Typography } from '@mui/material';
 
 export type TodoListProps = {
   list: TodoListDef
-  onCreate?: (s: string) => any
-  onChecked?: (item: TodoItem, value: boolean) => any
-  onTitleChanged?: (item: TodoItem, value: string) => any
+  onCreate?: (s: string) => void
+  onChecked?: (item: TodoItem, value: boolean) => void
+  onTitleChanged?: (item: TodoItem, value: string) => void
   style?: CSSProperties
 };
 
