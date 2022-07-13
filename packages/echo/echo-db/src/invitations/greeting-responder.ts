@@ -13,8 +13,8 @@ import {
   Keyring,
   KeyType,
   SecretProvider,
-  SecretValidator
-  , Message as HaloMessage
+  SecretValidator,
+  Message as HaloMessage
 } from '@dxos/credentials';
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
@@ -59,11 +59,13 @@ export class GreetingResponder {
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _partyProcessor: PartyStateProvider,
+    private readonly _genesisFeedKey: PublicKey,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _credentialsWriter: FeedWriter<HaloMessage>
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
+      this._genesisFeedKey,
       async (messages: any) => this._writeCredentialsToParty(messages),
       async () => this._gatherHints()
     );

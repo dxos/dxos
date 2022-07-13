@@ -94,6 +94,10 @@ export class IdentityManager {
     assert(!this._identity, 'Identity already initialized.');
 
     const halo = await this._haloFactory.createHalo(options);
+
+    const identityKey = this.getIdentityKey() ?? failUndefined();
+    this._metadataStore.setGenesisFeed(identityKey.publicKey, await halo.getWriteFeedKey())
+
     await this._initialize(halo);
     return halo;
   }

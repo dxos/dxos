@@ -127,7 +127,7 @@ export class PartyPipeline {
    */
   @synchronized
   @timed(1_000)
-  async open (options: OpenOptions = {}) {
+  async open (options: OpenOptions) {
     const {
       feedHints = [],
       initialTimeframe,

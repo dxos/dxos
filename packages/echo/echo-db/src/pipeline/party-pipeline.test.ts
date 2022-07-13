@@ -48,7 +48,10 @@ describe('PartyPipeline', () => {
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
-    await party.open({ feedHints: [feed.key] });
+    await party.open({
+      genesisFeedKey: feed.key,
+      feedHints: [feed.key] 
+    });
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
@@ -103,7 +106,10 @@ describe('PartyPipeline', () => {
     }
 
     await party.close();
-    await party.open({ feedHints: [feedKey] });
+    await party.open({
+      genesisFeedKey: feedKey,
+       feedHints: [feedKey] 
+      });
 
     {
       await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
@@ -157,11 +163,11 @@ describe('PartyPipeline', () => {
       PublicKey.random()
     );
 
-    await partyFeedProvider.createOrOpenWritableFeed();
+    const writeFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
     const feedOpened = feedStore.feedOpenedEvent.waitForCount(1);
 
-    await party.open({ feedHints: [otherFeedKey] });
+    await party.open({ genesisFeedKey: writeFeed.key, feedHints: [otherFeedKey] });
     afterTest(async () => party.close());
 
     await feedOpened;
@@ -171,7 +177,6 @@ describe('PartyPipeline', () => {
 
   test('manually create item', async () => {
     const { party, partyFeedProvider } = await setup();
-    await party.open();
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
 
@@ -192,7 +197,6 @@ describe('PartyPipeline', () => {
 
   test('admit a second feed to the party', async () => {
     const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
@@ -222,7 +226,6 @@ describe('PartyPipeline', () => {
 
   test('admit feed and then open it', async () => {
     const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
@@ -269,7 +272,7 @@ describe('PartyPipeline', () => {
     expect(timeframe.isEmpty()).toBeFalsy();
 
     await party.close();
-    await party.open({ feedHints: [feedKey], targetTimeframe: timeframe });
+    await party.open({ genesisFeedKey: feedKey, feedHints: [feedKey], targetTimeframe: timeframe });
   });
 
   test('two instances replicating', async () => {
@@ -304,6 +307,7 @@ describe('PartyPipeline', () => {
     ));
 
     await party2.open({
+      genesisFeedKey: peer1.feedKey,
       feedHints: [peer1.feedKey]
     });
     afterTest(async () => party2.close());

@@ -9,6 +9,7 @@ import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
 import { Directory } from '@dxos/random-access-multi-storage';
+import { ComplexSet } from '@dxos/util';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -131,6 +132,13 @@ export class MetadataStore {
     } else {
       party.feedKeys = [feedKey];
     }
+    await this._save();
+  }
+
+  async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    await this.addPartyFeed(partyKey, feedKey);
+    const party = this.getParty(partyKey) ?? failUndefined();
+    party.genesisFeedKey = feedKey;
     await this._save();
   }
 

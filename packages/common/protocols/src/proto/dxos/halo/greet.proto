@@ -96,7 +96,10 @@ message NotarizeResponse {
   repeated google.protobuf.Any copies = 1;
 
   // Feed hints necessary to bootstrap the invitee into the Party.
+  // TODO(dmaretskyi): Remove when genesis feed is ready.
   repeated PubKey feedHints = 2;
+
+  PubKey genesisFeed = 3;
 };
 
 // TODO(dmaretskyi): Verify if this is valid. Wouldn't the knowledge of the party's public key be enough to verify the rest of credential messages?
