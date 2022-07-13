@@ -4,18 +4,18 @@
 
 import { Enum, Type } from 'protobufjs';
 
-export interface VisitorContext {
+export interface SanitizeContext {
   errors: string[]
 }
 
 /**
+ * Sanitiaze all enum fields in object based on protobuf type.
  * @param type
  * @param value
  * @param path
  * @param context
  */
-// TODO(wittjosiah): JSDoc.
-export const visitMessage = (type: Type, value: any, path: string, context: VisitorContext) => {
+export const sanitize = (type: Type, value: any, path: string, context: SanitizeContext) => {
   for (const key of Object.keys(value)) {
     if (!type.fields[key]) {
       context.errors.push(`Unexpected key: ${path}.${key}`);
@@ -32,14 +32,14 @@ export const visitMessage = (type: Type, value: any, path: string, context: Visi
       continue;
     }
     if (field.resolvedType instanceof Type) {
-      visitMessage(field.resolvedType, value[key], `${path}.${key}`, context);
+      sanitize(field.resolvedType, value[key], `${path}.${key}`, context);
     } else if (field.resolvedType instanceof Enum) {
       value[key] = sanitizeEnum(field.resolvedType, value[key], `${path}.${key}`, context);
     }
   }
 };
 
-const sanitizeEnum = (type: Enum, value: any, path: string, context: VisitorContext): any => {
+const sanitizeEnum = (type: Enum, value: any, path: string, context: SanitizeContext): any => {
   if (type.valuesById[value]) {
     return value;
   }

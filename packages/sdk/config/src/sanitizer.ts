@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { visitMessage, VisitorContext } from '@dxos/codec-protobuf';
+import { sanitize, SanitizeContext } from '@dxos/codec-protobuf';
 
 import { InvalidConfigError } from './errors';
 import { schema, ConfigObject } from './proto';
@@ -18,8 +18,8 @@ export const sanitizeConfig = (value: any): ConfigObject => {
   }
 
   // TODO(egorgripasov): Clean once old config deprecated.
-  const ctx: VisitorContext = { errors: [] };
-  visitMessage(configRootType.protoType, value, '', ctx);
+  const ctx: SanitizeContext = { errors: [] };
+  sanitize(configRootType.protoType, value, '', ctx);
   if (ctx.errors.length > 0) {
     throw new InvalidConfigError(ctx.errors.join('\n'));
   }
