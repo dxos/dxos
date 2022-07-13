@@ -1,9 +1,11 @@
 # ECHO Spec
 
+## 1. Introduction
+
 ECHO (The Eventually Consistent Hierrarhical Object-store) is a peer-to-peer database.
 
 
-## Terminology
+## 2. Terminology
 
 ***Party*** -
 Context for collaboration and data replication.
@@ -21,7 +23,7 @@ Type-specific API associated with a data Item.
 Monotonic sequence number used to order messages across multiple feeds.
 
 
-## Overview
+## 3. Basic Concepts
 
 ECHO is a decentralized graph database. 
 
