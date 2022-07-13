@@ -44,7 +44,6 @@ describe('SignalMessager', () => {
   });
 
   test('message between 2 clients', async () => {
-
     const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
     const messenger1 = new ReliableMessenger(
       (message: Message) => api1.signal(message as SignalApi.SignalMessage),
