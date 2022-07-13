@@ -24,7 +24,9 @@ brew install dx
 ```
 
 
-### 2.1 Self-Sovereign Identity (HALO)
+### 2.1 Decentralized Identity (HALO)
+
+#### 2.1.1 Self-Sovereign Identity
 
 Create your identity.
 
@@ -39,7 +41,7 @@ id_dxos.pub
 ```
 
 
-### 2.1.1 HALO: Social Network
+#### 2.1.2 Social Networks
 
 Create a URL containing a one-time use invitation token.
 
