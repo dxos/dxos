@@ -15,15 +15,15 @@ export default {
 };
 
 export const Primary = () => (
-<FullScreen>
-      <CreateItemDialog
-        open
-        type={TestType.Org}
-        itemAdapter={itemAdapter}
-        onCreate={(title: string) => console.log(title)}
-        onCancel={() => {}}
-      />
-    </FullScreen>
+  <FullScreen>
+    <CreateItemDialog
+      open
+      type={TestType.Org}
+      itemAdapter={itemAdapter}
+      onCreate={(title: string) => console.log(title)}
+      onCancel={() => {}}
+    />
+  </FullScreen>
 );
 
 export const Secondary = () => {

@@ -9,6 +9,7 @@ import React, { FC, useState } from 'react';
 import { PartyKey } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
+import { Feeds } from './Feeds';
 import { ItemList } from './ItemList';
 import { PartyInfo } from './PartyInfo';
 import { ShareParty } from './ShareParty';
@@ -33,6 +34,8 @@ const SectionTabs: FC<{
         <Tab name='items'>Items</Tab>
         {/* @ts-ignore */}
         <Tab name='types'>Types</Tab>
+        {/* @ts-ignore */}
+        <Tab name='feeds'>Feeds</Tab>
         {/* @ts-ignore */}
         <Tab name='sharing'>Sharing</Tab>
       </Tabs>
@@ -81,6 +84,11 @@ export const PartyView: FC<{
         <TypeList
           party={party}
           onChange={setType}
+        />
+      )}
+      {tab === 'feeds' && (
+        <Feeds
+          partyKey={party.key}
         />
       )}
       {tab === 'sharing' && (
