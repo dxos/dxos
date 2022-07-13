@@ -14,7 +14,7 @@ export type ListItem = {
 const ListItem: FC<{
   item?: ListItem,
   selected?: boolean,
-  onUpdate: (item: { id?: string, text: string }) => void
+  onUpdate?: (item: { id?: string, text: string }) => void
 }> = ({
   item,
   selected,
@@ -32,7 +32,7 @@ const ListItem: FC<{
   const handleSubmit = (text: string) => {
     const str = text.trim();
     if (str.length && str !== item?.text) {
-      onUpdate({ id: item?.id, text: str });
+      onUpdate?.({ id: item?.id, text: str });
       if (!item?.id) {
         selected && setText('');
       }
@@ -45,7 +45,7 @@ const ListItem: FC<{
         <Text>{item?.id ? '- ' : '+ '}{item?.text}</Text>
       )}
 
-      {selected && (
+      {selected && onUpdate && (
         <>
           <Text>{'> '}</Text>
           <TextInput
@@ -61,61 +61,69 @@ const ListItem: FC<{
 };
 
 export const List: FC<{
-  items: ListItem[],
-  onUpdate: (item: { id?: string, text: string }) => void,
-  pageSize?: number,
+  items: ListItem[]
+  pageSize?: number
   title?: string
   showCount?: boolean
+  onUpdate?: (item: { id?: string, text: string }) => void
+  onSelect?: (id: string) => void
 }> = ({
   items = [],
-  onUpdate,
   pageSize = 10,
   title,
-  showCount
+  showCount,
+  onUpdate,
+  onSelect
 }) => {
   const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
-  const { isFocused } = useFocus({ autoFocus: true });
+  const { isFocused } = useFocus();
 
   useInput((input, key) => {
-    if (isFocused) {
-      if (key.upArrow) {
-        if (cursor !== 0) {
-          setPosition(({ cursor, startIndex }) => {
-            const i = (cursor === -1) ? items.length - 1 : cursor - 1;
-            if (i < startIndex) {
-              startIndex = i;
-            }
+    if (!isFocused) {
+      return;
+    }
 
-            return { cursor: i, startIndex };
-          });
-        }
+    if (key.return) {
+      console.log('!!!!');
+    }
+
+    if (key.upArrow) {
+      if (cursor !== 0) {
+        setPosition(({ cursor, startIndex }) => {
+          const i = (cursor === -1) ? items.length - 1 : cursor - 1;
+          if (i < startIndex) {
+            startIndex = i;
+          }
+
+          return { cursor: i, startIndex };
+        });
       }
+    }
 
-      if (key.downArrow) {
-        if (cursor !== -1) {
-          setPosition(({ cursor, startIndex }) => {
-            const i = (cursor === items.length - 1) ? -1 : cursor + 1;
-            if (i === -1) {
-              startIndex = Math.max(0, items.length - pageSize);
-            } else if (i >= startIndex + pageSize) {
-              startIndex = i + 1 - pageSize;
-            }
+    if (key.downArrow) {
+      if (cursor !== -1) {
+        setPosition(({ cursor, startIndex }) => {
+          const i = (cursor === items.length - 1) ? -1 : cursor + 1;
+          if (i === -1) {
+            startIndex = Math.max(0, items.length - pageSize);
+          } else if (i >= startIndex + pageSize) {
+            startIndex = i + 1 - pageSize;
+          }
 
-            return { cursor: i, startIndex };
-          });
-        }
+          return { cursor: i, startIndex };
+        });
       }
     }
   });
 
-  // TODO(burdon): Paging.
+  // Paging.
   const pageItems = items.slice(startIndex, startIndex + pageSize);
 
   return (
     <Box flexDirection='column'>
       {title && (
         <Box marginBottom={1}>
-          <Text color='green'>{title}</Text>
+          <Text color={isFocused ? 'green' : 'white'}>{title}</Text>
         </Box>
       )}
 
@@ -131,7 +139,7 @@ export const List: FC<{
       <ListItem
         selected={cursor === -1}
         onUpdate={item => {
-          onUpdate(item);
+          onUpdate?.(item);
           if (!item.id) {
             setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
           }

@@ -11,7 +11,7 @@ export const Config = () => {
   const config = useConfig();
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       <Text color='green'>
         {JSON.stringify(config.values, undefined, 2)}
       </Text>

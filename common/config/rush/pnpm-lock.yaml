@@ -723,7 +723,7 @@ importers:
       ink: ^3.2.0
       ink-select-input: ~4.2.1
       ink-spinner: ~4.0.3
-      ink-tab: ~4.2.0
+      ink-table: ~3.0.0
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
       mocha: ~8.4.0
@@ -746,7 +746,7 @@ importers:
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
       ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
       ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
-      ink-tab: 4.2.0_ink@3.2.0+react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       js-yaml: 4.1.0
       react: 18.2.0
@@ -17620,14 +17620,14 @@ packages:
       react: 18.2.0
     dev: false
 
-  /ink-tab/4.2.0_ink@3.2.0+react@18.2.0:
-    resolution: {integrity: sha512-KrvNWrebGCXWbGf74QE0XYKYGUCa0dEgHGa3B4VJK3PQh8+wXycQeGnl1s/kq3OokWOmMyfkc/BTPgulxjXspQ==}
+  /ink-table/3.0.0_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-RtcYjenHKZWjnwVNQ6zSYWMOLKwkWscDAJsqUQXftyjkYho1gGrluGss87NOoIzss0IKr74lKasd6MtlQYALiA==}
     peerDependencies:
-      ink: ^3.0.0
-      react: '>=16.0.0'
+      ink: '>=3.0.0'
+      react: '>=16.8.0'
     dependencies:
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
-      prop-types: 15.8.1
+      object-hash: 2.2.0
       react: 18.2.0
     dev: false
 
@@ -21879,6 +21879,11 @@ packages:
       copy-descriptor: 0.1.1
       define-property: 0.2.5
       kind-of: 3.2.2
+
+  /object-hash/2.2.0:
+    resolution: {integrity: sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==}
+    engines: {node: '>= 6'}
+    dev: false
 
   /object-inspect/1.12.2:
     resolution: {integrity: sha512-z+cPxW0QGUp0mcqcsgQyLVRDoXFQbXOwBaqyF7VIgI4TWNQsDHrBpUQslRmIfAoYWdYzs6UlKJtB2XJpTaNSpQ==}

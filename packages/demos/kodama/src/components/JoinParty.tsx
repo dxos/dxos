@@ -11,7 +11,7 @@ import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export const JoinParty: FC<{
-  onJoin: (partyKey?: PartyKey) => void
+  onJoin?: (partyKey?: PartyKey) => void
 }> = ({
   onJoin
 }) => {
@@ -35,7 +35,8 @@ export const JoinParty: FC<{
         const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
-        setDescriptor(undefined);
+        onJoin?.();
+        // setDescriptor(undefined);
       }
     }
   };
@@ -46,14 +47,14 @@ export const JoinParty: FC<{
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
       const party = await invitation!.getParty();
-      onJoin(party.key);
+      onJoin?.(party.key);
     } catch (err) {
-      onJoin();
+      onJoin?.();
     }
   };
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       {!invitation && !processing && (
         <TextInput
           placeholder='Enter invitation'

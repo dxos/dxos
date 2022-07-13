@@ -33,7 +33,7 @@ export const TypeList: FC<{
   const { isFocused } = useFocus();
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       <Text color='green'>Types</Text>
       <SelectInput
         isFocused={isFocused}

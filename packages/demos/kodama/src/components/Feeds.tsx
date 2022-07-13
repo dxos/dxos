@@ -18,7 +18,7 @@ export const Feeds: FC<{
   const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       <Text color='green'>Feeds</Text>
        {feeds?.map(({ feedKey, length }) => (
         <Box key={feedKey!.toHex()}>

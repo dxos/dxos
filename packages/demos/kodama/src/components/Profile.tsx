@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { useProfile } from '@dxos/react-client';
+
+import { Table } from './Table';
 
 export const Profile = () => {
   const profile = useProfile();
@@ -15,16 +16,27 @@ export const Profile = () => {
   }
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='blue'>HALO Profile</Text>
-      <Box>
-        <Text color='blue'>  Public Key: </Text>
-        <Text>{truncateKey(profile.publicKey, 8)}</Text>
-      </Box>
-      <Box>
-        <Text color='blue'>  Username: </Text>
-        <Text>{profile.username}</Text>
-      </Box>
-    </Box>
+    <Table
+      columns={[
+        {
+          key: 'property',
+          color: 'blue',
+          width: 16
+        },
+        {
+          key: 'value'
+        }
+      ]}
+      rows={[
+        {
+          property: 'Public key',
+          value: truncateKey(profile.publicKey, 8)
+        },
+        {
+          property: 'Username',
+          value: profile.username
+        }
+      ]}
+    />
   );
 };

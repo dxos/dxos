@@ -38,7 +38,7 @@ export const ShareParty: FC<{
   return (
     <Box flexDirection='column'>
       {invitation && (
-        <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+        <Box flexDirection='column'>
           <Box flexDirection='column'>
             <Text color='green'>Invitation (copied to clipboard)</Text>
             <Text>{invitation.descriptor}</Text>

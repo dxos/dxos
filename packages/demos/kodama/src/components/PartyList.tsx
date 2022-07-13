@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
+import { PublicKey } from '@dxos/crypto';
 import { useClient, useParties } from '@dxos/react-client';
 
 import { List } from './List';
+import { Panel } from './Panel';
 import { PartyView } from './PartyView';
 
 export const PartyList: FC<{
@@ -45,16 +46,16 @@ export const PartyList: FC<{
   }
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Panel>
       <List
-        title='ECHO Parties'
         showCount
         onUpdate={handleUpdate}
+        onSelect={partyKey => setPartyKey(PublicKey.from(partyKey))}
         items={parties.map(party => ({
           id: party.key.toHex(),
           text: party.getProperty('title')
         }))}
       />
-    </Box>
+    </Panel>
   );
 };

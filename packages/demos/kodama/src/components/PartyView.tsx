@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, useInput, useFocus } from 'ink';
-import { Tabs, Tab } from 'ink-tab';
+import { Box, useInput } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
@@ -11,37 +10,11 @@ import { useParty } from '@dxos/react-client';
 
 import { Feeds } from './Feeds';
 import { ItemList } from './ItemList';
+import { Menu } from './Menu';
+import { Panel } from './Panel';
 import { PartyInfo } from './PartyInfo';
 import { ShareParty } from './ShareParty';
 import { TypeList } from './TypeList';
-
-const SectionTabs: FC<{
-  onChange: (id: string) => void
-}> = ({
-  onChange
-}) => {
-  const { isFocused } = useFocus();
-
-  return (
-    <Box borderStyle='single' borderColor='#333'>
-      <Tabs
-        isFocused={isFocused}
-        showIndex={false}
-        onChange={onChange}
-      >
-        {/* eslint-disable @typescript-eslint/ban-ts-comment */}
-        {/* @ts-ignore */}
-        <Tab name='items'>Items</Tab>
-        {/* @ts-ignore */}
-        <Tab name='types'>Types</Tab>
-        {/* @ts-ignore */}
-        <Tab name='feeds'>Feeds</Tab>
-        {/* @ts-ignore */}
-        <Tab name='sharing'>Sharing</Tab>
-      </Tabs>
-    </Box>
-  );
-};
 
 export const PartyView: FC<{
   partyKey: PartyKey,
@@ -64,37 +37,68 @@ export const PartyView: FC<{
     return null;
   }
 
-  return (
-    <Box flexDirection='column'>
-      <PartyInfo
-        party={party}
-      />
+  // TODO(burdon): Convert to Module.
 
-      <SectionTabs
+  return (
+    <Box flexDirection='column' flexGrow={1}>
+      <Panel>
+        <PartyInfo
+          party={party}
+        />
+      </Panel>
+
+      <Menu
+        value={tab}
         onChange={setTab}
+        items={[
+          {
+            id: 'items',
+            label: 'Items'
+          },
+          {
+            id: 'types',
+            label: 'Types'
+          },
+          {
+            id: 'feeds',
+            label: 'Feeds'
+          },
+          {
+            id: 'sharing',
+            label: 'Sharing'
+          }
+        ]}
       />
 
       {tab === 'items' && (
-        <ItemList
-          party={party}
-          type={type}
-        />
+        <Panel>
+          <ItemList
+            party={party}
+            type={type}
+          />
+        </Panel>
       )}
       {tab === 'types' && (
-        <TypeList
-          party={party}
-          onChange={setType}
-        />
+        <Panel>
+          <TypeList
+            party={party}
+            onChange={setType}
+          />
+        </Panel>
       )}
       {tab === 'feeds' && (
-        <Feeds
-          partyKey={party.key}
-        />
+        <Panel>
+          <Feeds
+            partyKey={party.key}
+          />
+        </Panel>
       )}
       {tab === 'sharing' && (
-        <ShareParty
-          party={party}
-        />
+        <Panel>
+          <ShareParty
+            party={party}
+          />
+        </Panel>
       )}
     </Box>
   );

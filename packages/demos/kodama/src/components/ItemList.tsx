@@ -44,7 +44,7 @@ export const ItemList: FC<{
   }
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       <List
         title={`Items [${type}]`}
         showCount
