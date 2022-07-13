@@ -46,7 +46,7 @@ The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.or
 
 ### Signaling
 
-Signaling enables two or more peers to discover and conntect to each other forming a peer-to-peer swarm.
+Signaling enables two or more peers to discover and connect to each other forming a peer-to-peer swarm.
 Peers may exist on multiple platforms, including browser and mobile applications, Web services (including bots), and tools (including the CLI and other terminal applications).
 
 ### Signaling Server
