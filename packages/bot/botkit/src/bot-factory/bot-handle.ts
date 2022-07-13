@@ -11,7 +11,7 @@ import { Tail } from 'tail';
 import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';

@@ -6,8 +6,8 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { TimeframeClock } from '../packlets/database';
 import { PartyStateProvider } from './party-processor';

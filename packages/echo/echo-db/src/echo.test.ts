@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
 import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase, humanize, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -43,7 +43,7 @@ describe('ECHO', () => {
   test('create party and update properties.', async () => {
     const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const party = await echo.createParty();
@@ -55,12 +55,12 @@ describe('ECHO', () => {
   test('create party and items.', async () => {
     const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => party.key.humanize()));
+      log('Updated:', parties.map(party => humanize(party.key)));
 
       // TODO(burdon): Update currently called after all mutations below have completed?
       expect(parties).toHaveLength(1);
@@ -83,7 +83,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     // TODO(burdon): Test item mutations.
     await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
@@ -98,12 +98,12 @@ describe('ECHO', () => {
     const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => party.key.humanize()));
+      log('Updated:', parties.map(party => humanize(party.key)));
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
@@ -126,7 +126,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parent = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
@@ -139,7 +139,7 @@ describe('ECHO', () => {
     const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const party = await echo.createParty();
@@ -148,7 +148,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parentA = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });

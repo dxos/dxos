@@ -7,7 +7,8 @@
 import expect from 'expect';
 import moment from 'moment';
 
-import { PublicKey, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { Filter, Keyring } from '../keys';
 import {

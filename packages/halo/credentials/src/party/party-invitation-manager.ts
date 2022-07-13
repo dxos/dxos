@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { KeyRecord, SignedMessage } from '../proto';
 import { PartyEventType } from './events';

@@ -5,7 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';

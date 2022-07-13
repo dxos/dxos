@@ -8,9 +8,9 @@ import unionWith from 'lodash.unionwith';
 
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';

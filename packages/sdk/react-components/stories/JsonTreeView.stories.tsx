@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { JsonTreeView } from '../src';
 import { Container } from './helpers';

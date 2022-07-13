@@ -5,12 +5,13 @@
 import assert from 'assert';
 import crypto from 'hypercore-crypto';
 
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+
 import { HumanHasher } from './human-hash';
-import { PublicKey, PublicKeyLike } from './public-key';
 
 export const hasher = new HumanHasher();
 
-export const PUBLIC_KEY_LENGTH = 32;
+export const PUBLIC_KEY_LENGTH = 32; // TODO(wittjosiah): Move to protocols with PublicKey?
 export const SECRET_KEY_LENGTH = 64;
 export const SIGNATURE_LENGTH = 64;
 
@@ -52,7 +53,7 @@ export const keyToBuffer = (str: string): Buffer => {
  * @param {Buffer | Uint8Array} buffer - Key buffer.
  * @return {string} Hex string representation of key.
  */
-export const keyToString = (buffer: Buffer | Uint8Array | PublicKey): string => {
+export const keyToString = (buffer: PublicKeyLike): string => {
   if (buffer instanceof PublicKey) {
     buffer = buffer.asBuffer();
   } else if (buffer instanceof Uint8Array) {
@@ -63,8 +64,8 @@ export const keyToString = (buffer: Buffer | Uint8Array | PublicKey): string => 
   return buffer.toString('hex');
 };
 
-export const humanize = (value: Buffer | Uint8Array | string): string => {
-  if (value instanceof Buffer || value instanceof Uint8Array) {
+export const humanize = (value: PublicKeyLike): string => {
+  if (value instanceof PublicKey || value instanceof Buffer || value instanceof Uint8Array) {
     value = keyToString(value);
   }
 

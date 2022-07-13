@@ -6,7 +6,7 @@ import assert from 'assert';
 import defaultHypercore from 'hypercore';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import type { PublicKey } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';

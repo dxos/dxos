@@ -2,10 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import crypto from 'hypercore-crypto';
+import randomBytes from 'randombytes';
 import { inspect } from 'util';
-
-import { HumanHasher } from './human-hash';
 
 export class PublicKey {
   /**
@@ -39,7 +37,7 @@ export class PublicKey {
   }
 
   static random (): PublicKey {
-    return PublicKey.from(crypto.randomBytes(32));
+    return PublicKey.from(randomBytes(32));
   }
 
   /**
@@ -95,13 +93,6 @@ export class PublicKey {
   }
 
   /**
-   * Convert this key to human-readable representation.
-   */
-  humanize (): string {
-    return hasher.humanize(this.toHex());
-  }
-
-  /**
    * Same as `PublicKey.humanize()`.
    */
   toString (): string {
@@ -115,11 +106,20 @@ export class PublicKey {
     return this.toHex();
   }
 
+  truncate (n = 4) {
+    const key = this.toHex();
+    if (key.length < n * 2 + 2) {
+      return key;
+    }
+
+    return `${key.substring(0, n)}..${key.substring(key.length - n)}`;
+  }
+
   /**
    * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
    */
   [inspect.custom] () {
-    return `<PublicKey ${this.humanize()}>`;
+    return `<PublicKey ${this.truncate()}>`;
   }
 
   /**
@@ -148,8 +148,6 @@ export type PublicKeyLike =
   | Buffer
   | Uint8Array
   | string
-
-const hasher = new HumanHasher();
 
 export const publicKeySubstitutions = {
   // TODO(dmaretskyi): Rename to dxos.crypto.PublicKey.
