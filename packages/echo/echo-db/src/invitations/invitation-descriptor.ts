@@ -6,9 +6,10 @@ import assert from 'assert';
 import base from 'base-x';
 import stableStringify from 'json-stable-stringify';
 
-import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
+import { keyToBuffer, keyToString, ripemd160 } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import * as proto from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvalidInvitationError } from '../packlets/errors';
 

@@ -6,11 +6,11 @@ import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';

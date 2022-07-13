@@ -15,10 +15,11 @@ import {
   Filter,
   SecretProvider
 } from '@dxos/credentials';
-import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { keyToString, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { createHaloPartyAdmissionMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';

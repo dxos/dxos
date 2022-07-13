@@ -8,8 +8,9 @@ import { Duplex } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
-import { discoveryKey, PublicKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';

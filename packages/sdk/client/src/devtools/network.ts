@@ -3,8 +3,8 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   GetNetworkPeersRequest,

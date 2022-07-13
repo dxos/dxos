@@ -37,6 +37,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.28.10",
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",

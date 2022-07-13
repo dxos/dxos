@@ -4,7 +4,8 @@
 
 import debug from 'debug';
 
-import { createKeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { Timeframe } from './timeframe';
 

@@ -45,7 +45,7 @@ const DEFAULT_WORDLIST = [
 /**
  * humanhash: Human-readable representations of digests.
  */
-// TODO(wittjosiah): Is this needed still?
+// TODO(wittjosiah): Move to debug?
 export class HumanHasher {
   /**
    * Transforms hex digests to human-readable strings.

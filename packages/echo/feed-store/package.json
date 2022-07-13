@@ -35,6 +35,7 @@
     "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/crypto": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/debug": "^4.1.7",

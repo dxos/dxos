@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKeyLike } from '@dxos/crypto';
+import type { PublicKeyLike } from '@dxos/protocols';
 
 export const truncate = (str = '', length: number, pad: boolean | string = false) => {
   if (str.length >= (length - 1)) {

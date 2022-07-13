@@ -4,7 +4,8 @@
 
 import expect from 'expect';
 
-import { generateSeedPhrase, KeyPair, keyPairFromSeedPhrase, PublicKey } from '@dxos/crypto';
+import { generateSeedPhrase, KeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { Keyring } from '../keys';
 import { KeyType } from '../proto';

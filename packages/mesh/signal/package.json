@@ -68,6 +68,7 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@koush/wrtc": "^0.5.3",

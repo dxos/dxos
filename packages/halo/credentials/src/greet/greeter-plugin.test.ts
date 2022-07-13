@@ -7,8 +7,9 @@ import expect from 'expect';
 import pump from 'pump';
 
 import { trigger } from '@dxos/async';
-import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { keyToString, randomBytes } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';

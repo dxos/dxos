@@ -4,7 +4,7 @@
 
 import { SignalData } from 'simple-peer';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 // TODO(burdon): Define message types as protobuf.
 

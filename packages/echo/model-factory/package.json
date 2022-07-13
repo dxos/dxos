@@ -14,16 +14,17 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^16.11.27",
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@dxos/crypto": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",

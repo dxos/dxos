@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { useDevtools, useParties, useStream } from '@dxos/react-client';
 
 import { KeySelect, MessageTable, Panel } from '../../components';

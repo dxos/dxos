@@ -4,11 +4,12 @@
 
 import debug from 'debug';
 
-import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
+import { discoveryKey, keyToString } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsProvider } from '.';
 

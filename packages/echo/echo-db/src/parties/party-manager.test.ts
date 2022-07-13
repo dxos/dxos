@@ -18,7 +18,8 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair,
+  humanize,
   randomBytes,
   sign,
   SIGNATURE_LENGTH, verify
@@ -29,6 +30,7 @@ import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
@@ -318,11 +320,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }
@@ -399,10 +401,10 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
         }
       }
     }
@@ -456,11 +458,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }

@@ -6,9 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from '../transport';

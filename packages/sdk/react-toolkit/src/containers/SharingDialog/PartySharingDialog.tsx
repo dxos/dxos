@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import type { PublicKey } from '@dxos/crypto';
+import type { PublicKey } from '@dxos/protocols';
 import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { ResourceSet } from '@dxos/registry-client';
 

@@ -8,8 +8,9 @@ import faker from 'faker';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair, keyToString, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair, keyToString } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
@@ -36,7 +37,7 @@ describe('feed store iterator', () => {
     //
 
     // Update when processed downstream.
-    let currentTimeframe = new Timeframe();
+    const currentTimeframe = new Timeframe();
 
     // TODO(burdon): Factor out/generalize.
     // Select message based on timeframe.
@@ -111,44 +112,6 @@ describe('feed store iterator', () => {
       log('Write:', keyToString(feed.key), value, timeframe);
     }
 
-    return;
-
-    //
-    // Consume iterator.
-    //
-    let j = 0;
-    const [counter, updateCounter] = latch(config.numMessages);
-    setImmediate(async () => {
-      for await (const message of iterator) {
-        assert(message.data?.echo?.mutation);
-
-        const { key: feedKey, seq, data: { timeframe, echo: { itemId, mutation } } } = message;
-        assert(itemId);
-        assert(timeframe);
-        assert(mutation);
-
-        const { key, value: word } = schema.getCodecForType('dxos.echo.testing.TestItemMutation').decode(mutation);
-        const i = parseInt(key!);
-        log('Read:', j, { i, word }, i === j, timeframe);
-
-        // Check order.
-        expect(i).toBe(j);
-
-        // Update timeframe for node.
-        currentTimeframe = Timeframe.merge(currentTimeframe, new Timeframe([[PublicKey.from(feedKey), seq]]));
-
-        updateCounter();
-        j++;
-      }
-    });
-
-    await counter;
-    await iterator.close();
-    await feedStore.close();
-
-    // Test expected number of messages.
-    expect(Array.from(feeds.values())
-      .reduce((sum, feed: HypercoreFeed) => sum + feed.length, 0)).toBe(config.numMessages);
   });
 
   test('skipping initial messages', async () => {
