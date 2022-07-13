@@ -37,7 +37,7 @@ describe('feed store iterator', () => {
     //
 
     // Update when processed downstream.
-    let currentTimeframe = new Timeframe();
+    const currentTimeframe = new Timeframe();
 
     // TODO(burdon): Factor out/generalize.
     // Select message based on timeframe.
@@ -111,8 +111,6 @@ describe('feed store iterator', () => {
       await pify(feed.append.bind(feed))(message);
       log('Write:', keyToString(feed.key), value, timeframe);
     }
-
-    return;
 
   });
 
