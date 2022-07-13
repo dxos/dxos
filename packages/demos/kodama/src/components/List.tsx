@@ -4,7 +4,7 @@
 
 import { Box, Text, useFocus, useInput } from 'ink';
 import TextInput from 'ink-text-input';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 export type ListItem = {
   id: string
@@ -22,6 +22,23 @@ const ListItem: FC<{
 }) => {
   const [text, setText] = useState(item?.text);
 
+  // Save when lose focus.
+  useEffect(() => {
+    if (text) {
+      handleSubmit(text);
+    }
+  }, [selected]);
+
+  const handleSubmit = (text: string) => {
+    const str = text.trim();
+    if (str.length && str !== item?.text) {
+      onUpdate({ id: item?.id, text: str });
+      if (!item?.id) {
+        selected && setText('');
+      }
+    }
+  };
+
   return (
     <Box>
       {!selected && (
@@ -35,15 +52,7 @@ const ListItem: FC<{
             value={text ?? ''}
             focus={selected}
             onChange={(text: string) => selected && setText(text)}
-            onSubmit={(text: string) => {
-              const str = text.trim();
-              if (str.length) {
-                onUpdate({ id: item?.id, text: str });
-                if (!item?.id) {
-                  selected && setText('');
-                }
-              }
-            }}
+            onSubmit={(text: string) => handleSubmit(text)}
           />
         </>
       )}
@@ -53,47 +62,87 @@ const ListItem: FC<{
 
 export const List: FC<{
   items: ListItem[],
-  onUpdate: (item: { id?: string, text: string }) => void
+  onUpdate: (item: { id?: string, text: string }) => void,
+  pageSize?: number,
+  title?: string
+  showCount?: boolean
 }> = ({
   items = [],
-  onUpdate
+  onUpdate,
+  pageSize = 10,
+  title,
+  showCount
 }) => {
-  const [index, setIndex] = useState(-1);
+  const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
   const { isFocused } = useFocus({ autoFocus: true });
 
   useInput((input, key) => {
     if (isFocused) {
       if (key.upArrow) {
-        setIndex(index => (index === -1) ? items.length - 1 : index - 1);
+        if (cursor !== 0) {
+          setPosition(({ cursor, startIndex }) => {
+            const i = (cursor === -1) ? items.length - 1 : cursor - 1;
+            if (i < startIndex) {
+              startIndex = i;
+            }
+
+            return { cursor: i, startIndex };
+          });
+        }
       }
+
       if (key.downArrow) {
-        setIndex(index => (index === items.length - 1) ? -1 : index + 1);
+        if (cursor !== -1) {
+          setPosition(({ cursor, startIndex }) => {
+            const i = (cursor === items.length - 1) ? -1 : cursor + 1;
+            if (i === -1) {
+              startIndex = Math.max(0, items.length - pageSize);
+            } else if (i >= startIndex + pageSize) {
+              startIndex = i + 1 - pageSize;
+            }
+
+            return { cursor: i, startIndex };
+          });
+        }
       }
     }
   });
 
   // TODO(burdon): Paging.
+  const pageItems = items.slice(startIndex, startIndex + pageSize);
 
   return (
     <Box flexDirection='column'>
-      {items.map((item, i) => (
+      {title && (
+        <Box marginBottom={1}>
+          <Text color='green'>{title}</Text>
+        </Box>
+      )}
+
+      {pageItems.map((item, i) => (
         <ListItem
           key={item.id}
           item={item}
-          selected={index === i}
+          selected={startIndex + i === cursor}
           onUpdate={onUpdate}
         />
       ))}
 
       <ListItem
-        selected={index === -1}
+        selected={cursor === -1}
         onUpdate={item => {
           onUpdate(item);
           if (!item.id) {
-            setIndex(-1);
+            setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
           }
         }}
       />
+
+      {showCount && (
+        <Box marginTop={1}>
+          <Text color='gray'>{items.length} items</Text>
+        </Box>
+      )}
     </Box>
   );
 };
