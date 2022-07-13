@@ -56,3 +56,8 @@ it('equals', () => {
     PublicKey.random()
   )).toEqual(false);
 });
+
+it('expect equality', () => {
+  const key = PublicKey.random();
+  expect(key).toEqual(PublicKey.from(key.toHex()));
+});

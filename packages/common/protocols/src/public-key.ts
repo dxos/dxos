@@ -106,7 +106,7 @@ export class PublicKey {
     return this.toHex();
   }
 
-  truncate = (n = 3) => {
+  truncate (n = 4) {
     const key = this.toHex();
     if (key.length < n * 2 + 2) {
       return key;
