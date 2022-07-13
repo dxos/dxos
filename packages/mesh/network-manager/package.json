@@ -26,10 +26,7 @@
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocols": "workspace:*",
-<<<<<<< HEAD
     "@dxos/codec-protobuf": "workspace:*",
-=======
->>>>>>> origin/main
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "assert": "^2.0.0",
