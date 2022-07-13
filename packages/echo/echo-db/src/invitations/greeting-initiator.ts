@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
 import {
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   createEnvelopeMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
@@ -19,8 +20,8 @@ import {
   Message,
   SecretProvider,
   WithTypeUrl,
-  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
-  SignedMessage
+  SignedMessage,
+  NotarizeResponse
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
@@ -46,10 +47,9 @@ export class GreetingInitiator {
 
   /**
    * @param _networkManager
-   * @param _identity
    * @param _invitationDescriptor
-   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
-   * @param _getMessagesToNotarize Returns a list of credential messages that the inviter will be asked to write into the control feed.
+   * @param _getMessagesToNotarize
+   *  Returns a list of credential messages that the inviter will be asked to write into the control feed.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
@@ -93,7 +93,8 @@ export class GreetingInitiator {
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
 
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
+      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId),
+      timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),
@@ -111,7 +112,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider) {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -150,7 +151,7 @@ export class GreetingInitiator {
     const credentialMessages = await this._getMessagesToNotarize(PublicKey.from(partyKey), nonce);
 
     // Send the signed payload to the greeting responder.
-    const notarizeResponse = await this._greeterPlugin.send(responderPeerId,
+    const notarizeResponse: NotarizeResponse = await this._greeterPlugin.send(responderPeerId,
       createGreetingNotarizeMessage(secret, credentialMessages as WithTypeUrl<Message>[]));
 
     //
@@ -171,7 +172,7 @@ export class GreetingInitiator {
     this._state = GreetingState.SUCCEEDED;
     return {
       partyKey,
-      hints: notarizeResponse.hints
+      hints: notarizeResponse.feedHints ?? []
     };
   }
 

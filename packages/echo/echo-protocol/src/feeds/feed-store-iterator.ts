@@ -22,8 +22,8 @@ const STALL_TIMEOUT = 1000;
  * - Construction separate from open.
  */
 
-export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
-export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
+export type MessageSelector = (candidates: FeedBlock[]) => number | undefined
+export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time

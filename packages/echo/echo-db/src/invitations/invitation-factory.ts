@@ -4,11 +4,12 @@
 
 import assert from 'assert';
 
-import { createPartyInvitationMessage } from '@dxos/credentials';
+import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { FeedWriter } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { CredentialWriter, PartyStateProvider } from '../pipeline';
+import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
@@ -19,10 +20,11 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
  */
 export class InvitationFactory {
   constructor (
-    private readonly _partyProcessor: CredentialWriter & PartyStateProvider,
+    private readonly _partyProcessor: PartyStateProvider,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
     private readonly _credentialsSigner: CredentialsSigner,
+    private readonly _credentialsWriter: FeedWriter<HaloMessage>,
     private readonly _networkManager: NetworkManager
   ) {}
 
@@ -42,7 +44,7 @@ export class InvitationFactory {
       this._credentialsSigner.getDeviceSigningKeys()
     );
 
-    await this._partyProcessor.writeHaloMessage(invitationMessage);
+    await this._credentialsWriter.write(invitationMessage);
 
     return new InvitationDescriptor(
       InvitationDescriptorType.OFFLINE,
@@ -60,7 +62,8 @@ export class InvitationFactory {
     const responder = new GreetingResponder(
       this._networkManager,
       this._partyProcessor,
-      this._credentialsSigner
+      this._credentialsSigner,
+      this._credentialsWriter
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

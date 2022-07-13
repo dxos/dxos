@@ -16,6 +16,8 @@ export class InvitationRequest {
 
   private _isCanceled = false;
 
+  // TODO(burdon): Merge events and provide single status Event.
+
   /**
    * Fired when the remote peer connects.
    */

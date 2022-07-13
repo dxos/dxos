@@ -12,37 +12,33 @@ import { SignalApi } from '../signal';
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
  */
 export interface Transport {
-  closed: Event;
-
-  connected: Event;
-
-  errors: ErrorStream;
-
-  signal (msg: SignalApi.SignalMessage): void;
-
-  close (): Promise<void>;
+  closed: Event
+  connected: Event
+  errors: ErrorStream
+  signal (msg: SignalApi.SignalMessage): Promise<void> // TODO(burdon): Remove async?
+  close (): Promise<void>
 }
 
 export interface TransportOptions {
   /**
    * Did local node initiate this connection.
    */
-  initiator: boolean,
+  initiator: boolean
 
-  ownId: PublicKey,
-  remoteId: PublicKey,
-  sessionId: PublicKey,
-  topic: PublicKey,
+  ownId: PublicKey
+  remoteId: PublicKey
+  sessionId: PublicKey
+  topic: PublicKey
 
   /**
    * Wire protocol.
    */
-  stream: NodeJS.ReadWriteStream,
+  stream: NodeJS.ReadWriteStream
 
   /**
    * Send a signal message to remote peer.
    */
-  sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+  sendSignal: (msg: SignalApi.SignalMessage) => Promise<void> // TODO(burdon): Remove async?
 }
 
-export type TransportFactory = (options: TransportOptions) => Transport;
+export type TransportFactory = (options: TransportOptions) => Transport

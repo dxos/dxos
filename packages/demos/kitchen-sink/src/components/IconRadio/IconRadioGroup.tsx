@@ -24,9 +24,9 @@ export const IconRadioGroup = ({
   value,
   onChange
 }: IconRadioGroupProps) => (
-<Box>
-      <IconRadioGroupContext.Provider value={{ value, onChange }}>
-        {children}
-      </IconRadioGroupContext.Provider>
-    </Box>
+  <Box>
+    <IconRadioGroupContext.Provider value={{ value, onChange }}>
+      {children}
+    </IconRadioGroupContext.Provider>
+  </Box>
 );

@@ -23,7 +23,7 @@ import {
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { InvalidInvitationError } from '../errors';
+import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -70,8 +70,8 @@ export class OfflineInvitationClaimer {
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, async () => false);
 
     log('Connecting');
-    const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      () => this._greeterPlugin?.peers.length, timeout);
+    const peerJoinedWaiter = waitForEvent(
+      this._greeterPlugin, 'peer:joined', () => !!this._greeterPlugin?.peers.length, timeout);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),

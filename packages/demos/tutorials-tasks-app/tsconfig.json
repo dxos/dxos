@@ -15,7 +15,7 @@
       "ESNext",
       "ES6"
     ],
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
@@ -37,12 +37,6 @@
   ],
   "references": [
     {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
@@ -50,6 +44,12 @@
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

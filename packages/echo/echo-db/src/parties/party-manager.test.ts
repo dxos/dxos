@@ -32,8 +32,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
-import { Item } from '../api';
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
+import { Item } from '../packlets/database';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createTestIdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
@@ -55,9 +55,11 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async () => {
   const keyring = new Keyring();
-  const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
-  const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
-  const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+
+  const storage = createStorage('', StorageType.RAM);
+  const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+  const metadataStore = new MetadataStore(storage.directory('metadata'));
+  const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
@@ -69,6 +71,7 @@ const setup = async () => {
     modelFactory,
     snapshotStore,
     feedProviderFactory,
+    metadataStore,
     {
       writeLogger: messageLogger('<<<'),
       readLogger: messageLogger('>>>')
@@ -138,21 +141,18 @@ describe('Party manager', () => {
     const feedStream = createWritableFeedStream(feed);
     feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
 
-    await partyManager.addParty(partyKey.publicKey, [{
-      type: KeyType.FEED,
-      publicKey: PublicKey.from(feed.key)
-    }]);
+    await partyManager.addParty(partyKey.publicKey, [PublicKey.from(feed.key)]);
 
     await update;
   });
 
   test('Create from cold start', async () => {
     const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const keyring = new Keyring();
-    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
@@ -162,7 +162,8 @@ describe('Party manager', () => {
       networkManager,
       modelFactory,
       snapshotStore,
-      feedProviderFactory
+      feedProviderFactory,
+      metadataStore
     );
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
 
@@ -188,15 +189,23 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identity.identityKey) });
       feedStream.write({
+        timeframe: new Timeframe(),
+        halo: createPartyGenesisMessage(
+          keyring,
+          partyKey,
+          feedKey.publicKey,
+          identity.identityKey
+        )
+      });
+      feedStream.write({
+        timeframe: new Timeframe(),
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',
           genesis: {
             itemType: PARTY_ITEM_TYPE,
             modelType: ObjectModel.meta.type
-          },
-          timeframe: new Timeframe()
+          }
         })
       });
     }

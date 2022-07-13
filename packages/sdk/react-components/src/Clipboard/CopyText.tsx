@@ -14,16 +14,21 @@ export interface CopyTextProps extends TypographyProps {
   value?: string
   length?: number
   monospace?: boolean
-  onCopyToClipboard?: (text: string) => void
+  onCopyToClipboard?: (text: string) => void // TODO(burdon): onCopy.
 }
 
-export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, variant, ...rest }: CopyTextProps) => (
-<Box sx={{
-  display: 'flex',
-  alignItems: 'center',
-  overflow: 'hidden',
-  height: 40
-}}>
+export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, variant, ...rest }: CopyTextProps) => {
+  if (!value) {
+    return null;
+  }
+
+  return (
+    <Box sx={{
+      display: 'flex',
+      alignItems: 'center',
+      overflow: 'hidden',
+      height: 40
+    }}>
       <Typography
         sx={{
           overflow: 'hidden',
@@ -38,13 +43,10 @@ export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, vari
         {length ? truncateKey(value, length) : value}
       </Typography>
 
-      {value && (
-        <>
-          <Box sx={{ flex: 1 }} />
-          <IconButton sx={{ marginLeft: 1 }}>
-            <CopyToClipboard text={value} />
-          </IconButton>
-        </>
-      )}
+      <Box sx={{ flex: 1 }} />
+      <IconButton sx={{ marginLeft: 1 }}>
+        <CopyToClipboard text={value} />
+      </IconButton>
     </Box>
-);
+  );
+};

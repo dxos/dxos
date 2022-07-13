@@ -4,16 +4,14 @@
 
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client';
 
 import { KeyTable } from '../../components';
-import { useStream } from '../../hooks';
 
 export const KeyringPanel = () => {
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
+  const devtoolsHost = useDevtools();
 
-  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({})) ?? {};
+  const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
   if (keys === undefined) {
     return null;
   }

@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Export other key API classes?
-
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   Database,
@@ -21,8 +19,17 @@ export {
 } from '@dxos/echo-db';
 
 export {
+  ItemID,
+  PartyKey
+} from '@dxos/echo-protocol';
+
+export {
   Model
 } from '@dxos/model-factory';
+
+export {
+  ObjectModel
+} from '@dxos/object-model';
 
 export * as proto from './proto/gen';
 

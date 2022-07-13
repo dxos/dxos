@@ -13,7 +13,7 @@ import { sleep } from '@dxos/async';
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
-import { pipeProtocols } from './testutils';
+import { pipeProtocols } from './testing';
 
 const log = debug('dxos:protocol:test');
 

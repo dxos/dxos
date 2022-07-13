@@ -9,14 +9,32 @@ import {
   GetPartySnapshotResponse,
   SavePartySnapshotRequest,
   SavePartySnapshotResponse,
+  SubscribeToPartiesRequest,
   SubscribeToPartiesResponse
 } from '../proto/gen/dxos/devtools';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
-export const subscribeToParties = ({ echo }: DevtoolsServiceDependencies) => new Stream<SubscribeToPartiesResponse>(({ next }) => {
+export const subscribeToParties = (
+  { echo }: DevtoolsServiceDependencies,
+  { partyKeys = [] }: SubscribeToPartiesRequest
+) => new Stream<SubscribeToPartiesResponse>(({ next }) => {
   const update = () => {
     const { value: parties } = echo.queryParties();
-    next({ parties: parties.map(party => party.partyInfo) });
+    const filteredParties = parties.filter(
+      party => !partyKeys?.length || partyKeys.some(partyKey => partyKey.equals(party.key)));
+
+    next({
+      parties: filteredParties.map(party => {
+        return {
+          key: party.key,
+          isOpen: party.isOpen,
+          isActive: party.isActive,
+          timeframe: party.timeframe,
+          feeds: party.getFeeds().map(feed => feed.key),
+          properties: party.isOpen ? party.getPropertiesSet().expectOne().model.toObject() : undefined
+        };
+      })
+    });
   };
 
   const partySubscriptions: Record<string, () => void> = {};

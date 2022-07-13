@@ -136,8 +136,8 @@ const ListStory = () => {
       const activeIndex = orderedList.values.indexOf(activeId);
       if (activeIndex !== overIndex) {
         const newOrder = moveItemInArray(orderedList.values, activeId, overIndex);
-        await orderedList.init(newOrder);
         setCurrentOrder(newOrder);
+        await orderedList.init(newOrder);
       }
     }
     setActiveId(undefined);
@@ -147,8 +147,8 @@ const ListStory = () => {
     if (!orderedList) {
       return;
     }
-    await orderedList.init(initialOrder);
     setCurrentOrder(initialOrder);
+    await orderedList.init(initialOrder);
   };
 
   if (!list) {
@@ -188,11 +188,11 @@ const ListStory = () => {
 };
 
 export const List = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <ListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <ListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleListStory = () => {
@@ -282,10 +282,10 @@ const MultipleListStory = () => {
     }
 
     const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
-    await targetOrderedList.init(newOrder);
     targetOrderedList.id !== sourceOrderedList.id
       ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
       : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
+    await targetOrderedList.init(newOrder);
 
     setActiveId(undefined);
   };
@@ -295,11 +295,6 @@ const MultipleListStory = () => {
       return;
     }
 
-    await Promise.all(orderedLists.map(async (orderedList) => {
-      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-      initialOrder && await orderedList?.init(initialOrder.values);
-    }));
-
     // Update state to trigger rerender
     setCurrentOrders(orderedLists.map(orderedList => {
       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
@@ -308,6 +303,12 @@ const MultipleListStory = () => {
       }
       return initialOrder;
     }));
+
+    await Promise.all(orderedLists.map(async (orderedList) => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      initialOrder && await orderedList?.init(initialOrder.values);
+    }));
+
   };
 
   if (!party || !lists.length) {
@@ -426,11 +427,11 @@ const MultipleListStory = () => {
 };
 
 export const MultipleList = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const TYPE_TEST_PERSON = 'example:type/person';
@@ -516,8 +517,8 @@ const TableStory = () => {
           const activeIndex = columnOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
             const newOrder = moveItemInArray(columnOrderedList.values, activeId, overIndex);
-            await columnOrderedList.init(newOrder);
             setColumnOrder(newOrder);
+            await columnOrderedList.init(newOrder);
           }
         }
       } else {
@@ -526,8 +527,8 @@ const TableStory = () => {
           const activeIndex = rowOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
             const newOrder = moveItemInArray(rowOrderedList.values, activeId, overIndex);
-            await rowOrderedList.init(newOrder);
             setRowOrder(newOrder);
+            await rowOrderedList.init(newOrder);
           }
         }
       }
@@ -536,10 +537,10 @@ const TableStory = () => {
   };
 
   const handleReset = async () => {
-    await rowOrderedList!.init(initialRowOrder);
     setRowOrder(initialRowOrder);
-    await columnOrderedList!.init(initialColumnOrder);
+    await rowOrderedList!.init(initialRowOrder);
     setColumnOrder(initialColumnOrder);
+    await columnOrderedList!.init(initialColumnOrder);
   };
 
   const getRows = () => rowOrder!.map(itemId => {
@@ -583,11 +584,11 @@ const TableStory = () => {
 };
 
 export const Table = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <TableStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <TableStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleContainersStory = () => {
@@ -675,8 +676,8 @@ const MultipleContainersStory = () => {
     const activeIndex = columnOrderedList!.values.indexOf(activeId);
     if (activeIndex !== overIndex) {
       const newOrder = moveItemInArray(columnOrderedList!.values, activeId, overIndex);
-      await columnOrderedList!.init(newOrder);
       setColumnOrder(newOrder);
+      await columnOrderedList!.init(newOrder);
     }
   };
 
@@ -712,10 +713,11 @@ const MultipleContainersStory = () => {
     }
 
     const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
-    await targetOrderedList.init(newOrder);
     targetOrderedList.id !== sourceOrderedList.id
       ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
       : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
+    await targetOrderedList.init(newOrder);
+
     setActiveId(undefined);
   };
 
@@ -748,11 +750,6 @@ const MultipleContainersStory = () => {
       return;
     }
 
-    await Promise.all(orderedLists.map(async (orderedList) => {
-      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-      initialOrder && await orderedList?.init(initialOrder.values);
-    }));
-
     // Update state to trigger rerender
     setCurrentOrders(orderedLists.map(orderedList => {
       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
@@ -761,8 +758,14 @@ const MultipleContainersStory = () => {
       }
       return initialOrder;
     }));
-    await columnOrderedList!.init(initialColumnOrder);
     setColumnOrder(initialColumnOrder);
+
+    await Promise.all(orderedLists.map(async (orderedList) => {
+      const initialOrder = initialOrders.find(order => order.id === orderedList.id);
+      initialOrder && await orderedList?.init(initialOrder.values);
+    }));
+
+    await columnOrderedList!.init(initialColumnOrder);
   };
 
   return (
@@ -859,9 +862,9 @@ const MultipleContainersStory = () => {
 };
 
 export const MultipleContainers = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleContainersStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleContainersStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );

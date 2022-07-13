@@ -8,23 +8,22 @@ import { TestType } from '@dxos/client-testing';
 import { itemAdapter } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
-import { CreateItemDialog } from '../src';
-import { CreateItemButton } from './helpers';
+import { CreateItemButton, CreateItemDialog } from '../src';
 
 export default {
   title: 'KitchenSink/CreateItemDialog'
 };
 
 export const Primary = () => (
-<FullScreen>
-      <CreateItemDialog
-        open
-        type={TestType.Org}
-        itemAdapter={itemAdapter}
-        onCreate={(title: string) => console.log(title)}
-        onCancel={() => {}}
-      />
-    </FullScreen>
+  <FullScreen>
+    <CreateItemDialog
+      open
+      type={TestType.Org}
+      itemAdapter={itemAdapter}
+      onCreate={(title: string) => console.log(title)}
+      onCancel={() => {}}
+    />
+  </FullScreen>
 );
 
 export const Secondary = () => {

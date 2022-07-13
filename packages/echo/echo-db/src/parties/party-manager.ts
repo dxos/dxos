@@ -9,7 +9,7 @@ import unionWith from 'lodash.unionwith';
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { timed } from '@dxos/debug';
+import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
@@ -94,9 +94,13 @@ export class PartyManager {
       const partyKey = partyKeys[i];
       if (!this._parties.has(partyKey)) {
         const snapshot = await this._snapshotStore.load(partyKey);
+
+        const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
+
         const party = snapshot
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
+        party._setFeedHints(metadata.feedKeys ?? []);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -157,11 +161,9 @@ export class PartyManager {
 
   /**
    * Construct a party object and start replicating with the remote peer that created that party.
-   * @param partyKey
-   * @param hints
    */
   @synchronized
-  async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
+  async addParty (partyKey: PartyKey, feedHints: PublicKey[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -174,8 +176,9 @@ export class PartyManager {
       return this._parties.get(partyKey);
     }
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
-    const party = await this._partyFactory.constructParty(partyKey, hints);
+    log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
+    const party = await this._partyFactory.constructParty(partyKey);
+    party._setFeedHints(feedHints);
     await party.open();
     await this._metadataStore.addParty(party.key);
     this._setParty(party);

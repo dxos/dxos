@@ -15,7 +15,7 @@ import { ConnectionLog } from './connection-log';
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
-import { createWebRtcTransportFactory, inMemoryTransportFactory } from './transport';
+import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
 
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
@@ -37,7 +37,7 @@ export class NetworkManager {
   private readonly _ice?: any[];
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
   private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
-  private readonly _signal: SignalManager;
+  private readonly _signalManager: SignalManager;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -47,13 +47,15 @@ export class NetworkManager {
 
     const onOffer = async (message: SignalApi.SignalMessage) =>
       await this._swarms.get(message.topic)?.onOffer(message) ?? { accept: false };
-    this._signal = options.signal
+
+    this._signalManager = options.signal
       ? new WebsocketSignalManager(options.signal, onOffer)
       : new InMemorySignalManager(onOffer);
 
-    this._signal.peerCandidatesChanged.on(([topic, candidates]) =>
-      this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
-    this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+    this._signalManager.peerCandidatesChanged
+      .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
+    this._signalManager.onSignal
+      .on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
 
     if (options.log) {
       this._connectionLog = new ConnectionLog();
@@ -61,9 +63,10 @@ export class NetworkManager {
   }
 
   get signal () {
-    return this._signal;
+    return this._signalManager;
   }
 
+  // TODO(burdon): Reconcile with "discoveryKey".
   get topics () {
     return Array.from(this._swarms.keys());
   }
@@ -82,12 +85,12 @@ export class NetworkManager {
 
   joinProtocolSwarm (options: SwarmOptions) {
     // TODO(burdon): Use TS to constrain properties.
-    assert(typeof options === 'object', 'Incorrect arguments format.');
+    assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
-    assert(PublicKey.isPublicKey(topic), 'Incorrect arguments format.');
-    assert(PublicKey.isPublicKey(peerId), 'Incorrect arguments format.');
-    assert(topology, 'Incorrect arguments format.');
-    assert(typeof protocol === 'function', 'Incorrect arguments format.');
+    assert(PublicKey.isPublicKey(topic));
+    assert(PublicKey.isPublicKey(peerId));
+    assert(topology);
+    assert(typeof protocol === 'function');
 
     log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
     if (this._swarms.has(topic)) {
@@ -95,21 +98,17 @@ export class NetworkManager {
         GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
     }
 
+    // TODO(burdon): Require factory (i.e., don't make InMemorySignalManager by default).
     // TODO(burdon): Bundle common transport related classes.
-    const transportFactory = this._signal instanceof InMemorySignalManager
-      ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice });
+    const transportFactory = this._signalManager instanceof InMemorySignalManager
+      ? inMemoryTransportFactory : createWebRTCTransportFactory({ iceServers: this._ice });
 
     const swarm = new Swarm(
       topic,
       peerId,
       topology,
       protocol,
-
-      // TODO(burdon): Merge.
-      async offer => this._signal.offer(offer),
-      async msg => this._signal.signal(msg),
-      () => this._signal.lookup(topic),
-
+      this._signalManager,
       transportFactory,
       options.label
     );
@@ -119,7 +118,7 @@ export class NetworkManager {
     });
 
     this._swarms.set(topic, swarm);
-    this._signal.join(topic, peerId);
+    this._signalManager.join(topic, peerId);
     this._maps.set(topic, new SwarmMapper(swarm, presence));
 
     this.topicsUpdated.emit();
@@ -139,7 +138,7 @@ export class NetworkManager {
     const map = this._maps.get(topic)!;
     const swarm = this._swarms.get(topic)!;
 
-    this._signal.leave(topic, swarm.ownPeerId);
+    this._signalManager.leave(topic, swarm.ownPeerId);
 
     map.destroy();
     this._maps.delete(topic);
@@ -168,7 +167,7 @@ export class NetworkManager {
       });
     }
 
-    await this._signal.destroy();
+    await this._signalManager.destroy();
   }
 }
 
@@ -177,6 +176,7 @@ export interface SwarmOptions {
    * Swarm topic.
    */
   topic: PublicKey,
+
   /**
    * This node's peer id.
    */
