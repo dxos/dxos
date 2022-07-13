@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
@@ -46,8 +46,9 @@ export const PartyList: FC<{
 
   return (
     <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='green'>ECHO Parties</Text>
       <List
+        title='ECHO Parties'
+        showCount
         onUpdate={handleUpdate}
         items={parties.map(party => ({
           id: party.key.toHex(),

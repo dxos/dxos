@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { HashIcon } from '@dxos/react-components';
 
 interface KeySelectProps {

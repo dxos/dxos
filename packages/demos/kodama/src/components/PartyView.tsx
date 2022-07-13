@@ -23,7 +23,7 @@ const SectionTabs: FC<{
   const { isFocused } = useFocus();
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box borderStyle='single' borderColor='#333'>
       <Tabs
         isFocused={isFocused}
         showIndex={false}

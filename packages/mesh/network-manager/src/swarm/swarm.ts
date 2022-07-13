@@ -6,8 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { discoveryKey, PublicKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';

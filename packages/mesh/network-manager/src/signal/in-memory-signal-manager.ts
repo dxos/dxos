@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalApi } from './signal-api';

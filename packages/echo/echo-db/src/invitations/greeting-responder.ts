@@ -16,9 +16,10 @@ import {
   SecretValidator
   , Message as HaloMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
+import { keyToString, randomBytes } from '@dxos/crypto';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';

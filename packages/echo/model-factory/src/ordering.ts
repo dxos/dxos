@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
 import { Timeframe } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { ModelMessage } from './types';
 

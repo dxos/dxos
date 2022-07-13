@@ -4,8 +4,8 @@
 
 import expect from 'expect';
 
-import { PublicKey } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
