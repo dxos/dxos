@@ -33,7 +33,7 @@ import { useEffect } from 'react';
 // TODO(burdon): Creade useAsyncMemo?
 // TODO(burdon): Replace setImmediate everywhere (approx 30 places).
 export const useAsyncEffect = <T> (
-  callback: (isMounted: () => boolean) => Promise<T>,
+  callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
   deps?: any[]
 ) => {
@@ -45,7 +45,7 @@ export const useAsyncEffect = <T> (
   useEffect(() => {
     let mounted = true;
 
-    let value: T;
+    let value: T | undefined;
     const asyncResult = callback(() => mounted);
 
     // TODO(burdon): Catch exception.

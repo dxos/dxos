@@ -88,23 +88,23 @@ const AppWithEditor = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <App />
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <App />
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 export const Secondary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <AppWithEditor />
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <AppWithEditor />
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const embedStyles = {
@@ -122,13 +122,13 @@ const embedStyles = {
 };
 
 export const Embedded = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <Box sx={embedStyles}>
-            <App />
-          </Box>
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <Box sx={embedStyles}>
+          <App />
+        </Box>
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );

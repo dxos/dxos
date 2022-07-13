@@ -8,17 +8,15 @@ import { Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
-import { useClient, useParties } from '@dxos/react-client';
+import { useDevtools, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { KeySelect, Panel } from '../../components';
 
 export const SnapshotsPanel = () => {
+  const devtoolsHost = useDevtools();
   const parties = useParties();
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
-
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
   const [snapshot, setSnapshot] = useState<PartySnapshot>();
 
   const handlePartyChange = (key: PublicKey | undefined) => {

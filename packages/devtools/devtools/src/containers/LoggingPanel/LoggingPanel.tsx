@@ -6,11 +6,10 @@ import React, { ChangeEvent, useEffect, useState } from 'react';
 
 import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
 
-import { useClient } from '@dxos/react-client';
+import { useDevtools } from '@dxos/react-client';
 
 export const LoggingPanel = () => {
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
+  const devtoolsHost = useDevtools();
   const [enabled, setEnabled] = useState(false);
   const [namespaces, setNamespaces] = useState('');
 
