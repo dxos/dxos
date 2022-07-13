@@ -6,9 +6,15 @@ import { Box } from 'ink';
 import React, { FC, ReactNode } from 'react';
 
 /**
- * Panel
+ * Focusable panel.
  */
-export const Panel: FC<{ children: ReactNode }> = ({ children }) => {
+export const Panel: FC<{
+  focused?: boolean
+  children: ReactNode
+}> = ({
+  focused,
+  children
+}) => {
   return (
     <Box
       flexDirection='column'
@@ -18,7 +24,7 @@ export const Panel: FC<{ children: ReactNode }> = ({ children }) => {
       marginTop={1}
       marginBottom={1}
       borderStyle='single'
-      borderColor='#666'
+      borderColor={focused ? 'green' : '#666'}
     >
       {children}
     </Box>

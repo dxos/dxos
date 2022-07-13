@@ -6,9 +6,9 @@ import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import React, { FC, useEffect, useState } from 'react';
 
 /**
- * Toolbar with tabs.
+ * Toolbar.
  */
-export const Menu: FC<{
+export const Toolbar: FC<{
   items: { id: string, label: string }[]
   value?: string
   onChange: (id: string) => void
@@ -36,6 +36,10 @@ export const Menu: FC<{
       return;
     }
 
+    if (key.return) {
+      focusNext();
+    }
+
     if (key.upArrow) {
       focusPrevious();
     }
@@ -60,11 +64,14 @@ export const Menu: FC<{
   return (
     <Box>
       <Text>{isFocused ? '> ' : '  '}</Text>
-      {items.map(({ id, label }) => (
+      {items.map(({ id, label }, i) => (
         <Box
           key={id}
           marginRight={1}
         >
+          {i !== 0 && (
+            <Text color='#333'>| </Text>
+          )}
           <Text
             dimColor={!isFocused}
             color={selected === id ? 'green' : 'white'}

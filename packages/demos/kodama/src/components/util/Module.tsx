@@ -5,7 +5,7 @@
 import { Box } from 'ink';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Menu } from './Menu';
+import { Toolbar } from './Toolbar';
 
 export type Module = {
   id: string
@@ -27,11 +27,7 @@ export const ModulePanel: FC<{
     const module = modules.find(m => m.id === option);
     if (module?.component) {
       const Component = module.component;
-      setComponent(() => () => (
-        // <Panel>
-          <Component />
-        // </Panel>
-      ));
+      setComponent(() => () => <Component />);
     } else if (module?.modules) {
       setComponent(() => () => <ModulePanel modules={module.modules!} />);
     } else {
@@ -41,7 +37,7 @@ export const ModulePanel: FC<{
 
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Menu
+      <Toolbar
         onChange={setOption}
         items={modules}
         value={option}

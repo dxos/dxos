@@ -8,13 +8,13 @@ import React, { FC } from 'react';
 import { Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { List } from './List';
+import { List } from '../util';
 
 const LABEL_PROPERTY = 'name'; // TODO(burdon): To make compatable with kitchen-sink/client-test.
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
-  party: Party,
+  party: Party
   type?: string
 }> = ({
   party,
@@ -44,9 +44,8 @@ export const ItemList: FC<{
   }
 
   return (
-    <Box flexDirection='column'>
+    <Box flexDirection='column' flexGrow={1}>
       <List
-        title={`Items [${type}]`}
         showCount
         onUpdate={handleUpdate}
         items={items.map(item => ({

@@ -5,27 +5,28 @@
 import { Box, Text } from 'ink';
 import React, { FC } from 'react';
 
-import { PublicKey } from '@dxos/crypto';
+import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useDevtools, useStream } from '@dxos/react-client';
 
-export const Feeds: FC<{
-  partyKey: PublicKey
+import { Panel } from '../util';
+
+export const PartyFeeds: FC<{
+  party: Party
 }> = ({
-  partyKey
+  party
 }) => {
   const devtoolsHost = useDevtools();
-  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
+  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey: party.key }), {});
 
   return (
-    <Box flexDirection='column'>
-      <Text color='green'>Feeds</Text>
-       {feeds?.map(({ feedKey, length }) => (
+    <Panel>
+      {feeds?.map(({ feedKey, length }) => (
         <Box key={feedKey!.toHex()}>
           <Text>- {truncateKey(feedKey!, 8)}</Text>
           <Text> [{length}]</Text>
         </Box>
-       ))}
-    </Box>
+      ))}
+    </Panel>
   );
 };

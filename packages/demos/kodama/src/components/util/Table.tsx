@@ -8,6 +8,9 @@ import React, { FC } from 'react';
 // TODO(burdon): Truncate.
 const pad = (value: any, width?: number) => String(value ?? '').padEnd(width ?? 20);
 
+/**
+ * Simple table.
+ */
 export const Table: FC<{
   columns: { key: string, color?: string, width?: number }[]
   rows: any[] }

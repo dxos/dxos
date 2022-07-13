@@ -27,6 +27,14 @@ const root: Module[] = [
       {
         id: 'keychain',
         label: 'Keychain'
+      },
+      {
+        id: 'devices',
+        label: 'Devices'
+      },
+      {
+        id: 'recover',
+        label: 'Recover Identity'
       }
     ]
   },

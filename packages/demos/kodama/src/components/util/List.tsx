@@ -6,14 +6,16 @@ import { Box, Text, useFocus, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
+import { Panel } from './Panel';
+
 export type ListItem = {
   id: string
   text: string
 }
 
 const ListItem: FC<{
-  item?: ListItem,
-  selected?: boolean,
+  item?: ListItem
+  selected?: boolean
   onUpdate?: (item: { id?: string, text: string }) => void
 }> = ({
   item,
@@ -42,18 +44,27 @@ const ListItem: FC<{
   return (
     <Box>
       {!selected && (
-        <Text>{item?.id ? '- ' : '+ '}{item?.text}</Text>
+        <>
+          <Text>{item?.id ? '- ' : '+ '}</Text>
+          <Text>{item?.text}</Text>
+        </>
       )}
 
-      {selected && onUpdate && (
+      {selected && (
         <>
           <Text>{'> '}</Text>
-          <TextInput
-            value={text ?? ''}
-            focus={selected}
-            onChange={(text: string) => selected && setText(text)}
-            onSubmit={(text: string) => handleSubmit(text)}
-          />
+          {!onUpdate && (
+            <Text>{item?.text}</Text>
+          )}
+
+          {onUpdate && (
+            <TextInput
+              value={text ?? ''}
+              focus={selected}
+              onChange={(text: string) => selected && setText(text)}
+              onSubmit={(text: string) => handleSubmit(text)}
+            />
+          )}
         </>
       )}
     </Box>
@@ -64,6 +75,7 @@ export const List: FC<{
   items: ListItem[]
   pageSize?: number
   title?: string
+  focusId?: string
   showCount?: boolean
   onUpdate?: (item: { id?: string, text: string }) => void
   onSelect?: (id: string) => void
@@ -71,22 +83,28 @@ export const List: FC<{
   items = [],
   pageSize = 10,
   title,
+  focusId,
   showCount,
   onUpdate,
   onSelect
 }) => {
   const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
-  const { isFocused } = useFocus();
+  const { isFocused } = useFocus({ id: focusId });
 
   useInput((input, key) => {
     if (!isFocused) {
       return;
     }
 
-    if (key.return) {
-      console.log('!!!!');
+    // Select.
+    if (key.return && onSelect) {
+      const id = items[cursor]?.id;
+      if (id) {
+        onSelect(id);
+      }
     }
 
+    // Up.
     if (key.upArrow) {
       if (cursor !== 0) {
         setPosition(({ cursor, startIndex }) => {
@@ -100,6 +118,7 @@ export const List: FC<{
       }
     }
 
+    // Down.
     if (key.downArrow) {
       if (cursor !== -1) {
         setPosition(({ cursor, startIndex }) => {
@@ -120,37 +139,41 @@ export const List: FC<{
   const pageItems = items.slice(startIndex, startIndex + pageSize);
 
   return (
-    <Box flexDirection='column'>
-      {title && (
-        <Box marginBottom={1}>
-          <Text color={isFocused ? 'green' : 'white'}>{title}</Text>
-        </Box>
-      )}
+    <Panel focused={isFocused}>
+      <Box flexDirection='column'>
+        {title && (
+          <Box marginBottom={1}>
+            <Text color={isFocused ? 'green' : 'white'}>{title}</Text>
+          </Box>
+        )}
 
-      {pageItems.map((item, i) => (
-        <ListItem
-          key={item.id}
-          item={item}
-          selected={startIndex + i === cursor}
-          onUpdate={onUpdate}
-        />
-      ))}
+        {pageItems.map((item, i) => (
+          <ListItem
+            key={item.id}
+            item={item}
+            selected={isFocused && startIndex + i === cursor}
+            onUpdate={onUpdate}
+          />
+        ))}
 
-      <ListItem
-        selected={cursor === -1}
-        onUpdate={item => {
-          onUpdate?.(item);
-          if (!item.id) {
-            setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
-          }
-        }}
-      />
+        {isFocused && (
+          <ListItem
+            selected={cursor === -1}
+            onUpdate={item => {
+              onUpdate?.(item);
+              if (!item.id) {
+                setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
+              }
+            }}
+          />
+        )}
 
-      {showCount && (
-        <Box marginTop={1}>
-          <Text color='gray'>{items.length} items</Text>
-        </Box>
-      )}
-    </Box>
+        {showCount && (
+          <Box marginTop={(isFocused && onUpdate) || items.length ? 1 : 0}>
+            <Text color='gray'>{items.length} items</Text>
+          </Box>
+        )}
+      </Box>
+    </Panel>
   );
 };
