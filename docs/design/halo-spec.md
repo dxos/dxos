@@ -1,10 +1,12 @@
 # HALO Spec
 
+## 1. Introduction
+
 Users maintain a HALO, which encompasses their identity and access control rights to digital assets withint the DXOS ecosystem.
 These rights are expressed cryptographically secure, privacy respecting, and machine-verifiable credentials.
 
 
-## Terminology
+## 2. Terminology
 
 ***Agent*** -
 Participant (i.e., bot or user) in the peer-to-peer network.
@@ -49,9 +51,9 @@ Storage for keys (on disk or in-memory).
 > device => Identity {HALO, keyring = {identity pk, device sk, feeds sk }}
 
 
-## Basic Concepts
+## 3. Basic Concepts
 
-## Credential message
+### Credential message
  
 > See packages/common/protocols/src/proto/dxos/halo/signed.proto
 
