@@ -8,13 +8,14 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessaging } from './signal-manager';
 
 /**
  * Adds offer/answer RPC and reliable messaging.
  *
  * TODO(mykola): https://github.com/dxos/protocols/issues/1316
  */
-export class ReliableMessenger {
+export class ReliableMessenger implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
 
   constructor (

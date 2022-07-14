@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
+import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, Message } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
@@ -16,6 +16,7 @@ import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
+import { ReliableMessenger } from './signal/reliable-messenger';
 
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
@@ -38,6 +39,7 @@ export class NetworkManager {
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
   private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
   private readonly _signalManager: SignalManager;
+  // private readonly _reliableMessenger: ReliableMessenger;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -56,6 +58,12 @@ export class NetworkManager {
       .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
     this._signalManager.onSignal
       .on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+
+    // this._reliableMessenger = new ReliableMessenger(
+    //   msg => this._signalManager.signal(msg),
+    //   async msg => this._swarms.get(msg.topic!)?.onSignal(msg),
+    //   msg => onOffer(msg)
+    // );
 
     if (options.log) {
       this._connectionLog = new ConnectionLog();
@@ -109,6 +117,7 @@ export class NetworkManager {
       topology,
       protocol,
       this._signalManager,
+      this._signalManager.lookup.bind(this._signalManager),
       transportFactory,
       options.label
     );
