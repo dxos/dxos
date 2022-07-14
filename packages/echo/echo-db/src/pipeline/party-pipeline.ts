@@ -130,6 +130,7 @@ export class PartyPipeline {
   async open (options: OpenOptions) {
     const {
       feedHints = [],
+      genesisFeedKey,
       initialTimeframe,
       targetTimeframe
     } = options;
@@ -161,7 +162,7 @@ export class PartyPipeline {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._partyProcessor, this._timeframeClock),
-      createFeedSelector(this._partyProcessor, feedHints),
+      createFeedSelector(this._partyProcessor, [genesisFeedKey]),
       initialTimeframe
     );
 
