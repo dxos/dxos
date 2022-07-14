@@ -7,7 +7,7 @@ import { PublicKey } from './public-key';
 const KEY_HEX = '2c28f0d08ccc5340aee02655675be5796227a28d27b9704df34b7d8b2d9fddc7';
 
 it('Basic key operations', () => {
-  const publicKey = PublicKey.random().toString();
+  const publicKey = PublicKey.random().asBuffer();
 
   expect(PublicKey.bufferize(PublicKey.stringify(publicKey))).toEqual(publicKey);
 

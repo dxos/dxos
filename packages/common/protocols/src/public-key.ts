@@ -90,7 +90,7 @@ export class PublicKey {
    * @return Hex string representation of key.
    * @deprecated All keys should be represented as instances of PublicKey.
    */
-  static stringify (key: string | Buffer | Uint8Array): string {
+  static stringify (key: Buffer | Uint8Array): string {
     if (key instanceof PublicKey) {
       key = key.asBuffer();
     } else if (key instanceof Uint8Array) {
