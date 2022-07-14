@@ -138,7 +138,10 @@ describe('Party manager', () => {
       type: KeyType.FEED
     });
 
-    await feed.append(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
+    await feed.append({
+      timeframe: new Timeframe(),
+      halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey) 
+    });
 
     await partyManager.addParty(partyKey.publicKey, feed.key, [feed.key]);
 
