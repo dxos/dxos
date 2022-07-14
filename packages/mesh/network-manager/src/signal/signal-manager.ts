@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 
 /**
@@ -18,13 +18,13 @@ export interface SignalConnection {
   lookup (topic: PublicKey): void
 
   /**
-   * 
+   *
    */
   // TODO(burdon): Document.
   join (topic: PublicKey, peerId: PublicKey): void
 
   /**
-   * 
+   *
    */
   // TODO(burdon): Document.
   leave (topic: PublicKey, peerId: PublicKey): void

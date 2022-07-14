@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, Message } from '@dxos/credentials';
+import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
@@ -16,7 +16,6 @@ import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
-import { ReliableMessenger } from './signal/reliable-messenger';
 
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 

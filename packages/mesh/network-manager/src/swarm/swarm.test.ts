@@ -12,7 +12,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalApi, SignalConnection, SignalMessaging } from '../signal';
+import { SignalApi, SignalMessaging } from '../signal';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
