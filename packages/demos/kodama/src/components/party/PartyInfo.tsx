@@ -20,7 +20,7 @@ export const PartyInfo: FC<{
         {
           key: 'property',
           color: 'blue',
-          width: 16
+          width: 20
         },
         {
           key: 'value'
@@ -32,7 +32,7 @@ export const PartyInfo: FC<{
           value: truncateKey(party.key, 8)
         },
         {
-          property: 'Username',
+          property: 'Name',
           value: party.getProperty('title')
         }
       ]}

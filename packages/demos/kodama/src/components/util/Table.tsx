@@ -42,6 +42,9 @@ export const Table: FC<{
           ))}
         </Box>
       )}
+      {!showHeader && rows.length === 0 && (
+        <Text color='gray'>Empty</Text>
+      )}
 
       {rows.map((row, i) => (
         <Box key={i}>

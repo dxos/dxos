@@ -7,6 +7,7 @@ import { Box } from 'ink';
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
+import { KeyType } from '@dxos/protocols';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Table } from '../util';
@@ -27,7 +28,8 @@ export const Keychain = () => {
         columns={[
           {
             key: 'type',
-            width: 8
+            width: 12,
+            value: type => KeyType[type]
           },
           {
             key: 'own',
@@ -39,17 +41,20 @@ export const Keychain = () => {
           },
           {
             key: 'created',
-            width: 20,
+            width: 22,
+            color: 'gray',
             value: date => formatDate(date)
           },
           {
             key: 'added',
-            width: 20,
+            width: 22,
+            color: 'gray',
             value: date => formatDate(date)
           },
           {
             key: 'publicKey',
             width: 20,
+            color: 'green',
             value: key => truncateKey(key, 8)
           }
         ]}

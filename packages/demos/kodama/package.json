@@ -35,12 +35,15 @@
     "ink": "^3.2.0",
     "ink-select-input": "~4.2.1",
     "ink-spinner": "~4.0.3",
+    "ink-syntax-highlight": "~1.0.1",
     "ink-table": "~3.0.0",
     "ink-text-input": "~4.0.3",
     "js-yaml": "^4.1.0",
+    "npm-api": "~1.0.1",
     "react": "^18.1.0",
     "yargs": "~16.2.0",
-    "ink-syntax-highlight": "~1.0.1"
+    "compare-semver": "~1.1.0",
+    "chalk": "^4.1.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",

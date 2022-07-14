@@ -19,17 +19,21 @@ export const PartyMembers: FC<{
 
   return (
     <Table
-      rows={members}
+      showHeader
       columns={[
         {
           key: 'publicKey',
-          color: 'blue',
-          value: key => truncateKey(key, 8)
+          value: key => truncateKey(key, 8),
+          width: 20,
+          color: 'green',
+          label: 'key'
         },
         {
-          key: 'displayName'
+          key: 'displayName',
+          label: 'username'
         }
       ]}
+      rows={members}
     />
   );
 };

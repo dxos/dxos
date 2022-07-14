@@ -44,7 +44,7 @@ export const ModulePanel: FC<{
 
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Box>
+      <Box marginBottom={1}>
         {/*
         {parent && (
           <Text>{parent}</Text>

@@ -21,8 +21,6 @@ export const Panel: FC<{
       flexGrow={1}
       paddingLeft={1}
       paddingRight={1}
-      marginTop={1}
-      marginBottom={1}
       borderStyle='single'
       borderColor={focused ? 'green' : '#666'}
     >

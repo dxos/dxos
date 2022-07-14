@@ -28,11 +28,13 @@ export const PartyView: FC<{
 
   useInput((input, key) => {
     if (key.escape) {
+      console.log('!!!');
       onExit();
     }
   });
 
-  // TODO(burdon): Convert to Module.
+  // TODO(burdon): Standardize use of <Panel>?
+
   const modules: Module[] = useMemo(() => party ? [
     {
       id: 'items',
@@ -69,9 +71,11 @@ export const PartyView: FC<{
       id: 'feeds',
       label: 'Feeds',
       component: () => (
-        <PartyFeeds
-          party={party}
-        />
+        <Panel>
+          <PartyFeeds
+            party={party}
+          />
+        </Panel>
       )
     },
     {
@@ -99,9 +103,11 @@ export const PartyView: FC<{
         />
       </Panel>
 
-      <ModulePanel
-        modules={modules}
-      />
+      <Box marginTop={1}>
+        <ModulePanel
+          modules={modules}
+        />
+      </Box>
     </Box>
   );
 };
