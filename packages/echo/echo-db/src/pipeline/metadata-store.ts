@@ -136,6 +136,7 @@ export class MetadataStore {
   }
 
   async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    assert(PublicKey.isPublicKey(feedKey));
     await this.addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
     party.genesisFeedKey = feedKey;

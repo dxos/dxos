@@ -22,7 +22,7 @@ import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
 describe('DataParty', () => {
-  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, feedHints: PublicKey[]) => {
+  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey, feedHints: PublicKey[] = []) => {
 
     const storage = createStorage('', StorageType.RAM);
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
@@ -43,6 +43,7 @@ describe('DataParty', () => {
       identity.preferences,
       networkManager
     );
+    party._setGenesisFeedKey(genesisFeedKey ?? writableFeed.key);
     party._setFeedHints([...feedHints, writableFeed.key]);
     return party;
   };
@@ -51,7 +52,7 @@ describe('DataParty', () => {
     const keyring = new Keyring();
     const identity = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const party = await createParty(identity, partyKey.publicKey, []);
+    const party = await createParty(identity, partyKey.publicKey);
 
     await party.open();
     await party.close();
@@ -61,7 +62,7 @@ describe('DataParty', () => {
     const keyring = new Keyring();
     const identity = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const party = await createParty(identity, partyKey.publicKey, []);
+    const party = await createParty(identity, partyKey.publicKey);
     await party.open();
 
     const feed = await party.getWriteFeed();
@@ -81,7 +82,7 @@ describe('DataParty', () => {
     const keyring = new Keyring();
     const identity = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const party = await createParty(identity, partyKey.publicKey, []);
+    const party = await createParty(identity, partyKey.publicKey);
     await party.open();
 
     const feed = await party.getWriteFeed();
@@ -109,7 +110,7 @@ describe('DataParty', () => {
     const identity = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const party = await createParty(identity, partyKey.publicKey, []);
+    const party = await createParty(identity, partyKey.publicKey);
     await party.open();
     const feed = await party.getWriteFeed();
     await party.credentialsWriter.write(createPartyGenesisMessage(
@@ -134,7 +135,7 @@ describe('DataParty', () => {
     const identityA = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const party = await createParty(identityA, partyKey.publicKey, []);
+    const party = await createParty(identityA, partyKey.publicKey);
     await party.open();
     const feed = await party.getWriteFeed();
     await party.credentialsWriter.write(createPartyGenesisMessage(
@@ -161,7 +162,7 @@ describe('DataParty', () => {
     const identityA = await createTestIdentityCredentials(keyring);
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const partyA = await createParty(identityA, partyKey.publicKey, []);
+    const partyA = await createParty(identityA, partyKey.publicKey);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
     await partyA.credentialsWriter.write(createPartyGenesisMessage(
@@ -178,7 +179,7 @@ describe('DataParty', () => {
     ));
 
     const identityB = await deriveTestDeviceCredentials(identityA);
-    const partyB = await createParty(identityB, partyKey.publicKey, [feedA.key]);
+    const partyB = await createParty(identityB, partyKey.publicKey, feedA.key, [feedA.key]);
     await partyB.open();
 
     await partyA.database.createItem({ type: 'test:item-a' });
@@ -195,7 +196,7 @@ describe('DataParty', () => {
     const identityA = await createTestIdentityCredentials(new Keyring());
     const partyKeyA = await identityA.keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const partyA = await createParty(identityA, partyKeyA.publicKey, []);
+    const partyA = await createParty(identityA, partyKeyA.publicKey);
     await partyA.open();
     const feedA = await partyA.getWriteFeed();
     await partyA.credentialsWriter.write(createPartyGenesisMessage(
@@ -226,9 +227,9 @@ describe('DataParty', () => {
     );
 
     await initiator.connect();
-    const { partyKey: partyKeyB, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
+    const { partyKey: partyKeyB, genesisFeedKey, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
     expect(partyKeyB.equals(partyKeyA.publicKey));
-    const partyB = await createParty(identityB, partyKeyB, hintsB);
+    const partyB = await createParty(identityB, partyKeyB, genesisFeedKey, hintsB);
     await partyB.open();
     await initiator.destroy();
 

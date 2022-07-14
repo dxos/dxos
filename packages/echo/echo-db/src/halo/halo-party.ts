@@ -32,6 +32,7 @@ export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/prefere
  */
 export interface JoinedParty {
   partyKey: PublicKey,
+  genesisFeed: PublicKey,
   keyHints: KeyHint[]
 }
 

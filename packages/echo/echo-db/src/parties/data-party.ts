@@ -152,11 +152,16 @@ export class DataParty {
     this._feedHints = feedHints;
   }
 
+  get genesisFeedKey() {
+    assert(this._genesisFeedKey);
+    return this._genesisFeedKey;
+  }
+
   /**
    * @internal
    */
   _setGenesisFeedKey (genesisFeedKey: PublicKey) {
-    this._genesisFeedKey = genesisFeedKey;;
+    this._genesisFeedKey = genesisFeedKey;
   }
 
   /**

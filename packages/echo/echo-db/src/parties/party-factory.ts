@@ -58,8 +58,12 @@ export class PartyFactory {
     const party = await this.constructParty(partyKey.publicKey);
 
     const writableFeed = await party.getWriteFeed();
+    party._setGenesisFeedKey(writableFeed.key);
     // Hint at the newly created writable feed so that we can start replicating from it.
     party._setFeedHints([writableFeed.key]);
+
+    await this._metadataStore.addParty(partyKey.publicKey);
+    await this._metadataStore.setGenesisFeed(partyKey.publicKey, writableFeed.key);
 
     // Connect the pipeline.
     await party.open();
@@ -171,9 +175,15 @@ export class PartyFactory {
     );
 
     await initiator.connect();
-    const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+    const { partyKey, genesisFeedKey, hints } = await initiator.redeemInvitation(secretProvider);
     const party = await this.constructParty(partyKey);
+    
+    await this._metadataStore.addParty(partyKey);
+    await this._metadataStore.setGenesisFeed(partyKey, (await party.getWriteFeed()).key);
+
+    party._setGenesisFeedKey(genesisFeedKey);
     party._setFeedHints(hints);
+    
     await party.open();
     await initiator.destroy();
 
@@ -200,7 +210,11 @@ export class PartyFactory {
 
     const writableFeed = await party.getWriteFeed();
     // Hint at the newly created writable feed so that we can start replicating from it.
+    party._setGenesisFeedKey(writableFeed.key);
     party._setFeedHints([writableFeed.key]);
+
+    await this._metadataStore.addParty(partyKey.publicKey);
+    await this._metadataStore.setGenesisFeed(partyKey.publicKey, writableFeed.key);
 
     // Connect the pipeline.
     await party.open();

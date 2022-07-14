@@ -151,6 +151,7 @@ export class Preferences {
       type: HALO_PARTY_DESCRIPTOR_TYPE,
       props: {
         publicKey: joinedParty.partyKey.asBuffer(),
+        genesisFeed: joinedParty.genesisFeed.toHex(),
         subscribed: true,
         hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
       }
@@ -160,8 +161,9 @@ export class Preferences {
   subscribeToJoinedPartyList (callback: (parties: JoinedParty[]) => void): () => void {
     const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
 
-    const converter = (partyDesc: Item<any>) => ({
+    const converter = (partyDesc: Item<any>): JoinedParty => ({
       partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
+      genesisFeed: PublicKey.from(partyDesc.model.get('genesisFeed')),
       keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
         ...hint,
         publicKey: PublicKey.from(hint.publicKey)
