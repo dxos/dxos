@@ -138,7 +138,8 @@ export class FeedMuxer {
 
           if (message.echo) {
             const memberKey = this._partyProcessor.getFeedOwningMember(PublicKey.from(block.key));
-            assert(memberKey, `Ownership of feed ${block.key.toHex()} could not be determined.`);
+            // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+            assert(memberKey, `Ownership of feed ${PublicKey.stringify(block.key as unknown as Buffer)} could not be determined.`);
 
             // Validate messge.
             const { itemId } = message.echo;
