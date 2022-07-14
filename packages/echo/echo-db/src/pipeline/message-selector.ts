@@ -33,7 +33,7 @@ export const createMessageSelector = (partyProcessor: PartyStateProvider, timefr
     }
 
     assert(timeframe);
-    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
+    if (!timeframeClock.hasGaps(timeframe)) {
       return i;
     }
   }
@@ -47,7 +47,7 @@ export const createMessageSelector = (partyProcessor: PartyStateProvider, timefr
     }
 
     assert(timeframe);
-    if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(timeframe)) {
+    if (!timeframeClock.hasGaps(timeframe)) {
       return i;
     }
 
