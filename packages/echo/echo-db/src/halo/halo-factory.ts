@@ -193,10 +193,10 @@ export class HaloFactory {
     );
 
     await initiator.connect();
-    const { hints } = await initiator.redeemInvitation(secretProvider);
+    const { hints, genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
 
     const halo = await this.constructParty(hints);
-    // TODO(dmaretskyi): Set genesis feed key from invitation data.
+    halo._setGenesisFeedKey(genesisFeedKey);
     await halo.open();
 
     await initiator.destroy();

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert, { notDeepEqual } from 'assert';
 import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
@@ -34,6 +34,12 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 const log = debug('dxos:echo-db:greeting-initiator');
 
 const DEFAULT_TIMEOUT = 30_000;
+
+export interface InvitationResult {
+  partyKey: PublicKey;
+  genesisFeedKey: PublicKey
+  hints: PublicKey[];
+}
 
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
@@ -112,7 +118,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<InvitationResult> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -170,9 +176,11 @@ export class GreetingInitiator {
     await this.disconnect();
 
     this._state = GreetingState.SUCCEEDED;
+    assert(notarizeResponse.genesisFeed);
     return {
       partyKey,
-      hints: notarizeResponse.feedHints ?? []
+      genesisFeedKey: notarizeResponse.genesisFeed,
+      hints: notarizeResponse.feedHints ?? [] // TODO(dmaretskyi): Remove.
     };
   }
 

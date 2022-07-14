@@ -163,6 +163,7 @@ export class HaloParty {
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
       this._partyCore.credentialsWriter,
       this._networkManager
