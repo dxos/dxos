@@ -15,6 +15,7 @@ export const ShareParty: FC<{
   party
 }) => {
   const [invitation, setInvitation] = useState<{ descriptor: string, secret: string }>();
+  const [status, setStatus] = useState<string>();
 
   useAsyncEffect(async () => {
     const invitation = await party.createInvitation();
@@ -29,10 +30,13 @@ export const ShareParty: FC<{
     // TODO(burdon): Change API: single status event.
     const handleDone = () => {
       setInvitation(undefined);
+      setStatus('Success');
     };
+
     invitation.canceled.on(handleDone);
     invitation.finished.on(handleDone);
-    invitation.error.on(handleDone);
+
+    invitation.error.on(err => setStatus(`Error: ${err}`));
   }, []);
 
   return (
@@ -48,6 +52,10 @@ export const ShareParty: FC<{
             <Text>{invitation.secret}</Text>
           </Box>
         </Box>
+      )}
+
+      {status && (
+        <Text>{status}</Text>
       )}
     </Box>
   );

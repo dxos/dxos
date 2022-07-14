@@ -20,6 +20,7 @@ export const JoinParty: FC<{
   const [secret, setSecret] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [invitation, setInvitation] = useState<PartyInvitation>();
+  const [status, setStatus] = useState<string>();
 
   const handleDecode = () => {
     try {
@@ -35,8 +36,7 @@ export const JoinParty: FC<{
         const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
-        onJoin?.();
-        // setDescriptor(undefined);
+        setStatus(`Error: ${err}`);
       }
     }
   };
@@ -47,9 +47,10 @@ export const JoinParty: FC<{
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
       const party = await invitation!.getParty();
+      setStatus('Success');
       onJoin?.(party.key);
     } catch (err) {
-      onJoin?.();
+      setStatus(`Error: ${err}`);
     }
   };
 
@@ -73,7 +74,10 @@ export const JoinParty: FC<{
         />
       )}
 
-      {processing && (
+      {status && (
+        <Text>{status}</Text>
+      )}
+      {processing && !status && (
         <Text>
           <Text color='green'>
             <Spinner type='dots' />

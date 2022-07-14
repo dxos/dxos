@@ -6,7 +6,7 @@ import { useFocusManager } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { useClient, useParties } from '@dxos/react-client';
 
 import { List } from '../util';
