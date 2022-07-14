@@ -12,8 +12,8 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { keyToBuffer, keyToString } from '@dxos/crypto';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { wrapMessage } from '../party';
 import { codec, Command } from '../proto';
@@ -28,7 +28,7 @@ export type GreetingCommandMessageHandler = (message: any, remotePeerId: Buffer,
 
 const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
-  return keyToBuffer(peerId);
+  return PublicKey.bufferize(peerId);
 };
 
 /**
@@ -113,7 +113,7 @@ export class GreetingCommandPlugin extends EventEmitter {
   async _send (peerId: PeerId, message: Command, oneway: boolean) {
     assert(Buffer.isBuffer(peerId));
     // `peerId` is a Buffer, but here we only need its string form.
-    const peerIdStr = keyToString(peerId);
+    const peerIdStr = PublicKey.stringify(peerId);
     const peer = this._peers.get(peerIdStr);
     assert(peer, `Peer not connected: ${peerIdStr}`);
     const extension = peer.getExtension(GreetingCommandPlugin.EXTENSION_NAME);

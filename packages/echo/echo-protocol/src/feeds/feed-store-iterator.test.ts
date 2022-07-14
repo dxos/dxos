@@ -8,7 +8,7 @@ import faker from 'faker';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair, keyToString } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
@@ -109,7 +109,7 @@ describe('feed store iterator', () => {
 
       // Write data.
       await pify(feed.append.bind(feed))(message);
-      log('Write:', keyToString(feed.key), value, timeframe);
+      log('Write:', PublicKey.stringify(feed.key), value, timeframe);
     }
 
   });

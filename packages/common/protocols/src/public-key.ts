@@ -2,9 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import randomBytes from 'randombytes';
 import { inspect } from 'util';
 
+export const PUBLIC_KEY_LENGTH = 32;
+export const SECRET_KEY_LENGTH = 64;
+
+/**
+ * The purpose of this class is to assure consistent use of keys throughout the project.
+ * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
+ * strings as late as possible (eg, to log/display).
+ */
 export class PublicKey {
   /**
    * Creates new instance of PublicKey automatically determining the input format.
@@ -61,6 +70,35 @@ export class PublicKey {
    */
   static equals (left: PublicKeyLike, right: PublicKeyLike) {
     return PublicKey.from(left).equals(right);
+  }
+
+  /**
+   * @param Hex string representation of key.
+   * @return Key buffer.
+   * @deprecated All keys should be represented as instances of PublicKey.
+   */
+  static bufferize (str: string): Buffer {
+    assert(typeof str === 'string', 'Invalid type');
+    const buffer = Buffer.from(str, 'hex');
+    assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
+      `Invalid key length: ${buffer.length}`);
+    return buffer;
+  }
+
+  /**
+   * @param Public key like data structure (but not PublicKey which should use toString).
+   * @return Hex string representation of key.
+   * @deprecated All keys should be represented as instances of PublicKey.
+   */
+  static stringify (key: string | Buffer | Uint8Array): string {
+    if (key instanceof PublicKey) {
+      key = key.asBuffer();
+    } else if (key instanceof Uint8Array) {
+      key = Buffer.from(key);
+    }
+
+    assert(key instanceof Buffer, 'Invalid type');
+    return key.toString('hex');
   }
 
   constructor (
