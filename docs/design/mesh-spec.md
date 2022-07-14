@@ -85,6 +85,15 @@ Each peer maintains a map of connections, which may implement different transpor
 
 ![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
 
+### Proposed libp2p architecture
+
+<br/> 
+
+![Network Manager](./diagrams/mesh-libp2p-signaling.drawio.svg)
+
+<br/> 
+
+![Network Manager](./diagrams/mesh-network-manager-libp2p.drawio.svg)
 
 ### Hypercore Protocol
 
