@@ -731,7 +731,8 @@ importers:
       ink: ^3.2.0
       ink-select-input: ~4.2.1
       ink-spinner: ~4.0.3
-      ink-tab: ~4.2.0
+      ink-syntax-highlight: ~1.0.1
+      ink-table: ~3.0.0
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
       mocha: ~8.4.0
@@ -754,7 +755,8 @@ importers:
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
       ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
       ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
-      ink-tab: 4.2.0_ink@3.2.0+react@18.2.0
+      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       js-yaml: 4.1.0
       react: 18.2.0
@@ -12230,6 +12232,19 @@ packages:
     dependencies:
       restore-cursor: 3.1.0
 
+  /cli-highlight/2.1.11:
+    resolution: {integrity: sha512-9KDcoEVwyUXrjcJNvHD0NFc/hiwe/WPVYIleQh2O1N2Zro5gWJZ/K+3DGn8w8P/F6FxOgzyC5bxDyHIgCSPhGg==}
+    engines: {node: '>=8.0.0', npm: '>=5.0.0'}
+    hasBin: true
+    dependencies:
+      chalk: 4.1.2
+      highlight.js: 10.7.3
+      mz: 2.7.0
+      parse5: 5.1.1
+      parse5-htmlparser2-tree-adapter: 6.0.1
+      yargs: 16.2.0
+    dev: false
+
   /cli-spinners/2.6.1:
     resolution: {integrity: sha512-x/5fWmGMnbKQAaNwN+UZlV79qBLM9JFnJuJ03gIi5whrob0xV0ofNVHy9DhwGdsMJQc2OKv0oGmLzvaqvAVv+g==}
     engines: {node: '>=6'}
@@ -17656,14 +17671,26 @@ packages:
       react: 18.2.0
     dev: false
 
-  /ink-tab/4.2.0_ink@3.2.0+react@18.2.0:
-    resolution: {integrity: sha512-KrvNWrebGCXWbGf74QE0XYKYGUCa0dEgHGa3B4VJK3PQh8+wXycQeGnl1s/kq3OokWOmMyfkc/BTPgulxjXspQ==}
+  /ink-syntax-highlight/1.0.1_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-+8lLWx2WUp7+et6d1mSgycdtuP0nDfCUDXB8Wo8tF5zqNT9YEGuHnznEZ30ypkB9bgCCDFsxn8QgxzBpNcbVOQ==}
+    engines: {node: '>=10'}
     peerDependencies:
-      ink: ^3.0.0
+      ink: ^3.0.0-4
       react: '>=16.0.0'
     dependencies:
+      cli-highlight: 2.1.11
       ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
-      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
+
+  /ink-table/3.0.0_ink@3.2.0+react@18.2.0:
+    resolution: {integrity: sha512-RtcYjenHKZWjnwVNQ6zSYWMOLKwkWscDAJsqUQXftyjkYho1gGrluGss87NOoIzss0IKr74lKasd6MtlQYALiA==}
+    peerDependencies:
+      ink: '>=3.0.0'
+      react: '>=16.8.0'
+    dependencies:
+      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      object-hash: 2.2.0
       react: 18.2.0
     dev: false
 
@@ -20496,7 +20523,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -21031,7 +21058,7 @@ packages:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
 
   /mkdirp/0.5.1:
-    resolution: {integrity: sha512-SknJC52obPfGQPnjIkXbmA6+5H15E+fR+E4iR2oQ3zzCLbd7/ONua69R/Gw7AgkTLsRG+r5fzksYwWe1AgTyWA==}
+    resolution: {integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=}
     deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
     hasBin: true
     dependencies:
@@ -21371,7 +21398,6 @@ packages:
       any-promise: 1.3.0
       object-assign: 4.1.1
       thenify-all: 1.6.0
-    dev: true
 
   /nan/2.15.0:
     resolution: {integrity: sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==}
@@ -21916,6 +21942,11 @@ packages:
       define-property: 0.2.5
       kind-of: 3.2.2
 
+  /object-hash/2.2.0:
+    resolution: {integrity: sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==}
+    engines: {node: '>= 6'}
+    dev: false
+
   /object-inspect/1.12.2:
     resolution: {integrity: sha512-z+cPxW0QGUp0mcqcsgQyLVRDoXFQbXOwBaqyF7VIgI4TWNQsDHrBpUQslRmIfAoYWdYzs6UlKJtB2XJpTaNSpQ==}
 
@@ -22393,7 +22424,10 @@ packages:
     resolution: {integrity: sha512-qPuWvbLgvDGilKc5BoicRovlT4MtYT6JfJyBOMDsKoiT+GiuP5qyrPCnR9HcPECIJJmZh5jRndyNThnhhb/vlA==}
     dependencies:
       parse5: 6.0.1
-    dev: true
+
+  /parse5/5.1.1:
+    resolution: {integrity: sha512-ugq4DFI0Ptb+WWjAdOK16+u/nHfiIrcE+sh8kZMaM0WllQKLI9rOUq6c2b7cwPkXdzfQESqvoqK6ug7U/Yyzug==}
+    dev: false
 
   /parse5/6.0.1:
     resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
@@ -26526,17 +26560,15 @@ packages:
       - '@mdx-js/react'
 
   /thenify-all/1.6.0:
-    resolution: {integrity: sha1-GhkY1ALY/D+Y+/I02wvMjMEOlyY=}
+    resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
     engines: {node: '>=0.8'}
     dependencies:
       thenify: 3.3.1
-    dev: true
 
   /thenify/3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
     dependencies:
       any-promise: 1.3.0
-    dev: true
 
   /thread-stream/0.13.0:
     resolution: {integrity: sha512-kTMZeX4Dzlb1zZ00/01aerGaTw2i8NE4sWF0TvF1uXewRhCiUjCvatQkvxIvFqauWG2ADFS2Wpd3qBeYL9i3dg==}

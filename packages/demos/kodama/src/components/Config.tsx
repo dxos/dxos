@@ -12,7 +12,7 @@ export const Config = () => {
 
   return (
     <Box flexDirection='column'>
-      <Text color='green'>
+      <Text color='grey'>
         {JSON.stringify(config.values, undefined, 2)}
       </Text>
     </Box>

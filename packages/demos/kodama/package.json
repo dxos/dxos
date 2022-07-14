@@ -38,7 +38,8 @@
     "ink-text-input": "~4.0.3",
     "js-yaml": "^4.1.0",
     "react": "^18.1.0",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "ink-syntax-highlight": "~1.0.1"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
