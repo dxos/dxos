@@ -50,7 +50,7 @@ export interface SignalManager extends SignalConnection, SignalMessaging {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
-  onSignal: Event<SignalApi.SignalMessage>
+  onSignal: Event<Message>
 
   getStatus (): SignalApi.Status[]
   destroy(): Promise<void>

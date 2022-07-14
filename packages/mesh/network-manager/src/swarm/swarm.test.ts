@@ -12,7 +12,8 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalApi, SignalMessaging } from '../signal';
+import { Message } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessaging } from '../signal';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
@@ -25,12 +26,12 @@ class MockSignalConnection implements SignalMessaging {
     readonly _delay = 10
   ) {}
 
-  async offer (msg: SignalApi.SignalMessage) {
+  async offer (msg: Message) {
     await sleep(this._delay);
     return this._swarm().onOffer(msg);
   }
 
-  async signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: Message) {
     await sleep(this._delay);
     await this._swarm().onSignal(msg);
   }

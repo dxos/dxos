@@ -14,7 +14,6 @@ import { randomInt } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { ReliableMessenger } from './reliable-messenger';
-import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
 
 describe('SignalMessenger', () => {
@@ -50,14 +49,14 @@ describe('SignalMessenger', () => {
     let api: SignalClient;
     const messenger: ReliableMessenger = new ReliableMessenger(
       // todo(mykola): added catch to avoid not finished request.
-      (msg: Message) => api.signal(msg as SignalApi.SignalMessage).catch((_) => {}),
+      (msg: Message) => api.signal(msg).catch((_) => {}),
       onSignal,
       onOffer
     );
     api = new SignalClient(
       signalApiUrl,
       (async () => {}) as any,
-      async (msg: SignalApi.SignalMessage) => messenger.receiveMessage(msg as Message)
+      async (msg: Message) => messenger.receiveMessage(msg)
     );
     afterTest(() => api.close());
     return {

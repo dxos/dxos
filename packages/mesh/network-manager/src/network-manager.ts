@@ -12,7 +12,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
+import { Message } from './proto/gen/dxos/mesh/signal';
+import { InMemorySignalManager, SignalManager, WebsocketSignalManager } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
@@ -46,8 +47,8 @@ export class NetworkManager {
   constructor (options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: SignalApi.SignalMessage) =>
-      await this._swarms.get(message.topic)?.onOffer(message) ?? { accept: false };
+    const onOffer = async (message: Message) =>
+      await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal
       ? new WebsocketSignalManager(options.signal, onOffer)
@@ -56,7 +57,10 @@ export class NetworkManager {
     this._signalManager.peerCandidatesChanged
       .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
     this._signalManager.onSignal
-      .on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+      .on(msg => {
+        assert(msg.topic);
+        return this._swarms.get(msg.topic)?.onSignal(msg);
+      });
 
     // this._reliableMessenger = new ReliableMessenger(
     //   msg => this._signalManager.signal(msg),

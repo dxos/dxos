@@ -12,7 +12,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { SignalApi, SignalMessaging } from '../signal';
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessaging } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
@@ -99,12 +100,13 @@ export class Swarm {
     this._topology.update();
   }
 
-  async onOffer (message: SignalApi.SignalMessage): Promise<SignalApi.Answer> {
+  async onOffer (message: Message): Promise<Answer> {
     log(`Offer from ${message.id} topic=${this._topic}`);
     // Id of the peer offering us the connection.
+    assert(message.id);
     const remoteId = message.id;
-    assert(message.remoteId.equals(this._ownPeerId));
-    assert(message.topic.equals(this._topic));
+    assert(message.remoteId?.equals(this._ownPeerId));
+    assert(message.topic?.equals(this._topic));
 
     // Check if we are already trying to connect to that peer.
     if (this._connections.has(remoteId)) {
@@ -124,6 +126,7 @@ export class Swarm {
     let accept = false;
     if (await this._topology.onOffer(remoteId)) {
       if (!this._connections.has(remoteId)) { // Connection might have been already established.
+        assert(message.sessionId);
         const connection = this._createConnection(false, message.id, message.sessionId);
         try {
           connection.connect();
@@ -137,10 +140,11 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: SignalApi.SignalMessage): Promise<void> {
+  async onSignal (message: Message): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
-    assert(message.remoteId.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
-    assert(message.topic.equals(this._topic));
+    assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
+    assert(message.topic?.equals(this._topic));
+    assert(message.id);
     const connection = this._connections.get(message.id);
     if (!connection) {
       log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.id}`);
@@ -241,7 +245,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: SignalApi.SignalMessage) => this._signalMessaging.signal(msg),
+      (msg: Message) => this._signalMessaging.signal(msg),
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
