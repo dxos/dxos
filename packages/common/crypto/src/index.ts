@@ -4,6 +4,5 @@
 
 export * from './encrypt';
 export * from './hash';
-export * from './human-hash';
 export * from './keys';
 export * from './validator';

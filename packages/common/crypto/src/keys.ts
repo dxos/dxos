@@ -7,10 +7,6 @@ import crypto from 'hypercore-crypto';
 
 import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
 
-import { HumanHasher } from './human-hash';
-
-export const hasher = new HumanHasher();
-
 export const SIGNATURE_LENGTH = 64;
 
 export const zeroKey = () => new Uint8Array(32);
@@ -29,16 +25,6 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
 };
 
 export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
-
-export const humanize = (value: PublicKeyLike): string => {
-  if (value instanceof Buffer || value instanceof Uint8Array) {
-    value = PublicKey.stringify(value);
-  } else if (value instanceof PublicKey) {
-    value = value.toHex();
-  }
-
-  return hasher.humanize(value);
-};
 
 /**
  * Return random bytes of length.

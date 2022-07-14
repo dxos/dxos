@@ -3,6 +3,7 @@
 //
 
 export * from './complex';
+export * from './human-hash';
 export * from './json';
 export * from './map';
 export * from './range';

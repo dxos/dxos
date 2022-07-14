@@ -13,13 +13,13 @@ import {
   SecretProvider,
   wrapMessage
 } from '@dxos/credentials';
-import { humanize } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 import {
   createDataPartyAdmissionMessages,

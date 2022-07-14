@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { humanize } from '@dxos/crypto';
+import { humanize } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';
 import { PartyPipeline } from '../pipeline';

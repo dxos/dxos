@@ -4,8 +4,7 @@
 
 import { inspect } from 'util';
 
-import { humanize } from '@dxos/crypto';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, humanize } from '@dxos/util';
 
 import { FeedKey } from '../types';
 
