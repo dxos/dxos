@@ -18,8 +18,10 @@ const Blank = () => <div />;
 
 export const ModulePanel: FC<{
   modules: Module[]
+  parent?: string
 }> = ({
-  modules
+  modules,
+  parent
 }) => {
   const [option, setOption] = useState<string>();
   const [Component, setComponent] = useState<FC>();
@@ -29,7 +31,12 @@ export const ModulePanel: FC<{
       const Component = module.component;
       setComponent(() => () => <Component />);
     } else if (module?.modules) {
-      setComponent(() => () => <ModulePanel modules={module.modules!} />);
+      setComponent(() => () => (
+        <ModulePanel
+          parent={option}
+          modules={module.modules!}
+        />
+      ));
     } else {
       setComponent(() => Blank);
     }
@@ -37,11 +44,19 @@ export const ModulePanel: FC<{
 
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Toolbar
-        onChange={setOption}
-        items={modules}
-        value={option}
-      />
+      <Box>
+        {/*
+        {parent && (
+          <Text>{parent}</Text>
+        )}
+        */}
+
+        <Toolbar
+          onChange={setOption}
+          items={modules}
+          value={option}
+        />
+      </Box>
 
       <Box>
         {Component && (

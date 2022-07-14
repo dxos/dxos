@@ -8,7 +8,19 @@ import React from 'react';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient, useProfile } from '@dxos/react-client';
 
-import { Config, JoinParty, Module, ModulePanel, Panel, PartyList, Profile } from './components';
+import {
+  Config,
+  Contacts,
+  Devices,
+  JoinParty,
+  Keychain,
+  Module,
+  ModulePanel,
+  Panel,
+  PartyList,
+  Profile,
+  Recovery
+} from './components';
 
 const root: Module[] = [
   {
@@ -26,15 +38,39 @@ const root: Module[] = [
       },
       {
         id: 'keychain',
-        label: 'Keychain'
+        label: 'Keychain',
+        component: () => (
+          <Panel>
+            <Keychain />
+          </Panel>
+        )
+      },
+      {
+        id: 'contacts',
+        label: 'Contacts',
+        component: () => (
+          <Panel>
+            <Contacts />
+          </Panel>
+        )
       },
       {
         id: 'devices',
-        label: 'Devices'
+        label: 'Devices',
+        component: () => (
+          <Panel>
+            <Devices />
+          </Panel>
+        )
       },
       {
         id: 'recover',
-        label: 'Recover Identity'
+        label: 'Recover Identity',
+        component: () => (
+          <Panel>
+            <Recovery />
+          </Panel>
+        )
       }
     ]
   },
@@ -64,14 +100,14 @@ const root: Module[] = [
     id: 'mesh',
     label: 'MESH'
   },
-  {
-    id: 'kube',
-    label: 'KUBE'
-  },
-  {
-    id: 'dxns',
-    label: 'DXNS'
-  },
+  // {
+  //   id: 'kube',
+  //   label: 'KUBE'
+  // },
+  // {
+  //   id: 'dxns',
+  //   label: 'DXNS'
+  // },
   {
     id: 'config',
     label: 'Config',

@@ -58,9 +58,11 @@ export const PartyView: FC<{
       id: 'members',
       label: 'Members',
       component: () => (
-        <PartyMembers
-          party={party}
-        />
+        <Panel>
+          <PartyMembers
+            party={party}
+          />
+        </Panel>
       )
     },
     {
