@@ -179,7 +179,7 @@ export class PartyFactory {
     const party = await this.constructParty(partyKey);
     
     await this._metadataStore.addParty(partyKey);
-    await this._metadataStore.setGenesisFeed(partyKey, (await party.getWriteFeed()).key);
+    await this._metadataStore.setGenesisFeed(partyKey, genesisFeedKey);
 
     party._setGenesisFeedKey(genesisFeedKey);
     party._setFeedHints(hints);
