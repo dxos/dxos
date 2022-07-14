@@ -50,15 +50,6 @@ export const createMessageSelector = (partyProcessor: PartyStateProvider, timefr
     if (!timeframeClock.hasGaps(timeframe)) {
       return i;
     }
-
-    if (partyProcessor.genesisRequired) {
-      try { // TODO(dmaretskyi): Get getPartyCredentialMessageType crashes for some reason.
-        // TODO(telackey): Add check that this is for the right Party.
-        if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
-          return i;
-        }
-      } catch { }
-    }
   }
 
   // Not ready for this message yet.
