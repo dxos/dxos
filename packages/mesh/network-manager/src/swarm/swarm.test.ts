@@ -12,20 +12,18 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalApi, SignalConnection } from '../signal';
+import { SignalApi, SignalConnection, SignalMessaging } from '../signal';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
 
 const log = debug('dxos:network-manager:swarm:test');
 
-class MockSignalConnection implements SignalConnection {
+class MockSignalConnection implements SignalMessaging {
   constructor (
     readonly _swarm: () => Swarm,
     readonly _delay = 10
   ) {}
-
-  lookup (topic: PublicKey) {}
 
   async offer (msg: SignalApi.SignalMessage) {
     await sleep(this._delay);
@@ -49,6 +47,7 @@ const setup = () => {
     new FullyConnectedTopology(),
     () => new Protocol(),
     new MockSignalConnection(() => swarm2),
+    () => {},
     createWebRTCTransportFactory(),
     undefined
   );
@@ -59,6 +58,7 @@ const setup = () => {
     new FullyConnectedTopology(),
     () => new Protocol(),
     new MockSignalConnection(() => swarm1),
+    () => {},
     createWebRTCTransportFactory(),
     undefined
   );
