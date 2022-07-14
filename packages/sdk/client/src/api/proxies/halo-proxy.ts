@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { DeviceInfo, KeyRecord } from '@dxos/credentials';
+import { DeviceInfo, keyPairFromSeedPhrase, KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
@@ -94,7 +94,18 @@ export class HaloProxy implements Halo {
    * If not public and secret key are provided it relies on keyring to contain an identity key.
    * @returns User profile info.
    */
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
+  async createProfile ({
+    publicKey,
+    secretKey,
+    username,
+    seedphrase
+  }: CreateProfileOptions = {}): Promise<Profile> {
+    if (seedphrase) {
+      const keyPair = keyPairFromSeedPhrase(seedphrase);
+      publicKey = keyPair.publicKey;
+      secretKey = keyPair.secretKey;
+    }
+
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({ publicKey, secretKey, username });
     return this._profile;
   }

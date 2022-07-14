@@ -8,8 +8,10 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
-import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, humanize, keyPairFromSeedPhrase } from '@dxos/crypto';
+import {
+  defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase
+} from '@dxos/credentials';
+import { humanize } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
