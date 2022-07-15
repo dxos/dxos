@@ -81,18 +81,14 @@ const root: Module[] = [
         id: 'share',
         label: 'Share',
         component: () => (
-          <Panel>
-            <ShareHalo />
-          </Panel>
+          <ShareHalo />
         )
       },
       {
         id: 'join',
         label: 'Join',
         component: () => (
-          <Panel>
-            <Join />
-          </Panel>
+          <Join />
         )
       }
     ]
@@ -112,9 +108,7 @@ const root: Module[] = [
         id: 'join',
         label: 'Join',
         component: () => (
-          <Panel>
-            <Join />
-          </Panel>
+          <Join />
         )
       }
     ]
@@ -158,18 +152,14 @@ const init: Module[] = [
         id: 'profile',
         label: 'Create Profile',
         component: () => (
-          <Panel>
-            <CreateProfile />
-          </Panel>
+          <CreateProfile />
         )
       },
       {
         id: 'recover',
         label: 'Recover Identity',
         component: () => (
-          <Panel>
-            <RecoverProfile />
-          </Panel>
+          <RecoverProfile />
         )
       }
     ]

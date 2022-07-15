@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Text, useFocus } from 'ink';
 import Spinner from 'ink-spinner';
 import TextInput from 'ink-text-input';
 import React, { FC, useState } from 'react';
@@ -10,12 +10,15 @@ import React, { FC, useState } from 'react';
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
+import { Panel } from '../util';
+
 export const Join: FC<{
   onJoin?: (partyKey?: PartyKey) => void
 }> = ({
   onJoin
 }) => {
   const client = useClient();
+  const { isFocused } = useFocus();
   const [descriptor, setDescriptor] = useState<string>();
   const [secret, setSecret] = useState<string>();
   const [processing, setProcessing] = useState(false);
@@ -55,7 +58,7 @@ export const Join: FC<{
   };
 
   return (
-    <Box flexDirection='column'>
+    <Panel focused={isFocused}>
       {!invitation && !processing && (
         <TextInput
           placeholder='Enter invitation code'
@@ -85,6 +88,6 @@ export const Join: FC<{
           {' Authenticating'}
         </Text>
       )}
-    </Box>
+    </Panel>
   );
 };
