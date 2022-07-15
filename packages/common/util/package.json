@@ -17,14 +17,16 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@types/node": "^16.11.27"
+    "@dxos/protocols": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/crypto": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
     "typescript": "^4.7.2"
   },

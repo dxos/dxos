@@ -27,8 +27,8 @@
   "dependencies": {
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^16.11.27",
     "buffer-json-encoding": "^1.0.2",

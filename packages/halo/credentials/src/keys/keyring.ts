@@ -7,7 +7,7 @@ import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
 import {
-  KeyPair, keyToBuffer, randomBytes, sign as cryptoSign, verify as cryptoVerify
+  KeyPair, randomBytes, sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { arraysEqual } from '@dxos/util';
@@ -583,7 +583,7 @@ export class Keyring implements Signer {
         item.publicKey = PublicKey.from(item.publicKey);
       }
       if (item.secretKey) {
-        item.secretKey = keyToBuffer(item.secretKey);
+        item.secretKey = PublicKey.bufferize(item.secretKey);
       }
 
       if (item.secretKey) {

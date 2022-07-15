@@ -7,11 +7,12 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
-import { createKeyPair, humanize, KeyPair } from '@dxos/crypto';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';

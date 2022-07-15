@@ -19,7 +19,6 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",

@@ -21,7 +21,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
@@ -33,7 +32,6 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/crypto": "workspace:*",
     "@dxos/esbuild-plugins": "~2.28.10",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",

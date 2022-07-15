@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { discoveryKey, keyToString } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
@@ -93,7 +93,7 @@ export class PartyProtocolFactory {
 
       userSession: {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: keyToString(this._peerId.asBuffer()),
+        peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       },

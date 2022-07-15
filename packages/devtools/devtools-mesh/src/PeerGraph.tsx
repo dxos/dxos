@@ -4,11 +4,11 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { humanize } from '@dxos/crypto';
 import { SVG, SVGContextProvider } from '@dxos/gem-core';
 import { Graph } from '@dxos/gem-spore';
 import { PeerInfo } from '@dxos/network-manager';
 import type { PublicKey } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 // const classMap: Record<string, string> = {
 //   ME: 'blue',
