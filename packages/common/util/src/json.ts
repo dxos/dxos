@@ -4,8 +4,9 @@
 
 import { inspect } from 'util';
 
-import { humanize } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
+
+import { humanize } from './human-hash';
 
 /**
  * JSON.stringify replacer.

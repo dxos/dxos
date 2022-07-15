@@ -4,16 +4,8 @@
 
 // DXOS testing browser.
 
-import { PublicKey } from '@dxos/protocols';
+import { createId } from './keys';
 
-import { createKeyPair, createId, hasher, humanize } from './keys';
-
-test('Hashing', () => {
-  const { publicKey, secretKey } = createKeyPair();
-
+test('Create id is unique', () => {
   expect(createId()).not.toEqual(createId());
-
-  expect(humanize(publicKey)).not.toEqual(humanize(secretKey));
-  expect(humanize(publicKey)).toEqual(hasher.humanize(PublicKey.stringify(publicKey)));
-  expect(hasher.humanize(createId())).toBeDefined();
 });
