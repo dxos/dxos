@@ -93,7 +93,7 @@ export class PartyProtocolFactory {
 
       userSession: {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: PublicKey.stringify(this._peerId.asBuffer()),
+        peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       },
