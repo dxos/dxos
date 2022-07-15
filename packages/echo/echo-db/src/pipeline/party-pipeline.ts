@@ -152,9 +152,8 @@ export class PartyPipeline {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
 
-    if (feedHints.length > 0) {
-      await this._partyProcessor.takeHints(feedHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
-    }
+    // TODO(dmaretskyi): We still need to hint at the genesis feed for some reason, not doing this breaks invitation tests.
+    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: genesisFeedKey }]);
 
     //
     // Pipeline

@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { promiseTimeout } from '@dxos/async';
+import { promiseTimeout, sleep } from '@dxos/async';
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
@@ -137,7 +137,7 @@ describe('PartyPipeline', () => {
     expect(partyFeedProvider.getFeeds().find(k => k.key.equals(feedKey.publicKey))).toBeTruthy();
   });
 
-  test('opens feed from hints', async () => {
+  test('does not open unrelated feeds', async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
@@ -165,14 +165,13 @@ describe('PartyPipeline', () => {
 
     const writeFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
-    const feedOpened = feedStore.feedOpenedEvent.waitForCount(1);
-
-    await party.open({ genesisFeedKey: writeFeed.key, feedHints: [otherFeedKey] });
+    await party.open({ genesisFeedKey: writeFeed.key,  });
     afterTest(async () => party.close());
 
-    await feedOpened;
+    // Wait for events to be processed.
+    await sleep(5);
 
-    expect(partyFeedProvider.getFeeds().some(k => k.key.equals(otherFeedKey))).toEqual(true);
+    expect(partyFeedProvider.getFeeds().some(k => k.key.equals(otherFeedKey))).toEqual(false);
   });
 
   test('manually create item', async () => {
