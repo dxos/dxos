@@ -5,9 +5,8 @@
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/protocols';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';

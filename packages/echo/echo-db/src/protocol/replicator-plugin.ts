@@ -4,7 +4,6 @@
 
 import debug from 'debug';
 
-import { keyToString } from '@dxos/crypto';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { PartyFeedProvider } from '../pipeline';
@@ -18,7 +17,7 @@ export const createReplicatorPlugin = (feedProvider: PartyFeedProvider) =>
   new Replicator({
     load: async () => {
       const feeds = feedProvider.getFeeds();
-      log(`Loading feeds: ${feeds.map(feed => keyToString(feed.key))}`);
+      log(`Loading feeds: ${feeds.map(feed => feed.key.toHex())}`);
       return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
     },
 

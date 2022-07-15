@@ -7,7 +7,7 @@ import expect from 'expect';
 import pump from 'pump';
 
 import { trigger } from '@dxos/async';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { arraysEqual } from '@dxos/util';
@@ -51,7 +51,7 @@ const createGreeter = async (targetPartyKey: PublicKeyLike) => {
       live: true
     },
     discoveryKey: peerId,
-    userSession: { peerId: keyToString(peerId) },
+    userSession: { peerId: PublicKey.stringify(peerId) },
     initiator: true
   })
     .setExtension(plugin.createExtension())
@@ -71,8 +71,8 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
 
   const connectionPromise = new Promise<void>(resolve => {
     plugin.on('peer:joined', (peerId) => {
-      if (peerId && keyToString(peerId) === keyToString(rendezvousKey)) {
-        log(`${keyToString(peerId)} connected.`);
+      if (peerId && PublicKey.stringify(peerId) === PublicKey.stringify(rendezvousKey)) {
+        log(`${PublicKey.stringify(peerId)} connected.`);
         resolve();
       }
     });
@@ -83,7 +83,7 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
       live: true
     },
     discoveryKey: rendezvousKey,
-    userSession: { peerId: keyToString(peerId) },
+    userSession: { peerId: PublicKey.stringify(peerId) },
     initiator: false
   })
     .setExtension(plugin.createExtension())

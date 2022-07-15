@@ -5,22 +5,15 @@
 import assert from 'assert';
 import crypto from 'hypercore-crypto';
 
-import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
 
 import { HumanHasher } from './human-hash';
 
 export const hasher = new HumanHasher();
 
-export const PUBLIC_KEY_LENGTH = 32; // TODO(wittjosiah): Move to protocols with PublicKey?
-export const SECRET_KEY_LENGTH = 64;
 export const SIGNATURE_LENGTH = 64;
 
 export const zeroKey = () => new Uint8Array(32);
-
-/* The purpose of this module is to assure consistent use of keys throughout the project.
- * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
- * strings as late as possible (eg, to log/display).
- */
 
 export interface KeyPair {
   publicKey: Buffer
@@ -37,36 +30,11 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
 
 export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
 
-/**
- * @param {string} str - Hex string representation of key.
- * @return {Buffer} Key buffer.
- */
-export const keyToBuffer = (str: string): Buffer => {
-  assert(typeof str === 'string', 'Invalid type');
-  const buffer = Buffer.from(str, 'hex');
-  assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
-    `Invalid key length: ${buffer.length}`);
-  return buffer;
-};
-
-/**
- * @param {Buffer | Uint8Array} buffer - Key buffer.
- * @return {string} Hex string representation of key.
- */
-export const keyToString = (buffer: PublicKeyLike): string => {
-  if (buffer instanceof PublicKey) {
-    buffer = buffer.asBuffer();
-  } else if (buffer instanceof Uint8Array) {
-    buffer = Buffer.from(buffer);
-  }
-
-  assert(buffer instanceof Buffer, 'Invalid type');
-  return buffer.toString('hex');
-};
-
 export const humanize = (value: PublicKeyLike): string => {
-  if (value instanceof PublicKey || value instanceof Buffer || value instanceof Uint8Array) {
-    value = keyToString(value);
+  if (value instanceof Buffer || value instanceof Uint8Array) {
+    value = PublicKey.stringify(value);
+  } else if (value instanceof PublicKey) {
+    value = value.toHex();
   }
 
   return hasher.humanize(value);
@@ -82,7 +50,8 @@ export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
 /**
  * @return {string}
  */
-export const createId = (): string => keyToString(randomBytes(32));
+// TODO(wittjosiah): This probably shouldn't rely on PublicKey?
+export const createId = (): string => PublicKey.stringify(randomBytes(32));
 
 /**
  * Sign the contents of message with secretKey

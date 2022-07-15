@@ -4,17 +4,9 @@
 
 // DXOS testing browser.
 
-import { createKeyPair, createId, hasher, humanize, keyToBuffer, keyToString } from './keys';
+import { PublicKey } from '@dxos/protocols';
 
-test('Basic key operations', () => {
-  const { publicKey } = createKeyPair();
-
-  expect(keyToBuffer(keyToString(publicKey))).toEqual(publicKey);
-
-  expect(() => keyToString('not-a-buffer' as any)).toThrowError();
-  expect(() => keyToBuffer('not-a-value-hex-key')).toThrowError();
-  expect(() => keyToBuffer(publicKey as any)).toThrowError();
-});
+import { createKeyPair, createId, hasher, humanize } from './keys';
 
 test('Hashing', () => {
   const { publicKey, secretKey } = createKeyPair();
@@ -22,6 +14,6 @@ test('Hashing', () => {
   expect(createId()).not.toEqual(createId());
 
   expect(humanize(publicKey)).not.toEqual(humanize(secretKey));
-  expect(humanize(publicKey)).toEqual(hasher.humanize(keyToString(publicKey)));
+  expect(humanize(publicKey)).toEqual(hasher.humanize(PublicKey.stringify(publicKey)));
   expect(hasher.humanize(createId())).toBeDefined();
 });

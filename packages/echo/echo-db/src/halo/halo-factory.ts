@@ -16,7 +16,6 @@ import {
   Filter,
   SecretProvider
 } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -152,7 +151,7 @@ export class HaloFactory {
   }
 
   private async _joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    log(`Admitting device with invitation: ${keyToString(invitationDescriptor.invitation)}`);
+    log(`Admitting device with invitation: ${PublicKey.stringify(invitationDescriptor.invitation)}`);
     assert(invitationDescriptor.identityKey);
 
     let identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
