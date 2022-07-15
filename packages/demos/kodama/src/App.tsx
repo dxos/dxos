@@ -3,14 +3,15 @@
 //
 
 import { Box } from 'ink';
+import * as process from 'process';
 import React from 'react';
 
-import { useAsyncEffect } from '@dxos/react-async';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useProfile } from '@dxos/react-client';
 
 import {
   Config,
   Contacts,
+  CreateProfile,
   Devices,
   JoinParty,
   Keychain,
@@ -19,7 +20,7 @@ import {
   Panel,
   PartyList,
   Profile,
-  Recovery
+  RecoverProfile
 } from './components';
 
 const root: Module[] = [
@@ -60,15 +61,6 @@ const root: Module[] = [
         component: () => (
           <Panel>
             <Devices />
-          </Panel>
-        )
-      },
-      {
-        id: 'recover',
-        label: 'Recover Identity',
-        component: () => (
-          <Panel>
-            <Recovery />
           </Panel>
         )
       }
@@ -116,6 +108,43 @@ const root: Module[] = [
         <Config />
       </Panel>
     )
+  },
+  {
+    id: 'quit',
+    label: 'Quit',
+    exec: () => process.exit()
+  }
+];
+
+const init: Module[] = [
+  {
+    id: 'halo',
+    label: 'HALO',
+    modules: [
+      {
+        id: 'profile',
+        label: 'Create Profile',
+        component: () => (
+          <Panel>
+            <CreateProfile />
+          </Panel>
+        )
+      },
+      {
+        id: 'recover',
+        label: 'Recover Identity',
+        component: () => (
+          <Panel>
+            <RecoverProfile />
+          </Panel>
+        )
+      }
+    ]
+  },
+  {
+    id: 'quit',
+    label: 'Quit',
+    exec: () => process.exit()
   }
 ];
 
@@ -123,24 +152,12 @@ const root: Module[] = [
  * Top-level app with menu.
  */
 export const App = () => {
-  const client = useClient();
   const profile = useProfile();
-
-  // TODO(burdon): Create temp profile unless one is set already.
-  useAsyncEffect(async () => {
-    if (!profile) {
-      await client.halo.createProfile();
-    }
-  }, []);
-
-  if (!profile) {
-    return null;
-  }
 
   return (
     <Box>
       <ModulePanel
-        modules={root}
+        modules={profile ? root : init}
       />
     </Box>
   );

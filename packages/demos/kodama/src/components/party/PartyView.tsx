@@ -28,7 +28,6 @@ export const PartyView: FC<{
 
   useInput((input, key) => {
     if (key.escape) {
-      console.log('!!!');
       onExit();
     }
   });

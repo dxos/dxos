@@ -31,7 +31,6 @@ const HaloCreationContainer = () => {
   const handleCreateHalo = async () => {
     const seedPhrase = generateSeedPhrase();
     const keyPair = keyPairFromSeedPhrase(seedPhrase);
-
     await client.halo.createProfile({ ...keyPair });
     setSeed(seedPhrase);
   };

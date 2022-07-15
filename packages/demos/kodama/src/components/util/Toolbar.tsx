@@ -12,10 +12,12 @@ export const Toolbar: FC<{
   items: { id: string, label: string }[]
   value?: string
   onChange: (id: string) => void
+  onSelect: () => void
 }> = ({
   items,
   value: controlledValue,
-  onChange
+  onChange,
+  onSelect
 }) => {
   const [selected, setSelected] = useState(controlledValue);
   useEffect(() => {
@@ -37,7 +39,7 @@ export const Toolbar: FC<{
     }
 
     if (key.return) {
-      focusNext();
+      onSelect();
     }
 
     if (key.upArrow) {
