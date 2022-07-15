@@ -41,12 +41,12 @@ describe('HALO', () => {
     );
 
     return new HALO({
-      keyring: keyring,
-      networkManager: networkManager,
-      metadataStore: metadataStore,
+      keyring,
+      networkManager,
+      metadataStore,
       feedProviderFactory,
-      modelFactory: modelFactory,
-      snapshotStore: snapshotStore,
+      modelFactory,
+      snapshotStore,
       options: {}
     });
   };

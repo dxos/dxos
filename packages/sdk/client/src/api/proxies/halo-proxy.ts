@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { KeyRecord } from '@dxos/credentials';
+import { DeviceInfo, KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
@@ -23,6 +23,9 @@ export interface Halo {
   createProfile (options?: CreateProfileOptions): Promise<Profile>
   recoverProfile (seedPhrase: string): Promise<Profile>
 
+  sign (request: SignRequest): Promise<SignResponse>
+  addKeyRecord (keyRecord: KeyRecord): Promise<void>
+
   /**
    * @deprecated
    */
@@ -32,13 +35,12 @@ export interface Halo {
   createInvitation (): Promise<InvitationRequest>
   acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation
 
-  addKeyRecord (keyRecord: KeyRecord): Promise<void>
-  sign (request: SignRequest): Promise<SignResponse>
+  queryDevices (): Promise<DeviceInfo[]>
+  setDevicePreference (key: string, value: string): Promise<void>
+  getDevicePreference (key: string): Promise<string | undefined>
 
   setGlobalPreference (key: string, value: string): Promise<void>
   getGlobalPreference (key: string): Promise<string | undefined>
-  setDevicePreference (key: string, value: string): Promise<void>
-  getDevicePreference (key: string): Promise<string | undefined>
 }
 
 /**
@@ -155,20 +157,17 @@ export class HaloProxy implements Halo {
     );
   }
 
-  async addKeyRecord (keyRecord: KeyRecord) {
-    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
-  }
-
   async sign (request: SignRequest) {
     return await this._serviceProvider.services.HaloService.sign(request);
   }
 
-  async setGlobalPreference (key: string, value: string): Promise<void> {
-    await this._serviceProvider.services.HaloService.setGlobalPreference({ key, value });
+  async addKeyRecord (keyRecord: KeyRecord) {
+    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
 
-  async getGlobalPreference (key: string): Promise<string | undefined> {
-    return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
+  // TODO(burdon): Implement.
+  async queryDevices (): Promise<DeviceInfo[]> {
+    return [];
   }
 
   async setDevicePreference (key: string, value: string): Promise<void> {
@@ -177,6 +176,14 @@ export class HaloProxy implements Halo {
 
   async getDevicePreference (key: string): Promise<string | undefined> {
     return (await this._serviceProvider.services.HaloService.getDevicePreference({ key })).value;
+  }
+
+  async setGlobalPreference (key: string, value: string): Promise<void> {
+    await this._serviceProvider.services.HaloService.setGlobalPreference({ key, value });
+  }
+
+  async getGlobalPreference (key: string): Promise<string | undefined> {
+    return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
   }
 
   /**
