@@ -10,7 +10,7 @@ import pify from 'pify';
 import tempy from 'tempy';
 
 import { sleep } from '@dxos/async';
-import { createKeyPair, keyToString } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
 
@@ -70,7 +70,7 @@ describe('FeedStore', () => {
     expect(booksFeed).toBeInstanceOf(hypercore);
 
     const booksFeedDescriptor = await feedStore.openReadWriteFeed(PublicKey.from(booksFeed.key), booksFeed.secretKey);
-    expect(booksFeedDescriptor.key.toHex()).toEqual(keyToString(booksFeed.key));
+    expect(booksFeedDescriptor).toHaveProperty('key', PublicKey.from(booksFeed.key));
 
     await append(booksFeed, 'Foundation and Empire');
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');

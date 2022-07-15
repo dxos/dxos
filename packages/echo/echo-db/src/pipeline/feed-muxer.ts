@@ -7,7 +7,6 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import {
   createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter, Timeframe
@@ -139,7 +138,8 @@ export class FeedMuxer {
 
           if (message.echo) {
             const memberKey = this._partyProcessor.getFeedOwningMember(PublicKey.from(block.key));
-            assert(memberKey, `Ownership of feed ${keyToString(block.key)} could not be determined.`);
+            // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+            assert(memberKey, `Ownership of feed ${PublicKey.stringify(block.key as unknown as Buffer)} could not be determined.`);
 
             // Validate messge.
             const { itemId } = message.echo;

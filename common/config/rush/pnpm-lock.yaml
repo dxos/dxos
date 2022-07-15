@@ -502,6 +502,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
@@ -510,11 +511,12 @@ importers:
     dependencies:
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
-      '@types/node': 16.11.27
+      '@dxos/protocols': link:../protocols
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/jest': 26.0.24
+      '@types/node': 16.11.27
       eslint: 7.32.0
       typescript: 4.7.4
 
@@ -2174,10 +2176,10 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
@@ -2194,8 +2196,8 @@ importers:
     dependencies:
       '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
       '@dxos/mesh-protocol': link:../protocol
+      '@dxos/protocols': link:../../common/protocols
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       buffer-json-encoding: 1.0.2

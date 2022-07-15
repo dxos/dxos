@@ -16,7 +16,7 @@ import {
   SecretValidator
   , Message as HaloMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
@@ -130,11 +130,11 @@ export class GreetingResponder {
     // TODO(dboreham): Add tests for idempotence and transactional integrity over the greet flow.
     (this._greeterPlugin as any).once('peer:joined', (joinedPeerId: Buffer) => {
       if (joinedPeerId.equals(invitation.id)) {
-        log(`Initiator connected: ${keyToString(joinedPeerId)}`);
+        log(`Initiator connected: ${PublicKey.stringify(joinedPeerId)}`);
         this._state = GreetingState.CONNECTED;
         this.connected.emit(invitation.id);
       } else {
-        log(`Unexpected initiator connected: ${keyToString(joinedPeerId)}`);
+        log(`Unexpected initiator connected: ${PublicKey.stringify(joinedPeerId)}`);
       }
     });
 
@@ -158,7 +158,7 @@ export class GreetingResponder {
       label: 'Greeting responder'
     });
 
-    log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${keyToString(this._swarmKey)}`);
+    log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${PublicKey.stringify(this._swarmKey)}`);
 
     this._state = GreetingState.LISTENING;
     log('Listening');
