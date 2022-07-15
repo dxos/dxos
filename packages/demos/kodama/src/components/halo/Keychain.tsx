@@ -12,7 +12,7 @@ import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Table } from '../util';
 
-const formatDate = (date: Date) => format('yyyy-mm-dd hh:mm:ss', new Date(date));
+const formatDate = (date: Date) => format('yyyy-mm-dd hh:mm', new Date(date));
 
 export const Keychain = () => {
   const devtoolsHost = useDevtools();
@@ -41,13 +41,7 @@ export const Keychain = () => {
           },
           {
             key: 'created',
-            width: 22,
-            color: 'gray',
-            value: date => formatDate(date)
-          },
-          {
-            key: 'added',
-            width: 22,
+            width: 18,
             color: 'gray',
             value: date => formatDate(date)
           },

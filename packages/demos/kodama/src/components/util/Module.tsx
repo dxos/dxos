@@ -12,49 +12,46 @@ export type Module = {
   label: string
   modules?: Module[]
   component?: FC
+  exec?: () => void
 }
 
 const Blank = () => <div />;
 
 export const ModulePanel: FC<{
   modules: Module[]
-  parent?: string
 }> = ({
-  modules,
-  parent
+  modules
 }) => {
   const [option, setOption] = useState<string>();
   const [Component, setComponent] = useState<FC>();
+
   useEffect(() => {
-    const module = modules.find(m => m.id === option);
+    const module = modules.find(module => module.id === option);
     if (module?.component) {
       const Component = module.component;
       setComponent(() => () => <Component />);
     } else if (module?.modules) {
       setComponent(() => () => (
         <ModulePanel
-          parent={option}
           modules={module.modules!}
         />
       ));
     } else {
       setComponent(() => Blank);
     }
-  }, [option]);
+  }, [modules, option]);
 
   return (
     <Box flexDirection='column' flexGrow={1}>
       <Box marginBottom={1}>
-        {/*
-        {parent && (
-          <Text>{parent}</Text>
-        )}
-        */}
-
         <Toolbar
-          onChange={setOption}
           items={modules}
           value={option}
+          onChange={setOption}
+          onSelect={() => {
+            const module = modules.find(module => module.id === option);
+            module?.exec?.();
+          }}
         />
       </Box>
 

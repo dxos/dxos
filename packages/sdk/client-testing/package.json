@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-testing",
-  "version": "2.33.6",
+  "version": "2.33.7",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.33.6",
+  "version": "2.33.7",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "license": "MIT",
   "author": "DXOS.org",

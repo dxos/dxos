@@ -5,18 +5,22 @@
 import TextInput from 'ink-text-input';
 import React, { useState } from 'react';
 
-export const Recovery = () => {
-  const [seedPhrase, setSeedPhrase] = useState<string>();
+import { useClient } from '@dxos/react-client';
 
-  // TODO(burdon): Recovery process.
-  const handleSubmit = () => {};
+export const RecoverProfile = () => {
+  const [seedPhrase, setSeedPhrase] = useState<string>();
+  const client = useClient();
+
+  const handleSubmit = async (keyPhrase: string) => {
+    await client.halo.recoverProfile(keyPhrase);
+  };
 
   return (
     <TextInput
       value={seedPhrase ?? ''}
       onChange={setSeedPhrase}
       onSubmit={handleSubmit}
-      placeholder='Seed phrase'
+      placeholder='Enter seed phrase'
     />
   );
 };

@@ -58,7 +58,7 @@ export const JoinParty: FC<{
     <Box flexDirection='column'>
       {!invitation && !processing && (
         <TextInput
-          placeholder='Enter invitation'
+          placeholder='Enter invitation code'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
@@ -67,7 +67,7 @@ export const JoinParty: FC<{
 
       {invitation && !processing && (
         <TextInput
-          placeholder='Enter code'
+          placeholder='Enter verification code'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
