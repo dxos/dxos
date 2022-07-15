@@ -90,8 +90,11 @@ export class HaloProxy implements Halo {
   }
 
   /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
+   * Create Profile.
+   * Add Identity key if public and secret key are provided.
+   * Then initializes profile with given username.
+   * If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
+   * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
   async createProfile ({
@@ -100,6 +103,10 @@ export class HaloProxy implements Halo {
     username,
     seedphrase
   }: CreateProfileOptions = {}): Promise<Profile> {
+    if (seedphrase && (publicKey || secretKey)) {
+      throw new Error('Seedphrase must not be specified with existing keys');
+    }
+
     if (seedphrase) {
       const keyPair = keyPairFromSeedPhrase(seedphrase);
       publicKey = keyPair.publicKey;
