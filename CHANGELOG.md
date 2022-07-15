@@ -1,5 +1,12 @@
 # Change Log
 
+### [2.33.8](https://www.github.com/dxos/protocols/compare/v2.33.7...v2.33.8) (2022-07-15)
+
+
+### Features
+
+* device invitations ([#1348](https://www.github.com/dxos/protocols/issues/1348)) ([15fa9a0](https://www.github.com/dxos/protocols/commit/15fa9a037f460854b7c97621ccd532627e4b6be9))
+
 ### [2.33.7](https://www.github.com/dxos/protocols/compare/v2.33.6...v2.33.7) (2022-07-15)
 
 
