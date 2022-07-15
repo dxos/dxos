@@ -7,7 +7,7 @@ import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { useState } from 'react';
 
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export const CreateProfile = () => {
@@ -17,10 +17,9 @@ export const CreateProfile = () => {
   const handleSubmit = async (text: string) => {
     const username = text.trim();
     if (username.length) {
-      const seedPhrase = generateSeedPhrase();
-      const keyPair = keyPairFromSeedPhrase(seedPhrase);
-      await client.halo.createProfile({ ...keyPair, username });
-      copypaste.copy(seedPhrase);
+      const seedphrase = generateSeedPhrase();
+      await client.halo.createProfile({ seedphrase, username });
+      copypaste.copy(seedphrase);
     }
   };
 
