@@ -4,11 +4,14 @@
 
 The DMG is a decentralized social network.
 It consists of multiple interconnected decentralized networks:
-1. Agents (people and bots): HALO.
-2. Service Hubs: KUBE and MESH.
-3. Data: ECHO.
-4. Naming Service: DXNS.
 
+1. `HALO`: Identity and social networks
+2. `ECHO`: Realtime data
+3. `MESH`: Peer-to-peer networks
+4. `KUBE`: Peer-to-peer services
+5. `DXNS`: Discovery and naming service
+
+> - TDOO: Explain in more detail. 
 
 
 ## 2. Basic Concepts
@@ -16,10 +19,12 @@ It consists of multiple interconnected decentralized networks:
 To get started install the `dx` shell command.
 
 ```bash
-# NPM
 npm i -g @dxos/dx
+```
 
-# OS/X
+To install the OS/X desktop app and menubar, install the native application.
+
+```bash
 brew install dx
 ```
 
@@ -45,7 +50,7 @@ id_dxos
 id_dxos.pub
 ```
 
-> - TODO(burdon): Password to encrypt local HALO.
+> - TODO: Password to encrypt local HALO.
 
 
 #### 2.1.2 Social Networks
@@ -88,6 +93,7 @@ $ Bob
 ```
 
 > - TODO: Keybase-like Mobile app, OSX menubar, browser extension, etc.
+> - TODO: DIDs
 
 
 ### 2.2 Decentralized Data (ECHO)
@@ -184,7 +190,7 @@ Ping the daemon.
 ```
 
 > - TODO: Detect part of MESH network.
-> - TODO: List services .well-known
+> - TODO: List services .well-known.
 
 
 ### 2.4 Decentralized Naming Service (DXNS)
@@ -209,3 +215,15 @@ Ping the daemon.
 - [Semantic Web](https://www.w3.org/standards/semanticweb)
 - [Solid](https://solidproject.org)
   
+
+
+<hr/>
+
+## Notes
+
+#### 2022-07-13
+
+- HALO encrypted local storage
+- DXNS API/abstraction (e.g., signal network discovery)
+- Domain specific credentials (e.g., friends)
+- ephemeral messaging between friends (chat, invitations)

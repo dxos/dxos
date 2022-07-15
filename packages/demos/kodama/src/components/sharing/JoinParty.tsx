@@ -11,7 +11,7 @@ import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export const JoinParty: FC<{
-  onJoin: (partyKey?: PartyKey) => void
+  onJoin?: (partyKey?: PartyKey) => void
 }> = ({
   onJoin
 }) => {
@@ -20,6 +20,7 @@ export const JoinParty: FC<{
   const [secret, setSecret] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [invitation, setInvitation] = useState<PartyInvitation>();
+  const [status, setStatus] = useState<string>();
 
   const handleDecode = () => {
     try {
@@ -35,7 +36,7 @@ export const JoinParty: FC<{
         const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
-        setDescriptor(undefined);
+        setStatus(`Error: ${err}`);
       }
     }
   };
@@ -46,17 +47,18 @@ export const JoinParty: FC<{
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
       const party = await invitation!.getParty();
-      onJoin(party.key);
+      setStatus('Success');
+      onJoin?.(party.key);
     } catch (err) {
-      onJoin();
+      setStatus(`Error: ${err}`);
     }
   };
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Box flexDirection='column'>
       {!invitation && !processing && (
         <TextInput
-          placeholder='Enter invitation'
+          placeholder='Enter invitation code'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
@@ -65,14 +67,17 @@ export const JoinParty: FC<{
 
       {invitation && !processing && (
         <TextInput
-          placeholder='Enter code'
+          placeholder='Enter verification code'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
         />
       )}
 
-      {processing && (
+      {status && (
+        <Text>{status}</Text>
+      )}
+      {processing && !status && (
         <Text>
           <Text color='green'>
             <Spinner type='dots' />
