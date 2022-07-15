@@ -8,7 +8,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { PartyKey } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
-import { ShareParty } from '../sharing';
+import { Share } from '../invitations';
 import { Module, ModulePanel, Panel } from '../util';
 import { ItemList } from './ItemList';
 import { ItemTypeList } from './ItemTypeList';
@@ -78,14 +78,14 @@ export const PartyView: FC<{
       )
     },
     {
-      id: 'sharing',
-      label: 'Sharing',
+      id: 'share',
+      label: 'Share',
       component: () => (
-        <Panel>
-          <ShareParty
-            party={party}
-          />
-        </Panel>
+        <Share
+          onCreate={() => {
+            return party.createInvitation();
+          }}
+        />
       )
     }
   ] : [], [party, type]);

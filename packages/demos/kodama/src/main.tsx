@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import compare from 'compare-semver';
 import fs from 'fs';
-import { render } from 'ink';
+import { Box, Text, render } from 'ink';
 import yaml from 'js-yaml';
 import NPM from 'npm-api';
 import * as process from 'process';
-import React from 'react';
+import React, { FC } from 'react';
 import yargs from 'yargs';
 
+import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -31,11 +31,31 @@ const clear = () => {
   );
 };
 
-const warning = (lines: string[]) => {
-  const max = lines.reduce((max, value) => Math.max(max, value.length), 0);
-  console.warn(chalk.red('#'.padEnd(max + 3, '=') + '#'));
-  lines.forEach(line => console.warn(chalk.red('# ') + line.padEnd(max) + chalk.red(' #')));
-  console.warn(chalk.red('#'.padEnd(max + 3, '=') + '#'));
+// TODO(burdon): Command to auto-update.
+const versionCheck = async (name: string, version: string): Promise<string | undefined> => {
+  const npm = new NPM();
+  const repo = await npm.repo(name).package();
+  const max = version !== compare.max([repo.version, version]);
+  return max ? repo.version : undefined;
+};
+
+const VersionUpdate: FC<{ name: string, version: string }> = ({ name, version }) => {
+  return (
+    <Box
+      flexDirection='column'
+      margin={1}
+      padding={1}
+      borderStyle='double'
+      borderColor='red'
+    >
+      <Text>
+        New version: {version}
+      </Text>
+      <Text>
+        Update: <Text color='yellow'>npm -g up {name}</Text> or <Text color='yellow'>yarn global upgrade {name}</Text>
+      </Text>
+    </Box>
+  );
 };
 
 /**
@@ -44,16 +64,6 @@ const warning = (lines: string[]) => {
 const main = async () => {
   clear();
 
-  const npm = new NPM();
-  const repo = await npm.repo('@dxos/kodama').package();
-  if (version !== compare.max([repo.version, version])) {
-    // TODO(burdon): Command to auto-update.
-    warning([
-      `New version: ${repo.version}`,
-      `Update: "npm -g up ${name}" or "yarn global upgrade ${name}"`
-    ]);
-  }
-
   yargs
     .scriptName('kodama')
     .option('config', {
@@ -61,14 +71,36 @@ const main = async () => {
       type: 'string',
       default: `${process.cwd()}/config/config.yml`
     })
+    .option('debug', {
+      description: 'Debug mode (run in-memory)',
+      type: 'boolean'
+    })
     .command({
       command: '*',
-      handler: async ({ config: configFile }: { config: string }) => {
-        // TODO(burdon): Config persistent profile.
+      handler: async ({
+        config: configFile,
+        debug
+      }: {
+        config: string,
+        debug: boolean
+      }) => {
+        const newVersion = await versionCheck(name, version);
+
+        // TODO(burdon): Persistence option.
         const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
+        const client = new Client(config);
+        await client.initialize();
+
+        if (debug) {
+          await client.halo.createProfile({ username: 'Test' });
+        }
 
         const { waitUntilExit } = render((
-          <ClientProvider config={config}>
+          <ClientProvider client={client}>
+            {newVersion && (
+              <VersionUpdate name={name} version={newVersion} />
+            )}
+
             <App />
           </ClientProvider>
         ));

@@ -226,6 +226,7 @@ export class HALO {
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
     assert(this.identity?.halo, 'HALO not initialized.');
+
     return this.identity.halo.createInvitation(authenticationDetails, options);
   }
 
