@@ -23,7 +23,7 @@ export const PartyMembers: FC<{
       columns={[
         {
           key: 'publicKey',
-          value: key => truncateKey(key, 8),
+          value: key => truncateKey(key, 4),
           width: 20,
           color: 'green',
           label: 'key'

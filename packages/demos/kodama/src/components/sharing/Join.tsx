@@ -10,7 +10,7 @@ import React, { FC, useState } from 'react';
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-export const JoinParty: FC<{
+export const Join: FC<{
   onJoin?: (partyKey?: PartyKey) => void
 }> = ({
   onJoin

@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './JoinParty';
-export * from './ShareParty';
+export * from './Join';
+export * from './Share';

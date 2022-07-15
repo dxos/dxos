@@ -10,8 +10,17 @@ import { Panel } from './Panel';
 
 export type ListItem = {
   id: string
+  key?: string
   text: string
 }
+
+const Key: FC<{ id: string }> = ({ id }) => (
+  <>
+    <Text color='gray'>[</Text>
+    <Text color='green'>{id}</Text>
+    <Text color='gray'>] </Text>
+  </>
+);
 
 const ListItem: FC<{
   item?: ListItem
@@ -46,6 +55,8 @@ const ListItem: FC<{
       {!selected && (
         <>
           <Text>{item?.id ? '- ' : '+ '}</Text>
+          {item?.key && <Key id={item.key} />}
+
           <Text>{item?.text}</Text>
         </>
       )}
@@ -53,9 +64,7 @@ const ListItem: FC<{
       {selected && (
         <>
           <Text>{'> '}</Text>
-          {!onUpdate && (
-            <Text>{item?.text}</Text>
-          )}
+          {item?.key && <Key id={item.key} />}
 
           {onUpdate && (
             <TextInput
@@ -64,6 +73,9 @@ const ListItem: FC<{
               onChange={(text: string) => selected && setText(text)}
               onSubmit={(text: string) => handleSubmit(text)}
             />
+          )}
+          {!onUpdate && (
+            <Text>{item?.text}</Text>
           )}
         </>
       )}
@@ -143,7 +155,8 @@ export const List: FC<{
   });
 
   // Paging.
-  const pageItems = items.slice(startIndex, startIndex + pageSize);
+  const visibleItems = items.slice(startIndex, startIndex + pageSize);
+  const showInput = onUpdate && isFocused;
 
   return (
     <Panel focused={isFocused}>
@@ -154,29 +167,33 @@ export const List: FC<{
           </Box>
         )}
 
-        {pageItems.map((item, i) => (
-          <ListItem
-            key={item.id}
-            item={item}
-            selected={isFocused && startIndex + i === cursor}
-            onUpdate={onUpdate}
-          />
-        ))}
+        <Box flexDirection='column'>
+          {visibleItems.map((item, i) => (
+            <ListItem
+              key={item.id}
+              item={item}
+              selected={isFocused && startIndex + i === cursor}
+              onUpdate={onUpdate}
+            />
+          ))}
+        </Box>
 
-        {isFocused && (
-          <ListItem
-            selected={cursor === -1}
-            onUpdate={item => {
-              onUpdate?.(item);
-              if (!item.id) {
-                setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
-              }
-            }}
-          />
+        {showInput && (
+          <Box marginTop={visibleItems.length ? 1 : 0}>
+            <ListItem
+              selected={cursor === -1}
+              onUpdate={item => {
+                onUpdate?.(item);
+                if (!item.id) {
+                  setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
+                }
+              }}
+            />
+          </Box>
         )}
 
         {showCount && (
-          <Box marginTop={(isFocused && onUpdate) || items.length ? 1 : 0}>
+          <Box marginTop={showInput || visibleItems.length ? 1 : 0}>
             <Text color='gray'>{items.length} items</Text>
           </Box>
         )}

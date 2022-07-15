@@ -12,6 +12,7 @@ import * as process from 'process';
 import React, { FC } from 'react';
 import yargs from 'yargs';
 
+import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -78,16 +79,32 @@ const main = async () => {
       type: 'string',
       default: `${process.cwd()}/config/config.yml`
     })
+    .option('debug', {
+      description: 'Debug mode (run in-memory)',
+      type: 'boolean'
+    })
     .command({
       command: '*',
-      handler: async ({ config: configFile }: { config: string }) => {
+      handler: async ({
+        config: configFile,
+        debug
+      }: {
+        config: string,
+        debug: boolean
+      }) => {
         const newVersion = await versionCheck(name, version);
 
-        // TODO(burdon): Config persistent profile.
+        // TODO(burdon): Persistence option.
         const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
+        const client = new Client(config);
+        await client.initialize();
+
+        if (debug) {
+          await client.halo.createProfile({ username: 'Test' });
+        }
 
         const { waitUntilExit } = render((
-          <ClientProvider config={config}>
+          <ClientProvider client={client}>
             {newVersion && (
               <VersionUpdate name={name} version={newVersion} />
             )}

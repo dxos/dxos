@@ -6,22 +6,35 @@ import { Box } from 'ink';
 import * as process from 'process';
 import React from 'react';
 
-import { useProfile } from '@dxos/react-client';
+import { useClient, useProfile } from '@dxos/react-client';
 
 import {
   Config,
   Contacts,
   CreateProfile,
   Devices,
-  JoinParty,
+  Join,
   Keychain,
   Module,
   ModulePanel,
   Panel,
   PartyList,
   Profile,
-  RecoverProfile
+  RecoverProfile,
+  Share
 } from './components';
+
+const ShareHalo = () => {
+  const client = useClient();
+
+  return (
+    <Share
+      onCreate={() => {
+        return client.halo.createInvitation();
+      }}
+    />
+  );
+};
 
 const root: Module[] = [
   {
@@ -63,6 +76,24 @@ const root: Module[] = [
             <Devices />
           </Panel>
         )
+      },
+      {
+        id: 'share',
+        label: 'Share',
+        component: () => (
+          <Panel>
+            <ShareHalo />
+          </Panel>
+        )
+      },
+      {
+        id: 'join',
+        label: 'Join',
+        component: () => (
+          <Panel>
+            <Join />
+          </Panel>
+        )
       }
     ]
   },
@@ -82,7 +113,7 @@ const root: Module[] = [
         label: 'Join',
         component: () => (
           <Panel>
-            <JoinParty />
+            <Join />
           </Panel>
         )
       }
@@ -112,7 +143,9 @@ const root: Module[] = [
   {
     id: 'quit',
     label: 'Quit',
-    exec: () => process.exit()
+    exec: () => {
+      process.exit();
+    }
   }
 ];
 

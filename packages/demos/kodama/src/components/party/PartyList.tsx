@@ -6,6 +6,7 @@ import { useFocusManager } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { PartyKey } from '@dxos/client';
+import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { useClient, useParties } from '@dxos/react-client';
 
@@ -62,6 +63,7 @@ export const PartyList: FC<{
       onSelect={partyKey => setPartyKey(PublicKey.from(partyKey))}
       items={parties.map(party => ({
         id: party.key.toHex(),
+        key: truncateKey(party.key, 4),
         text: party.getProperty('title')
       }))}
     />

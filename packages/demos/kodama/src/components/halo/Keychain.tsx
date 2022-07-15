@@ -49,7 +49,7 @@ export const Keychain = () => {
             key: 'publicKey',
             width: 20,
             color: 'green',
-            value: key => truncateKey(key, 8)
+            value: key => truncateKey(key, 4)
           }
         ]}
         rows={keys}

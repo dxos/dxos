@@ -29,7 +29,7 @@ export const PartyInfo: FC<{
       rows={[
         {
           property: 'Public key',
-          value: truncateKey(party.key, 8)
+          value: truncateKey(party.key, 4)
         },
         {
           property: 'Name',
