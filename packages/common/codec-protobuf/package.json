@@ -39,7 +39,7 @@
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.11.27",
-    "esbuild": "^0.11.23",
+    "esbuild": "^0.14.49",
     "eslint": "^7.12.1",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",

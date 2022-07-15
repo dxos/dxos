@@ -28,7 +28,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.10",
+    "@dxos/esbuild-plugins": "~2.28.11",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
