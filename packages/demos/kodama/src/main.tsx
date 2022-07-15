@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import compare from 'compare-semver';
 import fs from 'fs';
 import { Box, Text, render } from 'ink';
@@ -30,13 +29,6 @@ const clear = () => {
   process.stdout.write(
     process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H'
   );
-};
-
-const warning = (lines: string[]) => {
-  const max = lines.reduce((max, value) => Math.max(max, value.length), 0);
-  console.warn(chalk.red('#'.padEnd(max + 3, '=') + '#'));
-  lines.forEach(line => console.warn(chalk.red('# ') + line.padEnd(max) + chalk.red(' #')));
-  console.warn(chalk.red('#'.padEnd(max + 3, '=') + '#'));
 };
 
 // TODO(burdon): Command to auto-update.
