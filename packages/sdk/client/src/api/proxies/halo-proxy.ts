@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { DeviceInfo, KeyRecord } from '@dxos/credentials';
+import { DeviceInfo, keyPairFromSeedPhrase, KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
@@ -90,11 +90,29 @@ export class HaloProxy implements Halo {
   }
 
   /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
+   * Create Profile.
+   * Add Identity key if public and secret key are provided.
+   * Then initializes profile with given username.
+   * If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
+   * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
+  async createProfile ({
+    publicKey,
+    secretKey,
+    username,
+    seedphrase
+  }: CreateProfileOptions = {}): Promise<Profile> {
+    if (seedphrase && (publicKey || secretKey)) {
+      throw new Error('Seedphrase must not be specified with existing keys');
+    }
+
+    if (seedphrase) {
+      const keyPair = keyPairFromSeedPhrase(seedphrase);
+      publicKey = keyPair.publicKey;
+      secretKey = keyPair.secretKey;
+    }
+
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({ publicKey, secretKey, username });
     return this._profile;
   }

@@ -2,13 +2,31 @@
 // Copyright 2020 DXOS.org
 //
 
+import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 import expect from 'expect';
 
-import { generateSeedPhrase, KeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 
 import { Keyring } from '../keys';
 import { KeyType } from '../proto';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from './seedphrase';
+
+it('Basic bip39 operations work', async () => {
+  const seedPhrase = generateMnemonic();
+  const seed = mnemonicToSeedSync(seedPhrase);
+  const keyPair = await createKeyPair(seed.slice(0, 32));
+  expect(keyPair).not.toBeUndefined();
+});
+
+it('Create keypair from seedphrase', async () => {
+  const seedPhrase = generateSeedPhrase();
+  expect(typeof seedPhrase).toBe('string');
+  expect(seedPhrase.split(/\s+/g).length).toEqual(12);
+
+  const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
+  expect(recoveredKeyPair).toBeDefined();
+});
 
 it('Create cold identity key and recover', async () => {
   // Generate a seed phrase and validate result.
