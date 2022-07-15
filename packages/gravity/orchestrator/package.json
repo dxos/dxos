@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-orchestrator",
-  "version": "2.33.6",
+  "version": "2.33.7",
   "private": true,
   "scripts": {
     "build": "toolchain build",
