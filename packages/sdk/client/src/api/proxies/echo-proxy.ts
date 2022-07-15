@@ -54,8 +54,8 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory =
-      _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost
+      ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }

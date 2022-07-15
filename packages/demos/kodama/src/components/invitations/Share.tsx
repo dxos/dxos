@@ -3,38 +3,36 @@
 //
 
 import copypaste from 'copy-paste';
-import { Box, Text } from 'ink';
+import { Box, Text, useFocus } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { Party } from '@dxos/client';
+import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
-export const ShareParty: FC<{
-  party: Party
+import { Panel } from '../util';
+
+export const Share: FC<{
+  onCreate: () => Promise<InvitationRequest>
 }> = ({
-  party
+  onCreate
 }) => {
   const isMounted = useMounted();
-  const [invitation, setInvitation] = useState<{ descriptor: string, secret: string }>();
+  const { isFocused } = useFocus();
+  const [invitation, setInvitation] = useState<InvitationRequest>();
   const [status, setStatus] = useState<string>();
 
   useAsyncEffect(async () => {
-    const invitation = await party.createInvitation();
-
-    setInvitation({
-      descriptor: invitation.descriptor.encode(),
-      secret: invitation.secret.toString()
-    });
-
+    const invitation = await onCreate();
+    // const invitation = await party.createInvitation();
+    // const invitation = await client.halo.createInvitation();
+    setInvitation(invitation);
     copypaste.copy(invitation.descriptor.encode());
 
     const handleDone = () => {
-      if (!isMounted()) {
-        return;
+      if (isMounted()) {
+        setInvitation(undefined);
+        setStatus('Success');
       }
-
-      setInvitation(undefined);
-      setStatus('Success');
     };
 
     // TODO(burdon): Change API: single status event.
@@ -44,16 +42,16 @@ export const ShareParty: FC<{
   }, []);
 
   return (
-    <Box flexDirection='column'>
+    <Panel focused={isFocused}>
       {invitation && (
         <Box flexDirection='column'>
           <Box flexDirection='column'>
             <Text color='green'>Invitation (copied to clipboard)</Text>
-            <Text>{invitation.descriptor}</Text>
+            <Text>{invitation.descriptor.encode()}</Text>
           </Box>
           <Box flexDirection='column' marginTop={1}>
-            <Text color='red'>Code</Text>
-            <Text>{invitation.secret}</Text>
+            <Text color='red'>Verification code</Text>
+            <Text>{String(invitation.secret)}</Text>
           </Box>
         </Box>
       )}
@@ -61,6 +59,6 @@ export const ShareParty: FC<{
       {status && (
         <Text>{status}</Text>
       )}
-    </Box>
+    </Panel>
   );
 };
