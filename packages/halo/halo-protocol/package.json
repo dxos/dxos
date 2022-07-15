@@ -24,7 +24,6 @@
   ],
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/util": "workspace:*"
   },

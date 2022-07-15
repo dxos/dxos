@@ -19,10 +19,10 @@ import {
 } from '@dxos/credentials';
 import {
   createKeyPair,
-  humanize,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify
+  SIGNATURE_LENGTH,
+  verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
@@ -33,6 +33,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../packlets/database';

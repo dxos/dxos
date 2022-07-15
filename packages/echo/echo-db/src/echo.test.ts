@@ -11,9 +11,9 @@ import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
 import {
   defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase
 } from '@dxos/credentials';
-import { humanize } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { Contact } from './halo';

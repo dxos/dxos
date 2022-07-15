@@ -22,7 +22,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
