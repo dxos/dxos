@@ -3,10 +3,14 @@
 //
 
 import chalk from 'chalk';
+import { build } from 'esbuild';
+import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
 import { Arguments, Argv } from 'yargs';
+
+import { NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 import { Config, defaults } from './config';
 import { Project } from './project';
@@ -81,6 +85,28 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
 
   process.stdout.write(chalk`\n{green.bold Typescript}\n`);
   await execTool('tsc', options.watch ? ['--watch'] : []);
+};
+
+export const execLibraryBundle = async (config: Config) => {
+  const project = Project.load(config);
+  const outdir = 'dist';
+  const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
+
+  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+
+  await execTool('tsc', ['--emitDeclarationOnly']);
+
+  await build({
+    entryPoints: ['src/index.ts'],
+    outdir,
+    format: 'cjs',
+    write: true,
+    bundle: true,
+    plugins: [
+      nodeExternalsPlugin({ allowList: bundlePackages }),
+      NodeModulesPlugin()
+    ]
+  });
 };
 
 /**
@@ -193,9 +219,19 @@ export const setupCoreCommands = (yargs: Argv) => (
       }
     )
 
+    .command<{ verbose?: boolean, watch?: boolean }>(
+      'bundle:library',
+      'Build the library package.',
+      yargs => yargs
+        .strict(),
+      async () => {
+        await execLibraryBundle(defaults);
+      }
+    )
+
     .command(
-      'build:bundle',
-      'Build a bundle for the package.',
+      'bundle:app',
+      'Bundle the app package.',
       yargs => yargs
         .option('minify', {
           type: 'boolean',
@@ -211,10 +247,14 @@ export const setupCoreCommands = (yargs: Argv) => (
       'build:test',
       'build, lint, and test the package',
       yargs => yargs
+        .option('bundle', {
+          type: 'boolean',
+          default: false
+        })
         .strict(),
-      handler('Tests', async () => {
+      handler<{ bundle: boolean }>('Tests', async (argv) => {
         const project = Project.load(defaults);
-        await execBuild(defaults);
+        argv.bundle ? await execLibraryBundle(defaults) : await execBuild(defaults);
         await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 

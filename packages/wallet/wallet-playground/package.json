@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:bundle": "toolchain build:bundle",
+    "build:bundle": "toolchain bundle:app",
     "build:test": "pnpm run build && pnpm run test",
     "lint": "toolchain lint",
     "start": "toolchain start",

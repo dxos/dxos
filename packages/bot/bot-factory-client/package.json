@@ -4,20 +4,17 @@
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "build": "toolchain bundle:library",
+    "build:test": "toolchain build:test --bundle",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/credentials": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -26,6 +23,7 @@
   "devDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/mocha": "~8.2.2",
@@ -38,6 +36,9 @@
     "access": "public"
   },
   "toolchain": {
+    "bundlePackages": [
+      "@dxos/network-manager"
+    ],
     "testingFramework": "mocha",
     "forceCloseTests": true
   }

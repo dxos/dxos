@@ -5,8 +5,9 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import { Database, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import {
+  Database, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA
+} from '@dxos/client';
 
 import { TestType } from './partyBuilder';
 

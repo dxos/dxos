@@ -27,7 +27,6 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",

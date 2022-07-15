@@ -22,8 +22,6 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
