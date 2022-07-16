@@ -1,229 +1,65 @@
-# The DXOS Meta Graph
+# DMG
+
+This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 ## 1. Introduction
 
-The DMG is a decentralized social network.
-It consists of multiple interconnected decentralized networks:
-
-1. `HALO`: Identity and social networks
-2. `ECHO`: Realtime data
-3. `MESH`: Peer-to-peer networks
-4. `KUBE`: Peer-to-peer services
-5. `DXNS`: Discovery and naming service
-
-> - TDOO: Explain in more detail. 
+### 1.1 Motivation
 
 
 ## 2. Basic Concepts
 
-To get started install the `dx` shell command.
-
-```bash
-npm i -g @dxos/dx
-```
-
-To install the OS/X desktop app and menubar, install the native application.
-
-```bash
-brew install dx
-```
-
-> - TODO: dx is still available.
+The DMG is made up of Circles (decentralized identity) and Branes (decentralized information).
 
 
-### 2.1 Decentralized Identity (HALO)
+### 2.1 Identity: Circles, Groups, and Agents
 
-#### 2.1.1 Self-Sovereign Identity
+Participants within the DMG (both humans and autonomous systems) are called ***Agents***,
+which control their own [self-sovereign identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18) (SSI).
+Agents identify themselves using [Peer DIDs](https://www.w3.org/TR/vc-data-model),
+which can be resolved by the network to [DID Documents](https://www.w3.org/TR/did-core/#dfn-did-documents) that contain metadata (including public keys) associated with the agent.
 
-Create your identity.
+An exmaple of a Peer DID: `did:peer:1zdksdnrjq0ru092sdfsd491cxvs03e0`.
 
-```bash
-> dx halo init --username Alice
-Record your recovery seed phrase:
-[ circle wool lesson trick sail ... ]
+Agents maintain a HALO, which is a secure decentralized keychain that contains [Verifiable Credentials](https://www.w3.org/TR/vc-data-model) that represent various forms of ***Claims***.
+Claims may represent access rights, digital asset ownership, relationships, and other information that can be digitally verified without the need for a centralized authority.
 
-> dx whoami
-Alice
+The HALO also contains an address book of other agents (represented by Peer DIDs) along with metadata that may represent relationships and claims associated with these agents. For example, one agent may issue a verifiable credential representing a friendship, which may enable the other agent to freely exchange messages or request information.
 
-> ls -las ~/.dx
-id_dxos
-id_dxos.pub
-```
+The set of all contacts for a given agent is called a ***Circle***.
 
-> - TODO: Password to encrypt local HALO.
+The system also enables the creation of ***Groups***, which are ad hoc collections of agent identifiers (Peer DIDs) and claims (Verifiable Credentials) that may represent rights associated with these agents.
+Groups are also referenced by Peer DIDs; the corresponding DID Document may be used to verify the management rights to the group.
+Groups may be used to implement access control for decentralized digital assets.
 
+#### References
 
-#### 2.1.2 Social Networks
-
-Create a URL containing a one-time use invitation token.
-
-```bash
-> dx halo invite --ttl 3600
-https://example.com/halo/Qmbq6Su7LzgYYgfQBzJUdXjgDUZZKxt4NSs4tbYwvfH8Wd
-```
-
-The URL uses the hostname of a KUBE node connected to the MESH network.
-The token expires after a given TTL period.
-
-Alternativerly, create a QR code and send this to your friend.
-
-```bash
-> dx halo invite --qrcode
-Created: ~/dxos-qr.png
-```
-
-> - TODO: Link contains token but also link to download client.
-
-Connect to the MESH network and ACK the incoming friend requests.
-
-> - TODO: Interactive vs. non-interactive mode?
-
-```bash
-> dx mesh connect
-$ 808 KUBE nodes.
-$ ACK friend request from Bob? [y/n]
-$ Enter token: 1234
-```
-
-List friends stored in your HALO address book.
-
-```bash
-> dx halo contacts
-$ Bob
-```
-
-> - TODO: Keybase-like Mobile app, OSX menubar, browser extension, etc.
-> - TODO: DIDs
+- [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
+- [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
+- [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec)
+- [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
+- [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
 
 
-### 2.2 Decentralized Data (ECHO)
+### 2.2. Information: Branes, Spaces, and Nodes
 
-Create a new ECHO party and create some data.
+The DMG consists of millions of interconnected database instances called ***Spaces***.
 
-```bash
-> dx echo party create --data '{ "title": "Things we should do." }'
-> dx echo party list
-QmPEKipMh6LsXzvtLxunSPP7ZsBM8y9xQ2SQQwBXy5UY6e *
-Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u
+> Note: Spaces were previously called Parties.
 
-> The party is identified by an IPNS name.
+Spaces are graph databases that contain atomic data elements called ***Nodes***.
+Spaces are implemented using secure and privacy-preserving ECHO peer-to-peer databases.
+The graph is traversably using the ECHO Graph API.
 
-> dx echo party select Qmd28
-> dx echo party list
-QmPEKipMh6LsXzvtLxunSPP7ZsBM8y9xQ2SQQwBXy5UY6e
-Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u *
+Nodes are globally addressable data structures that are constructred and accessed using one of an extensible set of ***Model*** APIs.
+Models provide convenient APIs representing different complex data structures with specific distributed consensus mechanisms.
+For example, models may represent text documents, hierarchical structured documents, messaging channels, game states, and other state machines.
 
-> dx echo party append --data '{ "title": "Join the circus" }'
-> dx echo party append --data '{ "title": "Remember the milk!" }'
-```
-
-List the contents of the party.
-
-```bash
-> dx echo party list --json
-{
-  "key": "Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u",
-  "items": [
-    {
-      "id": "CFBB9E61-FF74-4ABE-8DA3-668473BF5E9E",
-      "data": {
-        "title": "Join the circus"
-      }
-    },
-    {
-      "id": "326313F9-70ED-4191-B9B2-1593ECF223B2",
-      "data": {
-        "title": "Remember the milk!"
-      }
-    },
-  ]
-}
-```
-
-> The `dx echo` command remembers the context of the most recently accessed party.
-
-Invite your friend to the party.
-
-```bash
-> dx halo lookup Bob
-QmW2WQi7j6c7UgJTarActp7tDNikE4B2qXtFCfLPdsgaTQ
-
-> dx echo invite --user QmW2WQi7j6c7UgJTarActp7tDNikE4B2qXtFCfLPdsgaTQ
-```
-
-Get the access list of the party.
-
-```bash
-> dx echo members
-Alice
-Bob
-```
-
-Create a read-only feed for the party.
-
-```bash
-> dx echo feed
-https://example.com/echo/Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u
-```
-
-> - TODO: ECHO streams/feeds; KUBE servers support WebSub.
-> - TODO: IPLD graph: ECHO + IPFS.
-> - TODO: Messaging.
+Spaces are digital assets that are created and controlled by groups of agents.
+Agents maintain ownership and access control credentials within their HALO. 
+The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
 
 
-### 2.3 Decentralized Services (KUBE + MESH)
+#### References
 
-Install and start a KUBE daemon.
-
-```bash
-> brew install kube
-> kube start
-```
-
-Ping the daemon.
-
-```bash
-> curl localhost:3967/status | jq
-{
-  "key": "Qmbq6Su7LzgYYgfQBzJUdXjgDUZZKxt4NSs4tbYwvfH8Wd"
-}
-```
-
-> - TODO: Detect part of MESH network.
-> - TODO: List services .well-known.
-
-
-### 2.4 Decentralized Naming Service (DXNS)
-
-```bash
-> dx ns list
-```
-
-> - TODO: Discovery.
-> - TODO: Security concerns?
-
-
-## Reference
-
-- [FOAF](https://en.wikipedia.org/wiki/FOAF_(ontology))
-- [Keybase](https://keybase.io)
-- [Diaspora](https://diasporafoundation.org/)
-- [WebSub](https://www.w3.org/TR/websub)
-- [IPLD](https://ipld.io)
-- [Decentralized Identifiers](https://www.w3.org/TR/did-core)
-- [Verifiable Credentials](https://www.w3.org/TR/vc-data-model)
-- [Semantic Web](https://www.w3.org/standards/semanticweb)
-- [Solid](https://solidproject.org)
-  
-
-
-<hr/>
-
-## Notes
-
-#### 2022-07-13
-
-- HALO encrypted local storage
-- DXNS API/abstraction (e.g., signal network discovery)
-- Domain specific credentials (e.g., friends)
-- ephemeral messaging between friends (chat, invitations)
+- [IPLD](https://ipld.io/docs)
