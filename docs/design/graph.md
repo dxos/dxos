@@ -4,7 +4,15 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 ## 1. Introduction
 
+
+
 ### 1.1 Motivation
+
+- Our professional and social networks are one of our most valuable assets.
+- Social networks suck; they don't serve us.
+- We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
+- HALO and ECHO define low-level protocols that represent identity and information;
+  MESH and KUBE provide the building blocks to support such systems.
 
 
 ## 2. Basic Concepts
@@ -44,9 +52,7 @@ Groups may be used to implement access control for decentralized digital assets.
 
 ### 2.2. Information: Branes, Spaces, and Atoms
 
-Each agent within the system
 
-A Brane is a collection of interconnected Circles.
 
 
 
@@ -58,14 +64,4 @@ A Brane is a collection of interconnected Circles.
 
 - [IPLD](https://ipld.io/docs)
 
-
-<br/><br/><br/><br/>
-
-# Notes
-
-Social networks suck
-Address books suck
-Address book is not an app
-Social graph is the fabric
-Needs to be low-level protocol + infra
 

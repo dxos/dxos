@@ -93,7 +93,7 @@ $ Bob
 ```
 
 > - TODO: Keybase-like Mobile app, OSX menubar, browser extension, etc.
-> - TODO: DIDs
+> - TODO: Peer DIDs
 
 
 ### 2.2 Decentralized Data (ECHO)
