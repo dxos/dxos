@@ -65,10 +65,10 @@ export class Client {
   private readonly _options: ClientOptions;
   private readonly _mode: Runtime.Client.Mode;
 
+  private _initialized = false;
   private _serviceProvider!: ClientServiceProvider;
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
-  private _initialized = false;
 
   // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
 

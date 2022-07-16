@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';

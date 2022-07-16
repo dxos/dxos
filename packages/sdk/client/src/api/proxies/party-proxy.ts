@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import {
   PARTY_ITEM_TYPE,
@@ -17,6 +16,7 @@ import {
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { Party as PartyProto, PartyDetails } from '../../proto/gen/dxos/client';
 import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../services';

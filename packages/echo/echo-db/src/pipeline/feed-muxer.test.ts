@@ -8,10 +8,11 @@ import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 

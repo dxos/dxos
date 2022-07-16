@@ -8,8 +8,8 @@ import debug from 'debug';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from './transport';

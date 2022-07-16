@@ -3,7 +3,7 @@
 //
 
 import { Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { EchoEnvelope, FeedMessage } from './proto';
 import { Timeframe } from './spacetime/timeframe';

@@ -19,8 +19,9 @@ import {
   SignedMessage,
   codec
 } from '@dxos/credentials';
-import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
+import { randomBytes, verify } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';
@@ -65,7 +66,7 @@ export class HaloRecoveryInitiator {
 
     // This is a temporary connection, there is no need to any special or permanent ID.
     this._peerId = randomBytes();
-    log('Local PeerId:', keyToString(this._peerId));
+    log('Local PeerId:', PublicKey.stringify(this._peerId));
 
     const swarmKey = this._credentialsSigner.getIdentityKey().publicKey.asBuffer();
 
@@ -101,7 +102,7 @@ export class HaloRecoveryInitiator {
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
-    const responderPeerId = keyToBuffer(peer.getSession().peerId);
+    const responderPeerId = PublicKey.bufferize(peer.getSession().peerId);
 
     // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
     const signature = this._credentialsSigner.signer.rawSign(

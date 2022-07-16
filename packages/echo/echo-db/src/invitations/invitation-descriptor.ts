@@ -6,9 +6,10 @@ import assert from 'assert';
 import base from 'base-x';
 import stableStringify from 'json-stable-stringify';
 
-import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
+import { ripemd160 } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import * as proto from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvalidInvitationError } from '../packlets/errors';
 
@@ -45,8 +46,8 @@ export class InvitationDescriptor {
   static fromQueryParameters (queryParameters: InvitationQueryParameters): InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
-    const descriptor = new InvitationDescriptor(parseInvitationType(type), keyToBuffer(swarmKey),
-      keyToBuffer(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
+    const descriptor = new InvitationDescriptor(parseInvitationType(type), PublicKey.bufferize(swarmKey),
+      PublicKey.bufferize(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
       throw new InvalidInvitationError();
@@ -103,8 +104,8 @@ export class InvitationDescriptor {
    */
   toQueryParameters (): InvitationQueryParameters {
     const query: Partial<InvitationQueryParameters> = {
-      swarmKey: keyToString(this.swarmKey),
-      invitation: keyToString(this.invitation),
+      swarmKey: PublicKey.stringify(this.swarmKey),
+      invitation: PublicKey.stringify(this.invitation),
       type: stringifyInvitationType(this.type)
     };
 

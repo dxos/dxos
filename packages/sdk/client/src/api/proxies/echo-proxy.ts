@@ -5,12 +5,12 @@
 import assert from 'assert';
 
 import { Event, latch } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceHost, ClientServiceProvider } from '../../services';
@@ -54,8 +54,8 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory =
-      _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost
+      ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }

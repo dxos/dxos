@@ -15,8 +15,8 @@ import {
   PartyEventType,
   SignedMessage
 } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');

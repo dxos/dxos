@@ -8,13 +8,13 @@ import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 

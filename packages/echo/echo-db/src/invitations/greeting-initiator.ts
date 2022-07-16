@@ -23,8 +23,8 @@ import {
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -87,10 +87,10 @@ export class GreetingInitiator {
     // Therefore at present the greeter discovers the invitation id from session metadata, via the invitee's peer id.
     // TODO(dboreham): Invitation is actually invitationID.
     const localPeerId = invitation;
-    log('Local PeerId:', keyToString(localPeerId));
+    log('Local PeerId:', PublicKey.stringify(localPeerId));
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(localPeerId), new Greeter().createMessageHandler());
 
-    log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
+    log(PublicKey.stringify(localPeerId), 'connecting to', PublicKey.stringify(swarmKey));
 
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId),
