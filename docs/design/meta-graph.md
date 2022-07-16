@@ -6,6 +6,12 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 ### 1.1 Motivation
 
+- Our professional and social networks are one of our most valuable assets.
+- Social networks suck; they don't serve us.
+- We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
+- HALO and ECHO define low-level protocols that represent identity and information;
+  MESH and KUBE provide the building blocks to support such systems.
+
 
 ## 2. Basic Concepts
 
@@ -21,7 +27,7 @@ which can be resolved by the network to [DID Documents](https://www.w3.org/TR/di
 
 An exmaple of a Peer DID: `did:peer:1zdksdnrjq0ru092sdfsd491cxvs03e0`.
 
-Agents maintain a HALO, which is a secure decentralized keychain that contains [Verifiable Credentials](https://www.w3.org/TR/vc-data-model) that represent various forms of ***Claims***.
+Agents maintain a [HALO](./halo-spec.md), which is a secure decentralized keychain that contains [Verifiable Credentials](https://www.w3.org/TR/vc-data-model) that represent various forms of ***Claims***.
 Claims may represent access rights, digital asset ownership, relationships, and other information that can be digitally verified without the need for a centralized authority.
 
 The HALO also contains an address book of other agents (represented by Peer DIDs) along with metadata that may represent relationships and claims associated with these agents. For example, one agent may issue a verifiable credential representing a friendship, which may enable the other agent to freely exchange messages or request information.
@@ -48,7 +54,7 @@ The DMG consists of millions of interconnected database instances called ***Spac
 > Note: Spaces were previously called Parties.
 
 Spaces are graph databases that contain atomic data elements called ***Nodes***.
-Spaces are implemented using secure and privacy-preserving ECHO peer-to-peer databases.
+Spaces are implemented using secure and privacy-preserving [ECHO](./echo-spec.md) peer-to-peer databases.
 The graph is traversably using the ECHO Graph API.
 
 Nodes are globally addressable data structures that are constructred and accessed using one of an extensible set of ***Model*** APIs.
@@ -58,6 +64,22 @@ For example, models may represent text documents, hierarchical structured docume
 Spaces are digital assets that are created and controlled by groups of agents.
 Agents maintain ownership and access control credentials within their HALO. 
 The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
+
+
+#### 2.2.1 Consistency
+
+![Epochs](./diagrams/echo-epochs.svg)
+
+
+#### 2.2.2 Data Model
+
+
+
+
+#### 2.2.3 Federation
+
+
+
 
 
 #### References
