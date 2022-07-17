@@ -20,16 +20,31 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 <br/>
 
-## 2. Basic Concepts
+## 2. Terminology
+
+***Brane*** -
+Set of all data accessible to an agent within the network.
+
+***Circle*** -
+Set of all agents known to another agent within the network.
+
+***Frame*** -
+Module application component.
+
+***Space*** -
+A collaborative database realm controlled by one or more agents within the network.
+
+
+<br/>
+
+## 3. Basic Concepts
 
 The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-<center>
 <img src="./diagrams/dxns-ontology.drawio.svg" />
-</center>
 
 
-### 2.1 Identity: Circles, Groups, and Agents
+### 3.1 Identity: Circles, Groups, and Agents
 
 Participants within the DMG (both humans and autonomous systems) are called ***Agents***,
 which control their own [self-sovereign identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18) (SSI).
@@ -63,7 +78,7 @@ Groups may be used to implement access control for decentralized digital assets.
 
 <br/>
 
-### 2.2. Information: Branes, Spaces, and Nodes
+### 3.2 Information: Branes, Spaces, and Nodes
 
 The DMG consists of millions of interconnected database instances called ***Spaces***.
 
@@ -82,7 +97,7 @@ Agents maintain ownership and access control credentials within their HALO.
 The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
 
 
-#### 2.2.1 Consistency and Consensus
+#### 3.2.1 Consistency and Consensus
 
 Each ECHO instance is a graph database composed of elemental data structures called nodes.
 Nodes are queried using the ECHO Graph API, and individual nodes are accessed using their associated model API.
@@ -115,7 +130,7 @@ This provide a mechanism for data compression and consistency.
 > - Forking
 
 
-#### 2.2.2 Data Model
+#### 3.2.2 Data Model
 
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
@@ -140,7 +155,7 @@ The total set of all such spaces is called a ***Brane***.
 > - Brane indexing
 
 
-#### 2.2.3 Data Federation
+#### 3.2.3 Data Federation
 
 > - Branes
 > - Personal search agent
@@ -148,14 +163,14 @@ The total set of all such spaces is called a ***Brane***.
 
 #### References
 
-> - [IPLD](https://ipld.io/docs)
+- [Interplanetary Linked DataIPLD](https://ipld.io/docs)
 
 
 <br/>
 
-### 2.3 Decentralized Networks
+### 3.3 Decentralized Networks
 
-The DMG is realized by a peer-to-peer network of services called MESH.
+The DMG is realized by a peer-to-peer network of services called [MESH](./mesh-spec.md).
 MESH services are coordinated by KUBE nodes that run the KORE OS daemon.
 
 DXOS clients may connect to each other directly via a peer-to-peer transport such as WebRTC.
