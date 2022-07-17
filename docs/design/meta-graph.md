@@ -12,10 +12,15 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 - HALO and ECHO define low-level protocols that represent identity and information;
   MESH and KUBE provide the building blocks to support such systems.
 
+> - Motivate tangible and evocative first steps towards a new class of social networks.
+
 
 ## 2. Basic Concepts
 
-The DMG is made up of Circles (decentralized identity) and Branes (decentralized information).
+The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
+
+![Ontology](./diagrams/dxns-ontology.svg)
+
 
 
 ### 2.1 Identity: Circles, Groups, and Agents
@@ -67,11 +72,11 @@ Agents maintain ownership and access control credentials within their HALO.
 The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
 
 
-#### 2.2.1 Consistency
+#### 2.2.1 Consistency and Consensus
 
 Each ECHO instance is a graph database composed of elemental data structures called nodes.
 Nodes are queried using the ECHO Graph API, and individual nodes are accessed using their associated model API.
-Differen model APIs provide different kinds of consistency semantics.
+Different model APIs provide different consistency capabilities.
 
 Nodes are constructed and updated by ***mutations***.
 Mutations are atomic transformations that are applied to the associated node's state machine.
@@ -83,8 +88,8 @@ The database is made up from the set of feeds from each of the participating age
 
 The state of each node is constructed by applying mutations from individual feeds.
 Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
-Each message contains a special hash of the current state of the ECHO instance called a ***Timeframe***. 
-The timeframe is a vector of tuples consisting of the associated feed's public key and the ordinal position of the mutation within that feed.
+Each message contains a special hash of the current state of the ECHO instance called a ***Timeframe***.
+The timeframe is a kind of [Vector Clock](https://en.wikipedia.org/wiki/Vector_clock) consisting of an array of typles containing the associated feed's public key and the ordinal position of the mutation within that feed.
 Timeframes allow for deterministic ordering of mutations so that each peer processes mutations in the same order as all other peers regardless of when the individual mutations were created.
 This enables the ECHO data processing pipeline to provide a strict ordering of mutations (i.e., a ***total order***) to the associated node models, which are responsible for implementing data consistency.
 Models typically implement some form of [conflict-free replicated data type (CRDT)](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) to provide consistency guarantees.
@@ -96,17 +101,32 @@ These snapshots are stored persistently.
 Peers are then able to discard the preceeding mutation logs leading up to the start of the current epoch.
 This provide a mechanism for data compression and consistency.
 
-> - Explain consistency implications of epochs.
+> - Explain concensus implications of epochs.
+> - Forking
 
 
 #### 2.2.2 Data Model
 
+Each ECHO database instance is represented as a shared ***Space***.
+It consists of a graph of linked nodes.
+
+![Graph](./diagrams/echo-graph.svg)
+
+
+Agents may have access to an unlimited number of private and collaborative spaces.
+The total set of all such spaces is called a ***Brane***.
+
+![Graph](./diagrams/echo-brane.svg)
+
 > - Spaces
 > - Graph Queries
 > - Structured Items
+> - IPLD, codecs, protocol buffers
 > - Models
 > - Links
 > - Interspace links
+> - Nodes and files
+> - Cross space links and indexing
 
 
 #### 2.2.3 Federation
@@ -118,5 +138,11 @@ This provide a mechanism for data compression and consistency.
 #### References
 
 - [IPLD](https://ipld.io/docs)
+
+
+
+<br/><br/><br/><br/><br/>
+
+## Notes
 
 > - Reconcile with HALO, ECHO, MESH specs.
