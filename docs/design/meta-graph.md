@@ -138,6 +138,13 @@ The total set of all such spaces is called a ***Brane***.
 > - Personal search agent
 
 
+### 2.3 Decentralized Networks
+
+> - MESH: resilient networking, signaling
+> - KUBE: services
+
+
+
 #### References
 
 - [IPLD](https://ipld.io/docs)
