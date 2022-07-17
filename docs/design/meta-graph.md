@@ -12,15 +12,16 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 - HALO and ECHO define low-level protocols that represent identity and information;
   MESH and KUBE provide the building blocks to support such systems.
 
-> - Motivate tangible and evocative first steps towards a new class of social networks.
+> - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
 
 
 ## 2. Basic Concepts
 
 The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-![Ontology](./diagrams/graph/graph-ontology.svg)
-
+<center>
+<img src="./diagrams/graph/graph-ontology.svg" width="480" />
+</center>
 
 
 ### 2.1 Identity: Circles, Groups, and Agents
@@ -84,7 +85,9 @@ Individual mutations are written as signed immutable ***messages*** into an appe
 Each peer that has writable access to an ECHO instance maintains one or more feeds.
 The database is made up from the set of feeds from each of the participating agents' peers.
 
-![Epochs](./diagrams/graph/echo-epochs.svg)
+<center>
+<img src="./diagrams/graph/echo-epochs.svg" width="480" />
+</center>
 
 The state of each node is constructed by applying mutations from individual feeds.
 Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
@@ -110,23 +113,28 @@ This provide a mechanism for data compression and consistency.
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
 
-![Graph](./diagrams/graph/echo-space.svg)
+<center>
+<img src="./diagrams/graph/echo-space.svg" width="480" />
+</center>
+
+> - Graph Queries
+> - Schema, protocol buffers
+> - DXNS type system
+> - Nodes and files
+> - IPLD, codecs, protocol buffers
+> - Models
+> - Links
 
 
 Agents may have access to an unlimited number of private and collaborative spaces.
 The total set of all such spaces is called a ***Brane***.
 
-![Graph](./diagrams/graph/echo-brane.svg)
+<center>
+<img src="./diagrams/graph/echo-brane.svg" width="480" />
+</center>
 
-> - Spaces
-> - Graph Queries
-> - Structured Items
-> - IPLD, codecs, protocol buffers
-> - Models
-> - Links
 > - Interspace links
-> - Nodes and files
-> - Cross space links and indexing
+> - Brane indexing
 
 
 #### 2.2.3 Federation
@@ -141,8 +149,8 @@ The total set of all such spaces is called a ***Brane***.
 
 
 
-<br/><br/><br/><br/><br/>
+<br/><br/><br/>
 
 ## Notes
 
-> - Reconcile with HALO, ECHO, MESH specs.
+> - TODO: Reconcile with HALO, ECHO, MESH specs.
