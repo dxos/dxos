@@ -2,6 +2,8 @@
 
 This document outlines the DXOS Decentralized Meta Graph (DMG).
 
+<br/>
+
 ## 1. Introduction
 
 ### 1.1 Motivation
@@ -14,14 +16,13 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 > - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
 
+<br/>
 
 ## 2. Basic Concepts
 
 The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-<center>
 <img src="./diagrams/graph/graph-ontology.svg" width="480" />
-</center>
 
 
 ### 2.1 Identity: Circles, Groups, and Agents
@@ -85,9 +86,7 @@ Individual mutations are written as signed immutable ***messages*** into an appe
 Each peer that has writable access to an ECHO instance maintains one or more feeds.
 The database is made up from the set of feeds from each of the participating agents' peers.
 
-<center>
 <img src="./diagrams/graph/echo-epochs.svg" width="480" />
-</center>
 
 The state of each node is constructed by applying mutations from individual feeds.
 Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
@@ -113,31 +112,27 @@ This provide a mechanism for data compression and consistency.
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
 
-<center>
 <img src="./diagrams/graph/echo-space.svg" width="480" />
-</center>
 
-> - Graph Queries
-> - Schema, protocol buffers
+> - Graph Queries, subscriptions, filtering
+> - Schema, protocol buffers, versions
+> - CRDTs (key-value, structured, text, custom)
 > - DXNS type system
-> - Nodes and files
+> - Nodes, links, and files
 > - IPLD, codecs, protocol buffers
-> - Models
-> - Links
+> - Models and state machine
 
 
 Agents may have access to an unlimited number of private and collaborative spaces.
 The total set of all such spaces is called a ***Brane***.
 
-<center>
 <img src="./diagrams/graph/echo-brane.svg" width="480" />
-</center>
 
 > - Interspace links
 > - Brane indexing
 
 
-#### 2.2.3 Federation
+#### 2.2.3 Data Federation
 
 > - Branes
 > - Personal search agent
