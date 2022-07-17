@@ -19,7 +19,7 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-![Ontology](./diagrams/dxns-ontology.svg)
+![Ontology](./diagrams/graph/graph-ontology.svg)
 
 
 
@@ -84,7 +84,7 @@ Individual mutations are written as signed immutable ***messages*** into an appe
 Each peer that has writable access to an ECHO instance maintains one or more feeds.
 The database is made up from the set of feeds from each of the participating agents' peers.
 
-![Epochs](./diagrams/echo-epochs.svg)
+![Epochs](./diagrams/graph/echo-epochs.svg)
 
 The state of each node is constructed by applying mutations from individual feeds.
 Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
@@ -110,13 +110,13 @@ This provide a mechanism for data compression and consistency.
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
 
-![Graph](./diagrams/echo-graph.svg)
+![Graph](./diagrams/graph/echo-space.svg)
 
 
 Agents may have access to an unlimited number of private and collaborative spaces.
 The total set of all such spaces is called a ***Brane***.
 
-![Graph](./diagrams/echo-brane.svg)
+![Graph](./diagrams/graph/echo-brane.svg)
 
 > - Spaces
 > - Graph Queries
