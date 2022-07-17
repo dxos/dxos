@@ -1,4 +1,4 @@
-# DMG
+# The Decentralized Meta Graph (DMG)
 
 This document outlines the DXOS Decentralized Meta Graph (DMG).
 
@@ -38,6 +38,7 @@ The system also enables the creation of ***Groups***, which are ad hoc collectio
 Groups are also referenced by Peer DIDs; the corresponding DID Document may be used to verify the management rights to the group.
 Groups may be used to implement access control for decentralized digital assets.
 
+
 #### References
 
 - [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
@@ -68,20 +69,54 @@ The complete set of interconnected spaces accessible by an agent is called a ***
 
 #### 2.2.1 Consistency
 
+Each ECHO instance is a graph database composed of elemental data structures called nodes.
+Nodes are queried using the ECHO Graph API, and individual nodes are accessed using their associated model API.
+Differen model APIs provide different kinds of consistency semantics.
+
+Nodes are constructed and updated by ***mutations***.
+Mutations are atomic transformations that are applied to the associated node's state machine.
+Individual mutations are written as signed immutable ***messages*** into an append-only hash linked data structure called a ***feed***.
+Each peer that has writable access to an ECHO instance maintains one or more feeds.
+The database is made up from the set of feeds from each of the participating agents' peers.
+
 ![Epochs](./diagrams/echo-epochs.svg)
+
+The state of each node is constructed by applying mutations from individual feeds.
+Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
+Each message contains a special hash of the current state of the ECHO instance called a ***Timeframe***. 
+The timeframe is a vector of tuples consisting of the associated feed's public key and the ordinal position of the mutation within that feed.
+Timeframes allow for deterministic ordering of mutations so that each peer processes mutations in the same order as all other peers regardless of when the individual mutations were created.
+This enables the ECHO data processing pipeline to provide a strict ordering of mutations (i.e., a ***total order***) to the associated node models, which are responsible for implementing data consistency.
+Models typically implement some form of [conflict-free replicated data type (CRDT)](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) to provide consistency guarantees.
+
+Periodically, the set of mutations across participating feeds is bundled into a block called an ***Epoch***.
+Epochs are defined by a starting and ending timeframe.
+At the beginning of a timeframe, each node's model creates a serializable snapshot of the state of the associated state machine.
+These snapshots are stored persistently.
+Peers are then able to discard the preceeding mutation logs leading up to the start of the current epoch.
+This provide a mechanism for data compression and consistency.
+
+> - Explain consistency implications of epochs.
 
 
 #### 2.2.2 Data Model
 
-
+> - Spaces
+> - Graph Queries
+> - Structured Items
+> - Models
+> - Links
+> - Interspace links
 
 
 #### 2.2.3 Federation
 
-
-
+> - Branes
+> - Personal search agent
 
 
 #### References
 
 - [IPLD](https://ipld.io/docs)
+
+> - Reconcile with HALO, ECHO, MESH specs.
