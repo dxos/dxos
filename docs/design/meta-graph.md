@@ -2,6 +2,7 @@
 
 This document outlines the DXOS Decentralized Meta Graph (DMG).
 
+
 <br/>
 
 ## 1. Introduction
@@ -16,13 +17,16 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 > - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
 
+
 <br/>
 
 ## 2. Basic Concepts
 
 The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-<img src="./diagrams/graph/graph-ontology.svg" width="480" />
+<center>
+<img src="./diagrams/dxns-ontology.drawio.svg" />
+</center>
 
 
 ### 2.1 Identity: Circles, Groups, and Agents
@@ -41,6 +45,8 @@ The HALO also contains an address book of other agents (represented by Peer DIDs
 
 The set of all contacts for a given agent is called a ***Circle***.
 
+<img src="./diagrams/graph/halo-circle.svg" width="400" />
+
 The system also enables the creation of ***Groups***, which are ad hoc collections of agent identifiers (Peer DIDs) and claims (Verifiable Credentials) that may represent rights associated with these agents.
 Groups are also referenced by Peer DIDs; the corresponding DID Document may be used to verify the management rights to the group.
 Groups may be used to implement access control for decentralized digital assets.
@@ -54,6 +60,8 @@ Groups may be used to implement access control for decentralized digital assets.
 - [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
 - [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
 
+
+<br/>
 
 ### 2.2. Information: Branes, Spaces, and Nodes
 
@@ -138,20 +146,28 @@ The total set of all such spaces is called a ***Brane***.
 > - Personal search agent
 
 
-### 2.3 Decentralized Networks
-
-> - MESH: resilient networking, signaling
-> - KUBE: services
-
-
-
 #### References
 
-- [IPLD](https://ipld.io/docs)
+> - [IPLD](https://ipld.io/docs)
 
 
+<br/>
 
-<br/><br/><br/>
+### 2.3 Decentralized Networks
+
+The DMG is realized by a peer-to-peer network of services called MESH.
+MESH services are coordinated by KUBE nodes that run the KORE OS daemon.
+
+DXOS clients may connect to each other directly via a peer-to-peer transport such as WebRTC.
+These connections are mediated by a network of signaling services which implement a DHT using libp2p PubSub. 
+
+<img src="./diagrams/graph/mesh-signaling.svg" width="480" />
+
+Client applications connect to one or more signaling servers and register their IP address (and other metadata) using a ***discovery key*** shared by other peers with which they want to connect,.
+The discovery key is typically the hash of a public key associated with a decentralized digital asset, such as an ECHO Space.
+
+
+<br/>
 
 ## Notes
 
