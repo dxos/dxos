@@ -173,12 +173,12 @@ export class PartyFactory {
     await initiator.connect();
     const { partyKey, genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
     const party = await this.constructParty(partyKey);
-    
+
     await this._metadataStore.addParty(partyKey);
     await this._metadataStore.setGenesisFeed(partyKey, genesisFeedKey);
 
     party._setGenesisFeedKey(genesisFeedKey);
-    
+
     await party.open();
     await initiator.destroy();
 

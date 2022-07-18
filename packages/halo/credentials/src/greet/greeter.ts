@@ -11,7 +11,7 @@ import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { getPartyCredentialMessageType } from '../party';
-import { PartyCredential, Message, KeyHint, Command, NotarizeResponse, WithTypeUrl, KeyType } from '../proto';
+import { PartyCredential, Message, Command, NotarizeResponse, WithTypeUrl } from '../proto';
 import { PeerId } from '../typedefs';
 import {
   ERR_GREET_INVALID_COMMAND,
@@ -46,7 +46,7 @@ export class Greeter {
   constructor (
     partyKey?: PublicKeyLike,
     private readonly _genesisFeedKey?: PublicKey,
-    partyWriter?: PartyWriter,
+    partyWriter?: PartyWriter
   ) {
     if (partyKey || partyWriter) {
       assert(partyKey);
@@ -254,11 +254,11 @@ export class Greeter {
     const copies = await this._partyWriter(params);
 
     await invitation.notarize();
-    assert(this._genesisFeedKey)
+    assert(this._genesisFeedKey);
     return {
       '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
-      genesisFeed: this._genesisFeedKey,
+      genesisFeed: this._genesisFeedKey
     };
   }
 }

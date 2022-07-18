@@ -28,7 +28,7 @@ const createKeyring = async () => {
 const createGreeter = (keyring) => new Greeter(
   keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
   keyring.findKey(Filter.matches({ type: KeyType.FEED })).publicKey,
-  messages => messages,
+  messages => messages
 );
 
 it('Good invitation', async () => {

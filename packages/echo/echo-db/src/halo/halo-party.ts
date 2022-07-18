@@ -140,7 +140,7 @@ export class HaloParty {
    * @internal
    */
   _setGenesisFeedKey (genesisFeedKey: PublicKey) {
-    this._genesisFeedKey = genesisFeedKey;;
+    this._genesisFeedKey = genesisFeedKey;
   }
 
   /**

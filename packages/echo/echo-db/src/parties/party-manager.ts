@@ -96,7 +96,7 @@ export class PartyManager {
         const snapshot = await this._snapshotStore.load(partyKey);
 
         const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
-        if(!metadata.genesisFeedKey) {
+        if (!metadata.genesisFeedKey) {
           log(`Skipping loading party with missing genesis feed key: ${partyKey}`);
           continue;
         }
@@ -186,7 +186,7 @@ export class PartyManager {
 
     await this._metadataStore.addParty(party.key);
     await this._metadataStore.setGenesisFeed(party.key, genesisFeedKey);
-    
+
     await party.open();
     this._setParty(party);
     return party;

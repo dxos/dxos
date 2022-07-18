@@ -159,7 +159,7 @@ describe('PartyPipeline', () => {
 
     const writeFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
-    await party.open({ genesisFeedKey: writeFeed.key,  });
+    await party.open({ genesisFeedKey: writeFeed.key });
     afterTest(async () => party.close());
 
     // Wait for events to be processed.

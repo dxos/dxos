@@ -46,7 +46,7 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
-  
+
   private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
@@ -142,7 +142,7 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
-  get genesisFeedKey() {
+  get genesisFeedKey () {
     assert(this._genesisFeedKey);
     return this._genesisFeedKey;
   }

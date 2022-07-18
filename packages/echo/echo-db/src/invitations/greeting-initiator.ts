@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert, { notDeepEqual } from 'assert';
+import assert from 'assert';
 import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
@@ -178,7 +178,7 @@ export class GreetingInitiator {
     assert(notarizeResponse.genesisFeed);
     return {
       partyKey,
-      genesisFeedKey: notarizeResponse.genesisFeed,
+      genesisFeedKey: notarizeResponse.genesisFeed
     };
   }
 

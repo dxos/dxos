@@ -32,7 +32,7 @@ const createGreeter = async (targetPartyKey: PublicKeyLike, genesisFeedKey: Publ
     async messages => {
       outerResolve(messages);
       return messages;
-    },
+    }
   );
 
   const peerId = randomBytes(32);

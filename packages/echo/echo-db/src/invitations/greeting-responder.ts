@@ -9,9 +9,8 @@ import { Event, waitForCondition } from '@dxos/async';
 import {
   admitsKeys,
   createEnvelopeMessage, Greeter,
-  GreetingCommandPlugin, KeyHint,
+  GreetingCommandPlugin,
   Keyring,
-  KeyType,
   SecretProvider,
   SecretValidator,
   Message as HaloMessage
@@ -66,7 +65,7 @@ export class GreetingResponder {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
       this._genesisFeedKey,
-      async (messages: any) => this._writeCredentialsToParty(messages),
+      async (messages: any) => this._writeCredentialsToParty(messages)
     );
 
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(this._swarmKey), this._greeter.createMessageHandler());
