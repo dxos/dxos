@@ -61,7 +61,7 @@ export class Service {
             value: encoded,
             type_url: method.resolvedRequestType!.fullName
           });
-          return responseCodec.decode(response.value!);
+          return responseCodec.decode(response.value ?? new Uint8Array());
         };
       } else {
         (this as any)[methodName] = (request: unknown) => {
@@ -71,7 +71,7 @@ export class Service {
               value: encoded,
               type_url: method.resolvedRequestType!.fullName
             });
-            stream.subscribe(data => next(responseCodec.decode(data.value!)), close);
+            stream.subscribe(data => next(responseCodec.decode(data.value ?? new Uint8Array())), close);
 
             return () => stream.close();
           });

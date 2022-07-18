@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.mesh.signal;
+
+option go_package = "github.com/dxos/kube/go/signal/impl";
+
+message JoinRequest {
+    bytes discoveryKey = 1;
+    bytes peerKey = 2;
+}
+
+message LeaveRequest {
+    bytes discoveryKey = 1;
+    bytes peerKey = 2;
+}
+
+message LookupRequest {
+    bytes discoveryKey = 1;
+}
+
+message LookupResult {
+    repeated bytes peerKey = 1;
+}
+
+message Message {
+    bytes sender = 1;
+    bytes receiver = 2;
+    bytes payload = 3;
+    bytes signature = 4;
+}
+
+message SubscriptionRequest {
+    bytes peerKey = 1;
+}
+
+service Signal {
+    rpc Join(JoinRequest) returns (google.protobuf.Empty);
+    rpc Leave(LeaveRequest) returns (google.protobuf.Empty);
+    rpc Lookup(LookupRequest) returns (stream LookupResult);
+    rpc Send(Message) returns (google.protobuf.Empty);
+    rpc Subscribe(SubscriptionRequest) returns (stream Message);
+}

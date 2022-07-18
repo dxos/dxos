@@ -34,7 +34,9 @@
     "nanomessage-rpc": "^3.0.0",
     "simple-peer": "9.11.0",
     "ws": "^7.4.4",
-    "xor-distance": "^2.0.0"
+    "xor-distance": "^2.0.0",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
@@ -53,7 +55,8 @@
     "fast-check": "~2.14.0",
     "mocha": "~8.4.0",
     "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@swc-node/register": "~1.4.2"
   },
   "publishConfig": {
     "access": "public"
