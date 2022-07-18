@@ -28,7 +28,6 @@ import { Invitation, InvitationOnFinish, SecretProvider, SecretValidator } from 
 const log = debug('dxos:halo:greet');
 
 export type PartyWriter = (params: Message[]) => Promise<Message[]>;
-export type HintProvider = (params: Message[]) => Promise<KeyHint[]>;
 
 /**
  * Reference Greeter that uses useable, single-use "invitations" to authenticate the invitee.
@@ -36,7 +35,6 @@ export type HintProvider = (params: Message[]) => Promise<KeyHint[]>;
 export class Greeter {
   _partyKey?: PublicKey;
   _partyWriter?: PartyWriter;
-  _hintProvider?: HintProvider;
   _invitations = new Map<string, Invitation>();
 
   /**
@@ -44,23 +42,19 @@ export class Greeter {
    * TODO(telackey): Does it make sense to separate out the Invitee functionality?
    * @param {PublicKeyLike} [partyKey] The publicKey of the target Party.
    * @param {function} [partyWriter] Callback function to write messages to the Party.
-   * @param {function} [hintProvider] Callback function to gather feed and key hints to give to the invitee.
    */
   constructor (
     partyKey?: PublicKeyLike,
     private readonly _genesisFeedKey?: PublicKey,
     partyWriter?: PartyWriter,
-    hintProvider?: HintProvider,
   ) {
-    if (partyKey || partyWriter || hintProvider) {
+    if (partyKey || partyWriter) {
       assert(partyKey);
       assert(partyWriter);
-      assert(hintProvider);
     }
 
     this._partyKey = partyKey ? PublicKey.from(partyKey) : undefined;
     this._partyWriter = partyWriter;
-    this._hintProvider = hintProvider;
   }
 
   /**
@@ -255,20 +249,15 @@ export class Greeter {
     log('Admitting new node after successful greeting.');
 
     assert(this._partyWriter);
-    assert(this._hintProvider);
 
     // Write the supplied messages to the target Party.
     const copies = await this._partyWriter(params);
-
-    // Retrieve the hinted feed and key info for the invitee.
-    const hints = await this._hintProvider(params);
 
     await invitation.notarize();
     assert(this._genesisFeedKey)
     return {
       '@type': 'dxos.credentials.greet.NotarizeResponse',
       copies,
-      feedHints: hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!),
       genesisFeed: this._genesisFeedKey,
     };
   }

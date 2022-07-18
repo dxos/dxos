@@ -22,7 +22,7 @@ import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
 describe('DataParty', () => {
-  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey, feedHints: PublicKey[] = []) => {
+  const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
 
     const storage = createStorage('', StorageType.RAM);
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
@@ -178,7 +178,7 @@ describe('DataParty', () => {
     ));
 
     const identityB = await deriveTestDeviceCredentials(identityA);
-    const partyB = await createParty(identityB, partyKey.publicKey, feedA.key, [feedA.key]);
+    const partyB = await createParty(identityB, partyKey.publicKey, feedA.key);
     await partyB.open();
 
     await partyA.database.createItem({ type: 'test:item-a' });
@@ -226,9 +226,9 @@ describe('DataParty', () => {
     );
 
     await initiator.connect();
-    const { partyKey: partyKeyB, genesisFeedKey, hints: hintsB } = await initiator.redeemInvitation(defaultSecretProvider);
+    const { partyKey: partyKeyB, genesisFeedKey } = await initiator.redeemInvitation(defaultSecretProvider);
     expect(partyKeyB.equals(partyKeyA.publicKey));
-    const partyB = await createParty(identityB, partyKeyB, genesisFeedKey, hintsB);
+    const partyB = await createParty(identityB, partyKeyB, genesisFeedKey);
     await partyB.open();
     await initiator.destroy();
 

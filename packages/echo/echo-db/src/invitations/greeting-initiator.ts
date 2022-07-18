@@ -38,7 +38,6 @@ const DEFAULT_TIMEOUT = 30_000;
 export interface InvitationResult {
   partyKey: PublicKey;
   genesisFeedKey: PublicKey
-  hints: PublicKey[];
 }
 
 /**
@@ -180,7 +179,6 @@ export class GreetingInitiator {
     return {
       partyKey,
       genesisFeedKey: notarizeResponse.genesisFeed,
-      hints: notarizeResponse.feedHints ?? [] // TODO(dmaretskyi): Remove.
     };
   }
 

@@ -26,13 +26,6 @@ const log = debug('dxos:halo:greet');
 const createGreeter = async (targetPartyKey: PublicKeyLike, genesisFeedKey: PublicKey) => {
   const [writePromise, outerResolve] = trigger<Message[]>();
 
-  const hints = [
-    { publicKey: PublicKey.from(randomBytes(32)), type: KeyType.IDENTITY },
-    { publicKey: PublicKey.from(randomBytes(32)), type: KeyType.DEVICE },
-    { publicKey: PublicKey.from(randomBytes(32)), type: KeyType.FEED },
-    { publicKey: PublicKey.from(randomBytes(32)), type: KeyType.FEED }
-  ];
-
   const greeter = new Greeter(
     targetPartyKey,
     genesisFeedKey,
@@ -40,7 +33,6 @@ const createGreeter = async (targetPartyKey: PublicKeyLike, genesisFeedKey: Publ
       outerResolve(messages);
       return messages;
     },
-    async () => hints
   );
 
   const peerId = randomBytes(32);
@@ -57,7 +49,7 @@ const createGreeter = async (targetPartyKey: PublicKeyLike, genesisFeedKey: Publ
     .setExtension(plugin.createExtension())
     .init();
 
-  return { greeter, rendezvousKey: peerId, plugin, protocol, writePromise: writePromise(), hints };
+  return { greeter, rendezvousKey: peerId, plugin, protocol, writePromise: writePromise() };
 };
 
 /**
@@ -107,7 +99,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && arraysEqual(secret, invitation.secret);
 
   const {
-    protocol: greeterProtocol, greeter, rendezvousKey, hints, writePromise
+    protocol: greeterProtocol, greeter, rendezvousKey, writePromise
   } = await createGreeter(targetPartyKey, genesisFeedKey);
 
   const invitation = await greeter.createInvitation(targetPartyKey, secretValidator, secretProvider);
@@ -164,7 +156,6 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
     // Send them to the greeter.
     const notarizeResponse = await plugin.send(rendezvousKey, command);
     expect(notarizeResponse.genesisFeed).toEqual(genesisFeedKey);
-    expect(notarizeResponse.feedHints).toEqual(hints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey));
 
     // In the real world, the response would be signed in an envelope by the Greeter, but in this test it is not altered.
     const written = await writePromise;

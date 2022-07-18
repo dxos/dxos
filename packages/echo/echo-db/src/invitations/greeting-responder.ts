@@ -67,7 +67,6 @@ export class GreetingResponder {
       this._partyProcessor.partyKey,
       this._genesisFeedKey,
       async (messages: any) => this._writeCredentialsToParty(messages),
-      async () => this._gatherHints()
     );
 
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(this._swarmKey), this._greeter.createMessageHandler());
@@ -211,6 +210,7 @@ export class GreetingResponder {
     // Place the self-signed messages inside an Envelope, sign then write the signed Envelope to the Party.
     const envelopes = [];
     for (const message of messages) {
+      // TODO(dmaretskyi): Refactor to pass in a callback: `await admitKeys(messages)`.
       const admittedKeys = admitsKeys(message);
 
       // TODO(telackey): Add hasKey/isMember to PartyProcessor?
@@ -238,25 +238,5 @@ export class GreetingResponder {
     log('Wrote messages to local party feed');
     // Return the signed messages to the caller because copies are sent back to the invitee.
     return envelopes;
-  }
-
-  /**
-   * Callback to gather member key and feed "hints" for the Invitee.
-   * @private
-   */
-  _gatherHints (): KeyHint[] {
-    assert(this._state === GreetingState.SUCCEEDED);
-
-    const memberKeys = this._partyProcessor.memberKeys.map((publicKey) => ({
-      publicKey,
-      type: KeyType.UNKNOWN
-    }));
-
-    const memberFeeds = this._partyProcessor.feedKeys.map((publicKey) => ({
-      publicKey,
-      type: KeyType.FEED
-    }));
-
-    return [...memberKeys, ...memberFeeds];
   }
 }

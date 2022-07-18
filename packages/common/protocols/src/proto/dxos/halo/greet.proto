@@ -95,10 +95,6 @@ message NotarizeResponse {
   // and key hints necessary to bootstrap the invitee into the Party.
   repeated google.protobuf.Any copies = 1;
 
-  // Feed hints necessary to bootstrap the invitee into the Party.
-  // TODO(dmaretskyi): Remove when genesis feed is ready.
-  repeated PubKey feedHints = 2;
-
   PubKey genesisFeed = 3;
 };
 
