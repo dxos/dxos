@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "bin": {
-    "echo": "bin/kodama.js"
+    "kx": "bin/kodama.js"
   },
   "files": [
     "bin",
