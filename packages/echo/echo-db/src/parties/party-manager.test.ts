@@ -134,17 +134,19 @@ describe('Party manager', () => {
 
     // TODO(burdon): Create multiple feeds.
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
       type: KeyType.FEED
     });
 
-    const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
+    await feed.append({
+      timeframe: new Timeframe(),
+      halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
+    });
 
-    await partyManager.addParty(partyKey.publicKey, [PublicKey.from(feed.key)]);
+    await partyManager.addParty(partyKey.publicKey, feed.key);
 
     await update;
   });
@@ -185,6 +187,7 @@ describe('Party manager', () => {
       assert(keyRecord, 'Key is not found in keyring');
       assert(keyRecord.secretKey, 'Missing secret key');
       await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
+      await metadataStore.setGenesisFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
       const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);

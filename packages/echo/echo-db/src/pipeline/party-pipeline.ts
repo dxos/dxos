@@ -30,9 +30,9 @@ export interface PipelineOptions {
 
 export interface OpenOptions {
   /**
-   * Keys of initial feeds needed to bootstrap the party.
+   * Initial feed that contains PartyGenesis message and acts as the root for the feed DAG.
    */
-  feedHints?: PublicKey[]
+  genesisFeedKey: PublicKey
   /**
    * Timeframe to start processing feed messages from.
    */
@@ -123,9 +123,9 @@ export class PartyPipeline {
    */
   @synchronized
   @timed(1_000)
-  async open (options: OpenOptions = {}) {
+  async open (options: OpenOptions) {
     const {
-      feedHints = [],
+      genesisFeedKey,
       initialTimeframe,
       targetTimeframe
     } = options;
@@ -147,17 +147,16 @@ export class PartyPipeline {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
 
-    if (feedHints.length > 0) {
-      await this._partyProcessor.takeHints(feedHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
-    }
+    // TODO(dmaretskyi): We still need to hint at the genesis feed for some reason, not doing this breaks invitation tests.
+    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: genesisFeedKey }]);
 
     //
     // Pipeline
     //
 
     const iterator = await this._feedProvider.createIterator(
-      createMessageSelector(this._partyProcessor, this._timeframeClock),
-      createFeedSelector(this._partyProcessor, feedHints),
+      createMessageSelector(this._timeframeClock),
+      createFeedSelector(this._partyProcessor, genesisFeedKey),
       initialTimeframe
     );
 
@@ -256,4 +255,4 @@ export class PartyPipeline {
   }
 }
 
-const createFeedSelector = (partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector => feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);
+const createFeedSelector = (partyProcessor: PartyProcessor, genesisFeed: PublicKey): FeedSelector => feed => genesisFeed.equals(feed.key) || partyProcessor.isFeedAdmitted(feed.key);
