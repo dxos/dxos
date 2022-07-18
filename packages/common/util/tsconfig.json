@@ -16,6 +16,12 @@
     },
     {
       "path": "../debug"
+    },
+    {
+      "path": "../protocols"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }
