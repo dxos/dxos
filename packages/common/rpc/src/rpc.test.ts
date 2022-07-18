@@ -436,11 +436,13 @@ describe('RpcPeer', () => {
           expect(msg.value).toEqual(Buffer.from('request'));
           return { value: Buffer.from('response') };
         },
-        port: alicePort
+        port: alicePort,
+        noHandshake: true
       });
       const bob = new RpcPeer({
         messageHandler: async (method, msg) => ({}),
-        port: bobPort
+        port: bobPort,
+        noHandshake: true
       });
 
       await alice.open();
