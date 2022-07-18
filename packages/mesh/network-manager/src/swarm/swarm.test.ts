@@ -38,28 +38,48 @@ class MockSignalConnection implements SignalMessaging {
   }
 }
 
-const setup = () => {
+const setup = (useReliableMessenger = false) => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
+  // eslint-disable-next-line prefer-const
+  let swarm1: Swarm;
+  // eslint-disable-next-line prefer-const
+  let swarm2: Swarm;
 
-  const swarm1: Swarm = new Swarm(
+  const rm1: ReliableMessenger = new ReliableMessenger(
+    msg => rm2.receiveMessage(msg),
+    msg => swarm1.onSignal(msg),
+    msg => swarm1.onOffer(msg)
+  );
+
+  const rm2: ReliableMessenger = new ReliableMessenger(
+    msg => rm1.receiveMessage(msg),
+    msg => swarm2.onSignal(msg),
+    msg => swarm2.onOffer(msg)
+  );
+
+  const sm1: SignalMessaging = useReliableMessenger ? rm1 : new MockSignalConnection(() => swarm2);
+
+  const sm2: SignalMessaging = useReliableMessenger ? rm2 : new MockSignalConnection(() => swarm1);
+
+  swarm1 = new Swarm(
     topic,
     peerId1,
     new FullyConnectedTopology(),
     () => new Protocol(),
-    new MockSignalConnection(() => swarm2),
+    sm1,
     () => {},
     createWebRTCTransportFactory(),
     undefined
   );
 
-  const swarm2: Swarm = new Swarm(
+  swarm2 = new Swarm(
     topic,
     peerId2,
     new FullyConnectedTopology(),
     () => new Protocol(),
-    new MockSignalConnection(() => swarm1),
+    sm2,
     () => {},
     createWebRTCTransportFactory(),
     undefined
@@ -145,47 +165,7 @@ test('second peer discovered after delay', async () => {
 }).timeout(5_000);
 
 test('swarming with reliable messenger', async () => {
-  const topic = PublicKey.random();
-  const peerId1 = PublicKey.random();
-  const peerId2 = PublicKey.random();
-  // eslint-disable-next-line prefer-const
-  let swarm1: Swarm;
-  // eslint-disable-next-line prefer-const
-  let swarm2: Swarm;
-
-  const rm1: ReliableMessenger = new ReliableMessenger(
-    msg => rm2.receiveMessage(msg),
-    msg => swarm1.onSignal(msg),
-    msg => swarm1.onOffer(msg)
-  );
-
-  const rm2: ReliableMessenger = new ReliableMessenger(
-    msg => rm1.receiveMessage(msg),
-    msg => swarm2.onSignal(msg),
-    msg => swarm2.onOffer(msg)
-  );
-
-  swarm1 = new Swarm(
-    topic,
-    peerId1,
-    new FullyConnectedTopology(),
-    () => new Protocol(),
-    rm1,
-    () => {},
-    createWebRTCTransportFactory(),
-    undefined
-  );
-
-  swarm2 = new Swarm(
-    topic,
-    peerId2,
-    new FullyConnectedTopology(),
-    () => new Protocol(),
-    rm2,
-    () => {},
-    createWebRTCTransportFactory(),
-    undefined
-  );
+  const { swarm1, swarm2, peerId2 } = setup(true);
 
   const promise = Promise.all([
     promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
