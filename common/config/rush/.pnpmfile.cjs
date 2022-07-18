@@ -58,9 +58,8 @@ function readPackage(packageJson, context) {
     }
 
     case 'ink':
-    case 'ink-markdown':
     case 'ink-select-input':
-    case 'ink-tab':
+    case 'ink-syntax-highlight':
     case 'ink-text-input':
     case 'react-reconciler': {
       packageJson.peerDependencies['react'] = '>=16.0.0'

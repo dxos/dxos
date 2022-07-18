@@ -2,10 +2,12 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react",
+    "esModuleInterop": true,
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "CommonJS",
     "outDir": "dist"
   },
   "exclude": [

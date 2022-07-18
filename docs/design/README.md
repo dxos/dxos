@@ -20,11 +20,15 @@ Additionally, the DXOS network incorporates other decentralized systems and tech
 | System                    | Description                                                 |
 |---------------------------|-------------------------------------------------------------|
 | [`KUBE`]()                | Peer-to-peer networks of back-end servers.                  |
-| [`IPFS`]()                | File replication.                                           |
-| [`Avalanche`]()           | Scalable proof-of-stake blockchains.                        |
+| [`IPFS`]()                | Peer-to-peer file replication.                              |
 | [`DNS`]()                 | Network address discovery.                                  |
+| [`Avalanche`]()           | Scalable proof-of-stake blockchains.                        |
+
 
 > - TODO(burdon): Diagram of KUBE services.
+
+
+![KUBE](./diagrams/KUBE.svg)
 
 
 ## Reference

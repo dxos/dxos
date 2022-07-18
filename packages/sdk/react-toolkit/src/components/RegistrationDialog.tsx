@@ -21,7 +21,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { generateSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 
 import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';

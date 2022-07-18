@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export { generateSeedPhrase } from '@dxos/credentials';
+
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   Entity,

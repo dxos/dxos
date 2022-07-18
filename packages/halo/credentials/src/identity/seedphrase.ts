@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 
-import { createKeyPair } from './keys';
+import { createKeyPair } from '@dxos/crypto';
 
 // Util functions for Identity: export, import, create.
 
