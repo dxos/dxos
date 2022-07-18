@@ -38,7 +38,7 @@ class MockSignalConnection implements SignalMessaging {
   }
 }
 
-const setup = (useReliableMessenger = false) => {
+const setup = (useMessageRouter = false) => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
@@ -59,9 +59,9 @@ const setup = (useReliableMessenger = false) => {
     msg => swarm2.onOffer(msg)
   );
 
-  const sm1: SignalMessaging = useReliableMessenger ? mr1 : new MockSignalConnection(() => swarm2);
+  const sm1: SignalMessaging = useMessageRouter ? mr1 : new MockSignalConnection(() => swarm2);
 
-  const sm2: SignalMessaging = useReliableMessenger ? mr2 : new MockSignalConnection(() => swarm1);
+  const sm2: SignalMessaging = useMessageRouter ? mr2 : new MockSignalConnection(() => swarm1);
 
   swarm1 = new Swarm(
     topic,
@@ -164,7 +164,7 @@ test('second peer discovered after delay', async () => {
   });
 }).timeout(5_000);
 
-test('swarming with reliable messenger', async () => {
+test('swarming with message router', async () => {
   const { swarm1, swarm2, peerId2 } = setup(true);
 
   const promise = Promise.all([
