@@ -159,7 +159,7 @@ describe('SignalApi', () => {
       id: peer2,
       topic,
       sessionId,
-      data: {}
+      data: { offer: {} }
     });
     expect(answer).toEqual({ accept: true });
 
