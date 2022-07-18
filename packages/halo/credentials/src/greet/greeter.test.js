@@ -98,7 +98,7 @@ it('Good invitation', async () => {
       }
     };
 
-    const response = await greeter.handleMessage(message.payload, invitation.id, randomBytes());
+    await greeter.handleMessage(message.payload, invitation.id, randomBytes());
 
     // The `FINISH` command informs the Greeter the Invitee is done.
     {
