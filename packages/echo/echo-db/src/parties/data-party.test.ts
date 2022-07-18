@@ -44,7 +44,6 @@ describe('DataParty', () => {
       networkManager
     );
     party._setGenesisFeedKey(genesisFeedKey ?? writableFeed.key);
-    party._setFeedHints([...feedHints, writableFeed.key]);
     return party;
   };
 

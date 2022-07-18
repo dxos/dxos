@@ -53,17 +53,15 @@ export class HaloFactory {
     private readonly _options: PipelineOptions = {}
   ) {}
 
-  async constructParty (feedHints: PublicKey[]): Promise<HaloParty> {
+  async constructParty (): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
-    const writableFeed = await feedProvider.createOrOpenWritableFeed();
     const halo = new HaloParty(
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      [...feedHints, writableFeed.key],
       undefined,
       this._options
     );
@@ -80,7 +78,7 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
-    const halo = await this.constructParty([]);
+    const halo = await this.constructParty();
     const feedKey = await halo.getWriteFeedKey();
     const feedKeyPair = this._keyring.getKey(feedKey);
     assert(feedKeyPair);
@@ -193,9 +191,9 @@ export class HaloFactory {
     );
 
     await initiator.connect();
-    const { hints, genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
+    const { genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
 
-    const halo = await this.constructParty(hints);
+    const halo = await this.constructParty();
     halo._setGenesisFeedKey(genesisFeedKey);
     await halo.open();
 

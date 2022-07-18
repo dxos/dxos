@@ -72,7 +72,7 @@ export class IdentityManager {
       const metadata = this._metadataStore.getParty(identityKey.publicKey);
       if (metadata) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty([]);
+        const halo = await this._haloFactory.constructParty();
 
         assert(metadata.genesisFeedKey);
         halo._setGenesisFeedKey(metadata.genesisFeedKey);

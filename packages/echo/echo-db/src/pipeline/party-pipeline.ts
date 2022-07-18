@@ -34,10 +34,6 @@ export interface OpenOptions {
    */
   genesisFeedKey: PublicKey
   /**
-   * Keys of initial feeds needed to bootstrap the party.
-   */
-  feedHints?: PublicKey[]
-  /**
    * Timeframe to start processing feed messages from.
    */
   initialTimeframe?: Timeframe
@@ -129,7 +125,6 @@ export class PartyPipeline {
   @timed(1_000)
   async open (options: OpenOptions) {
     const {
-      feedHints = [],
       genesisFeedKey,
       initialTimeframe,
       targetTimeframe
@@ -161,7 +156,7 @@ export class PartyPipeline {
 
     const iterator = await this._feedProvider.createIterator(
       createMessageSelector(this._timeframeClock),
-      createFeedSelector(this._partyProcessor, [genesisFeedKey]),
+      createFeedSelector(this._partyProcessor, genesisFeedKey),
       initialTimeframe
     );
 
@@ -260,4 +255,4 @@ export class PartyPipeline {
   }
 }
 
-const createFeedSelector = (partyProcessor: PartyProcessor, hints: PublicKey[]): FeedSelector => feed => hints.some(hint => hint.equals(feed.key)) || partyProcessor.isFeedAdmitted(feed.key);
+const createFeedSelector = (partyProcessor: PartyProcessor, genesisFeed: PublicKey): FeedSelector => feed => genesisFeed.equals(feed.key) || partyProcessor.isFeedAdmitted(feed.key);

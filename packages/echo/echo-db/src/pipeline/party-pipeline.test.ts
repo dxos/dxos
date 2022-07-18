@@ -48,10 +48,7 @@ describe('PartyPipeline', () => {
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
-    await party.open({
-      genesisFeedKey: feed.key,
-      feedHints: [feed.key] 
-    });
+    await party.open({ genesisFeedKey: feed.key });
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
@@ -106,10 +103,7 @@ describe('PartyPipeline', () => {
     }
 
     await party.close();
-    await party.open({
-      genesisFeedKey: feedKey,
-       feedHints: [feedKey] 
-      });
+    await party.open({ genesisFeedKey: feedKey });
 
     {
       await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
@@ -271,7 +265,7 @@ describe('PartyPipeline', () => {
     expect(timeframe.isEmpty()).toBeFalsy();
 
     await party.close();
-    await party.open({ genesisFeedKey: feedKey, feedHints: [feedKey], targetTimeframe: timeframe });
+    await party.open({ genesisFeedKey: feedKey, targetTimeframe: timeframe });
   });
 
   test('two instances replicating', async () => {
@@ -305,10 +299,7 @@ describe('PartyPipeline', () => {
       [peer1.partyKey]
     ));
 
-    await party2.open({
-      genesisFeedKey: peer1.feedKey,
-      feedHints: [peer1.feedKey]
-    });
+    await party2.open({ genesisFeedKey: peer1.feedKey });
     afterTest(async () => party2.close());
 
     createTestProtocolPair(

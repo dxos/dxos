@@ -105,7 +105,6 @@ export class PartyManager {
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
         party._setGenesisFeedKey(metadata.genesisFeedKey);
-        party._setFeedHints(metadata.feedKeys ?? []);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -184,7 +183,6 @@ export class PartyManager {
     log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
     const party = await this._partyFactory.constructParty(partyKey);
     party._setGenesisFeedKey(genesisFeedKey);
-    party._setFeedHints(feedHints);
 
     await this._metadataStore.addParty(party.key);
     await this._metadataStore.setGenesisFeed(party.key, genesisFeedKey);

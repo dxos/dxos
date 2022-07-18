@@ -46,9 +46,6 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
-
-  // TODO(dmaretskyi): Remove.
-  private _feedHints: PublicKey[] = []
   
   private _genesisFeedKey?: PublicKey | undefined;
 
@@ -145,13 +142,6 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
-  /**
-   * @internal
-   */
-  _setFeedHints (feedHints: PublicKey[]) {
-    this._feedHints = feedHints;
-  }
-
   get genesisFeedKey() {
     assert(this._genesisFeedKey);
     return this._genesisFeedKey;
@@ -180,7 +170,6 @@ export class DataParty {
     assert(this._genesisFeedKey);
     await this._partyCore.open({
       genesisFeedKey: this._genesisFeedKey,
-      feedHints: this._feedHints,
       initialTimeframe: this._initialTimeframe,
       targetTimeframe: party?.latestTimeframe
     });
