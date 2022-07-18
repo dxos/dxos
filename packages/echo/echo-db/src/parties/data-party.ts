@@ -46,7 +46,8 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
-  private _feedHints: PublicKey[] = []
+
+  private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
     partyKey: PartyKey,
@@ -141,11 +142,16 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
+  get genesisFeedKey () {
+    assert(this._genesisFeedKey);
+    return this._genesisFeedKey;
+  }
+
   /**
    * @internal
    */
-  _setFeedHints (feedHints: PublicKey[]) {
-    this._feedHints = feedHints;
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;
   }
 
   /**
@@ -161,8 +167,9 @@ export class DataParty {
     // TODO(dmaretskyi): May be undefined in some tests.
     const party = this._metadataStore.getParty(this._partyCore.key);
 
+    assert(this._genesisFeedKey);
     await this._partyCore.open({
-      feedHints: this._feedHints,
+      genesisFeedKey: this._genesisFeedKey,
       initialTimeframe: this._initialTimeframe,
       targetTimeframe: party?.latestTimeframe
     });
@@ -175,6 +182,7 @@ export class DataParty {
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
       this._partyCore.credentialsWriter,
       this._networkManager

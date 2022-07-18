@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -32,7 +31,7 @@ export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/prefere
  */
 export interface JoinedParty {
   partyKey: PublicKey,
-  keyHints: KeyHint[]
+  genesisFeed: PublicKey,
 }
 
 /**
@@ -48,13 +47,14 @@ export class HaloParty {
   private readonly _contactManager: ContactManager;
   private readonly _preferences: Preferences;
 
+  private _genesisFeedKey?: PublicKey | undefined;
+
   constructor (
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager,
-    private readonly _feedHints: PublicKey[] = [],
     private readonly _initialTimeframe: Timeframe | undefined,
     _options: PipelineOptions
   ) {
@@ -135,6 +135,13 @@ export class HaloParty {
   }
 
   /**
+   * @internal
+   */
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;
+  }
+
+  /**
    * Opens the pipeline and connects the streams.
    */
   @synchronized
@@ -144,13 +151,15 @@ export class HaloParty {
       return this;
     }
 
+    assert(this._genesisFeedKey);
     await this._partyCore.open({
-      feedHints: this._feedHints,
+      genesisFeedKey: this._genesisFeedKey,
       initialTimeframe: this._initialTimeframe
     });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
       this._partyCore.credentialsWriter,
       this._networkManager
