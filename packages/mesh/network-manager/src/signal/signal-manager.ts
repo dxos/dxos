@@ -18,15 +18,13 @@ export interface SignalConnection {
   lookup (topic: PublicKey): void
 
   /**
-   *
+   * Join topic on signal network, to be discoverable for other peers.
    */
-  // TODO(burdon): Document.
   join (topic: PublicKey, peerId: PublicKey): void
 
   /**
-   *
+   * Leave topic on signal network, to stop being discoverable for other peers.
    */
-  // TODO(burdon): Document.
   leave (topic: PublicKey, peerId: PublicKey): void
 }
 
@@ -35,9 +33,8 @@ export interface SignalConnection {
  */
 export interface SignalMessaging {
   /**
-   *
+   * Offer/answer RPC.
    */
-  // TODO(burdon): Document.
   offer (msg: Message): Promise<Answer>
 
   /**
