@@ -9,6 +9,33 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 ### 1.1 Motivation
 
+As humans we interact with many different applications and services, each of which have different user interfaces.
+Many systems share similar conceptual aspects, for example with respect to identity and access control, and the representation of data (files, tables, etc.)
+In some cases, these involve are overlapping/redundent implementations (e.g., Google Docs, Notion, Dropbox, Github all have different concepts of accounts, teams, roles, etc.)
+Some smaller subset of activities may share a common implementation (e.g., Notion supports universal login via Google accounts; Dropbox synchronizes files with the native operating system.)
+
+The first user-facing applications were created on early operating systems such as the [Alto Exec](https://en.wikipedia.org/wiki/Xerox_Alto) developed by Xeros PARC, which introduced for the first time the [desktop metaphor](https://en.wikipedia.org/wiki/Desktop_metaphor).
+The Apple Lisa and then Macintosh borrowed these concepts and brought them to the mainstream market.
+
+
+Industrial age metaphors
+
+Post symbolic communication is when we can instead of sequencing symbols (words and sentences) to ascribe ideas, we can just materialize the thing we're talking about
+
+
+
+
+
+#### Personal Information Management
+
+
+#### Team Collaboration
+
+
+
+
+
+
 - Our professional and social networks are one of our most valuable assets.
 - Social networks suck; they don't serve us.
 - We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
@@ -16,6 +43,8 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
   MESH and KUBE provide the building blocks to support such systems.
 
 > - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
+
+
 
 
 <br/>
@@ -51,7 +80,7 @@ which control their own [self-sovereign identity](https://academy.affinidi.com/c
 Agents identify themselves using [Peer DIDs](https://www.w3.org/TR/vc-data-model),
 which can be resolved by the network to [DID Documents](https://www.w3.org/TR/did-core/#dfn-did-documents) that contain metadata (including public keys) associated with the agent.
 
-An exmaple of a Peer DID: `did:peer:1zdksdnrjq0ru092sdfsd491cxvs03e0`.
+An example of a Peer DID: `did:peer:1zdksdnrjq0ru092sdfsd491cxvs03e0`.
 
 Agents maintain a [HALO](./halo-spec.md), which is a secure decentralized keychain that contains [Verifiable Credentials](https://www.w3.org/TR/vc-data-model) that represent various forms of ***Claims***.
 Claims may represent access rights, digital asset ownership, relationships, and other information that can be digitally verified without the need for a centralized authority.
@@ -80,15 +109,18 @@ Groups may be used to implement access control for decentralized digital assets.
 
 ### 3.2 Information: Branes, Spaces, and Nodes
 
-The DMG consists of millions of interconnected database instances called ***Spaces***.
-
-> Note: Spaces were previously called Parties.
+The DMG consists of millions of interconnected globally identifiable database instances called ***Spaces***.
 
 Spaces are graph databases that contain atomic data elements called ***Nodes***.
 Spaces are implemented using secure and privacy-preserving [ECHO](./echo-spec.md) peer-to-peer databases.
-The graph is traversably using the ECHO Graph API.
+The graph is traversable using the [LINK] ECHO Graph API.
 
-Nodes are globally addressable data structures that are constructred and accessed using one of an extensible set of ***Model*** APIs.
+> - TODO: Spaces were previously called Parties. Change use of Party for ad hoc sessions?
+> - TODO: Rename Nodes to Atoms?
+> - TODO: Spaces are globally addressable digital assets.
+> - TODO: Define Branespace.
+
+Nodes are identifiable data structures that are constructed and accessed using one of an extensible set of ***Model*** APIs.
 Models provide convenient APIs representing different complex data structures with specific distributed consensus mechanisms.
 For example, models may represent text documents, hierarchical structured documents, messaging channels, game states, and other state machines.
 
@@ -96,12 +128,16 @@ Spaces are digital assets that are created and controlled by groups of agents.
 Agents maintain ownership and access control credentials within their HALO. 
 The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
 
+> - TODO: Are Node IDs GUIDs -- or local to the Space, whereby the GUID is constructed with the Space identifier.
+
 
 #### 3.2.1 Consistency and Consensus
 
 Each ECHO instance is a graph database composed of elemental data structures called nodes.
-Nodes are queried using the ECHO Graph API, and individual nodes are accessed using their associated model API.
-Different model APIs provide different consistency capabilities.
+Nodes can be queried using the ECHO Graph API.
+
+- TODO: Individual nodes are accessed using their associated model API.
+- TODO: Different model APIs provide different consistency capabilities.
 
 Nodes are constructed and updated by ***mutations***.
 Mutations are atomic transformations that are applied to the associated node's state machine.
@@ -163,7 +199,7 @@ The total set of all such spaces is called a ***Brane***.
 
 #### References
 
-- [Interplanetary Linked DataIPLD](https://ipld.io/docs)
+- [Interplanetary Linked Data IPLD](https://ipld.io/docs)
 
 
 <br/>
@@ -181,9 +217,12 @@ These connections are mediated by a network of signaling services which implemen
 Client applications connect to one or more signaling servers and register their IP address (and other metadata) using a ***discovery key*** shared by other peers with which they want to connect,.
 The discovery key is typically the hash of a public key associated with a decentralized digital asset, such as an ECHO Space.
 
+> - TODO: Generalize DHT for discoverable digital assets? I.e., not just peers? E.g., local/global DXNS?
+
 
 <br/>
 
 ## Notes
 
 > - TODO: Reconcile with HALO, ECHO, MESH specs.
+> - https://www.inkandswitch.com/local-first 
