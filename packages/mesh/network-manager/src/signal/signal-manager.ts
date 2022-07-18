@@ -18,12 +18,12 @@ export interface SignalConnection {
   lookup (topic: PublicKey): void
 
   /**
-   * Join topic on signal network, to be discoverable for other peers.
+   * Join topic on signal network, to be discoverable by other peers.
    */
   join (topic: PublicKey, peerId: PublicKey): void
 
   /**
-   * Leave topic on signal network, to stop being discoverable for other peers.
+   * Leave topic on signal network, to stop being discoverable by other peers.
    */
   leave (topic: PublicKey, peerId: PublicKey): void
 }
