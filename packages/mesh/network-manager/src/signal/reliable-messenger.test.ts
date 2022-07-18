@@ -138,7 +138,7 @@ describe('SignalMessenger', () => {
     await api3.join(topic, peer3);
 
     // sending signal from peer1 to peer3.
-    const msg1to3 = {
+    const msg1to3: Message = {
       id: peer1,
       remoteId: peer3,
       sessionId: PublicKey.random(),
@@ -151,7 +151,7 @@ describe('SignalMessenger', () => {
     }, 4_000);
 
     // sending signal from peer2 to peer3.
-    const msg2to3 = {
+    const msg2to3: Message = {
       id: peer2,
       remoteId: peer3,
       sessionId: PublicKey.random(),
@@ -164,7 +164,7 @@ describe('SignalMessenger', () => {
     }, 4_000);
 
     // sending signal from peer3 to peer1.
-    const msg3to1 = {
+    const msg3to1: Message = {
       id: peer3,
       remoteId: peer1,
       sessionId: PublicKey.random(),
