@@ -40,10 +40,9 @@ export {
   NetworkManager
 } from '@dxos/network-manager';
 
-export * as proto from './proto/gen';
-
 export * from './api';
 export * from './devtools';
+export * from './proto';
 export * from './services';
 export * from './util';
 export * from './version';

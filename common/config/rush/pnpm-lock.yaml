@@ -22,6 +22,7 @@ importers:
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
+      jsonify: ^0.0.0
       typescript: ^4.7.2
     dependencies:
       '@dxos/async': link:../../common/async
@@ -40,6 +41,7 @@ importers:
       '@types/node': 16.11.27
       eslint: 7.32.0
       expect: 27.0.6
+      jsonify: 0.0.0
       typescript: 4.7.4
 
   ../../packages/bot/botkit:
@@ -2436,6 +2438,7 @@ importers:
       eslint: ^7.12.1
       expect: ~27.0.2
       jsondown: dxos/jsondown#main
+      jsonify: ^0.0.0
       level-js: ^5.0.2
       lodash.defaultsdeep: ^4.6.1
       memdown: ^5.1.0
@@ -2486,6 +2489,7 @@ importers:
       '@types/uuid': 8.3.3
       eslint: 7.32.0
       expect: 27.0.6
+      jsonify: 0.0.0
       mocha: 8.4.0
       typescript: 4.7.4
       wait-for-expect: 3.0.2
@@ -3075,7 +3079,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
@@ -3129,7 +3132,6 @@ importers:
       randombytes: 2.1.0
     devDependencies:
       '@dxos/client': link:../client
-      '@dxos/credentials': link:../../halo/credentials
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@polkadot/typegen': 4.17.1
@@ -19555,8 +19557,7 @@ packages:
       graceful-fs: 4.2.8
 
   /jsonify/0.0.0:
-    resolution: {integrity: sha1-LHS27kHZPKUbe1qu6PUDYx0lKnM=}
-    dev: false
+    resolution: {integrity: sha512-trvBk1ki43VZptdBI5rIlG4YOzyeH/WefQt5rj1grasPn4iiZWKet8nkgc4GlsAylaztn0qZfUYOiTsASJFdNA==}
 
   /jsonparse/1.3.1:
     resolution: {integrity: sha512-POQXvpdL69+CluYsillJ7SUhKvytYjW9vG/GKpnf+xP8UWgYEM/RaMzHHofbALDiKbbP1W8UEYmgGl39WkPZsg==}

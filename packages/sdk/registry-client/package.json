@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
