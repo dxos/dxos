@@ -56,8 +56,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -94,8 +92,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
@@ -347,9 +343,11 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
       '@types/randombytes': ^2.0.0
+      debug: ^4.3.3
       eslint: ^7.12.1
       randombytes: ^2.1.0
       typescript: ^4.7.2
@@ -359,9 +357,11 @@ importers:
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.24
       '@types/node': 16.11.27
       '@types/randombytes': 2.0.0
+      debug: 4.3.4
       eslint: 7.32.0
       typescript: 4.7.4
 
@@ -1568,7 +1568,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/feed-store': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -1584,19 +1583,18 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-protocol': link:../echo-protocol
-      '@dxos/feed-store': link:../feed-store
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/node': 16.11.27
       debug: 4.3.3
     devDependencies:
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.24
       '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
       eslint: 7.32.0
       expect: 27.0.6
       typescript: 4.7.4
@@ -12546,7 +12544,7 @@ packages:
     dev: false
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}

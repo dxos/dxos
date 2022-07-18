@@ -4,7 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { FeedKey, Timeframe } from '@dxos/echo-protocol';
+import { FeedKey } from '@dxos/echo-protocol';
+import { Timeframe } from '@dxos/protocols';
 
 /**
  * Keeps state of the last timeframe that was processed by ECHO.

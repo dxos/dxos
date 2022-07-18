@@ -25,12 +25,12 @@ import {
   verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
+import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 import { humanize } from '@dxos/util';

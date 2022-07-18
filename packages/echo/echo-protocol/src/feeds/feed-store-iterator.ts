@@ -8,9 +8,8 @@ import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { Timeframe } from '../spacetime';
 import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
