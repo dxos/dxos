@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { timed } from '@dxos/debug';
 import { FeedKey, Timeframe } from '@dxos/echo-protocol';
 
 /**
@@ -29,6 +30,7 @@ export class TimeframeClock {
     return !gaps.isEmpty();
   }
 
+  @timed(5_000)
   async waitUntilReached (target: Timeframe) {
     await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
   }
