@@ -1564,7 +1564,6 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
@@ -1587,7 +1586,6 @@ importers:
       '@dxos/util': link:../../common/util
       debug: 4.3.3
     devDependencies:
-      '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain

@@ -6,7 +6,6 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
-import { createId } from '@dxos/crypto';
 import { MockFeedWriter, MutationMetaWithTimeframe } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 
@@ -17,6 +16,8 @@ import { TestListModel } from './testing';
 // feedA < feedB
 const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
 const feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
+
+const createId = () => PublicKey.random().toHex();
 
 describe('StateManager', () => {
   test('construct readonly and apply mutations', () => {
