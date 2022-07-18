@@ -53,7 +53,7 @@ export class WebRTCTransport implements Transport {
           remoteId: this._remoteId,
           sessionId: this._sessionId,
           topic: this._topic,
-          data
+          data: { signal: { json: JSON.stringify(data) } }
         });
       } catch (err: any) {
         this.errors.raise(err);
@@ -91,7 +91,8 @@ export class WebRTCTransport implements Transport {
 
   async signal (msg: Message) {
     assert(this._peer, 'Connection not ready to accept signals.');
-    this._peer.signal(msg.data);
+    assert(msg.data?.signal?.json, 'Signal message must contain signal data.');
+    this._peer.signal(JSON.parse(msg.data.signal.json));
   }
 
   async close () {

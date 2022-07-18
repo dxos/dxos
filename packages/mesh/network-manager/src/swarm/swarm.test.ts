@@ -17,6 +17,7 @@ import { SignalMessaging } from '../signal';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
+import { ReliableMessenger } from '../signal/reliable-messenger';
 
 const log = debug('dxos:network-manager:swarm:test');
 
@@ -141,4 +142,70 @@ test('second peer discovered after delay', async () => {
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
+}).timeout(5_000);
+
+test('swarming with reliable messenger', async () => {
+  const topic = PublicKey.random();
+  const peerId1 = PublicKey.random();
+  const peerId2 = PublicKey.random();
+  let swarm1: Swarm;
+  let swarm2: Swarm;
+
+  const rm1: ReliableMessenger = new ReliableMessenger(
+    msg => rm2.receiveMessage(msg), 
+    msg => swarm1.onSignal(msg), 
+    msg => swarm1.onOffer(msg), 
+  );
+
+  const rm2: ReliableMessenger = new ReliableMessenger(
+    msg => rm1.receiveMessage(msg), 
+    msg => swarm2.onSignal(msg), 
+    msg => swarm2.onOffer(msg), 
+  );
+
+  swarm1 = new Swarm(
+    topic,
+    peerId1,
+    new FullyConnectedTopology(),
+    () => new Protocol(),
+    rm1,
+    () => {},
+    createWebRTCTransportFactory(),
+    undefined
+  );
+
+  swarm2 = new Swarm(
+    topic,
+    peerId2,
+    new FullyConnectedTopology(),
+    () => new Protocol(),
+    rm2,
+    () => {},
+    createWebRTCTransportFactory(),
+    undefined
+  );
+
+  const promise = Promise.all([
+    promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+    promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
+  ]);
+
+  swarm1.onPeerCandidatesChanged([peerId2]);
+
+  log('Candidates changed');
+  await promise;
+  log('Swarms connected');
+
+  const swarm1Connection = swarm1.connections[0];
+  const swarm2Connection = swarm2.connections[0];
+  const onData = mockFn<(data: Buffer) => void>().returns(undefined);
+  (swarm2Connection.transport as WebRTCTransport).peer!.on('data', onData);
+
+  const data = Buffer.from('1234');
+  (swarm1Connection.transport as WebRTCTransport).peer!.send(data);
+  await waitForExpect(() => {
+    expect(onData).toHaveBeenCalledWith([data]);
+  });
+  await swarm1.destroy();
+  await swarm2.destroy();
 }).timeout(5_000);

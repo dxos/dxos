@@ -207,7 +207,7 @@ export class Swarm {
       remoteId,
       sessionId,
       topic: this._topic,
-      data: {}
+      data: { offer: {} }
     })
       .then(answer => {
         log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
