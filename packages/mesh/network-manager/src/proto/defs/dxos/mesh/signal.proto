@@ -14,7 +14,7 @@ message Message {
    */
   PubKey id = 1;
   /**
-   *  Reciver`s public key.
+   *  Receiver`s public key.
    */
   PubKey remoteId = 2;
   PubKey topic = 3;

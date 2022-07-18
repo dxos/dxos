@@ -52,7 +52,7 @@ export namespace SignalApi {
      */
     id: PublicKey
     /**
-     *  Reciver`s public key.
+     *  Receiver`s public key.
      */
     remoteId: PublicKey
     topic: PublicKey
