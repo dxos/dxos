@@ -7,7 +7,7 @@ import debug from 'debug';
 import unionWith from 'lodash.unionwith';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
+import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
@@ -167,7 +167,7 @@ export class PartyManager {
    * Construct a party object and start replicating with the remote peer that created that party.
    */
   @synchronized
-  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey, feedHints: PublicKey[] = []) {
+  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -180,7 +180,7 @@ export class PartyManager {
       return this._parties.get(partyKey);
     }
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
+    log(`Adding party partyKey=${partyKey.toHex()}`);
     const party = await this._partyFactory.constructParty(partyKey);
     party._setGenesisFeedKey(genesisFeedKey);
 
@@ -334,15 +334,9 @@ export class PartyManager {
       return;
     }
 
-    const keyHints: KeyHint[] = [
-      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
-      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
-    ];
-
     await identity.preferences.recordPartyJoining({
       partyKey: party.key,
-      genesisFeed: party.genesisFeedKey,
-      keyHints
+      genesisFeed: party.genesisFeedKey
     });
   }
 }

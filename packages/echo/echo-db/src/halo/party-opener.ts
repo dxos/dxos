@@ -4,7 +4,6 @@
 
 import debug from 'debug';
 
-import { KeyType } from '@dxos/credentials';
 import { SubscriptionGroup, Unsubscribe } from '@dxos/util';
 
 import { PartyManager } from '../parties';
@@ -25,9 +24,8 @@ export const autoPartyOpener = (preferences: Preferences, partyManager: PartyMan
 
     for (const partyDesc of values) {
       if (!partyManager.parties.some(x => x.key === partyDesc.partyKey)) {
-        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()} hints=${JSON.stringify(partyDesc.keyHints)}`);
-        const feedHints = partyDesc.keyHints.filter(hint => hint.type === KeyType.FEED).map(hint => hint.publicKey!);
-        await partyManager.addParty(partyDesc.partyKey, partyDesc.genesisFeed, feedHints);
+        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
+        await partyManager.addParty(partyDesc.partyKey, partyDesc.genesisFeed);
       }
     }
   }));

@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -33,7 +32,6 @@ export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/prefere
 export interface JoinedParty {
   partyKey: PublicKey,
   genesisFeed: PublicKey,
-  keyHints: KeyHint[]
 }
 
 /**

@@ -146,7 +146,7 @@ describe('Party manager', () => {
       halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     });
 
-    await partyManager.addParty(partyKey.publicKey, feed.key, [feed.key]);
+    await partyManager.addParty(partyKey.publicKey, feed.key);
 
     await update;
   });

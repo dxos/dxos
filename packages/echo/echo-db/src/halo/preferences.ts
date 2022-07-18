@@ -7,7 +7,6 @@ import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
@@ -152,8 +151,7 @@ export class Preferences {
       props: {
         publicKey: joinedParty.partyKey.asBuffer(),
         genesisFeed: joinedParty.genesisFeed.toHex(),
-        subscribed: true,
-        hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
+        subscribed: true
       }
     });
   }
@@ -163,11 +161,7 @@ export class Preferences {
 
     const converter = (partyDesc: Item<any>): JoinedParty => ({
       partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
-      genesisFeed: PublicKey.from(partyDesc.model.get('genesisFeed')),
-      keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
-        ...hint,
-        publicKey: PublicKey.from(hint.publicKey)
-      } as KeyHint))
+      genesisFeed: PublicKey.from(partyDesc.model.get('genesisFeed'))
     });
 
     const result = database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
