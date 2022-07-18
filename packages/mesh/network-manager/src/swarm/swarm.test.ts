@@ -14,10 +14,10 @@ import { afterTest } from '@dxos/testutils';
 
 import { Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from '../signal';
+import { ReliableMessenger } from '../signal/reliable-messenger';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
-import { ReliableMessenger } from '../signal/reliable-messenger';
 
 const log = debug('dxos:network-manager:swarm:test');
 
@@ -148,19 +148,21 @@ test('swarming with reliable messenger', async () => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
+  // eslint-disable-next-line prefer-const
   let swarm1: Swarm;
+  // eslint-disable-next-line prefer-const
   let swarm2: Swarm;
 
   const rm1: ReliableMessenger = new ReliableMessenger(
-    msg => rm2.receiveMessage(msg), 
-    msg => swarm1.onSignal(msg), 
-    msg => swarm1.onOffer(msg), 
+    msg => rm2.receiveMessage(msg),
+    msg => swarm1.onSignal(msg),
+    msg => swarm1.onOffer(msg)
   );
 
   const rm2: ReliableMessenger = new ReliableMessenger(
-    msg => rm1.receiveMessage(msg), 
-    msg => swarm2.onSignal(msg), 
-    msg => swarm2.onOffer(msg), 
+    msg => rm1.receiveMessage(msg),
+    msg => swarm2.onSignal(msg),
+    msg => swarm2.onOffer(msg)
   );
 
   swarm1 = new Swarm(

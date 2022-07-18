@@ -57,13 +57,13 @@ export class NetworkManager {
 
     this._signalManager.peerCandidatesChanged
       .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
-    
+
     this._signalManager.onSignal.on(msg => this._reliableMessenger.receiveMessage(msg));
 
     this._reliableMessenger = new ReliableMessenger(
       msg => this._signalManager.signal(msg),
       async msg => this._swarms.get(msg.topic!)?.onSignal(msg),
-      msg => onOffer(msg) 
+      msg => onOffer(msg)
     );
 
     if (options.log) {
