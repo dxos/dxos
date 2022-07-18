@@ -13,10 +13,10 @@ import { afterTest } from '@dxos/testutils';
 import { randomInt } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
-import { ReliableMessenger } from './reliable-messenger';
+import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 
-describe('SignalMessenger', () => {
+describe('MessageRouter', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
@@ -40,14 +40,14 @@ describe('SignalMessenger', () => {
     await broker1.stop();
   });
 
-  const createSignalClientAndReliableMessenger = async (
+  const createSignalClientAndMessageRouter = async (
     signalApiUrl: string,
     onSignal: (msg: Message) => Promise<void> = (async () => {}) as any,
     onOffer: (msg: Message) => Promise<Answer> = async () => ({ accept: true })
   ) => {
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
-    const messenger: ReliableMessenger = new ReliableMessenger(
+    const router: MessageRouter = new MessageRouter(
       // todo(mykola): added catch to avoid not finished request.
       (msg: Message) => api.signal(msg).catch((_) => {}),
       onSignal,
@@ -56,19 +56,19 @@ describe('SignalMessenger', () => {
     api = new SignalClient(
       signalApiUrl,
       (async () => {}) as any,
-      async (msg: Message) => messenger.receiveMessage(msg)
+      async (msg: Message) => router.receiveMessage(msg)
     );
     afterTest(() => api.close());
     return {
       api,
-      messenger
+      router
     };
   };
 
   test('signaling between 2 clients', async () => {
     const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const { api: api1 } = await createSignalClientAndReliableMessenger(signalApiUrl1, signalMock1);
-    const { api: api2, messenger: messenger2 } = await createSignalClientAndReliableMessenger(signalApiUrl1);
+    const { api: api1 } = await createSignalClientAndMessageRouter(signalApiUrl1, signalMock1);
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(signalApiUrl1);
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -80,7 +80,7 @@ describe('SignalMessenger', () => {
       topic,
       data: { signal: { json: '{"asd": "asd"}' } }
     };
-    await messenger2.signal(msg);
+    await router2.signal(msg);
 
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg]);
@@ -88,12 +88,12 @@ describe('SignalMessenger', () => {
   }).timeout(5_000);
 
   test('offer/answer', async () => {
-    const { api: api1, messenger: messenger1 } = await createSignalClientAndReliableMessenger(
+    const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       (async () => {}) as any,
       async () => ({ accept: true })
     );
-    const { api: api2 } = await createSignalClientAndReliableMessenger(
+    const { api: api2 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       (async () => {}) as any,
       async () => ({ accept: true })
@@ -102,7 +102,7 @@ describe('SignalMessenger', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const answer = await messenger1.offer({
+    const answer = await router1.offer({
       id: peer1,
       remoteId: peer2,
       sessionId: PublicKey.random(),
@@ -114,19 +114,19 @@ describe('SignalMessenger', () => {
 
   test('signaling between 3 clients', async () => {
     const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const { api: api1, messenger: messenger1 } = await createSignalClientAndReliableMessenger(
+    const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       signalMock1,
       async () => ({ accept: true })
     );
     const signalMock2 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const { api: api2, messenger: messenger2 } = await createSignalClientAndReliableMessenger(
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       signalMock2,
       async () => ({ accept: true })
     );
     const signalMock3 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
-    const { api: api3, messenger: messenger3 } = await createSignalClientAndReliableMessenger(
+    const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       signalMock3,
       async () => ({ accept: true })
@@ -145,7 +145,7 @@ describe('SignalMessenger', () => {
       topic,
       data: { signal: { json: '1to3' } }
     };
-    await messenger1.signal(msg1to3);
+    await router1.signal(msg1to3);
     await waitForExpect(() => {
       expect(signalMock3).toHaveBeenCalledWith([msg1to3]);
     }, 4_000);
@@ -158,7 +158,7 @@ describe('SignalMessenger', () => {
       topic,
       data: { signal: { json: '2to3' } }
     };
-    await messenger2.signal(msg2to3);
+    await router2.signal(msg2to3);
     await waitForExpect(() => {
       expect(signalMock3).toHaveBeenCalledWith([msg2to3]);
     }, 4_000);
@@ -171,19 +171,19 @@ describe('SignalMessenger', () => {
       topic,
       data: { signal: { json: '3to1' } }
     };
-    await messenger3.signal(msg3to1);
+    await router3.signal(msg3to1);
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg3to1]);
     }, 4_000);
   }).timeout(5_000);
 
   test('two offers', async () => {
-    const { api: api1, messenger: messenger1 } = await createSignalClientAndReliableMessenger(
+    const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       (async () => {}) as any,
       async () => ({ accept: true })
     );
-    const { api: api2, messenger: messenger2 } = await createSignalClientAndReliableMessenger(
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       signalApiUrl1,
       (async () => {}) as any,
       async () => ({ accept: true })
@@ -193,7 +193,7 @@ describe('SignalMessenger', () => {
     await api2.join(topic, peer2);
 
     // sending offer from peer1 to peer2.
-    const answer1 = await messenger1.offer({
+    const answer1 = await router1.offer({
       id: peer1,
       remoteId: peer2,
       sessionId: PublicKey.random(),
@@ -203,7 +203,7 @@ describe('SignalMessenger', () => {
     expect(answer1).toEqual({ accept: true });
 
     // sending offer from peer2 to peer1.
-    const answer2 = await messenger2.offer({
+    const answer2 = await router2.offer({
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),

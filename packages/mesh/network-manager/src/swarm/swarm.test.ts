@@ -14,7 +14,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from '../signal';
-import { ReliableMessenger } from '../signal/reliable-messenger';
+import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
@@ -47,21 +47,21 @@ const setup = (useReliableMessenger = false) => {
   // eslint-disable-next-line prefer-const
   let swarm2: Swarm;
 
-  const rm1: ReliableMessenger = new ReliableMessenger(
-    msg => rm2.receiveMessage(msg),
+  const mr1: MessageRouter = new MessageRouter(
+    msg => mr2.receiveMessage(msg),
     msg => swarm1.onSignal(msg),
     msg => swarm1.onOffer(msg)
   );
 
-  const rm2: ReliableMessenger = new ReliableMessenger(
-    msg => rm1.receiveMessage(msg),
+  const mr2: MessageRouter = new MessageRouter(
+    msg => mr1.receiveMessage(msg),
     msg => swarm2.onSignal(msg),
     msg => swarm2.onOffer(msg)
   );
 
-  const sm1: SignalMessaging = useReliableMessenger ? rm1 : new MockSignalConnection(() => swarm2);
+  const sm1: SignalMessaging = useReliableMessenger ? mr1 : new MockSignalConnection(() => swarm2);
 
-  const sm2: SignalMessaging = useReliableMessenger ? rm2 : new MockSignalConnection(() => swarm1);
+  const sm2: SignalMessaging = useReliableMessenger ? mr2 : new MockSignalConnection(() => swarm1);
 
   swarm1 = new Swarm(
     topic,

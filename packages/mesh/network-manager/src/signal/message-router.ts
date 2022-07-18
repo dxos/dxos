@@ -15,7 +15,7 @@ import { SignalMessaging } from './signal-manager';
  *
  * TODO(mykola): https://github.com/dxos/protocols/issues/1316
  */
-export class ReliableMessenger implements SignalMessaging {
+export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
 
   constructor (

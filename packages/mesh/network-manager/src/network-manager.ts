@@ -14,7 +14,7 @@ import { ComplexMap } from '@dxos/util';
 import { ConnectionLog } from './connection-log';
 import { Message } from './proto/gen/dxos/mesh/signal';
 import { InMemorySignalManager, SignalManager, WebsocketSignalManager } from './signal';
-import { ReliableMessenger } from './signal/reliable-messenger';
+import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
@@ -40,7 +40,7 @@ export class NetworkManager {
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
   private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
   private readonly _signalManager: SignalManager;
-  private readonly _reliableMessenger: ReliableMessenger;
+  private readonly _messageRouter: MessageRouter;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -58,9 +58,9 @@ export class NetworkManager {
     this._signalManager.peerCandidatesChanged
       .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
 
-    this._signalManager.onSignal.on(msg => this._reliableMessenger.receiveMessage(msg));
+    this._signalManager.onSignal.on(msg => this._messageRouter.receiveMessage(msg));
 
-    this._reliableMessenger = new ReliableMessenger(
+    this._messageRouter = new MessageRouter(
       msg => this._signalManager.signal(msg),
       async msg => this._swarms.get(msg.topic!)?.onSignal(msg),
       msg => onOffer(msg)
@@ -117,7 +117,7 @@ export class NetworkManager {
       peerId,
       topology,
       protocol,
-      this._reliableMessenger,
+      this._messageRouter,
       this._signalManager.lookup.bind(this._signalManager),
       transportFactory,
       options.label
