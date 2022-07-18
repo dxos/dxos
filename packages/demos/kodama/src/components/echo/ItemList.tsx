@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
 import React, { FC } from 'react';
 
 import { Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { List } from './List';
+import { List } from '../util';
 
 const LABEL_PROPERTY = 'name'; // TODO(burdon): To make compatable with kitchen-sink/client-test.
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
-  party: Party,
+  party: Party
   type?: string
 }> = ({
   party,
@@ -44,9 +44,9 @@ export const ItemList: FC<{
   }
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
-      <Text color='green'>Items ({type})</Text>
+    <Box flexDirection='column' flexGrow={1}>
       <List
+        showCount
         onUpdate={handleUpdate}
         items={items.map(item => ({
           id: item.id,

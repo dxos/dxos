@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { Signer, SigningKey } from '../keys';
 import { wrapMessage } from '../party';

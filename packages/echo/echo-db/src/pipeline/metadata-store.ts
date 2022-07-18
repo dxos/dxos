@@ -5,9 +5,10 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/crypto';
+import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
@@ -51,6 +52,7 @@ export class MetadataStore {
   /**
    * Loads metadata from persistent storage.
    */
+  @synchronized
   async load (): Promise<void> {
     const file = this._directory.createOrOpen('EchoMetadata');
     try {
@@ -72,6 +74,7 @@ export class MetadataStore {
     }
   }
 
+  @synchronized
   private async _save (): Promise<void> {
     const data: EchoMetadata = {
       ...this._metadata,
@@ -85,6 +88,21 @@ export class MetadataStore {
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
       await file.write(0, encoded);
+
+      // Truncate the rest of the file.
+      {
+        const { size } = await file.stat();
+        if (size > encoded.length) {
+          await file.truncate(encoded.length, size);
+        }
+      }
+
+      // Sanity check.
+      const { size } = await file.stat();
+      if (size !== encoded.length) {
+        console.log('SANITY!');
+      }
+      assert(size === encoded.length);
     } finally {
       await file.close();
     }

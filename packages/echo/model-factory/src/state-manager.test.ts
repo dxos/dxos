@@ -6,8 +6,9 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { MockFeedWriter, MutationMetaWithTimeframe, Timeframe } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 import { StateManager } from './state-manager';

@@ -5,8 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';

@@ -1,5 +1,10 @@
 # Bots
 
+> TODO(burdon): Rename?
+
+
+## 1. Introduction
+
 A runtime to run long running processes: bots.
 
 Bots are packaged and published on DXNS blockchain.

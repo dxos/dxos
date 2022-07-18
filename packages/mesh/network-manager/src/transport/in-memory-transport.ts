@@ -7,8 +7,8 @@ import debug from 'debug';
 import { Transform } from 'stream';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { SignalApi } from '../signal';

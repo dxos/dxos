@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testutils",
-  "version": "2.33.6",
+  "version": "2.33.8",
   "description": "Test utilities",
   "license": "MIT",
   "author": "DXOS.org",
@@ -21,7 +21,7 @@
     "@types/node": "^16.11.27"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "eslint": "^7.12.1",
     "typescript": "^4.7.2"

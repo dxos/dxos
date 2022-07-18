@@ -25,47 +25,47 @@ export const EchoBoard = ({
   itemAdapter,
   onCreateItem
 }: EchoBoardProps) => (
-<Grid
-      container
-      spacing={2}
-      sx={{
-        display: 'flex',
-        padding: 1,
-        overflow: 'scroll',
-        justifyContent: 'center'
-      }}
-    >
-      {items.map(item => {
-        const { childTypes } = itemAdapter.meta?.(item.type!) ?? {};
-        if (!childTypes) {
-          return undefined;
-        }
+  <Grid
+    container
+    spacing={2}
+    sx={{
+      display: 'flex',
+      padding: 1,
+      overflow: 'scroll',
+      justifyContent: 'center'
+    }}
+  >
+    {items.map(item => {
+      const { childTypes } = itemAdapter.meta?.(item.type!) ?? {};
+      if (!childTypes) {
+        return undefined;
+      }
 
-        return (
-          <Grid
-            key={item.id}
-            item
+      return (
+        <Grid
+          key={item.id}
+          item
+        >
+          <EchoCard
+            item={item}
+            itemAdapter={itemAdapter}
           >
-            <EchoCard
-              item={item}
-              itemAdapter={itemAdapter}
-            >
-              {childTypes!.map(type => (
-                <Box
-                  key={type}
-                  sx={{ paddingBottom: 0.5 }}
-                >
-                  <EchoSubList
-                    item={item}
-                    itemAdapter={itemAdapter}
-                    type={type}
-                    onCreateItem={onCreateItem}
-                  />
-                </Box>
-              ))}
-            </EchoCard>
-          </Grid>
-        );
-      }).filter(Boolean)}
-    </Grid>
+            {childTypes!.map(type => (
+              <Box
+                key={type}
+                sx={{ paddingBottom: 0.5 }}
+              >
+                <EchoSubList
+                  item={item}
+                  itemAdapter={itemAdapter}
+                  type={type}
+                  onCreateItem={onCreateItem}
+                />
+              </Box>
+            ))}
+          </EchoCard>
+        </Grid>
+      );
+    }).filter(Boolean)}
+  </Grid>
 );

@@ -7,13 +7,14 @@ import { it as test } from 'mocha';
 
 import { promiseTimeout, sleep } from '@dxos/async';
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, FeedMessage, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 

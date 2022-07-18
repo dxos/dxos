@@ -2,11 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import crypto from 'hypercore-crypto';
+import assert from 'assert';
+import randomBytes from 'randombytes';
 import { inspect } from 'util';
 
-import { HumanHasher } from './human-hash';
+export const PUBLIC_KEY_LENGTH = 32;
+export const SECRET_KEY_LENGTH = 64;
 
+/**
+ * The purpose of this class is to assure consistent use of keys throughout the project.
+ * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
+ * strings as late as possible (eg, to log/display).
+ */
 export class PublicKey {
   /**
    * Creates new instance of PublicKey automatically determining the input format.
@@ -39,7 +46,7 @@ export class PublicKey {
   }
 
   static random (): PublicKey {
-    return PublicKey.from(crypto.randomBytes(32));
+    return PublicKey.from(randomBytes(32));
   }
 
   /**
@@ -63,6 +70,35 @@ export class PublicKey {
    */
   static equals (left: PublicKeyLike, right: PublicKeyLike) {
     return PublicKey.from(left).equals(right);
+  }
+
+  /**
+   * @param Hex string representation of key.
+   * @return Key buffer.
+   * @deprecated All keys should be represented as instances of PublicKey.
+   */
+  static bufferize (str: string): Buffer {
+    assert(typeof str === 'string', 'Invalid type');
+    const buffer = Buffer.from(str, 'hex');
+    assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
+      `Invalid key length: ${buffer.length}`);
+    return buffer;
+  }
+
+  /**
+   * @param Public key like data structure (but not PublicKey which should use toString).
+   * @return Hex string representation of key.
+   * @deprecated All keys should be represented as instances of PublicKey.
+   */
+  static stringify (key: Buffer | Uint8Array): string {
+    if (key instanceof PublicKey) {
+      key = key.asBuffer();
+    } else if (key instanceof Uint8Array) {
+      key = Buffer.from(key);
+    }
+
+    assert(key instanceof Buffer, 'Invalid type');
+    return key.toString('hex');
   }
 
   constructor (
@@ -95,13 +131,6 @@ export class PublicKey {
   }
 
   /**
-   * Convert this key to human-readable representation.
-   */
-  humanize (): string {
-    return hasher.humanize(this.toHex());
-  }
-
-  /**
    * Same as `PublicKey.humanize()`.
    */
   toString (): string {
@@ -115,11 +144,20 @@ export class PublicKey {
     return this.toHex();
   }
 
+  truncate (n = 4) {
+    const key = this.toHex();
+    if (key.length < n * 2 + 2) {
+      return key;
+    }
+
+    return `${key.substring(0, n)}..${key.substring(key.length - n)}`;
+  }
+
   /**
    * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
    */
   [inspect.custom] () {
-    return `<PublicKey ${this.humanize()}>`;
+    return `<PublicKey ${this.truncate()}>`;
   }
 
   /**
@@ -148,8 +186,6 @@ export type PublicKeyLike =
   | Buffer
   | Uint8Array
   | string
-
-const hasher = new HumanHasher();
 
 export const publicKeySubstitutions = {
   // TODO(dmaretskyi): Rename to dxos.crypto.PublicKey.

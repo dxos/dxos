@@ -5,13 +5,13 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
@@ -82,7 +82,7 @@ export class DataParty {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeeds().length,
+      feedKeys: this._feedProvider.getFeeds().length, // TODO(burdon): feeds.
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };

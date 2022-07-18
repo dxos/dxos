@@ -33,35 +33,35 @@ export const ViewContainer = ({
   selected,
   onCreateItem
 }: ViewContainerProps) => (
-<>
-      {value === ViewType.List && (
-        <BoxContainer expand column>
-          <EchoList
-            itemAdapter={itemAdapter}
-            items={items}
-          />
-        </BoxContainer>
-      )}
+  <>
+    {value === ViewType.List && (
+      <BoxContainer expand column>
+        <EchoList
+          itemAdapter={itemAdapter}
+          items={items}
+        />
+      </BoxContainer>
+    )}
 
-      {value === ViewType.Board && (
-        <BoxContainer expand>
-          <EchoBoard
-            itemAdapter={itemAdapter}
-            items={items}
-            onCreateItem={onCreateItem}
-          />
-        </BoxContainer>
-      )}
+    {value === ViewType.Board && (
+      <BoxContainer expand>
+        <EchoBoard
+          itemAdapter={itemAdapter}
+          items={items}
+          onCreateItem={onCreateItem}
+        />
+      </BoxContainer>
+    )}
 
-      {value === ViewType.Graph && (
-        <BoxContainer expand>
-          <EchoGraph
-            model={model}
-            selected={selected}
-            itemAdapter={itemAdapter}
-            styles={graphStyles}
-          />
-        </BoxContainer>
-      )}
-    </>
+    {value === ViewType.Graph && (
+      <BoxContainer expand>
+        <EchoGraph
+          model={model}
+          selected={selected}
+          itemAdapter={itemAdapter}
+          styles={graphStyles}
+        />
+      </BoxContainer>
+    )}
+  </>
 );

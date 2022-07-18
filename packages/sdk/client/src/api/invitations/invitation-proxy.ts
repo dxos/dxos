@@ -69,11 +69,11 @@ export class InvitationProxy {
           reject(err);
           error.emit(err);
         }
-      }, error => {
-        if (error) {
-          console.error(error);
-          reject(error);
+      }, err => {
+        if (err) {
           // TODO(rzadp): Handle retry.
+          console.error(err);
+          reject(error);
         }
       });
     });
@@ -102,10 +102,10 @@ export class InvitationProxy {
         // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
         throwUnhandledRejection(error);
       }
-    }, error => {
-      if (error && !(error instanceof RpcClosedError)) {
+    }, err => {
+      if (err && !(err instanceof RpcClosedError)) {
         // TODO(dmaretskyi): Should result in an error inside the returned Invitation, rejecting the promise in Invitation.wait().
-        throwUnhandledRejection(error);
+        throwUnhandledRejection(err);
       }
     });
 

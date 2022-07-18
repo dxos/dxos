@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 export interface SwarmController {
   /**

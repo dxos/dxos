@@ -7,7 +7,7 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 

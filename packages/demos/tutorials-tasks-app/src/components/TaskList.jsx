@@ -5,6 +5,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Share as ShareIcon,
+  Download as DownloadIcon
+} from '@mui/icons-material';
+import {
   Checkbox,
   createTheme,
   Fab,
@@ -17,18 +23,11 @@ import {
   TextField
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Share as ShareIcon,
-  Download as DownloadIcon,
-} from '@mui/icons-material';
 
-import { PartySharingDialog } from '@dxos/react-toolkit'
-
+import { proto } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
-import { proto } from '@dxos/client'
+import { PartySharingDialog } from '@dxos/react-toolkit';
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -115,7 +114,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
   };
 
   const handleDownload = async () => {
-    if(!party) {
+    if (!party) {
       return;
     }
 
@@ -126,7 +125,7 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
     a.href = url;
     a.download = `${party.key.toHex()}.party`;
     a.click();
-  }
+  };
 
   if (!partyKey) {
     return null;
@@ -143,15 +142,15 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
               fullWidth
               autoFocus
               value={taskTitle}
-              variant="standard"
+              variant='standard'
               onChange={event => setTaskTitle(event.target.value)}
               onKeyPress={event => (event.key === 'Enter') && handleCreateTask()}
             />
             <ListItemSecondaryAction>
               <IconButton
-                size="small"
-                edge="end"
-                aria-label="create"
+                size='small'
+                edge='end'
+                aria-label='create'
                 onClick={handleCreateTask}
               >
                 <AddIcon />
@@ -161,35 +160,34 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
 
           {/* Current tasks. */}
           <div className={classes.reverseList} ref={scrollListRef}>
-            {items
-              ?.map(item => (
-                <ListItem
-                  button
-                  key={item.id}
-                >
-                  <ListItemIcon>
-                    <Checkbox
-                      edge="start"
-                      tabIndex={-1}
-                      checked={item.model.get('complete') || false}
-                      onChange={handleToggleComplete(item)}
-                    />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.model.get('name')}
+            {items?.map(item => (
+              <ListItem
+                button
+                key={item.id}
+              >
+                <ListItemIcon>
+                  <Checkbox
+                    edge='start'
+                    tabIndex={-1}
+                    checked={item.model.get('complete') || false}
+                    onChange={handleToggleComplete(item)}
                   />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      size="small"
-                      edge="end"
-                      aria-label="delete"
-                      onClick={handleDeleteTask(item)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.model.get('name')}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    size='small'
+                    edge='end'
+                    aria-label='delete'
+                    onClick={handleDeleteTask(item)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
           </div>
         </List>
       </div>
@@ -203,19 +201,19 @@ export const TaskList = ({ partyKey, hideShare = false }) => {
       {!hideShare && (
         <div className={classes.actions}>
           <Fab
-            size="small"
-            color="secondary"
-            aria-label="invite"
-            title="Invite people"
+            size='small'
+            color='secondary'
+            aria-label='invite'
+            title='Invite people'
             onClick={() => setPartyInvitationDialog(true)}
           >
             <ShareIcon />
           </Fab>
           <Fab
-            size="small"
-            color="secondary"
-            aria-label="download"
-            title="Download party"
+            size='small'
+            color='secondary'
+            aria-label='download'
+            title='Download party'
             onClick={handleDownload}
           >
             <DownloadIcon />

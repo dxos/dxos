@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Text, useFocus } from 'ink';
 import Spinner from 'ink-spinner';
 import TextInput from 'ink-text-input';
 import React, { FC, useState } from 'react';
@@ -10,16 +10,20 @@ import React, { FC, useState } from 'react';
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-export const JoinParty: FC<{
-  onJoin: (partyKey?: PartyKey) => void
+import { Panel } from '../util';
+
+export const Join: FC<{
+  onJoin?: (partyKey?: PartyKey) => void
 }> = ({
   onJoin
 }) => {
   const client = useClient();
+  const { isFocused } = useFocus();
   const [descriptor, setDescriptor] = useState<string>();
   const [secret, setSecret] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [invitation, setInvitation] = useState<PartyInvitation>();
+  const [status, setStatus] = useState<string>();
 
   const handleDecode = () => {
     try {
@@ -30,9 +34,13 @@ export const JoinParty: FC<{
       const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
-      const stripped = descriptor!.replace(/[\W]/g, '');
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
-      setInvitation(invitation);
+      try {
+        const stripped = descriptor!.replace(/[\W]/g, '');
+        const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
+        setInvitation(invitation);
+      } catch (err) {
+        setStatus(`Error: ${err}`);
+      }
     }
   };
 
@@ -42,17 +50,18 @@ export const JoinParty: FC<{
       invitation!.authenticate(Buffer.from(secret));
       setProcessing(true);
       const party = await invitation!.getParty();
-      onJoin(party.key);
+      setStatus('Success');
+      onJoin?.(party.key);
     } catch (err) {
-      onJoin();
+      setStatus(`Error: ${err}`);
     }
   };
 
   return (
-    <Box flexDirection='column' borderStyle='single' borderColor='#333'>
+    <Panel focused={isFocused}>
       {!invitation && !processing && (
         <TextInput
-          placeholder='Enter invitation'
+          placeholder='Enter invitation code'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
@@ -61,14 +70,17 @@ export const JoinParty: FC<{
 
       {invitation && !processing && (
         <TextInput
-          placeholder='Enter code'
+          placeholder='Enter verification code'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
         />
       )}
 
-      {processing && (
+      {status && (
+        <Text>{status}</Text>
+      )}
+      {processing && !status && (
         <Text>
           <Text color='green'>
             <Spinner type='dots' />
@@ -76,6 +88,6 @@ export const JoinParty: FC<{
           {' Authenticating'}
         </Text>
       )}
-    </Box>
+    </Panel>
   );
 };

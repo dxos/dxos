@@ -1,5 +1,26 @@
 # Change Log
 
+### [2.33.8](https://www.github.com/dxos/protocols/compare/v2.33.7...v2.33.8) (2022-07-15)
+
+
+### Features
+
+* device invitations ([#1348](https://www.github.com/dxos/protocols/issues/1348)) ([15fa9a0](https://www.github.com/dxos/protocols/commit/15fa9a037f460854b7c97621ccd532627e4b6be9))
+
+### [2.33.7](https://www.github.com/dxos/protocols/compare/v2.33.6...v2.33.7) (2022-07-15)
+
+
+### Features
+
+* HALO keychain ([#1347](https://www.github.com/dxos/protocols/issues/1347)) ([40cf099](https://www.github.com/dxos/protocols/commit/40cf0994fa4e220cefcf87062207cc711fedc582))
+* kodama feed updates. ([#1334](https://www.github.com/dxos/protocols/issues/1334)) ([61c14bd](https://www.github.com/dxos/protocols/commit/61c14bdf9e74572e149126442fc53b2578aa1b85))
+* paging ([#1335](https://www.github.com/dxos/protocols/issues/1335)) ([c2ba88f](https://www.github.com/dxos/protocols/commit/c2ba88fb775e4f5a2aa5308c881a26babde848c2))
+
+
+### Bug Fixes
+
+* Truncate metadata file to avoid corruption ([#1330](https://www.github.com/dxos/protocols/issues/1330)) ([c7ce8f3](https://www.github.com/dxos/protocols/commit/c7ce8f3206f2ee29df1b5f7d924a874c1ffeab94))
+
 ### [2.33.6](https://www.github.com/dxos/protocols/compare/v2.33.5...v2.33.6) (2022-07-12)
 
 

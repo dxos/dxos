@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-orchestrator",
-  "version": "2.33.6",
+  "version": "2.33.8",
   "private": true,
   "scripts": {
     "build": "toolchain build",
@@ -18,7 +18,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
@@ -38,7 +37,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",

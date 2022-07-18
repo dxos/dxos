@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+
 // From https://github.com/SEBv15/humanhash/blob/166c1a6f70d854fe6767cdd76be1237112d4eaf1/index.js
 
 const DEFAULT_WORDLIST = [
@@ -45,7 +47,6 @@ const DEFAULT_WORDLIST = [
 /**
  * humanhash: Human-readable representations of digests.
  */
-// TODO(wittjosiah): Is this needed still?
 export class HumanHasher {
   /**
    * Transforms hex digests to human-readable strings.
@@ -117,3 +118,15 @@ export class HumanHasher {
     return checksums;
   }
 }
+
+const hasher = new HumanHasher();
+
+export const humanize = (value: PublicKeyLike): string => {
+  if (value instanceof Buffer || value instanceof Uint8Array) {
+    value = PublicKey.stringify(value);
+  } else if (value instanceof PublicKey) {
+    value = value.toHex();
+  }
+
+  return hasher.humanize(value);
+};

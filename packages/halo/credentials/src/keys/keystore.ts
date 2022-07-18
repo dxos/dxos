@@ -10,7 +10,7 @@ import levelup, { LevelUp } from 'levelup';
 import memdown from 'memdown';
 import toArray from 'stream-to-array';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { KeyRecord } from '../proto';
 

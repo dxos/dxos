@@ -72,28 +72,28 @@ export const EchoSubList = ({
           disablePadding
         >
           {itemAdapter.linkedItems?.(item, type).map((item) => (
-<ListItem
-                key={item.id}
-                dense
-                disableGutters
-                sx={{ py: 0, height: 26, minHeight: 26 }}
-              >
-                {Icon && (
-                  <ListItemIcon sx={{ minWidth: 36, color: color[500] }}>
-                    <Icon />
-                  </ListItemIcon>
-                )}
-                <ListItemText
-                  primary={itemAdapter.title(item)}
-                  primaryTypographyProps={{
-                    fontSize: 14,
-                    fontWeight: 'light',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                />
-              </ListItem>
+            <ListItem
+              key={item.id}
+              dense
+              disableGutters
+              sx={{ py: 0, height: 26, minHeight: 26 }}
+            >
+              {Icon && (
+                <ListItemIcon sx={{ minWidth: 36, color: color[500] }}>
+                  <Icon />
+                </ListItemIcon>
+              )}
+              <ListItemText
+                primary={itemAdapter.title(item)}
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: 'light',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              />
+            </ListItem>
           ))}
         </List>
       </Box>

@@ -1,10 +1,12 @@
 # MESH Spec
 
+## 1. Introduction
+
 MESH is a set of protocols and components that enable resilient peer-to-peer networks.
 The MESH infrastructure supports client application networks (e.g., parties), signaling, and server-to-server networks.
 
 
-## Terminology
+## 2. Terminology
 
 ***Discovery Key*** - 
 Public key used as the connection context for peers joining the swarm.
@@ -40,9 +42,11 @@ The Traversal Using Relays around NAT ([TURN](https://en.wikipedia.org/wiki/TURN
 The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)) API enables Javascript applications running within a browser to open peer-to-peer connections with each other. WebRTC uses the ICE protocols.
 
 
-## Signaling
+## 3. Basic Concepts
 
-Signaling enables two or more peers to discover and conntect to each other forming a peer-to-peer swarm.
+### Signaling
+
+Signaling enables two or more peers to discover and connect to each other forming a peer-to-peer swarm.
 Peers may exist on multiple platforms, including browser and mobile applications, Web services (including bots), and tools (including the CLI and other terminal applications).
 
 ### Signaling Server
@@ -80,6 +84,16 @@ Each peer maintains a map of connections, which may implement different transpor
 <br/> 
 
 ![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
+
+### Proposed libp2p architecture
+
+<br/> 
+
+![Network Manager](./diagrams/mesh-libp2p-signaling.drawio.svg)
+
+<br/> 
+
+![Network Manager](./diagrams/mesh-network-manager-libp2p.drawio.svg)
 
 ### Hypercore Protocol
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-registry-client",
-  "version": "2.33.6",
+  "version": "2.33.8",
   "description": "React registry client API",
   "license": "MIT",
   "author": "DXOS.org",
@@ -26,7 +26,7 @@
     "@babel/core": "~7.13.15",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/esbuild-plugins": "~2.28.10",
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^16.11.27",

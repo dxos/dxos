@@ -44,9 +44,9 @@ const App = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <App />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <App />
+    </ProfileInitializer>
+  </ClientProvider>
 );
