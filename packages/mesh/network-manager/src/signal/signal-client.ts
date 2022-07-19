@@ -7,6 +7,7 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';
 
@@ -53,8 +54,8 @@ export class SignalClient {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
-    private readonly _onSignal: (message: SignalApi.SignalMessage) => Promise<void>
+    private readonly _onOffer: (message: Message) => Promise<Answer>,
+    private readonly _onSignal: (message: Message) => Promise<void>
   ) {
     this._setState(SignalApi.State.CONNECTING);
     this._createClient();
@@ -89,11 +90,11 @@ export class SignalClient {
       data: message.data
     }));
 
-    this._client.subscribe('signal', (msg: SignalApi.SignalMessage) => this._onSignal({
-      id: PublicKey.from(msg.id),
-      remoteId: PublicKey.from(msg.remoteId),
-      topic: PublicKey.from(msg.topic),
-      sessionId: PublicKey.from(msg.sessionId),
+    this._client.subscribe('signal', (msg: Message) => this._onSignal({
+      id: PublicKey.from(msg.id!),
+      remoteId: PublicKey.from(msg.remoteId!),
+      topic: PublicKey.from(msg.topic!),
+      sessionId: PublicKey.from(msg.sessionId!),
       data: msg.data
     }));
 
@@ -210,25 +211,25 @@ export class SignalClient {
    * Routes an offer to the other peer's _onOffer callback.
    * @returns Other peer's _onOffer callback return value.
    */
-  async offer (payload: SignalApi.SignalMessage): Promise<SignalApi.Answer> {
+  async offer (msg: Message): Promise<Answer> {
     return this._client.call('offer', {
-      id: payload.id.asBuffer(),
-      remoteId: payload.remoteId.asBuffer(),
-      topic: payload.topic.asBuffer(),
-      sessionId: payload.sessionId.asBuffer(),
-      data: payload.data
+      id: msg.id?.asBuffer(),
+      remoteId: msg.remoteId?.asBuffer(),
+      topic: msg.topic?.asBuffer(),
+      sessionId: msg.sessionId?.asBuffer(),
+      data: msg.data
     });
   }
 
   /**
    * Routes an offer to the other peer's _onSignal callback.
    */
-  async signal (payload: SignalApi.SignalMessage): Promise<void> {
+  async signal (payload: Message): Promise<void> {
     return this._client.emit('signal', {
-      id: payload.id.asBuffer(),
-      remoteId: payload.remoteId.asBuffer(),
-      topic: payload.topic.asBuffer(),
-      sessionId: payload.sessionId.asBuffer(),
+      id: payload.id?.asBuffer(),
+      remoteId: payload.remoteId?.asBuffer(),
+      topic: payload.topic?.asBuffer(),
+      sessionId: payload.sessionId?.asBuffer(),
       data: payload.data
     });
   }
