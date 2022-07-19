@@ -4,7 +4,7 @@
 
 import { fromB58String, toB58String } from 'multihashes';
 import assert from 'node:assert';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 import { Multihash } from '../polkadot/interfaces';
 

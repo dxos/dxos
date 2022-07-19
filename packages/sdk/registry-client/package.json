@@ -7,7 +7,8 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:util": "util"
   },
   "scripts": {
     "build": "toolchain build",
@@ -40,7 +41,8 @@
     "fs-extra": "^8.1.0",
     "multihashes": "^4.0.2",
     "protobufjs": "^6.9.0",
-    "randombytes": "^2.1.0"
+    "randombytes": "^2.1.0",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
