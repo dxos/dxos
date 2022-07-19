@@ -9,13 +9,9 @@ import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 package dxos.mesh.signal;
 
 message Message {
-  /**
-   *  Sender's public key.
-   */
+  /// Sender's public key.
   PubKey id = 1;
-  /**
-   *  Receiver`s public key.
-   */
+  /// Receiver`s public key.
   PubKey remoteId = 2;
   PubKey topic = 3;
   PubKey sessionId = 4;
