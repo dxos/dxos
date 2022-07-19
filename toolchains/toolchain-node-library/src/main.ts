@@ -50,6 +50,24 @@ export interface BuildOptions {
   watch?: boolean
 }
 
+const buildProto = async (config: Config, project: Project) => {
+  // Compile protocol buffer definitions.
+  const protoFiles = glob(config.protobuf.src, { cwd: project.packageRoot });
+  if (protoFiles.length > 0) {
+    process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
+
+    // Substitution classes for protobuf parsing.
+    const file = join(project.packageRoot, config.protobuf.substitutions);
+    const substitutions = fs.existsSync(file) ? join(file) : undefined;
+
+    await execTool('build-protobuf', [
+      '-o', join(project.packageRoot, config.protobuf.output),
+      ...(substitutions ? ['-s', substitutions] : []),
+      ...protoFiles
+    ]);
+  }
+};
+
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
  */
@@ -67,22 +85,7 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
     process.stdout.write(`Config = ${JSON.stringify(config, undefined, 2)}\n`);
   }
 
-  // Compile protocol buffer definitions.
-  const protoFiles = glob(config.protobuf.src, { cwd: project.packageRoot });
-  if (protoFiles.length > 0) {
-    process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
-
-    // Substitution classes for protobuf parsing.
-    const file = join(project.packageRoot, config.protobuf.substitutions);
-    const substitutions = fs.existsSync(file) ? join(file) : undefined;
-
-    await execTool('build-protobuf', [
-      '-o', join(project.packageRoot, config.protobuf.output),
-      ...(substitutions ? ['-s', substitutions] : []),
-      ...protoFiles
-    ]);
-  }
-
+  await buildProto(config, project);
   process.stdout.write(chalk`\n{green.bold Typescript}\n`);
   await execTool('tsc', options.watch ? ['--watch'] : []);
 };
@@ -94,6 +97,7 @@ export const execLibraryBundle = async (config: Config) => {
 
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
+  await buildProto(config, project);
   await execTool('tsc', ['--emitDeclarationOnly']);
 
   await build({
