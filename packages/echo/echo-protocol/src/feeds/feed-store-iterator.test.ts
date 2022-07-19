@@ -10,12 +10,11 @@ import pify from 'pify';
 import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
-import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 

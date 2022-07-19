@@ -4,21 +4,14 @@
 
 import debug from 'debug';
 
-import { createKeyPair } from '@dxos/crypto';
-import { PublicKey } from '@dxos/protocols';
-
+import { PublicKey } from './public-key';
 import { Timeframe } from './timeframe';
 
-const log = debug('dxos:echo:spacetime:test');
-
-const createFeedKey = () => {
-  const { publicKey } = createKeyPair();
-  return PublicKey.from(publicKey);
-};
+const log = debug('dxos:protocols:timeframe:test');
 
 describe('spacetime', () => {
   test('constructors', () => {
-    const feedKey = createFeedKey();
+    const feedKey = PublicKey.random();
 
     const tf1 = new Timeframe([[feedKey, 1]]);
     log(tf1.toString());
@@ -26,9 +19,9 @@ describe('spacetime', () => {
   });
 
   test('merge/subtract', () => {
-    const feedKey1 = createFeedKey();
-    const feedKey2 = createFeedKey();
-    const feedKey3 = createFeedKey();
+    const feedKey1 = PublicKey.random();
+    const feedKey2 = PublicKey.random();
+    const feedKey3 = PublicKey.random();
 
     {
       // Merge.
@@ -66,9 +59,9 @@ describe('spacetime', () => {
   });
 
   test('dependencies', () => {
-    const feedKey1 = createFeedKey();
-    const feedKey2 = createFeedKey();
-    const feedKey3 = createFeedKey();
+    const feedKey1 = PublicKey.random();
+    const feedKey2 = PublicKey.random();
+    const feedKey3 = PublicKey.random();
 
     {
       const tf1 = new Timeframe();

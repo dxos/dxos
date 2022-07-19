@@ -7,8 +7,8 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
