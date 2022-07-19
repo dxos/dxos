@@ -10,6 +10,11 @@ import { ComplexMap } from '@dxos/util';
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
 
+interface OfferRecord {
+  resolve: (answer: Answer) => void;
+  reject: (error?: Error) => void;
+}
+
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
@@ -68,9 +73,4 @@ export class MessageRouter implements SignalMessaging {
     };
     await this._sendMessage(answerMessage);
   }
-}
-
-interface OfferRecord {
-  resolve: (answer: Answer) => void;
-  reject: (error?: Error) => void;
 }
