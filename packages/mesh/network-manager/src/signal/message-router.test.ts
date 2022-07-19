@@ -47,17 +47,19 @@ describe('MessageRouter', () => {
   ) => {
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
-    const router: MessageRouter = new MessageRouter(
+    const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      (msg: Message) => api.signal(msg).catch((_) => {}),
-      onSignal,
-      onOffer
-    );
+      sendMessage: (msg: Message) => api.signal(msg).catch((_) => { }),
+      onSignal: onSignal,
+      onOffer: onOffer
+    });
+
     api = new SignalClient(
       signalApiUrl,
       (async () => {}) as any,
       async (msg: Message) => router.receiveMessage(msg)
     );
+
     afterTest(() => api.close());
     return {
       api,

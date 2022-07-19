@@ -60,11 +60,11 @@ export class NetworkManager {
 
     this._signalManager.onSignal.on(msg => this._messageRouter.receiveMessage(msg));
 
-    this._messageRouter = new MessageRouter(
-      msg => this._signalManager.signal(msg),
-      async msg => this._swarms.get(msg.topic!)?.onSignal(msg),
-      msg => onOffer(msg)
-    );
+    this._messageRouter = new MessageRouter({
+      sendMessage: msg => this._signalManager.signal(msg),
+      onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
+      onOffer: msg => onOffer(msg)
+    });
 
     if (options.log) {
       this._connectionLog = new ConnectionLog();

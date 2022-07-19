@@ -15,18 +15,31 @@ interface OfferRecord {
   reject: (error?: Error) => void;
 }
 
+interface MessageRouterOptions {
+  onSignal: (message: Message) => Promise<void>;
+  sendMessage: (message: Message) => Promise<void>;
+  onOffer: (message: Message) => Promise<Answer>;
+}
+
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
 // TODO(mykola): https://github.com/dxos/protocols/issues/1316
 export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
+  private readonly _onSignal: (message: Message) => Promise<void>;
+  private readonly _sendMessage: (message: Message) => Promise<void>;
+  private readonly _onOffer: (message: Message) => Promise<Answer>;
 
-  constructor (
-    private readonly _sendMessage: (message: Message) => Promise<void>,
-    private readonly _onSignal: (message: Message) => Promise<void>,
-    private readonly _onOffer: (message: Message) => Promise<Answer>
-  ) {}
+  constructor ({
+    sendMessage,
+    onSignal,
+    onOffer
+  }: MessageRouterOptions) {
+    this._sendMessage = sendMessage;
+    this._onSignal = onSignal;
+    this._onOffer = onOffer;
+  }
 
   async receiveMessage (message: Message): Promise<void> {
     if (message.data?.offer) {

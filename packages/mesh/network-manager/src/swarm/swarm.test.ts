@@ -38,7 +38,7 @@ class MockSignalConnection implements SignalMessaging {
   }
 }
 
-const setup = (useMessageRouter = false) => {
+const setup = (router = false) => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
@@ -47,21 +47,21 @@ const setup = (useMessageRouter = false) => {
   // eslint-disable-next-line prefer-const
   let swarm2: Swarm;
 
-  const mr1: MessageRouter = new MessageRouter(
-    msg => mr2.receiveMessage(msg),
-    msg => swarm1.onSignal(msg),
-    msg => swarm1.onOffer(msg)
-  );
+  const mr1: MessageRouter = new MessageRouter({
+    sendMessage: msg => mr2.receiveMessage(msg),
+    onSignal: msg => swarm1.onSignal(msg),
+    onOffer: msg => swarm1.onOffer(msg)
+  });
 
-  const mr2: MessageRouter = new MessageRouter(
-    msg => mr1.receiveMessage(msg),
-    msg => swarm2.onSignal(msg),
-    msg => swarm2.onOffer(msg)
-  );
+  const mr2: MessageRouter = new MessageRouter({
+    sendMessage: msg => mr1.receiveMessage(msg),
+    onSignal: msg => swarm2.onSignal(msg),
+    onOffer: msg => swarm2.onOffer(msg)
+  });
 
-  const sm1: SignalMessaging = useMessageRouter ? mr1 : new MockSignalConnection(() => swarm2);
+  const sm1: SignalMessaging = router ? mr1 : new MockSignalConnection(() => swarm2);
 
-  const sm2: SignalMessaging = useMessageRouter ? mr2 : new MockSignalConnection(() => swarm1);
+  const sm2: SignalMessaging = router ? mr2 : new MockSignalConnection(() => swarm1);
 
   swarm1 = new Swarm(
     topic,
