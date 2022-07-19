@@ -226,7 +226,8 @@ describe('MessageRouter', () => {
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
 
     let { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
-    // mock api2.signal to become unreliable and work only in 1 of 3 times.
+    // Simulate unreliable connection. 
+    // Mock api2.signal to become unreliable and work only in 1 of 3 times. 
     let i = 0;
     const reliableSignal = api2.signal.bind(api2);
     const unreliableSignal = async (msg: Message) => {
@@ -253,6 +254,37 @@ describe('MessageRouter', () => {
     // expect to receive 3 messages.
     await waitForExpect(() => {
       expect(received.length).toEqual(3);
+    }, 4_000);
+  }).timeout(5_000);
+
+  test.only('ignoring doubled messages', async () => {
+    const received: Message[] = [];
+    const signalMock1 = async (msg: Message) => {received.push(msg);};
+    const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
+
+    let { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
+    // Message got doubled going through signal network.
+    const originalSignal = api2.signal.bind(api2);
+    const doubledSignal = async (msg: Message) => {
+      originalSignal(msg);
+      originalSignal(msg);
+    };
+    api2.signal = doubledSignal;
+
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+
+    // sending message.
+    await router2.signal({
+      id: peer2,
+      remoteId: peer1,
+      sessionId: PublicKey.random(),
+      topic,
+      data: { signal: { json: 'asd' } }
+    });
+    // expect to receive 1 message.
+    await waitForExpect(() => {
+      expect(received.length).toEqual(1);
     }, 4_000);
   }).timeout(5_000);
 });
