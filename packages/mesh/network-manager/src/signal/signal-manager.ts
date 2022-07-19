@@ -5,9 +5,12 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 
-// TODO(burdon): Document methods.
+/**
+ * Signal peer discovery interface.
+ */
 export interface SignalConnection {
   /**
    * Find peers (triggers async event).
@@ -15,25 +18,37 @@ export interface SignalConnection {
   lookup (topic: PublicKey): void
 
   /**
-   *
+   * Join topic on signal network, to be discoverable by other peers.
    */
-  // TODO(burdon): Document.
-  offer (msg: SignalApi.SignalMessage): Promise<SignalApi.Answer>
+  join (topic: PublicKey, peerId: PublicKey): void
+
+  /**
+   * Leave topic on signal network, to stop being discoverable by other peers.
+   */
+  leave (topic: PublicKey, peerId: PublicKey): void
+}
+
+/**
+ * Signal peer messaging interface.
+ */
+export interface SignalMessaging {
+  /**
+   * Offer/answer RPC.
+   */
+  offer (msg: Message): Promise<Answer>
 
   /**
    * Send message to peer.
    */
-  signal (msg: SignalApi.SignalMessage): Promise<void>
+  signal (msg: Message): Promise<void>
 }
 
-export interface SignalManager extends SignalConnection {
+export interface SignalManager extends SignalConnection, SignalMessaging {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
-  onSignal: Event<SignalApi.SignalMessage>
+  onSignal: Event<Message>
 
   getStatus (): SignalApi.Status[]
-  join (topic: PublicKey, peerId: PublicKey): void
-  leave (topic: PublicKey, peerId: PublicKey): void
   destroy(): Promise<void>
 }
