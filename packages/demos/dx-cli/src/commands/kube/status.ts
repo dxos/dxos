@@ -5,8 +5,9 @@
 import { BaseCommand } from '../../base-command';
 
 export default class Status extends BaseCommand {
-  static description = 'Get KUBE status';
   static enableJsonFlag = true;
+  static description = 'Get KUBE status';
+  static flags = {}; // Required.
 
   async run (): Promise<{ status: number }> {
     const status = 200;
