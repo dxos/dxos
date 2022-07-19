@@ -41,7 +41,7 @@
     "@testing-library/react-hooks": "5.1.2",
     "@types/debug": "^4.1.7",
     "@types/level-js": "~4.0.1",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",

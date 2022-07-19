@@ -28,7 +28,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "typescript": "^4.7.2"

@@ -52,7 +52,7 @@
     "@swc-node/register": "~1.4.2",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1",

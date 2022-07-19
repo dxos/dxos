@@ -27,7 +27,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "earljs": "~0.1.10",
     "eslint": "^7.12.1",

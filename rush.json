@@ -791,6 +791,10 @@
       "projectFolder": "packages/demos/hello-world"
     },
     {
+      "packageName": "@dxos/dx-cli",
+      "projectFolder": "packages/demos/dx-cli"
+    },
+    {
       "packageName": "@dxos/kitchen-sink",
       "projectFolder": "packages/demos/kitchen-sink",
       "shouldPublish": true,

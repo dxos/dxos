@@ -43,7 +43,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
@@ -51,7 +51,7 @@
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "fast-check": "~2.14.0",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"
   },

@@ -44,7 +44,7 @@
     "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/pump": "^1.1.0",
     "eslint": "^7.12.1",
