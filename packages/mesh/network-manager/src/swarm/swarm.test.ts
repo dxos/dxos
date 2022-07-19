@@ -38,7 +38,7 @@ class MockSignalConnection implements SignalMessaging {
   }
 }
 
-const setup = (router = false) => {
+const setup = ({ router = false } = {}) => {
   const topic = PublicKey.random();
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
@@ -165,7 +165,7 @@ test('second peer discovered after delay', async () => {
 }).timeout(5_000);
 
 test('swarming with message router', async () => {
-  const { swarm1, swarm2, peerId2 } = setup(true);
+  const { swarm1, swarm2, peerId2 } = setup({router: true});
 
   const promise = Promise.all([
     promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),

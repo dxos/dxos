@@ -45,6 +45,7 @@ describe('MessageRouter', () => {
     onSignal: (msg: Message) => Promise<void> = (async () => {}) as any,
     onOffer: (msg: Message) => Promise<Answer> = async () => ({ accept: true })
   ) => {
+    
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
     const router: MessageRouter = new MessageRouter({
