@@ -23,10 +23,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/react-async"
