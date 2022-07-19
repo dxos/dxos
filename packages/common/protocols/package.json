@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -18,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "assert": "^2.0.0",
     "randombytes": "^2.1.0"
   },
   "devDependencies": {

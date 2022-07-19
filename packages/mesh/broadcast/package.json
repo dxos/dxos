@@ -10,6 +10,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "srd",
     "dist"
@@ -24,6 +27,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "tiny-lru": "^7.0.6"
   },

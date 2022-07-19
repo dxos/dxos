@@ -13,6 +13,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -24,7 +27,8 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*"
+    "@dxos/debug": "workspace:*",
+    "assert": "^2.0.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",

@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -18,7 +21,8 @@
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@dxos/protocols": "workspace:*"
+    "@dxos/protocols": "workspace:*",
+    "assert": "^2.0.0"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",

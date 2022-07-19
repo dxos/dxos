@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
@@ -31,6 +34,7 @@
     "@polkadot/types": "4.17.1",
     "@polkadot/util": "6.11.1",
     "@polkadot/util-crypto": "6.11.1",
+    "assert": "^2.0.0",
     "bn.js": "4.12.0",
     "faker": "^5.1.0",
     "fs-extra": "^8.1.0",

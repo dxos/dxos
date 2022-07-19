@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';

@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "esbuild-plugin.js",
@@ -22,6 +25,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "boolean": "^3.0.1",
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",

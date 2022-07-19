@@ -13,6 +13,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "browser": {
+    "node:assert": "assert"
+  },
   "bin": {
     "dxos-signal": "bin/signal.js",
     "signal": "bin/signal.js"

@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:events": "events"
+  },
   "files": [
     "dist",
     "src"
@@ -17,7 +20,8 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "events": "^3.3.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",

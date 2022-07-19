@@ -6,7 +6,7 @@ import PolkadotKeyring from '@polkadot/keyring';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Client, KeyRecord, KeyType, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';

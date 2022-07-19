@@ -19,6 +19,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
@@ -30,6 +31,7 @@ importers:
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
+      assert: 2.0.0
       debug: 4.3.3
     devDependencies:
       '@dxos/client': link:../../sdk/client
@@ -96,6 +98,7 @@ importers:
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
       abort-controller: 3.0.0
+      assert: 2.0.0
       debug: 4.3.3
       download: 8.0.0
       esbuild: 0.14.49
@@ -118,7 +121,6 @@ importers:
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
       '@types/tail': 2.2.1
-      assert: 2.0.0
       eslint: 7.32.0
       expect: 27.0.6
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -132,10 +134,12 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       eslint: ^7.12.1
       typescript: ^4.7.2
     dependencies:
       '@dxos/debug': link:../debug
+      assert: 2.0.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -147,7 +151,6 @@ importers:
   ../../packages/common/codec-protobuf:
     specifiers:
       '@dxos/eslint-plugin': ~1.0.34
-      '@types/assert': ^1.5.4
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ^4.6.6
@@ -169,7 +172,6 @@ importers:
       lodash.merge: 4.6.2
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_5jruesmsy74grgm44y2sobqsde
-      '@types/assert': 1.5.6
       '@types/debug': 4.1.7
       '@types/jest': 26.0.24
       '@types/lodash.merge': 4.6.6
@@ -191,12 +193,14 @@ importers:
       '@types/crypto-js': ~4.0.2
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       crypto-js: ^3.1.9-1
       eslint: ^7.12.1
       hypercore-crypto: ^2.3.0
       typescript: ^4.7.2
     dependencies:
       '@dxos/protocols': link:../protocols
+      assert: 2.0.0
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
@@ -258,9 +262,11 @@ importers:
       '@types/node': ^16.11.27
       debug: ^4.3.3
       eslint: ^7.12.1
+      events: ^3.3.0
       typescript: ^4.7.2
     dependencies:
       debug: 4.3.3
+      events: 3.3.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../protocols
@@ -345,12 +351,14 @@ importers:
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
       '@types/randombytes': ^2.0.0
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       randombytes: ^2.1.0
       typescript: ^4.7.2
     dependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
+      assert: 2.0.0
       randombytes: 2.1.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -448,6 +456,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
       eslint: ^7.12.1
@@ -457,6 +466,7 @@ importers:
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
       '@dxos/protocols': link:../protocols
+      assert: 2.0.0
       debug: 4.3.3
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -508,11 +518,13 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       eslint: ^7.12.1
       typescript: ^4.7.2
     dependencies:
       '@dxos/debug': link:../debug
       '@dxos/protocols': link:../protocols
+      assert: 2.0.0
     devDependencies:
       '@dxos/crypto': link:../crypto
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -1309,6 +1321,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/pify': ^3.0.2
+      assert: ^2.0.0
       base-x: ~3.0.9
       buffer-json-encoding: ^1.0.2
       chalk: ^4.1.0
@@ -1341,6 +1354,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       base-x: 3.0.9
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
@@ -1392,6 +1406,7 @@ importers:
       '@types/pify': ^3.0.2
       '@types/pumpify': ~1.4.1
       '@types/readable-stream': ^2.3.9
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       faker: ^5.1.0
@@ -1407,6 +1422,7 @@ importers:
       '@dxos/feed-store': link:../feed-store
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       debug: 4.3.3
       pify: 5.0.0
       readable-stream: 3.6.0
@@ -1489,6 +1505,7 @@ importers:
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
       '@types/through2': ^2.0.36
+      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
@@ -1506,6 +1523,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
       end-of-stream: 1.4.4
@@ -1574,6 +1592,7 @@ importers:
       '@types/jest': ^26.0.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
@@ -1584,6 +1603,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       debug: 4.3.3
     devDependencies:
       '@dxos/echo-protocol': link:../echo-protocol
@@ -1613,6 +1633,7 @@ importers:
       '@types/lodash.set': ^4.3.6
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       expect: ~27.0.2
@@ -1628,6 +1649,7 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       debug: 4.3.3
       lodash.clonedeep: 4.5.0
       lodash.get: 4.4.2
@@ -1662,6 +1684,7 @@ importers:
       '@types/jest': ^26.0.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       eslint: ^7.12.1
       expect: ~27.0.2
       faker: ^5.1.0
@@ -1673,6 +1696,7 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
       '@types/node': 16.11.27
+      assert: 2.0.0
       yjs: 13.5.22
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -1698,6 +1722,7 @@ importers:
       '@types/node': ^16.11.27
       '@types/uuid': ~8.3.3
       '@types/yargs': ~16.0.1
+      assert: ^2.0.0
       chalk: ^4.1.0
       esbuild: ^0.14.49
       eslint: ^7.12.1
@@ -1711,6 +1736,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': 2.28.11
+      assert: 2.0.0
       chalk: 4.1.2
       esbuild: 0.14.49
       glob: 7.1.7
@@ -1855,6 +1881,7 @@ importers:
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
       '@types/stream-to-array': ^2.3.0
+      assert: ^2.0.0
       bip39: ^3.0.4
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
@@ -1882,6 +1909,7 @@ importers:
       '@dxos/mesh-protocol': link:../../mesh/protocol
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       bip39: 3.0.4
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
@@ -1953,6 +1981,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       eslint: ^7.12.1
       tiny-lru: ^7.0.6
@@ -1961,6 +1990,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      assert: 2.0.0
       debug: 4.3.3
       tiny-lru: 7.0.6
     devDependencies:
@@ -1983,6 +2013,7 @@ importers:
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
       '@types/pump': ^1.1.0
+      assert: ^2.0.0
       end-of-stream: ^1.4.1
       eslint: ^7.12.1
       ngraph.generators: ^18.0.1
@@ -1991,6 +2022,7 @@ importers:
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../common/async
+      assert: 2.0.0
       end-of-stream: 1.4.4
       ngraph.generators: 18.0.1
       ngraph.graph: 19.1.0
@@ -2087,7 +2119,6 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
-      '@types/assert': ^1.5.4
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
       '@types/mocha': ~8.2.2
@@ -2122,7 +2153,6 @@ importers:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@types/assert': 1.5.6
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1
       '@types/mocha': 8.2.3
@@ -2143,11 +2173,13 @@ importers:
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
       '@types/pump': ^1.1.0
+      assert: ^2.0.0
       eslint: ^7.12.1
       pump: ^3.0.0
       typescript: ^4.7.2
     dependencies:
       '@dxos/network-generator': link:../network-generator
+      assert: 2.0.0
       pump: 3.0.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -2172,6 +2204,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       eslint: ^7.12.1
@@ -2186,8 +2219,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/mesh-protocol': link:../protocol
       '@dxos/protocols': link:../../common/protocols
-      '@types/debug': 4.1.7
-      '@types/node': 16.11.27
+      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
       ngraph.graph: 19.1.0
@@ -2198,7 +2230,9 @@ importers:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.24
+      '@types/node': 16.11.27
       eslint: 7.32.0
       ngraph.path: 1.3.1
       typescript: 4.7.4
@@ -2221,6 +2255,7 @@ importers:
       '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
       '@types/pify': ^3.0.2
+      assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
@@ -2235,6 +2270,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/mesh-protocol': link:../protocol
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.3
     devDependencies:
@@ -2271,6 +2307,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       eslint: ^7.12.1
       expect: ~27.0.2
       typescript: ^4.7.2
@@ -2280,6 +2317,7 @@ importers:
       '@dxos/mesh-protocol': link:../protocol
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
@@ -2574,6 +2612,7 @@ importers:
       '@types/lodash.set': ^4.3.6
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       boolean: ^3.0.1
       debug: ^4.3.3
       esbuild: ^0.14.49
@@ -2590,6 +2629,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       boolean: 3.1.4
       debug: 4.3.3
       js-yaml: 4.1.0
@@ -3099,6 +3139,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/randombytes': ^2.0.0
+      assert: ^2.0.0
       bn.js: 4.12.0
       chai: ^4.3.4
       chai-as-promised: ^7.1.1
@@ -3124,6 +3165,7 @@ importers:
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
+      assert: 2.0.0
       bn.js: 4.12.0
       faker: 5.5.3
       fs-extra: 8.1.0

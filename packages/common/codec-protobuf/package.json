@@ -5,6 +5,9 @@
   "author": "DXOS.org",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -33,7 +36,6 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
-    "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.7",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "^4.6.6",

@@ -5,6 +5,9 @@
   "author": "DXOS.org",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"

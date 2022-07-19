@@ -14,6 +14,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "index.js"
@@ -29,6 +32,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3"
   },

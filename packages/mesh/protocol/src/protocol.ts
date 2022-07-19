@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';

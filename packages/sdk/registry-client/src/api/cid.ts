@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { fromB58String, toB58String } from 'multihashes';
+import assert from 'node:assert';
 import { inspect } from 'util';
 
 import { Multihash } from '../polkadot/interfaces';

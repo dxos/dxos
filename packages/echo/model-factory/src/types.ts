@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
 import type { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';

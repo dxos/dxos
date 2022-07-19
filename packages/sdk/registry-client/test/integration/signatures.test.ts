@@ -9,9 +9,9 @@ import { TypeRegistry } from '@polkadot/types';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
-import assert from 'assert';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import assert from 'node:assert';
 
 import { Client, KeyType } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';

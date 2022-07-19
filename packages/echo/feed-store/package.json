@@ -5,6 +5,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "src",
     "dist"
@@ -21,6 +24,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "end-of-stream": "^1.4.1",

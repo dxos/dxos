@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import protobufjs from 'protobufjs';
 
 // This code is an async version of the code copied over from @dxos/codec-protobuf.

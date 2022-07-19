@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "scripts": {
     "build": "toolchain bundle:library",
     "build:test": "toolchain build:test --bundle",
@@ -18,6 +21,7 @@
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {

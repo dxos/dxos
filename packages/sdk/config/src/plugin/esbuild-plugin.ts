@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import type { Plugin } from 'esbuild';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
+import assert from 'node:assert';
 import { resolve } from 'path';
 
 const log = debug('dxos:config:plugin');
