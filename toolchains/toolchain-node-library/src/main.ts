@@ -10,7 +10,7 @@ import { sync as glob } from 'glob';
 import { join } from 'path';
 import { Arguments, Argv } from 'yargs';
 
-import { NodeModulesPlugin } from '@dxos/esbuild-plugins';
+import { FixMemdownPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 import { Config, defaults } from './config';
 import { Project } from './project';
@@ -90,7 +90,11 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   await execTool('tsc', options.watch ? ['--watch'] : []);
 };
 
-export const execLibraryBundle = async (config: Config) => {
+export interface BundleOptions {
+  polyfill?: boolean
+}
+
+export const execLibraryBundle = async (config: Config, options: BundleOptions = {}) => {
   const project = Project.load(config);
   const outdir = 'dist';
   const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
@@ -108,7 +112,9 @@ export const execLibraryBundle = async (config: Config) => {
     bundle: true,
     plugins: [
       nodeExternalsPlugin({ allowList: bundlePackages }),
-      NodeModulesPlugin()
+      FixMemdownPlugin(),
+      NodeModulesPlugin(),
+      ...(options.polyfill ? [NodeGlobalsPolyfillPlugin()] : [])
     ]
   });
 };
@@ -223,14 +229,18 @@ export const setupCoreCommands = (yargs: Argv) => (
       }
     )
 
-    .command<{ verbose?: boolean, watch?: boolean }>(
+    .command(
       'bundle:library',
       'Build the library package.',
       yargs => yargs
+        .option('polyfill', {
+          type: 'boolean',
+          default: false
+        })
         .strict(),
-      async () => {
-        await execLibraryBundle(defaults);
-      }
+      handler<{ polyfill: boolean }>('Bundle', async (argv) => {
+        await execLibraryBundle(defaults, { polyfill: argv.polyfill });
+      })
     )
 
     .command(
@@ -255,10 +265,16 @@ export const setupCoreCommands = (yargs: Argv) => (
           type: 'boolean',
           default: false
         })
+        .option('polyfill', {
+          type: 'boolean',
+          default: false
+        })
         .strict(),
-      handler<{ bundle: boolean }>('Tests', async (argv) => {
+      handler<{ bundle: boolean, polyfill: boolean }>('Tests', async (argv) => {
         const project = Project.load(defaults);
-        argv.bundle ? await execLibraryBundle(defaults) : await execBuild(defaults);
+        argv.bundle
+          ? await execLibraryBundle(defaults, { polyfill: argv.polyfill })
+          : await execBuild(defaults);
         await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 

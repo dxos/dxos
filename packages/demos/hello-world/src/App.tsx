@@ -23,6 +23,7 @@ export const App = () => {
 
   // 1. Create party.
   useEffect(() => {
+    // TODO(wittjosiah): Attempt to load existing party.
     void client.echo.createParty().then(party => setParty(party));
   }, []);
 
@@ -100,7 +101,7 @@ export const App = () => {
                 }}
               />
             </ListItemIcon>
-            <ListItemText primary={item.model.get('name')} />
+            <ListItemText primary={item.model.get('title')} />
           </ListItemButton>
         ))}
       </List>

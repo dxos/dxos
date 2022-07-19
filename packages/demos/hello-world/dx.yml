@@ -7,3 +7,8 @@ package:
       build:
         command: npm run build
         outdir: out/book
+
+runtime:
+  client:
+    storage:
+      persistent: true
