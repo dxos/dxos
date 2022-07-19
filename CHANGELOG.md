@@ -1,5 +1,54 @@
 # Change Log
 
+### [2.33.8](https://www.github.com/dxos/protocols/compare/v2.33.7...v2.33.8) (2022-07-15)
+
+
+### Features
+
+* device invitations ([#1348](https://www.github.com/dxos/protocols/issues/1348)) ([15fa9a0](https://www.github.com/dxos/protocols/commit/15fa9a037f460854b7c97621ccd532627e4b6be9))
+
+### [2.33.7](https://www.github.com/dxos/protocols/compare/v2.33.6...v2.33.7) (2022-07-15)
+
+
+### Features
+
+* HALO keychain ([#1347](https://www.github.com/dxos/protocols/issues/1347)) ([40cf099](https://www.github.com/dxos/protocols/commit/40cf0994fa4e220cefcf87062207cc711fedc582))
+* kodama feed updates. ([#1334](https://www.github.com/dxos/protocols/issues/1334)) ([61c14bd](https://www.github.com/dxos/protocols/commit/61c14bdf9e74572e149126442fc53b2578aa1b85))
+* paging ([#1335](https://www.github.com/dxos/protocols/issues/1335)) ([c2ba88f](https://www.github.com/dxos/protocols/commit/c2ba88fb775e4f5a2aa5308c881a26babde848c2))
+
+
+### Bug Fixes
+
+* Truncate metadata file to avoid corruption ([#1330](https://www.github.com/dxos/protocols/issues/1330)) ([c7ce8f3](https://www.github.com/dxos/protocols/commit/c7ce8f3206f2ee29df1b5f7d924a874c1ffeab94))
+
+### [2.33.6](https://www.github.com/dxos/protocols/compare/v2.33.5...v2.33.6) (2022-07-12)
+
+
+### Features
+
+* dynamic config. ([#1329](https://www.github.com/dxos/protocols/issues/1329)) ([4581830](https://www.github.com/dxos/protocols/commit/45818305c5a22a77dca02305d0c5997748a2c190))
+* kodama CLI with selector. ([#1327](https://www.github.com/dxos/protocols/issues/1327)) ([21302cb](https://www.github.com/dxos/protocols/commit/21302cba285bb43ac1032850ad788c483601344e))
+
+### [2.33.5](https://www.github.com/dxos/protocols/compare/v2.33.4...v2.33.5) (2022-07-11)
+
+
+### Features
+
+* Add benchmark & improve echo performance ([#1284](https://www.github.com/dxos/protocols/issues/1284)) ([cca7f13](https://www.github.com/dxos/protocols/commit/cca7f1390a28fa916150f58f048a81557b43c47d))
+* Add todos demo ([#1311](https://www.github.com/dxos/protocols/issues/1311)) ([b0c4a97](https://www.github.com/dxos/protocols/commit/b0c4a97c61a1c7e92219ff89c99ca26c9d4e9636))
+* **devtools-extension:** Upgrade to manifest v3 ([#1278](https://www.github.com/dxos/protocols/issues/1278)) ([4dcc534](https://www.github.com/dxos/protocols/commit/4dcc5349528ed36abc9d8114705e911a6c5a9326))
+* **devtools:** Add profile panel ([#1281](https://www.github.com/dxos/protocols/issues/1281)) ([ea3876b](https://www.github.com/dxos/protocols/commit/ea3876ba47f251f68bc368e6f726d1ec3b72fd53)), closes [#875](https://www.github.com/dxos/protocols/issues/875)
+* Implement strict feed selection & wait for the previous timeframe to be reached when opening the party ([#1312](https://www.github.com/dxos/protocols/issues/1312)) ([bc3d9f8](https://www.github.com/dxos/protocols/commit/bc3d9f870e6a67ea802374c0e0c103dfa8aa800a))
+* Order credential messages with a timeframe ([#1301](https://www.github.com/dxos/protocols/issues/1301)) ([b2587e7](https://www.github.com/dxos/protocols/commit/b2587e74d83970e7e76e545f7c1f82abfa20f5b2))
+* refactor kitchen sink demo (move app out of stories) ([#1303](https://www.github.com/dxos/protocols/issues/1303)) ([c6e30fb](https://www.github.com/dxos/protocols/commit/c6e30fbcd94f215bb63dc0316aa20adbbd78f732))
+
+
+### Bug Fixes
+
+* **dnd:** First set state, then update ordered list. ([#1299](https://www.github.com/dxos/protocols/issues/1299)) ([b298094](https://www.github.com/dxos/protocols/commit/b298094f8e938540f1b0d7de5cc15dc3aa6eb98c))
+* **schema:** Schema tests fix. ([#1290](https://www.github.com/dxos/protocols/issues/1290)) ([6e3a100](https://www.github.com/dxos/protocols/commit/6e3a1009cd5565dc2d48d2226111bfaa9829215e))
+* Update timeframe clock on HALO mutations as well ([#1304](https://www.github.com/dxos/protocols/issues/1304)) ([9b628b4](https://www.github.com/dxos/protocols/commit/9b628b4abf9eb1850b5a75639426734c2b115a59))
+
 ### [2.33.4](https://www.github.com/dxos/protocols/compare/v2.33.3...v2.33.4) (2022-06-24)
 
 

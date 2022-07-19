@@ -2,16 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { randomBytes, keyToString } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { makeSet, makeMap } from '../src/complex';
 
-const PulicKeySet = makeSet<Uint8Array>(keyToString);
+const PulicKeySet = makeSet<PublicKey>(key => key.toHex());
 
 test('ComplexSet', () => {
-  const key1 = randomBytes();
-  const key2 = randomBytes();
-  const key3 = randomBytes();
+  const key1 = PublicKey.random();
+  const key2 = PublicKey.random();
+  const key3 = PublicKey.random();
 
   const set = new PulicKeySet([key1]);
 
@@ -37,12 +37,12 @@ test('ComplexSet', () => {
   expect(Array.from(set.values())).toEqual([key2]);
 });
 
-const PulicKeyMap = makeMap<Uint8Array>(keyToString);
+const PulicKeyMap = makeMap<PublicKey>(key => key.toHex());
 
 test('ComplexMap', () => {
-  const key1 = randomBytes();
-  const key2 = randomBytes();
-  const key3 = randomBytes();
+  const key1 = PublicKey.random();
+  const key2 = PublicKey.random();
+  const key3 = PublicKey.random();
 
   const map = new PulicKeyMap<string>([[key1, 'a']]);
 

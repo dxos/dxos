@@ -7,10 +7,12 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
-import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 import { ResultSet } from '../api';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
@@ -194,7 +196,7 @@ export class HALO {
 
     const identityKey = this._identityManager.getIdentityKey() ?? raise(new Error('Cannot create HALO. Identity key not found.'));
     await this._identityManager.createHalo({
-      identityDisplayName: displayName || identityKey.publicKey.humanize()
+      identityDisplayName: displayName || humanize(identityKey.publicKey)
     });
   }
 
@@ -224,6 +226,7 @@ export class HALO {
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
     assert(this.identity?.halo, 'HALO not initialized.');
+
     return this.identity.halo.createInvitation(authenticationDetails, options);
   }
 

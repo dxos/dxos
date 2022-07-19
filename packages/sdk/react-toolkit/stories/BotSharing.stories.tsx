@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigObject } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { ClientProvider, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';

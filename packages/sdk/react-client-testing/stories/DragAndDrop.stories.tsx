@@ -192,11 +192,11 @@ const ListStory = () => {
 };
 
 export const List = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <ListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <ListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleListStory = () => {
@@ -435,11 +435,11 @@ const MultipleListStory = () => {
 };
 
 export const MultipleList = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const TYPE_TEST_PERSON = 'example:type/person';
@@ -597,11 +597,11 @@ const TableStory = () => {
 };
 
 export const Table = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <TableStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <TableStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleContainersStory = () => {
@@ -879,9 +879,9 @@ const MultipleContainersStory = () => {
 };
 
 export const MultipleContainers = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleContainersStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleContainersStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );

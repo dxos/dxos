@@ -3,8 +3,8 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   GetNetworkPeersRequest,
@@ -25,6 +25,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => n
       close(err);
     }
   };
+
   hook.networkManager.signal.statusChanged.on(update);
   update();
 });

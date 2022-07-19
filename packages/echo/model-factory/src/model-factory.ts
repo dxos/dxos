@@ -5,8 +5,8 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
+import type { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 import { StateManager } from './state-manager';

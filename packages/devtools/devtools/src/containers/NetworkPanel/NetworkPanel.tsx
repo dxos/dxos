@@ -6,14 +6,13 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
-import { useClient } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Autocomplete } from '../../components';
-import { useStream } from '../../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../../proto';
 
 interface Topic {
@@ -27,12 +26,11 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => (
 });
 
 export const NetworkPanel = () => {
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
+  const devtoolsHost = useDevtools();
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  const { topics } = useStream(() => devtoolsHost.subscribeToNetworkTopics()) ?? {};
+  const { topics } = useStream(() => devtoolsHost.subscribeToNetworkTopics(), {});
 
   useAsyncEffect(async () => {
     if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {

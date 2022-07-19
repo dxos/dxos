@@ -1,0 +1,38 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+
+package dxos.mesh.signal;
+
+message Message {
+  /// Sender's public key.
+  PubKey id = 1;
+  /// Receiver`s public key.
+  PubKey remoteId = 2;
+  PubKey topic = 3;
+  PubKey sessionId = 4;
+  MessageData data = 5;
+}
+
+message MessageData {
+  oneof payload {
+    Offer offer = 1;
+    Answer answer = 2;
+    Signal signal = 3;
+  }
+}
+
+message Offer {
+}
+
+message Answer {
+  bool accept = 1;
+}
+
+message Signal {
+  string json = 1;
+}

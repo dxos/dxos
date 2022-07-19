@@ -26,13 +26,13 @@ const TestApp = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <TestApp />
-    </ClientProvider>
+  <ClientProvider>
+    <TestApp />
+  </ClientProvider>
 );
 
 export const Secondary = () => (
-<ClientProvider config={() => ({})}>
-      <TestApp />
-    </ClientProvider>
+  <ClientProvider config={() => ({})}>
+    <TestApp />
+  </ClientProvider>
 );

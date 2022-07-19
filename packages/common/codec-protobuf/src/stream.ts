@@ -8,7 +8,7 @@ import debug from 'debug';
 const log = debug('dxos:codec-protobuf:stream');
 
 type Producer<T> = (callbacks: {
-  next: (message: T) => void,
+  next: (message: T) => void
   close: (error?: Error) => void
 }) => (() => void) | void
 
@@ -60,7 +60,7 @@ export class Stream<T> {
   private _buffer: T[] | null = [];
 
   constructor (producer: Producer<T>) {
-    const disposeCb = producer({
+    const disposeCallback = producer({
       next: msg => {
         if (this._isClosed) {
           log('Stream is closed, dropping message.');
@@ -79,6 +79,7 @@ export class Stream<T> {
           this._buffer.push(msg);
         }
       },
+
       close: err => {
         if (this._isClosed) {
           return;
@@ -95,12 +96,13 @@ export class Stream<T> {
         }
       }
     });
-    if (disposeCb) {
-      this._dispose = disposeCb;
+
+    if (disposeCallback) {
+      this._dispose = disposeCallback;
     }
   }
 
-  subscribe (onMessage: (msg: T) => void, onClose: (error?: Error) => void) {
+  subscribe (onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -113,11 +115,12 @@ export class Stream<T> {
         throwUnhandledRejection(error);
       }
     }
+
     this._buffer = null;
 
     // Stream might have allready been closed.
     if (this._isClosed) {
-      onClose(this._closeError);
+      onClose?.(this._closeError);
       return;
     }
 

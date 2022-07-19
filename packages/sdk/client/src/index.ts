@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export { generateSeedPhrase } from '@dxos/credentials';
+
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   Entity,
@@ -17,6 +19,15 @@ export {
   PartyMember,
   ResultSet
 } from '@dxos/echo-db';
+
+export {
+  ItemID,
+  PartyKey
+} from '@dxos/echo-protocol';
+
+export {
+  ObjectModel
+} from '@dxos/object-model';
 
 export * as proto from './proto/gen';
 

@@ -16,17 +16,17 @@ export default {
 };
 
 export const Popup = () => (
-<div style={{ backgroundColor: '#ccc', width: '100vw', height: '100vh' }}>
-      <div style={CONTAINER_STYLE}>
-        <ThemeProvider theme={theme}>
-          <ClientProvider>
-            <WithSnackbarContext>
-              <Main />
-            </WithSnackbarContext>
-          </ClientProvider>
-        </ThemeProvider>
-      </div>
+  <div style={{ backgroundColor: '#ccc', width: '100vw', height: '100vh' }}>
+    <div style={CONTAINER_STYLE}>
+      <ThemeProvider theme={theme}>
+        <ClientProvider>
+          <WithSnackbarContext>
+            <Main />
+          </WithSnackbarContext>
+        </ClientProvider>
+      </ThemeProvider>
     </div>
+  </div>
 );
 
 const theme = createTheme();

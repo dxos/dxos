@@ -24,9 +24,12 @@ export const sleep = (ms: number) => new Promise<void>((resolve) => {
 });
 
 /**
- * @param [timeout] How long to wait, in milliseconds (0 = no timeout).
+ * Wait for promise or throw error on timeout.
+ * @param promise
+ * @param [timeout] How long to wait, in milliseconds.
+ * @param [error]
  */
-export const promiseTimeout = <T = any>(promise: Promise<T>, timeout: number, error: Error): Promise<T> => {
+export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: Error | string): Promise<T> => {
   let cancelTimeout: any;
 
   const timeoutPromise = new Promise<T>((resolve, reject) => {

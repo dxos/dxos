@@ -7,9 +7,9 @@ import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { FeedSelector, FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
+import { FeedSelector, FeedStoreIterator, MessageSelector } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from './metadata-store';

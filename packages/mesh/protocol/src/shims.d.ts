@@ -20,6 +20,7 @@ declare module 'buffer-json-encoding';
 
 declare module 'hypercore-protocol' {
   import events = require('events');
+
   export class Channel {
     options: (options: {extensions: any[]}) => any;
     extension: (id: number, message: Buffer) => any;

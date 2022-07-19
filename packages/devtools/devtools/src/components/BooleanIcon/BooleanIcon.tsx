@@ -11,10 +11,10 @@ import {
 import { IconButton, colors } from '@mui/material';
 
 export const BooleanIcon = ({ value }: { value: boolean | undefined }) => (
-<IconButton size='small' disabled={true}>
-      {value
-        ? <TrueIcon style={{ color: colors.green[500] }} />
-        : <FalseIcon style={{ color: value === false ? colors.red[500] : 'transparent' }} />
-      }
-    </IconButton>
+  <IconButton size='small' disabled={true}>
+    {value
+      ? <TrueIcon style={{ color: colors.green[500] }} />
+      : <FalseIcon style={{ color: value === false ? colors.red[500] : 'transparent' }} />
+    }
+  </IconButton>
 );

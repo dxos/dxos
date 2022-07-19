@@ -27,33 +27,66 @@ module.exports = {
  * The return value is the updated object.
  */
 function readPackage(packageJson, context) {
-  if (packageJson.name === 'ts-essentials') {
-    // This peer dependency is not required at runtime
-    delete packageJson.peerDependencies['typescript']
-  } else if (packageJson.name === 'wrtc') {
-    // The package got renamed
-    delete packageJson.dependencies['node-pre-gyp'];
-    packageJson.dependencies['@mapbox/node-pre-gyp'] = '1.0.3';
-  } else if (packageJson.name === '@hot-loader/react-dom') {
-    // Package has an unneccessarily strict peer dep of 17.0.1
-    packageJson.peerDependencies['react'] = '^18.0.0'
-  } else if (packageJson.name === 'react-resize-aware') {
-    // https://github.com/FezVrasta/react-resize-aware/issues/59
-    packageJson.peerDependencies['react'] = '^18.0.0'
-  } else if (packageJson.name === '@mui/styles') {
-    // Can be removed once tutorials-tasks-app is removed or upgraded to MUI5.
-    packageJson.peerDependencies['react'] = '^18.0.0'
-    packageJson.peerDependencies['@types/react'] = '^18.0.0'
-  } else if (packageJson.name === 'create-react-context' || packageJson.name === '@reach/router') {
-    // Packages haven't been updated, see:
-    // - https://github.com/jamiebuilds/create-react-context/pull/33
-    // - https://github.com/reach/router/pull/43
-    packageJson.peerDependencies['react'] = '>=15.0.0'
-    packageJson.peerDependencies['react-dom'] = '>=15.0.0'
-  } else if(packageJson.name === 'eslint-plugin-unused-imports') {
-    packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^4.14.2 || ^5.0.0'
-  } else if (packageJson.name === 'bip39') {
-    packageJson.dependencies['@types/node'] = '^16.11.27'
+  switch (packageJson.name) {
+    case '@hot-loader/react-dom': {
+      // Package has an unneccessarily strict peer dep of 17.0.1
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
+    }
+
+    // TODO(burdon): Can be removed once tutorials-tasks-app is removed or upgraded to MUI5.
+    case '@mui/styles': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['@types/react'] = '^18.0.0'
+      break;
+    }
+
+    case 'react-resize-aware': {
+      // https://github.com/FezVrasta/react-resize-aware/issues/59
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      break;
+    }
+
+    case '@react/router':
+    case 'create-react-context': {
+      // Packages haven't been updated, see:
+      // - https://github.com/reach/router/pull/43
+      // - https://github.com/jamiebuilds/create-react-context/pull/33
+      packageJson.peerDependencies['react'] = '>=15.0.0'
+      packageJson.peerDependencies['react-dom'] = '>=15.0.0'
+      break;
+    }
+
+    case 'ink':
+    case 'ink-select-input':
+    case 'ink-syntax-highlight':
+    case 'ink-text-input':
+    case 'react-reconciler': {
+      packageJson.peerDependencies['react'] = '>=16.0.0'
+      break;
+    }
+
+    case 'eslint-plugin-unused-imports': {
+      packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^4.14.2 || ^5.0.0'
+      break;
+    }
+
+    case 'ts-essentials': {
+      // This peer dependency is not required at runtime.
+      delete packageJson.peerDependencies['typescript']
+      break;
+    }
+
+    // TODO(burdon): Remove.
+    case 'wrtc': {
+      delete packageJson.dependencies['node-pre-gyp'];
+      packageJson.dependencies['@mapbox/node-pre-gyp'] = '1.0.3';
+      break;
+    }
+
+    case 'bip39': {
+      packageJson.dependencies['@types/node'] = '^16.11.27'
+    }
   }
 
   return packageJson;

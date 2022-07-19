@@ -7,12 +7,10 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
-// code import { PeerGraph } from '@dxos/devtools-mesh';
 import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
 import { SignalApi } from '@dxos/network-manager';
-import { useClient } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client';
 
-import { useStream } from '../../hooks';
 import { SubscribeToSignalStatusResponse } from '../../proto';
 
 const stringToState = (state: string): SignalApi.State => {
@@ -38,10 +36,9 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 };
 
 export const SignalPanel = () => {
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
-  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus()) ?? {};
-  const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace()) ?? {};
+  const devtoolsHost = useDevtools();
+  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), {});
+  const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace(), {});
   if (!servers || !events) {
     return null;
   }

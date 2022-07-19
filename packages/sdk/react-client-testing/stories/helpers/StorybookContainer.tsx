@@ -15,10 +15,10 @@ export const StorybookContainer = ({
   children,
   style
 }: StorybookContainerProps) => (
-<div style={{
-  height: `calc(100vh - ${STORYBOOKS_MARGIN}px)`,
-  ...style
-}}>
-      {children}
-    </div>
+  <div style={{
+    height: `calc(100vh - ${STORYBOOKS_MARGIN}px)`,
+    ...style
+  }}>
+    {children}
+  </div>
 );

@@ -9,7 +9,7 @@
       "ESNext"
     ],
     "jsx": "react",
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,

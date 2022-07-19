@@ -69,7 +69,7 @@ export interface ItemAdapter {
  */
 // TODO(burdon): Is this general purpose?
 export const itemAdapter: ItemAdapter = {
-  title: (item: Item<ObjectModel>) => item.model.get('title'),
+  title: (item: Item<ObjectModel>) => item.model.get('name'),
 
   description: (item: Item<ObjectModel>) => item.model.get('description'),
 
