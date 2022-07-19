@@ -257,7 +257,7 @@ describe('MessageRouter', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test.only('ignoring doubled messages', async () => {
+  test('ignoring doubled messages', async () => {
     const received: Message[] = [];
     const signalMock1 = async (msg: Message) => {received.push(msg);};
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
