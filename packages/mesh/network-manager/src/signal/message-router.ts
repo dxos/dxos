@@ -12,9 +12,8 @@ import { SignalMessaging } from './signal-manager';
 
 /**
  * Adds offer/answer RPC and reliable messaging.
- *
- * TODO(mykola): https://github.com/dxos/protocols/issues/1316
  */
+// TODO(mykola): https://github.com/dxos/protocols/issues/1316
 export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
 
