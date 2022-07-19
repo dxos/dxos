@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { BaseCommand } from '../base';
+import { BaseCommand } from '../../base-command';
 
 export default class Status extends BaseCommand {
   static description = 'Get KUBE status';
-  static enableJsonFlag = true
+  static enableJsonFlag = true;
 
   async run (): Promise<{ status: number }> {
     const status = 200;
-    this.log('status:', status);
+    this.log('Status:', status);
     return { status: 200 };
   }
 }

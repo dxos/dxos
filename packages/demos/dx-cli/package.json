@@ -75,10 +75,10 @@
     "topicSeparator": " ",
     "topics": {
       "config": {
-        "description": "Config management"
+        "description": "Config management."
       },
       "kube": {
-        "description": "KUBE management"
+        "description": "KUBE management."
       }
     }
   }
