@@ -33,7 +33,7 @@ export abstract class BaseCommand extends Command {
     // TODO(burdon): Removes the --json flag.
     //  [2022-07-18] https://github.com/oclif/core/issues/444
     // console.log(Parser.parse(this.argv, { context: this }));
-    const { flags } = { flags: { config: '' } };// await this.parse(BaseCommand);
+    const { flags } = await this.parse(BaseCommand);
     const { config: configFile } = flags;
     if (fs.existsSync(configFile)) {
       this.userConfig = yaml.load(String(fs.readFileSync(configFile))) as any;
