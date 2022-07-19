@@ -20,7 +20,7 @@
     "ipfs-http-client": "~56.0.1"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.28.10",
+    "@dxos/esbuild-plugins": "~2.28.11",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/node": "^16.11.27",
