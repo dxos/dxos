@@ -37,9 +37,6 @@
   ],
   "references": [
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../echo/echo-db"
     },
     {

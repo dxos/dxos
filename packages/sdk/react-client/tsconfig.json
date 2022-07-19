@@ -21,10 +21,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/react-async"
@@ -34,9 +37,6 @@
     },
     {
       "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../../mesh/network-manager"
