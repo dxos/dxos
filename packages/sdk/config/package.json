@@ -7,7 +7,9 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:fs": "./dist/src/loaders/empty-module-stub.js",
+    "node:path": "path-browserify"
   },
   "files": [
     "dist",
@@ -32,7 +34,8 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "path-browserify": "^1.0.1"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
