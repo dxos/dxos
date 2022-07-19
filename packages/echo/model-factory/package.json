@@ -20,7 +20,6 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/crypto": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
