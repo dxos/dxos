@@ -5,16 +5,16 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { promiseTimeout } from '@dxos/async';
+import { promiseTimeout, sleep } from '@dxos/async';
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec, FeedMessage, Timeframe } from '@dxos/echo-protocol';
+import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -49,7 +49,7 @@ describe('PartyPipeline', () => {
     );
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
-    await party.open({ feedHints: [feed.key] });
+    await party.open({ genesisFeedKey: feed.key });
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
@@ -104,7 +104,7 @@ describe('PartyPipeline', () => {
     }
 
     await party.close();
-    await party.open({ feedHints: [feedKey] });
+    await party.open({ genesisFeedKey: feedKey });
 
     {
       await party.database.select().exec().update.waitFor(result => result.entities.length === 2);
@@ -132,7 +132,7 @@ describe('PartyPipeline', () => {
     expect(partyFeedProvider.getFeeds().find(k => k.key.equals(feedKey.publicKey))).toBeTruthy();
   });
 
-  test('opens feed from hints', async () => {
+  test('does not open unrelated feeds', async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
@@ -158,21 +158,19 @@ describe('PartyPipeline', () => {
       PublicKey.random()
     );
 
-    await partyFeedProvider.createOrOpenWritableFeed();
+    const writeFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
-    const feedOpened = feedStore.feedOpenedEvent.waitForCount(1);
-
-    await party.open({ feedHints: [otherFeedKey] });
+    await party.open({ genesisFeedKey: writeFeed.key });
     afterTest(async () => party.close());
 
-    await feedOpened;
+    // Wait for events to be processed.
+    await sleep(5);
 
-    expect(partyFeedProvider.getFeeds().some(k => k.key.equals(otherFeedKey))).toEqual(true);
+    expect(partyFeedProvider.getFeeds().some(k => k.key.equals(otherFeedKey))).toEqual(false);
   });
 
   test('manually create item', async () => {
     const { party, partyFeedProvider } = await setup();
-    await party.open();
 
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
 
@@ -193,7 +191,6 @@ describe('PartyPipeline', () => {
 
   test('admit a second feed to the party', async () => {
     const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
@@ -223,7 +220,6 @@ describe('PartyPipeline', () => {
 
   test('admit feed and then open it', async () => {
     const { party, keyring, partyKey, feedStore } = await setup();
-    await party.open();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
@@ -270,7 +266,7 @@ describe('PartyPipeline', () => {
     expect(timeframe.isEmpty()).toBeFalsy();
 
     await party.close();
-    await party.open({ feedHints: [feedKey], targetTimeframe: timeframe });
+    await party.open({ genesisFeedKey: feedKey, targetTimeframe: timeframe });
   });
 
   test('two instances replicating', async () => {
@@ -304,9 +300,7 @@ describe('PartyPipeline', () => {
       [peer1.partyKey]
     ));
 
-    await party2.open({
-      feedHints: [peer1.feedKey]
-    });
+    await party2.open({ genesisFeedKey: peer1.feedKey });
     afterTest(async () => party2.close());
 
     createTestProtocolPair(

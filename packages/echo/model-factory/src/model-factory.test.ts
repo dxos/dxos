@@ -5,7 +5,6 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 
 import { ModelFactory } from './model-factory';
@@ -13,7 +12,7 @@ import { TestModel } from './testing';
 
 describe('model factory', () => {
   test('model constructor', async () => {
-    const itemId = createId();
+    const itemId = PublicKey.random().toHex();
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);

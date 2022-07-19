@@ -47,7 +47,13 @@ export namespace SignalApi {
   }
 
   export type SignalMessage = {
+    /**
+     *  Sender's public key.
+     */
     id: PublicKey
+    /**
+     *  Receiver`s public key.
+     */
     remoteId: PublicKey
     topic: PublicKey
     sessionId: PublicKey

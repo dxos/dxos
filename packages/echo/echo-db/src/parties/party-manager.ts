@@ -7,7 +7,7 @@ import debug from 'debug';
 import unionWith from 'lodash.unionwith';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
+import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
@@ -96,11 +96,15 @@ export class PartyManager {
         const snapshot = await this._snapshotStore.load(partyKey);
 
         const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
+        if (!metadata.genesisFeedKey) {
+          log(`Skipping loading party with missing genesis feed key: ${partyKey}`);
+          continue;
+        }
 
         const party = snapshot
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
-        party._setFeedHints(metadata.feedKeys ?? []);
+        party._setGenesisFeedKey(metadata.genesisFeedKey);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -163,7 +167,7 @@ export class PartyManager {
    * Construct a party object and start replicating with the remote peer that created that party.
    */
   @synchronized
-  async addParty (partyKey: PartyKey, feedHints: PublicKey[] = []) {
+  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -176,11 +180,14 @@ export class PartyManager {
       return this._parties.get(partyKey);
     }
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
+    log(`Adding party partyKey=${partyKey.toHex()}`);
     const party = await this._partyFactory.constructParty(partyKey);
-    party._setFeedHints(feedHints);
-    await party.open();
+    party._setGenesisFeedKey(genesisFeedKey);
+
     await this._metadataStore.addParty(party.key);
+    await this._metadataStore.setGenesisFeed(party.key, genesisFeedKey);
+
+    await party.open();
     this._setParty(party);
     return party;
   }
@@ -327,14 +334,9 @@ export class PartyManager {
       return;
     }
 
-    const keyHints: KeyHint[] = [
-      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
-      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
-    ];
-
     await identity.preferences.recordPartyJoining({
       partyKey: party.key,
-      keyHints
+      genesisFeed: party.genesisFeedKey
     });
   }
 }

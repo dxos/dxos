@@ -35,6 +35,11 @@ const log = debug('dxos:echo-db:greeting-initiator');
 
 const DEFAULT_TIMEOUT = 30_000;
 
+export interface InvitationResult {
+  partyKey: PublicKey;
+  genesisFeedKey: PublicKey
+}
+
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
  * authentication check, in order to be admitted to a Party.
@@ -112,7 +117,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<InvitationResult> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -170,9 +175,10 @@ export class GreetingInitiator {
     await this.disconnect();
 
     this._state = GreetingState.SUCCEEDED;
+    assert(notarizeResponse.genesisFeed);
     return {
       partyKey,
-      hints: notarizeResponse.feedHints ?? []
+      genesisFeedKey: notarizeResponse.genesisFeed
     };
   }
 
