@@ -15,8 +15,8 @@ export const RecoverProfile = () => {
   const { isFocused } = useFocus();
   const client = useClient();
 
-  const handleSubmit = async (keyPhrase: string) => {
-    await client.halo.recoverProfile(keyPhrase);
+  const handleSubmit = async (seedPhrase: string) => {
+    await client.halo.recoverProfile(seedPhrase);
   };
 
   return (

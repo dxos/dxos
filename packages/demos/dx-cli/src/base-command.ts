@@ -3,12 +3,17 @@
 //
 
 import { Command, Flags } from '@oclif/core';
+import assert from 'assert';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import * as path from 'path';
 
+import { Client } from '@dxos/client';
+import { ConfigObject } from '@dxos/config';
+
 export abstract class BaseCommand extends Command {
-  protected userConfig = {}; // TODO(burdon): Protobuf type.
+  private _clientConfig?: ConfigObject;
+  private _client?: Client;
 
   static globalFlags = {
     config: Flags.string({
@@ -21,6 +26,10 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  get clientConfig () {
+    return this._clientConfig;
+  }
+
   async init (): Promise<void> {
     await super.init();
 
@@ -30,7 +39,25 @@ export abstract class BaseCommand extends Command {
     const { flags } = await this.parse(undefined);
     const { config: configFile } = flags;
     if (fs.existsSync(configFile)) {
-      this.userConfig = yaml.load(String(fs.readFileSync(configFile))) as any;
+      this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
     }
+  }
+
+  async getClient () {
+    assert(this._clientConfig);
+    if (!this._client) {
+      this._client = new Client(this._clientConfig);
+      await this._client.initialize();
+    }
+
+    return this._client;
+  }
+
+  // TODO(burdon): Error handling.
+  async execWithClient <T> (callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
+    const client = await this.getClient();
+    const value = await callback(client);
+    await client.destroy();
+    return value;
   }
 }

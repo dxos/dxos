@@ -522,6 +522,8 @@ importers:
 
   ../../packages/demos/dx-cli:
     specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@oclif/core': ^1.11.0
@@ -549,6 +551,8 @@ importers:
       tslib: ^2.3.1
       typescript: ^4.7.2
     dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
       '@oclif/core': 1.11.0
       '@oclif/plugin-help': 5.1.12
       '@oclif/plugin-plugins': 2.1.0

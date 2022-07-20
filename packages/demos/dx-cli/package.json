@@ -27,6 +27,8 @@
     "version": "oclif readme && git add README.md"
   },
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@oclif/core": "^1.11.0",
     "@oclif/plugin-help": "^5.1.12",
     "@oclif/plugin-plugins": "^2.0.1",
@@ -77,8 +79,14 @@
       "config": {
         "description": "Config management."
       },
+      "identity": {
+        "description": "Identity management."
+      },
       "kube": {
         "description": "KUBE management."
+      },
+      "space": {
+        "description": "Space management."
       }
     }
   }
