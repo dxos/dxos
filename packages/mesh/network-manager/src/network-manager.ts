@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert, { throws } from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
@@ -176,7 +176,8 @@ export class NetworkManager {
         log(err);
       });
     }
-
+    
+    await this._messageRouter.destroy();
     await this._signalManager.destroy();
   }
 }

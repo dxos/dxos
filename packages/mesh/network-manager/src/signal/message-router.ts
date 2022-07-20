@@ -17,11 +17,11 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  onSignal: (message: Message) => Promise<void>;
-  sendMessage: (message: Message) => Promise<void>;
-  onOffer: (message: Message) => Promise<Answer>;
-  retryDelay: number;
-  timeout: number;
+  onSignal?: (message: Message) => Promise<void>;
+  sendMessage?: (message: Message) => Promise<void>;
+  onOffer?: (message: Message) => Promise<Answer>;
+  retryDelay?: number;
+  timeout?: number;
 }
 
 /**
@@ -40,15 +40,21 @@ export class MessageRouter implements SignalMessaging {
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
+
+  private readonly _beforeDestroyCallbacks: (() => void)[] = [];
+
   constructor ({
     sendMessage,
     onSignal,
     onOffer,
     retryDelay = 1000,
     timeout = 3000
-  }: MessageRouterOptions) {
+  }: MessageRouterOptions = {}) {
+    assert(sendMessage);
     this._sendMessage = sendMessage;
+    assert(onSignal);
     this._onSignal = onSignal;
+    assert(onOffer);
     this._onOffer = onOffer;
     this._retryDelay = retryDelay;
     this._timeout = timeout;
@@ -74,13 +80,13 @@ export class MessageRouter implements SignalMessaging {
 
     // Setting retry interval if signal was not acknowledged.
     const retryInterval = setInterval(async () => {
+      console.log('Retrying signal...');
       if (!this._acknowledgedSignals.has(message.messageId!)) {
         await this._sendMessage(message);
       }
     }, this._retryDelay);
-    setTimeout(() => {
-      clearInterval(retryInterval);
-    }, this._timeout);
+    this._beforeDestroyCallbacks.push(() => clearInterval(retryInterval));
+    setTimeout(() => clearInterval(retryInterval), this._timeout);
   }
 
   async offer (message: Message): Promise<Answer> {
@@ -134,5 +140,9 @@ export class MessageRouter implements SignalMessaging {
     if (!this._acknowledgedSignals.has(message.data.ack.messageId)) {
       this._acknowledgedSignals.add(message.data.ack.messageId);
     }
+  }
+
+  destroy (): void {
+    this._beforeDestroyCallbacks.forEach(callback => callback());
   }
 }

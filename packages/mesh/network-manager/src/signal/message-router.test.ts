@@ -58,6 +58,7 @@ describe('MessageRouter', () => {
       onSignal: onSignal,
       onOffer: onOffer
     });
+    afterTest(() => router.destroy());
 
     api = new SignalClient(
       signalApiUrl,
