@@ -7,8 +7,8 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 
 export default class Identity extends BaseCommand {
-  static description = 'Show identity profile.';
-  static aliases = ['id']; // TODO(burdon): Doesn't propagate to child commands.
+  static description = 'Show profile.';
+  // static aliases = ['id']; // TODO(burdon): Doesn't propagate to child commands.
   static flags = {}; // Required.
 
   async run (): Promise<void> {

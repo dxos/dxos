@@ -34,7 +34,8 @@
     "@oclif/plugin-plugins": "^2.0.1",
     "@octokit/core": "^4.0.4",
     "fs-extra": "^8.1.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "inquirer": "~9.0.2"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
@@ -77,16 +78,19 @@
     "topicSeparator": " ",
     "topics": {
       "config": {
-        "description": "Config management."
+        "description": "Configuration information."
       },
       "identity": {
-        "description": "Identity management."
+        "description": "Manage your decentralized identity."
       },
       "kube": {
-        "description": "KUBE management."
+        "description": "Manage your KUBE device and MESH network."
+      },
+      "shell": {
+        "description": "Interactive shell."
       },
       "space": {
-        "description": "Space management."
+        "description": "Manage your Brane spaces."
       }
     }
   }
