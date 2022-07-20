@@ -3,7 +3,7 @@
 //
 
 import chalk from 'chalk';
-import { build } from 'esbuild';
+import { build, BuildOptions as EsbuildOptions } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
@@ -104,14 +104,27 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
   await buildProto(config, project);
   await execTool('tsc', ['--emitDeclarationOnly']);
 
-  await build({
+  const esbuildConfig: EsbuildOptions = {
     entryPoints: ['src/index.ts'],
-    outfile: `${outdir}/browser.js`,
     format: 'cjs',
     write: true,
     bundle: true,
+    // https://esbuild.github.io/api/#log-override
+    logOverride: {
+      // @polkadot/api/augment/rpc was generating this warning.
+      // It is specifically type related and has no effect on the final bundle behavior.
+      'ignored-bare-import': 'info'
+    },
     plugins: [
-      nodeExternalsPlugin({ allowList: bundlePackages }),
+      nodeExternalsPlugin({ allowList: bundlePackages })
+    ]
+  };
+
+  await build({
+    ...esbuildConfig,
+    outfile: `${outdir}/browser.js`,
+    plugins: [
+      ...esbuildConfig.plugins!,
       FixMemdownPlugin(),
       NodeModulesPlugin(),
       ...(options.polyfill ? [NodeGlobalsPolyfillPlugin()] : [])
@@ -119,15 +132,9 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
   });
 
   await build({
-    entryPoints: ['src/index.ts'],
+    ...esbuildConfig,
     outdir,
-    platform: 'node',
-    format: 'cjs',
-    write: true,
-    bundle: true,
-    plugins: [
-      nodeExternalsPlugin({ allowList: bundlePackages })
-    ]
+    platform: 'node'
   });
 };
 
