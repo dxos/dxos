@@ -101,8 +101,8 @@ describe('SignalApi', () => {
   }).timeout(5_000);
 
   test('signal', async () => {
-    const received: Message[] = [];
-    const signalMock = async (msg: Message) => {received.push(msg);}; 
+    const signalMock = mockFn<(msg: Message) => Promise<void>>()
+      .resolvesTo();
     api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, signalMock);
 
     await api1.join(topic, peer1);
@@ -116,8 +116,9 @@ describe('SignalApi', () => {
       messageId: undefined
     };
     await api1.signal(msg);
+
     await waitForExpect(() => {
-      expect(received[0].data).toEqual(msg.data);
+      expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
   }).timeout(5_000);
 
