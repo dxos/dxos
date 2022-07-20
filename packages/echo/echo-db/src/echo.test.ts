@@ -374,7 +374,7 @@ describe('ECHO', () => {
 
   }).timeout(10_000);
 
-  test.skip('3 devices', async () => {
+  test('3 devices', async () => {
     const a = await setup({ createProfile: true });
     const b = await setup();
 
