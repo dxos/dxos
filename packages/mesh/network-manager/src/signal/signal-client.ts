@@ -95,7 +95,8 @@ export class SignalClient {
       remoteId: PublicKey.from(msg.remoteId!),
       topic: PublicKey.from(msg.topic!),
       sessionId: PublicKey.from(msg.sessionId!),
-      data: msg.data
+      data: msg.data,
+      messageId: msg.messageId
     }));
 
     this._clientCleanup.push(this._client.connected.on(() => {
@@ -224,13 +225,14 @@ export class SignalClient {
   /**
    * Routes an offer to the other peer's _onSignal callback.
    */
-  async signal (payload: Message): Promise<void> {
+  async signal (message: Message): Promise<void> {
     return this._client.emit('signal', {
-      id: payload.id?.asBuffer(),
-      remoteId: payload.remoteId?.asBuffer(),
-      topic: payload.topic?.asBuffer(),
-      sessionId: payload.sessionId?.asBuffer(),
-      data: payload.data
+      messageId: message.messageId,
+      id: message.id?.asBuffer(),
+      remoteId: message.remoteId?.asBuffer(),
+      topic: message.topic?.asBuffer(),
+      sessionId: message.sessionId?.asBuffer(),
+      data: message.data
     });
   }
 }
