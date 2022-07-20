@@ -20,6 +20,8 @@ interface MessageRouterOptions {
   onSignal: (message: Message) => Promise<void>;
   sendMessage: (message: Message) => Promise<void>;
   onOffer: (message: Message) => Promise<Answer>;
+  retryDelay: number;
+  timeout: number;
 }
 
 /**
@@ -35,15 +37,21 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sentSignals: Set<string> = new Set();
   private readonly _receivedSignals: Set<string> = new Set();
   private readonly _acknowledgedSignals: Set<string> = new Set();
+  private readonly _retryDelay: number;
+  private readonly _timeout: number;
 
   constructor ({
     sendMessage,
-    onSignal,
-    onOffer
+    onSignal, 
+    onOffer,
+    retryDelay = 1000,
+    timeout = 3000,
   }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
     this._onOffer = onOffer;
+    this._retryDelay = retryDelay;
+    this._timeout = timeout;
   }
 
   async receiveMessage (message: Message): Promise<void> {
@@ -63,6 +71,14 @@ export class MessageRouter implements SignalMessaging {
     message.messageId = uuid();
     this._sentSignals.add(message.messageId);
     await this._sendMessage(message);
+
+    // Setting retry interval if signal was not acknowledged.
+    let retryInterval = setInterval(async () => { 
+      if (!this._acknowledgedSignals.has(message.messageId!)) {
+        await this._sendMessage(message);
+      }
+    }, this._retryDelay);
+    setTimeout(() => { clearInterval(retryInterval); }, this._timeout);
   }
 
   async offer (message: Message): Promise<Answer> {
