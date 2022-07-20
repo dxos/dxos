@@ -52,7 +52,7 @@
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",

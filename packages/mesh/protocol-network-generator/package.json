@@ -36,7 +36,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
     "@types/pump": "^1.1.0",
     "eslint": "^7.12.1",

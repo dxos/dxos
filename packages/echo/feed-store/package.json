@@ -45,7 +45,7 @@
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/from2": "~2.3.1",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "@types/pump": "^1.1.0",

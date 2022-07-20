@@ -37,15 +37,15 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.11.27",
     "esbuild": "^0.14.49",
     "esbuild-node-externals": "^1.4.1",
     "eslint": "^7.12.1",
-    "jest": "^26.6.3",
+    "jest": "^28.1.3",
     "protobufjs": "^6.9.0",
-    "ts-jest": "^26.5.6",
+    "ts-jest": "^28.0.7",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
   },
