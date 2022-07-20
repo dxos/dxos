@@ -7,6 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
+    "./dist/index.js": "./dist/browser.js",
     "node:assert": "assert"
   },
   "scripts": {
@@ -29,6 +30,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",

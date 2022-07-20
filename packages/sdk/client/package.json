@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
+    "./dist/index.js": "./dist/browser.js",
     "node:assert": "assert"
   },
   "files": [
@@ -14,8 +15,8 @@
   ],
   "scripts": {
     "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-    "build": "npm run prebuild && toolchain bundle:library --polyfill",
-    "build:test": "toolchain build:test --bundle --polyfill",
+    "build": "npm run prebuild && toolchain bundle:library",
+    "build:test": "toolchain build:test --bundle",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -51,6 +52,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.6",
     "@types/level-js": "~4.0.1",

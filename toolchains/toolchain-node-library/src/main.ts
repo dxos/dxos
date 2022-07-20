@@ -106,7 +106,7 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
 
   await build({
     entryPoints: ['src/index.ts'],
-    outdir,
+    outfile: `${outdir}/browser.js`,
     format: 'cjs',
     write: true,
     bundle: true,
@@ -115,6 +115,18 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
       FixMemdownPlugin(),
       NodeModulesPlugin(),
       ...(options.polyfill ? [NodeGlobalsPolyfillPlugin()] : [])
+    ]
+  });
+
+  await build({
+    entryPoints: ['src/index.ts'],
+    outdir,
+    platform: 'node',
+    format: 'cjs',
+    write: true,
+    bundle: true,
+    plugins: [
+      nodeExternalsPlugin({ allowList: bundlePackages })
     ]
   });
 };
