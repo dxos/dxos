@@ -6,6 +6,7 @@ import assert from 'assert';
 
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
+import { uuid } from 'uuidv4';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
@@ -31,6 +32,10 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sendMessage: (message: Message) => Promise<void>;
   private readonly _onOffer: (message: Message) => Promise<Answer>;
 
+  private readonly _sentSignals: Set<string> = new Set();
+  private readonly _receivedSignals: Set<string> = new Set();
+  private readonly _acknowledgedSignals: Set<string> = new Set();
+
   constructor ({
     sendMessage,
     onSignal,
@@ -47,12 +52,16 @@ export class MessageRouter implements SignalMessaging {
     } else if (message.data?.answer) {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
-      await this._onSignal(message);
+      await this._handleSignal(message);
+    } else if (message.data?.ack) {
+      await this._handleAcknowledgement(message);
     }
   }
 
   async signal (message: Message): Promise<void> {
     assert(message.data?.signal);
+    message.messageId = uuid();
+    this._sentSignals.add(message.messageId);
     await this._sendMessage(message);
   }
 
@@ -82,8 +91,30 @@ export class MessageRouter implements SignalMessaging {
       remoteId: message.id,
       topic: message.topic,
       sessionId: message.sessionId,
-      data: { answer: answer }
+      data: { answer: answer },
     };
     await this._sendMessage(answerMessage);
+  }
+
+  private async _handleSignal (message: Message): Promise<void> {
+    assert(message.messageId);
+    if (!this._receivedSignals.has(message.messageId)) {
+      this._receivedSignals.add(message.messageId);
+      await this._onSignal(message);
+      await this._sendMessage({
+        id: message.remoteId,
+        remoteId: message.id,
+        topic: message.topic,
+        data: { ack: { messageId: message.messageId } },
+      });
+    }
+  }
+
+  private async _handleAcknowledgement (message: Message): Promise<void> {
+    assert(message.data?.ack);
+    assert(message.data.ack.messageId);
+    if (!this._acknowledgedSignals.has(message.data.ack.messageId)) {
+      this._acknowledgedSignals.add(message.data.ack.messageId);
+    }
   }
 }
