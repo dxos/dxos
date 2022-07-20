@@ -79,7 +79,6 @@ export class MessageRouter implements SignalMessaging {
 
     // Setting retry interval if signal was not acknowledged.
     const retryInterval = setInterval(async () => {
-      console.log('Retrying signal...');
       if (!this._acknowledgedSignals.has(message.messageId!)) {
         await this._sendMessage(message);
       }
