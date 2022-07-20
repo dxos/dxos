@@ -40,7 +40,6 @@ export class MessageRouter implements SignalMessaging {
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
-
   private readonly _beforeDestroyCallbacks: (() => void)[] = [];
 
   constructor ({
