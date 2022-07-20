@@ -40,15 +40,15 @@ describe('MessageRouter', () => {
     await broker1.stop();
   });
 
-  const createSignalClientAndMessageRouter = async ({ 
-    signalApiUrl, 
-    onSignal = (async () => { }) as any, 
-    onOffer = async () => ({ accept: true }) 
-  }: { 
-    signalApiUrl: string; 
-    onSignal?: (msg: Message) => Promise<void>; 
-    onOffer?: (msg: Message) => Promise<Answer>; 
-  } ) => {
+  const createSignalClientAndMessageRouter = async ({
+    signalApiUrl,
+    onSignal = (async () => { }) as any,
+    onOffer = async () => ({ accept: true })
+  }: {
+    signalApiUrl: string;
+    onSignal?: (msg: Message) => Promise<void>;
+    onOffer?: (msg: Message) => Promise<Answer>;
+  }) => {
 
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
@@ -97,14 +97,18 @@ describe('MessageRouter', () => {
   test('offer/answer', async () => {
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: (async () => { }) as any, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: (async () => { }) as any,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
     const { api: api2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: (async () => { }) as any, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: (async () => { }) as any,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -123,21 +127,27 @@ describe('MessageRouter', () => {
     const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: signalMock1, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: signalMock1,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
     const signalMock2 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: signalMock2, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: signalMock2,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
     const signalMock3 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: signalMock3, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: signalMock3,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -187,14 +197,18 @@ describe('MessageRouter', () => {
   test('two offers', async () => {
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: (async () => { }) as any, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: (async () => { }) as any,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1, onSignal: (async () => { }) as any, onOffer:
+        signalApiUrl: signalApiUrl1,
+        onSignal: (async () => { }) as any,
+        onOffer:
           async () => ({ accept: true })
-      }    );
+      });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -222,17 +236,19 @@ describe('MessageRouter', () => {
 
   test('signaling with non reliable connection', async () => {
     const received: Message[] = [];
-    const signalMock1 = async (msg: Message) => {received.push(msg);};
+    const signalMock1 = async (msg: Message) => {
+      received.push(msg);
+    };
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
 
-    let { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
-    // Simulate unreliable connection. 
-    // Mock api2.signal to become unreliable and work only in 1 of 3 times. 
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
+    // Simulate unreliable connection.
+    // Mock api2.signal to become unreliable and work only in 1 of 3 times.
     let i = 0;
     const reliableSignal = api2.signal.bind(api2);
     const unreliableSignal = async (msg: Message) => {
       i++;
-      if (i % 3 != 0) {
+      if (i % 3 !== 0) {
         return reliableSignal(msg);
       }
     };
@@ -259,15 +275,17 @@ describe('MessageRouter', () => {
 
   test('ignoring doubled messages', async () => {
     const received: Message[] = [];
-    const signalMock1 = async (msg: Message) => {received.push(msg);};
+    const signalMock1 = async (msg: Message) => {
+      received.push(msg);
+    };
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
 
-    let { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
     // Message got doubled going through signal network.
     const originalSignal = api2.signal.bind(api2);
     const doubledSignal = async (msg: Message) => {
-      originalSignal(msg);
-      originalSignal(msg);
+      await originalSignal(msg);
+      await originalSignal(msg);
     };
     api2.signal = doubledSignal;
 

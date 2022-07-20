@@ -3,10 +3,10 @@
 //
 
 import assert from 'assert';
+import { uuid } from 'uuidv4';
 
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
-import { uuid } from 'uuidv4';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
@@ -42,10 +42,10 @@ export class MessageRouter implements SignalMessaging {
 
   constructor ({
     sendMessage,
-    onSignal, 
+    onSignal,
     onOffer,
     retryDelay = 1000,
-    timeout = 3000,
+    timeout = 3000
   }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
@@ -73,12 +73,14 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(message);
 
     // Setting retry interval if signal was not acknowledged.
-    let retryInterval = setInterval(async () => { 
+    const retryInterval = setInterval(async () => {
       if (!this._acknowledgedSignals.has(message.messageId!)) {
         await this._sendMessage(message);
       }
     }, this._retryDelay);
-    setTimeout(() => { clearInterval(retryInterval); }, this._timeout);
+    setTimeout(() => {
+      clearInterval(retryInterval);
+    }, this._timeout);
   }
 
   async offer (message: Message): Promise<Answer> {
@@ -107,7 +109,7 @@ export class MessageRouter implements SignalMessaging {
       remoteId: message.id,
       topic: message.topic,
       sessionId: message.sessionId,
-      data: { answer: answer },
+      data: { answer: answer }
     };
     await this._sendMessage(answerMessage);
   }
@@ -121,7 +123,7 @@ export class MessageRouter implements SignalMessaging {
         id: message.remoteId,
         remoteId: message.id,
         topic: message.topic,
-        data: { ack: { messageId: message.messageId } },
+        data: { ack: { messageId: message.messageId } }
       });
     }
   }
