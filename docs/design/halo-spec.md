@@ -261,3 +261,105 @@ Only the party public key, which is also the genesis feed key, is required to di
 ## References
 
 1. [W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/)
+
+
+
+
+
+
+
+
+
+
+## Spec
+
+- Identity Keys
+  - Create identity
+  - Support multiple identites (on all platforms: e.g., CLI, PWA)
+  - Recover identity
+  - External identifier (Peer DID)
+  - Profile metadata (IFPS document?)
+- Encrypted local storage (secured by password)
+- Decentralized Credentials
+  - ECHO Party replication
+  - Extensible credentials (e.g., party membership, external tokens (e.g., Github), KUBE access, etc.)
+  - Credential presentation
+- Device management
+  - Admit device
+  - Revoke device
+- Preferences
+- Circle Contacts
+  - Represent contacts as DID documents? (e.g., keys + metadata?)
+
+### Design
+
+- NOTE: Spaces are the new name for Parties.
+
+- Each Agent (User or Bot) has:
+  - An Identity public key.
+  - A public Profile document (e.g., IPFS file discovered by a Peer DID?)
+    - Peer DID resolve to DID Document via a Naming Service.
+    - ISSUE: Cannot use IPNS due to single private key limitation.
+    - ISSUE: KUBEs implement a federated DXNS and DID resolver.
+      - DXNS is hybrid KUBE p2p/blockchain.
+      - DXNS maintains a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have authority over the document).
+  - A Set of devices that manage secure private keys and credentials.
+  - A private decentralized HALO that contains:
+    - A set of Credentials that represent various decentralized claims (e.g., Blockchain accounts, KUBE access, external Web2 tokens).
+    - A set of Device public keys (and metadata).
+    - A Circle that contains a set of Agent public keys (DIDs?) and profiles (e.g., cached DID Profile documents)
+
+- A Credential contain a Subject and a Claim signed by an Authority.
+- Spaces maintain a DAG of credentials.
+- The space itself is the root authority that signs a set of Genesis messages using a temporary Private key.
+- The genesis messages contain the root credentials that anchor the "chain of trust".
+
+- Agents are identified by their Identity public key.
+- The Identity key may be used to look-up the agent's profile.
+  - TODO: How to lookup profile (e.g., DID document).
+
+- Credentials may represent (multiple) roles for Agents (e.g., Admin, Writer, Reader).
+- Credential may represent:
+  1. Agent admission (ECHO Party only): `{ subject: Agent; claim: Role; authority: Genesis|Device }` (applies to all Agent's devices).
+  2. Device admission: `{ subject: Device: claim: Agent Proxy; authority: Genesis|Device }`: Gives the Device transitive rights to act on behalf of an Agent.
+  3. Feed admission: `{ subject: Device; claim: Valid; authority: Device }`
+  - When an Agent's Device attempts to join the Space, it presents a credential signed by an existing admitted Device.
+  - Alternatively: The new Device may present a chain of credentials that are anchored by the Agent (e.g., Agent => Device 1 => Device 2) generated from the Agent's HALO.
+    - ISSUE: How to deal with device revocation (e.g., Device 1 is now invalid)
+
+- Each Agent has Public key.
+- Agent's have multiple devices, each of which have a Public/Private key.
+- Each Agent maintins a public Profile document (e.g., DID document stored as IPFS file).
+- The Profile document may be resolved by the network using Peer DID resolution.
+
+### Issues
+
+- What mechanism does Peer DID resolution? Needs Naming Service?
+- TODO(pierre): Privacy review (for Spaces and Peer signaling).
+  - ISSUE: A time-salted hash of the associated Public key may be used to discover the Space (i.e., MESH discovery key).
+  - This hash may be transmitted publicly (e.g., as a discovery key for signaling) and provides one degree of privacy.
+- TODO: Credential expiration/revocation and finality (e.g., by epoch).
+
+### Trust and Threats
+
+#### Aspects of Trust
+
+- Availability: Can I find it from any node in the network.
+- Correctness: Is the value verifiable? Can I invalidate fakes?
+- Consensus and Finality: Can I determine that all nodes agree?
+- Censorship Resistance: Am I seeing all results?
+
+> - TODO: Convert to table.
+
+- KUBE/MESH network for availability and correctness.
+  - ISSUE: Cannot prevent censorship.
+  - ISSUE: Implement peer verification using unique discovery keys?
+- IPFS for availability (can validate document by hash)
+- DXNS:
+  - By trusted subnets.
+  - By global blockchain.
+- ECHO Spaces by chain-of-trust of Credentials (within scope of ECHO).
+- HALO
+
+> - TODO: DNS
+> - TODO: Incentives
