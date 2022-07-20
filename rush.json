@@ -792,9 +792,7 @@
     },
     {
       "packageName": "@dxos/kitchen-sink",
-      "projectFolder": "packages/demos/kitchen-sink",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/demos/kitchen-sink"
     },
     {
       "packageName": "@dxos/kodama",

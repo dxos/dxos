@@ -12,10 +12,13 @@
   ],
   "references": [
     {
-      "path": "../../common/crypto"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../mesh/network-manager"

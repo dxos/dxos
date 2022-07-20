@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Timeframe } from '../spacetime';
+import { Timeframe } from '@dxos/protocols';
+
 import { ItemID, ItemType } from '../types';
 import { schema } from './gen';
 import { FeedMessage } from './gen/dxos/echo/feed';
@@ -29,7 +30,7 @@ export const createTestItemMutation = (
   timeframe,
   echo: {
     itemId,
-    mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation').encode({
+    mutation: schema.getCodecForType('dxos.test.echo.TestItemMutation').encode({
       key,
       value
     })

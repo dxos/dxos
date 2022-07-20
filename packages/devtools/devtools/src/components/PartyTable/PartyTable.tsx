@@ -7,7 +7,7 @@ import React from 'react';
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
-import { Timeframe } from '@dxos/echo-protocol';
+import { Timeframe } from '@dxos/protocols';
 import { CopyText, HashIcon } from '@dxos/react-components';
 
 import { SubscribeToPartiesResponse } from '../../proto';
