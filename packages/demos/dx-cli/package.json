@@ -18,12 +18,12 @@
     "/oclif.manifest.json"
   ],
   "scripts": {
-    "build": "shx rm -rf dist && tsc -b",
+    "build": "toolchain build",
     "lint": "toolchain lint",
-    "prepack": "yarn build && oclif manifest && oclif readme",
+    "prepack": "npm run build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
-    "posttest": "yarn lint",
+    "posttest": "npm run lint",
     "version": "oclif readme && git add README.md"
   },
   "dependencies": {

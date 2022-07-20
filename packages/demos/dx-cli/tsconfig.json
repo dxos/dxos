@@ -1,15 +1,24 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "declaration": true,
-    "importHelpers": true,
-    "esModuleInterop": true,
-    "module": "commonjs",
-    "outDir": "dist",
-    "rootDir": "src",
-    "strict": true,
-    "target": "es2019"
+    "outDir": "dist"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    }
+  ],
+  "types": [
+    "mocha"
   ]
 }
