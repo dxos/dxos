@@ -7,8 +7,8 @@ import { CliUx, run } from '@oclif/core';
 import { BaseCommand } from '../../base-command';
 
 export default class Shell extends BaseCommand {
-  static description = 'Interactive shell.';
-  static flags = {}; // Required.
+  static override description = 'Interactive shell.';
+  static override flags = {}; // Required.
 
   // TODO(burdon): Inquirer vs. ink (different apps?)
 

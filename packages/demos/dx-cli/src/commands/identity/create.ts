@@ -7,10 +7,10 @@ import { Client, generateSeedPhrase } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 
 export default class Create extends BaseCommand {
-  static enableJsonFlag = true;
-  static description = 'Create profile.';
-  static flags = {}; // Required.
-  static args = [
+  static override enableJsonFlag = true;
+  static override description = 'Create profile.';
+  static override flags = {}; // Required.
+  static override args = [
     {
       name: 'username'
     }

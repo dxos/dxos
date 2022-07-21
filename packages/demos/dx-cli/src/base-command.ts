@@ -15,7 +15,7 @@ export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigObject;
   private _client?: Client;
 
-  static globalFlags = {
+  static override globalFlags = {
     config: Flags.string({
       env: 'DX_CONFIG',
       description: 'Specify config file',
@@ -30,7 +30,7 @@ export abstract class BaseCommand extends Command {
     return this._clientConfig;
   }
 
-  async init (): Promise<void> {
+  override async init (): Promise<void> {
     await super.init();
 
     // Load user config file.

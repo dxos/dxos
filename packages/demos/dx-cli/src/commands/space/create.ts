@@ -5,8 +5,8 @@
 import { BaseCommand } from '../../base-command';
 
 export default class Create extends BaseCommand {
-  static description = 'Create spaces.';
-  static flags = {}; // Required.
+  static override description = 'Create spaces.';
+  static override flags = {}; // Required.
 
   async run (): Promise<void> {}
 }
