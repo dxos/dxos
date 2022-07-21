@@ -97,7 +97,7 @@ export class SignalClient {
       topic: PublicKey.from(msg.topic!),
       sessionId: PublicKey.from(msg.sessionId!),
       data: msg.data,
-      // Field that MessageRouter adds so on lower level it not always defined.
+      // Field that MessageRouter adds, so on lower level it not always defined.
       messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
     });
   });
