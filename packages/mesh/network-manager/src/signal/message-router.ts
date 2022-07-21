@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import { uuid } from 'uuidv4';
 
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
@@ -34,9 +33,9 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sendMessage: (message: Message) => Promise<void>;
   private readonly _onOffer: (message: Message) => Promise<Answer>;
 
-  private readonly _sentSignals: Set<string> = new Set();
-  private readonly _receivedSignals: Set<string> = new Set();
-  private readonly _acknowledgedSignals: Set<string> = new Set();
+  private readonly _sentSignals = new Set<PublicKey>();
+  private readonly _receivedSignals = new Set<PublicKey>();
+  private readonly _acknowledgedSignals = new Set<PublicKey>();
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
@@ -73,7 +72,7 @@ export class MessageRouter implements SignalMessaging {
 
   async signal (message: Message): Promise<void> {
     assert(message.data?.signal);
-    message.messageId = uuid();
+    message.messageId = PublicKey.random();
     this._sentSignals.add(message.messageId);
     await this._sendMessage(message);
 

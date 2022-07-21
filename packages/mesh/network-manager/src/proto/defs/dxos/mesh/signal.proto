@@ -16,7 +16,7 @@ message Message {
   PubKey topic = 3;
   PubKey sessionId = 4;
   MessageData data = 5;
-  string messageId = 6;
+  PubKey messageId = 6;
 }
 
 message MessageData {
@@ -40,5 +40,5 @@ message Signal {
 }
 
  message Acknowledgement {
-  string messageId = 1;
+  PubKey messageId = 1;
  }

@@ -90,14 +90,17 @@ export class SignalClient {
       data: message.data
     }));
 
-    this._client.subscribe('signal', (msg: Message) => this._onSignal({
+    this._client.subscribe('signal', (msg: Message) => {
+    return this._onSignal({
       id: PublicKey.from(msg.id!),
       remoteId: PublicKey.from(msg.remoteId!),
       topic: PublicKey.from(msg.topic!),
       sessionId: PublicKey.from(msg.sessionId!),
       data: msg.data,
-      messageId: msg.messageId
-    }));
+      // Field that MessageRouter adds so on lower level it not always defined.
+      messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
+    });
+  });
 
     this._clientCleanup.push(this._client.connected.on(() => {
       log('Socket connected');
@@ -227,7 +230,7 @@ export class SignalClient {
    */
   async signal (message: Message): Promise<void> {
     return this._client.emit('signal', {
-      messageId: message.messageId,
+      messageId: message.messageId?.asBuffer(),
       id: message.id?.asBuffer(),
       remoteId: message.remoteId?.asBuffer(),
       topic: message.topic?.asBuffer(),
