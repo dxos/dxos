@@ -231,7 +231,7 @@ The HALO protocol definitions are defined by [protobuf schema](https://github.co
 - Devices may write revocation messages to the HALO, which cancel prior authorizations.
   - ISSUE: There is the potential for a race, whereby two Devices may attempt to revoke access to the other. Revocation may require a multi-Device "vote" or a second factor authentication method.
 
-The diagram below illustrates the chain of trust formed during Agent and Device authorization.
+The diagram below illustrates the chain of trust formed when a HALO is constructed and the Agent authorizes and authenticates a second device.
 
 ![Credentials](./diagrams//halo-credentials.drawio.svg)
 
@@ -268,6 +268,9 @@ Internally ECHO Spaces are used to create decentralized HALO databases.
 
 The ECHO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/echo).
 
+TODO: Add table describing messasges.
+
+
 #### 4.2.2. Genesis
 
 - Spaces are created on an Agent's Device.
@@ -294,7 +297,7 @@ The ECHO protocol definitions are defined by [protobuf schema](https://github.co
   - On successful authorization the verifying Device writes a `Feed Admit` message to its control feed similar to the HALO Device authorization process above.
 - **NOTE**: After the inviting Device has written the `Agent Auth` message, ANY Device belonging to ANY previously authorizated Agent (with invitation permissions) may complete the authentication and `Feed Admit` process.
 
-The diagram below illustrates the chain of trust formed during Agent and Device authorization.
+The diagram below illustrates the chain of trust formed when a Space is constructed and the Agent authorizes and authenticates a second device, then invites a second Agent to the Space.
 
 ![Credentials](./diagrams//halo-credentials-space.drawio.svg)
 
@@ -302,9 +305,9 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
 
 - TODO: DXNS
   - hybrid/federated KUBE p2p/blockchain.
-  - maintain a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have Issuer over the document).
-  - DID resolver?
-  - DNS resolver?
+  - maintains a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have Issuer over the document).
+  - DNS resolver? Subnets?
+  - DID controller?
 - TODO: Use blockchain hash as timestamp for revocation messages. Finality?
 - TODO: Peer DID resolution?
 - TODO: Optionally publish Github credential (claim) to HALO as backup-recovery?
@@ -361,7 +364,8 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
 
 ## 7. Deprecated Notes
 
-> - TODO: Add diagram references.
+TODO: Clean-up.
+TODO: Add UML and state machine diagram.
 
 ### 7.1. Credential message
  
@@ -399,6 +403,8 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
 ### 7.3. Credential message types
+
+TODO: Remove and reference the protobuf instead.
 
 #### 7.3.1. Envelope 
 
