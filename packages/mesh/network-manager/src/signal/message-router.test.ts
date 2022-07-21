@@ -15,6 +15,7 @@ import { randomInt } from '@dxos/util';
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
+import { maxSafeInteger } from 'fast-check';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -234,37 +235,69 @@ describe('MessageRouter', () => {
     });
     expect(answer2).toEqual({ accept: true });
   }).timeout(5_000);
+});
+
+describe('MessageRouter reliability', () => {
+  const setup = ({
+    onSignal1 = async () => { },
+    onSignal2 = async () => { },
+    // Imitates signal network disruptions (e. g. message doubling, ). 
+    messageDisruption = msg => [msg],
+  }: {
+    onSignal1?: (msg: Message) => Promise<void>;
+    onSignal2?: (msg: Message) => Promise<void>;
+    messageDisruption?: (msg: Message) => Message[];
+  }): {mr1: MessageRouter; mr2: MessageRouter} => {
+    let mr1: MessageRouter;
+    let mr2: MessageRouter;
+
+    mr1 = new MessageRouter({ 
+      sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),
+      onOffer: async () => ({ accept: true }),
+      onSignal: onSignal1
+    });
+    afterTest(() => mr1.destroy());
+
+    mr2 = new MessageRouter({ 
+      sendMessage: async msg => messageDisruption(msg).forEach(msg => mr1.receiveMessage(msg)),
+      onOffer: async () => ({ accept: true }),
+      onSignal: onSignal2
+    });
+    afterTest(() => mr1.destroy());
+
+    return { mr1, mr2 }
+  };
 
   test('signaling with non reliable connection', async () => {
+    // Simulate unreliable connection.
+    // Only each 3rd message is sent.
+    let i = 0;
+    const unreliableConnection = (msg: Message): Message[] => {
+      i++;
+      if (i % 3 !== 0) {
+        return [msg];
+      }
+      return [];
+    };
+
     const received: Message[] = [];
     const signalMock1 = async (msg: Message) => {
       received.push(msg);
     };
-    const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
 
-    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
-    // Simulate unreliable connection.
-    // Mock api2.signal to become unreliable and work only in 1 of 3 times.
-    let i = 0;
-    const reliableSignal = api2.signal.bind(api2);
-    const unreliableSignal = async (msg: Message) => {
-      i++;
-      if (i % 3 !== 0) {
-        return reliableSignal(msg);
-      }
-    };
-    api2.signal = unreliableSignal;
+    const { mr2 } = await setup({ 
+      onSignal1: signalMock1, 
+      messageDisruption: unreliableConnection
+    });
 
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
-
-    // sending 3 message.
+    // Sending 3 messages.
+    // Setup sends messages directly to between. So we don`t need to specify any ids.
     Array(3).fill(0).forEach(async (id) => {
-      await router2.signal({
-        id: peer2,
-        remoteId: peer1,
+      await mr2.signal({
+        id: PublicKey.random(),
+        remoteId: PublicKey.random(),
         sessionId: PublicKey.random(),
-        topic,
+        topic: PublicKey.random(),
         data: { signal: { json: JSON.stringify(id) } }
       });
     });
@@ -275,30 +308,27 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   test('ignoring doubled messages', async () => {
+    // Message got doubled going through signal network.
+    const doublingMessage = (msg: Message) => {
+      return [msg, msg];
+    };
+
     const received: Message[] = [];
     const signalMock1 = async (msg: Message) => {
       received.push(msg);
     };
-    const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
 
-    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
-    // Message got doubled going through signal network.
-    const originalSignal = api2.signal.bind(api2);
-    const doubledSignal = async (msg: Message) => {
-      await originalSignal(msg);
-      await originalSignal(msg);
-    };
-    api2.signal = doubledSignal;
-
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
+    const { mr2 } = setup({
+      onSignal1: signalMock1,
+      messageDisruption: doublingMessage
+    });
 
     // sending message.
-    await router2.signal({
-      id: peer2,
-      remoteId: peer1,
+    await mr2.signal({
+      id: PublicKey.random(),
+      remoteId: PublicKey.random(),
       sessionId: PublicKey.random(),
-      topic,
+      topic: PublicKey.random(),
       data: { signal: { json: 'asd' } }
     });
     // expect to receive 1 message.
