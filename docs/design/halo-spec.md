@@ -109,10 +109,16 @@ Decentralized credentials database.
 Public/private key pair for agents.
 
 ***Invitation*** - 
-The process (sometimes interactive) of admitting a new member to a Space (ECHO or HALO).
+The process (sometimes interactive) of admitting a new Agent to a Space (ECHO or HALO).
 
-***Issuer** -
+***Issuer*** -
 Entity that creates Credentials for a given Subject.
+
+***KUBE*** -
+DXOS network devices running the KUBE daemon process and services.
+
+***MESH*** -
+Peer-to-peer network supported by KUBE nodes.
 
 ***Keychain*** - 
 Set of credential messages establishing a linear chain of trust between credentials.
@@ -124,7 +130,7 @@ Storage for keys (on disk or in-memory).
 ***Party*** -
 Set of Agents that can access a digital resource (such as an ECHO Space).
 
-> **Note:** Old term for Space.
+> **Note:** Party was the old term for a Space.
 
 ***Presentation***
 Message containing a Credential that is signed by the Subject.
