@@ -3,13 +3,13 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
-import debug from 'debug';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -35,7 +35,7 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sendMessage: (message: Message) => Promise<void>;
   private readonly _onOffer: (message: Message) => Promise<Answer>;
 
-  private readonly _sentSignalsVSRetryInterval = new ComplexMap<PublicKey, ReturnType<typeof setInterval>>(key => key.toHex());
+  private readonly _sentSignalsVSClearInterval = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedSignals = new Set<PublicKey>();
   private readonly _acknowledgedSignals = new Set<PublicKey>();
   private readonly _retryDelay: number;
@@ -78,19 +78,21 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(message);
 
     // Setting retry interval if signal was not acknowledged.
-    const retryInterval = exponentialBackoffInterval(async () => {
+    const clearInterval = exponentialBackoffInterval(async () => {
       if (!this._acknowledgedSignals.has(message.messageId!)) {
         await this._sendMessage(message);
       }
     }, this._retryDelay);
-    this._sentSignalsVSRetryInterval.set(message.messageId, retryInterval);
-    this._subs.push(() => clearInterval(retryInterval));
+    this._sentSignalsVSClearInterval.set(message.messageId, clearInterval);
+    this._subs.push(() => clearInterval());
     setTimeout(() => {
-      if (this._acknowledgedSignals.has(message.messageId!)) { 
-        log('Signal was not delivered!');
+      if (this._acknowledgedSignals.has(message.messageId!)) {
         this._acknowledgedSignals.delete(message.messageId!);
+      } else {
+        log('Signal was not delivered!');
       }
-      clearInterval(retryInterval);
+      this._sentSignalsVSClearInterval.delete(message.messageId!);
+      clearInterval();
     }, this._timeout);
   }
 
@@ -145,10 +147,10 @@ export class MessageRouter implements SignalMessaging {
     if (!this._acknowledgedSignals.has(message.data.ack.messageId)) {
       this._acknowledgedSignals.add(message.data.ack.messageId);
       // Clearing retry interval.
-      const retryInterval = this._sentSignalsVSRetryInterval.get(message.data.ack.messageId);
-      if (retryInterval) {
-        clearInterval(retryInterval);
-        this._sentSignalsVSRetryInterval.delete(message.data.ack.messageId);
+      const clearInterval = this._sentSignalsVSClearInterval.get(message.data.ack.messageId);
+      if (clearInterval) {
+        clearInterval();
+        this._sentSignalsVSClearInterval.delete(message.data.ack.messageId);
       }
     }
   }
