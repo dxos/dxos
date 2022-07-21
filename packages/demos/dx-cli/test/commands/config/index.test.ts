@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { expect, test } from '@oclif/test';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import path from 'path';
-import { expect, test } from '@oclif/test';
 
 // TODO(burdon): Import (configure esbuild).
 // TODO(burdon): Lint issue.
