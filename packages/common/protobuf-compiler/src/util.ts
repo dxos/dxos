@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export function getFlags (enumType: any, flags: any) {
+export const getFlags = (enumType: any, flags: any) => {
   const res = [];
   for (const variant of Object.keys(enumType)) {
     if (typeof variant !== 'string') {
@@ -13,4 +13,4 @@ export function getFlags (enumType: any, flags: any) {
     }
   }
   return res;
-}
+};

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.33.3",
+  "version": "2.33.8",
   "description": "ECHO database.",
   "license": "MIT",
   "main": "dist/src/index.js",
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
@@ -62,7 +62,7 @@
     "faker": "^5.1.0",
     "memdown": "^5.1.0",
     "mocha": "~8.4.0",
-    "typescript": "^4.5.2"
+    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"

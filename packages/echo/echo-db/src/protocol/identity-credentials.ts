@@ -2,7 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage } from '@dxos/credentials';
+import {
+  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
+  KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
+} from '@dxos/credentials';
+import { humanize } from '@dxos/util';
 
 import { ContactManager, Preferences } from '../halo';
 import { CredentialsSigner } from './credentials-signer';
@@ -25,7 +29,7 @@ export interface IdentityCredentials {
 
 export type IdentityCredentialsProvider = () => IdentityCredentials | undefined
 
-export async function createTestIdentityCredentials (keyring: Keyring): Promise<IdentityCredentials> {
+export const createTestIdentityCredentials = async (keyring: Keyring): Promise<IdentityCredentials> => {
   const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
   const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
@@ -38,7 +42,7 @@ export async function createTestIdentityCredentials (keyring: Keyring): Promise<
   messageMap.set(deviceKey.publicKey.toHex(), partyGenesis);
   const deviceKeyChain = Keyring.buildKeyChain(deviceKey.publicKey, messageMap, [feedKey.publicKey]);
 
-  const displayName = identityKey.publicKey.humanize();
+  const displayName = humanize(identityKey.publicKey);
   const identityInfo = createIdentityInfoMessage(keyring, displayName, identityKey);
 
   return {
@@ -53,9 +57,9 @@ export async function createTestIdentityCredentials (keyring: Keyring): Promise<
     preferences: undefined,
     contacts: undefined
   };
-}
+};
 
-export async function deriveTestDeviceCredentials (identity: IdentityCredentials): Promise<IdentityCredentials> {
+export const deriveTestDeviceCredentials = async (identity: IdentityCredentials): Promise<IdentityCredentials> => {
   const deviceKey = await identity.keyring.createKeyRecord({ type: KeyType.DEVICE });
   const keyAdmit = createKeyAdmitMessage(identity.keyring, identity.identityKey.publicKey, deviceKey, [identity.identityKey]);
 
@@ -75,4 +79,4 @@ export async function deriveTestDeviceCredentials (identity: IdentityCredentials
       deviceKeyChain
     )
   };
-}
+};

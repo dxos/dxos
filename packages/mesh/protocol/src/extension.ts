@@ -34,24 +34,20 @@ export interface ExtensionOptions {
    */
   schema?: Record<string, any>
 
-  [key: string]: any;
+  [key: string]: any
 }
 
-export type InitHandler = (protocol: Protocol) => Promise<void> | void;
-
-export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
-
-export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
-
-export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
-
-export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void;
+export type InitHandler = (protocol: Protocol) => Promise<void> | void
+export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void
+export type CloseHandler = (protocol: Protocol) => Promise<void> | void
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void
 
 /**
  * Reliable message passing via using Dat protocol extensions.
- *
  * Events: "send", "receive", "error"
  */
+// TODO(burdon): Rename ProtocolPlugin to disambiguate ProtocolExtension.
 export class Extension extends Nanomessage {
   public _name: any;
   public [kCodec]: Codec<any>;
@@ -105,7 +101,6 @@ export class Extension extends Nanomessage {
     this._name = name;
 
     const codec = schema.getCodecForType('dxos.protocol.Message');
-
     if (userSchema) {
       codec.addJson(userSchema);
     }

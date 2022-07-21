@@ -40,7 +40,7 @@ export interface ConfigPluginOpts {
 }
 
 // TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
-export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
+export const ConfigPlugin = ({ dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin => {
   dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
@@ -83,4 +83,4 @@ export function ConfigPlugin ({ dynamic = false, publicUrl = '' }: ConfigPluginO
       }));
     }
   };
-}
+};

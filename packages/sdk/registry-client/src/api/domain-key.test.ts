@@ -3,8 +3,7 @@
 //
 
 import { expect } from 'chai';
-
-import { randomBytes } from '@dxos/crypto';
+import randomBytes from 'randombytes';
 
 import { DomainKey } from './domain-key';
 

@@ -3,12 +3,13 @@
 //
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
-import { Database, Item, ResultSet } from '../api';
-import { IdentityNotInitializedError } from '../errors';
+import { ResultSet } from '../api';
+import { Database, Item } from '../packlets/database';
+import { IdentityNotInitializedError } from '../packlets/errors';
 import { PartyMember } from '../parties';
 import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 

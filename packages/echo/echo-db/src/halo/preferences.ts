@@ -7,13 +7,13 @@ import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
-import { Database, Item, ResultSet } from '../api';
-import { IdentityNotInitializedError } from '../errors';
+import { ResultSet } from '../api';
+import { Database, Item } from '../packlets/database';
+import { IdentityNotInitializedError } from '../packlets/errors';
 import { DataParty } from '../parties';
 import {
   HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty
@@ -150,8 +150,8 @@ export class Preferences {
       type: HALO_PARTY_DESCRIPTOR_TYPE,
       props: {
         publicKey: joinedParty.partyKey.asBuffer(),
-        subscribed: true,
-        hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
+        genesisFeed: joinedParty.genesisFeed.toHex(),
+        subscribed: true
       }
     });
   }
@@ -159,16 +159,10 @@ export class Preferences {
   subscribeToJoinedPartyList (callback: (parties: JoinedParty[]) => void): () => void {
     const database = this._getDatabase() ?? raise(new IdentityNotInitializedError());
 
-    const converter = (partyDesc: Item<any>) => {
-      // TODO(burdon): Define type.
-      return {
-        partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
-        keyHints: Object.values(partyDesc.model.get('hints')).map((hint: any) => ({
-          ...hint,
-          publicKey: PublicKey.from(hint.publicKey)
-        } as KeyHint))
-      };
-    };
+    const converter = (partyDesc: Item<any>): JoinedParty => ({
+      partyKey: PublicKey.from(partyDesc.model.get('publicKey')),
+      genesisFeed: PublicKey.from(partyDesc.model.get('genesisFeed'))
+    });
 
     const result = database.select({ type: HALO_PARTY_DESCRIPTOR_TYPE }).exec();
 

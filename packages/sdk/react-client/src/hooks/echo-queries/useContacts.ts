@@ -32,5 +32,5 @@ export const useContacts = () => {
     };
   }, []);
 
-  return [contacts];
+  return contacts;
 };

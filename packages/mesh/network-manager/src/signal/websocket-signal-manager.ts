@@ -6,42 +6,43 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SignalManager } from './interface';
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
+import { SignalClient } from './signal-client';
+import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
 export class WebsocketSignalManager implements SignalManager {
-  private readonly _servers = new Map<string, SignalApi>();
+  private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
-  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(x => x.toHex());
-
+  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(topic => topic.toHex());
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconcileTimeoutId?: NodeJS.Timeout;
 
   readonly statusChanged = new Event<SignalApi.Status[]>();
-
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
+  readonly onSignal = new Event<Message>();
 
   constructor (
     private readonly _hosts: string[],
-    private readonly _onOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>
+    private readonly _onOffer: (message: Message) => Promise<Answer>
   ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalApi(
+      const server = new SignalClient(
         host,
-        async (msg) => this._onOffer(msg),
-        async msg => {
-          this.onSignal.emit(msg);
-        }
+        async msg => this._onOffer(msg),
+        async msg => this.onSignal.emit(msg)
       );
+
       this._servers.set(host, server);
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
       server.commandTrace.on(trace => this.commandTrace.emit(trace));
@@ -137,13 +138,13 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
-  offer (msg: SignalApi.SignalMessage) {
+  offer (msg: Message) {
     log(`Offer ${msg.remoteId}`);
     // TODO(marik-d): Broadcast to all signal servers.
     return Array.from(this._servers.values())[0].offer(msg);
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: Message) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {
       void server.signal(msg);
@@ -154,8 +155,4 @@ export class WebsocketSignalManager implements SignalManager {
   async destroy () {
     await Promise.all(Array.from(this._servers.values()).map(server => server.close()));
   }
-
-  peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
-
-  onSignal = new Event<SignalApi.SignalMessage>();
 }

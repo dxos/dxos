@@ -8,8 +8,8 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { keyToBuffer, keyToString } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { protocolFactory } from '../protocol-factory';
 
@@ -20,7 +20,7 @@ const EXTENSION_NAME = 'test';
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
 export const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
-  return keyToBuffer(peerId);
+  return PublicKey.bufferize(peerId);
 };
 
 /**
@@ -97,7 +97,7 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   async send (peerId: Buffer, payload: string): Promise<string> {
     assert(Buffer.isBuffer(peerId));
-    const peerIdStr = keyToString(peerId);
+    const peerIdStr = PublicKey.stringify(peerId);
     const peer = this._peers.get(peerIdStr);
     // TODO(dboreham): Throw fatal error if peer not found.
     const extension = peer.getExtension(EXTENSION_NAME);
@@ -111,7 +111,7 @@ export class TestProtocolPlugin extends EventEmitter {
   }
 
   async _receive (protocol: Protocol, data: any) {
-    const peerIdStr = keyToString(getPeerId(protocol));
+    const peerIdStr = PublicKey.stringify(getPeerId(protocol));
     let payload = data.data.toString();
     if (this._uppercase) {
       payload = payload.toUpperCase();
@@ -125,7 +125,7 @@ export class TestProtocolPlugin extends EventEmitter {
     if (peerId === undefined) {
       return;
     }
-    const peerIdStr = keyToString(peerId);
+    const peerIdStr = PublicKey.stringify(peerId);
     if (this._peers.has(peerIdStr)) {
       return;
     }
@@ -140,7 +140,7 @@ export class TestProtocolPlugin extends EventEmitter {
       return;
     }
 
-    this._peers.delete(keyToString(peerId));
+    this._peers.delete(PublicKey.stringify(peerId));
     this.emit('disconnect', peerId);
   }
 }
@@ -149,12 +149,8 @@ export class TestProtocolPlugin extends EventEmitter {
  * @return {ProtocolProvider}
  */
 // TODO(dboreham): Try to encapsulate swarmKey, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: any) => {
-  return protocolFactory({
-    getTopics: () => {
-      return [swarmKey];
-    },
-    session: { peerId: keyToString(nodeId) },
-    plugins: [protocolPlugin]
-  });
-};
+export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: any) => protocolFactory({
+  getTopics: () => [swarmKey],
+  session: { peerId: PublicKey.stringify(nodeId) },
+  plugins: [protocolPlugin]
+});

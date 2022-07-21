@@ -9,10 +9,10 @@
   ],
   "references": [
     {
-      "path": "../broadcast"
+      "path": "../../common/protocols"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../broadcast"
     }
   ],
   "types": [

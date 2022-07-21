@@ -6,13 +6,13 @@
 
 import assert from 'assert';
 import hypercore from 'hypercore';
-import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
 
 import { sleep } from '@dxos/async';
-import { PublicKey, createKeyPair } from '@dxos/crypto';
-import { IStorage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
+import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
@@ -25,40 +25,32 @@ interface KeyPair {
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
-const createFeedStore = (storage: IStorage, options = {}) => {
-  const feedStore = new FeedStore(storage, options);
+const createFeedStore = (storage: Storage, options = {}) => {
+  const feedStore = new FeedStore(storage.directory('feed'), options);
   return feedStore;
 };
 
-async function createDefault () {
+const createDefault = async () => {
   const directory = tempy.directory();
 
   return {
     directory,
     feedStore: createFeedStore(createStorage(directory, StorageType.NODE), { valueEncoding: 'utf-8' })
   };
-}
-
-async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, FeedDescriptor>> {
-  return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
-  )));
-}
-
-function append (feed: HypercoreFeed, message: any) {
-  return pify(feed.append.bind(feed))(message);
-}
-
-function head (feed: HypercoreFeed) {
-  return pify(feed.head.bind(feed))();
-}
-
-const createKeyPairs = () => {
-  return Object.fromEntries<KeyPair>(feedNames.map(feed => {
-    const { publicKey, secretKey } = createKeyPair();
-    return [feed, { key: PublicKey.from(publicKey), secretKey }];
-  }));
 };
+
+const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>): Promise<Record<string, FeedDescriptor>> => Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
+  [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
+)));
+
+const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
+
+const head = (feed: HypercoreFeed) => pify(feed.head.bind(feed))();
+
+const createKeyPairs = () => Object.fromEntries<KeyPair>(feedNames.map(feed => {
+  const { publicKey, secretKey } = createKeyPair();
+  return [feed, { key: PublicKey.from(publicKey), secretKey }];
+}));
 
 describe('FeedStore', () => {
   const keys = createKeyPairs();
@@ -67,28 +59,8 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('', StorageType.RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM));
+    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM).directory('feed'));
     expect(feedStore2).toBeInstanceOf(FeedStore);
-  });
-
-  test('Config default + custom database + custom hypercore', async () => {
-    const customHypercore = jest.fn((...args) => {
-      return hypercore(args[0], args[1], args[2]);
-    });
-
-    const storage = createStorage('', StorageType.RAM);
-    const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
-    database.list = jest.fn((_, cb) => cb(null, []));
-
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
-      hypercore: customHypercore
-    });
-
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    await feedStore.openReadOnlyFeed(PublicKey.random());
-
-    expect(customHypercore.mock.calls.length).toBe(1);
   });
 
   test('Create feed', async () => {
@@ -175,11 +147,11 @@ describe('FeedStore', () => {
     const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
       hypercore: () => ({
         opened: true,
-        ready (cb: () => void) {
+        ready: (cb: () => void) => {
           cb();
         },
-        on () {},
-        close () {
+        on: () => {},
+        close: () => {
           throw new Error('close error');
         }
       })

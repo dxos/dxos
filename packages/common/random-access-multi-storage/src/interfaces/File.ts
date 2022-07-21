@@ -1,70 +1,79 @@
 //
 // Copyright 2022 DXOS.org
 //
+import { promisify } from 'util';
 
-export interface FileStat {
-    size: number
-  }
+import { FileInternal } from '../internal';
+import { FileStat } from '../types';
 
-interface Callback<DataType> {
-  (err: Error | null, data?: DataType): void;
-}
-
-export interface FileInternal {
-  read(offset: number, size: number, cb?: Callback<Buffer>): void;
-
-  write(offset: number, data: Buffer, cb?: Callback<void>): void;
-
-  del(offset: number, data: Buffer, cb?: Callback<void>): void;
-
-  stat(cb: Callback<FileStat>): void;
-
-  close(cb?: Callback<void>): void;
-
-  destroy(cb?: Callback<void>): void
-}
-
+/**
+ * Handle to the file allowing read/write access to the data in the file.
+ */
 export class File {
-  constructor (private readonly _fileInternal: FileInternal) {}
+  constructor (protected readonly _fileInternal: FileInternal) {}
 
-  private _createPromise<Type> (fileMethod: (...args: any[]) => void, cb?: Callback<Type>, ...args: (number | Buffer)[]): Promise<Type> {
-    const promise = new Promise<Type>(
-      (resolve, reject) => {
-        fileMethod(...args, (err: Error | null, data?: Type) => {
-          cb?.(err, data);
-          if (err) {
-            return reject(err);
-          }
-          return resolve(data as Type);
-        });
-      });
-    if (cb) {
-      promise.catch((_) => {});
+  /**
+   * @internal
+   */
+  _isDestroyed () {
+    return this._fileInternal.destroyed;
+  }
+
+  /**
+   * @internal
+   * Only to be used in RamStorage and IDb implementation.
+   * TODO(mykola): Don`t know if will work with others.
+   */
+  _reopen () {
+    if (this._isDestroyed()) {
+      throw new Error('File is destroyed');
     }
-    return promise;
+    this._fileInternal.closed = false;
   }
 
-  read (offset: number, size: number, cb?: Callback<Buffer>): Promise<Buffer> {
-    return this._createPromise<Buffer>(this._fileInternal.read.bind(this._fileInternal), cb, offset, size);
+  /**
+   * Read Buffer from file starting from offset to offset+size.
+   */
+  read (offset: number, size: number): Promise<Buffer> {
+    return promisify(this._fileInternal.read.bind(this._fileInternal))(offset, size) as Promise<Buffer>;
   }
 
-  write (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
-    return this._createPromise<void>(this._fileInternal.write.bind(this._fileInternal), cb, offset, data);
+  /**
+   * Write Buffer into file starting from offset.
+   */
+  write (offset: number, data: Buffer): Promise<void> {
+    return promisify(this._fileInternal.write.bind(this._fileInternal))(offset, data) as Promise<void>;
   }
 
-  del (offset: number, data: Buffer, cb?: Callback<void>): Promise<void> {
-    return this._createPromise<void>(this._fileInternal.del.bind(this._fileInternal), cb, offset, data);
+  /**
+   * Truncate the file at offset if offset + length >= the current file length. Otherwise, do nothing.
+   * Throws 'Not deletable' in IDb realization.
+   *
+   * Example:
+   * // There is file with content Buffer([a, b, c]) at 0 offset.
+   *
+   * // Truncate it at offset 1 with size 1.
+   * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
+   *
+   * // Truncate it at offset 1 with size 2.
+   * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
+   */
+  truncate (offset: number, size: number): Promise<void> {
+    return promisify(this._fileInternal.del.bind(this._fileInternal))(offset, size) as Promise<void>;
   }
 
-  stat (cb?: Callback<FileStat>): Promise<FileStat> {
-    return this._createPromise<FileStat>(this._fileInternal.stat.bind(this._fileInternal), cb);
+  stat (): Promise<FileStat> {
+    return promisify(this._fileInternal.stat.bind(this._fileInternal))() as Promise<FileStat>;
   }
 
-  close (cb?: Callback<void>): Promise<void> {
-    return this._createPromise<void>(this._fileInternal.close.bind(this._fileInternal), cb);
+  close (): Promise<void> {
+    return promisify(this._fileInternal.close.bind(this._fileInternal))() as Promise<void>;
   }
 
-  destroy (cb?: Callback<void>): Promise<void> {
-    return this._createPromise<void>(this._fileInternal.destroy.bind(this._fileInternal), cb);
+  /**
+   * Delete the file.
+   */
+  delete (): Promise<void> {
+    return promisify(this._fileInternal.destroy.bind(this._fileInternal))() as Promise<void>;
   }
 }

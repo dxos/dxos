@@ -18,16 +18,22 @@
       "path": "../../common/async"
     },
     {
-      "path": "../client"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../config"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -36,16 +42,10 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../client"
     },
     {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/random-access-multi-storage"
-    },
-    {
-      "path": "../../common/testutils"
+      "path": "../config"
     }
   ]
 }

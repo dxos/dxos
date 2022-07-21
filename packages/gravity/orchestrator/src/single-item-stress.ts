@@ -10,13 +10,13 @@ import { ObjectModel } from '@dxos/object-model';
 import { ITEM_TYPE, SLACK_FOR_BOT_UPDATES_MS, SLEEP_TIME } from './constants';
 import { Orchestrator } from './orchestrator';
 
-function isAllFresh (item: Item<ObjectModel>) {
+const isAllFresh = (item: Item<ObjectModel>) => {
   const object = item.model.toObject();
   const now = Date.now();
   return Object.values(object).every((value) => value > now - SLACK_FOR_BOT_UPDATES_MS);
-}
+};
 
-async function singleItemStress () {
+const singleItemStress = async () => {
   const orchestrator = new Orchestrator(new NodeContainer(['@swc-node/register']));
   await orchestrator.initialize();
 
@@ -39,6 +39,6 @@ async function singleItemStress () {
   console.log('done');
 
   await orchestrator.stop();
-}
+};
 
 void singleItemStress();

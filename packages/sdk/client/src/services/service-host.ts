@@ -25,16 +25,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     private readonly _config: Config,
     private readonly _options: ClientOptions
   ) {
-    const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
-      this._config.get('runtime.client.storage', {})!,
-      this._config.get('runtime.client.enableSnapshots', false)
+    const { storage, keyStorage } = createStorageObjects(
+      this._config.get('runtime.client.storage', {})!
     );
 
     this._echo = new ECHO({
-      feedStorage,
+      storage,
       keyStorage,
-      snapshotStorage,
-      metadataStorage,
       networkManagerOptions: {
         signal: this._config.get('runtime.services.signal.server')
           ? [this._config.get('runtime.services.signal.server')!] : undefined,

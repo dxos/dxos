@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 
 import { Config } from '@dxos/config';
-import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
 import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
@@ -39,11 +38,10 @@ export const Main = () => {
     return () => partyStream.close();
   }, []);
 
-  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seed, username) => {
+  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, username) => {
     setInProgress(true);
     try {
-      const keypair = keyPairFromSeedPhrase(seed);
-      await client.halo.createProfile({ ...keypair, username });
+      await client.halo.createProfile({ seedphrase, username });
     } catch (e: any) {
       console.error(e);
       setError(e);

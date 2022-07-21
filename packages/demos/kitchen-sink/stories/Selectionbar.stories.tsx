@@ -36,12 +36,10 @@ const App = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <App />
-      </ProfileInitializer>
-    </ClientProvider>
-  );
-};
+export const Primary = () => (
+  <ClientProvider>
+    <ProfileInitializer>
+      <App />
+    </ProfileInitializer>
+  </ClientProvider>
+);

@@ -7,21 +7,19 @@ import moment from 'moment';
 
 import { getSystemInfo, getServiceInfo } from '../system-information';
 
-const delay = (ms, signal) => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', onAbort);
-      resolve();
-    }, ms);
+const delay = (ms, signal) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => {
+    signal.removeEventListener('abort', onAbort);
+    resolve();
+  }, ms);
 
-    const onAbort = () => {
-      signal.removeEventListener('abort', onAbort);
-      clearTimeout(timer);
-      reject(new Error('aborted'));
-    };
-    signal.addEventListener('abort', onAbort);
-  });
-};
+  const onAbort = () => {
+    signal.removeEventListener('abort', onAbort);
+    clearTimeout(timer);
+    reject(new Error('aborted'));
+  };
+  signal.addEventListener('abort', onAbort);
+});
 
 export const StatusService = {
   name: 'status',

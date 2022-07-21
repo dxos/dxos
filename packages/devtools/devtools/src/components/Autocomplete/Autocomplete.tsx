@@ -21,27 +21,25 @@ export const Autocomplete = ({
   value,
   options = [],
   onUpdate
-}: AutocompleteProps) => {
-  return (
-    <MuiAutocomplete
-      size='small'
-      freeSolo
-      autoComplete
-      clearOnEscape
-      value={value || null}
-      options={options}
-      getOptionLabel={option => option}
-      onChange={(event: SyntheticEvent, value: string | null) => {
-        onUpdate(value || undefined);
-      }}
-      renderInput={params => (
-        <TextField
-          {...params}
-          label={label}
-          variant='outlined'
-          fullWidth
-        />
-      )}
-    />
-  );
-};
+}: AutocompleteProps) => (
+  <MuiAutocomplete
+    size='small'
+    freeSolo
+    autoComplete
+    clearOnEscape
+    value={value || null}
+    options={options}
+    getOptionLabel={option => option}
+    onChange={(event: SyntheticEvent, value: string | null) => {
+      onUpdate(value || undefined);
+    }}
+    renderInput={params => (
+      <TextField
+        {...params}
+        label={label}
+        variant='outlined'
+        fullWidth
+      />
+    )}
+  />
+);

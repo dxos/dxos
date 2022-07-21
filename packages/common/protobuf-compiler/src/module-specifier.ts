@@ -49,18 +49,18 @@ export class ModuleSpecifier {
 
 export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', __dirname);
 
-function normalizeRelativePath (path: string) {
+const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {
     return `./${path}`;
   } else {
     return path;
   }
-}
+};
 
-function removeExtension (path: string, extension: string) {
+const removeExtension = (path: string, extension: string) => {
   if (path.endsWith(extension)) {
     return path.slice(0, -extension.length);
   } else {
     return path;
   }
-}
+};

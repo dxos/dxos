@@ -93,36 +93,32 @@ export interface IpcProcessLike {
   send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean;
 }
 
-export function createIpcPort (proc: IpcProcessLike): RpcPort {
-  return {
-    send: msg => {
-      return new Promise<void>((resolve, reject) => {
-        if (!proc.send) {
-          reject(new Error('Given port is not able to send messages'));
-          return;
-        }
-        proc.send(msg, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-    },
-    subscribe: cb => {
-      const ipcCallback = (msg: Serializable): void => {
-        if (!(msg instanceof Uint8Array)) {
-          log(`Invalid message type received from on IPC socket: type=${typeof msg}`);
-          return;
-        }
-        cb(msg);
-      };
-      proc.on('message', ipcCallback);
-
-      return () => {
-        proc.off('message', ipcCallback);
-      };
+export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({
+  send: (msg) => new Promise<void>((resolve, reject) => {
+    if (!proc.send) {
+      reject(new Error('Given port is not able to send messages'));
+      return;
     }
-  };
-}
+    proc.send(msg, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  }),
+  subscribe: cb => {
+    const ipcCallback = (msg: Serializable): void => {
+      if (!(msg instanceof Uint8Array)) {
+        log(`Invalid message type received from on IPC socket: type=${typeof msg}`);
+        return;
+      }
+      cb(msg);
+    };
+    proc.on('message', ipcCallback);
+
+    return () => {
+      proc.off('message', ipcCallback);
+    };
+  }
+});

@@ -16,7 +16,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 import { KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   ClientSigner,
@@ -109,20 +109,16 @@ describe('Signatures', () => {
   });
 
   it('Can send transactions with lower-level external signer', async () => {
-    const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
-    };
+    const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
 
     const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 
   it('Can send transactions with external signer using Client', async () => {
-    const signTxFunction: SignTxFunction = async (tx) => {
-      return await tx.signAsync(keypair.address, {
-        signer: new ClientSigner(client, apiPromise.registry, keypair.address)
-      });
-    };
+    const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, {
+      signer: new ClientSigner(client, apiPromise.registry, keypair.address)
+    });
 
     const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);

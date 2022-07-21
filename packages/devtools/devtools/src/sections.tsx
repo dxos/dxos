@@ -6,12 +6,14 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
+  AccountCircle as ProfileIcon,
   Grain as ItemsIcon,
   Dns as StorageIcon,
   List as MessagesIcon,
   FilterTiltShift as SwarmIcon,
   Group as PartiesIcon,
   List as FeedsIcon,
+  AppRegistration as RegistryIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
   SettingsBackupRestore as SnapshotsIcon,
@@ -24,16 +26,18 @@ import {
   CredentialMessagesPanel,
   FeedsPanel,
   ItemsPanel,
-  LoggingPanel,
   KeyringPanel,
+  LoggingPanel,
+  // NetworkPanel,
   PartiesPanel,
-  SignalPanel,
-  StoragePanel,
-  SwarmPanel,
-  SnapshotsPanel,
+  ProfilePanel,
+  RegistryPanel,
   RpcTracePanel,
-  Section
-  // NetworkPanel
+  Section,
+  SignalPanel,
+  SnapshotsPanel,
+  StoragePanel,
+  SwarmPanel
 } from './containers';
 
 export const sections: Section[] = [
@@ -57,6 +61,12 @@ export const sections: Section[] = [
   {
     title: 'HALO',
     items: [
+      {
+        id: 'halo.profile',
+        title: 'Profile',
+        icon: <ProfileIcon />,
+        panel: <ProfilePanel />
+      },
       {
         id: 'halo.keyring',
         title: 'Keyring',
@@ -122,6 +132,17 @@ export const sections: Section[] = [
         title: 'Signal',
         icon: <SignalIcon />,
         panel: <SignalPanel />
+      }
+    ]
+  },
+  {
+    title: 'DXNS',
+    items: [
+      {
+        id: 'dxns.registry',
+        title: 'Registry',
+        icon: <RegistryIcon />,
+        panel: <RegistryPanel />
       }
     ]
   },

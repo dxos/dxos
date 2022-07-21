@@ -19,44 +19,42 @@ export interface EchoListProps {
 export const EchoList = ({
   items = [],
   itemAdapter
-}: EchoListProps) => {
-  return (
-    <BoxContainer expand column>
-      <BoxContainer expand scrollY>
-        <List
-          dense
-          disablePadding
-          sx={{
-            width: '100%'
-          }}
-        >
-          {items.map((item) => {
-            const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
-            return (
-              <ListItemButton
-                key={item.id}
-                dense
-              >
-                {Icon && (
-                  <ListItemIcon>
-                    <Icon />
-                  </ListItemIcon>
-                )}
-                <ListItemText
-                  primary={itemAdapter.title(item)}
-                  secondary={itemAdapter.description(item)}
-                />
-              </ListItemButton>
-            );
-          })}
-        </List>
-      </BoxContainer>
-
-      <Toolbar>
-        <Typography>
-          {items?.length} Items.
-        </Typography>
-      </Toolbar>
+}: EchoListProps) => (
+  <BoxContainer expand column>
+    <BoxContainer expand scrollY>
+      <List
+        dense
+        disablePadding
+        sx={{
+          width: '100%'
+        }}
+      >
+        {items.map((item) => {
+          const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
+          return (
+            <ListItemButton
+              key={item.id}
+              dense
+            >
+              {Icon && (
+                <ListItemIcon>
+                  <Icon />
+                </ListItemIcon>
+              )}
+              <ListItemText
+                primary={itemAdapter.title(item)}
+                secondary={itemAdapter.description(item)}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
     </BoxContainer>
-  );
-};
+
+    <Toolbar>
+      <Typography>
+        {items?.length} Items.
+      </Typography>
+    </Toolbar>
+  </BoxContainer>
+);

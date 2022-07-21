@@ -5,14 +5,10 @@
 import { SystemService } from '../../proto/gen/dxos/client';
 import { CreateServicesOpts } from './types';
 
-export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => {
-  return {
-    getConfig: async () => {
-      return config.values;
-    },
+export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => ({
+  getConfig: async () => config.values,
 
-    reset: async () => {
-      await echo.reset();
-    }
-  };
-};
+  reset: async () => {
+    await echo.reset();
+  }
+});

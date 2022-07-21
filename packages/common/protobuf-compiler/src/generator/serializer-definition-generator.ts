@@ -10,11 +10,7 @@ import { serializeSchemaToJson } from '../protobuf-json';
 
 const f = ts.factory;
 
-export function createSerializerDefinition (
-  substitutionsModule: ModuleSpecifier | undefined,
-  root: protobufjs.Root,
-  outFileDir: string
-): { imports: ts.Statement[], exports: ts.Statement[] } {
+export const createSerializerDefinition = (substitutionsModule: ModuleSpecifier | undefined, root: protobufjs.Root, outFileDir: string): { imports: ts.Statement[], exports: ts.Statement[] } => {
   const schemaIdentifier = f.createIdentifier('Schema');
 
   const schemaImport = f.createImportDeclaration(
@@ -65,4 +61,4 @@ export function createSerializerDefinition (
     imports: [schemaImport],
     exports: [schemaJsonExport, schemaExport]
   };
-}
+};

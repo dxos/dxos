@@ -1,4 +1,5 @@
 {
+  "manifest_version": 3,
   "version": "1.0.0",
   "author": "DXOS.org",
   "name": "DXOS Client Developer Tools",
@@ -8,25 +9,30 @@
     "48": "assets/img/icon-dxos-48.png",
     "128": "assets/img/icon-dxos-128.png"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "assets/img/icon-dxos-48.png",
     "default_title": "DXOS",
     "default_popup": "popup.html"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
+  },
   "permissions": [
     "storage",
-    "tabs",
+    "tabs"
+  ],
+  "host_permissions": [
     "http://*/*",
     "https://*/*"
   ],
   "devtools_page": "main.html",
-  "manifest_version": 2,
   "background": {
-    "scripts": [
-      "background.js"
-    ],
-    "persistent": false
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

@@ -20,62 +20,54 @@ const error = debug('dxos:stream:error');
  * @returns {NodeJS.WritableStream}
  */
 // TODO(burdon): Move to @dxos/codec.
-export function createWritableFeedStream (feed: HypercoreFeed) {
-  return new Writable({
-    objectMode: true,
-    write (message, _, callback) {
-      feed.append(message, callback);
-    }
-  });
-}
+export const createWritableFeedStream = (feed: HypercoreFeed) => new Writable({
+  objectMode: true,
+  write: (message, _, callback) => {
+    feed.append(message, callback);
+  }
+});
 
 /**
  * Creates a readStream stream that can be used as a buffer into which messages can be pushed.
  */
-export function createReadable (): Readable {
-  return new Readable({
-    objectMode: true,
-    read () {}
-  });
-}
+export const createReadable = (): Readable => new Readable({
+  objectMode: true,
+  read: () => {}
+});
 
 /**
  * Creates a writeStream object stream.
  * @param callback
  */
-export function createWritable<T> (callback: (message: T) => Promise<void>): NodeJS.WritableStream {
-  return new Writable({
-    objectMode: true,
-    write: async (message: T, _, next) => {
-      try {
-        await callback(message);
-        next();
-      } catch (err: any) {
-        error(err);
-        next(err);
-      }
+export const createWritable = <T>(callback: (message: T) => Promise<void>): NodeJS.WritableStream => new Writable({
+  objectMode: true,
+  write: async (message: T, _, next) => {
+    try {
+      await callback(message);
+      next();
+    } catch (err: any) {
+      error(err);
+      next(err);
     }
-  });
-}
+  }
+});
 
 /**
  * Creates a transform object stream.
  * @param callback
  */
-export function createTransform<R, W> (callback: (message: R) => Promise<W | undefined>): Transform {
-  return new Transform({
-    objectMode: true,
-    transform: async (message: R, _, next) => {
-      try {
-        const response = await callback(message);
-        next(null, response);
-      } catch (err: any) {
-        error(err);
-        next(err);
-      }
+export const createTransform = <R, W>(callback: (message: R) => Promise<W | undefined>): Transform => new Transform({
+  objectMode: true,
+  transform: async (message: R, _, next) => {
+    try {
+      const response = await callback(message);
+      next(null, response);
+    } catch (err: any) {
+      error(err);
+      next(err);
     }
-  });
-}
+  }
+});
 
 /**
  * Wriable stream that collects objects (e.g., for testing).

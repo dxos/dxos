@@ -16,7 +16,7 @@
    * path segment in the "$schema" field for all your Rush config files.  This will ensure
    * correct error-underlining and tab-completion for editors such as VS Code.
    */
-  "rushVersion": "5.58.0",
+  "rushVersion": "5.75.0",
 
   /**
    * The next field selects which package manager should be installed and determines its version.
@@ -783,7 +783,7 @@
     },
 
     //
-    // tutorials
+    // demos
     //
 
     {
@@ -795,8 +795,18 @@
       "projectFolder": "packages/demos/kitchen-sink"
     },
     {
+      "packageName": "@dxos/kodama",
+      "projectFolder": "packages/demos/kodama",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/lexical-editor",
       "projectFolder": "packages/demos/lexical-editor"
+    },
+    {
+      "packageName": "@dxos/todos",
+      "projectFolder": "packages/demos/todos"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",

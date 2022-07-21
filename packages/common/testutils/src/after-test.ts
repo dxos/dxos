@@ -9,9 +9,9 @@ let afterTestCallbacks: (() => any | Promise<any>)[] = [];
  *
  * Closures are executed from last to first.
  */
-export function afterTest (cb: () => any | Promise<any>) {
+export const afterTest = (cb: () => any | Promise<any>) => {
   afterTestCallbacks.push(cb);
-}
+};
 
 afterEach(async () => {
   for (let i = afterTestCallbacks.length - 1; i >= 0; i--) {

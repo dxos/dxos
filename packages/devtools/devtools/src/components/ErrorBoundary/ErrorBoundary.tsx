@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component } from 'react';
+import React, { Component, PropsWithChildren } from 'react';
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -10,7 +10,7 @@ interface ErrorBoundaryState {
 }
 
 // NOTE: Has to be Component, not arrow function.
-export class ErrorBoundary extends Component<{}, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundaryState> {
   constructor (props: {}) {
     super(props);
     this.state = { hasError: false };

@@ -8,56 +8,49 @@ import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { PublicKey } from '@dxos/protocols';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
-import { DataServiceRouter } from './database';
-import { IdentityNotInitializedError, InvalidStorageVersionError } from './errors';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
+import { DataServiceRouter } from './packlets/database';
+import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
-import { createRamStorage } from './util';
 
 const log = debug('dxos:echo');
 const error = log.extend('error');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PartyFilter { }
+export interface PartyFilter {
+  open?: boolean
+  partyKeys?: PublicKey[]
+}
 
 /**
  * Various options passed to `ECHO.create`.
  */
 export interface EchoCreationOptions {
+
   /**
-   * Storage used for feeds. Defaults to in-memory.
+   * Storage to persist data. Defaults to in-memory.
    */
-  feedStorage?: IStorage
+   storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.
    */
   keyStorage?: any
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  snapshotStorage?: IStorage
-
-  /**
-   * Storage used for snapshots. Defaults to in-memory.
-   */
-  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -97,6 +90,7 @@ export class ECHO {
   private readonly _halo: HALO;
   private readonly _keyring: Keyring;
 
+  private readonly _storage: Storage;
   private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
@@ -113,9 +107,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    feedStorage = createRamStorage(),
-    snapshotStorage = createRamStorage(),
-    metadataStorage = createRamStorage(),
+    storage = createStorage('', StorageType.RAM),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,
@@ -126,11 +118,12 @@ export class ECHO {
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
+    this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(snapshotStorage);
-    this._metadataStore = new MetadataStore(metadataStorage);
+    this._snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    this._metadataStore = new MetadataStore(storage.directory('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.directory('feeds'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,
@@ -153,6 +146,7 @@ export class ECHO {
       this._modelFactory,
       this._snapshotStore,
       feedProviderFactory,
+      this._metadataStore,
       options
     );
 
@@ -271,42 +265,29 @@ export class ECHO {
     await this.halo.close();
 
     await this._partyManager.close();
-
     await this._feedStore.close();
 
     await this.networkManager.destroy();
   }
 
   /**
-  * Removes all data and closes this ECHO instance.
-  *
-  * The instance will be in an unusable state at this point and a page refresh is recommended.
-  */
+   * Removes all data and closes this ECHO instance.
+   *
+   * The instance will be in an unusable state at this point and a page refresh is recommended.
+   */
   // TODO(burdon): Enable re-open.
   async reset () {
     await this.close();
 
     try {
-      if (this._feedStore.storage.destroy) {
-        await this._feedStore.storage.destroy();
+      if (this._storage.destroy) {
+        await this._storage.destroy();
       }
     } catch (err: any) {
-      error('Error clearing feed storage:', err);
+      error('Error clearing storage:', err);
     }
 
     await this.halo.reset();
-
-    try {
-      await this._snapshotStore.clear();
-    } catch (err: any) {
-      error('Error clearing snapshot storage:', err);
-    }
-
-    try {
-      await this._metadataStore.clear();
-    } catch (err: any) {
-      error('Error clearing metadata storage:', err);
-    }
   }
 
   //
@@ -321,40 +302,37 @@ export class ECHO {
 
     const party = await this._partyManager.createParty();
     await party.open();
-
     return party;
   }
 
   /**
-  * Clones an existing party from a snapshot.
-  * @param snapshot
-  */
+   * Clones an existing party from a snapshot.
+   * @param snapshot
+   */
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
     const party = await this._partyManager.cloneParty(snapshot);
     await party.open();
-
     return party;
   }
 
   /**
-  * Returns an individual party by it's key.
-  * @param {PartyKey} partyKey
-  */
+   * Returns an individual party by it's key.
+   * @param {PartyKey} partyKey
+   */
   getParty (partyKey: PartyKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
 
-    const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
-    return party;
+    return this._partyManager.parties.find(party => party.key.equals(partyKey));
   }
 
   /**
-  * Queries for a set of Parties matching the optional filter.
-  * @param {PartyFilter} filter
-  */
+   * Queries for a set of Parties matching the optional filter.
+   * @param {PartyFilter} filter
+   */
   // eslint-disable-next-line unused-imports/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<DataParty> {
     if (!this._partyManager.isOpen) {
@@ -363,15 +341,32 @@ export class ECHO {
 
     return new ResultSet(
       this._partyManager.update.discardParameter(),
-      () => this._partyManager.parties
+      () => {
+        const parties = this._partyManager.parties;
+        if (filter) {
+          return parties.filter(party => {
+            if (filter.open !== undefined && Boolean(filter.open) !== Boolean(party.isOpen)) {
+              return false;
+            }
+
+            if (filter.partyKeys && !filter.partyKeys.some(partyKey => partyKey.equals(party.key))) {
+              return false;
+            }
+
+            return true;
+          });
+        }
+
+        return parties;
+      }
     );
   }
 
   /**
-  * Joins a party that was created by another peer and starts replicating with it.
-  * @param invitationDescriptor Invitation descriptor passed from another peer.
-  * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
-  */
+   * Joins a party that was created by another peer and starts replicating with it.
+   * @param invitationDescriptor Invitation descriptor passed from another peer.
+   * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
+   */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 

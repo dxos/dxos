@@ -17,20 +17,18 @@ import { SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
-function createSubstitutionsReference (type: string): ts.TypeNode {
-  return f.createTypeReferenceNode(
-    f.createIdentifier('ReturnType'),
-    [f.createIndexedAccessTypeNode(
-      f.createIndexedAccessTypeNode(
-        f.createTypeQueryNode(f.createIdentifier('substitutions')),
-        f.createLiteralTypeNode(f.createStringLiteral(type))
-      ),
-      f.createLiteralTypeNode(f.createStringLiteral('decode'))
-    )]
-  );
-}
+const createSubstitutionsReference = (type: string): ts.TypeNode => f.createTypeReferenceNode(
+  f.createIdentifier('ReturnType'),
+  [f.createIndexedAccessTypeNode(
+    f.createIndexedAccessTypeNode(
+      f.createTypeQueryNode(f.createIdentifier('substitutions')),
+      f.createLiteralTypeNode(f.createStringLiteral(type))
+    ),
+    f.createLiteralTypeNode(f.createStringLiteral('decode'))
+  )]
+);
 
-function getPrimitiveType (type: string): ts.TypeNode {
+const getPrimitiveType = (type: string): ts.TypeNode => {
   switch (type) {
     case 'double':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
@@ -65,11 +63,11 @@ function getPrimitiveType (type: string): ts.TypeNode {
     default:
       return f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
   }
-}
+};
 
 type PbType = protobufjs.Enum | protobufjs.Type | string
 
-export function types (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) {
+export const types = (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) => {
   if (typeof type === 'string') {
     return getPrimitiveType(type);
   } else if (type.fullName === '.google.protobuf.Empty') {
@@ -79,9 +77,9 @@ export function types (type: PbType, containingObject: protobufjs.ReflectionObje
   } else {
     return getTypeReference(type, containingObject);
   }
-}
+};
 
-export function getTypeReference (to: protobufjs.ReflectionObject, from?: protobufjs.ReflectionObject) {
+export const getTypeReference = (to: protobufjs.ReflectionObject, from?: protobufjs.ReflectionObject) => {
   const toNamespace = getNamespaceName(to);
   const fromNamespace = from && getNamespaceName(from);
 
@@ -92,4 +90,4 @@ export function getTypeReference (to: protobufjs.ReflectionObject, from?: protob
     const name = [getSafeNamespaceIdentifier(toNamespace), ...getFullNestedTypeName(to)];
     return f.createTypeReferenceNode(convertNameToIdentifier(name));
   }
-}
+};

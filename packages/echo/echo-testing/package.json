@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-testing",
-  "version": "2.33.3",
+  "version": "2.33.8",
   "description": "ECHO testing utils.",
   "license": "MIT",
   "main": "dist/src/index.js",
@@ -19,7 +19,7 @@
     "lodash.times": "^4.3.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
@@ -27,12 +27,13 @@
     "@types/jest": "^26.0.7",
     "@types/lodash.times": "^4.3.6",
     "@types/mocha": "~8.2.2",
+    "@types/node": "^16.11.27",
     "abstract-leveldown": "~7.0.0",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "jsondown": "dxos/jsondown#main",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.5.2"
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"

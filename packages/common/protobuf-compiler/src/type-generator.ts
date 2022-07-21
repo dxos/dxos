@@ -17,11 +17,17 @@ import { parseSubstitutionsFile, registerResolver, SubstitutionsMap } from './pa
 registerResolver();
 preconfigureProtobufjs();
 
-export async function parseAndGenerateSchema (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) {
+export const parseAndGenerateSchema = async (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) => {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
-  logger.logParsedSubstitutions(substitutions);
-
   const root = await pb.load(protoFiles);
+
+  for (const fqn of Object.keys(substitutions)) {
+    if (!root.lookup(fqn)) {
+      throw new Error(`No protobuf definition found matching the substitution: ${fqn}`);
+    }
+  }
+
+  logger.logParsedSubstitutions(substitutions);
 
   await generateSchema({
     schema: root,
@@ -33,7 +39,7 @@ export async function parseAndGenerateSchema (substitutionsModule: ModuleSpecifi
         }
       : undefined
   });
-}
+};
 
 export interface GenerateSchemaOptions {
   schema: pb.Root
@@ -47,7 +53,7 @@ export interface GenerateSchemaOptions {
 /**
  * Generate typescript definitions for a given schema and write them to `options.outDir`.
  */
-export function generateSchema (options: GenerateSchemaOptions) {
+export const generateSchema = (options: GenerateSchemaOptions) => {
   const namespaces = splitSchemaIntoNamespaces(options.schema);
 
   const printer = ts.createPrinter();
@@ -77,4 +83,4 @@ export function generateSchema (options: GenerateSchemaOptions) {
   const source = printer.printFile(generatedSourceFile);
 
   writeFileSync(join(options.outDir, 'index.ts'), source);
-}
+};

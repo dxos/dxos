@@ -69,13 +69,9 @@ export interface ItemAdapter {
  */
 // TODO(burdon): Is this general purpose?
 export const itemAdapter: ItemAdapter = {
-  title: (item: Item<ObjectModel>) => {
-    return item.model.get('title');
-  },
+  title: (item: Item<ObjectModel>) => item.model.get('name'),
 
-  description: (item: Item<ObjectModel>) => {
-    return item.model.get('description');
-  },
+  description: (item: Item<ObjectModel>) => item.model.get('description'),
 
   linkedTypes: (item: Item<ObjectModel>) => {
     const types = new Set<string>();
@@ -83,9 +79,7 @@ export const itemAdapter: ItemAdapter = {
     return Array.from(types);
   },
 
-  linkedItems: (item: Item<ObjectModel>, kind: string) => {
-    return item.children.filter(item => item.type === kind);
-  },
+  linkedItems: (item: Item<ObjectModel>, kind: string) => item.children.filter(item => item.type === kind),
 
   meta: (type: string) => typeMeta[type]
 };

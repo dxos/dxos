@@ -7,14 +7,12 @@ import * as ts from 'typescript';
 
 const f = ts.factory;
 
-export function createEnumDeclaration (type: protobufjs.Enum) {
-  return f.createEnumDeclaration(
-    undefined,
-    [f.createToken(ts.SyntaxKind.ExportKeyword)],
-    type.name,
-    Object.entries(type.values).map(([name, id]) => f.createEnumMember(
-      name,
-      f.createNumericLiteral(id)
-    ))
-  );
-}
+export const createEnumDeclaration = (type: protobufjs.Enum) => f.createEnumDeclaration(
+  undefined,
+  [f.createToken(ts.SyntaxKind.ExportKeyword)],
+  type.name,
+  Object.entries(type.values).map(([name, id]) => f.createEnumMember(
+    name,
+    f.createNumericLiteral(id)
+  ))
+);

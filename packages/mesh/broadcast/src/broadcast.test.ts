@@ -83,18 +83,14 @@ class Peer extends EventEmitter {
   }
 }
 
-async function publishAndSync (peers: any, message: any, opts?: any) {
+const publishAndSync = async (peers: any, message: any, opts?: any) => {
   const [peerOrigin, ...peersTarget] = peers;
-  const sync = Promise.all(peersTarget.map((peer: any) => {
-    return new Promise<void>(resolve => peer.once('packet', () => resolve()));
-  }));
+  const sync = Promise.all(peersTarget.map((peer: any) => new Promise<void>(resolve => peer.once('packet', () => resolve()))));
   const packet = await peerOrigin.publish(message, opts);
   await sync;
-  expect(peersTarget.reduce((prev: any, curr: any) => {
-    return prev && curr.messages.has(packetId(packet));
-  }, true)).toBe(true);
+  expect(peersTarget.reduce((prev: any, curr: any) => prev && curr.messages.has(packetId(packet)), true)).toBe(true);
   return packet;
-}
+};
 
 test('balancedBinTree: broadcast a message.', async () => {
   const generator = new NetworkGenerator({
@@ -138,9 +134,7 @@ test('complete: broadcast a message.', async () => {
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   // The cache should have always the limit of 100.
-  expect(network.peers.slice(1).reduce((prev: any, next: any) => {
-    return prev && next.seenMessagesSize === 2;
-  }, true)).toBeTruthy();
+  expect(network.peers.slice(1).reduce((prev: any, next: any) => prev && next.seenMessagesSize === 2, true)).toBeTruthy();
 
   time = Date.now() - time;
   if (time < 2000) {
@@ -148,9 +142,7 @@ test('complete: broadcast a message.', async () => {
   }
 
   network.peers.forEach((peer: any) => peer.prune());
-  expect(network.peers.reduce((prev: any, next: any) => {
-    return prev && next.seenMessagesSize === 0;
-  }, true)).toBeTruthy();
+  expect(network.peers.reduce((prev: any, next: any) => prev && next.seenMessagesSize === 0, true)).toBeTruthy();
 
   network.peers.forEach((peer: any) => peer.close());
 });

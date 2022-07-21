@@ -15,25 +15,25 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../bot/bot-factory-client"
     },
     {
-      "path": "../client"
+      "path": "../../common/async"
     },
     {
-      "path": "../config"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../common/crypto"
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -42,10 +42,10 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../client"
     },
     {
-      "path": "../../common/util"
+      "path": "../config"
     }
   ]
 }

@@ -8,7 +8,6 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import {
   FullyConnectedTopology,
   Swarm,
@@ -25,6 +24,7 @@ import {
   ConnectionLog
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
@@ -89,12 +89,12 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     }
   }, [topology]);
 
-  async function addPeers (n: number) {
+  const addPeers = async (n: number) => {
     for (let i = 0; i < n; i++) {
       const peer = await createPeer(topic, PublicKey.random(), topology);
       setPeers(peers => [...peers, peer]);
     }
-  }
+  };
 
   const killPeer = (id: PublicKey) => {
     const peer = peers.find(peer => peer.swarm.ownPeerId.equals(id));
@@ -111,18 +111,14 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   }, [controlPeer]);
 
   const [signalStatus, setSignalStatus] = useState<SignalApi.Status[]>([]);
-  useEffect(() => {
-    return controlPeer?.signal.statusChanged.on(status => {
-      setSignalStatus(status);
-    });
-  }, [controlPeer]);
+  useEffect(() => controlPeer?.signal.statusChanged.on(status => {
+    setSignalStatus(status);
+  }), [controlPeer]);
 
   const [signalTrace, setSignalTrace] = useState<SignalApi.CommandTrace[]>([]);
-  useEffect(() => {
-    return controlPeer?.signal.commandTrace.on(msg => {
-      setSignalTrace(msgs => [...msgs, msg]);
-    });
-  }, [controlPeer]);
+  useEffect(() => controlPeer?.signal.commandTrace.on(msg => {
+    setSignalTrace(msgs => [...msgs, msg]);
+  }), [controlPeer]);
 
   const [swarmInfo, setSwarmInfo] = useState<SwarmInfo[]>([]);
   useEffect(() => {

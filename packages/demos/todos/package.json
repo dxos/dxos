@@ -1,0 +1,65 @@
+{
+  "name": "@dxos/todos",
+  "version": "2.33.8",
+  "private": true,
+  "description": "Track your todos",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc && vite build",
+    "build:test": "npm run build && npm run lint",
+    "dev": "vite",
+    "https-preview": "serve dist",
+    "lint": "true",
+    "preview": "vite preview"
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ],
+    "src/**/*.{js,jsx,ts,tsx,json}": [
+      "eslint --max-warnings=0"
+    ]
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.0.5",
+    "@dnd-kit/sortable": "^7.0.1",
+    "@dnd-kit/utilities": "^3.2.0",
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/lab": "^5.0.0-alpha.83",
+    "@mui/material": "^5.8.1",
+    "@mui/system": "^5.8.1",
+    "@mui/utils": "^5.8.0",
+    "@react-hook/event": "^1.2.6",
+    "is-mobile": "^3.1.1",
+    "notistack": "^2.0.5",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-error-boundary": "^3.1.4",
+    "react-helmet-async": "^1.3.0",
+    "react-hotkeys-hook": "^3.4.6",
+    "react-router-dom": "^6.3.0",
+    "recoil": "^0.7.2"
+  },
+  "devDependencies": {
+    "@babel/core": "~7.13.15",
+    "@trivago/prettier-plugin-sort-imports": "^3.2.0",
+    "@types/node": "^16.11.27",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "@vitejs/plugin-react": "^1.3.2",
+    "eslint": "^7.12.1",
+    "eslint-plugin-react": "^7.30.0",
+    "eslint-plugin-react-hooks": "^4.5.0",
+    "https-localhost": "^4.7.1",
+    "lint-staged": "^12.4.2",
+    "prettier": "2.6.2",
+    "typescript": "^4.7.2",
+    "vite": "^2.9.9",
+    "vite-plugin-pwa": "^0.12.0",
+    "workbox-window": "^6.5.3"
+  }
+}

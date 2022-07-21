@@ -95,12 +95,12 @@ export interface Scalars {
     bytesField?: Uint8Array;
 }
 export interface ComplexFields {
-    repeatedField?: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>[];
-    requiredField: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
-    mappedField?: Partial<Record<string, ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>>>;
+    repeatedField?: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>[];
+    requiredField: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>;
+    mappedField?: Partial<Record<string, ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>>>;
     inner?: ComplexFields.Inner;
     myAny?: Any;
-    googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
+    googleAny?: ReturnType<(typeof substitutions)[\\"google.protobuf.Any\\"][\\"decode\\"]>;
     importedAny?: dxos_test_any.Any;
     fooTest?: dxos_test_testfoo.TestFoo;
 }
@@ -115,7 +115,7 @@ export namespace ComplexFields {
     }
 }
 export interface WithTimestamp {
-    timestamp?: ReturnType<typeof substitutions[\\"google.protobuf.Timestamp\\"][\\"decode\\"]>;
+    timestamp?: ReturnType<(typeof substitutions)[\\"google.protobuf.Timestamp\\"][\\"decode\\"]>;
 }
 export interface Outer {
     inner?: ComplexFields.Inner;
@@ -146,9 +146,9 @@ export interface Task {
      * Task key.
      * Multiline field comment.
      */
-    key: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
+    key: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>;
     type: TaskType;
-    googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
+    googleAny?: ReturnType<(typeof substitutions)[\\"google.protobuf.Any\\"][\\"decode\\"]>;
 }
 export interface TaskList {
     tasks?: Task[];
@@ -170,7 +170,7 @@ export interface TestService {
     /**
      * Subscribe to task list updates.
      */
-    subscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
+    subscribeTasks: (request: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
 export interface WithEmptyField {
     emptyField?: void;

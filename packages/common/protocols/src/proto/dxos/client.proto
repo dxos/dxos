@@ -175,7 +175,7 @@ message GetPartyDetailsRequest {
 
 message PartyDetails {
   /// The timeframe of mutations processed by the client.
-  required dxos.echo.feed.TimeframeVector processed_timeframe = 1;
+  required dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
 message SubscribePartyResponse {

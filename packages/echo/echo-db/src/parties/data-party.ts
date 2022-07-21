@@ -5,20 +5,22 @@
 import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { Database, Item, ResultSet } from '../api';
+import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
 import { InvitationFactory } from '../invitations';
-import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { Database, Item } from '../packlets/database';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions, MetadataStore } from '../pipeline';
 import { createAuthPlugin, createOfflineInvitationPlugin, createAuthenticator, createCredentialsProvider } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
+import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
 import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
@@ -40,31 +42,32 @@ export interface PartyMember {
 export class DataParty {
   public readonly update = new Event<void>();
 
-  private readonly _partyCore: PartyCore;
+  private readonly _partyCore: PartyPipeline;
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
+
+  private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
     partyKey: PartyKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
+    private readonly _metadataStore: MetadataStore,
     private readonly _credentialsSigner: CredentialsSigner,
     // TODO(dmaretskyi): Pull this out to a higher level. Should preferences be part of client API instead?
     private readonly _profilePreferences: Preferences | undefined,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
-    _initialTimeframe?: Timeframe,
-    _options: PartyOptions = {}
+    private readonly _initialTimeframe?: Timeframe,
+    _options: PipelineOptions = {}
   ) {
-    this._partyCore = new PartyCore(
+    this._partyCore = new PartyPipeline(
       partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
       this._credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -79,7 +82,7 @@ export class DataParty {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeeds().length,
+      feedKeys: this._feedProvider.getFeeds().length, // TODO(burdon): feeds.
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };
@@ -125,14 +128,8 @@ export class DataParty {
     return this._invitationManager;
   }
 
-  // TODO(burdon): Remove?
-  get feedProvider (): PartyFeedProvider {
-    return this._feedProvider;
-  }
-
-  get preferences (): PartyPreferences {
-    assert(this._preferences, 'Preferences not available.');
-    return this._preferences;
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
   }
 
   get title () {
@@ -145,6 +142,18 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
+  get genesisFeedKey () {
+    assert(this._genesisFeedKey);
+    return this._genesisFeedKey;
+  }
+
+  /**
+   * @internal
+   */
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;
+  }
+
   /**
    * Opens the pipeline and connects the streams.
    */
@@ -155,11 +164,27 @@ export class DataParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    // TODO(dmaretskyi): May be undefined in some tests.
+    const party = this._metadataStore.getParty(this._partyCore.key);
+
+    assert(this._genesisFeedKey);
+    await this._partyCore.open({
+      genesisFeedKey: this._genesisFeedKey,
+      initialTimeframe: this._initialTimeframe,
+      targetTimeframe: party?.latestTimeframe
+    });
+
+    // Keep updating latest reached timeframe in the metadata.
+    // This timeframe will be waited for when opening the party next time.
+    this._partyCore.timeframeUpdate.on(timeframe => {
+      void this._metadataStore.setTimeframe(this._partyCore.key, timeframe);
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -173,13 +198,13 @@ export class DataParty {
     this._protocol = new PartyProtocolFactory(
       this._partyCore.key,
       this._networkManager,
-      this._feedProvider,
       deviceKey.publicKey,
       createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     await this._protocol.start([
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), deviceKey.publicKey),
+      createReplicatorPlugin(this._feedProvider),
+      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner, this.credentialsWriter), deviceKey.publicKey),
       createOfflineInvitationPlugin(this._invitationManager, deviceKey.publicKey)
     ]);
 
@@ -199,6 +224,9 @@ export class DataParty {
       return this;
     }
 
+    // Save the latest reached timeframe.
+    await this._metadataStore.setTimeframe(this._partyCore.key, this._partyCore.timeframe);
+
     await this._partyCore.close();
     await this._protocol?.stop();
 
@@ -208,6 +236,14 @@ export class DataParty {
     this.update.emit();
 
     return this;
+  }
+
+  async getWriteFeed (): Promise<FeedDescriptor> {
+    return this._feedProvider.createOrOpenWritableFeed();
+  }
+
+  getFeeds (): FeedDescriptor[] {
+    return this._feedProvider.getFeeds();
   }
 
   get isActive (): boolean {

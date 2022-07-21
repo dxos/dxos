@@ -31,7 +31,7 @@ export const logError = str => {
  * @return {{ log: debug, error: debug }}
  */
 // TODO(burdon): Rename.
-export function logs (name) {
+export const logs = (name) => {
   const log = debug(name);
   log.log = console.log.bind(console);
 
@@ -55,7 +55,7 @@ export function logs (name) {
       }
     }
   };
-}
+};
 
 /**
  * Expose 'debug' module's selective log namespace capabilities by delegation.
@@ -68,15 +68,13 @@ export function logs (name) {
  *
  * @param {String} namespaces
  */
-export function enable (namespaces) {
+export const enable = (namespaces) => {
   debug.enable(namespaces);
-}
+};
 
 /**
  * Disable all namespaces, return previously enabled namespaces.
  *
  * @return {String} namespaces
  */
-export function disable () {
-  return debug.disable();
-}
+export const disable = () => debug.disable();

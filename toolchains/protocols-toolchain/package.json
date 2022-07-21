@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols-toolchain",
-  "version": "2.33.3",
+  "version": "2.33.8",
   "private": true,
   "bin": {
     "toolchain": "./main.js"
@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "typescript": "^4.5.2",
+    "typescript": "^4.7.2",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/eslint-plugin": "~1.0.34",
     "@types/node": "^16.11.27",
     "@types/yargs": "~16.0.1",
     "eslint": "^7.12.1",
-    "ts-node": "^9.1.1"
+    "ts-node": "^10.8.2"
   }
 }

@@ -14,13 +14,11 @@ interface StorybookContainerProps {
 export const StorybookContainer = ({
   children,
   style
-}: StorybookContainerProps) => {
-  return (
-    <div style={{
-      height: `calc(100vh - ${STORYBOOKS_MARGIN}px)`,
-      ...style
-    }}>
-      {children}
-    </div>
-  );
-};
+}: StorybookContainerProps) => (
+  <div style={{
+    height: `calc(100vh - ${STORYBOOKS_MARGIN}px)`,
+    ...style
+  }}>
+    {children}
+  </div>
+);

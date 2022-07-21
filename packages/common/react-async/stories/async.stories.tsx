@@ -43,10 +43,8 @@ const TestApp = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <div style={{ padding: 16 }}>
-      <TestApp />
-    </div>
-  );
-};
+export const Primary = () => (
+  <div style={{ padding: 16 }}>
+    <TestApp />
+  </div>
+);

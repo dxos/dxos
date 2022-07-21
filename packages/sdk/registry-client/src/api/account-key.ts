@@ -3,8 +3,7 @@
 //
 
 import assert from 'assert';
-
-import { randomBytes } from '@dxos/crypto';
+import randomBytes from 'randombytes';
 
 export const ACCOUNT_KEY_LENGTH = 32;
 

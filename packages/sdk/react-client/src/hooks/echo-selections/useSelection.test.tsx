@@ -16,16 +16,14 @@ import { useSelection } from './useSelection';
 const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
-const useTestComponents = async () => {
+const createTestComponents = async () => {
   const config = {};
   const client = new Client(config);
   await client.initialize();
   await client.halo.createProfile();
 
   const party = await client.echo.createParty();
-  const items = await Promise.all(Array.from({ length: count }).map(async () => {
-    return await party.database.createItem({ type: TYPE_EXAMPLE });
-  }));
+  const items = await Promise.all(Array.from({ length: count }).map(async () => await party.database.createItem({ type: TYPE_EXAMPLE })));
   expect(items.length).toBe(count);
 
   return { client, party };
@@ -57,7 +55,7 @@ afterEach(() => {
 
 describe.only('useSelection', () => {
   it('gets updated items selection', async () => {
-    const { party } = await useTestComponents();
+    const { party } = await createTestComponents();
     act(() => {
       ReactDOM.render(<UseSelectionTestComponent party={party} />, rootContainer);
     });

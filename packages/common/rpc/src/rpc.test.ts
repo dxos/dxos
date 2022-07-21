@@ -82,7 +82,7 @@ describe('RpcPeer', () => {
       ]);
     });
 
-    test('hanshake works with a port that is open later', async () => {
+    test('handshake works with a port that is open later', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let portOpen = false;
@@ -223,9 +223,9 @@ describe('RpcPeer', () => {
       const alice: RpcPeer = new RpcPeer({
         messageHandler: async (method, msg) => {
           expect(method).toEqual('RpcMethodName');
-          async function handlerFn (): Promise<never> {
+          const handlerFn = async (): Promise<never> => {
             throw new Error('My error');
-          }
+          };
 
           return await handlerFn();
         },
@@ -389,13 +389,9 @@ describe('RpcPeer', () => {
       let closeCalled = false;
       const alice = new RpcPeer({
         messageHandler: async msg => ({}),
-        streamHandler: (method, msg) => {
-          return new Stream<Any>(({ next, close }) => {
-            return () => {
-              closeCalled = true;
-            };
-          });
-        },
+        streamHandler: (method, msg) => new Stream<Any>(({ next, close }) => () => {
+          closeCalled = true;
+        }),
         port: alicePort
       });
 
@@ -418,4 +414,42 @@ describe('RpcPeer', () => {
     });
   });
 
+  describe('with disabled handshake', () => {
+    test('opens immediately', async () => {
+      const [alicePort] = createLinkedPorts();
+
+      const alice = new RpcPeer({
+        messageHandler: async msg => ({}),
+        port: alicePort,
+        noHandshake: true
+      });
+
+      await alice.open();
+    });
+
+    test('can send a request', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice = new RpcPeer({
+        messageHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          expect(msg.value).toEqual(Buffer.from('request'));
+          return { value: Buffer.from('response') };
+        },
+        port: alicePort,
+        noHandshake: true
+      });
+      const bob = new RpcPeer({
+        messageHandler: async (method, msg) => ({}),
+        port: bobPort,
+        noHandshake: true
+      });
+
+      await alice.open();
+      await bob.open();
+
+      const response = await bob.call('method', { value: Buffer.from('request') });
+      expect(response).toEqual({ value: Buffer.from('response') });
+    });
+  });
 });

@@ -15,19 +15,17 @@ import { MemberAvatar } from './MemberAvatar';
  */
 export const MemberList = ({ members }: {
   members: PartyMember[]
-}) => {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row'
-      }}
-    >
-      <AvatarGroup>
-        {members.map(member => (
-          <MemberAvatar key={member.publicKey.toString()} member={member} />
-        ))}
-      </AvatarGroup>
-    </Box>
-  );
-};
+}) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'row'
+    }}
+  >
+    <AvatarGroup>
+      {members.map(member => (
+        <MemberAvatar key={member.publicKey.toString()} member={member} />
+      ))}
+    </AvatarGroup>
+  </Box>
+);

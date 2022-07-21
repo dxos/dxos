@@ -9,9 +9,9 @@ import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -55,7 +55,7 @@ const createPeer = async ({
   };
 };
 
-function sharedTests (inMemory: boolean) {
+const sharedTests = (inMemory: boolean) => {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
@@ -118,10 +118,10 @@ function sharedTests (inMemory: boolean) {
     await networkManager2.destroy();
     log('Peer2 destroyed');
   }).timeout(10_000).retries(3);
-}
+};
 
 // eslint-disable-next-line jest/no-export
-export function webRTCTests () {
+export const webRTCTests = () => {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -183,7 +183,7 @@ export function webRTCTests () {
       });
     }).timeout(10_000).retries(3);
   });
-}
+};
 
 // eslint-disable-next-line jest/no-export
 export function inMemoryTests () {
@@ -285,7 +285,7 @@ export function inMemoryTests () {
       }>
     }
 
-    async function assertState (model: Model, real: Real) {
+    const assertState = async (model: Model, real: Real) => {
       await waitForExpect(() => {
         for (const peer of real.peers.values()) {
           if (peer.presence) {
@@ -306,7 +306,7 @@ export function inMemoryTests () {
       real.peers.forEach(peer => peer.networkManager.topics.forEach(topic => {
         peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
       }));
-    }
+    };
 
     class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
       constructor (readonly peerId: PublicKey) {}

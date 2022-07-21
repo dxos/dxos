@@ -108,13 +108,11 @@ const Popup = () => {
     popupRef.current!.style.top = `${y + 24}px`;
   }, [editor]);
 
-  useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(() => {
-        updatePopup();
-      });
+  useEffect(() => editor.registerUpdateListener(({ editorState }) => {
+    editorState.read(() => {
+      updatePopup();
     });
-  }, [editor]);
+  }), [editor]);
 
   useEffect(() => {
     const keyDownHandler = (event: KeyboardEvent) => {

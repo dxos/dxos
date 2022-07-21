@@ -22,29 +22,27 @@ const defaultStyles = css`
   }
 `;
 
-const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => {
-  return useMemo(() => [
-    {
-      field: 'id',
-      headerName: 'ID',
-      width: 120,
-      valueGetter: (params: GridValueGetterParams) => truncateKey(params.row.id, 4),
-      cellClassName: () => 'monospace'
-    },
-    {
-      field: 'type',
-      headerName: 'Type',
-      width: 160,
-      cellClassName: (params: GridCellParams<string>) => params.row.type.replace(/\W/g, '_')
-    },
-    {
-      field: 'name',
-      headerName: 'Name',
-      flex: 1,
-      valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row)
-    }
-  ], []);
-};
+const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => useMemo(() => [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 120,
+    valueGetter: (params: GridValueGetterParams) => truncateKey(params.row.id, 4),
+    cellClassName: () => 'monospace'
+  },
+  {
+    field: 'type',
+    headerName: 'Type',
+    width: 160,
+    cellClassName: (params: GridCellParams<string>) => params.row.type.replace(/\W/g, '_')
+  },
+  {
+    field: 'name',
+    headerName: 'Name',
+    flex: 1,
+    valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row)
+  }
+], []);
 
 export interface EchoGridProps {
   items?: Item<ObjectModel>[]

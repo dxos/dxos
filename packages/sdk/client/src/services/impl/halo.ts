@@ -47,6 +47,8 @@ export class HaloService implements IHaloService {
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
   }
 
+  // TODO(burdon): subscribeToContacts or just query/contacts with subscription object.
+  //  ResultSet vs Stream?
   subscribeContacts (): Stream<Contacts> {
     if (this.echo.halo.identity) {
       return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
@@ -104,6 +106,4 @@ export class HaloService implements IHaloService {
   }
 }
 
-export const createHaloService = ({ echo, signer }: CreateServicesOpts): HaloService => {
-  return new HaloService(echo, signer);
-};
+export const createHaloService = ({ echo, signer }: CreateServicesOpts): HaloService => new HaloService(echo, signer);

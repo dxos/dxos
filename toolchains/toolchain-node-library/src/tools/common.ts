@@ -7,7 +7,7 @@ import { ChildProcess, spawn, SpawnSyncOptionsWithBufferEncoding } from 'child_p
 
 import { TOOLCHAIN_PACKAGE_DIR } from '../common';
 
-function printChildStatus (child: ChildProcess, name: string, start: number) {
+const printChildStatus = (child: ChildProcess, name: string, start: number) => {
   if (child.exitCode === null) {
     process.stderr.write(chalk`{red error}: ${name} terminated due to a signal: ${child.signalCode}\n`);
     process.exit(1);
@@ -17,9 +17,9 @@ function printChildStatus (child: ChildProcess, name: string, start: number) {
   } else {
     console.log(chalk`{green.bold OK} in {bold ${Date.now() - start}} ms`);
   }
-}
+};
 
-export async function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
+export const execTool = async (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) => {
   const start = Date.now();
 
   const child = spawn(`${TOOLCHAIN_PACKAGE_DIR}/node_modules/.bin/${name}`, args, {
@@ -34,9 +34,9 @@ export async function execTool (name: string, args: string[] = [], opts?: SpawnS
   });
 
   printChildStatus(child, name, start);
-}
+};
 
-export async function execCommand (command: string, args: string[]) {
+export const execCommand = async (command: string, args: string[]) => {
   const start = Date.now();
 
   const child = spawn(command, args, {
@@ -55,4 +55,4 @@ export async function execCommand (command: string, args: string[]) {
   });
 
   printChildStatus(child, command, start);
-}
+};

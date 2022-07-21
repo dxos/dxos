@@ -21,7 +21,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { generateSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 
 import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
@@ -42,9 +42,7 @@ const useSeedWords = (seedPhrase: string, n: number): [string[], number[]] => {
   return [words, indexes];
 };
 
-const isSeedPhraseValid = (value: string) => {
-  return value.trim().toLowerCase().split(/\s+/g).length === 12;
-};
+const isSeedPhraseValid = (value: string) => value.trim().toLowerCase().split(/\s+/g).length === 12;
 
 const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
@@ -118,9 +116,7 @@ export const RegistrationDialog = ({
       case Stage.CHECK_SEED_PHRASE: {
         const testWords = seedRefs.map(seedRef => seedRef.current!.value);
         // Find first word that doesn't match.
-        const match = undefined === testWords.find((word, i) => {
-          return word !== seedWords[seedWordTestIndexes[i]] ? true : undefined;
-        });
+        const match = undefined === testWords.find((word, i) => word !== seedWords[seedWordTestIndexes[i]] ? true : undefined);
 
         const skipMatch = (debug || event.shiftKey || !!isMobile);
         if (match || skipMatch) {

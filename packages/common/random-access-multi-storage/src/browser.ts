@@ -5,7 +5,7 @@
 import { FirefoxStorage } from './implementations/firefox-storage';
 import { IDbStorage } from './implementations/idb-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { IStorage } from './interfaces/IStorage';
+import { Storage } from './interfaces/Storage';
 import { StorageType } from './interfaces/storage-types';
 
 export { StorageType };
@@ -32,7 +32,7 @@ export const createStorage = (
   throw new Error(`Unsupported storage: ${type}`);
 };
 
-const defaultBrowserImplementation = (root: string): IStorage => {
+const defaultBrowserImplementation = (root: string): Storage => {
   if ((window as any).IDBMutableFile) {
     return new FirefoxStorage(root);
   }

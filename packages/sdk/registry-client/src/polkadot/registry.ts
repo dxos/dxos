@@ -136,12 +136,10 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
   }
 
   private _decodeResource (resource: BaseResource): Record<string, CID> {
-    const decodeMap = (map: BTreeMap<Text, Multihash>): Record<string, CID> => {
-      return Object.fromEntries(
-        Array.from(map.entries())
-          .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
-      );
-    };
+    const decodeMap = (map: BTreeMap<Text, Multihash>): Record<string, CID> => Object.fromEntries(
+      Array.from(map.entries())
+        .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
+    );
 
     return decodeMap(resource.tags ?? new Map());
   }

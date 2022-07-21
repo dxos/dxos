@@ -12,10 +12,7 @@ import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage, WithTypeUr
  * Return the @type, if present.
  * @param message
  */
-function getTypeUrl (message: any) {
-  // eslint-disable-next-line camelcase
-  return message?.['@type'];
-}
+const getTypeUrl = (message: any) => message?.['@type'];
 
 /**
  * Creates a DeviceInfo SignedMessage.

@@ -81,9 +81,7 @@ export const EchoGraph = ({
                 node: (node: GraphLayoutNode<Item<ObjectModel>>) => getAttributes(node)
               }}
               labels={{
-                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) => {
-                  return highlight ? itemAdapter.title(node.data!) : undefined;
-                }
+                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) => highlight ? itemAdapter.title(node.data!) : undefined
               }}
             />
           </Zoom>

@@ -11,10 +11,10 @@ const port = browser.runtime.connect({ name: 'content' });
 
 // Forward messages from background script to DXOS Client.
 port.onMessage.addListener(message => {
-  log(`Received message from background: ${message}`);
+  log('Received message from background:', message);
 
   window.postMessage({
-    data: message,
+    data: message.data,
     source: 'content-script'
   }, '*');
 });
@@ -35,7 +35,7 @@ window.addEventListener('message', event => {
     return;
   }
 
-  log(`Received message from DXOS Client: ${message}`);
+  log('Received message from DXOS Client:', message);
   port.postMessage(message);
 });
 

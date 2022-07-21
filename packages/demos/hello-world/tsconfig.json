@@ -18,25 +18,25 @@
   ],
   "references": [
     {
+      "path": "../../echo/object-model"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/react-client-testing"
     },
     {
       "path": "../../sdk/react-components"
     },
     {
       "path": "../../sdk/react-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client-testing"
     }
   ]
 }

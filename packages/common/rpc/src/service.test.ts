@@ -56,10 +56,10 @@ describe('Protobuf service', () => {
       service,
       handlers: {
         testCall: async (req) => {
-          async function handlerFn (): Promise<never> {
+          const handlerFn = async (): Promise<never> => {
             await sleep(5);
             throw new Error('TestError');
-          }
+          };
 
           return await handlerFn();
         },

@@ -8,9 +8,9 @@ import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { PublicKey } from '@dxos/protocols';
 
 import { PresencePlugin } from './presence-plugin';
 
@@ -34,7 +34,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId): Promise<an
     },
     discoveryKey: topic,
     initiator: !!initiator,
-    userSession: { peerId: keyToString(peerId) }
+    userSession: { peerId: PublicKey.stringify(peerId) }
   })
     .setExtension(presence.createExtension())
     .init()
@@ -43,14 +43,14 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId): Promise<an
   return { id: peerId, presence, createStream };
 });
 
-function links (graph: Graph) {
+const links = (graph: Graph) => {
   const links: string[] = [];
   graph.forEachLink(link => {
     const t = [link.fromId, link.toId].sort();
     links.push(t.join(' --> '));
   });
   return links;
-}
+};
 
 test('presence', async () => {
   const topic = crypto.randomBytes(32);
@@ -83,9 +83,7 @@ test('presence', async () => {
 
     const result = network.peers
       .filter((peer: any) => peer !== peer1)
-      .reduce((prev: any, peer: any) => {
-        return prev && pathFinder.find(fromId, peer.id.toString('hex')).length > 0;
-      }, true);
+      .reduce((prev: any, peer: any) => prev && pathFinder.find(fromId, peer.id.toString('hex')).length > 0, true);
 
     expect(result).toBe(true);
   }, TIMEOUT, 5 * 1000);

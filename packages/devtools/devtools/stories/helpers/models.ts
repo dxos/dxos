@@ -12,29 +12,23 @@ export type ModelType = 'ObjectModel' | 'MessengerModel' | 'TextModel'
 export const modelTypes: { [index: string]: any } = {
   'ObjectModel': {
     model: ObjectModel,
-    createItem: (party: Party) => {
-      return party.database.createItem({
-        model: ObjectModel,
-        type: 'example:type/object'
-      });
-    }
+    createItem: (party: Party) => party.database.createItem({
+      model: ObjectModel,
+      type: 'example:type/object'
+    })
   },
   'MessengerModel': {
     model: MessengerModel,
-    createItem: (party: Party) => {
-      return party.database.createItem({
-        model: MessengerModel,
-        type: 'example:type/messenger'
-      });
-    }
+    createItem: (party: Party) => party.database.createItem({
+      model: MessengerModel,
+      type: 'example:type/messenger'
+    })
   },
   'TextModel': {
     model: TextModel,
-    createItem: (party: Party) => {
-      return party.database.createItem({
-        model: TextModel,
-        type: 'example:type/text'
-      });
-    }
+    createItem: (party: Party) => party.database.createItem({
+      model: TextModel,
+      type: 'example:type/text'
+    })
   }
 };

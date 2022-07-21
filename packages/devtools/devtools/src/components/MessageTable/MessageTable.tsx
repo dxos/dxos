@@ -16,8 +16,6 @@ import {
   useTheme
 } from '@mui/material';
 
-import { keyToString } from '@dxos/crypto';
-import { truncateKey } from '@dxos/debug';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { JsonTreeView } from '@dxos/react-components';
 
@@ -25,9 +23,7 @@ import { Table, TableCell } from '../Table';
 
 const colorHash = new ColorHash({ saturation: 0.5 });
 
-const color = (type: string) => {
-  return type === 'halo' ? colors.red[500] : colors.blue[500];
-};
+const color = (type: string) => type === 'halo' ? colors.red[500] : colors.blue[500];
 
 // TODO(burdon): Remove.
 const defaultGetType = (message: any) => {
@@ -94,7 +90,7 @@ export const MessageTable = ({
         {
           // Messages with feed metadata.
           messages.map(({ key: feedKey, seq, data }) => {
-            const key = keyToString(feedKey);
+            const key = feedKey.toString();
             const rowKey = `key-${key}-${seq}`;
             const type = getType(data);
 
@@ -111,7 +107,7 @@ export const MessageTable = ({
                   style={{ color: colorHash.hex(key) }}
                   title={key}
                 >
-                  {truncateKey(key, 8)}
+                  {feedKey.truncate(8)}
                 </TableCell>
 
                 {/* Number. */}

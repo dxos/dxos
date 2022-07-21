@@ -4,17 +4,14 @@
 
 import debug from 'debug';
 
-import { synchronized } from '@dxos/async';
-import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
-import { FeedKey, PartyKey } from '@dxos/echo-protocol';
-import type { HypercoreFeed } from '@dxos/feed-store';
+import { discoveryKey } from '@dxos/crypto';
+import { PartyKey } from '@dxos/echo-protocol';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsProvider } from '.';
-import { PartyFeedProvider } from '../pipeline/party-feed-provider';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
 
@@ -23,21 +20,15 @@ const log = debug('dxos:echo-db:party-protocol-factory');
  */
 export class PartyProtocolFactory {
   private readonly _presencePlugin = new PresencePlugin(this._peerId.asBuffer());
-  private readonly _replicatorProtocolPluginFactory: ReplicatorProtocolPluginFactory;
 
   private _started = false;
 
   constructor (
     private readonly _partyKey: PartyKey,
     private readonly _networkManager: NetworkManager,
-    private readonly _feedProvider: PartyFeedProvider,
     private readonly _peerId: PublicKey,
     private readonly _credentials: CredentialsProvider
-  ) {
-    // Replication.
-    this._replicatorProtocolPluginFactory =
-      new ReplicatorProtocolPluginFactory(this._feedProvider);
-  }
+  ) {}
 
   async start (plugins: Plugin[]) {
     if (this._started) {
@@ -73,9 +64,8 @@ export class PartyProtocolFactory {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol (channel: any, opts: {initiator: boolean}, extraPlugins: Plugin[]) {
+  private _createProtocol (channel: any, opts: { initiator: boolean }, extraPlugins: Plugin[]) {
     const plugins: Plugin[] = [
-      ...this._replicatorProtocolPluginFactory.createPlugins(),
       ...extraPlugins,
       this._presencePlugin
     ];
@@ -103,7 +93,7 @@ export class PartyProtocolFactory {
 
       userSession: {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: keyToString(this._peerId.asBuffer()),
+        peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       },
@@ -116,47 +106,5 @@ export class PartyProtocolFactory {
       .init();
 
     return protocol;
-  }
-}
-
-/**
- * Creates the protocol plugin for feed replication.
- */
-export class ReplicatorProtocolPluginFactory {
-  constructor (
-    private readonly _feedProvider: PartyFeedProvider
-  ) {}
-
-  createPlugins () {
-    return [
-      new Replicator({
-        load: async () => {
-          const feeds = this._feedProvider.getFeeds();
-          log(`Loading feeds: ${feeds.map(feed => keyToString(feed.key))}`);
-          return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
-        },
-
-        subscribe: (addFeedToReplicatedSet: (feed: any) => void) => {
-          return this._feedProvider.feedOpened.on(async (feed) => {
-            log(`Adding feed: ${feed.key.toHex()}`);
-            addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
-          });
-        },
-
-        replicate: async (remoteFeeds, info) => {
-          // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
-          // TODO(telackey): Why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          const feeds = this._feedProvider.getFeeds();
-          log(`Replicating: peerId=${info.session}; feeds=${feeds.map(feed => feed.key.toHex())}`);
-          return feeds.map(feed => feed.feed);
-        }
-      })
-    ];
-  }
-
-  @synchronized
-  private async _openFeed (key: FeedKey): Promise<HypercoreFeed> {
-    const descriptor = await this._feedProvider.createOrOpenReadOnlyFeed(key);
-    return descriptor.feed;
   }
 }

@@ -37,35 +37,33 @@ const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsRes
   };
 };
 
-export const subscribeToItems = ({ echo }: DevtoolsServiceDependencies) => {
-  return new Stream<SubscribeToItemsResponse>(({ next }) => {
-    const update = () => {
-      const res = getData(echo);
-      next(res);
-    };
+export const subscribeToItems = ({ echo }: DevtoolsServiceDependencies) => new Stream<SubscribeToItemsResponse>(({ next }) => {
+  const update = () => {
+    const res = getData(echo);
+    next(res);
+  };
 
-    const partySubscriptions: Record<string, () => void> = {};
-    const unsubscribe = echo.queryParties().subscribe((parties) => {
-      parties.forEach(party => {
-        if (!partySubscriptions[party.key.toHex()]) {
-          const sub = party.database.select().exec().update.on(() => {
-            // Send updates on items changes.
-            update();
-          });
-          partySubscriptions[party.key.toHex()] = sub;
-        }
-      });
-
-      // Send items for new parties.
-      update();
+  const partySubscriptions: Record<string, () => void> = {};
+  const unsubscribe = echo.queryParties().subscribe((parties) => {
+    parties.forEach(party => {
+      if (!partySubscriptions[party.key.toHex()]) {
+        const sub = party.database.select().exec().update.on(() => {
+          // Send updates on items changes.
+          update();
+        });
+        partySubscriptions[party.key.toHex()] = sub;
+      }
     });
 
-    // Send initial items.
+    // Send items for new parties.
     update();
-
-    return () => {
-      unsubscribe();
-      Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
-    };
   });
-};
+
+  // Send initial items.
+  update();
+
+  return () => {
+    unsubscribe();
+    Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
+  };
+});

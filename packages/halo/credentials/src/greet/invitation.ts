@@ -2,7 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { createDateTimeString } from '../proto';
 

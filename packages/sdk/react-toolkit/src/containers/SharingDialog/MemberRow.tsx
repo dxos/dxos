@@ -21,27 +21,25 @@ export interface MemberRowProps {
 export const MemberRow = ({
   member,
   onRemove
-}: MemberRowProps) => {
-  return (
-    <Box sx={{
-      display: 'flex',
-      flex: 1,
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      minHeight: 40
-    }}>
-      <MemberAvatar key={member.publicKey.toString()} member={member} />
+}: MemberRowProps) => (
+  <Box sx={{
+    display: 'flex',
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 40
+  }}>
+    <MemberAvatar key={member.publicKey.toString()} member={member} />
 
-      <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
-        {member.displayName}
-      </Typography>
+    <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
+      {member.displayName}
+    </Typography>
 
-      {/* TODO(burdon): Role (Read-only, Editor, Admin). */}
-      {onRemove && (
-        <IconButton size='small' onClick={onRemove}>
-          <CancelIcon />
-        </IconButton>
-      )}
-    </Box>
-  );
-};
+    {/* TODO(burdon): Role (Read-only, Editor, Admin). */}
+    {onRemove && (
+      <IconButton size='small' onClick={onRemove}>
+        <CancelIcon />
+      </IconButton>
+    )}
+  </Box>
+);

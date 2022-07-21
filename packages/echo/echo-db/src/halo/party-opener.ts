@@ -14,7 +14,7 @@ const log = debug('dxos:echo-db:party-opener');
 /**
  * Automatically adds, opens, and clothes parties from HALO preferences.
  */
-export function autoPartyOpener (preferences: Preferences, partyManager: PartyManager): Unsubscribe {
+export const autoPartyOpener = (preferences: Preferences, partyManager: PartyManager): Unsubscribe => {
   const subs = new SubscriptionGroup();
 
   subs.push(preferences.subscribeToJoinedPartyList(async values => {
@@ -24,8 +24,8 @@ export function autoPartyOpener (preferences: Preferences, partyManager: PartyMa
 
     for (const partyDesc of values) {
       if (!partyManager.parties.some(x => x.key === partyDesc.partyKey)) {
-        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()} hints=${JSON.stringify(partyDesc.keyHints)}`);
-        await partyManager.addParty(partyDesc.partyKey, partyDesc.keyHints);
+        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
+        await partyManager.addParty(partyDesc.partyKey, partyDesc.genesisFeed);
       }
     }
   }));
@@ -46,4 +46,4 @@ export function autoPartyOpener (preferences: Preferences, partyManager: PartyMa
   }));
 
   return () => subs.unsubscribe();
-}
+};

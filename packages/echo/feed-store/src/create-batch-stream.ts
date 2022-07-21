@@ -17,7 +17,7 @@ export interface CreateBatchStreamOptions {
   tail?: boolean
 }
 
-export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) {
+export const createBatchStream = (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) => {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;
@@ -34,9 +34,7 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
 
   let range = feed.download({ start, end, linear: true });
 
-  return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
-
-  function read (size: any, cb?: any) {
+  const read = (size: any, cb?: any) => {
     if (!feed.opened) {
       return open(size, cb);
     }
@@ -103,9 +101,9 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
 
       cb(null, messages.map(buildMessage));
     });
-  }
+  };
 
-  function buildMessage (data: object) {
+  const buildMessage = (data: object) => {
     const message = {
       key: feed.key,
       seq: seq++,
@@ -115,26 +113,26 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
     };
 
     return message;
-  }
+  };
 
-  function cleanup () {
+  const cleanup = () => {
     if (!range) {
       return;
     }
     feed.undownload(range);
     range = null;
-  }
+  };
 
-  function open (size: any, cb: (err: Error) => void) {
-    feed.ready(function (err: Error) {
+  const open = (size: any, cb: (err: Error) => void) => {
+    feed.ready((err: Error) => {
       if (err) {
         return cb(err);
       }
       read(size, cb);
     });
-  }
+  };
 
-  function setStart (value: number) {
+  const setStart = (value: number) => {
     const prevStart = start;
     start = value;
     range.start = start;
@@ -142,5 +140,7 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
       range.iterator.start = start;
     }
     return prevStart;
-  }
-}
+  };
+
+  return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
+};

@@ -18,27 +18,29 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify
+  SIGNATURE_LENGTH,
+  verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
+import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
-import { Item } from '../api';
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
+import { Item } from '../packlets/database';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createTestIdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
-import { createRamStorage } from '../util';
 import { PARTY_ITEM_TYPE } from './data-party';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
@@ -56,9 +58,11 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async () => {
   const keyring = new Keyring();
-  const metadataStore = new MetadataStore(createRamStorage());
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
-  const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
+
+  const storage = createStorage('', StorageType.RAM);
+  const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+  const metadataStore = new MetadataStore(storage.directory('metadata'));
+  const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
@@ -70,6 +74,7 @@ const setup = async () => {
     modelFactory,
     snapshotStore,
     feedProviderFactory,
+    metadataStore,
     {
       writeLogger: messageLogger('<<<'),
       readLogger: messageLogger('>>>')
@@ -129,31 +134,30 @@ describe('Party manager', () => {
 
     // TODO(burdon): Create multiple feeds.
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
       type: KeyType.FEED
     });
 
-    const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
+    await feed.append({
+      timeframe: new Timeframe(),
+      halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
+    });
 
-    await partyManager.addParty(partyKey.publicKey, [{
-      type: KeyType.FEED,
-      publicKey: PublicKey.from(feed.key)
-    }]);
+    await partyManager.addParty(partyKey.publicKey, feed.key);
 
     await update;
   });
 
   test('Create from cold start', async () => {
     const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const keyring = new Keyring();
-    const metadataStore = new MetadataStore(createRamStorage());
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(createStorage('', StorageType.RAM));
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
@@ -163,7 +167,8 @@ describe('Party manager', () => {
       networkManager,
       modelFactory,
       snapshotStore,
-      feedProviderFactory
+      feedProviderFactory,
+      metadataStore
     );
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identity, partyFactory);
 
@@ -182,6 +187,7 @@ describe('Party manager', () => {
       assert(keyRecord, 'Key is not found in keyring');
       assert(keyRecord.secretKey, 'Missing secret key');
       await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
+      await metadataStore.setGenesisFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
       const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
@@ -189,15 +195,23 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identity.identityKey) });
       feedStream.write({
+        timeframe: new Timeframe(),
+        halo: createPartyGenesisMessage(
+          keyring,
+          partyKey,
+          feedKey.publicKey,
+          identity.identityKey
+        )
+      });
+      feedStream.write({
+        timeframe: new Timeframe(),
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',
           genesis: {
             itemType: PARTY_ITEM_TYPE,
             modelType: ObjectModel.meta.type
-          },
-          timeframe: new Timeframe()
+          }
         })
       });
     }
@@ -310,11 +324,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }
@@ -391,10 +405,10 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
         }
       }
     }
@@ -448,11 +462,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }

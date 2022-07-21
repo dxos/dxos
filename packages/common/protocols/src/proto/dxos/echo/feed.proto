@@ -9,14 +9,19 @@ package dxos.echo.feed;
 
 import "google/protobuf/any.proto";
 import "./snapshot.proto";
+import "./timeframe.proto";
 
 /**
  * Outer message type decoded by Codec.
  * This is what is written to the feeds.
  */
 message FeedMessage {
-  CredentialsMessage halo = 1;
-  EchoEnvelope echo = 2;
+  TimeframeVector timeframe = 1;
+
+  oneof payload {
+    CredentialsMessage halo = 10;
+    EchoEnvelope echo = 11;
+  }
 }
 
 /**
@@ -28,25 +33,10 @@ message CredentialsMessage {
 }
 
 /**
- * Vector timestamp used to order messages.
- */
-message TimeframeVector {
-  message Frame {
-    // TODO(marik-d): Compress using numeric feed indexes.
-    // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
-    bytes feedKey = 1;
-    int32 seq = 3;
-  }
-
-  repeated Frame frames = 1;
-}
-
-/**
  * Wrapper for all ECHO messages.
  */
 message EchoEnvelope {
   string itemId = 1;
-  TimeframeVector timeframe = 2;
 
   // Create item.
   ItemGenesis genesis = 10;

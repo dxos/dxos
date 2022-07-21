@@ -6,77 +6,111 @@ import { Readable } from 'readable-stream';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { createBatchStream } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/protocols';
 
-import { SubscribeToFeedRequest, SubscribeToFeedResponse, SubscribeToFeedsResponse } from '../proto/gen/dxos/devtools';
+import {
+  SubscribeToFeedsRequest,
+  SubscribeToFeedsResponse,
+  SubscribeToFeedBlocksRequest,
+  SubscribeToFeedBlocksResponse
+} from '../proto/gen/dxos/devtools';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
-export const subscribeToFeeds = ({ echo }: DevtoolsServiceDependencies) => {
-  return new Stream<SubscribeToFeedsResponse>(({ next }) => {
-    const update = () => {
-      const { value: parties } = echo.queryParties();
-      next({
-        parties: parties.map(party => ({
-          key: party.key,
-          feeds: party.feedProvider.getFeeds().map(feed => feed.key)
-        }))
-      });
-    };
-
-    const partySubscriptions: Record<string, () => void> = {};
-    const unsubscribe = echo.queryParties().subscribe((parties) => {
-      parties.forEach((party) => {
-        if (!partySubscriptions[party.key.toHex()]) {
-          // Send updates on timeframe changes.
-          partySubscriptions[party.key.toHex()] = party.timeframeUpdate.on(() => update());
-        }
-      });
-
-      // Send feeds for new parties.
-      update();
-    });
-
-    // Send initial feeds.
-    update();
-
-    return () => {
-      unsubscribe();
-      Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
-    };
-  });
-};
-
-export const subscribeToFeed = (
+export const subscribeToFeeds = (
   { echo }: DevtoolsServiceDependencies,
-  { partyKey, feedKey }: SubscribeToFeedRequest
-) => {
-  return new Stream<SubscribeToFeedResponse>(({ next }) => {
-    if (!partyKey || !feedKey) {
+  { partyKey, feedKeys }: SubscribeToFeedsRequest
+) => new Stream<SubscribeToFeedsResponse>(({ next }) => {
+  if (!partyKey || feedKeys?.length === 0) {
+    return;
+  }
+
+  const feedMap = new Map<PublicKey, { feedKey: PublicKey, stream: Readable, length: number }>();
+
+  setImmediate(async () => {
+    const { value: parties } = echo.queryParties();
+    const party = parties.find(party => party.key.equals(partyKey));
+    if (!party) {
       return;
     }
 
-    let feedStream: Readable;
-    setImmediate(async () => {
-      const { value: parties } = echo.queryParties();
-      const party = parties.find(party => party.key.equals(partyKey));
-      if (!party) {
-        return;
-      }
+    const feeds = await party.getFeeds();
+    feeds
+      .filter(feed => !feedKeys?.length || feedKeys.some(feedKey => feedKey.equals(feed.key)))
+      .forEach(feed => {
+        let feedInfo = feedMap.get(feed.key);
+        if (!feedInfo) {
+          // TODO(wittjosiah): Start from timeframe?
+          // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
+          // Tail feed so as to not overload the browser.
+          const feedStream = new Readable({ objectMode: true })
+            .wrap(createBatchStream(feed.feed, {
+              live: true,
+              start: 0
+            }));
 
-      const { feed } = await party.feedProvider.createOrOpenReadOnlyFeed(feedKey);
+          feedStream.on('data', blocks => {
+            feedInfo!.length += blocks.length;
 
-      // TODO(wittjosiah): Start from timeframe?
-      // TODO(wittjosiah): Bidirectional lazy loading to feed into virtualized table.
-      // Tail feed so as to not overload the browser.
-      feedStream = new Readable({ objectMode: true })
-        .wrap(createBatchStream(feed, { live: true, start: Math.max(0, feed.length - 10) }));
+            next({
+              feeds: Array.from(feedMap.values()).map(({ feedKey, length }) => ({
+                feedKey,
+                length
+              }))
+            });
+          });
 
-      feedStream.on('data', blocks => {
-        next({ blocks });
+          feedInfo = {
+            feedKey: feed.key,
+            stream: feedStream,
+            length: 0
+          };
+
+          feedMap.set(feed.key, feedInfo);
+        }
       });
-    });
-
-    return () => {
-      feedStream?.destroy();
-    };
   });
-};
+
+  return () => {
+    feedMap.forEach(({ stream }) => stream.destroy());
+  };
+});
+
+export const subscribeToFeedBlocks = (
+  { echo }: DevtoolsServiceDependencies,
+  { partyKey, feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest
+) => new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
+  if (!partyKey || !feedKey) {
+    return;
+  }
+
+  let feedStream: Readable;
+  setImmediate(async () => {
+    const { value: parties } = echo.queryParties();
+    const party = parties.find(party => party.key.equals(partyKey));
+    if (!party) {
+      return;
+    }
+
+    const descriptor = await party.getFeeds().find(feed => feed.key.equals(feedKey));
+    if (!descriptor) {
+      return;
+    }
+
+    // TODO(wittjosiah): Start from timeframe?
+    // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
+    // Tail feed so as to not overload the browser.
+    feedStream = new Readable({ objectMode: true })
+      .wrap(createBatchStream(descriptor.feed, {
+        live: true,
+        start: Math.max(0, descriptor.feed.length - maxBlocks)
+      }));
+
+    feedStream.on('data', blocks => {
+      next({ blocks });
+    });
+  });
+
+  return () => {
+    feedStream?.destroy();
+  };
+});

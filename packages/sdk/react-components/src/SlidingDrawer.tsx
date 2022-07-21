@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, PropsWithChildren } from 'react';
 
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -66,25 +66,23 @@ export interface AppBarProps extends MuiAppBarProps {
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
-})<AppBarProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => {
-  return ({
+})<AppBarProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
+  transition: theme.transitions.create(['margin', 'width'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen
+  }),
+  marginLeft: 0,
+  marginRight: 0,
+  ...(drawerOpen && {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
+    marginRight: (direction === 'right') ? drawerWidth : undefined,
     transition: theme.transitions.create(['margin', 'width'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen
-    }),
-    marginLeft: 0,
-    marginRight: 0,
-    ...(drawerOpen && {
-      width: `calc(100% - ${drawerWidth}px)`,
-      marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-      marginRight: (direction === 'right') ? drawerWidth : undefined,
-      transition: theme.transitions.create(['margin', 'width'], {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen
-      })
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen
     })
-  });
-});
+  })
+}));
 
 export const SlidingAppBar: FunctionComponent<AppBarProps> = AppBar;
 
@@ -101,30 +99,28 @@ interface ContentProps {
 
 const Content = styled('main', {
   shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
-})<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => {
-  return ({
-    display: 'flex',
-    overflow: 'hidden',
-    flexGrow: 1,
-    flexDirection: 'column',
+})<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
+  display: 'flex',
+  overflow: 'hidden',
+  flexGrow: 1,
+  flexDirection: 'column',
+  transition: theme.transitions.create('margin', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen
+  }),
+  marginLeft: 0,
+  marginRight: 0,
+  ...(drawerOpen && {
+    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
+    marginRight: (direction === 'right') ? `${drawerWidth}px` : undefined,
     transition: theme.transitions.create('margin', {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen
-    }),
-    marginLeft: 0,
-    marginRight: 0,
-    ...(drawerOpen && {
-      marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-      marginRight: (direction === 'right') ? `${drawerWidth}px` : undefined,
-      transition: theme.transitions.create('margin', {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen
-      })
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen
     })
-  });
-});
+  })
+}));
 
-export const SlidingContent: FunctionComponent<ContentProps> = Content;
+export const SlidingContent: FunctionComponent<PropsWithChildren<ContentProps>> = Content;
 
 // ----------------------------------------------------------------------------.
 // Helpers.

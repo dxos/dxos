@@ -5,17 +5,18 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
-import { createRamStorage } from '../util';
 import { SnapshotStore } from './snapshot-store';
 
 const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('SnapshotStore', () => {
   test('in-memory', async () => {
-    const store = new SnapshotStore(createRamStorage());
+    const store = new SnapshotStore(createStorage('', StorageType.RAM).directory('snapshots'));
 
     const key1 = createPublicKey();
     const key2 = createPublicKey();

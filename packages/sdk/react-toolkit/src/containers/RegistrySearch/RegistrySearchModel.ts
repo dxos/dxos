@@ -10,12 +10,14 @@ import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client
 
 export type SearchFilter = (resource: ResourceSet) => boolean
 
+// TODO(wittjosiah): Move to hooks.
 export const useRegistrySearchModel = (
   registry: RegistryClient,
   filters: SearchFilter[] = [],
   deps: any[] = []
 ) => {
-  return useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  const searchModel = useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  return searchModel;
 };
 
 export const getTypeName = ({ type }: RegistryType) => {
@@ -24,14 +26,11 @@ export const getTypeName = ({ type }: RegistryType) => {
 };
 
 // TODO(wittjosiah): Reimplement this with DXQS.
-
 // export const createTypeFilter = (types: CID[]) => (resource: ResourceSet) => {
 //   return types.some(type => resource.type && type.equals(resource.type));
 // };
 
-export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) => {
-  return domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
-};
+export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) => domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
 
 /**
  * Filterable resource search model.
@@ -87,15 +86,12 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
         });
       }
 
-      this._results = resources.map(resource => {
-        // const type = this._types.find(type => resource.type && resource.type.equals(type.cid));
-        return ({
-          id: resource.name.toString(),
-          // type: type ? getTypeName(type) : undefined,
-          text: resource.name.toString(),
-          value: resource
-        });
-      });
+      this._results = resources.map((resource) => ({
+        id: resource.name.toString(),
+        // type: type ? getTypeName(type) : undefined,
+        text: resource.name.toString(),
+        value: resource
+      }));
 
       this._results = this._results.sort((a, b) => {
         let sort = 0;

@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import distance from 'xor-distance';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
 
@@ -111,6 +111,4 @@ export class MMSTTopology implements Topology {
   }
 }
 
-function sortByXorDistance (keys: PublicKey[], reference: PublicKey): PublicKey[] {
-  return keys.sort((a, b) => distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer())));
-}
+const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] => keys.sort((a, b) => distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer())));

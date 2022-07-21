@@ -11,7 +11,8 @@ import {
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
 import { PartyMember } from '@dxos/client';
-import { PublicKeyLike, humanize } from '@dxos/crypto';
+import { PublicKeyLike } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;
@@ -29,9 +30,7 @@ const COLORS = [
   amber[depth]
 ];
 
-const getColor = (publicKey: PublicKeyLike) => {
-  return COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
-};
+const getColor = (publicKey: PublicKeyLike) => COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
 
 // Same size as medium Icon.
 const avatarStyles = {

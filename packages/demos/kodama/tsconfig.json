@@ -1,0 +1,45 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "CommonJS",
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    }
+  ]
+}

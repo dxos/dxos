@@ -20,45 +20,43 @@ export interface KeyTableProps {
   keys: KeyRecord[]
 }
 
-export const KeyTable = ({ keys }: KeyTableProps) => {
-  return (
-    <Table
-      stickyHeader
-      size='small'
-    >
-      <TableHead>
-        <TableRow>
-          <TableCell sx={{ width: 80 }}>Type</TableCell>
-          <TableCell>Public Key</TableCell>
-          <TableCell sx={{ width: 180 }}>Added</TableCell>
-          <TableCell sx={{ width: 40 }}>Ours</TableCell>
-          <TableCell sx={{ width: 40 }}>Trusted</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {keys.sort(sorter).map(({ type, publicKey, added, own, trusted }) => {
-          const key = publicKey.toHex();
-          return (
-            <TableRow key={key}>
-              <TableCell monospace>
-                {keyTypeName(type)}
-              </TableCell>
-              <TableCell title={key}>
-                <CopyText monospace variant='h6' value={key} length={8} />
-              </TableCell>
-              <TableCell title={added}>
-                {moment(added).fromNow()}
-              </TableCell>
-              <TableCell align='center'>
-                <BooleanIcon value={own} />
-              </TableCell>
-              <TableCell align='center'>
-                <BooleanIcon value={trusted} />
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
-};
+export const KeyTable = ({ keys }: KeyTableProps) => (
+  <Table
+    stickyHeader
+    size='small'
+  >
+    <TableHead>
+      <TableRow>
+        <TableCell sx={{ width: 80 }}>Type</TableCell>
+        <TableCell>Public Key</TableCell>
+        <TableCell sx={{ width: 180 }}>Added</TableCell>
+        <TableCell sx={{ width: 40 }}>Ours</TableCell>
+        <TableCell sx={{ width: 40 }}>Trusted</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {keys.sort(sorter).map(({ type, publicKey, added, own, trusted }) => {
+        const key = publicKey.toHex();
+        return (
+          <TableRow key={key}>
+            <TableCell monospace>
+              {keyTypeName(type)}
+            </TableCell>
+            <TableCell title={key}>
+              <CopyText monospace variant='h6' value={key} length={8} />
+            </TableCell>
+            <TableCell title={added}>
+              {moment(added).fromNow()}
+            </TableCell>
+            <TableCell align='center'>
+              <BooleanIcon value={own} />
+            </TableCell>
+            <TableCell align='center'>
+              <BooleanIcon value={trusted} />
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+);

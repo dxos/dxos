@@ -27,9 +27,7 @@ const range = types.reduce((result, _, i) => result * data[types[i]].length, 1);
 const bitlength = Math.log2(range);
 const bytelength = bitlength / 8;
 
-export const generateKey = () => {
-  return crypto.randomBytes(bytelength);
-};
+export const generateKey = () => crypto.randomBytes(bytelength);
 
 /**
  * Generate 3-work phrase.

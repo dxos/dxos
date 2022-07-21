@@ -161,9 +161,8 @@ export class PartyBuilder {
     });
   }
 
-  async createParty () {
-
-  }
+  // TODO(burdon): ???
+  async createParty () {}
 
   async createRandomItem (parent?: Item<ObjectModel>) {
     if (parent) {

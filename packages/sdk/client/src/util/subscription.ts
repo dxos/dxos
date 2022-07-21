@@ -6,19 +6,18 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ResultSet } from '@dxos/echo-db';
 
-export function resultSetToStream<T, U> (resultSet: ResultSet<T>, map: (arg: T[]) => U): Stream<U> {
-  return new Stream(({ next }) => {
-    next(map(resultSet.value));
-    return resultSet.update.on(() => next(map(resultSet.value)));
-  });
-}
+export const resultSetToStream = <T, U>(resultSet: ResultSet<T>, map: (arg: T[]) => U): Stream<U> => new Stream(({ next }) => {
+  next(map(resultSet.value));
+  return resultSet.update.on(() => next(map(resultSet.value)));
+});
 
-export function streamToResultSet<T, U> (stream: Stream<T>, map: (arg?: T) => U[]): ResultSet<U> {
+export const streamToResultSet = <T, U>(stream: Stream<T>, map: (arg?: T) => U[]): ResultSet<U> => {
   const event = new Event();
   let lastItem: T | undefined;
   stream.subscribe(data => {
     lastItem = data;
     event.emit();
-  }, () => {});
+  });
+
   return new ResultSet(event, () => map(lastItem));
-}
+};

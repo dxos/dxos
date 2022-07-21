@@ -8,15 +8,17 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
-import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
+import {
+  defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase
+} from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
-import { Item } from './api';
 import { ECHO } from './echo';
 import { Contact } from './halo';
 import { defaultInvitationAuthenticator } from './invitations';
+import { Item } from './packlets/database';
 import { inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:test');
@@ -43,7 +45,7 @@ describe('ECHO', () => {
   test('create party and update properties.', async () => {
     const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const party = await echo.createParty();
@@ -55,12 +57,12 @@ describe('ECHO', () => {
   test('create party and items.', async () => {
     const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => party.key.humanize()));
+      log('Updated:', parties.map(party => humanize(party.key)));
 
       // TODO(burdon): Update currently called after all mutations below have completed?
       expect(parties).toHaveLength(1);
@@ -83,7 +85,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     // TODO(burdon): Test item mutations.
     await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
@@ -98,12 +100,12 @@ describe('ECHO', () => {
     const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => party.key.humanize()));
+      log('Updated:', parties.map(party => humanize(party.key)));
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
@@ -126,7 +128,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parent = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
@@ -139,7 +141,7 @@ describe('ECHO', () => {
     const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => party.key.humanize()));
+    log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
     const party = await echo.createParty();
@@ -148,7 +150,7 @@ describe('ECHO', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parentA = await party.database.createItem({ model: ObjectModel, type: 'example:item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });
@@ -707,10 +709,6 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await partyA.database
-      .select({ type: 'example:item/test' })
-      .exec()
-      .update.waitFor(result => result.entities.length > 0);
     expect(partyA.database.select({ type: 'example:item/test' }).exec().entities.length).toEqual(1);
   }).timeout(10_000);
 
@@ -832,6 +830,21 @@ describe('ECHO', () => {
 
     expect(members[0].displayName).toBe('A');
     expect(members[1].displayName).toBe('B');
+  });
+
+  test('optimistic mutations on ObjectModel', async () => {
+    const echo = await setup({ createProfile: true, displayName: 'A' });
+    const party = await echo.createParty();
+    const item = await party.database.createItem({ model: ObjectModel });
+
+    const committed = item.model
+      .builder()
+      .set('key', 'value')
+      .commit();
+    expect(item.model.get('key')).toEqual('value');
+
+    await committed;
+    expect(item.model.get('key')).toEqual('value');
   });
 
   // TODO(burdon): Fix.

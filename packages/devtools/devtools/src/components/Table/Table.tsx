@@ -19,31 +19,29 @@ export type TableProps = MuiTableProps
 /**
  * Scrolling table.
  */
-export const Table = ({ children, ...props }: TableProps) => {
-  return (
-    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <TableContainer sx={{ height: '100%' }}>
-        <MuiTable
-          stickyHeader
-          size='small'
-          sx={{
-            '& .MuiTableCell-head': {
-              fontVariant: 'all-petite-caps'
-            },
-            '& .MuiTableCell-root': {
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis'
-            }
-          }}
-          {...props}
-        >
-          {children}
-        </MuiTable>
-      </TableContainer>
-    </Box>
-  );
-};
+export const Table = ({ children, ...props }: TableProps) => (
+  <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+    <TableContainer sx={{ height: '100%' }}>
+      <MuiTable
+        stickyHeader
+        size='small'
+        sx={{
+          '& .MuiTableCell-head': {
+            fontVariant: 'all-petite-caps'
+          },
+          '& .MuiTableCell-root': {
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis'
+          }
+        }}
+        {...props}
+      >
+        {children}
+      </MuiTable>
+    </TableContainer>
+  </Box>
+);
 
 interface TableCellProps extends MuiTableCellProps {
   monospace?: boolean;

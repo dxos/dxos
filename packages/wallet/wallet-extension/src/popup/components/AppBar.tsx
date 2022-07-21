@@ -6,24 +6,11 @@ import React from 'react';
 import browser from 'webextension-polyfill';
 
 import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
-import { AppBar as MuiAppBar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
-import { makeStyles } from '@mui/styles';
+import { AppBar as MuiAppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 
 import { inFullScreenMode } from '../utils';
 
-const useStyles = makeStyles(theme => ({
-  logo: {
-    maxWidth: 20,
-    margin: 5
-  },
-  title: {
-    flexGrow: 1
-  }
-}));
-
 export const AppBar = () => {
-  const classes = useStyles();
-
   const onExpandToFullscreen = async () => {
     if (inFullScreenMode()) {
       return;
@@ -35,8 +22,13 @@ export const AppBar = () => {
   return (
     <MuiAppBar position='static' color='default'>
       <Toolbar>
-        <img src='../dxos.png' alt='logo' className={classes.logo} />
-        <Typography variant='h6' className={classes.title}> Welcome to DXOS! </Typography>
+        <Box sx={{
+          maxWidth: 20,
+          margin: 5
+        }}>
+          <img src='../dxos.png' alt='logo' />
+        </Box>
+        <Typography variant='h6' sx={{ flexGrow: 1 }}> Welcome to DXOS! </Typography>
         {inFullScreenMode() || (
           <Tooltip title='Expand to fullscreen' placement='left' arrow>
             <IconButton onClick={onExpandToFullscreen}>

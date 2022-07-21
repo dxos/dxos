@@ -30,6 +30,7 @@ import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './typ
 export class ProfileService implements IProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
+  // TODO(burdon): Pass in HALO.
   constructor (
     private readonly echo: ECHO
   ) {}
@@ -126,6 +127,4 @@ export class ProfileService implements IProfileService {
   }
 }
 
-export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => {
-  return new ProfileService(echo);
-};
+export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => new ProfileService(echo);

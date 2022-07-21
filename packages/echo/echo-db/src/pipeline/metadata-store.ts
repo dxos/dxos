@@ -5,10 +5,11 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/crypto';
+import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -19,6 +20,11 @@ export const STORAGE_VERSION = 1;
 
 const log = debug('dxos:snapshot-store');
 
+export interface AddPartyOptions {
+  key: PublicKey
+  genesisFeed: PublicKey
+}
+
 export class MetadataStore {
   private _metadata: EchoMetadata = {
     version: STORAGE_VERSION,
@@ -28,7 +34,7 @@ export class MetadataStore {
   };
 
   constructor (
-    private readonly _storage: IStorage
+    private readonly _directory: Directory
   ) {}
 
   get version (): number {
@@ -46,8 +52,9 @@ export class MetadataStore {
   /**
    * Loads metadata from persistent storage.
    */
+  @synchronized
   async load (): Promise<void> {
-    const file = this._storage.createOrOpen('EchoMetadata');
+    const file = this._directory.createOrOpen('EchoMetadata');
     try {
       const { size } = await file.stat();
       if (size === 0) {
@@ -67,6 +74,7 @@ export class MetadataStore {
     }
   }
 
+  @synchronized
   private async _save (): Promise<void> {
     const data: EchoMetadata = {
       ...this._metadata,
@@ -75,11 +83,26 @@ export class MetadataStore {
       updated: new Date()
     };
 
-    const file = this._storage.createOrOpen('EchoMetadata');
+    const file = this._directory.createOrOpen('EchoMetadata');
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
       await file.write(0, encoded);
+
+      // Truncate the rest of the file.
+      {
+        const { size } = await file.stat();
+        if (size > encoded.length) {
+          await file.truncate(encoded.length, size);
+        }
+      }
+
+      // Sanity check.
+      const { size } = await file.stat();
+      if (size !== encoded.length) {
+        console.log('SANITY!');
+      }
+      assert(size === encoded.length);
     } finally {
       await file.close();
     }
@@ -90,7 +113,7 @@ export class MetadataStore {
    */
   async clear (): Promise<void> {
     log('Clearing all echo metadata...');
-    await this._storage.destroy();
+    await this._directory.delete();
   }
 
   /**
@@ -129,6 +152,14 @@ export class MetadataStore {
     await this._save();
   }
 
+  async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    assert(PublicKey.isPublicKey(feedKey));
+    await this.addPartyFeed(partyKey, feedKey);
+    const party = this.getParty(partyKey) ?? failUndefined();
+    party.genesisFeedKey = feedKey;
+    await this._save();
+  }
+
   /**
    * Sets the data feed key in the party specified by public key and saves updated data in persistent storage.
    * Update party's feed list.
@@ -157,5 +188,11 @@ export class MetadataStore {
       return false;
     }
     return !!party.feedKeys?.find(fk => feedKey.equals(fk));
+  }
+
+  async setTimeframe (partyKey: PublicKey, timeframe: Timeframe) {
+    const party = this.getParty(partyKey) ?? failUndefined();
+    party.latestTimeframe = timeframe;
+    await this._save();
   }
 }

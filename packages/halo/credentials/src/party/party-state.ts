@@ -6,7 +6,8 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { PublicKey, PublicKeyLike, discoveryKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { isIdentityMessage, IdentityMessageProcessor, IdentityEvents } from '../identity';
 import { Keyring, assertValidPublicKey, keyTypeName } from '../keys';
@@ -516,15 +517,13 @@ export class PartyState extends EventEmitter {
     publicKey = PublicKey.from(publicKey);
     const keyStr = publicKey.toHex();
 
-    const makeRecord = () => {
-      return {
-        type: KeyType.UNKNOWN,
-        trusted: true,
-        own: false,
-        ...attributes, // Let attributes clobber the defaults.
-        publicKey
-      };
-    };
+    const makeRecord = () => ({
+      type: KeyType.UNKNOWN,
+      trusted: true,
+      own: false,
+      ...attributes, // Let attributes clobber the defaults.
+      publicKey
+    });
 
     let keyRecord = this._keyring.getKey(publicKey);
     if (!keyRecord) {

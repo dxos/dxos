@@ -23,7 +23,8 @@
      * When someone asks for "^1.0.0" make sure they get "1.2.3" when working in this repo,
      * instead of the latest version.
      */
-    // "some-library": "1.2.3"
+     // https://github.com/microsoft/rushstack/issues/2981#issuecomment-1157233890
+     "browserslist": "4.21.1"
   },
 
   /**

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component, FunctionComponent } from 'react';
+import React, { Component, FunctionComponent, PropsWithChildren } from 'react';
 
 import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../../components';
 import { ErrorContext } from '../../hooks';
@@ -30,7 +30,7 @@ interface ErrorBoundaryState {
  * https://reactjs.org/docs/error-boundaries.html
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
   static defaultProps = {
     indicator: ErrorIndicator, // TODO(burdon): Debug only.
     view: ErrorView,

@@ -25,22 +25,28 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../common/protocols"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../gravity/browser-mocha"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -50,15 +56,6 @@
     },
     {
       "path": "../../sdk/react-toolkit"
-    },
-    {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../gravity/browser-mocha"
     }
   ]
 }

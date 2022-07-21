@@ -9,15 +9,15 @@ import { Party } from '@dxos/client';
 import { ITEM_TYPE, SLACK_FOR_BOT_UPDATES_MS, SLEEP_TIME } from './constants';
 import { Orchestrator } from './orchestrator';
 
-function isAllFresh (party: Party) {
+const isAllFresh = (party: Party) => {
   const now = Date.now();
   const entities = party.database.select({
     type: ITEM_TYPE
   }).exec().entities;
   return entities.every((e) => e.model.getProperty('ts') > now - SLACK_FOR_BOT_UPDATES_MS);
-}
+};
 
-async function multiItemStress () {
+const multiItemStress = async () => {
   const orchestrator = new Orchestrator(new NodeContainer(['@swc-node/register']));
   await orchestrator.initialize();
 
@@ -35,6 +35,6 @@ async function multiItemStress () {
 
   await orchestrator.stop();
 
-}
+};
 
 void multiItemStress();

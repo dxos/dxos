@@ -11,6 +11,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/protocols"
+    },
+    {
       "path": "../echo-db"
     },
     {
@@ -18,9 +21,6 @@
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../../common/crypto"
     },
     {
       "path": "../object-model"

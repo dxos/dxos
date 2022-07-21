@@ -5,12 +5,11 @@
 import debug from 'debug';
 
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
 import { DataParty } from '../parties';
-import { createRamStorage } from '../util';
 
 export const log = debug('dxos:echo-db:testing');
 
@@ -21,13 +20,12 @@ export const messageLogger = (tag: string) => (message: any) => {
 export interface TestOptions {
   verboseLogging?: boolean
   initialize?: boolean
-  storage?: any
+  storage?: Storage
   keyStorage?: any
   networkManagerOptions?: NetworkManagerOptions
   // TODO(burdon): Group properties by hierarchical object.
   snapshots?: boolean
   snapshotInterval?: number
-  snapshotStorage?: IStorage
 }
 
 /**
@@ -36,17 +34,15 @@ export interface TestOptions {
 export const createTestInstance = async ({
   verboseLogging = false,
   initialize = false,
-  storage = createRamStorage(),
+  storage = createStorage('', StorageType.RAM),
   keyStorage = undefined,
   networkManagerOptions,
-  snapshotStorage = createRamStorage(),
   snapshots = true,
   snapshotInterval
 }: TestOptions = {}) => {
   const echo = new ECHO({
-    feedStorage: storage,
+    storage,
     keyStorage,
-    snapshotStorage,
     snapshotInterval,
     snapshots,
     networkManagerOptions,

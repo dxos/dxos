@@ -6,8 +6,8 @@ import assert from 'assert';
 import defaultHypercore from 'hypercore';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import { IStorage } from '@dxos/random-access-multi-storage';
+import type { PublicKey } from '@dxos/protocols';
+import { Directory } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
@@ -45,7 +45,7 @@ export interface FeedStoreOptions {
  * into a persist repository storage.
  */
 export class FeedStore {
-  private _storage: IStorage;
+  private _directory: Directory;
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
@@ -56,13 +56,13 @@ export class FeedStore {
   readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
   /**
-   * @param storage RandomAccessStorage to use by default by the feeds.
+   * @param directory RandomAccessStorage to use by default by the feeds.
    * @param options Feedstore options.
    */
-  constructor (storage: IStorage, options: FeedStoreOptions = {}) {
-    assert(storage, 'The storage is required.');
+  constructor (directory: Directory, options: FeedStoreOptions = {}) {
+    assert(directory, 'The storage is required.');
 
-    this._storage = storage;
+    this._directory = directory;
 
     const {
       valueEncoding,
@@ -79,7 +79,7 @@ export class FeedStore {
    * @type {RandomAccessStorage}
    */
   get storage () {
-    return this._storage;
+    return this._directory;
   }
 
   @synchronized
@@ -114,7 +114,7 @@ export class FeedStore {
     const { key, secretKey } = options;
 
     const descriptor = new FeedDescriptor({
-      storage: this._storage,
+      directory: this._directory,
       key,
       secretKey,
       valueEncoding: this._valueEncoding,
@@ -133,7 +133,7 @@ export class FeedStore {
   }
 }
 
-function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
+const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;
   }
@@ -141,4 +141,4 @@ function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
     encode: (x: any) => Buffer.from(encoding.encode(x)),
     decode: encoding.decode.bind(encoding)
   };
-}
+};

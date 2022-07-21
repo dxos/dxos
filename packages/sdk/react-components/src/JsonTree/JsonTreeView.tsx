@@ -13,8 +13,8 @@ import {
 import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
 import { Box, Typography, styled, useTheme } from '@mui/material';
 
-import { keyToString, PublicKey } from '@dxos/crypto';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 
 //
 // Calculate all IDs.
@@ -199,7 +199,7 @@ export const JsonTreeView = ({
     // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
     let itemValue;
     if (value instanceof Uint8Array) {
-      itemValue = <KeyValue size={size}>{truncateKey(keyToString(value), 8)}</KeyValue>;
+      itemValue = <KeyValue size={size}>{truncateKey(PublicKey.stringify(value), 8)}</KeyValue>;
     } else if (value instanceof PublicKey) {
       itemValue = <KeyValue size={size}>{truncateKey(value.toHex(), 8)}</KeyValue>;
     } else if (value === null) {

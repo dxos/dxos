@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.33.3",
+  "version": "2.33.8",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "license": "MIT",
   "author": "DXOS.org",
@@ -17,16 +17,18 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@types/node": "^16.11.27"
+    "@dxos/protocols": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.27",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^26.0.7",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"

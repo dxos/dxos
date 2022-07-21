@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Input, Paper, Toolbar
 } from '@mui/material';
 
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase } from '@dxos/client';
 
 import {
   ClientProvider, useClient,
@@ -29,11 +29,9 @@ const HaloCreationContainer = () => {
   const [seed, setSeed] = useState('');
 
   const handleCreateHalo = async () => {
-    const seedPhrase = generateSeedPhrase();
-    const keyPair = keyPairFromSeedPhrase(seedPhrase);
-
-    await client.halo.createProfile({ ...keyPair });
-    setSeed(seedPhrase);
+    const seedphrase = generateSeedPhrase();
+    await client.halo.createProfile({ seedphrase });
+    setSeed(seedphrase);
   };
 
   return (
@@ -108,19 +106,17 @@ const TestApp = () => {
   );
 };
 
-export const HaloRecovery = () => {
-  return (
-    <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
-        {/* Instantiated Client. */}
-        <ClientProvider>
-          <TestApp />
-        </ClientProvider>
+export const HaloRecovery = () => (
+  <Container>
+    <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
+      {/* Instantiated Client. */}
+      <ClientProvider>
+        <TestApp />
+      </ClientProvider>
 
-        <ClientProvider>
-          <TestApp />
-        </ClientProvider>
-      </Box>
-    </Container>
-  );
-};
+      <ClientProvider>
+        <TestApp />
+      </ClientProvider>
+    </Box>
+  </Container>
+);

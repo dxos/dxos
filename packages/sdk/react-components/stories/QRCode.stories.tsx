@@ -12,10 +12,8 @@ export default {
   component: QRCode
 };
 
-export const Primary = () => {
-  return (
-    <Container>
-      <QRCode value='https://dxos.org' />
-    </Container>
-  );
-};
+export const Primary = () => (
+  <Container>
+    <QRCode value='https://dxos.org' />
+  </Container>
+);

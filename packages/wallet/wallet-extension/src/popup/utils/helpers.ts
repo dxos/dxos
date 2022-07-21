@@ -6,10 +6,6 @@
 // Copyright 2021 DXOS.org
 //
 
-export function inDev (): boolean {
-  return process.env.NODE_ENV === 'development';
-}
+export const inDev = (): boolean => process.env.NODE_ENV === 'development';
 
-export function inFullScreenMode (): boolean {
-  return window.location.href.includes('popup/fullscreen.html');
-}
+export const inFullScreenMode = (): boolean => window.location.href.includes('popup/fullscreen.html');

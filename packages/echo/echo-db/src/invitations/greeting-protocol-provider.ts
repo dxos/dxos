@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { keyToString } from '@dxos/crypto';
 import { protocolFactory } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Creates a duplex connection with a single peer using a common rendezvous key as topic.
@@ -14,12 +14,8 @@ import { protocolFactory } from '@dxos/network-manager';
  */
 // TODO(burdon): When closed?
 // TODO(dboreham): Write a test to check resources are released (no resource leaks).
-export const greetingProtocolProvider = (rendezvousKey: any, peerId: Buffer | Uint8Array, protocolPlugins: any[]) => {
-  return protocolFactory({
-    getTopics: () => {
-      return [rendezvousKey];
-    },
-    session: { peerId: keyToString(peerId) },
-    plugins: protocolPlugins
-  });
-};
+export const greetingProtocolProvider = (rendezvousKey: any, peerId: Buffer | Uint8Array, protocolPlugins: any[]) => protocolFactory({
+  getTopics: () => [rendezvousKey],
+  session: { peerId: PublicKey.stringify(peerId) },
+  plugins: protocolPlugins
+});

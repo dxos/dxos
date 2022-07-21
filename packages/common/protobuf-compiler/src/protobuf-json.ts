@@ -9,7 +9,7 @@ interface ProtobufJson {
   [K: string]: any
 }
 
-function postprocessProtobufJson (protobufJson: ProtobufJson): ProtobufJson {
+const postprocessProtobufJson = (protobufJson: ProtobufJson): ProtobufJson => {
   if (!protobufJson.nested) {
     return protobufJson;
   }
@@ -22,8 +22,6 @@ function postprocessProtobufJson (protobufJson: ProtobufJson): ProtobufJson {
     ...protobufJson,
     nested: newNested
   };
-}
+};
 
-export function serializeSchemaToJson (root: protobuf.Root): any {
-  return postprocessProtobufJson(root.toJSON({ keepComments: true }));
-}
+export const serializeSchemaToJson = (root: protobuf.Root): any => postprocessProtobufJson(root.toJSON({ keepComments: true }));

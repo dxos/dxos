@@ -5,8 +5,8 @@
 import assert from 'assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/crypto';
 import { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 
@@ -96,6 +96,7 @@ export type ModelConstructor<M extends Model> = (
 /**
  *
  */
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
 

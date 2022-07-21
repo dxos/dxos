@@ -31,7 +31,7 @@ export const Filtering = {
    * @param name undergoes filter conditions examination.
    * @param filter specifies the filter conditions.
    */
-  matchResource (name: DXN, filter?: Filter): boolean {
+  matchResource: (name: DXN, filter?: Filter): boolean => {
     if (!filter) {
       return true;
     }
@@ -47,7 +47,7 @@ export const Filtering = {
    * @param filter specifies the filter conditions.
    * @param record undergoes filter conditions examination.
    */
-  matchRecord (record: RegistryRecord, filter?: Filter): boolean {
+  matchRecord: (record: RegistryRecord, filter?: Filter): boolean => {
     if (!filter) {
       return true;
     }
@@ -59,23 +59,21 @@ export const Filtering = {
   }
 };
 
-function matchesRecordType (record: RegistryRecord, type: CID) {
+const matchesRecordType = (record: RegistryRecord, type: CID) => {
   if (!record.payload['@type']) {
     return false;
   }
 
   return CID.from(record.payload['@type']).equals(type);
-}
+};
 
-function matchesText (record: RegistryRecord, text: string) {
+const matchesText = (record: RegistryRecord, text: string) => {
   const places = [
     record.displayName ?? '',
     record.description ?? '',
     ...(record.tags ?? [])
   ];
   return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
-}
+};
 
-function matchesDxn (dxn: DXN, text: string): boolean {
-  return dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
-}
+const matchesDxn = (dxn: DXN, text: string): boolean => dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;

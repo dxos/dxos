@@ -55,15 +55,13 @@ const ImportStory = () => {
   );
 };
 
-export const ImportParty = () => {
-  return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <ImportStory />
-      </ProfileInitializer>
-    </ClientProvider>
-  );
-};
+export const ImportParty = () => (
+  <ClientProvider>
+    <ProfileInitializer>
+      <ImportStory />
+    </ProfileInitializer>
+  </ClientProvider>
+);
 
 const ExportStory = () => {
   const party = useTestParty();
@@ -96,12 +94,10 @@ const ExportStory = () => {
   );
 };
 
-export const ExportParty = () => {
-  return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <ExportStory />
-      </ProfileInitializer>
-    </ClientProvider>
-  );
-};
+export const ExportParty = () => (
+  <ClientProvider>
+    <ProfileInitializer>
+      <ExportStory />
+    </ProfileInitializer>
+  </ClientProvider>
+);

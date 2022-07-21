@@ -26,21 +26,19 @@ export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
  * @param timeout
  * @param verbose
  */
-export function handler <T> (title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> {
-  return async function (argv: Arguments<T>) {
-    const t = timeout && setTimeout(() => {
-      err(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
-      process.exit(1);
-    }, PACKAGE_TIMEOUT);
+export const handler = <T>(title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> => async (argv: Arguments<T>) => {
+  const t = timeout && setTimeout(() => {
+    err(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+    process.exit(1);
+  }, PACKAGE_TIMEOUT);
 
-    const start = Date.now();
-    verbose && log(chalk`\n{green.bold ${title} started}`);
-    await handler(argv);
-    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
+  const start = Date.now();
+  verbose && log(chalk`\n{green.bold ${title} started}`);
+  await handler(argv);
+  verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
 
-    t && clearTimeout(t);
-  };
-}
+  t && clearTimeout(t);
+};
 
 export interface BuildOptions {
   minify?: boolean
@@ -51,7 +49,7 @@ export interface BuildOptions {
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
  */
-export async function execBuild (config: Config, options: BuildOptions = {}) {
+export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
 
   try {
@@ -83,12 +81,12 @@ export async function execBuild (config: Config, options: BuildOptions = {}) {
 
   process.stdout.write(chalk`\n{green.bold Typescript}\n`);
   await execTool('tsc', options.watch ? ['--watch'] : []);
-}
+};
 
 /**
  * Creates a bundled build of the current package.
  */
-export async function execBuildBundle (config: Config, options: BuildOptions = {}) {
+export const execBuildBundle = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
   const outdir = project.esbuildConfig.outdir ?? defaults.esbuild.outdir;
 
@@ -106,12 +104,12 @@ export async function execBuildBundle (config: Config, options: BuildOptions = {
     fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
     await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
-}
+};
 
 /**
  * Creates a static build of the storybook for the current package.
  */
-export async function execBuildBook (config: Config, options: BuildOptions = {}) {
+export const execBuildBook = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
   const outdir = project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
 
@@ -126,27 +124,27 @@ export async function execBuildBook (config: Config, options: BuildOptions = {})
     fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
     await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
-}
+};
 
 /**
  * Runs the storybook for the current package.
  */
-export async function execBook (userArgs?: string[]) {
+export const execBook = async (userArgs?: string[]) => {
   await execTool('esbuild-server', ['book', ...userArgs ?? []]);
-}
+};
 
 /**
  * Runs a dev server for the current package.
  */
-export async function execStart (userArgs?: string[]) {
+export const execStart = async (userArgs?: string[]) => {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
   await execTool('esbuild-server', ['dev', ...userArgs ?? []]);
-}
+};
 
 /**
  * Mocha/Jest tests.
  */
-export async function execTest (config: Config, userArgs?: string[]) {
+export const execTest = async (config: Config, userArgs?: string[]) => {
   const project = Project.load(config);
   if (project.packageJsonContents.jest) {
     err(chalk`{yellow warn}: jest config in package.json is ignored.\n`);
@@ -162,7 +160,7 @@ export async function execTest (config: Config, userArgs?: string[]) {
     process.stdout.write(chalk`\n{green.bold Jest Tests}\n`);
     await execJest({ project, userArgs, forceClose });
   }
-}
+};
 
 /**
  * Builds core yargs commands for toolchain.

@@ -7,7 +7,8 @@
 import expect from 'expect';
 import moment from 'moment';
 
-import { PublicKey, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 import { Filter, Keyring } from '../keys';
 import {
@@ -63,11 +64,8 @@ const messageMap = (messages: (Message | SignedMessage)[]): Map<string, Message 
   return map;
 };
 
-const getIdentityKeyChainForDevice = (keyring: Keyring, devicePublicKey: PublicKey, messages: Map<string, Message | SignedMessage>) => {
-  // Excludes all the FEED keys.
-  return Keyring.buildKeyChain(devicePublicKey, messages,
-    keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
-};
+const getIdentityKeyChainForDevice = (keyring: Keyring, devicePublicKey: PublicKey, messages: Map<string, Message | SignedMessage>) => Keyring.buildKeyChain(devicePublicKey, messages,
+  keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
 
 describe('PartyAuthenticator', () => {
 

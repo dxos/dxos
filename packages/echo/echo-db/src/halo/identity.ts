@@ -102,7 +102,7 @@ export class Identity implements IdentityCredentials {
 
 export type IdentityProvider = () => Identity | undefined;
 
-function getDeviceKeyChainFromHalo (halo: HaloParty, deviceKey: KeyRecord) {
+const getDeviceKeyChainFromHalo = (halo: HaloParty, deviceKey: KeyRecord) => {
   try {
     return Keyring.buildKeyChain(
       deviceKey.publicKey,
@@ -113,4 +113,4 @@ function getDeviceKeyChainFromHalo (halo: HaloParty, deviceKey: KeyRecord) {
     log('Unable to locate device KeyChain:', err);
     throw err;
   }
-}
+};

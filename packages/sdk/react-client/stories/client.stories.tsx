@@ -25,18 +25,14 @@ const TestApp = () => {
   );
 };
 
-export const Primary = () => {
-  return (
-    <ClientProvider>
-      <TestApp />
-    </ClientProvider>
-  );
-};
+export const Primary = () => (
+  <ClientProvider>
+    <TestApp />
+  </ClientProvider>
+);
 
-export const Secondary = () => {
-  return (
-    <ClientProvider config={() => ({})}>
-      <TestApp />
-    </ClientProvider>
-  );
-};
+export const Secondary = () => (
+  <ClientProvider config={() => ({})}>
+    <TestApp />
+  </ClientProvider>
+);

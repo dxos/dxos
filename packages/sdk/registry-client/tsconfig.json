@@ -2,12 +2,12 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false,
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "noImplicitAny": false,
+    "outDir": "dist",
     "paths": {
       "@polkadot/api/augment": [
         "./src/polkadot/interfaces/augment-api.ts"
@@ -32,22 +32,22 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../config"
-    },
-    {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../client"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../config"
     }
   ]
 }

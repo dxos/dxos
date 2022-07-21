@@ -8,8 +8,9 @@ import expect from 'expect';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';

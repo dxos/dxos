@@ -9,7 +9,7 @@ import protobufjs from 'protobufjs';
 
 export type FieldMapper = (value: any, typeName: string) => Promise<any>;
 
-export async function mapMessage (type: protobufjs.Type, mapper: FieldMapper, obj: any) {
+export const mapMessage = async (type: protobufjs.Type, mapper: FieldMapper, obj: any) => {
   const res: any = {};
   for (const field of type.fieldsArray) {
     if (!(field.name in obj)) {
@@ -19,9 +19,9 @@ export async function mapMessage (type: protobufjs.Type, mapper: FieldMapper, ob
   }
 
   return res;
-}
+};
 
-async function mapField (field: protobufjs.Field, mapper: FieldMapper, value: any) {
+const mapField = async (field: protobufjs.Field, mapper: FieldMapper, value: any) => {
   if (!field.required && (value === null || value === undefined)) {
     return value;
   } else if (field.repeated) {
@@ -32,9 +32,9 @@ async function mapField (field: protobufjs.Field, mapper: FieldMapper, value: an
   } else {
     return mapScalarField(field, mapper, value);
   }
-}
+};
 
-async function mapScalarField (field: protobufjs.Field, mapper: FieldMapper, value: any) {
+const mapScalarField = async (field: protobufjs.Field, mapper: FieldMapper, value: any) => {
   if (!field.resolved) {
     field.resolve();
   }
@@ -49,9 +49,9 @@ async function mapScalarField (field: protobufjs.Field, mapper: FieldMapper, val
   }
 
   return value;
-}
+};
 
-async function asyncObjectMap<K extends keyof any, T, U> (map: (value: T, key: K) => Promise<U>, record: Record<K, T>): Promise<Record<K, U>> {
+const asyncObjectMap = async <K extends keyof any, T, U>(map: (value: T, key: K) => Promise<U>, record: Record<K, T>): Promise<Record<K, U>> => {
   const res: Record<K, U> = {} as any;
 
   await Promise.all(Object.entries(record).map(async ([key, value]) => {
@@ -59,4 +59,4 @@ async function asyncObjectMap<K extends keyof any, T, U> (map: (value: T, key: K
   }));
 
   return res;
-}
+};

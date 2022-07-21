@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 
-import { File, IStorage, StorageType } from './interfaces';
+import { File, Storage, StorageType } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
-export function storageTests (testGroupName: string, createStorage: () => IStorage) {
+export function storageTests (testGroupName: string, createStorage: () => Storage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
@@ -21,15 +22,17 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
   describe(testGroupName, () => {
     it('open & close', async () => {
       const storage = createStorage();
+      const directory = storage.directory('');
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
       await file.close();
     });
 
     it('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(fileName);
 
       // eslint-disable-next-line unused-imports/no-unused-vars
       for (const _ of Array.from(Array(5))) {
@@ -43,10 +46,11 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
 
     it('multiple files', async () => {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       const files = Array.from(Array(10))
         .map(() => randomText())
-        .map(fileName => storage.createOrOpen(fileName));
+        .map(fileName => directory.createOrOpen(fileName));
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
@@ -60,13 +64,14 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
 
     it('reads from empty file', async function () {
       const storage = createStorage();
+      const directory = storage.directory('');
 
       // TODO(yivlad): Doesn't work for node.
       if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const { size } = await file.stat();
       expect(size).toBe(0);
@@ -75,71 +80,100 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('reopen', async () => {
       // Open.
       const storage = createStorage();
+      const directory = storage.directory('');
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       // Write & close.
       await writeAndCheck(file, Buffer.from(randomText()));
       await file.close();
 
       // Open again.
-      const file2 = storage.createOrOpen('EchoMetadata');
+      const file2 = directory.createOrOpen('EchoMetadata');
       // Write & close.
       await writeAndCheck(file2, Buffer.from(randomText()));
       await file2.close();
     });
 
-    // TODO(yivlad): Not implemented.
-    it.skip('destroy clears all data', async function () {
+    it('reopen and check if data is the same', async () => {
+      // Open.
       const storage = createStorage();
+      const fileName = randomText();
+      const data = Buffer.from(randomText());
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(fileName);
+
+      // Write & close.
+      await writeAndCheck(file, data);
+      await file.close();
+
+      // Open again.
+      const file2 = directory.createOrOpen(fileName);
+
+      // Read and check inside.
+      const dataFromFile = await file2.read(0, data.length);
+      expect(dataFromFile).toEqual(data);
+      await file2.close();
+    });
+
+    // TODO(yivlad): Not implemented.
+    it.skip('destroy clears all data', async () => {
+      const storage = createStorage();
+      const directory = storage.directory('');
 
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await storage.delete(fileName);
+      await storage.destroy();
       const { size } = await file.stat();
       expect(size).toBe(0);
 
       await file.close();
     });
 
-    it('subdirectories', async function () {
-      const rootStorage = createStorage();
+    it('subdirectories', async () => {
+      // 1. Create storage and two subdirectories
+      const storage = createStorage();
+      const dir1 = storage.directory('dir1');
+      const dir2 = storage.directory('dir2');
 
-      // TODO(yivlad): Doesn't work for StorageType.NODE.
-      if (rootStorage.type === StorageType.NODE) {
-        this.skip();
-      }
-      const fileName = randomText();
-      const file1 = rootStorage.createOrOpen(fileName);
-
+      const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
-      await writeAndCheck(file1, buffer1);
-
-      const childStorage1 = rootStorage.subDir('child1');
-      const file2 = childStorage1.createOrOpen(fileName);
       const buffer2 = Buffer.from(randomText());
-      await writeAndCheck(file2, buffer2);
-      const bufferRead1 = await file1.read(0, buffer1.length);
-      expect(buffer1.equals(bufferRead1));
 
-      const childStorage2 = rootStorage.subDir('child2');
-      const file3 = childStorage2.createOrOpen(fileName);
-      const { size } = await file3.stat();
-      expect(size).toBe(0);
-      const buffer3 = Buffer.from(randomText());
-      await writeAndCheck(file3, buffer3);
-      const bufferRead2 = await file2.read(0, buffer2.length);
-      expect(buffer2.equals(bufferRead2));
+      // 2. Create a file in first subdirectory and write content
+      const file1 = dir1.createOrOpen(fileName);
+      await file1.write(0, buffer1);
 
-      await file1.close();
+      // 3. Create a file with the same name in the second subdir and write different content
+      const file2 = dir2.createOrOpen(fileName);
+      await file2.write(0, buffer2);
+
+      // 4. Check that they have corrent content.
+      expect(await file1.read(0, buffer1.length)).toEqual(buffer1);
+      expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
-    it('destroys file', async function () {
+    it('write in directory/subDirectory/file', async () => {
       const storage = createStorage();
+      const dir = storage.directory('directory');
+      const subDir = dir.subDirectory('subDirectory');
+
+      const file = subDir.createOrOpen('file');
+      const buffer = Buffer.from(randomText());
+      await file.write(0, buffer);
+
+      const readBuffer = await file.read(0, buffer.length);
+      expect(readBuffer).toEqual(buffer);
+      await file.close();
+    });
+
+    it('delete file', async function () {
+      const storage = createStorage();
+      const directory = storage.directory('');
 
       // TODO(yivlad): Works only for StorageType.RAM.
       if (storage.type !== StorageType.RAM) {
@@ -147,17 +181,50 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       }
 
       const fileName = randomText();
-      const file = storage.createOrOpen(fileName);
+      const file = directory.createOrOpen(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await file.destroy();
+      await file.delete();
 
-      const reopened = storage.createOrOpen(fileName);
+      const reopened = directory.createOrOpen(fileName);
       const { size } = await reopened.stat();
       expect(size).toBe(0);
       await reopened.close();
+    });
+
+    it('delete directory', async () => {
+      const storage = createStorage();
+      const directory = storage.directory('');
+      const file = directory.createOrOpen('file');
+
+      const buffer = Buffer.from(randomText());
+      await writeAndCheck(file, buffer);
+
+      await directory.delete();
+      await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
+    });
+
+    it('truncate file', async function () {
+      const storage = createStorage();
+      if (storage.type === StorageType.IDB) {
+        // File.truncate() throws 'Not deletable' error for IDb.
+        this.skip();
+      }
+      const directory = storage.directory('');
+      const file = directory.createOrOpen(randomText());
+
+      const buffer1 = Buffer.from(randomText());
+      await file.write(0, buffer1);
+      const buffer2 = Buffer.from(randomText());
+      await file.write(buffer1.length, buffer2);
+      expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
+
+      await file.truncate(buffer1.length, buffer2.length);
+      expect((await file.stat()).size).toBe(buffer1.length);
+      expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
+      await assert.rejects(async () => await file.read(buffer1.length, buffer2.length), Error, 'Could not satisfy length');
     });
   });
 }

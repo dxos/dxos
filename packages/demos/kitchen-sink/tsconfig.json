@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "dist",
     "removeComments": false,
@@ -28,16 +28,13 @@
   ],
   "references": [
     {
-      "path": "../../sdk/client"
+      "path": "../../common/async"
     },
     {
-      "path": "../../sdk/client-testing"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../common/crypto"
+      "path": "../../common/util"
     },
     {
       "path": "../../echo/echo-db"
@@ -50,6 +47,15 @@
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -68,15 +74,6 @@
     },
     {
       "path": "../../sdk/react-toolkit"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     }
   ]
 }

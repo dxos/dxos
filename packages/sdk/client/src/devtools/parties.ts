@@ -9,42 +9,58 @@ import {
   GetPartySnapshotResponse,
   SavePartySnapshotRequest,
   SavePartySnapshotResponse,
+  SubscribeToPartiesRequest,
   SubscribeToPartiesResponse
 } from '../proto/gen/dxos/devtools';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
-export const subscribeToParties = ({ echo }: DevtoolsServiceDependencies) => {
-  return new Stream<SubscribeToPartiesResponse>(({ next }) => {
-    const update = () => {
-      const { value: parties } = echo.queryParties();
-      next({ parties: parties.map(party => party.partyInfo) });
-    };
+export const subscribeToParties = (
+  { echo }: DevtoolsServiceDependencies,
+  { partyKeys = [] }: SubscribeToPartiesRequest
+) => new Stream<SubscribeToPartiesResponse>(({ next }) => {
+  const update = () => {
+    const { value: parties } = echo.queryParties();
+    const filteredParties = parties.filter(
+      party => !partyKeys?.length || partyKeys.some(partyKey => partyKey.equals(party.key)));
 
-    const partySubscriptions: Record<string, () => void> = {};
-    const timeframeSubscriptions: Record<string, () => void> = {};
-    const unsubscribe = echo.queryParties().subscribe((parties) => {
-      parties.forEach((party) => {
-        if (!partySubscriptions[party.key.toHex()]) {
-          // Send updates on party changes.
-          partySubscriptions[party.key.toHex()] = party.update.on(() => update());
-          timeframeSubscriptions[party.key.toHex()] = party.timeframeUpdate.on(() => update());
-        }
-      });
+    next({
+      parties: filteredParties.map(party => {
+        return {
+          key: party.key,
+          isOpen: party.isOpen,
+          isActive: party.isActive,
+          timeframe: party.timeframe,
+          feeds: party.getFeeds().map(feed => feed.key),
+          properties: party.isOpen ? party.getPropertiesSet().expectOne().model.toObject() : undefined
+        };
+      })
+    });
+  };
 
-      // Send new parties.
-      update();
+  const partySubscriptions: Record<string, () => void> = {};
+  const timeframeSubscriptions: Record<string, () => void> = {};
+  const unsubscribe = echo.queryParties().subscribe((parties) => {
+    parties.forEach((party) => {
+      if (!partySubscriptions[party.key.toHex()]) {
+        // Send updates on party changes.
+        partySubscriptions[party.key.toHex()] = party.update.on(() => update());
+        timeframeSubscriptions[party.key.toHex()] = party.timeframeUpdate.on(() => update());
+      }
     });
 
-    // Send initial parties.
+    // Send new parties.
     update();
-
-    return () => {
-      unsubscribe();
-      Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
-      Object.values(timeframeSubscriptions).forEach(unsubscribe => unsubscribe());
-    };
   });
-};
+
+  // Send initial parties.
+  update();
+
+  return () => {
+    unsubscribe();
+    Object.values(partySubscriptions).forEach(unsubscribe => unsubscribe());
+    Object.values(timeframeSubscriptions).forEach(unsubscribe => unsubscribe());
+  };
+});
 
 export const getPartySnapshot = async (
   { echo }: DevtoolsServiceDependencies,

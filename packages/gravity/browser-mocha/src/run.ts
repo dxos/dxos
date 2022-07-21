@@ -18,7 +18,7 @@ import { Browser, RunOptions } from './runner';
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> {
+export const runTests = async (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
 
   await fs.mkdir(userDataDir, { recursive: true });
@@ -80,22 +80,20 @@ export async function runTests (bundleFile: string, browser: Browser, options: O
     clearTimeout(exitTimeout);
   });
 
-  await page.exposeFunction('browserMocha__getEnv', () => {
-    return { browser };
-  });
+  await page.exposeFunction('browserMocha__getEnv', () => ({ browser }));
 
   await page.addScriptTag({
     path: bundleFile
   });
 
   return getPromise();
-}
+};
 
-function getBrowser (browser: Browser) {
+const getBrowser = (browser: Browser) => {
   switch (browser) {
     case Browser.CHROMIUM: return chromium;
     case Browser.FIREFOX: return firefox;
     case Browser.WEBKIT: return webkit;
     default: throw new Error(`Unsupported browser: ${browser}`);
   }
-}
+};

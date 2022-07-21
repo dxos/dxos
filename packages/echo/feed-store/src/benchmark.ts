@@ -3,7 +3,8 @@
 //
 
 import { Suite } from '@dxos/benchmark-suite';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
@@ -21,44 +22,40 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
+  const fs = new FeedStore(createStorage('').directory('.benchmark'), { valueEncoding: 'utf8' });
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
-  suite.beforeAll(() => {
-    return Promise.all(range(maxFeeds).map(async i => {
-      const name = `feed/${i}`;
-      const { publicKey, secretKey } = createKeyPair();
-      const { feed } = await fs.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+  suite.beforeAll(() => Promise.all(range(maxFeeds).map(async i => {
+    const name = `feed/${i}`;
+    const { publicKey, secretKey } = createKeyPair();
+    const { feed } = await fs.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
-      for (let i = 0; i < maxMessages; i++) {
-        await new Promise<void>((resolve, reject) => {
-          feed.append(`${name}/${i}`, (err) => {
-            if (err) {
-              return reject(err);
-            }
-            resolve();
-          });
-        });
-      }
-
-      return feed;
-    }));
-  });
-
-  suite.test('getBatch', async () => {
-    let count = 0;
-
-    await Promise.all(Array.from((fs as any)._descriptors.values()).map(({ feed }: any) => {
-      return new Promise<void>((resolve, reject) => {
-        feed.getBatch(0, maxMessages, (err: Error, result: any) => {
-          count += result.length;
+    for (let i = 0; i < maxMessages; i++) {
+      await new Promise<void>((resolve, reject) => {
+        feed.append(`${name}/${i}`, (err) => {
           if (err) {
             return reject(err);
           }
           resolve();
         });
       });
-    }));
+    }
+
+    return feed;
+  })));
+
+  suite.test('getBatch', async () => {
+    let count = 0;
+
+    await Promise.all(Array.from((fs as any)._descriptors.values()).map(({ feed }: any) => new Promise<void>((resolve, reject) => {
+      feed.getBatch(0, maxMessages, (err: Error, result: any) => {
+        count += result.length;
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    })));
 
     check(count);
   });

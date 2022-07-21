@@ -8,19 +8,19 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/util"
     },
     {
       "path": "../echo-protocol"
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

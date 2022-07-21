@@ -12,15 +12,13 @@ export default {
   title: 'react-client-testing/CreatePartyDialog'
 };
 
-export const Primary = () => {
-  return (
-    <FullScreen>
-      <CreatePartyDialog
-        open
-        onCreate={() => console.log('Create party')}
-        onJoin={(invitation: string) => console.log('Join party: ' + invitation)}
-        onImport={() => console.log('Import Party')}
-      />
-    </FullScreen>
-  );
-};
+export const Primary = () => (
+  <FullScreen>
+    <CreatePartyDialog
+      open
+      onCreate={() => console.log('Create party')}
+      onJoin={(invitation: string) => console.log('Join party: ' + invitation)}
+      onImport={() => console.log('Import Party')}
+    />
+  </FullScreen>
+);

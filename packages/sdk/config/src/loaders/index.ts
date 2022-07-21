@@ -45,6 +45,4 @@ export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
 /**
  * JSON config.
  */
-export const Defaults = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
-  return maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;
-};
+export const Defaults = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;
