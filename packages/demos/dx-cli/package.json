@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
