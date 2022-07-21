@@ -23,7 +23,7 @@
     "lint": "toolchain lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "toolchain test",
     "posttest": "npm run lint",
     "version": "oclif readme && git add README.md"
   },
@@ -66,10 +66,10 @@
   "oclif": {
     "bin": "dx",
     "dirname": "dx",
-    "commands": "./dist/commands",
+    "commands": "./dist/src/commands",
     "hooks": {
       "init": [
-        "./dist/hooks/init/config"
+        "./dist/src/hooks/init/config"
       ]
     },
     "plugins": [
@@ -94,5 +94,8 @@
         "description": "Manage your Brane spaces."
       }
     }
+  },
+  "toolchain": {
+    "forceCloseTests": true
   }
 }
