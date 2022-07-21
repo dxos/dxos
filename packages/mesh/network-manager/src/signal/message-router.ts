@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
@@ -41,7 +41,7 @@ export class MessageRouter implements SignalMessaging {
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
-  private readonly _beforeDestroyCallbacks: (() => void)[] = [];
+  private readonly _subs = new SubscriptionGroup();
 
   constructor ({
     sendMessage,
@@ -84,7 +84,7 @@ export class MessageRouter implements SignalMessaging {
       }
     }, this._retryDelay);
     this._sentSignalsVSRetryInterval.set(message.messageId, retryInterval);
-    this._beforeDestroyCallbacks.push(() => clearInterval(retryInterval));
+    this._subs.push(() => clearInterval(retryInterval));
     setTimeout(() => {
       if (this._acknowledgedSignals.has(message.messageId!)) { 
         log('Signal was not delivered!');
@@ -154,6 +154,6 @@ export class MessageRouter implements SignalMessaging {
   }
 
   destroy (): void {
-    this._beforeDestroyCallbacks.forEach(callback => callback());
+    this._subs.unsubscribe();
   }
 }
