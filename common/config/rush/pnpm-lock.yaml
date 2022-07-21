@@ -1051,7 +1051,9 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/react-registry-client': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
       '@emotion/react': ^11.9.0
@@ -1085,8 +1087,11 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-registry-client': link:../../sdk/react-registry-client
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.9.3_d5bzas45mfehtvmrop73rv3yw4
       '@emotion/styled': 11.9.3_rtk2r4lsmeeb4eofjg7vjptjzm
@@ -1110,7 +1115,6 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/text-model': link:../../echo/text-model
       '@mui/system': 5.8.7_kgoqblbzxlux4bm4vftowiq75m
       '@types/color-hash': 1.0.2
