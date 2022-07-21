@@ -10,6 +10,7 @@ import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Loader } from './components';
@@ -19,7 +20,9 @@ import { theme } from './theme';
 
 const Main = ({ client }: { client: Client }) => (
   <ClientProvider client={client}>
-    <PanelsContainer sections={sections} />
+    <RegistryProvider config={client.config}>
+      <PanelsContainer sections={sections} />
+    </RegistryProvider>
   </ClientProvider>
 );
 
