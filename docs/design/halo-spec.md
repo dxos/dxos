@@ -6,13 +6,12 @@
 - [4. Design](#4-design)
   - [4.1. HALO](#41-halo)
     - [4.1.1. Protocol Definitions](#411-protocol-definitions)
-    - [4.1.2. Identity](#412-identity)
-    - [4.1.3. Profiles](#413-profiles)
-    - [4.1.4. DID Documents](#414-did-documents)
-    - [4.1.5. Credentials](#415-credentials)
-    - [4.1.6. HALO Genesis](#416-halo-genesis)
-    - [4.1.7. Device Authorization and Authentication](#417-device-authorization-and-authentication)
-    - [4.1.8. Circles](#418-circles)
+    - [4.1.2. Credentials](#412-credentials)
+    - [4.1.3. HALO Genesis](#413-halo-genesis)
+    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
+    - [4.1.5. Profiles](#415-profiles)
+    - [4.1.6. Circles](#416-circles)
+    - [4.1.7. DID Documents](#417-did-documents)
   - [4.2. ECHO Spaces](#42-echo-spaces)
     - [4.2.1. Protocol Definitions](#421-protocol-definitions)
     - [4.2.2. Genesis](#422-genesis)
@@ -197,38 +196,27 @@ The HALO contains:
 
 The HALO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/halo).
 
-#### 4.1.2. Identity
-
-- Agents create an [TODO: ED25519] key pair.
-- Key pairs can be recovered from a [TODO: 24-word] seed phrase.
-- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity. It is not used to sign messages.
-
-#### 4.1.3. Profiles
-
-- Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
-- Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
-- Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
-- **NOTE**: IPNS is impractical since it only support single private-key access.
-
-#### 4.1.4. DID Documents
-
-- Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used to authenticate an Agent. 
-- DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
-
-#### 4.1.5. Credentials
+#### 4.1.2. Credentials
 
 - Credentials are represented by a schema defined by the HALO protocol.
   The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 - Credentials may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
-- Credentials should generally have narrow claims (separation of concerns).
-- ISSUE: Consider integration with hardware wallets?
 
-#### 4.1.6. HALO Genesis
+#### 4.1.3. HALO Genesis
 
-- Once an Agent's Identity has been created on a Device a special ECHO Space is created that instantiates the Agent's HALO (see below).
-- The Agent's Identity public key is used to create the Genesis messages, and used as the HALO Space identifier.
+> - TODO: What is the private key used for?
+> - TODO: Specify the recovery process.
 
-#### 4.1.7. Device Authorization and Authentication
+- Agents first create an ED25519 key pair that represents an Identity key.
+- The key pair may be recovered from a [TODO: 24-word] seed phrase.
+- A hash of the Identity public key is used as a discovery key (or topic) to locate other peers on the network.
+
+- The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
+- The Agent's Identity key is used to create the Genesis messages (see below).
+
+- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity. It is not used to sign messages.
+
+#### 4.1.4. Device Authorization and Authentication
 
 - Each Device creates a [TODO: ED25519] key pair and maintains a secure key store.
 - The key store is encrypted and optionally protected by a password and/or second factor authenticator.
@@ -252,11 +240,23 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
   and Devices present authentication messages when joining the swarm.
   However, Credentials ***are*** written to the HALO so that they can be presented to ECHO Spaces to demonstrate a chain of trust for authorized Devices (see below).
 
-#### 4.1.8. Circles
+#### 4.1.5. Profiles
+
+- Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
+- Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
+- Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
+- **NOTE**: IPNS is impractical since it only support single private-key access.
+
+#### 4.1.6. Circles
 
 - The HALO database contains a set of records representing third-party agents.
 - These records contain Agent keys (e.g., DIDs) and other metadata (e.g., cached Profiles).
 - The HALO may also contain claims relating to other Agents.
+
+#### 4.1.7. DID Documents
+
+- Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used by external systesm to authenticate the Agent. 
+- DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
 
 
 ### 4.2. ECHO Spaces
@@ -300,14 +300,15 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
 
 ### 4.3. Design Issues
 
-- TODO: Use blockchain hash as timestamp for revocation messages. Finality?
 - TODO: DXNS
   - hybrid/federated KUBE p2p/blockchain.
   - maintain a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have Issuer over the document).
   - DID resolver?
   - DNS resolver?
+- TODO: Use blockchain hash as timestamp for revocation messages. Finality?
 - TODO: Peer DID resolution?
 - TODO: Optionally publish Github credential (claim) to HALO as backup-recovery?
+- TODO: Consider integration with hardware wallets?
 
 <hr/>
 
