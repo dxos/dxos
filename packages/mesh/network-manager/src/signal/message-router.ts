@@ -47,7 +47,7 @@ export class MessageRouter implements SignalMessaging {
     sendMessage,
     onSignal,
     onOffer,
-    retryDelay = 1000,
+    retryDelay = 100,
     timeout = 3000
   }: MessageRouterOptions = {}) {
     assert(sendMessage);
@@ -78,7 +78,7 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(message);
 
     // Setting retry interval if signal was not acknowledged.
-    const retryInterval = setInterval(async () => {
+    const retryInterval = exponentialBackoffInterval(async () => {
       if (!this._acknowledgedSignals.has(message.messageId!)) {
         await this._sendMessage(message);
       }
@@ -157,3 +157,14 @@ export class MessageRouter implements SignalMessaging {
     this._subs.unsubscribe();
   }
 }
+
+const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
+  let interval = initialInterval;
+  const repeat = () => {
+    cb();
+    interval *= 2;
+    timeoutId = setTimeout(repeat, interval);
+  };
+  let timeoutId = setTimeout(repeat, interval);
+  return () => clearTimeout(timeoutId);
+};
