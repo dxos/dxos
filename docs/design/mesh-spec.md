@@ -44,12 +44,12 @@ The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.or
 
 ## 3. Basic Concepts
 
-### Signaling
+### 3.1 Signaling
 
 Signaling enables two or more peers to discover and connect to each other forming a peer-to-peer swarm.
 Peers may exist on multiple platforms, including browser and mobile applications, Web services (including bots), and tools (including the CLI and other terminal applications).
 
-### Signaling Server
+### 3.2 Signaling Server
 
 Peers connect to a configurable signaling server, typically running on a KUBE node.
 The signaling server maintains a DHT that contains a transient map of discovery keys onto a set of peer keys.
@@ -62,7 +62,7 @@ This DHT is replicated across all signaling servers; entries in the DHT expire a
 The signaling server implements a socket based endpoint that allows peers to join and leave swarms, and to send and receive messages to and from other peers.
 
 
-### Signaling Protocol
+### 3.3 Signaling Protocol
 
 > - Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)?
 protocol.
@@ -75,7 +75,7 @@ protocol.
 > - Security considerations (e.g., encryption, authentication, key exchange, hash party/device keys, TTLs)
 
 
-### Client Swarms
+### 3.4 Client Swarms
 
 Peers use the signaling server to connect and exchange data with other peers that belong to the same ECHO party.
 The hash of the party key as the discovery key.
