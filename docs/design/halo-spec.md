@@ -9,9 +9,10 @@
     - [4.1.2. Credentials](#412-credentials)
     - [4.1.3. HALO Genesis](#413-halo-genesis)
     - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
-    - [4.1.5. Profiles](#415-profiles)
-    - [4.1.6. Circles](#416-circles)
-    - [4.1.7. DID Documents](#417-did-documents)
+    - [4.1.5. HALO Recovery](#415-halo-recovery)
+    - [4.1.6. Profiles](#416-profiles)
+    - [4.1.7. Circles](#417-circles)
+    - [4.1.8. DID Documents](#418-did-documents)
   - [4.2. ECHO Spaces](#42-echo-spaces)
     - [4.2.1. Protocol Definitions](#421-protocol-definitions)
     - [4.2.2. Genesis](#422-genesis)
@@ -204,21 +205,16 @@ The HALO protocol definitions are defined by [protobuf schema](https://github.co
 
 #### 4.1.3. HALO Genesis
 
-> - TODO: What is the private key used for?
-> - TODO: Specify the recovery process.
-
-- Agents first create an ED25519 key pair that represents an Identity key.
-- The key pair may be recovered from a [TODO: 24-word] seed phrase.
-- A hash of the Identity public key is used as a discovery key (or topic) to locate other peers on the network.
-
+- Agents first create an Ed25519 key pair that represents an Identity key.
+- The key pair can be recovered from a [TODO: 24-word] seed phrase.
 - The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
-- The Agent's Identity key is used to create the Genesis messages (see below).
-
-- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity. It is not used to sign messages.
+- A second key pair is generated for the Space and both this key and the Identity are used to sign Genesis messages (see below).
+- A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
+- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity.
 
 #### 4.1.4. Device Authorization and Authentication
 
-- Each Device creates a [TODO: ED25519] key pair and maintains a secure key store.
+- Each Device creates a Ed25519 key pair and maintains a secure key store.
 - The key store is encrypted and optionally protected by a password and/or second factor authenticator.
 - Devices must be authorized and authenticated before joining a HALO.
 - Devices may only join one HALO.
@@ -240,20 +236,27 @@ The diagram below illustrates the chain of trust formed when a HALO is construct
   and Devices present authentication messages when joining the swarm.
   However, Credentials ***are*** written to the HALO so that they can be presented to ECHO Spaces to demonstrate a chain of trust for authorized Devices (see below).
 
-#### 4.1.5. Profiles
+#### 4.1.5. HALO Recovery
+
+- New Decices can be admitted to the Halo using the authorization mechanism below.
+- Alternatively, Agents with the recovery key can self-admit a Device to the Halo.
+- The Identity private key can be used to create an `Device Auth` message allowing the Device to connect to the Halo swarm.
+- Another Device can then issue a `Feed Admit` message to enable replication to begin.
+
+#### 4.1.6. Profiles
 
 - Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
 - Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
 - Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
 - **NOTE**: IPNS is impractical since it only support single private-key access.
 
-#### 4.1.6. Circles
+#### 4.1.7. Circles
 
 - The HALO database contains a set of records representing third-party agents.
 - These records contain Agent keys (e.g., DIDs) and other metadata (e.g., cached Profiles).
 - The HALO may also contain claims relating to other Agents.
 
-#### 4.1.7. DID Documents
+#### 4.1.8. DID Documents
 
 - Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used by external systesm to authenticate the Agent. 
 - DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
@@ -379,7 +382,7 @@ A Credential message consists of:
   - The signature itself.
   - Optional KeyChain.
 
-ED25519 curve is used for signatures via [hypercore-crypto](https://www.npmjs.com/package/hypercore-crypto) package.
+Ed25519 curve is used for signatures via [hypercore-crypto](https://www.npmjs.com/package/hypercore-crypto) package.
 
 ### 7.2. Key chain
 
