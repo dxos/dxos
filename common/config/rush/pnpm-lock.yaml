@@ -2039,7 +2039,6 @@ importers:
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
       typescript: ^4.7.2
-      uuidv4: ^6.2.13
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
       xor-distance: ^2.0.0
@@ -2078,7 +2077,6 @@ importers:
       fast-check: 2.14.0
       mocha: 8.4.0
       typescript: 4.7.4
-      uuidv4: 6.2.13
       wait-for-expect: 3.0.2
 
   ../../packages/mesh/protocol:
@@ -9723,10 +9721,6 @@ packages:
 
   /@types/uuid/8.3.3:
     resolution: {integrity: sha512-0LbEEx1zxrYB3pgpd1M5lEhLcXjKJnYghvhTRgaBeUivLHMDM1TzF3IJ6hXU2+8uA4Xz+5BA63mtZo5DjVT8iA==}
-    dev: true
-
-  /@types/uuid/8.3.4:
-    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
     dev: true
 
   /@types/webextension-polyfill/0.8.2:
@@ -27463,13 +27457,6 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
-
-  /uuidv4/6.2.13:
-    resolution: {integrity: sha512-AXyzMjazYB3ovL3q051VLH06Ixj//Knx7QnUSi1T//Ie3io6CpsPu9nVMOx5MoLWh6xV0B9J0hIaxungxXUbPQ==}
-    dependencies:
-      '@types/uuid': 8.3.4
-      uuid: 8.3.2
-    dev: true
 
   /uvu/0.5.2:
     resolution: {integrity: sha512-m2hLe7I2eROhh+tm3WE5cTo/Cv3WQA7Oc9f7JB6uWv+/zVKvfAm53bMyOoGOSZeQ7Ov2Fu9pLhFr7p07bnT20w==}

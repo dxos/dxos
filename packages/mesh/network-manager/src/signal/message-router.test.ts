@@ -15,7 +15,6 @@ import { randomInt } from '@dxos/util';
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
-import { maxSafeInteger } from 'fast-check';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -241,31 +240,34 @@ describe('MessageRouter reliability', () => {
   const setup = ({
     onSignal1 = async () => { },
     onSignal2 = async () => { },
-    // Imitates signal network disruptions (e. g. message doubling, ). 
-    messageDisruption = msg => [msg],
+    // Imitates signal network disruptions (e. g. message doubling, ).
+    messageDisruption = msg => [msg]
   }: {
     onSignal1?: (msg: Message) => Promise<void>;
     onSignal2?: (msg: Message) => Promise<void>;
     messageDisruption?: (msg: Message) => Message[];
   }): {mr1: MessageRouter; mr2: MessageRouter} => {
+    // eslint-disable-next-line prefer-const
     let mr1: MessageRouter;
+    // eslint-disable-next-line prefer-const
     let mr2: MessageRouter;
 
-    mr1 = new MessageRouter({ 
+    // eslint-disable-next-line prefer-const
+    mr1 = new MessageRouter({
       sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),
       onOffer: async () => ({ accept: true }),
       onSignal: onSignal1
     });
     afterTest(() => mr1.destroy());
 
-    mr2 = new MessageRouter({ 
+    mr2 = new MessageRouter({
       sendMessage: async msg => messageDisruption(msg).forEach(msg => mr1.receiveMessage(msg)),
       onOffer: async () => ({ accept: true }),
       onSignal: onSignal2
     });
     afterTest(() => mr1.destroy());
 
-    return { mr1, mr2 }
+    return { mr1, mr2 };
   };
 
   test('signaling with non reliable connection', async () => {
@@ -285,8 +287,8 @@ describe('MessageRouter reliability', () => {
       received.push(msg);
     };
 
-    const { mr2 } = await setup({ 
-      onSignal1: signalMock1, 
+    const { mr2 } = await setup({
+      onSignal1: signalMock1,
       messageDisruption: unreliableConnection
     });
 
