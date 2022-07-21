@@ -65,3 +65,5 @@ The basic app should implement the following features:
 - [Kodama CLI](https://github.com/dxos/protocols/tree/main/packages/demos/kodama)
 - [HALO wallet browser extension](https://github.com/dxos/protocols/tree/main/packages/wallet/wallet-extension)
 - [Devtools browser extension](https://github.com/dxos/protocols/tree/main/packages/devtools/devtools-extension) 
+- [DX CLI](https://github.com/dxos/cli)
+

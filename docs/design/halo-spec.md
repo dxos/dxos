@@ -122,7 +122,9 @@ TOOD: Example.
 Storage for keys (on disk or in-memory).
 
 ***Party*** -
-Old term for Space.
+Set of Agents that can access a digital resource (such as an ECHO Space).
+
+> **Note:** Old term for Space.
 
 ***Presentation***
 Message containing a Credential that is signed by the Subject.

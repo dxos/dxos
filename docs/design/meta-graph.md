@@ -31,11 +31,6 @@ Post symbolic communication is when we can instead of sequencing symbols (words 
 
 #### Team Collaboration
 
-
-
-
-
-
 - Our professional and social networks are one of our most valuable assets.
 - Social networks suck; they don't serve us.
 - We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
@@ -43,8 +38,6 @@ Post symbolic communication is when we can instead of sequencing symbols (words 
   MESH and KUBE provide the building blocks to support such systems.
 
 > - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
-
-
 
 
 <br/>
