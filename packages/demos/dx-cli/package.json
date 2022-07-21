@@ -35,9 +35,12 @@
     "@oclif/plugin-help": "^5.1.12",
     "@oclif/plugin-plugins": "^2.0.1",
     "@octokit/core": "^4.0.4",
+    "chalk": "^4.1.0",
     "fs-extra": "^8.1.0",
     "js-yaml": "^4.1.0",
-    "inquirer": "~9.0.2"
+    "inquirer": "~9.0.2",
+    "ink": "^3.2.0",
+    "react": "^18.1.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
@@ -84,9 +87,6 @@
       },
       "identity": {
         "description": "Manage your decentralized identity."
-      },
-      "kube": {
-        "description": "Manage your KUBE device and MESH network."
       },
       "shell": {
         "description": "Interactive shell."

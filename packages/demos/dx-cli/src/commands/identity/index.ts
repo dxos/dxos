@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import chalk from 'chalk';
+
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
@@ -13,10 +15,8 @@ export default class Identity extends BaseCommand {
   async run (): Promise<void> {
     await this.execWithClient(async (client: Client) => {
       const profile = client.halo.profile;
-
-      // TODO(burdon): Prompt.
       if (!profile) {
-        this.log('Profile not initialized.');
+        this.log(chalk`{red Profile not initialized.}`);
       }
     });
   }

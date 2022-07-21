@@ -30,6 +30,9 @@ export abstract class BaseCommand extends Command {
     return this._clientConfig;
   }
 
+  /**
+   * Load the client config.
+   */
   override async init (): Promise<void> {
     await super.init();
 
@@ -41,6 +44,9 @@ export abstract class BaseCommand extends Command {
     }
   }
 
+  /**
+   * Lazily create the client.
+   */
   async getClient () {
     assert(this._clientConfig);
     if (!this._client) {
@@ -51,6 +57,9 @@ export abstract class BaseCommand extends Command {
     return this._client;
   }
 
+  /**
+   * Convenience function to wrap command passing in client object.
+   */
   // TODO(burdon): Error handling.
   async execWithClient <T> (callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
     const client = await this.getClient();

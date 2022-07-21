@@ -22,7 +22,7 @@ export default class Create extends BaseCommand {
     return await this.execWithClient(async (client: Client) => {
       let profile = client.halo.profile;
       if (profile) {
-        this.log('Profile already initialized.');
+        this.log('Profile already initialized.'); // TODO(burdon): Return as error?
       } else {
         const seedphrase = generateSeedPhrase();
         profile = await client.halo.createProfile({ seedphrase, username });
