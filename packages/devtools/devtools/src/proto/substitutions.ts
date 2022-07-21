@@ -3,9 +3,8 @@
 //
 
 import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
-import { timeframeSubstitutions } from '@dxos/echo-protocol';
 import type { ConnectionEvent } from '@dxos/network-manager';
-import { publicKeySubstitutions } from '@dxos/protocols';
+import { publicKeySubstitutions, timeframeSubstitutions } from '@dxos/protocols';
 
 export default {
   ...timestampSubstitutions,

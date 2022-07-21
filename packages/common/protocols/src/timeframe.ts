@@ -4,34 +4,46 @@
 
 import { inspect } from 'util';
 
-import { ComplexMap, humanize } from '@dxos/util';
-
-import { FeedKey } from '../types';
+import { PublicKey } from './public-key';
 
 /**
  * A mapping of feed key to a sequence number on that feed.
  * Describes how many messages have been processed.
  */
 export class Timeframe {
-  private readonly _frames = new ComplexMap<FeedKey, number>(key => key.asUint8Array().toString());
+  // Cannot use ComplexMap because @dxos/util depends on @dxos/protocols for PublicKey.
+  private readonly _keys = new Map<string, PublicKey>();
+  private readonly _frames = new Map<string, number>();
 
-  constructor (frames: [FeedKey, number][] = []) {
+  constructor (frames: [PublicKey, number][] = []) {
     for (const [key, seq] of frames) {
-      this._frames.set(key, seq);
+      this.set(key, seq);
     }
   }
 
-  get (key: FeedKey) {
-    return this._frames.get(key);
+  get (key: PublicKey) {
+    const keyString = key.toString();
+    return this._frames.get(keyString);
   }
 
-  set (key: FeedKey, value: number) {
-    this._frames.set(key, value);
+  set (key: PublicKey, value: number) {
+    const keyString = key.toString();
+    this._frames.set(keyString, value);
+    this._keys.set(keyString, key);
   }
 
   // TODO(burdon): Change to getter.
-  frames (): [FeedKey, number][] {
-    return Array.from(this._frames.entries());
+  frames (): [PublicKey, number][] {
+    return Array.from(this._frames.entries())
+      .map(([keyString, value]): [PublicKey, number] | undefined => {
+        const key = this._keys.get(keyString);
+        if (!key) {
+          return undefined;
+        }
+
+        return [key, value];
+      })
+      .filter((frame): frame is [PublicKey, number] => !!frame);
   }
 
   // TODO(burdon): Change to getter.
@@ -48,7 +60,7 @@ export class Timeframe {
    * Returns a new timeframe with specified keys removed.
    * @param keys
    */
-  withoutKeys (keys: FeedKey[]): Timeframe {
+  withoutKeys (keys: PublicKey[]): Timeframe {
     return new Timeframe(this.frames().filter(([frameKey]) => keys.every(key =>
       Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0)));
   }
@@ -62,13 +74,13 @@ export class Timeframe {
 
   toJSON () {
     return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
-      frames[humanize(key)] = seq;
+      frames[key.truncate()] = seq;
       return frames;
     }, {});
   }
 
   toString () {
-    return `(${this.frames().map(([key, seq]) => `${humanize(key)} => ${seq}`).join(', ')})`;
+    return `(${this.frames().map(([key, seq]) => `${key.truncate()} => ${seq}`).join(', ')})`;
   }
 
   /**
@@ -117,3 +129,16 @@ export class Timeframe {
     return result;
   }
 }
+
+export const timeframeSubstitutions = {
+  'dxos.echo.timeframe.TimeframeVector': {
+    encode: (timeframe: Timeframe) => ({
+      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
+    }),
+    decode: (vector: any) => new Timeframe(
+      (vector.frames ?? [])
+        .filter((frame: any) => frame.feedKey != null && frame.seq != null)
+        .map((frame: any) => [PublicKey.from(new Uint8Array(frame.feedKey)), frame.seq])
+    )
+  }
+};

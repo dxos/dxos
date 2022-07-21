@@ -6,12 +6,12 @@ import assert from 'assert';
 
 import { synchronized, Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';

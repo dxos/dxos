@@ -5,9 +5,8 @@
 import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
-import { createId } from '@dxos/crypto';
-import { FeedWriter, Timeframe, WriteReceipt } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import type { FeedWriter, WriteReceipt } from '@dxos/echo-protocol';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
@@ -57,7 +56,8 @@ export class TestRig<M extends Model<any>> {
       }
     };
 
-    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, createId(), {}, key, writer);
+    const id = PublicKey.random().toHex();
+    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
 
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
