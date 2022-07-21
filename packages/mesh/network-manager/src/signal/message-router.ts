@@ -9,6 +9,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
+import debug from 'debug';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -23,6 +24,7 @@ interface MessageRouterOptions {
   timeout?: number;
 }
 
+const log = debug('dxos:message-router');
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
@@ -33,7 +35,7 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sendMessage: (message: Message) => Promise<void>;
   private readonly _onOffer: (message: Message) => Promise<Answer>;
 
-  private readonly _sentSignals = new Set<PublicKey>();
+  private readonly _sentSignalsVSRetryInterval = new ComplexMap<PublicKey, ReturnType<typeof setInterval>>(key => key.toHex());
   private readonly _receivedSignals = new Set<PublicKey>();
   private readonly _acknowledgedSignals = new Set<PublicKey>();
   private readonly _retryDelay: number;
@@ -73,7 +75,6 @@ export class MessageRouter implements SignalMessaging {
   async signal (message: Message): Promise<void> {
     assert(message.data?.signal);
     message.messageId = PublicKey.random();
-    this._sentSignals.add(message.messageId);
     await this._sendMessage(message);
 
     // Setting retry interval if signal was not acknowledged.
@@ -82,8 +83,15 @@ export class MessageRouter implements SignalMessaging {
         await this._sendMessage(message);
       }
     }, this._retryDelay);
+    this._sentSignalsVSRetryInterval.set(message.messageId, retryInterval);
     this._beforeDestroyCallbacks.push(() => clearInterval(retryInterval));
-    setTimeout(() => clearInterval(retryInterval), this._timeout);
+    setTimeout(() => {
+      if (this._acknowledgedSignals.has(message.messageId!)) { 
+        log('Signal was not delivered!');
+        this._acknowledgedSignals.delete(message.messageId!);
+      }
+      clearInterval(retryInterval);
+    }, this._timeout);
   }
 
   async offer (message: Message): Promise<Answer> {
@@ -136,6 +144,12 @@ export class MessageRouter implements SignalMessaging {
     assert(message.data.ack.messageId);
     if (!this._acknowledgedSignals.has(message.data.ack.messageId)) {
       this._acknowledgedSignals.add(message.data.ack.messageId);
+      // Clearing retry interval.
+      const retryInterval = this._sentSignalsVSRetryInterval.get(message.data.ack.messageId);
+      if (retryInterval) {
+        clearInterval(retryInterval);
+        this._sentSignalsVSRetryInterval.delete(message.data.ack.messageId);
+      }
     }
   }
 
