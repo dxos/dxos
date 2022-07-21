@@ -3,7 +3,7 @@
 //
 
 import chalk from 'chalk';
-import { build, BuildOptions as EsbuildOptions } from 'esbuild';
+import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
@@ -102,10 +102,13 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
   fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
   await buildProto(config, project);
-  await execTool('tsc', ['--emitDeclarationOnly']);
+  await execTool('tsc', []);
 
-  const esbuildConfig: EsbuildOptions = {
+  // TODO(wittjosiah): Bundle for node as well.
+
+  await build({
     entryPoints: ['src/index.ts'],
+    outfile: `${outdir}/browser.js`,
     format: 'cjs',
     write: true,
     bundle: true,
@@ -116,25 +119,11 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
       'ignored-bare-import': 'info'
     },
     plugins: [
-      nodeExternalsPlugin({ allowList: bundlePackages })
-    ]
-  };
-
-  await build({
-    ...esbuildConfig,
-    outfile: `${outdir}/browser.js`,
-    plugins: [
-      ...esbuildConfig.plugins!,
+      nodeExternalsPlugin({ allowList: bundlePackages }),
       FixMemdownPlugin(),
       NodeModulesPlugin(),
       ...(options.polyfill ? [NodeGlobalsPolyfillPlugin()] : [])
     ]
-  });
-
-  await build({
-    ...esbuildConfig,
-    outdir,
-    platform: 'node'
   });
 };
 

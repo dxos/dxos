@@ -4,10 +4,10 @@
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/index.js": "./dist/browser.js",
+    "./dist/src/index.js": "./dist/browser.js",
     "node:assert": "assert"
   },
   "scripts": {
