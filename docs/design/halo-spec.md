@@ -6,13 +6,13 @@
 - [4. Design](#4-design)
   - [4.1. HALO](#41-halo)
     - [4.1.1. Protocol Definitions](#411-protocol-definitions)
-    - [4.1.2. Identity](#412-identity)
-    - [4.1.3. Profiles](#413-profiles)
-    - [4.1.4. DID Documents](#414-did-documents)
-    - [4.1.5. Credentials](#415-credentials)
-    - [4.1.6. HALO Genesis](#416-halo-genesis)
-    - [4.1.7. Device Authorization and Authentication](#417-device-authorization-and-authentication)
-    - [4.1.8. Circles](#418-circles)
+    - [4.1.2. Credentials](#412-credentials)
+    - [4.1.3. HALO Genesis](#413-halo-genesis)
+    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
+    - [4.1.5. HALO Recovery](#415-halo-recovery)
+    - [4.1.6. Profiles](#416-profiles)
+    - [4.1.7. Circles](#417-circles)
+    - [4.1.8. DID Documents](#418-did-documents)
   - [4.2. ECHO Spaces](#42-echo-spaces)
     - [4.2.1. Protocol Definitions](#421-protocol-definitions)
     - [4.2.2. Genesis](#422-genesis)
@@ -109,10 +109,16 @@ Decentralized credentials database.
 Public/private key pair for agents.
 
 ***Invitation*** - 
-The process (sometimes interactive) of admitting a new member to a Space (ECHO or HALO).
+The process (sometimes interactive) of admitting a new Agent to a Space (ECHO or HALO).
 
-***Issuer** -
+***Issuer*** -
 Entity that creates Credentials for a given Subject.
+
+***KUBE*** -
+DXOS network devices running the KUBE daemon process and services.
+
+***MESH*** -
+Peer-to-peer network supported by KUBE nodes.
 
 ***Keychain*** - 
 Set of credential messages establishing a linear chain of trust between credentials.
@@ -124,7 +130,7 @@ Storage for keys (on disk or in-memory).
 ***Party*** -
 Set of Agents that can access a digital resource (such as an ECHO Space).
 
-> **Note:** Old term for Space.
+> **Note:** Party was the old term for a Space.
 
 ***Presentation***
 Message containing a Credential that is signed by the Subject.
@@ -191,40 +197,24 @@ The HALO contains:
 
 The HALO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/halo).
 
-#### 4.1.2. Identity
-
-- Agents create an [TODO: ED25519] key pair.
-- Key pairs can be recovered from a [TODO: 24-word] seed phrase.
-- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity. It is not used to sign messages.
-
-#### 4.1.3. Profiles
-
-- Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
-- Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
-- Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
-- **NOTE**: IPNS is impractical since it only support single private-key access.
-
-#### 4.1.4. DID Documents
-
-- Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used to authenticate an Agent. 
-- DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
-
-#### 4.1.5. Credentials
+#### 4.1.2. Credentials
 
 - Credentials are represented by a schema defined by the HALO protocol.
   The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 - Credentials may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
-- Credentials should generally have narrow claims (separation of concerns).
-- ISSUE: Consider integration with hardware wallets?
 
-#### 4.1.6. HALO Genesis
+#### 4.1.3. HALO Genesis
 
-- Once an Agent's Identity has been created on a Device a special ECHO Space is created that instantiates the Agent's HALO (see below).
-- The Agent's Identity public key is used to create the Genesis messages, and used as the HALO Space identifier.
+- Agents first create an Ed25519 key pair that represents an Identity key.
+- The key pair can be recovered from a [TODO: 24-word] seed phrase.
+- The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
+- A second key pair is generated for the Space and both this key and the Identity are used to sign Genesis messages (see below).
+- A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
+- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity.
 
-#### 4.1.7. Device Authorization and Authentication
+#### 4.1.4. Device Authorization and Authentication
 
-- Each Device creates a [TODO: ED25519] key pair and maintains a secure key store.
+- Each Device creates a Ed25519 key pair and maintains a secure key store.
 - The key store is encrypted and optionally protected by a password and/or second factor authenticator.
 - Devices must be authorized and authenticated before joining a HALO.
 - Devices may only join one HALO.
@@ -237,7 +227,7 @@ The HALO protocol definitions are defined by [protobuf schema](https://github.co
 - Devices may write revocation messages to the HALO, which cancel prior authorizations.
   - ISSUE: There is the potential for a race, whereby two Devices may attempt to revoke access to the other. Revocation may require a multi-Device "vote" or a second factor authentication method.
 
-The diagram below illustrates the chain of trust formed during Agent and Device authorization.
+The diagram below illustrates the chain of trust formed when a HALO is constructed and the Agent authorizes and authenticates a second device.
 
 ![Credentials](./diagrams//halo-credentials.drawio.svg)
 
@@ -246,11 +236,30 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
   and Devices present authentication messages when joining the swarm.
   However, Credentials ***are*** written to the HALO so that they can be presented to ECHO Spaces to demonstrate a chain of trust for authorized Devices (see below).
 
-#### 4.1.8. Circles
+#### 4.1.5. HALO Recovery
+
+- New Decices can be admitted to the Halo using the authorization mechanism below.
+- Alternatively, Agents with the recovery key can self-admit a Device to the Halo.
+- The Identity private key can be used to create an `Device Auth` message allowing the Device to connect to the Halo swarm.
+- Another Device can then issue a `Feed Admit` message to enable replication to begin.
+
+#### 4.1.6. Profiles
+
+- Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
+- Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
+- Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
+- **NOTE**: IPNS is impractical since it only support single private-key access.
+
+#### 4.1.7. Circles
 
 - The HALO database contains a set of records representing third-party agents.
 - These records contain Agent keys (e.g., DIDs) and other metadata (e.g., cached Profiles).
 - The HALO may also contain claims relating to other Agents.
+
+#### 4.1.8. DID Documents
+
+- Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used by external systesm to authenticate the Agent. 
+- DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
 
 
 ### 4.2. ECHO Spaces
@@ -261,6 +270,9 @@ Internally ECHO Spaces are used to create decentralized HALO databases.
 #### 4.2.1. Protocol Definitions
 
 The ECHO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/echo).
+
+TODO: Add table describing messasges.
+
 
 #### 4.2.2. Genesis
 
@@ -288,20 +300,21 @@ The ECHO protocol definitions are defined by [protobuf schema](https://github.co
   - On successful authorization the verifying Device writes a `Feed Admit` message to its control feed similar to the HALO Device authorization process above.
 - **NOTE**: After the inviting Device has written the `Agent Auth` message, ANY Device belonging to ANY previously authorizated Agent (with invitation permissions) may complete the authentication and `Feed Admit` process.
 
-The diagram below illustrates the chain of trust formed during Agent and Device authorization.
+The diagram below illustrates the chain of trust formed when a Space is constructed and the Agent authorizes and authenticates a second device, then invites a second Agent to the Space.
 
 ![Credentials](./diagrams//halo-credentials-space.drawio.svg)
 
 ### 4.3. Design Issues
 
-- TODO: Use blockchain hash as timestamp for revocation messages. Finality?
 - TODO: DXNS
   - hybrid/federated KUBE p2p/blockchain.
-  - maintain a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have Issuer over the document).
-  - DID resolver?
-  - DNS resolver?
+  - maintains a map of name (DXN) => Document (typed record) with a set of Credentials (that contains a set of public keys that have Issuer over the document).
+  - DNS resolver? Subnets?
+  - DID controller?
+- TODO: Use blockchain hash as timestamp for revocation messages. Finality?
 - TODO: Peer DID resolution?
 - TODO: Optionally publish Github credential (claim) to HALO as backup-recovery?
+- TODO: Consider integration with hardware wallets?
 
 <hr/>
 
@@ -354,7 +367,8 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
 
 ## 7. Deprecated Notes
 
-> - TODO: Add diagram references.
+TODO: Clean-up.
+TODO: Add UML and state machine diagram.
 
 ### 7.1. Credential message
  
@@ -368,7 +382,7 @@ A Credential message consists of:
   - The signature itself.
   - Optional KeyChain.
 
-ED25519 curve is used for signatures via [hypercore-crypto](https://www.npmjs.com/package/hypercore-crypto) package.
+Ed25519 curve is used for signatures via [hypercore-crypto](https://www.npmjs.com/package/hypercore-crypto) package.
 
 ### 7.2. Key chain
 
@@ -392,6 +406,8 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
 ### 7.3. Credential message types
+
+TODO: Remove and reference the protobuf instead.
 
 #### 7.3.1. Envelope 
 
