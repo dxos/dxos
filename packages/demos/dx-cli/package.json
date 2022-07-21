@@ -80,6 +80,9 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
+    "macos": {
+      "identifier": "org.dxos.dx.cli"
+    },
     "topicSeparator": " ",
     "topics": {
       "config": {
