@@ -158,6 +158,9 @@ The HALO protocols are implemented by components that form part of smart clients
    - Agents have a public decentralized identifier that can be shared with others.
    - Identities can be used to establish connections between Devices belongong to Agents on the MESH network.
 
+> NOTE: We can make recovery more flexible: users can generate (and revoke) multiple paper keys which can be used to recover access to the identity.
+> TODO: Does agent ID resolve to all profiles, or does each profile have a separate ID? Are profiles correlatable to a single agent?
+
 2. ***Profiles***
    - Agents can manage a globally accessible public document that contains metadata they wish to share (e.g., display name).
    - Profiles can be discovered across the network by the agent's public identifier.
@@ -197,6 +200,8 @@ The HALO protocol definitions are defined by [protobuf schema](https://github.co
 - Key pairs can be recovered from a [TODO: 24-word] seed phrase.
 - **NOTE**: The identity private key is only used to generate the HALO and to recover an identity. It is not used to sign messages.
 
+> NOTE: Agent ID is derived from Identity private key
+
 #### 4.1.3. Profiles
 
 - Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
@@ -204,10 +209,14 @@ The HALO protocol definitions are defined by [protobuf schema](https://github.co
 - Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
 - **NOTE**: IPNS is impractical since it only support single private-key access.
 
+> NOTE: Storing profile documents on DXNS locks us into making DXNS fee-less
+
 #### 4.1.4. DID Documents
 
 - Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used to authenticate an Agent. 
 - DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
+
+> TODO: Can DID document be the same as profile document?
 
 #### 4.1.5. Credentials
 
@@ -245,6 +254,10 @@ The diagram below illustrates the chain of trust formed during Agent and Device 
   Authorized Devices write `Device Auth` authorization messages to their corresponding feed
   and Devices present authentication messages when joining the swarm.
   However, Credentials ***are*** written to the HALO so that they can be presented to ECHO Spaces to demonstrate a chain of trust for authorized Devices (see below).
+
+> The store being encrypted implies that there must be an encryption key either from a user or from the platform (e.g., secure storage on apple devices)
+> FeedAdmit credential should be issued by the new device. An existing device would record it in it's feed without adding a signature.
+> Confused about DeviceAuth vs DeviceAdmit which one of them is for one-time session auth and which one is written to the feed? The diagram shows admit messages. Does it need > to get updated?
 
 #### 4.1.8. Circles
 
