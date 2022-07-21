@@ -9,7 +9,6 @@ import { BaseCommand } from '../../base-command';
 export default class Recover extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Recover profile.';
-  static override flags = {}; // Required.
   static override args = [
     {
       name: 'seedphrase'

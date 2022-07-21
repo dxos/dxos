@@ -23,6 +23,7 @@
     "lint": "toolchain lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
+    "run:config": "npm run build && ./bin/run config --config ./config/config.yml --json",
     "test": "toolchain test",
     "posttest": "npm run lint",
     "version": "oclif readme && git add README.md"
@@ -30,7 +31,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@oclif/core": "^1.11.0",
+    "@oclif/core": "^1.12.0",
     "@oclif/plugin-help": "^5.1.12",
     "@oclif/plugin-plugins": "^2.0.1",
     "@octokit/core": "^4.0.4",

@@ -9,7 +9,6 @@ import { BaseCommand } from '../../base-command';
 export default class Create extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Create profile.';
-  static override flags = {}; // Required.
   static override args = [
     {
       name: 'username'

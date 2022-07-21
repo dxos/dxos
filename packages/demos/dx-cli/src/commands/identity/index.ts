@@ -9,7 +9,6 @@ import { BaseCommand } from '../../base-command';
 export default class Identity extends BaseCommand {
   static override description = 'Show profile.';
   // static override aliases = ['id']; // TODO(burdon): Doesn't propagate to child commands.
-  static override flags = {}; // Required.
 
   async run (): Promise<void> {
     await this.execWithClient(async (client: Client) => {

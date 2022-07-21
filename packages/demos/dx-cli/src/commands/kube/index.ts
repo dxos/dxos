@@ -6,7 +6,6 @@ import { BaseCommand } from '../../base-command';
 
 export default class Kube extends BaseCommand {
   static override description = 'Show KUBE status.';
-  static override flags = {}; // Required.
 
   async run (): Promise<void> {}
 }
