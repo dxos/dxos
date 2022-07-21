@@ -76,6 +76,12 @@ const init = async () => {
     runtime: {
       client: {
         mode: defs.Runtime.Client.Mode.REMOTE
+      },
+      // TODO(wittjosiah): Missing config in local client should fallback to remote client.
+      services: {
+        dxns: {
+          server: 'wss://node1.devnet.dxos.network/dxns/ws'
+        }
       }
     }
   }, { rpcPort });
