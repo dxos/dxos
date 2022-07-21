@@ -56,8 +56,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -79,7 +77,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       download: ^8.0.0
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
       node-fetch: ^2.6.0
@@ -94,8 +92,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
@@ -104,7 +100,7 @@ importers:
       abort-controller: 3.0.0
       debug: 4.3.3
       download: 8.0.0
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       node-fetch: 2.6.6
       source-map-support: 0.5.21
       tail: 2.2.4
@@ -160,6 +156,8 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
+      esbuild: ^0.14.49
+      esbuild-node-externals: ^1.4.1
       eslint: ^7.12.1
       jest: ^26.6.3
       lodash.merge: ^4.6.2
@@ -171,7 +169,6 @@ importers:
       assert: 2.0.0
       debug: 4.3.3
       lodash.merge: 4.6.2
-      protobufjs: 6.11.2
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_5jruesmsy74grgm44y2sobqsde
       '@types/assert': 1.5.6
@@ -179,8 +176,11 @@ importers:
       '@types/jest': 26.0.24
       '@types/lodash.merge': 4.6.6
       '@types/node': 16.11.27
+      esbuild: 0.14.49
+      esbuild-node-externals: 1.4.1_esbuild@0.14.49
       eslint: 7.32.0
       jest: 26.6.3_ts-node@10.8.2
+      protobufjs: 6.11.2
       ts-jest: 26.5.6_rnfpnlbz3wqspag7uftsmccrvy
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
@@ -343,9 +343,11 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
+      '@types/debug': ^4.1.7
       '@types/jest': ^26.0.7
       '@types/node': ^16.11.27
       '@types/randombytes': ^2.0.0
+      debug: ^4.3.3
       eslint: ^7.12.1
       randombytes: ^2.1.0
       typescript: ^4.7.2
@@ -355,9 +357,11 @@ importers:
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.24
       '@types/node': 16.11.27
       '@types/randombytes': 2.0.0
+      debug: 4.3.4
       eslint: 7.32.0
       typescript: 4.7.4
 
@@ -402,7 +406,7 @@ importers:
 
   ../../packages/common/react-async:
     specifiers:
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/mocha': ^8.2.2
@@ -420,7 +424,7 @@ importers:
     dependencies:
       immutability-helper: 3.1.1
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/mocha': 8.2.3
@@ -588,8 +592,8 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
-      '@dxos/esbuild-server': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-server': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -624,8 +628,8 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.10
-      '@dxos/esbuild-server': 2.28.10_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
@@ -651,8 +655,8 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
-      '@dxos/esbuild-server': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-server': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -739,8 +743,8 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.28.10
-      '@dxos/esbuild-server': 2.28.10_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/d3': 7.0.0
@@ -789,7 +793,7 @@ importers:
       compare-semver: ~1.1.0
       copy-paste: ~1.3.0
       date-format: ~4.0.11
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
       ink: ^3.2.0
@@ -838,7 +842,7 @@ importers:
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       eslint: 7.32.0
       expect: 27.0.6
       mocha: 8.4.0
@@ -852,8 +856,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
-      '@dxos/esbuild-server': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-server': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -912,8 +916,8 @@ importers:
       yjs: 13.5.22
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.10
-      '@dxos/esbuild-server': 2.28.10_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
@@ -1024,8 +1028,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
-      '@dxos/esbuild-server': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-server': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
@@ -1074,8 +1078,8 @@ importers:
       type-fest: 0.13.1
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.10
-      '@dxos/esbuild-server': 2.28.10_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
@@ -1101,7 +1105,7 @@ importers:
       '@dxos/devtools-mesh': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1165,7 +1169,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
@@ -1193,7 +1197,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -1218,7 +1222,7 @@ importers:
       crx: ^5.0.1
       debug: ^4.3.3
       download: ^8.0.0
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       express: 4.17.1
       moment: ^2.24.0
@@ -1257,7 +1261,7 @@ importers:
       webextension-polyfill: 0.8.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/chrome': 0.0.125
@@ -1271,7 +1275,7 @@ importers:
       copy: 0.3.2
       crx: 5.0.1
       download: 8.0.0
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       eslint: 7.32.0
       express: 4.17.1
       rmdir: 1.2.0
@@ -1283,7 +1287,7 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -1326,7 +1330,7 @@ importers:
       react-resize-aware: 3.1.1_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -1625,11 +1629,9 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/feed-store': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -1645,19 +1647,17 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-protocol': link:../echo-protocol
-      '@dxos/feed-store': link:../feed-store
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/node': 16.11.27
       debug: 4.3.3
     devDependencies:
-      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/debug': 4.1.7
       '@types/jest': 26.0.24
       '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
       eslint: 7.32.0
       expect: 27.0.6
       typescript: 4.7.4
@@ -1756,7 +1756,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/glob': ~7.1.3
@@ -1764,7 +1764,7 @@ importers:
       '@types/uuid': ~8.3.3
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       glob: ~7.1.6
       pkg-up: ^3.1.0
@@ -1775,9 +1775,9 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       chalk: 4.1.2
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       glob: 7.1.7
       pkg-up: 3.1.0
       playwright: 1.17.1
@@ -2075,6 +2075,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/browser-mocha': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -2108,6 +2109,7 @@ importers:
       xor-distance: ^2.0.0
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
@@ -2639,7 +2641,7 @@ importers:
       '@types/node': ^16.11.27
       boolean: ^3.0.1
       debug: ^4.3.3
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
       js-yaml: ^4.1.0
@@ -2670,7 +2672,7 @@ importers:
       '@types/lodash.set': 4.3.6
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       eslint: 7.32.0
       expect: 27.0.6
       typescript: 4.7.4
@@ -2682,9 +2684,10 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
@@ -2732,7 +2735,8 @@ importers:
       debug: 4.3.3
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
@@ -2770,7 +2774,7 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2808,7 +2812,7 @@ importers:
       '@dxos/client-testing': link:../client-testing
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -2843,7 +2847,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2893,7 +2897,7 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/client': link:../client
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -2926,7 +2930,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/gem-core': ~2.2.1-beta.11
       '@dxos/gem-spore': ~2.2.1-beta.11
@@ -2960,7 +2964,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -2987,7 +2991,7 @@ importers:
   ../../packages/sdk/react-ipfs:
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -3003,7 +3007,7 @@ importers:
       '@dxos/react-client': link:../react-client
       ipfs-http-client: 56.0.2_node-fetch@2.6.7
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/node': 16.11.27
@@ -3019,7 +3023,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/registry-client': workspace:*
@@ -3043,7 +3047,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
@@ -3066,7 +3070,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
@@ -3129,7 +3133,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -3242,7 +3246,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3265,7 +3269,7 @@ importers:
       '@types/webpack-env': ^1.16.0
       chalk: ^4.1.0
       copy: ~0.3.2
-      esbuild: ^0.11.23
+      esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
       faker: ^5.1.0
@@ -3300,7 +3304,7 @@ importers:
       webextension-polyfill: 0.8.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/faker': 5.5.9
@@ -3314,7 +3318,7 @@ importers:
       '@types/webpack-env': 1.16.3
       chalk: 4.1.2
       copy: 0.3.2
-      esbuild: 0.11.23
+      esbuild: 0.14.49
       eslint: 7.32.0
       expect: 27.0.6
       faker: 5.5.3
@@ -3327,7 +3331,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.10
+      '@dxos/esbuild-plugins': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -3352,7 +3356,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.10
+      '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/react': 18.0.15
@@ -3383,7 +3387,7 @@ importers:
 
   ../../toolchains/toolchain-node-library:
     specifiers:
-      '@dxos/esbuild-server': ~2.28.10
+      '@dxos/esbuild-server': ~2.28.11
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': ~1.4.2
@@ -3406,7 +3410,7 @@ importers:
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
-      '@dxos/esbuild-server': 2.28.10
+      '@dxos/esbuild-server': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_5jruesmsy74grgm44y2sobqsde
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@swc-node/register': 1.4.2
@@ -6336,14 +6340,14 @@ packages:
       - webpack-command
     dev: true
 
-  /@dxos/esbuild-plugins/2.28.10:
-    resolution: {integrity: sha512-9ujpOCJ3RZKb4+rvCGA9Z2+B2J5D1ipA8gg8ko3nZvSmnfVd7+OVIfFUuGKoWavJ1uUdSvkDP+ig33AhIyyUJA==}
+  /@dxos/esbuild-plugins/2.28.11:
+    resolution: {integrity: sha512-x5YEC3yqwXUtf+J+rX6uzKyJB1kQquYp88ZFzZ1AVBaVbBBAcTQEnUUpUPocBy2a/aeBRcTzCuG/Qj8XUMn7FQ==}
     dependencies:
       assert: 2.0.0
       crypto-browserify: 3.12.0
       debug: 4.3.4
       domain-browser: 4.22.0
-      esbuild: 0.12.29
+      esbuild: 0.14.49
       events: 3.3.0
       path-browserify: 1.0.1
       readable-stream: 3.6.0
@@ -6352,17 +6356,17 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@dxos/esbuild-server/2.28.10:
-    resolution: {integrity: sha512-SD/7WUYHzi5u9eOier/EBTV0ps9WRju1ObsbIX4O6goyfQFr3xziOqFSzfMo+G6PVoMG1rdWp1fzRACqs7k+uA==}
+  /@dxos/esbuild-server/2.28.11:
+    resolution: {integrity: sha512-+s2/wMBpKExoRaGoDu8L4Ja0FfXOc1wcXRlJFD5Yza9NICKDhZBo0evZKi2p0mGs49AgGcVzEw52GIvz9nr6rw==}
     hasBin: true
     dependencies:
       '@babel/core': 7.18.6
       '@emotion/react': 11.9.3_2sb3a56iojvze2npkgcccbebf4
-      '@mdx-js/esbuild': 2.0.0_esbuild@0.12.29
+      '@mdx-js/esbuild': 2.0.0_esbuild@0.14.49
       '@mdx-js/mdx': 2.0.0
       '@mdx-js/react': 2.0.0_react@18.2.0
       chalk: 4.1.2
-      esbuild: 0.12.29
+      esbuild: 0.14.49
       glob: 7.2.0
       lodash.defaultsdeep: 4.6.1
       ncp: 2.0.0
@@ -6381,17 +6385,17 @@ packages:
       - supports-color
     dev: false
 
-  /@dxos/esbuild-server/2.28.10_@types+react@18.0.15:
-    resolution: {integrity: sha512-SD/7WUYHzi5u9eOier/EBTV0ps9WRju1ObsbIX4O6goyfQFr3xziOqFSzfMo+G6PVoMG1rdWp1fzRACqs7k+uA==}
+  /@dxos/esbuild-server/2.28.11_@types+react@18.0.15:
+    resolution: {integrity: sha512-+s2/wMBpKExoRaGoDu8L4Ja0FfXOc1wcXRlJFD5Yza9NICKDhZBo0evZKi2p0mGs49AgGcVzEw52GIvz9nr6rw==}
     hasBin: true
     dependencies:
       '@babel/core': 7.18.6
       '@emotion/react': 11.9.3_dlcr7kzjh265l7kenqxjsvuiz4
-      '@mdx-js/esbuild': 2.0.0_esbuild@0.12.29
+      '@mdx-js/esbuild': 2.0.0_esbuild@0.14.49
       '@mdx-js/mdx': 2.0.0
       '@mdx-js/react': 2.0.0_react@18.2.0
       chalk: 4.1.2
-      esbuild: 0.12.29
+      esbuild: 0.14.49
       glob: 7.2.0
       lodash.defaultsdeep: 4.6.1
       ncp: 2.0.0
@@ -7466,13 +7470,13 @@ packages:
     resolution: {integrity: sha512-rmQPBLe3/DuJy0Bcr1KNuSiIcgV67R2AeLxagKMQTI0R8F9lLC894wJRYhA5ytV0CIi7dzxILqdFeuVbqrkoCA==}
     dev: true
 
-  /@mdx-js/esbuild/2.0.0_esbuild@0.12.29:
+  /@mdx-js/esbuild/2.0.0_esbuild@0.14.49:
     resolution: {integrity: sha512-Dxlrr8pZiTdzxTxoIhjWhoWS4HEdT/hGozYI2aZrVlVCndU61RWSChZ5WzcsAI57dTsExQilbhhfIgCCZ+hOug==}
     peerDependencies:
       esbuild: '>=0.11.0'
     dependencies:
       '@mdx-js/mdx': 2.0.0
-      esbuild: 0.12.29
+      esbuild: 0.14.49
       got: 11.8.3
       vfile: 5.2.0
     transitivePeerDependencies:
@@ -8738,46 +8742,36 @@ packages:
 
   /@protobufjs/aspromise/1.1.2:
     resolution: {integrity: sha1-m4sMxmPWaafY9vXQiToU00jzD78=}
-    dev: false
 
   /@protobufjs/base64/1.1.2:
     resolution: {integrity: sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==}
-    dev: false
 
   /@protobufjs/codegen/2.0.4:
     resolution: {integrity: sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==}
-    dev: false
 
   /@protobufjs/eventemitter/1.1.0:
     resolution: {integrity: sha1-NVy8mLr61ZePntCV85diHx0Ga3A=}
-    dev: false
 
   /@protobufjs/fetch/1.1.0:
     resolution: {integrity: sha1-upn7WYYUr2VwDBYZ/wbUVLDYTEU=}
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/inquire': 1.1.0
-    dev: false
 
   /@protobufjs/float/1.0.2:
     resolution: {integrity: sha1-Xp4avctz/Ap8uLKR33jIy9l7h9E=}
-    dev: false
 
   /@protobufjs/inquire/1.1.0:
     resolution: {integrity: sha1-/yAOPnzyQp4tyvwRQIKOjMY48Ik=}
-    dev: false
 
   /@protobufjs/path/1.1.2:
     resolution: {integrity: sha1-bMKyDFya1q0NzP0hynZz2Nf79o0=}
-    dev: false
 
   /@protobufjs/pool/1.1.0:
     resolution: {integrity: sha1-Cf0V8tbTq/qbZbw2ZQbWrXhG/1Q=}
-    dev: false
 
   /@protobufjs/utf8/1.1.0:
     resolution: {integrity: sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=}
-    dev: false
 
   /@react-hook/event/1.2.6_react@18.2.0:
     resolution: {integrity: sha512-JUL5IluaOdn5w5Afpe/puPa1rj8X6udMlQ9dt4hvMuKmTrBS1Ya6sb4sVgvfe2eU4yDuOfAhik8xhbcCekbg9Q==}
@@ -10021,7 +10015,6 @@ packages:
 
   /@types/long/4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
-    dev: false
 
   /@types/mdast/3.0.10:
     resolution: {integrity: sha512-W864tg/Osz1+9f4lrGTZpCSO5/z4608eUp19tbozkq2HJK6i3z1kT0H9tlADXuYIb1YYOBByU4Jsqkk75q48qA==}
@@ -15295,148 +15288,142 @@ packages:
       es6-symbol: 2.0.1
     dev: false
 
-  /esbuild-android-64/0.14.48:
-    resolution: {integrity: sha512-3aMjboap/kqwCUpGWIjsk20TtxVoKck8/4Tu19rubh7t5Ra0Yrpg30Mt1QXXlipOazrEceGeWurXKeFJgkPOUg==}
+  /esbuild-android-64/0.14.49:
+    resolution: {integrity: sha512-vYsdOTD+yi+kquhBiFWl3tyxnj2qZJsl4tAqwhT90ktUdnyTizgle7TjNx6Ar1bN7wcwWqZ9QInfdk2WVagSww==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-android-arm64/0.14.48:
-    resolution: {integrity: sha512-vptI3K0wGALiDq+EvRuZotZrJqkYkN5282iAfcffjI5lmGG9G1ta/CIVauhY42MBXwEgDJkweiDcDMRLzBZC4g==}
+  /esbuild-android-arm64/0.14.49:
+    resolution: {integrity: sha512-g2HGr/hjOXCgSsvQZ1nK4nW/ei8JUx04Li74qub9qWrStlysaVmadRyTVuW32FGIpLQyc5sUjjZopj49eGGM2g==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-darwin-64/0.14.48:
-    resolution: {integrity: sha512-gGQZa4+hab2Va/Zww94YbshLuWteyKGD3+EsVon8EWTWhnHFRm5N9NbALNbwi/7hQ/hM1Zm4FuHg+k6BLsl5UA==}
+  /esbuild-darwin-64/0.14.49:
+    resolution: {integrity: sha512-3rvqnBCtX9ywso5fCHixt2GBCUsogNp9DjGmvbBohh31Ces34BVzFltMSxJpacNki96+WIcX5s/vum+ckXiLYg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-darwin-arm64/0.14.48:
-    resolution: {integrity: sha512-bFjnNEXjhZT+IZ8RvRGNJthLWNHV5JkCtuOFOnjvo5pC0sk2/QVk0Qc06g2PV3J0TcU6kaPC3RN9yy9w2PSLEA==}
+  /esbuild-darwin-arm64/0.14.49:
+    resolution: {integrity: sha512-XMaqDxO846srnGlUSJnwbijV29MTKUATmOLyQSfswbK/2X5Uv28M9tTLUJcKKxzoo9lnkYPsx2o8EJcTYwCs/A==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-freebsd-64/0.14.48:
-    resolution: {integrity: sha512-1NOlwRxmOsnPcWOGTB10JKAkYSb2nue0oM1AfHWunW/mv3wERfJmnYlGzL3UAOIUXZqW8GeA2mv+QGwq7DToqA==}
+  /esbuild-freebsd-64/0.14.49:
+    resolution: {integrity: sha512-NJ5Q6AjV879mOHFri+5lZLTp5XsO2hQ+KSJYLbfY9DgCu8s6/Zl2prWXVANYTeCDLlrIlNNYw8y34xqyLDKOmQ==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-freebsd-arm64/0.14.48:
-    resolution: {integrity: sha512-gXqKdO8wabVcYtluAbikDH2jhXp+Klq5oCD5qbVyUG6tFiGhrC9oczKq3vIrrtwcxDQqK6+HDYK8Zrd4bCA9Gw==}
+  /esbuild-freebsd-arm64/0.14.49:
+    resolution: {integrity: sha512-lFLtgXnAc3eXYqj5koPlBZvEbBSOSUbWO3gyY/0+4lBdRqELyz4bAuamHvmvHW5swJYL7kngzIZw6kdu25KGOA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-32/0.14.48:
-    resolution: {integrity: sha512-ghGyDfS289z/LReZQUuuKq9KlTiTspxL8SITBFQFAFRA/IkIvDpnZnCAKTCjGXAmUqroMQfKJXMxyjJA69c/nQ==}
+  /esbuild-linux-32/0.14.49:
+    resolution: {integrity: sha512-zTTH4gr2Kb8u4QcOpTDVn7Z8q7QEIvFl/+vHrI3cF6XOJS7iEI1FWslTo3uofB2+mn6sIJEQD9PrNZKoAAMDiA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-64/0.14.48:
-    resolution: {integrity: sha512-vni3p/gppLMVZLghI7oMqbOZdGmLbbKR23XFARKnszCIBpEMEDxOMNIKPmMItQrmH/iJrL1z8Jt2nynY0bE1ug==}
+  /esbuild-linux-64/0.14.49:
+    resolution: {integrity: sha512-hYmzRIDzFfLrB5c1SknkxzM8LdEUOusp6M2TnuQZJLRtxTgyPnZZVtyMeCLki0wKgYPXkFsAVhi8vzo2mBNeTg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-arm/0.14.48:
-    resolution: {integrity: sha512-+VfSV7Akh1XUiDNXgqgY1cUP1i2vjI+BmlyXRfVz5AfV3jbpde8JTs5Q9sYgaoq5cWfuKfoZB/QkGOI+QcL1Tw==}
+  /esbuild-linux-arm/0.14.49:
+    resolution: {integrity: sha512-iE3e+ZVv1Qz1Sy0gifIsarJMQ89Rpm9mtLSRtG3AH0FPgAzQ5Z5oU6vYzhc/3gSPi2UxdCOfRhw2onXuFw/0lg==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-arm64/0.14.48:
-    resolution: {integrity: sha512-3CFsOlpoxlKPRevEHq8aAntgYGYkE1N9yRYAcPyng/p4Wyx0tPR5SBYsxLKcgPB9mR8chHEhtWYz6EZ+H199Zw==}
+  /esbuild-linux-arm64/0.14.49:
+    resolution: {integrity: sha512-KLQ+WpeuY+7bxukxLz5VgkAAVQxUv67Ft4DmHIPIW+2w3ObBPQhqNoeQUHxopoW/aiOn3m99NSmSV+bs4BSsdA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-mips64le/0.14.48:
-    resolution: {integrity: sha512-cs0uOiRlPp6ymknDnjajCgvDMSsLw5mST2UXh+ZIrXTj2Ifyf2aAP3Iw4DiqgnyYLV2O/v/yWBJx+WfmKEpNLA==}
+  /esbuild-linux-mips64le/0.14.49:
+    resolution: {integrity: sha512-n+rGODfm8RSum5pFIqFQVQpYBw+AztL8s6o9kfx7tjfK0yIGF6tm5HlG6aRjodiiKkH2xAiIM+U4xtQVZYU4rA==}
     engines: {node: '>=12'}
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-ppc64le/0.14.48:
-    resolution: {integrity: sha512-+2F0vJMkuI0Wie/wcSPDCqXvSFEELH7Jubxb7mpWrA/4NpT+/byjxDz0gG6R1WJoeDefcrMfpBx4GFNN1JQorQ==}
+  /esbuild-linux-ppc64le/0.14.49:
+    resolution: {integrity: sha512-WP9zR4HX6iCBmMFH+XHHng2LmdoIeUmBpL4aL2TR8ruzXyT4dWrJ5BSbT8iNo6THN8lod6GOmYDLq/dgZLalGw==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-riscv64/0.14.48:
-    resolution: {integrity: sha512-BmaK/GfEE+5F2/QDrIXteFGKnVHGxlnK9MjdVKMTfvtmudjY3k2t8NtlY4qemKSizc+QwyombGWTBDc76rxePA==}
+  /esbuild-linux-riscv64/0.14.49:
+    resolution: {integrity: sha512-h66ORBz+Dg+1KgLvzTVQEA1LX4XBd1SK0Fgbhhw4akpG/YkN8pS6OzYI/7SGENiN6ao5hETRDSkVcvU9NRtkMQ==}
     engines: {node: '>=12'}
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-linux-s390x/0.14.48:
-    resolution: {integrity: sha512-tndw/0B9jiCL+KWKo0TSMaUm5UWBLsfCKVdbfMlb3d5LeV9WbijZ8Ordia8SAYv38VSJWOEt6eDCdOx8LqkC4g==}
+  /esbuild-linux-s390x/0.14.49:
+    resolution: {integrity: sha512-DhrUoFVWD+XmKO1y7e4kNCqQHPs6twz6VV6Uezl/XHYGzM60rBewBF5jlZjG0nCk5W/Xy6y1xWeopkrhFFM0sQ==}
     engines: {node: '>=12'}
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-netbsd-64/0.14.48:
-    resolution: {integrity: sha512-V9hgXfwf/T901Lr1wkOfoevtyNkrxmMcRHyticybBUHookznipMOHoF41Al68QBsqBxnITCEpjjd4yAos7z9Tw==}
+  /esbuild-netbsd-64/0.14.49:
+    resolution: {integrity: sha512-BXaUwFOfCy2T+hABtiPUIpWjAeWK9P8O41gR4Pg73hpzoygVGnj0nI3YK4SJhe52ELgtdgWP/ckIkbn2XaTxjQ==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-openbsd-64/0.14.48:
-    resolution: {integrity: sha512-+IHf4JcbnnBl4T52egorXMatil/za0awqzg2Vy6FBgPcBpisDWT2sVz/tNdrK9kAqj+GZG/jZdrOkj7wsrNTKA==}
+  /esbuild-node-externals/1.4.1_esbuild@0.14.49:
+    resolution: {integrity: sha512-ZFNGa6w1kYzn4wx9ty4eaItaOTSe2hWQZ6WXa/8guKJCiXL3XpW2CZT4gkx2OhfBKxpqaqa7ZeGK54ScoLSUdw==}
+    peerDependencies:
+      esbuild: 0.12 - 0.14
+    dependencies:
+      esbuild: 0.14.49
+      find-up: 5.0.0
+      tslib: 2.3.1
+    dev: true
+
+  /esbuild-openbsd-64/0.14.49:
+    resolution: {integrity: sha512-lP06UQeLDGmVPw9Rg437Btu6J9/BmyhdoefnQ4gDEJTtJvKtQaUcOQrhjTq455ouZN4EHFH1h28WOJVANK41kA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-plugin-yaml/0.0.1:
@@ -15446,79 +15433,64 @@ packages:
       js-yaml: 4.1.0
     dev: true
 
-  /esbuild-sunos-64/0.14.48:
-    resolution: {integrity: sha512-77m8bsr5wOpOWbGi9KSqDphcq6dFeJyun8TA+12JW/GAjyfTwVtOnN8DOt6DSPUfEV+ltVMNqtXUeTeMAxl5KA==}
+  /esbuild-sunos-64/0.14.49:
+    resolution: {integrity: sha512-4c8Zowp+V3zIWje329BeLbGh6XI9c/rqARNaj5yPHdC61pHI9UNdDxT3rePPJeWcEZVKjkiAS6AP6kiITp7FSw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-windows-32/0.14.48:
-    resolution: {integrity: sha512-EPgRuTPP8vK9maxpTGDe5lSoIBHGKO/AuxDncg5O3NkrPeLNdvvK8oywB0zGaAZXxYWfNNSHskvvDgmfVTguhg==}
+  /esbuild-windows-32/0.14.49:
+    resolution: {integrity: sha512-q7Rb+J9yHTeKr9QTPDYkqfkEj8/kcKz9lOabDuvEXpXuIcosWCJgo5Z7h/L4r7rbtTH4a8U2FGKb6s1eeOHmJA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-windows-64/0.14.48:
-    resolution: {integrity: sha512-YmpXjdT1q0b8ictSdGwH3M8VCoqPpK1/UArze3X199w6u8hUx3V8BhAi1WjbsfDYRBanVVtduAhh2sirImtAvA==}
+  /esbuild-windows-64/0.14.49:
+    resolution: {integrity: sha512-+Cme7Ongv0UIUTniPqfTX6mJ8Deo7VXw9xN0yJEN1lQMHDppTNmKwAM3oGbD/Vqff+07K2gN0WfNkMohmG+dVw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild-windows-arm64/0.14.48:
-    resolution: {integrity: sha512-HHaOMCsCXp0rz5BT2crTka6MPWVno121NKApsGs/OIW5QC0ggC69YMGs1aJct9/9FSUF4A1xNE/cLvgB5svR4g==}
+  /esbuild-windows-arm64/0.14.49:
+    resolution: {integrity: sha512-v+HYNAXzuANrCbbLFJ5nmO3m5y2PGZWLe3uloAkLt87aXiO2mZr3BTmacZdjwNkNEHuH3bNtN8cak+mzVjVPfA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
-  /esbuild/0.11.23:
-    resolution: {integrity: sha512-iaiZZ9vUF5wJV8ob1tl+5aJTrwDczlvGP0JoMmnpC2B0ppiMCu8n8gmy5ZTGl5bcG081XBVn+U+jP+mPFm5T5Q==}
-    hasBin: true
-    requiresBuild: true
-
-  /esbuild/0.12.29:
-    resolution: {integrity: sha512-w/XuoBCSwepyiZtIRsKsetiLDUVGPVw1E/R3VTFSecIy8UR7Cq3SOtwKHJMFoVqqVG36aGkzh4e8BvpO1Fdc7g==}
-    hasBin: true
-    requiresBuild: true
-
-  /esbuild/0.14.48:
-    resolution: {integrity: sha512-w6N1Yn5MtqK2U1/WZTX9ZqUVb8IOLZkZ5AdHkT6x3cHDMVsYWC7WPdiLmx19w3i4Rwzy5LqsEMtVihG3e4rFzA==}
+  /esbuild/0.14.49:
+    resolution: {integrity: sha512-/TlVHhOaq7Yz8N1OJrjqM3Auzo5wjvHFLk+T8pIue+fhnhIMpfAzsG6PLVMbFveVxqD2WOp3QHei+52IMUNmCw==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
     optionalDependencies:
-      esbuild-android-64: 0.14.48
-      esbuild-android-arm64: 0.14.48
-      esbuild-darwin-64: 0.14.48
-      esbuild-darwin-arm64: 0.14.48
-      esbuild-freebsd-64: 0.14.48
-      esbuild-freebsd-arm64: 0.14.48
-      esbuild-linux-32: 0.14.48
-      esbuild-linux-64: 0.14.48
-      esbuild-linux-arm: 0.14.48
-      esbuild-linux-arm64: 0.14.48
-      esbuild-linux-mips64le: 0.14.48
-      esbuild-linux-ppc64le: 0.14.48
-      esbuild-linux-riscv64: 0.14.48
-      esbuild-linux-s390x: 0.14.48
-      esbuild-netbsd-64: 0.14.48
-      esbuild-openbsd-64: 0.14.48
-      esbuild-sunos-64: 0.14.48
-      esbuild-windows-32: 0.14.48
-      esbuild-windows-64: 0.14.48
-      esbuild-windows-arm64: 0.14.48
-    dev: true
+      esbuild-android-64: 0.14.49
+      esbuild-android-arm64: 0.14.49
+      esbuild-darwin-64: 0.14.49
+      esbuild-darwin-arm64: 0.14.49
+      esbuild-freebsd-64: 0.14.49
+      esbuild-freebsd-arm64: 0.14.49
+      esbuild-linux-32: 0.14.49
+      esbuild-linux-64: 0.14.49
+      esbuild-linux-arm: 0.14.49
+      esbuild-linux-arm64: 0.14.49
+      esbuild-linux-mips64le: 0.14.49
+      esbuild-linux-ppc64le: 0.14.49
+      esbuild-linux-riscv64: 0.14.49
+      esbuild-linux-s390x: 0.14.49
+      esbuild-netbsd-64: 0.14.49
+      esbuild-openbsd-64: 0.14.49
+      esbuild-sunos-64: 0.14.49
+      esbuild-windows-32: 0.14.49
+      esbuild-windows-64: 0.14.49
+      esbuild-windows-arm64: 0.14.49
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -21450,7 +21422,6 @@ packages:
 
   /long/4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
-    dev: false
 
   /longest-streak/3.0.1:
     resolution: {integrity: sha512-cHlYSUpL2s7Fb3394mYxwTYj8niTaNHUCLr0qdiCXQfSjfuA7CKofpX2uSwEfFDQ0EB7JcnMnm+GjbqqoinYYg==}
@@ -25223,7 +25194,6 @@ packages:
       '@types/long': 4.0.1
       '@types/node': 16.11.27
       long: 4.0.0
-    dev: false
 
   /protocol-buffers-encodings/1.1.1:
     resolution: {integrity: sha512-5aFshI9SbhtcMiDiZZu3g2tMlZeS5lhni//AGJ7V34PQLU5JA91Cva7TIs6inZhYikS3OpnUzAUuL6YtS0CyDA==}
@@ -29459,7 +29429,7 @@ packages:
       stylus:
         optional: true
     dependencies:
-      esbuild: 0.14.48
+      esbuild: 0.14.49
       postcss: 8.4.14
       resolve: 1.22.1
       rollup: 2.75.7

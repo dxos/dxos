@@ -26,6 +26,10 @@ export interface RpcPeerOptions {
   streamHandler?: (method: string, request: Any) => Stream<Any>
   port: RpcPort,
   timeout?: number,
+  /**
+   * Do not require or send handshake messages.
+   */
+  noHandshake?: boolean
 }
 
 /**
@@ -94,6 +98,11 @@ export class RpcPeer {
     }) as any;
 
     this._open = true;
+
+    if (this._options.noHandshake) {
+      this._remoteOpenTrigger.wake();
+      return;
+    }
 
     log('Send open message');
     await this._sendMessage({ open: true });
@@ -175,9 +184,17 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('Received open message');
+      if (this._options.noHandshake) {
+        return;
+      }
+
       await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
       log('Received openAck message');
+      if (this._options.noHandshake) {
+        return;
+      }
+
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (!this._open) {

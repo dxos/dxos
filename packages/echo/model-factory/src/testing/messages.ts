@@ -2,7 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { schema, FeedMessage, ItemID, Timeframe } from '@dxos/echo-protocol';
+import type { FeedMessage, ItemID } from '@dxos/echo-protocol';
+import { Timeframe } from '@dxos/protocols';
+
+import { schema } from '../proto';
 
 export const createSetPropertyMutation = (
   itemId: ItemID, key: string, value: string, timeframe?: Timeframe
@@ -10,7 +13,7 @@ export const createSetPropertyMutation = (
   timeframe,
   echo: {
     itemId,
-    mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation').encode({
+    mutation: schema.getCodecForType('dxos.test.echo.TestItemMutation').encode({
       key,
       value
     })
