@@ -5,8 +5,10 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
+import { schema } from '../proto/gen';
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';
@@ -96,7 +98,7 @@ export class SignalClient {
         remoteId: PublicKey.from(msg.remoteId!),
         topic: PublicKey.from(msg.topic!),
         sessionId: PublicKey.from(msg.sessionId!),
-        data: msg.data,
+        data: schema.getCodecForType('dxos.mesh.signal.MessageData').decode(msg.data as any ?? failUndefined()),
         // Field that MessageRouter adds, so on lower level it not always defined.
         messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
       });
@@ -214,6 +216,7 @@ export class SignalClient {
   /**
    * Routes an offer to the other peer's _onOffer callback.
    * @returns Other peer's _onOffer callback return value.
+   * @deprecated
    */
   async offer (msg: Message): Promise<Answer> {
     return this._client.call('offer', {
@@ -235,7 +238,7 @@ export class SignalClient {
       remoteId: message.remoteId?.asBuffer(),
       topic: message.topic?.asBuffer(),
       sessionId: message.sessionId?.asBuffer(),
-      data: message.data
+      data: schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined())
     });
   }
 }
