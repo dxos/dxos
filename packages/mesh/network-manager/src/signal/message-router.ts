@@ -40,7 +40,7 @@ export class MessageRouter implements SignalMessaging {
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
-  private readonly _subs = new SubscriptionGroup();
+  private readonly _subscriptions = new SubscriptionGroup();
 
   constructor ({
     sendMessage,
@@ -112,7 +112,7 @@ export class MessageRouter implements SignalMessaging {
       cancelRetry();
       clearTimeout(timeout);
     });
-    this._subs.push(() => cancelRetry());
+    this._subscriptions.push(() => cancelRetry());
 
   }
 
@@ -162,7 +162,7 @@ export class MessageRouter implements SignalMessaging {
   }
 
   destroy (): void {
-    this._subs.unsubscribe();
+    this._subscriptions.unsubscribe();
   }
 }
 
