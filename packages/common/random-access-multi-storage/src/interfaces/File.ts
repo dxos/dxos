@@ -1,7 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
-import { promisify } from 'util';
+import promisify from 'pify';
 
 import { FileInternal } from '../internal';
 import { FileStat } from '../types';

@@ -5,8 +5,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "browser": "dist/src/browser.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/index.js": "./dist/src/browser.js",
+    "node:assert": "assert",
+    "node:path": "path-browserify"
+  },
   "files": [
     "dist",
     "src"
@@ -19,7 +23,9 @@
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha 'src/**/*.browser-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
   },
   "dependencies": {
+    "assert": "^2.0.0",
     "del": "^5.1.0",
+    "path-browserify": "^1.0.1",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
     "random-access-idb": "^1.2.2",

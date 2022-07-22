@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
@@ -177,6 +177,7 @@ export class NetworkManager {
       });
     }
 
+    await this._messageRouter.destroy();
     await this._signalManager.destroy();
   }
 }

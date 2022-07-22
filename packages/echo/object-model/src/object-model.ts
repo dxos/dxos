@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import cloneDeep from 'lodash.clonedeep';
 import get from 'lodash.get';
+import assert from 'node:assert';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 

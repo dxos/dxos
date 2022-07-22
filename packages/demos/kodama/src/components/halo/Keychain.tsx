@@ -6,8 +6,8 @@ import format from 'date-format';
 import { Box } from 'ink';
 import React from 'react';
 
+import { KeyType } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { KeyType } from '@dxos/protocols';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Table } from '../util';

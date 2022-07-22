@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { join } from 'path';
+import { join } from 'node:path';
 import ram from 'random-access-memory';
 
 import { File } from '../interfaces';

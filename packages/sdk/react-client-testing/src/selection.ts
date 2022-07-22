@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Party } from '@dxos/client';
+import { Party, Selection } from '@dxos/client';
 import { TestType } from '@dxos/client-testing';
-import { Selection } from '@dxos/echo-db';
 
 /**
  * Eval method against a party object.

@@ -5,6 +5,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
@@ -17,6 +20,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
@@ -24,7 +28,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",
     "eslint": "^7.12.1",

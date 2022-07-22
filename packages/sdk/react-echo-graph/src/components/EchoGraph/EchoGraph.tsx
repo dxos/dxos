@@ -7,11 +7,9 @@ import React, { useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Item } from '@dxos/echo-db';
-import { ItemID } from '@dxos/echo-protocol';
+import { Item, ItemID, ObjectModel } from '@dxos/client';
 import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
 import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
-import { ObjectModel } from '@dxos/object-model';
 import { useDynamicRef } from '@dxos/react-async';
 import { ItemAdapter } from '@dxos/react-client-testing';
 

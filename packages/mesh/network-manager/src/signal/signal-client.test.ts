@@ -61,7 +61,8 @@ describe('SignalApi', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: "foo: 'bar'" } }
+      data: { signal: { json: "foo: 'bar'" } },
+      messageId: undefined
     };
     await api2.signal(msg);
 
@@ -111,7 +112,8 @@ describe('SignalApi', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: 'bar' } }
+      data: { signal: { json: 'bar' } },
+      messageId: undefined
     };
     await api1.signal(msg);
 

@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import fs from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 

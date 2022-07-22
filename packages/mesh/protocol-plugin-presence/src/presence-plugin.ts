@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
+import assert from 'node:assert';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
