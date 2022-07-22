@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap, ComplexSet, SubscriptionGroup } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
@@ -35,9 +35,8 @@ export class MessageRouter implements SignalMessaging {
   private readonly _sendMessage: (message: Message) => Promise<void>;
   private readonly _onOffer: (message: Message) => Promise<Answer>;
 
-  private readonly _sentSignalsVSClearInterval = new ComplexMap<PublicKey, () => void>(key => key.toHex());
-  private readonly _receivedSignals = new Set<PublicKey>();
-  private readonly _acknowledgedSignals = new Set<PublicKey>();
+  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(key => key.toHex());
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
@@ -61,6 +60,15 @@ export class MessageRouter implements SignalMessaging {
   }
 
   async receiveMessage (message: Message): Promise<void> {
+    if (!message.data?.ack) {
+      if (this._receivedMessages.has(message.messageId!)) {
+        return;
+      }
+
+      this._receivedMessages.add(message.messageId!);
+      await this._sendAcknowledgement(message);
+    }
+
     if (message.data?.offer) {
       await this._handleOffer(message);
     } else if (message.data?.answer) {
@@ -74,26 +82,7 @@ export class MessageRouter implements SignalMessaging {
 
   async signal (message: Message): Promise<void> {
     assert(message.data?.signal);
-    message.messageId = PublicKey.random();
-    await this._sendMessage(message);
-
-    // Setting retry interval if signal was not acknowledged.
-    const clearInterval = exponentialBackoffInterval(async () => {
-      if (!this._acknowledgedSignals.has(message.messageId!)) {
-        await this._sendMessage(message);
-      }
-    }, this._retryDelay);
-    this._sentSignalsVSClearInterval.set(message.messageId, clearInterval);
-    this._subs.push(() => clearInterval());
-    setTimeout(() => {
-      if (this._acknowledgedSignals.has(message.messageId!)) {
-        this._acknowledgedSignals.delete(message.messageId!);
-      } else {
-        log('Signal was not delivered!');
-      }
-      this._sentSignalsVSClearInterval.delete(message.messageId!);
-      clearInterval();
-    }, this._timeout);
+    await this._sendReliableMessage(message);
   }
 
   async offer (message: Message): Promise<Answer> {
@@ -101,8 +90,30 @@ export class MessageRouter implements SignalMessaging {
       assert(message.sessionId);
       this._offerRecords.set(message.sessionId, { resolve, reject });
     });
-    await this._sendMessage(message);
+    await this._sendReliableMessage(message);
     return promise;
+  }
+
+  private async _sendReliableMessage (message: Message): Promise<void> {
+    message.messageId = PublicKey.random();
+    await this._sendMessage(message);
+
+    // Setting retry interval if signal was not acknowledged.
+    const cancelRetry = exponentialBackoffInterval(() => this._sendMessage(message), this._retryDelay);
+
+    const timeout = setTimeout(() => {
+      log('Signal was not delivered!');
+      this._onAckCallbacks.delete(message.messageId!);
+      cancelRetry();
+    }, this._timeout);
+
+    this._onAckCallbacks.set(message.messageId, () => {
+      this._onAckCallbacks.delete(message.messageId!);
+      cancelRetry();
+      clearTimeout(timeout);
+    });
+    this._subs.push(() => cancelRetry());
+
   }
 
   private async _resolveAnswers (message: Message): Promise<void> {
@@ -124,35 +135,30 @@ export class MessageRouter implements SignalMessaging {
       sessionId: message.sessionId,
       data: { answer: answer }
     };
-    await this._sendMessage(answerMessage);
+    await this._sendReliableMessage(answerMessage);
   }
 
   private async _handleSignal (message: Message): Promise<void> {
     assert(message.messageId);
-    if (!this._receivedSignals.has(message.messageId)) {
-      this._receivedSignals.add(message.messageId);
-      await this._onSignal(message);
-      await this._sendMessage({
-        id: message.remoteId,
-        remoteId: message.id,
-        topic: message.topic,
-        data: { ack: { messageId: message.messageId } }
-      });
-    }
+    await this._onSignal(message);
   }
 
   private async _handleAcknowledgement (message: Message): Promise<void> {
     assert(message.data?.ack);
     assert(message.data.ack.messageId);
-    if (!this._acknowledgedSignals.has(message.data.ack.messageId)) {
-      this._acknowledgedSignals.add(message.data.ack.messageId);
-      // Clearing retry interval.
-      const clearInterval = this._sentSignalsVSClearInterval.get(message.data.ack.messageId);
-      if (clearInterval) {
-        clearInterval();
-        this._sentSignalsVSClearInterval.delete(message.data.ack.messageId);
-      }
-    }
+    this._onAckCallbacks.get(message.data.ack.messageId)?.();
+  }
+
+  private async _sendAcknowledgement (message: Message): Promise<void> {
+    assert(message.messageId);
+    const ackMessage = {
+      id: message.remoteId,
+      remoteId: message.id,
+      topic: message.topic,
+      sessionId: message.sessionId,
+      data: { ack: { messageId: message.messageId } }
+    };
+    await this._sendMessage(ackMessage);
   }
 
   destroy (): void {
