@@ -35,6 +35,7 @@ Peer to peer messages (unlike swarm events) could use point-to-point connections
 ```protobuf
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -50,7 +51,7 @@ message JoinRequest {
 message Message {
   bytes author = 1;
   bytes recipient = 2;
-  bytes payload = 3;
+  google.protobuf.Any payload = 3;
 }
 
 message ReceptionRequest {
@@ -61,15 +62,13 @@ message ReceptionRequest {
 message SwarmEvent {
   message PeerAvailable {
     bytes peer = 1;
-    // When the kube emitting this message discovered the event, eg through a Join RPC or the responses it triggered
-    // through announceBackTo.
-    google.protobuf.Timestamp discovered = 2;
-    // When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
+    google.protobuf.Timestamp since = 2;
+    // When, if at all, this availability would expires were it not re-announced, like
     // periodically in Pub/Sub with some margin such that kubes going offline unexpectedly lead to offline status.
-    google.protobuf.Timestamp until = 3;
+    optional google.protobuf.Timestamp until = 3;
 
     // Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
-    bytes announceBackToHost = 4;
+    optional bytes announceBackToHost = 4;
   }
 
   message PeerLeft {
