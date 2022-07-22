@@ -22,12 +22,7 @@ Industrial age metaphors
 
 Post symbolic communication is when we can instead of sequencing symbols (words and sentences) to ascribe ideas, we can just materialize the thing we're talking about
 
-
-
-
-
 #### Personal Information Management
-
 
 #### Team Collaboration
 
