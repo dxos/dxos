@@ -10,8 +10,7 @@ import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 
 import { sleep } from '@dxos/async';
-import { Client, Item } from '@dxos/client';
-import { ObjectModel, OrderedList } from '@dxos/object-model';
+import { Client, Item, ObjectModel, OrderedList } from '@dxos/client';
 import { SubscriptionGroup } from '@dxos/util';
 
 const createTestComponents = async () => {

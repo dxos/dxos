@@ -12,9 +12,8 @@ import {
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
 
+import { Item, ObjectModel } from '@dxos/client';
 import { TestType } from '@dxos/client-testing';
-import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 
 export const typeMeta: { [i: string]: ItemMeta } = {
   [TestType.Org]: {

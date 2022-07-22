@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
+import assert from 'node:assert';
 
 import { createKeyPair } from '@dxos/crypto';
 

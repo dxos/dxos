@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import unionWith from 'lodash.unionwith';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';

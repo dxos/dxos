@@ -2,12 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import encode from 'encoding-down';
 import levelup, { LevelUp } from 'levelup';
 import memdown from 'memdown';
+import assert from 'node:assert';
 import toArray from 'stream-to-array';
 
 import { PublicKey } from '@dxos/protocols';

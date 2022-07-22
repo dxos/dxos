@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { PublicKey } from '@dxos/protocols';

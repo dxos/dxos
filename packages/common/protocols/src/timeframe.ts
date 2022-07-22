@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 import { PublicKey } from './public-key';
 

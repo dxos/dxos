@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { PARTY_TITLE_PROPERTY, DataParty } from '.';
 import { Preferences } from '../halo/preferences';

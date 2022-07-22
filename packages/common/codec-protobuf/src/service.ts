@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import pb from 'protobufjs';
 
 import type { Schema } from './schema';

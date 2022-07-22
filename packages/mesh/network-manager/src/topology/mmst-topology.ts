@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import distance from 'xor-distance';
 
 import { PublicKey } from '@dxos/protocols';

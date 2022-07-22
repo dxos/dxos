@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.

@@ -4,10 +4,10 @@
 
 /* eslint-disable jest/no-conditional-expect */
 
-import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
+import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import {

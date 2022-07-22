@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { join } from 'path';
+import { join } from 'node:path';
 import randomAccessIdb from 'random-access-idb';
 
 import { StorageType, File } from '../interfaces';

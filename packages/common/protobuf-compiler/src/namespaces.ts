@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import * as pb from 'protobufjs';
 import * as ts from 'typescript';
 

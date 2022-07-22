@@ -7,14 +7,15 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Item, Party } from '@dxos/client';
-import { ObjectModel, OrderedList } from '@dxos/object-model';
+import { Item, Party, ObjectModel, OrderedList } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { ProfileInitializer } from '../src';
-import { ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem, ListItemDef, ResetButton, StorybookContainer } from './helpers';
-import { moveItemInArray, updateSourceAndTargetState } from './helpers/utils';
+import {
+  ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem,
+  ListItemDef, ResetButton, StorybookContainer, moveItemInArray, updateSourceAndTargetState
+} from './helpers';
 
 export default {
   title: 'react-client-testing/DragAndDrop'

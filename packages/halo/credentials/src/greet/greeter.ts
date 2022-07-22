@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { PublicKeyLike, PublicKey } from '@dxos/protocols';
