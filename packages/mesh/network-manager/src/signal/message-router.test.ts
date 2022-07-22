@@ -289,13 +289,13 @@ describe('MessageRouter reliability', () => {
 
     // Sending 3 messages.
     // Setup sends messages directly to between. So we don`t need to specify any ids.
-    Array(3).fill(0).forEach(async (id) => {
+    Array(3).fill(0).forEach(async () => {
       await mr2.signal({
         id: PublicKey.random(),
         remoteId: PublicKey.random(),
         sessionId: PublicKey.random(),
         topic: PublicKey.random(),
-        data: { signal: { json: JSON.stringify(id) } }
+        data: { signal: { json: 'asd' } }
       });
     });
     // expect to receive 3 messages.
