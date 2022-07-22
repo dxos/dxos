@@ -177,6 +177,7 @@ export class NetworkManager {
       });
     }
 
+    await this._messageRouter.destroy();
     await this._signalManager.destroy();
   }
 }
