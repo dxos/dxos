@@ -88,9 +88,9 @@ export class MessageRouter implements SignalMessaging {
 
   async offer (message: Message): Promise<Answer> {
     message.messageId = PublicKey.random();
-    const promise = new Promise<Answer>(async (resolve, reject) => {
+    const promise = new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
-      await this._sendReliableMessage(message);
+      return this._sendReliableMessage(message);
     });
     return promise;
   }
