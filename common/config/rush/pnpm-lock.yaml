@@ -447,6 +447,7 @@ importers:
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
@@ -459,6 +460,7 @@ importers:
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
       '@dxos/protocols': link:../protocols
+      '@dxos/util': link:../util
       debug: 4.3.3
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu

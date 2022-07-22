@@ -21,6 +21,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
     "debug": "^4.3.3"
   },
   "devDependencies": {

@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap, ComplexSet, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup } from '@dxos/util';
 
 import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from './signal-manager';
@@ -174,14 +174,3 @@ export class MessageRouter implements SignalMessaging {
     this._subscriptions.unsubscribe();
   }
 }
-
-const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
-  let interval = initialInterval;
-  const repeat = () => {
-    cb();
-    interval *= 2;
-    timeoutId = setTimeout(repeat, interval);
-  };
-  let timeoutId = setTimeout(repeat, interval);
-  return () => clearTimeout(timeoutId);
-};
