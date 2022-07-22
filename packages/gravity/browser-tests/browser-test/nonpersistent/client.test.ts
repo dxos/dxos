@@ -48,11 +48,10 @@ describe('Client - nonpersistent', () => {
 
     const item = await party.database.createItem({ model: ObjectModel });
     await item.model.set('foo', 'bar');
-
     expect(item.model.get('foo')).toEqual('bar');
 
     await client.destroy();
-  });
+  }).timeout(10_000);
 
   it('invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
