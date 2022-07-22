@@ -24,7 +24,7 @@ interface MessageRouterOptions {
   timeout?: number;
 }
 
-const log = debug('dxos:message-router');
+const log = debug('dxos:network-manager:message-router');
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
@@ -60,6 +60,7 @@ export class MessageRouter implements SignalMessaging {
   }
 
   async receiveMessage (message: Message): Promise<void> {
+    log(`receive message: ${JSON.stringify(message)}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
         return;
@@ -86,20 +87,22 @@ export class MessageRouter implements SignalMessaging {
   }
 
   async offer (message: Message): Promise<Answer> {
-    const promise = new Promise<Answer>((resolve, reject) => {
-      assert(message.sessionId);
-      this._offerRecords.set(message.sessionId, { resolve, reject });
+    message.messageId = PublicKey.random();
+    const promise = new Promise<Answer>(async (resolve, reject) => {
+      this._offerRecords.set(message.messageId!, { resolve, reject });
     });
     await this._sendReliableMessage(message);
     return promise;
   }
 
-  private async _sendReliableMessage (message: Message): Promise<void> {
-    message.messageId = PublicKey.random();
-    await this._sendMessage(message);
-
+  private async _sendReliableMessage (message: Message): Promise<PublicKey> {
+    message.messageId = message.messageId ? message.messageId : PublicKey.random();
+    log(`sent message: ${JSON.stringify(message)}`);
     // Setting retry interval if signal was not acknowledged.
-    const cancelRetry = exponentialBackoffInterval(() => this._sendMessage(message), this._retryDelay);
+    const cancelRetry = exponentialBackoffInterval(() => {
+      log(`retrying message: ${JSON.stringify(message)}`);
+      this._sendMessage(message);
+    }, this._retryDelay);
 
     const timeout = setTimeout(() => {
       log('Signal was not delivered!');
@@ -107,33 +110,39 @@ export class MessageRouter implements SignalMessaging {
       cancelRetry();
     }, this._timeout);
 
+    assert(!this._onAckCallbacks.has(message.messageId!));
     this._onAckCallbacks.set(message.messageId, () => {
       this._onAckCallbacks.delete(message.messageId!);
       cancelRetry();
       clearTimeout(timeout);
     });
-    this._subscriptions.push(() => cancelRetry());
+    this._subscriptions.push(cancelRetry);
+    this._subscriptions.push(() => clearTimeout(timeout));
 
+    await this._sendMessage(message);
+    return message.messageId;
   }
 
   private async _resolveAnswers (message: Message): Promise<void> {
-    assert(message.sessionId);
-    const offerRecord = this._offerRecords.get(message.sessionId);
+    assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
+    const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
-      this._offerRecords.delete(message.sessionId);
-      assert(message.data?.answer);
+      this._offerRecords.delete(message.data.answer.offerMessageId);
+      assert(message.data?.answer, 'No Answer');
+      log(`resolving answer with ${message.data.answer}`)
       offerRecord.resolve(message.data.answer);
     }
   }
 
   private async _handleOffer (message: Message): Promise<void> {
     const answer = await this._onOffer(message);
-    const answerMessage = {
+    answer.offerMessageId = message.messageId;
+    const answerMessage: Message = {
       id: message.remoteId,
       remoteId: message.id,
       topic: message.topic,
       sessionId: message.sessionId,
-      data: { answer: answer }
+      data: { answer }
     };
     await this._sendReliableMessage(answerMessage);
   }
@@ -144,8 +153,7 @@ export class MessageRouter implements SignalMessaging {
   }
 
   private async _handleAcknowledgement (message: Message): Promise<void> {
-    assert(message.data?.ack);
-    assert(message.data.ack.messageId);
+    assert(message.data?.ack?.messageId);
     this._onAckCallbacks.get(message.data.ack.messageId)?.();
   }
 
@@ -158,6 +166,7 @@ export class MessageRouter implements SignalMessaging {
       sessionId: message.sessionId,
       data: { ack: { messageId: message.messageId } }
     };
+    log(`sent ack: ${JSON.stringify(ackMessage)}`);
     await this._sendMessage(ackMessage);
   }
 
