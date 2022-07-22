@@ -6,8 +6,7 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { Client, defaultConfig } from '@dxos/client';
-import { KeyType } from '@dxos/credentials';
+import { Client, defaultConfig, KeyType } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 
 import {

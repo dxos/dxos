@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import { it as test } from 'mocha';
+import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { RpcClosedError } from '@dxos/rpc';

@@ -6,6 +6,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "src",
     "dist"
@@ -22,6 +25,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "lodash.clonedeep": "^4.5.0",
     "lodash.get": "^4.4.2",

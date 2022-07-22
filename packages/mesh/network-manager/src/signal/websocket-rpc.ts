@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import WebSocket from 'isomorphic-ws';
 import nanomessagerpc from 'nanomessage-rpc';
+import assert from 'node:assert';
 import { promisify } from 'util';
 
 import { Event, Trigger, sleep } from '@dxos/async';

@@ -12,6 +12,7 @@ export * from './NetworkPanel';
 export * from './PanelsContainer';
 export * from './PartiesPanel';
 export * from './ProfilePanel';
+export * from './RegistryPanel';
 export * from './SignalPanel';
 export * from './SnapshotsPanel';
 export * from './StoragePanel';

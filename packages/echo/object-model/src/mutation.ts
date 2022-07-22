@@ -4,9 +4,9 @@
 
 /* eslint-disable no-unused-vars */
 
-import assert from 'assert';
 import get from 'lodash.get';
 import set from 'lodash.set';
+import assert from 'node:assert';
 
 import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
 import { removeKey } from './util';

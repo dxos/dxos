@@ -7,9 +7,9 @@
  *   and moved somewhere more abstract (RpcProtocolPlugin?).
  */
 
-import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
+import assert from 'node:assert';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';

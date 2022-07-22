@@ -3,8 +3,8 @@
 //
 
 import { compactAddLength } from '@polkadot/util';
-import assert from 'assert';
 import { webcrypto as crypto } from 'crypto';
+import assert from 'node:assert';
 
 import { ComplexMap } from '@dxos/util';
 

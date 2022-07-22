@@ -4,8 +4,8 @@
 
 /* eslint-disable jest/no-done-callback */
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
 

@@ -3,8 +3,8 @@
 //
 
 import wrtc from '@koush/wrtc';
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
