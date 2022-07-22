@@ -92,13 +92,13 @@ export class SignalClient {
       data: message.data
     }));
 
-    this._client.subscribe('signal', (msg: Message) => {
+    this._client.subscribe('signal', (msg: SignalMessage) => {
       return this._onSignal({
         id: PublicKey.from(msg.id!),
         remoteId: PublicKey.from(msg.remoteId!),
         topic: PublicKey.from(msg.topic!),
         sessionId: PublicKey.from(msg.sessionId!),
-        data: schema.getCodecForType('dxos.mesh.signal.MessageData').decode(msg.data as any ?? failUndefined()),
+        data: schema.getCodecForType('dxos.mesh.signal.MessageData').decode(msg.data ?? failUndefined()),
         // Field that MessageRouter adds, so on lower level it not always defined.
         messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
       });
@@ -232,13 +232,32 @@ export class SignalClient {
    * Routes an offer to the other peer's _onSignal callback.
    */
   async signal (message: Message): Promise<void> {
-    return this._client.emit('signal', {
+    const signalMessage: SignalMessage = {
       messageId: message.messageId?.asBuffer(),
       id: message.id?.asBuffer(),
       remoteId: message.remoteId?.asBuffer(),
       topic: message.topic?.asBuffer(),
       sessionId: message.sessionId?.asBuffer(),
-      data: schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined())
-    });
+      data: Buffer.from(schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined()))
+    }
+    return this._client.emit('signal', signalMessage);
   }
+}
+
+/**
+ * Messages as processed by the signal server.
+ */
+interface SignalMessage{
+  /**
+   * Sender's public key.
+   */
+  id?: Buffer;
+  /**
+   * Receiver`s public key.
+   */
+  remoteId?: Buffer;
+  topic?: Buffer;
+  sessionId?: Buffer;
+  data?: Buffer;
+  messageId?: Buffer;
 }
