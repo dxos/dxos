@@ -247,20 +247,15 @@ describe('MessageRouter reliability', () => {
     onSignal2?: (msg: Message) => Promise<void>;
     messageDisruption?: (msg: Message) => Message[];
   }): {mr1: MessageRouter; mr2: MessageRouter} => {
-    // eslint-disable-next-line prefer-const
-    let mr1: MessageRouter;
-    // eslint-disable-next-line prefer-const
-    let mr2: MessageRouter;
 
-    // eslint-disable-next-line prefer-const
-    mr1 = new MessageRouter({
+    const mr1: MessageRouter = new MessageRouter({
       sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),
       onOffer: async () => ({ accept: true }),
       onSignal: onSignal1
     });
     afterTest(() => mr1.destroy());
 
-    mr2 = new MessageRouter({
+    const mr2: MessageRouter = new MessageRouter({
       sendMessage: async msg => messageDisruption(msg).forEach(msg => mr1.receiveMessage(msg)),
       onOffer: async () => ({ accept: true }),
       onSignal: onSignal2
