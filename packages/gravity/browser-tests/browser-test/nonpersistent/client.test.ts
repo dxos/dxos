@@ -34,7 +34,7 @@ describe('Client - nonpersistent', () => {
     await client.destroy();
   });
 
-  it.only('create party', async () => {
+  it('create party', async () => {
     const client = new Client();
 
     await client.initialize();
