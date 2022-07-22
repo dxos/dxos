@@ -239,7 +239,7 @@ export class SignalClient {
       topic: message.topic?.asBuffer(),
       sessionId: message.sessionId?.asBuffer(),
       data: Buffer.from(schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined()))
-    }
+    };
     return this._client.emit('signal', signalMessage);
   }
 }

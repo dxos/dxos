@@ -90,18 +90,20 @@ export class MessageRouter implements SignalMessaging {
     message.messageId = PublicKey.random();
     const promise = new Promise<Answer>(async (resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
+      await this._sendReliableMessage(message);
     });
-    await this._sendReliableMessage(message);
     return promise;
   }
 
   private async _sendReliableMessage (message: Message): Promise<PublicKey> {
-    message.messageId = message.messageId ? message.messageId : PublicKey.random();
+    // Setting unique messageId if it not specified yet.
+    message.messageId = message.messageId ?? PublicKey.random();
     log(`sent message: ${JSON.stringify(message)}`);
+
     // Setting retry interval if signal was not acknowledged.
-    const cancelRetry = exponentialBackoffInterval(() => {
+    const cancelRetry = exponentialBackoffInterval(async () => {
       log(`retrying message: ${JSON.stringify(message)}`);
-      this._sendMessage(message);
+      await this._sendMessage(message);
     }, this._retryDelay);
 
     const timeout = setTimeout(() => {
@@ -129,7 +131,7 @@ export class MessageRouter implements SignalMessaging {
     if (offerRecord) {
       this._offerRecords.delete(message.data.answer.offerMessageId);
       assert(message.data?.answer, 'No Answer');
-      log(`resolving answer with ${message.data.answer}`)
+      log(`resolving answer with ${message.data.answer}`);
       offerRecord.resolve(message.data.answer);
     }
   }
