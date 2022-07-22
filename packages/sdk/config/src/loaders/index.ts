@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import fs from 'fs';
 import yaml from 'js-yaml';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { mapFromKeyValues } from '../config';
 import { ConfigObject } from '../proto';

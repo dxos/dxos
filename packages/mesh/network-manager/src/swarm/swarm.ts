@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
@@ -101,7 +101,7 @@ export class Swarm {
   }
 
   async onOffer (message: Message): Promise<Answer> {
-    log(`Offer from ${message.id} topic=${this._topic}`);
+    log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
     assert(message.id);
     const remoteId = message.id;

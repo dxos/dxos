@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { ECHO } from '@dxos/echo-db';

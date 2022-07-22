@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import base from 'base-x';
 import stableStringify from 'json-stable-stringify';
+import assert from 'node:assert';
 
 import { ripemd160 } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';

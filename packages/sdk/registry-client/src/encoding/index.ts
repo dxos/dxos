@@ -3,4 +3,3 @@
 //
 
 export * from './encoding';
-export * from './mapper';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import CryptoJS from 'crypto-js';
+import assert from 'node:assert';
 
 /**
  * Encrypt string plaintext to a base64-encoded string ciphertext.

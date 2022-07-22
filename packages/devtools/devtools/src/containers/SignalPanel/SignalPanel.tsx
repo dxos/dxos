@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import React from 'react';
 
 import { Box } from '@mui/material';
@@ -25,7 +24,6 @@ const stringToState = (state: string): SignalApi.State => {
 };
 
 const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
-  assert(server.connectionStarted && server.host && server.lastStateChange && server.reconnectIn && server.state);
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,

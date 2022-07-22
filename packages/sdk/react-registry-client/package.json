@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "scripts": {
     "book": "toolchain book",
     "build": "toolchain build",
