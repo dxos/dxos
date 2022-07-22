@@ -306,9 +306,7 @@ describe('MessageRouter reliability', () => {
 
   test('ignoring doubled messages', async () => {
     // Message got doubled going through signal network.
-    const doublingMessage = (msg: Message) => {
-      return [msg, msg];
-    };
+    const doublingMessage = (msg: Message) => [msg, msg];
 
     const received: Message[] = [];
     const signalMock1 = async (msg: Message) => {
