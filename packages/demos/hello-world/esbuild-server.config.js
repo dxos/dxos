@@ -2,11 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-const {
-  FixMemdownPlugin,
-  NodeGlobalsPolyfillPlugin,
-  NodeModulesPlugin
-} = require('@dxos/esbuild-plugins');
+const { NodeGlobalsPolyfillPlugin } = require('@dxos/esbuild-plugins');
+const { ConfigPlugin } = require('@dxos/config/esbuild-plugin');
 
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
@@ -18,9 +15,8 @@ module.exports = {
     sourcemap: 'inline'
   },
   plugins: [
-    FixMemdownPlugin(),
     NodeGlobalsPolyfillPlugin(),
-    NodeModulesPlugin()
+    ConfigPlugin()
   ],
   staticDir: 'public'
 };

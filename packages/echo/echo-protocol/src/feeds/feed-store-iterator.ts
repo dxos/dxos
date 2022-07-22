@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';

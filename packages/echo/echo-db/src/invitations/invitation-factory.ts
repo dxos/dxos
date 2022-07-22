@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
 import { FeedWriter } from '@dxos/echo-protocol';

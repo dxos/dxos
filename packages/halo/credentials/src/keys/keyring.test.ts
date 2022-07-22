@@ -4,8 +4,8 @@
 
 // DXOS testing browser.
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 
 import { createKeyPair, randomBytes, verify } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';

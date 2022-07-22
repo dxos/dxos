@@ -6,8 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
-import { Item, Party } from '@dxos/client';
-import { ObjectModel } from '@dxos/object-model';
+import { Item, ObjectModel, Party } from '@dxos/client';
 import { useClient, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
 import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-toolkit';
@@ -24,6 +23,7 @@ export const App = () => {
 
   // 1. Create party.
   useEffect(() => {
+    // TODO(wittjosiah): Attempt to load existing party.
     void client.echo.createParty().then(party => setParty(party));
   }, []);
 
@@ -101,7 +101,7 @@ export const App = () => {
                 }}
               />
             </ListItemIcon>
-            <ListItemText primary={item.model.get('name')} />
+            <ListItemText primary={item.model.get('title')} />
           </ListItemButton>
         ))}
       </List>

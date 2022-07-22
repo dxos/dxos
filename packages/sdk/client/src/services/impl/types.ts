@@ -3,10 +3,10 @@
 //
 
 import { Config } from '@dxos/config';
-import { KeyRecord } from '@dxos/credentials';
 import { ECHO } from '@dxos/echo-db';
 
 import { SignRequest, SignResponse } from '../../proto/gen/dxos/client';
+import { KeyRecord } from '../../proto/gen/dxos/halo/keys';
 
 /**
  * Signer plugin.

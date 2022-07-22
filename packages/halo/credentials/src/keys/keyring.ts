@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import memdown from 'memdown';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import {

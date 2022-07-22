@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
+import assert from 'node:assert';
 
 import { Codec, patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 

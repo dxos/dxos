@@ -2,16 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import protobuf from 'protobufjs';
 
+import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import {
   RecordExtension,
-  decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload,
-  encodeProtobuf, sanitizeExtensionData
+  decodeExtensionPayload,
+  encodeExtensionPayload,
+  sanitizeExtensionData
 } from '../encoding';
 import { Record as RawRecord } from '../proto';
 import { AccountKey } from './account-key';
