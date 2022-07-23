@@ -1,4 +1,4 @@
 // Copyright 2022 DXOS.org
-export const foo = (value: string) => {
+export const test = (value: string) => {
   console.log(value);
 };
