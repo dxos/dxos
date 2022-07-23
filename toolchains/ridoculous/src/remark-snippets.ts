@@ -10,8 +10,6 @@ import * as process from 'process';
 import * as protobuf from 'protocol-buffers-schema';
 import { visit } from 'unist-util-visit';
 
-console.log(':::', protobuf);
-
 const log = debug('dxos:ridoculous:error');
 
 type Type = {

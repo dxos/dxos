@@ -8,10 +8,11 @@
     "ridoculous": "./bin/ridoculous.js"
   },
   "scripts": {
-    "build": "tsc --outDir dist ./src/main.ts",
+    "build": "npm run clean && tsc --outDir ./dist ./src/main.ts",
+    "clean": "rm -rf ./dist ./out",
     "build:test": "pnpm build && pnpm lint",
     "lint": "eslint .",
-    "start": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts"
+    "start": "npm run clean && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",

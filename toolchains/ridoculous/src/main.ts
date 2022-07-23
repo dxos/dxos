@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import * as fs from 'fs';
-import { glob } from 'glob';
+import glob from 'glob';
 import * as path from 'path';
 import * as process from 'process';
 import { read } from 'to-vfile';
