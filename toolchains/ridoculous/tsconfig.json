@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "module": "ESNext"
   },
   "include": [
-    "src"
+    "src/**/*",
+    "testing/**/*"
   ]
 }
