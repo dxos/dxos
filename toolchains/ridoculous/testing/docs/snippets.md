@@ -2,24 +2,20 @@
 
 Here is a typescript file:
 
-```
-@import ./src/test.ts
-```
+<!-- @code ./src/test.ts -->
 
 Here is a proto file:
 
+<!-- @code ./src/test.proto -->
 ```
-@import ./src/test.proto
 ```
 
 Here is a proto message definition:
 
+<!-- @code ./src/test.proto#Bar -->
 ```
-@import ./src/test.proto#Bar
 ```
 
 Here is a YML file:
 
-```
-@import ./ridoculous.yml
-```
+<!-- @code ./ridoculous.yml -->

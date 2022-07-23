@@ -12,6 +12,35 @@ import { visit } from 'unist-util-visit';
 
 const log = debug('dxos:ridoculous:error');
 
+/**
+ * Util to remove trailing blank lines.
+ */
+// TODO(burdon): Factor out.
+const removeTrailing = (content: string) => {
+  const lines = content.split('\n');
+  let n;
+  for (n = lines.length - 1; n > 0; n--) {
+    if (lines[n].trim() !== '') {
+      break;
+    }
+  }
+  if (n < lines.length - 1) {
+    lines.splice(n + 1);
+    content = lines.join('\n');
+  }
+
+  return content;
+};
+
+/**
+ * Util to create regexp from set of parts to aid comprehension.
+ */
+// TODO(burdon): Factor out.
+const regex = (parts: RegExp[]) => {
+  const [first, ...rest] = parts;
+  return new RegExp(rest.reduce((res, p) => res + p.source, first.source));
+};
+
 type Type = {
   lang: string
   parser?: (content: string, options: { hash?: string }) => string
@@ -67,25 +96,6 @@ const langType: { [key: string]: Type } = {
   }
 };
 
-/**
- * Remove trailing blank lines.
- */
-const removeTrailing = (content: string) => {
-  const lines = content.split('\n');
-  let n;
-  for (n = lines.length - 1; n > 0; n--) {
-    if (lines[n].trim() !== '') {
-      break;
-    }
-  }
-  if (n < lines.length - 1) {
-    lines.splice(n + 1);
-    content = lines.join('\n');
-  }
-
-  return content;
-};
-
 export interface Options {
   baseDir?: string
 }
@@ -93,22 +103,46 @@ export interface Options {
 /**
  * Import snippets.
  * See https://www.gatsbyjs.com/plugins/gatsby-remark-embed-snippet/?=snippet
+ * Snippets are contains within comment blocks.
+ * The resulting code snippet is inserted above or replaces an existing block.
  */
 // TODO(burdon): Create test.
 export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tree: any) => {
-  visit(tree, 'code', (node) => {
-    const match = node.value.trim().match(/@import (.+)/);
-    if (match) {
-      const [file, hash] = match[1].split('#');
-      try {
-        const content = fs.readFileSync(path.join(baseDir, file), 'utf8');
+  visit(tree, 'html', (node, i, parent) => {
+    // Match: <!-- @code ./foo/bar.ts#hash -->
+    const reg = regex([
+      /<!--\s*/, // Opening comment.
+      /@(.+)\s/, // Group: directive (e.g., `code`).
+      /([^#\s]+)/, // Group: file
+      /(?:#(.+))?/, // Group hash (optional; note outer # is in non-capturing group).
+      /\s*-->/ // Closing comment.
+    ]);
 
-        // Type.
-        const { ext } = path.parse(file);
-        const { lang, parser } = langType[ext];
-        if (lang) {
-          node.lang = lang;
-          node.value = removeTrailing(parser?.(content, { hash }) ?? content);
+    const match = node.value.trim().match(reg);
+    if (match) {
+      const [, directive, file, hash] = match;
+      log('snippet:', [directive, file, hash]);
+      try {
+        const next = parent.children[i! + 1];
+        switch (directive) {
+          case 'code': {
+            const content = fs.readFileSync(path.join(baseDir, file), 'utf8');
+            const { ext } = path.parse(file);
+            const { lang, parser } = langType[ext];
+            if (lang) {
+              // TODO(burdon): Update previous node.
+              node.append();
+              // console.log(node);
+              // node.lang = lang;
+              // node.value = removeTrailing(parser?.(content, { hash }) ?? content);
+            }
+
+            break;
+          }
+
+          default: {
+            throw new Error(`Invalid directive: ${directive}`);
+          }
         }
       } catch (err) {
         log(String(err));

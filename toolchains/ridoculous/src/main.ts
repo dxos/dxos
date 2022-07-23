@@ -49,7 +49,7 @@ const main = () => {
         toc: string,
         verbose: boolean
       }) => {
-        debug.enable(process.env.DEBUG ?? verbose ? 'dxos:ridoculous:*' : '');
+        debug.enable(process.env.DEBUG ?? verbose ? 'dxos:ridoculous:*' : 'dxos:ridoculous:error');
         void processFiles({
           baseDir,
           files,
