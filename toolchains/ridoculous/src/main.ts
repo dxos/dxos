@@ -21,6 +21,7 @@ interface Options {
   outDir?: string
 }
 
+// TODO(burdon): Factor out to lib.
 const main = async ({
   baseDir = process.cwd(),
   files = 'docs/**/*.md',
