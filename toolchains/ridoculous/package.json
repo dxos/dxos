@@ -8,7 +8,7 @@
     "ridoculous": "./bin/ridoculous.js"
   },
   "scripts": {
-    "build": "npm run clean && tsc --outDir ./dist ./src/main.ts",
+    "build": "npm run clean && tsc",
     "clean": "rm -rf ./dist ./out",
     "build:test": "pnpm build && pnpm lint",
     "lint": "eslint .",

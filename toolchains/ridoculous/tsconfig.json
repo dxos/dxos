@@ -13,8 +13,10 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "outDir": "./dist"
   },
+  "files": ["./src/main.ts"],
   "include": [
     "src/**/*",
     "testing/**/*"
