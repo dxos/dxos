@@ -11,6 +11,7 @@ import remarkRehype from 'remark-rehype';
 import remarkToc from 'remark-toc';
 
 import { remarkHeading } from './remark-heading.js';
+import { remarkLinker } from './remark-linker.js';
 import { remarkSnippets } from './remark-snippets.js';
 
 interface Options {
@@ -32,6 +33,9 @@ export const createParser = ({ baseDir, heading, html }: Options): any => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     .use(remarkSnippets, { baseDir })
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    .use(remarkLinker, { baseDir })
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     .use(remarkHeading, { heading })

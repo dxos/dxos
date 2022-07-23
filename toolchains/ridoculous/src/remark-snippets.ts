@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as process from 'process';
 import { visit } from 'unist-util-visit';
 import protobuf from 'protocol-buffers-schema';
+import { TSDocParser, ParserContext, DocComment } from '@microsoft/tsdoc';
 
 const log = debug('dxos:ridoculous:error');
 
@@ -26,8 +27,18 @@ const langType: { [key: string]: Type } = {
   '.json': {
     lang: 'json'
   },
+  // TODO(burdon):
+  //  https://tsdoc.org
+  //  https://www.npmjs.com/package/@microsoft/tsdoc
+  //  https://github.com/microsoft/tsdoc
+  //  https://github.com/microsoft/tsdoc/blob/main/api-demo/src/simpleDemo.ts
   '.ts': {
-    lang: 'ts'
+    lang: 'ts',
+    parser: (content, { hash: def }) => {
+      const parser = new TSDocParser();
+      parser.parseString(content);
+      return content;
+    }
   },
   '.proto': {
     lang: 'protobuf',
