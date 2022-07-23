@@ -17,7 +17,7 @@ export interface Options {
 // TODO(burdon): Create test.
 export const remarkLinker = ({ baseDir }: Options) => (tree: any) => {
   visit(tree, 'link', (node) => {
-    const { url } = node;
+    // const { url } = node;
     visit(node, 'text', ({ value }) => {
       // TODO(burdon): Validate link
       // console.log(value, url);
