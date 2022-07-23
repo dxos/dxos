@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 
-require('../dist/main');
+import main from '../dist/src/main.js';
+// require('../dist/main');
+main();

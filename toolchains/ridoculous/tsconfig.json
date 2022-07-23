@@ -9,7 +9,6 @@
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "strict": true,
