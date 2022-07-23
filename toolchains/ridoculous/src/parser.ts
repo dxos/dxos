@@ -6,7 +6,7 @@ import rehypeStringify from 'rehype-stringify';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import remarkLint from 'remark-lint';
-import remarkNormalize from 'remark-normalize-headings';
+import remarkNormalizeHeadings from 'remark-normalize-headings';
 import remarkRehype from 'remark-rehype';
 import remarkToc from 'remark-toc';
 
@@ -26,9 +26,12 @@ interface Options {
 export const createParser = ({ baseDir, toc, html }: Options): any => {
   // https://github.com/remarkjs/awesome-remark
   const unified = remark()
+    // https://github.com/remarkjs/remark-gfm
     .use(remarkGfm as any)
+    // TODO(burdon): https://github.com/remarkjs/remark-lint
     .use(remarkLint as any)
-    .use(remarkNormalize as any)
+    // https://github.com/remarkjs/remark-normalize-headings
+    .use(remarkNormalizeHeadings as any)
 
     // TODO(burdon): Why TS errors?
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -45,9 +48,10 @@ export const createParser = ({ baseDir, toc, html }: Options): any => {
 
   if (toc) {
     unified
+      // https://github.com/remarkjs/remark-toc
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      .use(remarkToc as any, { heading: toc });
+      .use(remarkToc as any, { tight: true, heading: toc });
   }
 
   if (html) {
