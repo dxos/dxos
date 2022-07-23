@@ -38,7 +38,7 @@ const main = async ({
     const text = await parser.process(await read(filename));
 
     const parts = path.parse(filename);
-    const f = path.format({ ...parts, base: undefined, ext: '.html' });
+    const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
     const outFilename = path.join(outDir, path.relative(baseDir, f));
     const dirname = path.dirname(outFilename);
     if (!fs.existsSync(dirname)) {
@@ -54,6 +54,6 @@ const main = async ({
 void main({
   baseDir: 'testing',
   files: 'testing/**/*.md',
-  html: true,
+  html: false,
   toc: '.*contents.*'
 });

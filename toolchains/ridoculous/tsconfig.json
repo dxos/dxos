@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-<<<<<<< HEAD
     "target": "ES2020",
     "lib": ["ES2020"],
     "module": "ES2020",
@@ -13,12 +12,8 @@
     "emitDeclarationOnly": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "strict": true
-=======
-    "esModuleInterop": true,
-    "module": "ESNext",
-    "outDir": "dist"
->>>>>>> 9ba32ecdfc4b0075ef25b54f545ff3e7be607c6a
+    "strict": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*",

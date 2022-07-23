@@ -67,6 +67,25 @@ const langType: { [key: string]: Type } = {
   }
 };
 
+/**
+ * Remove trailing blank lines.
+ */
+const removeTrailing = (content: string) => {
+  const lines = content.split('\n');
+  let n;
+  for (n = lines.length - 1; n > 0; n--) {
+    if (lines[n].trim() !== '') {
+      break;
+    }
+  }
+  if (n < lines.length - 1) {
+    lines.splice(n + 1);
+    content = lines.join('\n');
+  }
+
+  return content;
+};
+
 export interface Options {
   baseDir?: string
 }
@@ -89,7 +108,7 @@ export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tr
         const { lang, parser } = langType[ext];
         if (lang) {
           node.lang = lang;
-          node.value = parser?.(content, { hash }) ?? content;
+          node.value = removeTrailing(parser?.(content, { hash }) ?? content);
         }
       } catch (err) {
         log(String(err));

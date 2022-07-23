@@ -14,3 +14,7 @@ message Foo {
 message Bar {
   string key = 1;
 }
+
+
+
+
