@@ -27,7 +27,7 @@ const langType: { [key: string]: Type } = {
   '.json': {
     lang: 'json'
   },
-  // TODO(burdon):
+  // TODO(burdon): Extract definitions.
   //  https://tsdoc.org
   //  https://www.npmjs.com/package/@microsoft/tsdoc
   //  https://github.com/microsoft/tsdoc
