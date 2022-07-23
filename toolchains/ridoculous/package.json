@@ -13,7 +13,7 @@
     "build:test": "pnpm build && pnpm lint",
     "info": "tsc --showConfig | jq",
     "lint": "eslint .",
-    "start": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts"
+    "start": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --baseDir ./testing"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",

@@ -8,10 +8,13 @@ import glob from 'glob';
 import * as path from 'path';
 import * as process from 'process';
 import { read } from 'to-vfile';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 import { createParser } from './parser.js';
 
 const log = debug('dxos:ridoculous:main');
+debug.enable(process.env.DEBUG ?? 'dxos:ridoculous:main');
 
 interface Options {
   baseDir?: string
@@ -22,7 +25,7 @@ interface Options {
 }
 
 // TODO(burdon): Factor out to lib.
-const main = async ({
+const parse = async ({
   baseDir = process.cwd(),
   files = 'docs/**/*.md',
   html = false,
@@ -51,10 +54,50 @@ const main = async ({
   }
 };
 
-// TODO(burdon): Yargs.
-void main({
-  baseDir: 'testing',
-  files: 'testing/**/*.md',
-  html: false,
-  toc: '.*contents.*'
-});
+const main = () => {
+  yargs(hideBin(process.argv))
+    .scriptName('ridoculous')
+    .option('files', {
+      description: 'Markdown files glob',
+      type: 'string',
+      default: 'docs/**/*.md'
+    })
+    .option('baseDir', {
+      description: 'Root directory',
+      type: 'string'
+    })
+    .option('toc', {
+      description: 'Regexp for table of contents header',
+      type: 'string',
+      default: '.*contents.*'
+    })
+    .option('html', {
+      description: 'Output HTML',
+      type: 'boolean'
+    })
+    .command({
+      command: '*',
+      handler: async ({
+        baseDir,
+        files,
+        html,
+        toc
+      }: {
+        baseDir: string,
+        files: string,
+        html: boolean,
+        toc: string
+      }) => {
+        void parse({
+          baseDir,
+          files,
+          html,
+          toc
+        });
+      }
+    })
+    .help()
+    .argv;
+};
+
+void main();
