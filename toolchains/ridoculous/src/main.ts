@@ -4,40 +4,37 @@
 
 import debug from 'debug';
 import * as fs from 'fs';
-import glob from 'glob';
+import { glob } from 'glob';
 import * as path from 'path';
 import * as process from 'process';
 import { read } from 'to-vfile';
 
-// TODO(burdon): Note: .js extension is required.
-//  https://github.com/microsoft/TypeScript/issues/40878 (Flame war).
-
 import { createParser } from './parser.js';
 
 const log = debug('dxos:ridoculous:main');
-debug.enable('dxos:ridoculous:*'); // TODO(burdon): ENV.
 
-// TODO(burdon): Yargs.
 interface Options {
   baseDir?: string
   files?: string
-  heading?: string
   html?: boolean
+  toc?: string
   outDir?: string
 }
 
 const main = async ({
   baseDir = process.cwd(),
-  files = '*.md',
-  heading = '.*contents.*',
+  files = 'docs/**/*.md',
   html = false,
+  toc,
   outDir = './out'
 }: Options = {}) => {
-  const parser = createParser({ baseDir, html, heading });
+  const parser = createParser({ baseDir, html, toc });
 
   const globFiles = glob.sync(files);
   for (const filename of globFiles) {
     log(`Parsing: ${filename}`);
+
+    // TODO(burdon): Catch errors.
     const text = await parser.process(await read(filename));
 
     const parts = path.parse(filename);
@@ -49,12 +46,14 @@ const main = async ({
     }
 
     fs.writeFileSync(outFilename, text.toString() + '\n', 'utf8');
-    log(`Parsing: ${outFilename}`);
+    log(`Wrote: ${outFilename}`);
   }
 };
 
+// TODO(burdon): Yargs.
 void main({
   baseDir: 'testing',
   files: 'testing/**/*.md',
-  html: true
+  html: true,
+  toc: '.*contents.*'
 });

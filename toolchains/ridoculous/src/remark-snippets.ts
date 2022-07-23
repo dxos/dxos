@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import { TSDocParser } from '@microsoft/tsdoc';
 import debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as process from 'process';
+import * as protobuf from 'protocol-buffers-schema';
 import { visit } from 'unist-util-visit';
-import protobuf from 'protocol-buffers-schema';
-import { TSDocParser, ParserContext, DocComment } from '@microsoft/tsdoc';
+
+console.log(':::', protobuf);
 
 const log = debug('dxos:ridoculous:error');
 

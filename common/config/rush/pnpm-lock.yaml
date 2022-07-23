@@ -3396,10 +3396,12 @@ importers:
       glob: 7.1.7
       js-yaml: 4.1.0
       protocol-buffers-schema: 3.6.0
+      rehype-stringify: 9.0.3
       remark: 14.0.2
       remark-gfm: 3.0.1
       remark-lint: 9.1.1
       remark-normalize-headings: 3.0.1
+      remark-rehype: 10.1.0
       remark-toc: 8.0.1
       to-vfile: 7.2.3
       unist-util-visit: 4.1.0
@@ -3419,8 +3421,6 @@ importers:
       eslint: 7.32.0
       jest: 28.1.3_n5iwv4rvtvnpm3zoiig6d6yksu
       mocha: 8.4.0
-      rehype-stringify: 9.0.3
-      remark-rehype: 10.1.0
       ts-jest: 28.0.7_bi2kohzqnxavgozw3csgny5hju
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
@@ -17501,7 +17501,6 @@ packages:
       space-separated-tokens: 2.0.1
       stringify-entities: 4.0.2
       unist-util-is: 5.1.1
-    dev: true
 
   /hast-util-to-text/3.1.1:
     resolution: {integrity: sha512-7S3mOBxACy8syL45hCn3J7rHqYaXkxRfsX6LXEU5Shz4nt4GxdjtMUtG+T6G/ZLUHd7kslFAf14kAN71bz30xA==}
@@ -17632,7 +17631,6 @@ packages:
 
   /html-void-elements/2.0.1:
     resolution: {integrity: sha512-0quDb7s97CfemeJAnW9wC0hw78MtW7NU3hqtCD75g2vFlDLt36llsYD7uB7SUzojLMP24N5IatXf7ylGXiGG9A==}
-    dev: true
 
   /html-webpack-plugin/4.5.0_webpack@4.44.2:
     resolution: {integrity: sha512-MouoXEYSjTzCrjIxWwg8gxL5fE2X2WZJLmBYXlaJhQUH5K/b5OrqmV7T4dB7iu0xkmJ6JlUuV6fFVtnqbPopZw==}
@@ -25452,7 +25450,7 @@ packages:
       '@types/hast': 2.3.4
       hast-util-to-html: 8.0.3
       unified: 10.1.1
-    dev: true
+    dev: false
 
   /relateurl/0.2.7:
     resolution: {integrity: sha1-VNvzd+UUQKypCkzSdGANP/LYiKk=}

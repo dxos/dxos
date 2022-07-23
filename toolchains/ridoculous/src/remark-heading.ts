@@ -7,22 +7,22 @@ import { visit } from 'unist-util-visit';
 const formatNumber = (n: number[]) => n.join('.');
 
 export interface Options {
-  heading: string
+  toc?: string
 }
 
 /**
  * Create heading numbers.
  */
 // TODO(burdon): Create test.
-export const remarkHeading = (options: Options) => (tree: any) => {
-  const heading = RegExp('^(' + options.heading + ')$', 'i'); // Matches remark-toc.
+export const remarkHeading = ({ toc }: Options) => (tree: any) => {
+  const tocReg = toc ? RegExp('^(' + toc + ')$', 'i') : undefined; // Matches remark-toc.
   const numbers = [0];
 
   visit(tree, 'heading', (node) => {
     const depth = node.depth - 2;
     if (depth >= 0) {
       visit(node, 'text', node => {
-        if (node.value.match(heading)) {
+        if (tocReg && node.value.match(tocReg)) {
           return;
         }
 
