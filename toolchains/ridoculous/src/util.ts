@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { arrayIterate } from 'array-iterate';
 import { visit } from 'unist-util-visit';
 
 /**
@@ -42,11 +43,20 @@ export const directiveRegex = regex([
   /\s+-->/ // Closing comment.
 ]);
 
-export type VisitorCallback = (directive: string, args: string[], node: any, index: number | null, parent: any) => void
+/**
+ * Test if the node is a directive.
+ */
+export const isDirective = (node) => {
+  if (node.type === 'html') {
+    const match = node.value.trim().match(directiveRegex);
+    if (match) {
+      const [, directive, args] = match;
+      return [directive, args];
+    }
+  }
+};
 
-// TODO(burdon): Use this to clone the tree.
-//  https://github.com/syntax-tree/unist-util-map
-//  https://www.npmjs.com/package/unist-util-modify-children
+export type VisitorCallback = (directive: string, args: string[], node: any, index: number | null, parent: any) => void
 
 /**
  * Visit directives.
@@ -59,4 +69,20 @@ export const visitDirectives = (tree: any, callback: VisitorCallback) => {
       callback(directive, args ? args.split(/\s*,\s*/) : [], node, i, parent);
     }
   });
+};
+
+/**
+ * Visit nodes and allow callback to replace nodes.
+ */
+// TODO(burdon): Make recursive.
+export const visitAndReplace = (tree, callback) => {
+  arrayIterate(tree.children, (node, index) => {
+    let [nodes = [], skip = 1] = callback(node, index, tree) ?? [];
+    if (nodes.length) {
+      skip = Math.max(skip, 1);
+      tree.children.splice(index, skip, ...nodes);
+    }
+
+    return index + skip;
+  }, tree);
 };

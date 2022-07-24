@@ -3370,6 +3370,7 @@ importers:
       '@types/node': ^16.11.27
       '@types/protocol-buffers-schema': ^3.4.1
       '@types/yargs': ~16.0.1
+      array-iterate: ~2.0.1
       chalk: ^4.1.0
       debug: ^4.3.3
       eslint: ^7.12.1
@@ -3395,6 +3396,7 @@ importers:
       yargs: ~16.2.0
     dependencies:
       '@microsoft/tsdoc': 0.14.1
+      array-iterate: 2.0.1
       chalk: 4.1.2
       debug: 4.3.4
       glob: 7.1.7
@@ -11169,6 +11171,10 @@ packages:
       es-abstract: 1.20.1
       get-intrinsic: 1.1.1
       is-string: 1.0.7
+
+  /array-iterate/2.0.1:
+    resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
+    dev: false
 
   /array-lru/1.1.1:
     resolution: {integrity: sha1-DH4bTgIq4Wb/HoRIxZXzGB/NMzc=}
