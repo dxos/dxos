@@ -11,17 +11,15 @@ const formatNumber = (n: number[]) => n.join('.') + '.';
 
 type Node = { children: Node[] }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface Options {
+interface Options {
   autoNumber?: boolean
-  depth?: number
 }
 
 /**
  * Create heading numbers.
  */
 // TODO(burdon): Create test.
-export const remarkHeadings = ({ autoNumber, depth }: Options) => (tree: any) => {
+export const remarkHeadings = ({ autoNumber }: Options) => (tree: any) => {
   const numbers = [0];
   const root: Node = u('list', { spread: false }, []);
   const stack = [root];
@@ -96,6 +94,8 @@ export const remarkHeadings = ({ autoNumber, depth }: Options) => (tree: any) =>
 
   // Insert TOC if directive exists.
   visitDirectives(tree, (directive, args, node, i, parent) => {
+    // TODO(burdon): Get depth (get this first before building TOC).
+    // <!-- @toc(depth=2) -->
     if (directive === 'toc') {
       const next = parent.children[i! + 1];
       parent.children.splice(i! + 1, next.type === 'list' ? 1 : 0, root);

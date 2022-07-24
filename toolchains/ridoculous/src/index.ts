@@ -3,4 +3,8 @@
 //
 
 export * from './main';
-export * from './remark-heading';
+export * from './parser.js';
+export * from './processor.js';
+export * from './remark-headings.js';
+export * from './remark-linker.js';
+export * from './remark-snippets.js';

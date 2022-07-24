@@ -4,7 +4,7 @@
 
 import { visit } from 'unist-util-visit';
 
-export interface Options {
+interface Options {
   baseDir: string
 }
 

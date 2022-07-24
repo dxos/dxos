@@ -68,7 +68,7 @@ const langType: { [key: string]: Type } = {
   }
 };
 
-export interface Options {
+interface Options {
   baseDir?: string
 }
 
