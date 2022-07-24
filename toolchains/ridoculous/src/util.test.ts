@@ -48,13 +48,14 @@ test('visitAndReplace', () => {
     u('html', { value: '<!-- @replace(2) -->' }),
     u('text', { value: '3' }),
     u('text', { value: '4' }),
-    u('text', { value: '5' })
+    u('html', { value: '<!-- @replace -->' })
   ]);
 
+  // TODO(burdon): Pass in optional test method.
   visitAndReplace(tree, (node) => {
     const [directive, args] = isDirective(node) ?? [];
     if (directive === 'replace') {
-      const skip = parseInt(args[0]);
+      const skip = args[0] ? parseInt(args[0]) : 1;
       const nodes = [
         u('text', { value: `replace ${skip} items` })
       ];

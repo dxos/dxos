@@ -51,7 +51,7 @@ export const isDirective = (node) => {
     const match = node.value.trim().match(directiveRegex);
     if (match) {
       const [, directive, args] = match;
-      return [directive, args];
+      return [directive, args ? args.split(/\s*,\s*/) : []];
     }
   }
 };
@@ -71,18 +71,24 @@ export const visitDirectives = (tree: any, callback: VisitorCallback) => {
   });
 };
 
+type ReplaceResult = [
+  nodes: any[], // Nodes to insert.
+  skip: number // Number of nodes to skip over (including current).
+]
+
+type ReplaceCallback = (node: any, index: number, parents: any) => ReplaceResult | undefined
+
 /**
  * Visit nodes and allow callback to replace nodes.
  */
 // TODO(burdon): Make recursive.
-export const visitAndReplace = (tree, callback) => {
+export const visitAndReplace = (tree, callback: ReplaceCallback) => {
   arrayIterate(tree.children, (node, index) => {
-    let [nodes = [], skip = 1] = callback(node, index, tree) ?? [];
-    if (nodes.length) {
-      skip = Math.max(skip, 1);
+    let [nodes = [], skip] = callback(node, index, tree) ?? [];
+    if (nodes.length || skip) {
+      skip = Math.max(skip ?? 1, 1);
       tree.children.splice(index, skip, ...nodes);
+      return index + skip;
     }
-
-    return index + skip;
   }, tree);
 };
