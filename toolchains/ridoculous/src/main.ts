@@ -21,10 +21,9 @@ const main = () => {
       description: 'Root directory for referenced files',
       type: 'string'
     })
-    .option('toc', {
-      description: 'Table of contents header (regex)',
-      type: 'string',
-      default: '.*contents.*'
+    .option('autoNumber', {
+      description: 'Generate auto-numbered headings',
+      type: 'boolean'
     })
     .option('html', {
       description: 'Output HTML',
@@ -37,24 +36,24 @@ const main = () => {
       command: '*',
       describe: 'Markdown processor to enhance Github docs (e.g., table of contents; snippets; links).',
       handler: ({
+        autoNumber,
         baseDir,
         files,
         html,
-        toc,
         verbose
       }: {
+        autoNumber: boolean,
         baseDir: string,
         files: string,
         html: boolean,
-        toc: string,
         verbose: boolean
       }) => {
         debug.enable(process.env.DEBUG ?? verbose ? 'dxos:ridoculous:*' : 'dxos:ridoculous:error');
         void processFiles({
+          autoNumber,
           baseDir,
           files,
           html,
-          toc,
           verbose
         });
       }

@@ -8,38 +8,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as process from 'process';
 import * as protobuf from 'protocol-buffers-schema';
-import { visit } from 'unist-util-visit';
+import { u } from 'unist-builder';
 
-const log = debug('dxos:ridoculous:error');
+import { removeTrailing, visitDirectives } from './util.js';
 
-/**
- * Util to remove trailing blank lines.
- */
-// TODO(burdon): Factor out.
-const removeTrailing = (content: string) => {
-  const lines = content.split('\n');
-  let n;
-  for (n = lines.length - 1; n > 0; n--) {
-    if (lines[n].trim() !== '') {
-      break;
-    }
-  }
-  if (n < lines.length - 1) {
-    lines.splice(n + 1);
-    content = lines.join('\n');
-  }
-
-  return content;
-};
-
-/**
- * Util to create regexp from set of parts to aid comprehension.
- */
-// TODO(burdon): Factor out.
-const regex = (parts: RegExp[]) => {
-  const [first, ...rest] = parts;
-  return new RegExp(rest.reduce((res, p) => res + p.source, first.source));
-};
+const error = debug('dxos:ridoculous:error');
 
 type Type = {
   lang: string
@@ -84,7 +57,6 @@ const langType: { [key: string]: Type } = {
         let output = protobuf.stringify(schema);
         output = output.replace(/syntax.*/, ''); // Syntax declaration.
         output = output.replace(/^\s*\n/gm, ''); // Blank lines.
-
         return output;
       }
 
@@ -108,45 +80,42 @@ export interface Options {
  */
 // TODO(burdon): Create test.
 export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tree: any) => {
-  visit(tree, 'html', (node, i, parent) => {
-    // Match: <!-- @code ./foo/bar.ts#hash -->
-    const reg = regex([
-      /<!--\s*/, // Opening comment.
-      /@(.+)\s/, // Group: directive (e.g., `code`).
-      /([^#\s]+)/, // Group: file
-      /(?:#(.+))?/, // Group hash (optional; note outer # is in non-capturing group).
-      /\s*-->/ // Closing comment.
-    ]);
+  // visit(tree, 'code', (node, i, parent) => {
+  //   console.log('>>>', node);
+  // });
 
-    const match = node.value.trim().match(reg);
-    if (match) {
-      const [, directive, file, hash] = match;
-      log('snippet:', [directive, file, hash]);
-      try {
-        const next = parent.children[i! + 1];
-        switch (directive) {
-          case 'code': {
-            const content = fs.readFileSync(path.join(baseDir, file), 'utf8');
-            const { ext } = path.parse(file);
-            const { lang, parser } = langType[ext];
-            if (lang) {
-              // TODO(burdon): Update previous node.
-              node.append();
-              // console.log(node);
-              // node.lang = lang;
-              // node.value = removeTrailing(parser?.(content, { hash }) ?? content);
+  visitDirectives(tree, (directive, args, node, i, parent) => {
+    try {
+      switch (directive) {
+        case 'code': {
+          const [file, hash] = args[0].split('#');
+          let content = fs.readFileSync(path.join(baseDir, file), 'utf8');
+          const { ext } = path.parse(file);
+          const { lang, parser } = langType[ext];
+          if (lang) {
+            content = removeTrailing(parser?.(content, { hash }) ?? content);
+
+            // Check for code block.
+            const next = parent.children[i! + 1];
+            if (next?.type === 'code') {
+              Object.assign(next, {
+                lang,
+                value: content
+              });
+            } else {
+              // https://github.com/syntax-tree/unist-builder
+              const code = u('code', { lang, value: content });
+              parent.children.splice(i! + 1, 0, code);
             }
 
-            break;
+            // Check for ref.
+            // <sup>[source code](./src/test.proto)</sup>
           }
-
-          default: {
-            throw new Error(`Invalid directive: ${directive}`);
-          }
+          break;
         }
-      } catch (err) {
-        log(String(err));
       }
+    } catch (err) {
+      error(String(err));
     }
   });
 };

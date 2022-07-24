@@ -3387,6 +3387,7 @@ importers:
       ts-jest: ^28.0.7
       ts-node: ^10.8.2
       typescript: ^4.7.2
+      unist-builder: ~3.0.0
       unist-util-visit: ^4.1.0
       yargs: ~16.2.0
     dependencies:
@@ -3404,6 +3405,7 @@ importers:
       remark-rehype: 10.1.0
       remark-toc: 8.0.1
       to-vfile: 7.2.3
+      unist-builder: 3.0.0
       unist-util-visit: 4.1.0
       yargs: 16.2.0
     devDependencies:
@@ -17501,6 +17503,7 @@ packages:
       space-separated-tokens: 2.0.1
       stringify-entities: 4.0.2
       unist-util-is: 5.1.1
+    dev: false
 
   /hast-util-to-text/3.1.1:
     resolution: {integrity: sha512-7S3mOBxACy8syL45hCn3J7rHqYaXkxRfsX6LXEU5Shz4nt4GxdjtMUtG+T6G/ZLUHd7kslFAf14kAN71bz30xA==}
@@ -17631,6 +17634,7 @@ packages:
 
   /html-void-elements/2.0.1:
     resolution: {integrity: sha512-0quDb7s97CfemeJAnW9wC0hw78MtW7NU3hqtCD75g2vFlDLt36llsYD7uB7SUzojLMP24N5IatXf7ylGXiGG9A==}
+    dev: false
 
   /html-webpack-plugin/4.5.0_webpack@4.44.2:
     resolution: {integrity: sha512-MouoXEYSjTzCrjIxWwg8gxL5fE2X2WZJLmBYXlaJhQUH5K/b5OrqmV7T4dB7iu0xkmJ6JlUuV6fFVtnqbPopZw==}

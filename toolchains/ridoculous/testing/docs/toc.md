@@ -2,19 +2,23 @@
 
 Generates a table of contents from auto-numbered headings.
 
-## Table of Contents
+## Table of Contents <!-- @ignore -->
 
-This should get replaced with a TOC.
+<!-- @toc -->
 
-## Basic Concepts
+## 2. Basic Concepts
 
 This is what you should know first.
 
-## Spec
+## 1. Spec
 
 ### HALO
 
 This is all about HALO.
+
+#### Identity
+
+#### Credentials
 
 ### ECHO
 

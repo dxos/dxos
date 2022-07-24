@@ -8,22 +8,21 @@ import remarkGfm from 'remark-gfm';
 import remarkLint from 'remark-lint';
 import remarkNormalizeHeadings from 'remark-normalize-headings';
 import remarkRehype from 'remark-rehype';
-import remarkToc from 'remark-toc';
 
-import { remarkHeading } from './remark-heading.js';
+import { remarkHeadings } from './remark-headings.js';
 import { remarkLinker } from './remark-linker.js';
 import { remarkSnippets } from './remark-snippets.js';
 
 interface Options {
+  autoNumber?: boolean
   baseDir?: string
-  toc?: string
   html?: boolean
 }
 
 /**
  * Generate parser.
  */
-export const createParser = ({ baseDir, toc, html }: Options): any => {
+export const createParser = ({ autoNumber, baseDir, html }: Options): any => {
   // https://github.com/remarkjs/awesome-remark
   const unified = remark()
     // https://github.com/remarkjs/remark-gfm
@@ -44,15 +43,7 @@ export const createParser = ({ baseDir, toc, html }: Options): any => {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    .use(remarkHeading, { toc });
-
-  if (toc) {
-    unified
-      // https://github.com/remarkjs/remark-toc
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      .use(remarkToc as any, { tight: true, heading: toc });
-  }
+    .use(remarkHeadings, { autoNumber });
 
   if (html) {
     unified

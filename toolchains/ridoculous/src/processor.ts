@@ -14,23 +14,23 @@ import { createParser } from './parser.js';
 const log = debug('dxos:ridoculous:processor');
 
 interface Options {
+  autoNumber?: boolean
   baseDir?: string
   files?: string
   html?: boolean
-  toc?: string
   outDir?: string
   verbose?: boolean
 }
 
 export const processFiles = async ({
+  autoNumber,
   baseDir = process.cwd(),
   files = 'docs/**/*.md',
   html = false,
-  toc,
   outDir = './out',
   verbose
 }: Options = {}) => {
-  const parser = createParser({ baseDir, html, toc });
+  const parser = createParser({ autoNumber, baseDir, html });
 
   const globFiles = glob.sync(files);
   for (const filename of globFiles) {

@@ -32,7 +32,8 @@
     "remark-toc": "~8.0.1",
     "to-vfile": "~7.2.3",
     "unist-util-visit": "^4.1.0",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "unist-builder": "~3.0.0"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.28.11",
