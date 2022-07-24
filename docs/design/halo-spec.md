@@ -53,7 +53,7 @@ Users and other network participants (Agents) maintain a HALO, which encompasses
 
 <hr/>
 
-## 2. Terminology'2.   foo
+## 2. Terminology
 
 The following terms are capitalized when referenced in the document.
 
