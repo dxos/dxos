@@ -44,6 +44,10 @@ export const directiveRegex = regex([
 
 export type VisitorCallback = (directive: string, args: string[], node: any, index: number | null, parent: any) => void
 
+// TODO(burdon): Use this to clone the tree.
+//  https://github.com/syntax-tree/unist-util-map
+//  https://www.npmjs.com/package/unist-util-modify-children
+
 /**
  * Visit directives.
  */

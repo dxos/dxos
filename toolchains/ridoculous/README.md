@@ -2,6 +2,10 @@
 
 Has the same [meaning](https://www.urbandictionary.com/define.php?term=ridoculous) as ridiculous only cooler people say this word.
 
+## ESM
+
+This package uses ESM with minimal `tsc` and `mocha` configurations.
+
 ## Remark
 
 Ridoculous uses the following technologies to parse and update Markdown documents.
@@ -10,4 +14,3 @@ Ridoculous uses the following technologies to parse and update Markdown document
 - [unified](https://github.com/unifiedjs/unified) - AST parser.
 - [mdast](https://github.com/syntax-tree/mdast) - Markdown AST.
 - [Rehype](https://github.com/rehypejs/rehype) - Transforms AST to HTML.
-

@@ -89,7 +89,9 @@ export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tr
       switch (directive) {
         case 'code': {
           const [file, hash] = args[0].split('#');
-          let content = fs.readFileSync(path.join(baseDir, file), 'utf8');
+          const addLink = args[1] === 'link';
+          const filePath = path.join(baseDir, file);
+          let content = fs.readFileSync(filePath, 'utf8');
           const { ext } = path.parse(file);
           const { lang, parser } = langType[ext];
           if (lang) {
@@ -97,6 +99,7 @@ export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tr
 
             // Check for code block.
             const next = parent.children[i! + 1];
+            const link = parent.children[i! + 2];
             if (next?.type === 'code') {
               Object.assign(next, {
                 lang,
@@ -108,9 +111,29 @@ export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tr
               parent.children.splice(i! + 1, 0, code);
             }
 
-            // Check for ref.
-            // <sup>[source code](./src/test.proto)</sup>
+            if (addLink && false) {
+              // Check exists.
+              const exists = (link?.type === 'paragraph' &&
+                link.children[0]?.type === 'html' &&
+                link.children[0]?.value === '<sup>');
+
+              // TODO(burdon): Create realtive link.
+              const newLink = u('paragraph', {}, [
+                u('paragraph', {}, [
+                  u('text', { value: '???!!' })
+                ]),
+
+                u('html', { value: '<sup>' }),
+                u('link', { url: filePath }, [
+                  u('text', { value: 'source code' })
+                ]),
+                u('html', { value: '</sup>' })
+              ]);
+
+              parent.children.splice(i! + 2, exists ? 1 : 0, newLink);
+            }
           }
+
           break;
         }
       }

@@ -15,7 +15,7 @@ const main = () => {
     .option('files', {
       description: 'Markdown files glob',
       type: 'string',
-      default: 'docs/**/*.md'
+      default: './docs/**/*.md'
     })
     .option('baseDir', {
       description: 'Root directory for referenced files',
@@ -29,6 +29,11 @@ const main = () => {
       description: 'Output HTML',
       type: 'boolean'
     })
+    .option('outDir', {
+      description: 'Output directory',
+      type: 'string',
+      default: './out'
+    })
     .option('verbose', {
       type: 'boolean'
     })
@@ -40,12 +45,14 @@ const main = () => {
         baseDir,
         files,
         html,
+        outDir,
         verbose
       }: {
         autoNumber: boolean,
         baseDir: string,
         files: string,
         html: boolean,
+        outDir: string,
         verbose: boolean
       }) => {
         debug.enable(process.env.DEBUG ?? verbose ? 'dxos:ridoculous:*' : 'dxos:ridoculous:error');
@@ -54,6 +61,7 @@ const main = () => {
           baseDir,
           files,
           html,
+          outDir,
           verbose
         });
       }

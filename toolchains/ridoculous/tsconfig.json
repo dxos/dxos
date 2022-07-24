@@ -1,23 +1,16 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020"],
+    "allowSyntheticDefaultImports": true,
     "module": "ES2020",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": true,
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "outDir": "./dist"
+    "outDir": "dist"
   },
-  "files": ["./src/main.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out"
+  ],
   "include": [
-    "src/**/*",
-    "testing/**/*"
+    "src/**/*"
   ]
 }
