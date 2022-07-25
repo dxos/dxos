@@ -8,7 +8,8 @@ import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowBack as BackIcon,
   Dangerous as ResetIcon,
-  Devices as DevicesIcon
+  Devices as DevicesIcon,
+  Redeem as JoinIcon
 } from '@mui/icons-material';
 import { AppBar, IconButton, Toolbar } from '@mui/material';
 
@@ -28,6 +29,13 @@ const useOptions = (): AppBarMenuOption[] => {
       text: 'Invite Device',
       onClick: async () => {
         dispatch({ type: ActionType.HALO_SHARING });
+      }
+    },
+    {
+      icon: JoinIcon,
+      text: 'Join Party',
+      onClick: async () => {
+        dispatch({ type: ActionType.PARTY_JOIN });
       }
     },
     // TODO(wittjosiah): Move to settings to make less prominent?

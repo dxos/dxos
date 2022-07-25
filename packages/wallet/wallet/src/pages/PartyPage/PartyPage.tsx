@@ -5,12 +5,14 @@
 import React, { useCallback, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
-import { Add as CreateIcon } from '@mui/icons-material';
-import { Box, IconButton, TextField } from '@mui/material';
+import { Add as CreateIcon, Share as ShareIcon } from '@mui/icons-material';
+import { Box, Fab, IconButton, TextField } from '@mui/material';
 
 import { Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 import { CustomTextField } from '@dxos/react-components';
+
+import { ActionType, useActions } from '../../hooks';
 
 // TODO(wittjosiah): Copied from Kodama, make customizable.
 const LABEL_PROPERTY = 'name';
@@ -20,6 +22,7 @@ export const PartyPage = () => {
   const { party } = useOutletContext<{ party?: Party }>();
   const items = useSelection(party?.select().filter({ type: TYPE_ITEM })) ?? [];
   const [name, setName] = useState('');
+  const [, dispatch] = useActions();
 
   const handleCreateItem = useCallback(async () => {
     await party?.database.createItem({
@@ -28,6 +31,10 @@ export const PartyPage = () => {
     });
     setName('');
   }, [party, name]);
+
+  if (!party) {
+    return null;
+  }
 
   return (
     <Box sx={{
@@ -77,6 +84,17 @@ export const PartyPage = () => {
           <CreateIcon />
         </IconButton>
       </Box>
+
+      <Fab
+        onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey: party.key } })}
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          right: 16
+        }}
+      >
+        <ShareIcon />
+      </Fab>
     </Box>
   );
 };
