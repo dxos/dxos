@@ -12,8 +12,8 @@ import { visit } from 'unist-util-visit';
 
 import { remarkHeadings } from './remark-headings.js';
 
-const createTree = () => {
-  return u('root', [
+test('remarkHeadings', () => {
+  const tree = u('root', [
     u('heading', { depth: 1 }, [
       u('text', { value: 'Test' })
     ]),
@@ -32,10 +32,8 @@ const createTree = () => {
       u('text', { value: 'MESH' })
     ])
   ]);
-};
 
-test('remarkHeadings', () => {
-  const tree = createTree();
+  // Process content.
   remarkHeadings({ autoNumber: true })(tree);
 
   // Check numbered.
@@ -69,16 +67,20 @@ test('remarkHeadings with remark', () => {
     ])
   ]);
 
-  const text = toMarkdown(tree as any);
+  // Process content.
+  const original = toMarkdown(tree as any);
   const { value } = remark()
     .use(remarkHeadings, { autoNumber: true })
-    .processSync(text);
+    .processSync(original);
 
-  // Test Markdown.
-  const match = String(value).match(/^##(.+)$/gm);
+  // Test markdown.
+  const processed = String(value);
+  const match = processed.match(/^##(.+)$/gm);
   expect(match).toHaveLength(3);
 
-  // Test diff.
-  const added = diffWords(text, value).filter(({ added }) => added).map(({ value }) => parseInt(value));
+  // Test numbers added.
+  const added = diffWords(original, processed)
+    .filter(({ added }) => added)
+    .map(({ value }) => parseInt(value));
   expect(added).toEqual([1, 2, 3]);
 });

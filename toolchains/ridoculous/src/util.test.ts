@@ -49,7 +49,7 @@ test('visitAndReplace', () => {
     u('html', { value: '<!-- @replace -->' })
   ]);
 
-  // TODO(burdon): Pass in optional test method.
+  // TODO(burdon): Pass in optional filter/test method.
   visitAndReplace(tree, (node) => {
     const [directive, args] = isDirective(node) ?? [];
     if (directive === 'replace') {
