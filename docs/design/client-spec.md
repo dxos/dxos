@@ -60,6 +60,10 @@ The basic app should implement the following features:
 
 ## 3. Implementation
 
+### Package structure
+
+![Package structure](./diagrams/client-package-structure.drawio.svg)
+
 ### Existing Development
 
 - [Kodama CLI](https://github.com/dxos/protocols/tree/main/packages/demos/kodama)
