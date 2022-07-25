@@ -17,7 +17,6 @@ const tree = u('root', [
 ]);
 
 test('remarkSnippets', () => {
-
   // Process content.
   remarkSnippets({ baseDir: './testing' })(tree);
 
