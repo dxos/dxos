@@ -9,8 +9,6 @@ import { visit } from 'unist-util-visit';
 
 import { isDirective, visitAndReplace, visitDirectives } from './util.js';
 
-// TODO(burdon): Test remark plugins.
-
 test('visit', () => {
   const tree = u('tree', [
     u('text', { value: 'hello' }),

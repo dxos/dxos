@@ -30,7 +30,6 @@
     "remark-lint": "~9.1.1",
     "remark-normalize-headings": "~3.0.1",
     "remark-rehype": "~10.1.0",
-    "remark-toc": "~8.0.1",
     "to-vfile": "~7.2.3",
     "unist-builder": "~3.0.0",
     "unist-util-visit": "^4.1.0",

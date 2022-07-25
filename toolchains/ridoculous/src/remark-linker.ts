@@ -5,7 +5,7 @@
 import { visit } from 'unist-util-visit';
 
 interface Options {
-  baseDir: string
+  baseDir?: string
 }
 
 // TODO(burdon): Fine line number in Github?
@@ -15,7 +15,7 @@ interface Options {
  * Validate links.
  */
 // TODO(burdon): Create test.
-export const remarkLinker = ({ baseDir }: Options) => (tree: any) => {
+export const remarkLinker = ({ baseDir }: Options = {}) => (tree: any) => {
   visit(tree, 'link', (node) => {
     // const { url } = node;
     visit(node, 'text', ({ value }) => {

@@ -19,7 +19,7 @@ interface Options {
  * Create heading numbers.
  */
 // TODO(burdon): Create test.
-export const remarkHeadings = ({ autoNumber }: Options) => (tree: any) => {
+export const remarkHeadings = ({ autoNumber }: Options = {}) => (tree: any) => {
   const numbers = [0];
   const root: Node = u('list', { spread: false }, []);
   const stack = [root];

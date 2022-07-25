@@ -119,10 +119,6 @@ export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tr
 
               // TODO(burdon): Create realtive link.
               const newLink = u('paragraph', {}, [
-                u('paragraph', {}, [
-                  u('text', { value: '???!!' })
-                ]),
-
                 u('html', { value: '<sup>' }),
                 u('link', { url: filePath }, [
                   u('text', { value: 'source code' })
