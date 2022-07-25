@@ -127,5 +127,7 @@ Publishing locally
 
 ![Meta Graph](./diagrams/meta-graph-architecture.drawio.svg)
 
+![Meta Graph](./diagrams/meta-graph-schematic.drawio.svg)
+
 ![Meta Graph](./diagrams/meta-graph-service-monitor.drawio.svg)
 
