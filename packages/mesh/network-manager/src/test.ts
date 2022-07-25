@@ -6,13 +6,18 @@ async function main() {
 
   await client.open();
 
-  const topic = PublicKey.random()
+  const swarm = PublicKey.random()
   const peerId1 = PublicKey.fromHex('0x11111111111111111111111111')
-  const peerId2 = PublicKey.fromHex('0x22222222222222222222222222')
-  await Promise.all([
-    client.join(topic, peerId1),
-    client.join(topic, peerId2),
-  ])
+  // const peerId2 = PublicKey.fromHex('0x22222222222222222222222222')
+  const events = client.join(swarm, peerId1);
+
+  console.log('foo')
+
+  events.subscribe(event => {
+    console.log({ event })
+  })
+  //   client.join(topic, peerId2),
+  // ])
 }
 
 main()

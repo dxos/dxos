@@ -54,10 +54,13 @@ export class NewSignalClient {
       {
         noHandshake: true,
         port: {
-          send: msg => this._socket.send(msg),
+          send: msg => {
+            console.log('send', msg)
+            this._socket.send(msg)
+          },
           subscribe: cb => {
             this._socket.onmessage = msg => {
-              console.log('msg', msg.data)
+              console.log('rcv', msg.data)
               cb(msg.data)
             }
           }
@@ -71,11 +74,10 @@ export class NewSignalClient {
     await this._rpc.open();
   }
 
-  async join(topic: PublicKey, peerId: PublicKey) {
-    const res = await this._rpc.rpc.Signal.join({
-      discoveryKey: topic.asUint8Array(),
-      peerKey: peerId.asUint8Array(),
+  join(topic: PublicKey, peerId: PublicKey) {
+    return this._rpc.rpc.Signal.join({
+      swarm: topic.asUint8Array(),
+      peer: peerId.asUint8Array(),
     })
-    console.log({ res })
   }
 }
