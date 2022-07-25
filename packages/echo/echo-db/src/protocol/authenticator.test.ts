@@ -61,11 +61,11 @@ describe('authenticator', () => {
         keyring,
         partyKey.publicKey,
         identity.identityKey,
-        identity.deviceKey,
+        identity.deviceKey
       );
       expect(await authenticator.authenticate(credential.payload)).toEqual(false);
     }
-    
+
     // Does authenticate with the feed key.
     {
       const credential = createAuthMessage(
@@ -73,7 +73,7 @@ describe('authenticator', () => {
         partyKey.publicKey,
         identity.identityKey,
         identity.deviceKey,
-        feedKey.publicKey,
+        feedKey.publicKey
       );
       expect(await authenticator.authenticate(credential.payload)).toEqual(true);
     }
@@ -117,7 +117,7 @@ describe('authenticator', () => {
     const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
 
     const identity2 = await createTestIdentityCredentials(keyring);
-    
+
     await partyProcessor.processMessage({
       data: createKeyAdmitMessage(
         keyring,
@@ -126,7 +126,7 @@ describe('authenticator', () => {
         [identity.deviceKeyChain]
       ),
       meta: {} as any
-    })
+    });
     await partyProcessor.processMessage({
       data: createKeyAdmitMessage(
         keyring,
@@ -135,13 +135,13 @@ describe('authenticator', () => {
         [identity.deviceKeyChain]
       ),
       meta: {} as any
-    })
+    });
 
     const credential = createAuthMessage(
       keyring,
       partyKey.publicKey,
       identity2.identityKey,
-      identity2.deviceKey,
+      identity2.deviceKey
     );
     expect(await authenticator.authenticate(credential.payload)).toEqual(true);
   });

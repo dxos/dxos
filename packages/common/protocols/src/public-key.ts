@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import { inspect, InspectOptions, InspectOptionsStylized } from 'node:util';
+import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
 export const PUBLIC_KEY_LENGTH = 32;
@@ -157,13 +157,13 @@ export class PublicKey {
    * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
    */
   [inspect.custom] (depth: number, options: InspectOptionsStylized) {
-    if(!options.colors || !process.stdout.hasColors()) {
+    if (!options.colors || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
     }
 
     const printControlCode = (code: number) => {
-      return `\x1b[${code}m`
-    }
+      return `\x1b[${code}m`;
+    };
 
     // Compute simple hash of the key.
     const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
@@ -181,11 +181,11 @@ export class PublicKey {
       'blueBright',
       'magentaBright',
       'cyanBright',
-      'whiteBright',
-    ]
+      'whiteBright'
+    ];
     const color = colors[hash % colors.length];
 
-    return `<PublicKey ${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors['reset']![0])}>`;
+    return `<PublicKey ${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])}>`;
   }
 
   /**
