@@ -131,3 +131,21 @@ Publishing locally
 
 ![Meta Graph](./diagrams/meta-graph-service-monitor.drawio.svg)
 
+
+
+
+
+## Issues
+
+2022-07-24 [RB]
+
+- What are the relationships between URL => Realm => Refs (and the implied mapping)?
+- Of course URL => Subnet, but the part of the URL that isn't just the host (i.e., subnet) consists of (possibly) a subdomain name (alice.example.com) and a path (/notepad). 
+- That's what i'm calling a "name" or DXN (i.e., alice/notepad). 
+- So a URL identifies both a Subnet and a resource Name (DXN).
+- Names (DXNs) contain both a Realm and a Resource (path). E.g., "alice.notepad" references the Realm "alice" and the Resource "notepad".
+- Questions:
+- 1. Can Realms be hierarchical (e.g., dxos.devnet vs. alice).
+- 2. Are Realms fixed to Subnets? Are they fixed to Domain names? (What if I don't have a domain name? What if I want to transfer them?). I don't think they are. 
+- 3. But if not, then how do we have globally unique Realm names?
+- 4. DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
