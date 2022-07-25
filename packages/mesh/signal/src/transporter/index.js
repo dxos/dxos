@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { EventEmitter } from 'events';
 import { discoveryKey } from 'hypercore-crypto';
 import hyperswarm from 'hyperswarm';
+import assert from 'node:assert';
 import pEvent from 'p-event';
 import Protocol from 'simple-hypercore-protocol';
 

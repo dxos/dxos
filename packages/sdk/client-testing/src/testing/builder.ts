@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 
 import { Client, Party } from '@dxos/client';
 

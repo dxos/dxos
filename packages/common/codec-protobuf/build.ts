@@ -7,7 +7,7 @@ import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 build({
   entryPoints: ['src/index.ts'],
-  outdir: 'dist',
+  outfile: 'dist/browser.js',
   format: 'cjs',
   write: true,
   bundle: true,

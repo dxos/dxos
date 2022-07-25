@@ -10,7 +10,15 @@ import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client
 
 export type SearchFilter = (resource: ResourceSet) => boolean
 
-export const useRegistrySearchModel = (registry: RegistryClient, filters: SearchFilter[] = [], deps: any[] = []) => useMemo(() => new RegistrySearchModel(registry, filters), deps);
+// TODO(wittjosiah): Move to hooks.
+export const useRegistrySearchModel = (
+  registry: RegistryClient,
+  filters: SearchFilter[] = [],
+  deps: any[] = []
+) => {
+  const searchModel = useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  return searchModel;
+};
 
 export const getTypeName = ({ type }: RegistryType) => {
   const parts = type.messageName.split('.');
@@ -18,7 +26,6 @@ export const getTypeName = ({ type }: RegistryType) => {
 };
 
 // TODO(wittjosiah): Reimplement this with DXQS.
-
 // export const createTypeFilter = (types: CID[]) => (resource: ResourceSet) => {
 //   return types.some(type => resource.type && type.equals(resource.type));
 // };

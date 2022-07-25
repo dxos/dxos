@@ -3,7 +3,7 @@
 //
 
 import { InvitationDescriptor } from '@dxos/client';
-import assert from 'assert';
+import assert from 'node:assert';
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';

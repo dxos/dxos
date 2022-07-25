@@ -5,10 +5,8 @@
 import chalk from 'chalk';
 import columnify from 'columnify';
 
-import { Party } from '@dxos/client';
+import { Item, ObjectModel, Party, SchemaField } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
-import { Item, SchemaField } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 
 // TODO(burdon): Protobuf definitions.
 

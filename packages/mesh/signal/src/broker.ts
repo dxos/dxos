@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import crypto from 'crypto';
 import { ServiceBroker } from 'moleculer';
+import assert from 'node:assert';
 
 import packageJSON from '../package.json';
 import { Serializer } from './serializer';

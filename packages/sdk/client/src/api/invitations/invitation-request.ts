@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';

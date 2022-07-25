@@ -3,7 +3,7 @@
 //
 
 import del from 'del';
-import { join } from 'path';
+import { join } from 'node:path';
 import raf from 'random-access-file';
 
 import { File } from '../interfaces';

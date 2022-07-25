@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { sleep, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
+import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -408,19 +409,4 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
-};
-
-/**
- * Runs the callback in an exponentially increasing interval
- * @returns Callback to clear the interval.
- */
-const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
-  let interval = initialInterval;
-  const repeat = () => {
-    cb();
-    interval *= 2;
-    timeoutId = setTimeout(repeat, interval);
-  };
-  let timeoutId = setTimeout(repeat, interval);
-  return () => clearTimeout(timeoutId);
 };

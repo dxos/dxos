@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
+import { inspect } from 'node:util';
 import randomBytes from 'randombytes';
-import { inspect } from 'util';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;

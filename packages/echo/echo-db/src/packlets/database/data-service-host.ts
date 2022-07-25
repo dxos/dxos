@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { failUndefined, raise } from '@dxos/debug';

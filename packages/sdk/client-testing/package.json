@@ -5,6 +5,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -22,8 +25,6 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
@@ -39,7 +40,7 @@
     "@types/columnify": "^1.5.1",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",

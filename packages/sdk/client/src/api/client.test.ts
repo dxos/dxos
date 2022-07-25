@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
+import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';

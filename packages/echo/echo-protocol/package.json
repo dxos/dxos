@@ -5,6 +5,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -23,6 +26,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "pify": "~5.0.0",
     "readable-stream": "^3.6.0"
@@ -34,7 +38,7 @@
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "@types/pumpify": "~1.4.1",

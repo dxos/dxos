@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
 import { callbackify } from 'util';
 
