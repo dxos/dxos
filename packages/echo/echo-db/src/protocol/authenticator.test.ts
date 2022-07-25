@@ -78,4 +78,71 @@ describe('authenticator', () => {
       expect(await authenticator.authenticate(credential.payload)).toEqual(true);
     }
   });
+
+  test('authenticates another identity', async () => {
+    const keyring = new Keyring();
+    const identity = await createTestIdentityCredentials(keyring);
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
+    await partyProcessor.processMessage({
+      data: createPartyGenesisMessage(
+        keyring,
+        partyKey,
+        feedKey.publicKey,
+        partyKey
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createEnvelopeMessage(
+        identity.keyring,
+        partyKey.publicKey,
+        wrapMessage(identity.identityGenesis),
+        [partyKey]
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createFeedAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        feedKey.publicKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    });
+
+    const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
+
+    const identity2 = await createTestIdentityCredentials(keyring);
+    
+    await partyProcessor.processMessage({
+      data: createKeyAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        identity2.identityKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    })
+    await partyProcessor.processMessage({
+      data: createKeyAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        identity2.deviceKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    })
+
+    const credential = createAuthMessage(
+      keyring,
+      partyKey.publicKey,
+      identity2.identityKey,
+      identity2.deviceKey,
+    );
+    expect(await authenticator.authenticate(credential.payload)).toEqual(true);
+  });
 });
