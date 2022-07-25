@@ -1,0 +1,85 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import React from 'react';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
+
+import {
+  ArrowBack as BackIcon,
+  Dangerous as ResetIcon,
+  Devices as DevicesIcon
+} from '@mui/icons-material';
+import { AppBar, IconButton, Toolbar } from '@mui/material';
+
+import { useParties, useProfile } from '@dxos/react-client';
+import { FullScreen } from '@dxos/react-components';
+
+import { ActionType, useActions, useSafePartyKey } from '../../hooks';
+import { ActionDialog } from '../ActionDialog';
+import { AppBarMenuOption, AppToolbar } from './AppToolbar';
+
+const useOptions = (): AppBarMenuOption[] => {
+  const [, dispatch] = useActions();
+
+  const options = [
+    {
+      icon: DevicesIcon,
+      text: 'Invite Device',
+      onClick: async () => {
+        dispatch({ type: ActionType.HALO_SHARING });
+      }
+    },
+    // TODO(wittjosiah): Move to settings to make less prominent?
+    {
+      icon: ResetIcon,
+      text: 'Reset Storage',
+      onClick: async () => {
+        dispatch({ type: ActionType.DANGEROUSLY_RESET_STORAGE });
+      }
+    }
+  ];
+
+  return options;
+};
+
+export const AppLayout = () => {
+  // DXOS
+  const profile = useProfile();
+  const parties = useParties();
+
+  // React Router
+  const navigate = useNavigate();
+  const { party: partyHex } = useParams();
+  const partyKey = useSafePartyKey(partyHex);
+  const party = partyKey && parties.find(({ key }) => key.equals(partyKey));
+
+  // App State
+  const options = useOptions();
+
+  return (
+    <FullScreen>
+      <AppBar>
+        <AppToolbar
+          dense
+          profile={profile}
+          options={options}
+        >
+          {party && (
+            <IconButton
+              onClick={() => navigate('/')}
+            >
+              <BackIcon />
+            </IconButton>
+          )}
+          {party?.properties.get('title')}
+        </AppToolbar>
+      </AppBar>
+
+      <Toolbar variant='dense' />
+      <Outlet context={{ party }} />
+
+      <ActionDialog />
+    </FullScreen>
+  );
+};
