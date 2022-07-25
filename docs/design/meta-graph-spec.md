@@ -133,7 +133,7 @@ Individual mutations are written as signed immutable ***messages*** into an appe
 Each peer that has writable access to an ECHO instance maintains one or more feeds.
 The database is made up from the set of feeds from each of the participating agents' peers.
 
-<img src="./diagrams/graph/echo-epochs.svg" width="480" />
+![Feeds](./diagrams//echo-feeds.drawio.svg)
 
 The state of each node is constructed by applying mutations from individual feeds.
 Since mutations may be applied by different peers concurrently, the system has to determine in which order each peer processes them.
