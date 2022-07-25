@@ -49,6 +49,12 @@ describe('authenticator', () => {
 
     const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
 
+    //
+    // This test follows the same party creation routing as party factory.
+    // Oddly, it does not admit the device key to the party.
+    // This means that authentication is actually done using the signature created using the feed key.
+    //
+
     // Does not authenticate without the feed key.
     {
       const credential = createAuthMessage(
