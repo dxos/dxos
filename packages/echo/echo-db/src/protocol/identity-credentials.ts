@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage } from '@dxos/credentials';
-import { humanize } from '@dxos/crypto';
+import {
+  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
+  KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
+} from '@dxos/credentials';
+import { humanize } from '@dxos/util';
 
 import { ContactManager, Preferences } from '../halo';
 import { CredentialsSigner } from './credentials-signer';

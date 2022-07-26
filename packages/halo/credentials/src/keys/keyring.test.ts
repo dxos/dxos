@@ -4,10 +4,10 @@
 
 // DXOS testing browser.
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 
-import { createKeyPair, keyToString, randomBytes, verify } from '@dxos/crypto';
+import { createKeyPair, randomBytes, verify } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 
 import { KeyType, schema } from '../proto';
@@ -90,7 +90,7 @@ it('Add/retrieve a publicKey from an external source (without secret present)', 
 
 it('Retrieve a non-existent key', async () => {
   const keyring = new Keyring();
-  const internal = keyring.findKey(Filter.matches({ key: keyToString(randomBytes(32)) }));
+  const internal = keyring.findKey(Filter.matches({ key: PublicKey.stringify(randomBytes(32)) }));
   expect(internal).toBeUndefined();
 });
 
@@ -194,8 +194,8 @@ it('Attempt to add a badly formatted key', async () => {
   const keyring = new Keyring();
   const good = createKeyPair();
   const bad = {
-    publicKey: keyToString(good.publicKey),
-    secretKey: keyToString(good.secretKey),
+    publicKey: PublicKey.stringify(good.publicKey),
+    secretKey: PublicKey.stringify(good.secretKey),
     type: KeyType.IDENTITY
   };
 

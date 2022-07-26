@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
 import {
@@ -20,7 +20,7 @@ import {
   SignedMessage,
   codec
 } from '@dxos/credentials';
-import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 
@@ -66,7 +66,7 @@ export class OfflineInvitationClaimer {
 
     // This is a temporary connection, there is no need to any special or permanent ID.
     const localPeerId = randomBytes();
-    log('Local PeerId:', keyToString(localPeerId));
+    log('Local PeerId:', PublicKey.stringify(localPeerId));
 
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, async () => false);
 
@@ -100,7 +100,7 @@ export class OfflineInvitationClaimer {
     const { invitation: invitationID } = this._invitationDescriptor;
 
     // Send to the first peer (any peer will do).
-    const responderPeerId = keyToBuffer(this._greeterPlugin.peers[0].getSession().peerId);
+    const responderPeerId = PublicKey.bufferize(this._greeterPlugin.peers[0].getSession().peerId);
 
     // We expect to receive a new swarm/rendezvousKey to use for the full Greeting process.
     const claimResponse = await this._greeterPlugin.send(

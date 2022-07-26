@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { Serializable, fork, ChildProcess } from 'child_process';
 import debug from 'debug';
 import * as fs from 'fs';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';

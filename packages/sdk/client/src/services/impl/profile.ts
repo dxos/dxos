@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
@@ -30,6 +30,7 @@ import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './typ
 export class ProfileService implements IProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
+  // TODO(burdon): Pass in HALO.
   constructor (
     private readonly echo: ECHO
   ) {}

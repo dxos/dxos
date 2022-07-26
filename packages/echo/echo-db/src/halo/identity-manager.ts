@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
@@ -69,9 +69,14 @@ export class IdentityManager {
   async loadFromStorage () {
     const identityKey = this.getIdentityKey();
     if (identityKey) {
-      if (this._metadataStore.getParty(identityKey.publicKey)) {
+      const metadata = this._metadataStore.getParty(identityKey.publicKey);
+      if (metadata) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty([]);
+        const halo = await this._haloFactory.constructParty();
+
+        assert(metadata.genesisFeedKey);
+        halo._setGenesisFeedKey(metadata.genesisFeedKey);
+
         // Always open the HALO.
         await halo.open();
         await this._initialize(halo);
@@ -89,6 +94,10 @@ export class IdentityManager {
     assert(!this._identity, 'Identity already initialized.');
 
     const halo = await this._haloFactory.createHalo(options);
+
+    const identityKey = this.getIdentityKey() ?? failUndefined();
+    await this._metadataStore.setGenesisFeed(identityKey.publicKey, await halo.getWriteFeedKey());
+
     await this._initialize(halo);
     return halo;
   }

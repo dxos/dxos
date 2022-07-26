@@ -6,11 +6,11 @@
 // TODO(burdon): Factor out helpers.
 //
 
-import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
+import assert from 'node:assert';
 
-import { createKeyPair, KeyPair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
 
 import { KeyChain, KeyRecord, KeyType, createDateTimeString } from '../proto';
 import { MakeOptional } from '../typedefs';

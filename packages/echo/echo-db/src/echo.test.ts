@@ -2,16 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
+import assert from 'node:assert';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
-import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { generateSeedPhrase, humanize, keyPairFromSeedPhrase } from '@dxos/crypto';
+import {
+  defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase
+} from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { Contact } from './halo';
@@ -372,7 +374,7 @@ describe('ECHO', () => {
 
   }).timeout(10_000);
 
-  test.skip('3 devices', async () => {
+  test('3 devices', async () => {
     const a = await setup({ createProfile: true });
     const b = await setup();
 

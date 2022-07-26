@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
@@ -54,8 +54,8 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory =
-      _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    this._modelFactory = _serviceProvider instanceof ClientServiceHost
+      ? _serviceProvider.echo.modelFactory : new ModelFactory();
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }

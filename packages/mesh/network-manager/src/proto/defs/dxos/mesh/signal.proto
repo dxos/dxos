@@ -1,0 +1,51 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+
+package dxos.mesh.signal;
+
+message Message {
+  /// Sender's public key.
+  PubKey id = 1;
+  /// Receiver`s public key.
+  PubKey remoteId = 2;
+  /// Swarm identefier.
+  PubKey topic = 3;
+  /// Unique connection identifier.
+  PubKey sessionId = 4;
+  /// Message payload.
+  MessageData data = 5;
+  /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
+  PubKey messageId = 6;
+}
+
+message MessageData {
+  oneof payload {
+    Offer offer = 1;
+    Answer answer = 2;
+    Signal signal = 3;
+    Acknowledgement ack = 4;
+  }
+}
+
+message Offer {
+}
+
+message Answer {
+  bool accept = 1;
+  /// MessageId of the Offer being answered.
+  PubKey offerMessageId = 2;
+}
+
+message Signal {
+  string json = 1;
+}
+
+message Acknowledgement {
+  // MessageId of the Message being acknowledged.
+  PubKey messageId = 1;
+ }

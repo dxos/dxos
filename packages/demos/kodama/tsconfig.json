@@ -1,11 +1,13 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "module": "CommonJS",
     "outDir": "dist"
   },
   "exclude": [
@@ -15,6 +17,15 @@
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
+    },
     {
       "path": "../../common/react-async"
     },

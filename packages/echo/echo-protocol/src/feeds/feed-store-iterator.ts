@@ -2,16 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { keyToString } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { Timeframe } from '../spacetime';
 import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
@@ -131,7 +129,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     const stream = new Readable({ objectMode: true })
       .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }));
 
-    this._openFeeds.set(keyToString(descriptor.key.asBuffer()), {
+    this._openFeeds.set(descriptor.key.toHex(), {
       descriptor,
       iterator: stream[Symbol.asyncIterator](),
       sendQueue: [],
@@ -166,7 +164,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     }
 
     const pickedCandidate = candidates[selected];
-    const feed = this._openFeeds.get(keyToString(pickedCandidate.key));
+    // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+    const feed = this._openFeeds.get(PublicKey.stringify(pickedCandidate.key as unknown as Buffer));
     assert(feed);
 
     return feed.sendQueue.shift();

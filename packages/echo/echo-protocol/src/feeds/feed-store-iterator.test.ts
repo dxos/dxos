@@ -2,20 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import faker from 'faker';
+import assert from 'node:assert';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair, keyToString } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
-import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
@@ -109,14 +108,14 @@ describe('feed store iterator', () => {
 
       // Write data.
       await pify(feed.append.bind(feed))(message);
-      log('Write:', keyToString(feed.key), value, timeframe);
+      log('Write:', PublicKey.stringify(feed.key), value, timeframe);
     }
 
   });
 
   test('skipping initial messages', async () => {
     const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), {
-      valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
+      valueEncoding: schema.getCodecForType('dxos.test.echo.TestItemMutation')
     });
 
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];

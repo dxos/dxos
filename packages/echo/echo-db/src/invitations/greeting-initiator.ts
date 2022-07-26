@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
 import {
@@ -23,7 +23,6 @@ import {
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 
@@ -35,6 +34,11 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 const log = debug('dxos:echo-db:greeting-initiator');
 
 const DEFAULT_TIMEOUT = 30_000;
+
+export interface InvitationResult {
+  partyKey: PublicKey;
+  genesisFeedKey: PublicKey
+}
 
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
@@ -88,10 +92,10 @@ export class GreetingInitiator {
     // Therefore at present the greeter discovers the invitation id from session metadata, via the invitee's peer id.
     // TODO(dboreham): Invitation is actually invitationID.
     const localPeerId = invitation;
-    log('Local PeerId:', keyToString(localPeerId));
+    log('Local PeerId:', PublicKey.stringify(localPeerId));
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(localPeerId), new Greeter().createMessageHandler());
 
-    log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
+    log(PublicKey.stringify(localPeerId), 'connecting to', PublicKey.stringify(swarmKey));
 
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId),
@@ -113,7 +117,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<InvitationResult> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -171,9 +175,10 @@ export class GreetingInitiator {
     await this.disconnect();
 
     this._state = GreetingState.SUCCEEDED;
+    assert(notarizeResponse.genesisFeed);
     return {
       partyKey,
-      hints: notarizeResponse.feedHints ?? []
+      genesisFeedKey: notarizeResponse.genesisFeed
     };
   }
 

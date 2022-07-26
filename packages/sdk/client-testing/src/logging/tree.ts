@@ -4,8 +4,8 @@
 
 import chalk from 'chalk';
 
+import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { Item } from '@dxos/echo-db';
 
 /**
  * Wrapper (e.g., for Party).

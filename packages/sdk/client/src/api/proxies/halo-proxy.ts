@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { KeyRecord } from '@dxos/credentials';
+import { DeviceInfo, keyPairFromSeedPhrase, KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
@@ -23,6 +23,9 @@ export interface Halo {
   createProfile (options?: CreateProfileOptions): Promise<Profile>
   recoverProfile (seedPhrase: string): Promise<Profile>
 
+  sign (request: SignRequest): Promise<SignResponse>
+  addKeyRecord (keyRecord: KeyRecord): Promise<void>
+
   /**
    * @deprecated
    */
@@ -32,13 +35,12 @@ export interface Halo {
   createInvitation (): Promise<InvitationRequest>
   acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation
 
-  addKeyRecord (keyRecord: KeyRecord): Promise<void>
-  sign (request: SignRequest): Promise<SignResponse>
+  queryDevices (): Promise<DeviceInfo[]>
+  setDevicePreference (key: string, value: string): Promise<void>
+  getDevicePreference (key: string): Promise<string | undefined>
 
   setGlobalPreference (key: string, value: string): Promise<void>
   getGlobalPreference (key: string): Promise<string | undefined>
-  setDevicePreference (key: string, value: string): Promise<void>
-  getDevicePreference (key: string): Promise<string | undefined>
 }
 
 /**
@@ -88,11 +90,29 @@ export class HaloProxy implements Halo {
   }
 
   /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
+   * Create Profile.
+   * Add Identity key if public and secret key are provided.
+   * Then initializes profile with given username.
+   * If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
+   * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
+  async createProfile ({
+    publicKey,
+    secretKey,
+    username,
+    seedphrase
+  }: CreateProfileOptions = {}): Promise<Profile> {
+    if (seedphrase && (publicKey || secretKey)) {
+      throw new Error('Seedphrase must not be specified with existing keys');
+    }
+
+    if (seedphrase) {
+      const keyPair = keyPairFromSeedPhrase(seedphrase);
+      publicKey = keyPair.publicKey;
+      secretKey = keyPair.secretKey;
+    }
+
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({ publicKey, secretKey, username });
     return this._profile;
   }
@@ -155,20 +175,17 @@ export class HaloProxy implements Halo {
     );
   }
 
-  async addKeyRecord (keyRecord: KeyRecord) {
-    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
-  }
-
   async sign (request: SignRequest) {
     return await this._serviceProvider.services.HaloService.sign(request);
   }
 
-  async setGlobalPreference (key: string, value: string): Promise<void> {
-    await this._serviceProvider.services.HaloService.setGlobalPreference({ key, value });
+  async addKeyRecord (keyRecord: KeyRecord) {
+    await this._serviceProvider.services.HaloService.addKeyRecord({ keyRecord });
   }
 
-  async getGlobalPreference (key: string): Promise<string | undefined> {
-    return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
+  // TODO(burdon): Implement.
+  async queryDevices (): Promise<DeviceInfo[]> {
+    return [];
   }
 
   async setDevicePreference (key: string, value: string): Promise<void> {
@@ -177,6 +194,14 @@ export class HaloProxy implements Halo {
 
   async getDevicePreference (key: string): Promise<string | undefined> {
     return (await this._serviceProvider.services.HaloService.getDevicePreference({ key })).value;
+  }
+
+  async setGlobalPreference (key: string, value: string): Promise<void> {
+    await this._serviceProvider.services.HaloService.setGlobalPreference({ key, value });
+  }
+
+  async getGlobalPreference (key: string): Promise<string | undefined> {
+    return (await this._serviceProvider.services.HaloService.getGlobalPreference({ key })).value;
   }
 
   /**

@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoMetadata, PartyMetadata, schema, Timeframe } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
 
 /**
@@ -19,6 +19,11 @@ import { Directory } from '@dxos/random-access-multi-storage';
 export const STORAGE_VERSION = 1;
 
 const log = debug('dxos:snapshot-store');
+
+export interface AddPartyOptions {
+  key: PublicKey
+  genesisFeed: PublicKey
+}
 
 export class MetadataStore {
   private _metadata: EchoMetadata = {
@@ -144,6 +149,14 @@ export class MetadataStore {
     } else {
       party.feedKeys = [feedKey];
     }
+    await this._save();
+  }
+
+  async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    assert(PublicKey.isPublicKey(feedKey));
+    await this.addPartyFeed(partyKey, feedKey);
+    const party = this.getParty(partyKey) ?? failUndefined();
+    party.genesisFeedKey = feedKey;
     await this._save();
   }
 

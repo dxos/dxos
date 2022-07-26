@@ -15,7 +15,7 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../broadcast"

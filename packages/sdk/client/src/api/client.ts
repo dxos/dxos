@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { Config, ConfigObject } from '@dxos/config';
@@ -65,10 +65,10 @@ export class Client {
   private readonly _options: ClientOptions;
   private readonly _mode: Runtime.Client.Mode;
 
+  private _initialized = false;
   private _serviceProvider!: ClientServiceProvider;
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
-  private _initialized = false;
 
   // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
 

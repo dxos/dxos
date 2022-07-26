@@ -796,7 +796,9 @@
     },
     {
       "packageName": "@dxos/kodama",
-      "projectFolder": "packages/demos/kodama"
+      "projectFolder": "packages/demos/kodama",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/lexical-editor",

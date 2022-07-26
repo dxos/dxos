@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { failUndefined } from '@dxos/debug';
 import { DataService } from '@dxos/echo-protocol';

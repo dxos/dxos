@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { sleep, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
+import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -26,6 +27,10 @@ export interface RpcPeerOptions {
   streamHandler?: (method: string, request: Any) => Stream<Any>
   port: RpcPort,
   timeout?: number,
+  /**
+   * Do not require or send handshake messages.
+   */
+  noHandshake?: boolean
 }
 
 /**
@@ -94,6 +99,11 @@ export class RpcPeer {
     }) as any;
 
     this._open = true;
+
+    if (this._options.noHandshake) {
+      this._remoteOpenTrigger.wake();
+      return;
+    }
 
     log('Send open message');
     await this._sendMessage({ open: true });
@@ -175,9 +185,17 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('Received open message');
+      if (this._options.noHandshake) {
+        return;
+      }
+
       await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
       log('Received openAck message');
+      if (this._options.noHandshake) {
+        return;
+      }
+
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (!this._open) {
@@ -391,19 +409,4 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
-};
-
-/**
- * Runs the callback in an exponentially increasing interval
- * @returns Callback to clear the interval.
- */
-const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
-  let interval = initialInterval;
-  const repeat = () => {
-    cb();
-    interval *= 2;
-    timeoutId = setTimeout(repeat, interval);
-  };
-  let timeoutId = setTimeout(repeat, interval);
-  return () => clearTimeout(timeoutId);
 };

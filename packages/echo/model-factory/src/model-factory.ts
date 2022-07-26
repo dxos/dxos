@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
+import type { FeedWriter, ItemID, ModelSnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';

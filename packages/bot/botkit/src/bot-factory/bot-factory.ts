@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { debug } from 'debug';
+import assert from 'node:assert';
 import { join } from 'path';
 
 import { Config } from '@dxos/config';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 
 import { BotContainer } from '../bot-container';
@@ -111,7 +111,7 @@ export class BotFactory implements BotFactoryService {
   }
 
   async spawnBot (request: SpawnBotRequest) {
-    const id = keyToString(randomBytes(6));
+    const id = PublicKey.stringify(randomBytes(6));
     try {
       log(`[${id}] Resolving bot package: ${JSON.stringify(request.package)}`);
       const packageSpecifier = request.package;

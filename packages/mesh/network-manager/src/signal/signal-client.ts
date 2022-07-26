@@ -5,8 +5,11 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
+import { schema } from '../proto/gen';
+import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';
 
@@ -53,8 +56,8 @@ export class SignalClient {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
-    private readonly _onSignal: (message: SignalApi.SignalMessage) => Promise<void>
+    private readonly _onOffer: (message: Message) => Promise<Answer>,
+    private readonly _onSignal: (message: Message) => Promise<void>
   ) {
     this._setState(SignalApi.State.CONNECTING);
     this._createClient();
@@ -89,13 +92,17 @@ export class SignalClient {
       data: message.data
     }));
 
-    this._client.subscribe('signal', (msg: SignalApi.SignalMessage) => this._onSignal({
-      id: PublicKey.from(msg.id),
-      remoteId: PublicKey.from(msg.remoteId),
-      topic: PublicKey.from(msg.topic),
-      sessionId: PublicKey.from(msg.sessionId),
-      data: msg.data
-    }));
+    this._client.subscribe('signal', (msg: SignalMessage) => {
+      return this._onSignal({
+        id: PublicKey.from(msg.id!),
+        remoteId: PublicKey.from(msg.remoteId!),
+        topic: PublicKey.from(msg.topic!),
+        sessionId: PublicKey.from(msg.sessionId!),
+        data: schema.getCodecForType('dxos.mesh.signal.MessageData').decode(msg.data ?? failUndefined()),
+        // Field that MessageRouter adds, so on lower level it not always defined.
+        messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
+      });
+    });
 
     this._clientCleanup.push(this._client.connected.on(() => {
       log('Socket connected');
@@ -209,27 +216,48 @@ export class SignalClient {
   /**
    * Routes an offer to the other peer's _onOffer callback.
    * @returns Other peer's _onOffer callback return value.
+   * @deprecated
    */
-  async offer (payload: SignalApi.SignalMessage): Promise<SignalApi.Answer> {
+  async offer (msg: Message): Promise<Answer> {
     return this._client.call('offer', {
-      id: payload.id.asBuffer(),
-      remoteId: payload.remoteId.asBuffer(),
-      topic: payload.topic.asBuffer(),
-      sessionId: payload.sessionId.asBuffer(),
-      data: payload.data
+      id: msg.id?.asBuffer(),
+      remoteId: msg.remoteId?.asBuffer(),
+      topic: msg.topic?.asBuffer(),
+      sessionId: msg.sessionId?.asBuffer(),
+      data: msg.data
     });
   }
 
   /**
    * Routes an offer to the other peer's _onSignal callback.
    */
-  async signal (payload: SignalApi.SignalMessage): Promise<void> {
-    return this._client.emit('signal', {
-      id: payload.id.asBuffer(),
-      remoteId: payload.remoteId.asBuffer(),
-      topic: payload.topic.asBuffer(),
-      sessionId: payload.sessionId.asBuffer(),
-      data: payload.data
-    });
+  async signal (message: Message): Promise<void> {
+    const signalMessage: SignalMessage = {
+      messageId: message.messageId?.asBuffer(),
+      id: message.id?.asBuffer(),
+      remoteId: message.remoteId?.asBuffer(),
+      topic: message.topic?.asBuffer(),
+      sessionId: message.sessionId?.asBuffer(),
+      data: Buffer.from(schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined()))
+    };
+    return this._client.emit('signal', signalMessage);
   }
+}
+
+/**
+ * Messages as processed by the signal server.
+ */
+interface SignalMessage{
+  /**
+   * Sender's public key.
+   */
+  id?: Buffer;
+  /**
+   * Receiver`s public key.
+   */
+  remoteId?: Buffer;
+  topic?: Buffer;
+  sessionId?: Buffer;
+  data?: Buffer;
+  messageId?: Buffer;
 }

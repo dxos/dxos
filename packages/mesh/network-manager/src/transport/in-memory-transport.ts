@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import { Transform } from 'stream';
 
 import { Event } from '@dxos/async';
@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SignalApi } from '../signal';
+import { Message } from '../proto/gen/dxos/mesh/signal';
 import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
@@ -79,7 +79,7 @@ export class InMemoryTransport implements Transport {
     return this._sessionId;
   }
 
-  async signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: Message) {
     // No-op.
   }
 

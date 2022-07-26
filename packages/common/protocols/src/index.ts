@@ -3,3 +3,4 @@
 //
 
 export * from './public-key';
+export * from './timeframe';

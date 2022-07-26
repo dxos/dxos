@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.33.6",
+  "version": "2.33.8",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/protocols",
@@ -14,6 +14,9 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
@@ -30,15 +33,16 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@types/node": "^16.11.27",
+    "assert": "^2.0.0",
     "yjs": "^13.4.1"
   },
   "devDependencies": {
-    "@dxos/protocols": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/object-model": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",

@@ -4,7 +4,7 @@
 
 import { SetStateAction } from 'react';
 
-import { OrderedList } from '@dxos/object-model';
+import { OrderedList } from '@dxos/client';
 
 export const moveItemInArray = (array: any[], item: any, index: number) => {
   const arrayWithoutItem = array.filter(currentItem => currentItem !== item);
