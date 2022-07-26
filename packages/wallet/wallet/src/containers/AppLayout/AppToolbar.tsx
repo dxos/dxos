@@ -76,18 +76,31 @@ export const AppToolbar = ({
       </Box>
       {profile?.username && (
         <Tooltip title={profile.username}>
-          <IconButton size={size} aria-label='account-icon'>
+          <IconButton
+            size={size}
+            color='inherit'
+            aria-label='account-icon'
+          >
             <AccountIcon className='account-icon' />
           </IconButton>
         </Tooltip>
       )}
       {!profile?.username && (
-        <IconButton size={size} aria-label='account-icon'>
+        <IconButton
+          size={size}
+          color='inherit'
+          aria-label='account-icon'
+        >
           <AccountIcon className='account-icon' />
         </IconButton>
       )}
       {options && (
-        <IconButton title='More Options' size={size} onClick={handleMenuOpen}>
+        <IconButton
+          title='More Options'
+          size={size}
+          color='inherit'
+          onClick={handleMenuOpen}
+        >
           <MoreVertIcon />
         </IconButton>
       )}

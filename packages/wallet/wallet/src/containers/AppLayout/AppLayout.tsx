@@ -2,19 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link as RouterLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import {
-  ArrowBack as BackIcon,
   Dangerous as ResetIcon,
   Devices as DevicesIcon,
   Redeem as JoinIcon
 } from '@mui/icons-material';
-import { AppBar, IconButton, Toolbar } from '@mui/material';
+import { AppBar, Link, Toolbar } from '@mui/material';
 
 import { useParties, useProfile } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
+import { DXOS, FullScreen } from '@dxos/react-components';
 
 import { ActionType, useActions, useSafePartyKey } from '../../hooks';
 import { ActionDialog } from '../ActionDialog';
@@ -65,6 +64,12 @@ export const AppLayout = () => {
   // App State
   const options = useOptions();
 
+  useEffect(() => {
+    if (partyKey && !party) {
+      navigate('/');
+    }
+  }, [partyKey, party]);
+
   return (
     <FullScreen>
       <AppBar>
@@ -73,13 +78,9 @@ export const AppLayout = () => {
           profile={profile}
           options={options}
         >
-          {party && (
-            <IconButton
-              onClick={() => navigate('/')}
-            >
-              <BackIcon />
-            </IconButton>
-          )}
+          <Link component={RouterLink} to='/' color='inherit'>
+            <DXOS />
+          </Link>
           {party?.properties.get('title')}
         </AppToolbar>
       </AppBar>
