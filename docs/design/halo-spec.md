@@ -1,4 +1,6 @@
-# HALO Spec <!-- omit in TOC -->
+# HALO Spec
+
+<!-- @toc -->
 
 - [1. Introduction](#1-introduction)
 - [2. Terminology](#2-terminology)
