@@ -71,7 +71,11 @@ export const AppToolbar = ({
           <MenuIcon />
         </IconButton>
       )}
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{
+        display: 'flex',
+        flexGrow: 1,
+        alignItems: 'center'
+      }}>
         {children}
       </Box>
       {profile?.username && (

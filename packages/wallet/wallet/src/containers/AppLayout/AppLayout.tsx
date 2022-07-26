@@ -10,10 +10,11 @@ import {
   Devices as DevicesIcon,
   Redeem as JoinIcon
 } from '@mui/icons-material';
-import { AppBar, Link, Toolbar } from '@mui/material';
+import { AppBar, Box, Link, Toolbar } from '@mui/material';
 
 import { useParties, useProfile } from '@dxos/react-client';
-import { DXOS, FullScreen } from '@dxos/react-components';
+import { CustomTextField, DXOS, FullScreen } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
 
 import { ActionType, useActions, useSafePartyKey } from '../../hooks';
 import { ActionDialog } from '../ActionDialog';
@@ -80,7 +81,15 @@ export const AppLayout = () => {
           <Link component={RouterLink} to='/' color='inherit'>
             <DXOS />
           </Link>
-          {party?.properties.get('title')}
+          {party && (
+            <Box sx={{ marginLeft: 1 }}>
+              <CustomTextField
+                value={party.properties.get('title') ?? humanize(party.key)}
+                onUpdate={title => party.properties.set('title', title)}
+                clickToEdit
+              />
+            </Box>
+          )}
         </AppToolbar>
       </AppBar>
 
