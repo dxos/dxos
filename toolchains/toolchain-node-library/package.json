@@ -13,6 +13,7 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protobuf-compiler": "workspace:*",
     "@swc-node/register": "~1.4.2",
+    "@types/yargs": "~16.0.1",
     "chalk": "^4.1.0",
     "esbuild": "^0.14.49",
     "esbuild-node-externals": "^1.4.1",
@@ -33,8 +34,6 @@
     "@types/glob": "~7.1.3",
     "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
-    "@types/yargs": "~16.0.1",
-    "eslint": "^7.12.1",
     "ts-node": "^10.8.2"
   }
 }
