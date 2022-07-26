@@ -3,11 +3,13 @@
 //
 
 import assert from 'node:assert';
+import { dirname, relative } from 'path';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import { normalizeFullyQualifiedName } from '../namespaces';
 import { SubstitutionsMap } from '../parser';
+import { GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';
 import { types, getTypeReference } from './types';
 
@@ -45,7 +47,7 @@ const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Serv
   );
 };
 
-export const createServiceDeclaration = (type: protobufjs.Service, subs: SubstitutionsMap): ts.InterfaceDeclaration => {
+export const createServiceDeclaration = (type: protobufjs.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -59,14 +61,23 @@ export const createServiceDeclaration = (type: protobufjs.Service, subs: Substit
           undefined,
           mapRpcMethodName(method.name),
           undefined,
-          createRpcMethodType(method, type, subs)
+          createRpcMethodType(method, type, ctx.subs)
         );
 
         return method.comment ? attachDocComment(sig, method.comment) : sig;
       })
   );
 
-  return type.comment ? attachDocComment(declaration, type.comment) : declaration;
+  const commentSections = type.comment ? [type.comment] : []
+  if(type.filename) {
+    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`)
+  }
+
+  if (commentSections.length === 0) {
+    return declaration;
+  }
+
+  return attachDocComment(declaration, commentSections.join('\n\n'));
 };
 
 function * getServices (root: protobufjs.NamespaceBase): Generator<protobufjs.Service> {

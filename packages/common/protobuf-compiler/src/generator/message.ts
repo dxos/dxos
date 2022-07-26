@@ -2,16 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
+import { dirname, relative } from 'path';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import { SubstitutionsMap } from '../parser';
+import { GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';
 import { getFieldType } from './field';
 
 const f = ts.factory;
 
-export const createMessageDeclaration = (type: protobufjs.Type, subs: SubstitutionsMap) => {
+/**
+ * {@link file://./../configure.ts#l5}
+ */
+export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorContext) => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -23,7 +28,7 @@ export const createMessageDeclaration = (type: protobufjs.Type, subs: Substituti
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
         field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
-        getFieldType(field, subs)
+        getFieldType(field, ctx.subs)
       );
 
       const docComment = getFieldDocComment(field);
@@ -31,11 +36,16 @@ export const createMessageDeclaration = (type: protobufjs.Type, subs: Substituti
     })
   );
 
-  if (!type.comment) {
+  const commentSections = type.comment ? [type.comment] : []
+  if(type.filename) {
+    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`)
+  }
+
+  if (commentSections.length === 0) {
     return declaration;
   }
 
-  return attachDocComment(declaration, type.comment);
+  return attachDocComment(declaration, commentSections.join('\n\n'));
 };
 
 const getFieldDocComment = (field: protobufjs.Field) => {

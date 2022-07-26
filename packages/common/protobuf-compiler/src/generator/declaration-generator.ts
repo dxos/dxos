@@ -7,6 +7,7 @@ import * as ts from 'typescript';
 
 import { normalizeFullyQualifiedName } from '../namespaces';
 import { SubstitutionsMap } from '../parser';
+import { GeneratorContext } from './context';
 import { createEnumDeclaration } from './enum';
 import { createMessageDeclaration } from './message';
 import { createServiceDeclaration } from './service';
@@ -14,16 +15,16 @@ import { getTypeReference } from './types';
 
 const f = ts.factory;
 
-export function * createDeclarations (types: protobufjs.ReflectionObject[], subs: SubstitutionsMap): Generator<ts.Statement> {
+export function * createDeclarations (types: protobufjs.ReflectionObject[], ctx: GeneratorContext): Generator<ts.Statement> {
   for (const obj of types) {
     if (obj instanceof protobufjs.Enum) {
-      yield createEnumDeclaration(obj);
+      yield createEnumDeclaration(obj, ctx);
     } else if (obj instanceof protobufjs.Service) {
-      yield createServiceDeclaration(obj, subs);
+      yield createServiceDeclaration(obj, ctx);
     } else if (obj instanceof protobufjs.Type) {
-      yield createMessageDeclaration(obj, subs);
+      yield createMessageDeclaration(obj, ctx);
 
-      const nested = Array.from(createDeclarations(obj.nestedArray, subs));
+      const nested = Array.from(createDeclarations(obj.nestedArray, ctx));
       if (nested.length > 0) {
         yield f.createModuleDeclaration(
           undefined,
@@ -34,7 +35,7 @@ export function * createDeclarations (types: protobufjs.ReflectionObject[], subs
         );
       }
     } else if (obj instanceof protobufjs.Namespace) {
-      yield * createDeclarations(obj.nestedArray, subs);
+      yield * createDeclarations(obj.nestedArray, ctx);
     }
   }
 }
