@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/protocols';
+
 import { setupBroker, setupClient } from '../testutils';
 import { Bot } from './client-bot';
 
@@ -15,7 +15,7 @@ describe('Client Bot', () => {
     await bot.initialize({
       id: PublicKey.random().toHex(),
       config: {},
-      invitation,
+      invitation
     });
 
     await bot.stop();

@@ -16,7 +16,7 @@ import { createLinkedPorts } from './testutil';
 const createPayload = (value = ''): Any => ({
   type_url: '',
   value: Buffer.from('')
-})
+});
 
 describe('RpcPeer', () => {
   describe('handshake', () => {

@@ -143,10 +143,12 @@ export class RpcPeer {
     if (decoded.request) {
       if (!this._open) {
         log('Received request while not open.');
-        await this._sendMessage({ response: {
-          id: decoded.request.id,
-          error: encodeError(new RpcClosedError())
-        } });
+        await this._sendMessage({
+          response: {
+            id: decoded.request.id,
+            error: encodeError(new RpcClosedError())
+          }
+        });
         return;
       }
 
@@ -248,7 +250,7 @@ export class RpcPeer {
         id,
         method,
         payload: request,
-        stream: false,
+        stream: false
       }
     });
 

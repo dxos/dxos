@@ -52,7 +52,7 @@ describe('Feed tests:', () => {
         itemId: 'id',
         genesis: {
           itemType: 'foo',
-          modelType: 'bar',
+          modelType: 'bar'
         }
       }
     };

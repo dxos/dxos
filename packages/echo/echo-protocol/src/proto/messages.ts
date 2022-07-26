@@ -4,7 +4,7 @@
 
 import { Timeframe } from '@dxos/protocols';
 
-import { ItemID, ItemType } from '../types';
+import { ItemID } from '../types';
 import { schema } from './gen';
 import { FeedMessage } from './gen/dxos/echo/feed';
 

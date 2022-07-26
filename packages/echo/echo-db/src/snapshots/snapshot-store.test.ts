@@ -27,7 +27,7 @@ describe('SnapshotStore', () => {
     const snapshot: PartySnapshot = {
       partyKey: key1.asBuffer(),
       halo: {
-        messages: [],
+        messages: []
       },
       database: {
         items: [{

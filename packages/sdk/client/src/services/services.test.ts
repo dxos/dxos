@@ -6,12 +6,12 @@ import { it as test } from 'mocha';
 import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../api';
 import { InvitationRequest, RedeemedInvitation } from '../proto/gen/dxos/client';
-import { failUndefined } from '@dxos/debug';
 
 const setup = async () => {
   const client = new Client();
