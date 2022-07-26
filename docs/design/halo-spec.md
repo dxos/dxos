@@ -554,3 +554,73 @@ Contains credential messages that establish the Space genesis, admit the first m
 Genesis feed is the root of the feed DAG.
 Genesis feed is the definitive starting point for the Space state machine.
 Only the Space public key, which is also the genesis feed key, is required to discover nodes on the network, authenticate with them, start replicating, and processing the Space credentials in the Space state machine.
+
+## TODO
+
+Alice creates her HALO:
+
+Keys:
+ - `Alice` Identity key
+ - `Alice/d1` Device key
+ - `Alice/d2` Device key
+ - `Alice/d1/f1` Feed key
+
+Genesis messages as written on feed:
+
+> Feed is signed by the feed key (separate from Identity or Device keys)
+
+```yaml
+messages(Alice/d1/f1):
+  # self signed root of authority
+  - assertion:
+      @type: 'IdentityGenesis'
+      identityKey: Alice
+    proof:
+      signature: sign(assertion + metadata, Alice)
+      issuer: Alice
+
+  # Add d1 to the HALO. Gives d1 authority to sign on behalf of alice.
+  - assertion:
+      @type: 'DeviceAuth'
+      identityKey: Alice
+      deviceKey: Alice/d1
+    proof:
+      issuer: Alice
+
+  # Add d1/f1 to the set of replicated feeds. Establishes the owner of the feed.
+  - assertion:
+      @type: 'FeedAdmit'
+      party: Alice # party = identity ??????
+      feedKey: Alice/d1/f1
+      deviceKey: Alice/d1
+    proof:
+      issuer: Alice/d1
+```
+
+Alice adds another device:
+
+```yaml
+messages(Alice/d1/f1):
+  # Add d1 to the HALO. Gives d1 authority to sign on behalf of alice.
+  - assertion:
+      @type: 'DeviceAuth'
+      identityKey: Alice
+      deviceKey: Alice/d2
+    proof:
+      issuer: Alice/d1
+
+  # Add d1/f1 to the set of replicated feeds. Establishes the owner of the feed.
+  # This message is signed by d2, sent to d1, and d1 writes this to d1/f1.
+  # Q: Is this a presentation?
+  - assertion:
+      @type: 'FeedAdmit'
+      party: Alice # party = identity ??????
+      feedKey: Alice/d1/f1
+      deviceKey: Alice/d2
+    proof:
+      - issuer: Alice/d2 # Must be equal to assertion.deviceKey
+    # Q: d2 can claim a feed that it doesn't have access to.
+
+# TODO: should d2 write a FeedGenesis message to d2/f1.
+```
+
