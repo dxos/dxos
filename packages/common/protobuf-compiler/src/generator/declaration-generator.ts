@@ -6,7 +6,6 @@ import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import { normalizeFullyQualifiedName } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
 import { GeneratorContext } from './context';
 import { createEnumDeclaration } from './enum';
 import { createMessageDeclaration } from './message';

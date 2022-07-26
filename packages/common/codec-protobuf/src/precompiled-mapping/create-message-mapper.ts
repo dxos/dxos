@@ -66,4 +66,4 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
 
 const throwMissingFieldError = (fieldName: string, typeName: string) => {
   throw new Error(`Missing field: ${fieldName} on ${typeName}`);
-}
+};

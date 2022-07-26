@@ -27,8 +27,8 @@ export const createNamespaceSourceFile = (types: pb.ReflectionObject[], substitu
   const outFile = join(outDir, getFileNameForNamespace(namespace));
   const ctx: GeneratorContext = {
     outputFilename: outFile,
-    subs: substitutions,
-  }
+    subs: substitutions
+  };
 
   const declarations: ts.Statement[] = Array.from(createDeclarations(types, ctx));
 

@@ -5,6 +5,7 @@
 import { dirname, relative } from 'path';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
+
 import { GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';
 
@@ -21,9 +22,9 @@ export const createEnumDeclaration = (type: protobufjs.Enum, ctx: GeneratorConte
     ))
   );
 
-  const commentSections = type.comment ? [type.comment] : []
-  if(type.filename) {
-    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`)
+  const commentSections = type.comment ? [type.comment] : [];
+  if (type.filename) {
+    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`);
   }
 
   if (commentSections.length === 0) {
@@ -31,4 +32,4 @@ export const createEnumDeclaration = (type: protobufjs.Enum, ctx: GeneratorConte
   }
 
   return attachDocComment(declaration, commentSections.join('\n\n'));
-}
+};

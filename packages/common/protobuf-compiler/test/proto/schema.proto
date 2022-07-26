@@ -56,7 +56,7 @@ message ComplexFields {
   google.protobuf.Any googleAny = 21;
   dxos.test.any.Any importedAny = 22;
 
-  TestFoo fooTest = 23;
+  optional TestFoo fooTest = 23;
 }
 
 message WithTimestamp {
@@ -85,7 +85,7 @@ message Task {
   string id = 1;
 
   /// Task title
-  string title = 2;
+  optional string title = 2;
 
   /**
    * Task key.
@@ -98,7 +98,7 @@ message Task {
 
   // And I'm a comment with
   // multiple lines
-  google.protobuf.Any googleAny = 5;
+  optional google.protobuf.Any googleAny = 5;
 }
 
 

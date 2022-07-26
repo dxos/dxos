@@ -21,6 +21,7 @@ test('services', async () => {
 
   const response = await client.countTasks({
     tasks: [{
+      id: 'foo',
       key: new MyKey(new Uint8Array([1, 2, 3])),
       type: TaskType.COMPLETED
     }]
