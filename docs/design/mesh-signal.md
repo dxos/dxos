@@ -1,4 +1,6 @@
-# MESH signal plugin and client protocol
+# MESH Signaling
+
+<!-- @toc -->
 
 ## 1. Introduction
 

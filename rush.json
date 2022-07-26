@@ -448,6 +448,12 @@
       "projectFolder": "toolchains/protocols-toolchain"
     },
     {
+      "packageName": "@dxos/ridoculous",
+      "projectFolder": "toolchains/ridoculous",
+//      "shouldPublish": true,
+//      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/toolchain-node-library",
       "shouldPublish": true,
