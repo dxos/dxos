@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { Link as RouterLink, Outlet, useNavigate, useParams } from 'react-router-dom';
+import React from 'react';
+import { Link as RouterLink, Navigate, Outlet, useParams } from 'react-router-dom';
 
 import {
   Dangerous as ResetIcon,
@@ -56,7 +56,6 @@ export const AppLayout = () => {
   const parties = useParties();
 
   // React Router
-  const navigate = useNavigate();
   const { party: partyHex } = useParams();
   const partyKey = useSafePartyKey(partyHex);
   const party = partyKey && parties.find(({ key }) => key.equals(partyKey));
@@ -64,11 +63,11 @@ export const AppLayout = () => {
   // App State
   const options = useOptions();
 
-  useEffect(() => {
-    if (partyKey && !party) {
-      navigate('/');
-    }
-  }, [partyKey, party]);
+  if (partyKey && !party) {
+    return (
+      <Navigate to='/' />
+    );
+  }
 
   return (
     <FullScreen>

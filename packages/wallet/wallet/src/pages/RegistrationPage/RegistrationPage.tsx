@@ -77,8 +77,14 @@ export const RegistrationPage = ({ onRegister }: RegistrationPageProps) => {
           setRegisterOpen(false);
           setHaloOpen(true);
         }}
-        onRestore={() => {
-          navigate(`/${redirect}${search}`); // TODO(burdon): Not implemented.
+        onRestore={async seedphrase => {
+          await client.halo.createProfile({ seedphrase });
+
+          setRegisterOpen(false);
+
+          setImmediate(() => {
+            navigate(`/${redirect}${search}`);
+          });
         }}
         onComplete={async (_: string, username: string) => {
           // Create profile.
