@@ -1,5 +1,7 @@
 # ECHO Spec
 
+<!-- @toc -->
+
 ## 1. Introduction
 
 ECHO (The Eventually Consistent Hierrarhical Object-store) is a peer-to-peer database.
@@ -148,7 +150,7 @@ ISSUES
 
 <br/><br/><br/><br/>
 
-# Deprecated
+## Deprecated
 
 ![Architecture](./diagrams/echo-architecture.drawio.svg)
 

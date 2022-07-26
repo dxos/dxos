@@ -14,7 +14,8 @@
     "build:test": "pnpm build && pnpm lint",
     "info": "tsc --showConfig | jq",
     "lint": "eslint .",
-    "start": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --base-dir ./testing",
+    "update:docs": "ts-node --esm ./src/main.ts --files '../../docs/design/**/*.md' --base-dir ../../docs/design --auto-number",
+    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --base-dir ./testing",
     "test": "mocha"
   },
   "dependencies": {

@@ -1,7 +1,6 @@
 # Client Spec
 
-> - TODO: Need codename for client application (e.g., "mono" (事) = "thing" Jp.)
-
+<!-- @toc -->
 
 ## 1. Introduction
 

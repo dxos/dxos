@@ -76,7 +76,7 @@ export const remarkHeadings = ({ autoNumber }: Options = {}) => (tree: any) => {
           // Add to the latest list item.
           const parentList = stack[depth - 1];
           const parentListItem = parentList.children[parentList.children.length - 1];
-          parentListItem.children.push(list); // Add after the list item's paragraph.
+          parentListItem?.children.push(list); // Add after the list item's paragraph.
         }
 
         const listItem = u('listItem', { spread: false }, [
