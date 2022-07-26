@@ -83,21 +83,21 @@ message GetConfigResponse {
 // EnableDebugLogging
 
 message EnableDebugLoggingRequest {
-  string namespaces = 1;
+  optional string namespaces = 1;
 }
 
 message EnableDebugLoggingResponse {
-  string enabledNamespaces = 1;
+  optional string enabledNamespaces = 1;
 }
 
 // DisableDebugLogging
 
 message DisableDebugLoggingRequest {
-  string namespaces = 1;
+  optional string namespaces = 1;
 }
 
 message DisableDebugLoggingResponse {
-  string enabledNamespaces = 1;
+  optional string enabledNamespaces = 1;
 }
 
 // SubscribeToKeyringKeys
@@ -111,7 +111,7 @@ message SubscribeToKeyringKeysResponse {
 // SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
-  PubKey partyKey = 1;
+  optional PubKey partyKey = 1;
 }
 
 message SubscribeToCredentialMessagesResponse {
@@ -188,9 +188,9 @@ message SubscribeToFeedsResponse {
 // SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
-  PubKey partyKey = 1;
-  PubKey feedKey = 2;
-  int32 maxBlocks = 3;
+  optional PubKey partyKey = 1;
+  optional PubKey feedKey = 2;
+  optional int32 maxBlocks = 3;
 }
 
 message SubscribeToFeedBlocksResponse {
@@ -212,7 +212,7 @@ message GetPartySnapshotRequest {
 }
 
 message GetPartySnapshotResponse {
-  PartySnapshot snapshot = 1;
+  optional PartySnapshot snapshot = 1;
 }
 
 // SavePartySnapshot
@@ -222,7 +222,7 @@ message SavePartySnapshotRequest {
 }
 
 message SavePartySnapshotResponse {
-  PartySnapshot snapshot = 1;
+  optional PartySnapshot snapshot = 1;
 }
 
 // ClearSnapshots
@@ -234,7 +234,7 @@ message ClearSnapshotsRequest {}
 message SubscribeToNetworkTopicsResponse {
   message Topic {
     PubKey topic = 1;
-    string label = 2;
+    optional string label = 2;
   }
 
   repeated Topic topics = 1;
@@ -249,7 +249,7 @@ message SubscribeToSignalStatusResponse {
     // SignalApi.State enum.
     string state = 2;
 
-    string error = 3;
+    optional string error = 3;
 
     // Number of milliseconds before reconnection.
     // TODO(dmaretskyi): Represent as absolute timestamp.
@@ -279,16 +279,16 @@ message SubscribeToSwarmInfoResponse {
   message SwarmInfo {
     PubKey id = 1;
     PubKey topic = 2;
-    string label = 3;
+    optional string label = 3;
     bool isActive = 4;
     message ConnectionInfo {
       message Json {
-        string data = 1;
+        optional string data = 1;
       }
       string state = 1;
       PubKey sessionId = 2;
       PubKey remotePeerId = 3;
-      string transport = 4;
+      optional string transport = 4;
       repeated string protocolExtensions = 5;
       repeated Json events = 6;
     }

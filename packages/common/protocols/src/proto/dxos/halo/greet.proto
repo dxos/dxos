@@ -57,7 +57,7 @@ message Command {
   Type command = 1;
 
   // Auth secret (PIN, hash, AuthMessage, etc.).
-  bytes secret = 2;
+  optional bytes secret = 2;
 
   // TODO(burdon): These seem to be signed messages? In which case we already know the type.
   // TODO(dboreham): static typing of contained messages is not yet supported, change from any when it is.

@@ -11,54 +11,54 @@ import "google/protobuf/descriptor.proto";
 package dxos.config;
 
 message Config {
-  int32 version = 1;
+  optional int32 version = 1;
 
   //
   // Package definition.
   //
 
-  Package package = 2;
+  optional Package package = 2;
 
   //
   // Runtime configuration.
   //
 
-  Runtime runtime = 3;
+  optional Runtime runtime = 3;
 }
 
 message Package {
-  string license = 1;
+  optional string license = 1;
   repeated Repo repos = 2;
   repeated Module modules = 3;
 }
 
 // TODO(wittjosiah): Shared with registry types. Factor out?
 message Repo {
-  string name = 1;
-  string url = 2;
-  string version = 3;
+  optional string name = 1;
+  optional string url = 2;
+  optional string version = 3;
 }
 
 message Module {
   message Build {
-    string command = 1;
-    string outdir = 2;
-    string version = 3;
-    string tag = 4;
+    optional string command = 1;
+    optional string outdir = 2;
+    optional string version = 3;
+    optional string tag = 4;
   }
 
-  string name = 1;
-  string type = 2;
-  string display_name = 3;
-  string description = 4;
+  optional string name = 1;
+  optional string type = 2;
+  optional string display_name = 3;
+  optional string description = 4;
   repeated string tags = 5;
 
-  Build build = 100;
+  optional Build build = 100;
   repeated Repo repos = 101;
 
   /// Data which will be included as apart of DXNS record.
   /// The data will be validated based on the type when being published.
-  google.protobuf.Any record = 200;
+  optional google.protobuf.Any record = 200;
 }
 
 message Runtime {
@@ -89,66 +89,66 @@ message Runtime {
         JSONDOWN = 12;
       }
 
-      bool persistent = 1;
-      StorageDriver storage_type = 2;
-      StorageDriver key_storage = 3;
-      string path = 4;
+      optional bool persistent = 1;
+      optional StorageDriver storage_type = 2;
+      optional StorageDriver key_storage = 3;
+      optional string path = 4;
     }
 
-    string debug = 1 [(env) = "DEBUG"];
-    Storage storage = 2;
-    bool enable_snapshots = 3;
+    optional string debug = 1 [(env) = "DEBUG"];
+    optional Storage storage = 2;
+    optional bool enable_snapshots = 3;
 
     /// Milliseconds
-    int32 snapshot_interval = 4;
+    optional int32 snapshot_interval = 4;
 
     /// Milliseconds
-    int32 invitation_expiration = 5;
+    optional int32 invitation_expiration = 5;
 
-    Mode mode = 6;
+    optional Mode mode = 6;
   }
 
   message App {
-    string org = 1;
-    string theme = 2;
-    string website = 3;
-    string public_url = 4 [(env) = "PUBLIC_URL"];
+    optional string org = 1;
+    optional string theme = 2;
+    optional string website = 3;
+    optional string public_url = 4 [(env) = "PUBLIC_URL"];
   }
 
   // CLI configuration
   message CLI {
     message AppServe {
       message Serve {
-        string config = 1;
-        string login_app = 2;
-        string key_phrase = 3;
+        optional string config = 1;
+        optional string login_app = 2;
+        optional string key_phrase = 3;
       }
 
-      Serve serve = 1;
+      optional Serve serve = 1;
     }
 
     message Package {
-      string package = 1;
-      string channel = 2;
-      string bin = 3;
-      string config = 4;
+      optional string package = 1;
+      optional string channel = 2;
+      optional string bin = 3;
+      optional string config = 4;
     }
 
-    string node_path = 1;
-    AppServe app = 2;
-    Package console = 3;
-    Package mdns = 4;
-    Package signal = 5;
-    string npm_client = 6;
-    string channel = 7;
+    optional string node_path = 1;
+    optional AppServe app = 2;
+    optional Package console = 3;
+    optional Package mdns = 4;
+    optional Package signal = 5;
+    optional string npm_client = 6;
+    optional string channel = 7;
   }
 
   message Props {
-    string title = 1;
+    optional string title = 1;
   }
 
   message System {
-    string debug = 1;
+    optional string debug = 1;
   }
 
   //
@@ -158,23 +158,23 @@ message Runtime {
     message Kube {
 
       message Endpoints {
-        string logs = 1;
-        string services = 2;
-        string cert = 3;
+        optional string logs = 1;
+        optional string services = 2;
+        optional string cert = 3;
       }
     
-      Endpoints endpoints = 1;
-      string public_url = 2;
+      optional Endpoints endpoints = 1;
+      optional string public_url = 2;
     }
 
     message AppServer {
-      string prefix = 1;
-      string server = 2;
+      optional string prefix = 1;
+      optional string server = 2;
     }
 
     message Dxns {
       /// DXNS endpoint.
-      string server = 1;
+      optional string server = 1;
 
       /**
       * Substrate account URI. This is a secret.
@@ -182,67 +182,67 @@ message Runtime {
       *
       * TODO(dmaretskyi): Deprecate this and move it to keyring.
       */
-      string account_uri = 2;
+      optional string account_uri = 2;
 
       /**
        * Public Polkadot Address.
       */
-      string address = 3;
+      optional string address = 3;
 
       /**
        * Public address of a DXNS Account.
       */
-      string account = 4;
+      optional string account = 4;
 
-      string faucet = 5;
+      optional string faucet = 5;
     }
 
     message Ipfs {
-      string server = 1;
-      string gateway = 2;
+      optional string server = 1;
+      optional string gateway = 2;
     }
 
     message Signal {
-      string server = 1;
-      string api = 2;
-      string status = 3;
+      optional string server = 1;
+      optional string api = 2;
+      optional string status = 3;
     }
 
     message Ice {
-      string urls = 1;
-      string username = 2;
-      string credential = 3;
+      optional string urls = 1;
+      optional string username = 2;
+      optional string credential = 3;
     }
 
     message Machine {
-      string do_access_token = 1;
-      string github_access_token = 2;
-      string github_username = 3;
-      string dns_domain = 4;
-      string npm_access_token = 5;
+      optional string do_access_token = 1;
+      optional string github_access_token = 2;
+      optional string github_username = 3;
+      optional string dns_domain = 4;
+      optional string npm_access_token = 5;
     }
 
     message BotFactory {
-      string topic = 1;
-      bool persistent = 2;
-      int32 retry_attempts = 3;
-      int32 retry_interval = 4;
+      optional string topic = 1;
+      optional bool persistent = 2;
+      optional int32 retry_attempts = 3;
+      optional int32 retry_interval = 4;
     }
 
-    Kube kube = 1;
-    AppServer app = 2;
-    Dxns dxns = 3;
-    Ipfs ipfs = 4;
-    Signal signal = 5;
+    optional Kube kube = 1;
+    optional AppServer app = 2;
+    optional Dxns dxns = 3;
+    optional Ipfs ipfs = 4;
+    optional Signal signal = 5;
     repeated Ice ice = 6;
-    Machine machine = 7;
-    BotFactory bot = 8;
+    optional Machine machine = 7;
+    optional BotFactory bot = 8;
   }
 
-  Client client = 1;
-  App app = 2;
-  CLI cli = 3;
-  Props props = 4;
-  Services services = 5;
-  System system = 6;
+  optional Client client = 1;
+  optional App app = 2;
+  optional CLI cli = 3;
+  optional Props props = 4;
+  optional Services services = 5;
+  optional System system = 6;
 }

@@ -16,11 +16,16 @@ describe('Echo Bot', () => {
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
     await bot.initialize({
+      id: PublicKey.random().toHex(),
+      config: {},
       invitation
     });
 
     const command = PublicKey.random().asUint8Array();
-    await bot.command({ command: command });
+    await bot.command({
+      botId: PublicKey.random().toHex(),
+      command: command
+    });
 
     const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
     const payload = item.model.get('payload');

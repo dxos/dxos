@@ -11,6 +11,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../api';
 import { InvitationRequest, RedeemedInvitation } from '../proto/gen/dxos/client';
+import { failUndefined } from '@dxos/debug';
 
 const setup = async () => {
   const client = new Client();
@@ -43,7 +44,7 @@ describe('Client Services', () => {
 
       await invitee.services.ProfileService.authenticateInvitation({
         processId: redeemedInvitation.id,
-        secret: invitation.descriptor.secret
+        secret: invitation.descriptor.secret ?? failUndefined()
       });
 
       const [inviteeProfileLatch, inviteeProfileTrigger] = latch();

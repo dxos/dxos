@@ -26,10 +26,14 @@ describe('SnapshotStore', () => {
 
     const snapshot: PartySnapshot = {
       partyKey: key1.asBuffer(),
+      halo: {
+        messages: [],
+      },
       database: {
         items: [{
           itemId: createId(),
-          itemType: 'example:test'
+          itemType: 'example:test',
+          modelType: 'example:model'
         }],
         links: []
       }

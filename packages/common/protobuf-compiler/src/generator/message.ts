@@ -28,7 +28,7 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
       const signature = f.createPropertySignature(
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
-        isRequired ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
+        isRequired && !field.partOf ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
         getFieldType(field, ctx.subs)
       );
 

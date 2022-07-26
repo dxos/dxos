@@ -166,7 +166,10 @@ describe('Node container', function () {
         await rpc.open();
 
         const command = PublicKey.random().asUint8Array();
-        const { response } = await rpc.rpc.command({ command });
+        const { response } = await rpc.rpc.command({
+          botId: PublicKey.random().toHex(),
+          command
+        });
         assert(response);
         expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
 

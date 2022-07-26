@@ -128,7 +128,8 @@ describe('FeedMuxer', () => {
     await pipeline.outboundEchoStream!.write({
       itemId: '123',
       genesis: {
-        itemType: 'foo'
+        itemType: 'foo',
+        modelType: 'bar'
       }
     });
 
