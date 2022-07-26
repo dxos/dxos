@@ -1,7 +1,6 @@
 # Bots
 
-> TODO(burdon): Rename?
-
+<!-- @toc -->
 
 ## 1. Introduction
 

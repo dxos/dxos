@@ -1,8 +1,6 @@
-# ECHO Spec
+# ECHO Spec <!-- omit in toc -->
 
 <!-- @toc -->
-
-<hr/>
 
 ## 1. Introduction
 
@@ -171,7 +169,7 @@ ISSUES
 
 <br/><br/><br/><br/>
 
-# 2. Deprecated
+## Deprecated
 
 ![Architecture](./diagrams/echo-architecture.drawio.svg)
 
