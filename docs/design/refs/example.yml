@@ -3,12 +3,6 @@
 #
 
 #
-# Message feeds implemention HALO credentials.
-# Feed messages are signed by the Feed key.
-# Since Feeds implement a hash linked data structure, they constitute a chain of authority.
-#
-
-#
 # Party Genesis: Creating a new Party.
 #
 
@@ -100,8 +94,10 @@ feed:
 
 #
 # Feed Admission: Device admits a new feed.
-# NOTE: This happens as part of genesis, but is exactly the same mechanism as any
+# NOTE: This happens as part of Genesis, but is exactly the same mechanism as any
 #   Authorized Agent presenting a nested Feed Admission Credential.
+# Any authorized Peer can Verify a Feed Admin Presentation.
+#   ISSUE: How to detect and avoid multiple Peers from doing this concurrently? (e.g., Direct P2P Requests?)
 #
 
 feed:
@@ -138,6 +134,7 @@ feed:
 
 #
 # Member Admission: Adding a new Member to a Space.
+# The joining Agent will Present a Credential representing a Feed Admission.
 #
 
 feed:
