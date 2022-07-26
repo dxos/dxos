@@ -33,7 +33,6 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             }
           };
 
-          // TODO(dmaretskyi): Support maps.
           if (field.repeated) {
             c`res.${field.name} = obj.${field.name}.map(item => `;
             genMapScalar('item');
@@ -52,6 +51,11 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             c`;`;
           }
         } c`}`;
+        if (!field.getOption('proto3_optional') && !field.repeated && !field.map) {
+          c`else {`; {
+            c`${ref(throwMissingFieldError)}('${field.name}', '${field.parent!.fullName.slice(1)}')`;
+          } c`}`;
+        }
       }
       c`return res;`;
     });
@@ -59,3 +63,7 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
 
   return cache[type.fullName];
 };
+
+const throwMissingFieldError = (fieldName: string, typeName: string) => {
+  throw new Error(`Missing field: ${fieldName} on ${typeName}`);
+}
