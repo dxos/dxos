@@ -3,6 +3,7 @@
 //
 
 import React, { FunctionComponent, ReactNode, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 
 import {
   AccountCircle as AccountIcon,
@@ -12,6 +13,7 @@ import {
 import {
   Box,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemIcon,
@@ -80,13 +82,14 @@ export const AppToolbar = ({
       </Box>
       {profile?.username && (
         <Tooltip title={profile.username}>
-          <IconButton
-            size={size}
+          <Link
+            component={RouterLink}
+            to='/profile'
             color='inherit'
             aria-label='account-icon'
           >
             <AccountIcon className='account-icon' />
-          </IconButton>
+          </Link>
         </Tooltip>
       )}
       {!profile?.username && (

@@ -6,7 +6,9 @@ import React from 'react';
 import { useRoutes } from 'react-router-dom';
 
 import { AppLayout } from './containers';
-import { InvitationPage, MainPage, PartyPage, RegistrationPage, RequireProfile } from './pages';
+import {
+  InvitationPage, MainPage, PartyPage, ProfilePage, RegistrationPage, RequireProfile
+} from './pages';
 
 export const App = () => useRoutes([
   {
@@ -25,6 +27,7 @@ export const App = () => useRoutes([
         path: '/',
         element: <AppLayout />,
         children: [
+          { path: '/profile', element: <ProfilePage /> },
           { path: '/:party', element: <PartyPage /> },
           { path: '/', element: <MainPage /> }
         ]

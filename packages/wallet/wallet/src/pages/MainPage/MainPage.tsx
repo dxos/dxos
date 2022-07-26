@@ -10,7 +10,7 @@ import { Box, Fab } from '@mui/material';
 
 import { useClient, useParties } from '@dxos/react-client';
 
-import { PartyList } from '../../components/PartyList';
+import { PartyList } from '../../components';
 
 export const MainPage = () => {
   const client = useClient();
