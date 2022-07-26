@@ -1,7 +1,6 @@
-# HALO Spec <!-- omit in toc -->_
+# HALO Spec <!-- omit in toc -->
 
 <!-- @toc -->
-
 
 ## 1. Introduction
 

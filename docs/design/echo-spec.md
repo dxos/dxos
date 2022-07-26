@@ -49,15 +49,7 @@ The diagram below illustrates the data processing pipeline.
 - Clients may process messages in different order (potential discrepancies are rectified downstream by the models).
 - DAG; require party key and first feed key.
 
-
 TODO(burdon): Diagram.
-
-
-
-
-
-
-
 
 ### 1.4.2. Object Graph
 
@@ -65,7 +57,6 @@ TODO(burdon): Diagram.
 - Hierarchy
 
 ![Feeds](./diagrams//echo-graph.drawio.svg)
-
 
 ### 1.4.3. Links
 
@@ -81,10 +72,7 @@ TODO(burdon): Diagram.
 - Filtering
 - Subscriptions
 
-
 ### 1.4.7. Branes
-
-
 
 
 ### 1.4.8. Epochs
@@ -156,15 +144,6 @@ ISSUES
 - [ ] Who initiates an epoch? E.g., leadership election; hardcoded (bot)?
 - [ ] What happens if peers join, but get "stale" messages from peers that have not yet joined the epoch?
 - [ ] What if the code changes for models.
-
-
-
-
-
-
-
-
-
 
 
 <br/><br/><br/><br/>
