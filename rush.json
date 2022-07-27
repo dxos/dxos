@@ -843,6 +843,10 @@
     //
 
     {
+      "packageName": "@dxos/wallet",
+      "projectFolder": "packages/wallet/wallet"
+    },
+    {
       "packageName": "@dxos/wallet-extension",
       "projectFolder": "packages/wallet/wallet-extension"
     },
