@@ -10,14 +10,15 @@ This document outlines the DXOS Decentralized Meta Graph (DMG).
         *   [1.1.2. Collaboration](#112-collaboration)
 *   [2. Terminology](#2-terminology)
 *   [3. Basic Concepts](#3-basic-concepts)
-    *   [3.1. Identity: Circles, Groups, and Agents](#31-identity-circles-groups-and-agents)
-        *   [3.1.1. References](#311-references)
-    *   [3.2. Information: Branes, Spaces, and Nodes](#32-information-branes-spaces-and-nodes)
-        *   [3.2.1. Consistency and Consensus](#321-consistency-and-consensus)
-        *   [3.2.2. Data Model](#322-data-model)
-        *   [3.2.3. Data Federation](#323-data-federation)
-        *   [3.2.4. References](#324-references)
-    *   [3.3. Decentralized Networks](#33-decentralized-networks)
+    *   [3.1. Decentralized Meta Graph](#31-decentralized-meta-graph)
+    *   [3.2. Identity: Circles, Groups, and Agents](#32-identity-circles-groups-and-agents)
+        *   [3.2.1. References](#321-references)
+    *   [3.3. Information: Branes, Spaces, and Nodes](#33-information-branes-spaces-and-nodes)
+        *   [3.3.1. Consistency and Consensus](#331-consistency-and-consensus)
+        *   [3.3.2. Data Model](#332-data-model)
+        *   [3.3.3. Data Federation](#333-data-federation)
+        *   [3.3.4. References](#334-references)
+    *   [3.4. Decentralized Networks](#34-decentralized-networks)
 *   [4. Notes](#4-notes)
 
 ## 1. Introduction
@@ -48,8 +49,6 @@ Post symbolic communication is when we can instead of sequencing symbols (words 
 
 > *   TODO: Motivate tangible and evocative first steps towards a new class of social networks.
 
-<br/>
-
 ## 2. Terminology
 
 ***Brane*** -
@@ -64,15 +63,20 @@ Module application component.
 ***Space*** -
 A collaborative database realm controlled by one or more agents within the network.
 
-<br/>
-
 ## 3. Basic Concepts
 
-The DMG is made up of Circles (decentralized identity) and Branes (decentralized data).
+### 3.1. Decentralized Meta Graph
 
-<img src="./diagrams/dxns-ontology.drawio.svg" />
+The Decentralized Meta Graph (DMG) is made up of Circles (decentralized identity) and Branes (decentralized data).
 
-### 3.1. Identity: Circles, Groups, and Agents
+![Meta Graph](./diagrams/dxns-ontology.drawio.svg)
+
+It is more than a graph database;
+it is a single global singleton that securely encompasses all of the information accessible to an individual Agent.
+
+![Meta Graph](./images/metagraph.jpeg)
+
+### 3.2. Identity: Circles, Groups, and Agents
 
 Participants within the DMG (both humans and autonomous systems) are called ***Agents***,
 which control their own [self-sovereign identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18) (SSI).
@@ -94,7 +98,7 @@ The system also enables the creation of ***Groups***, which are ad hoc collectio
 Groups are also referenced by Peer DIDs; the corresponding DID Document may be used to verify the management rights to the group.
 Groups may be used to implement access control for decentralized digital assets.
 
-#### 3.1.1. References
+#### 3.2.1. References
 
 *   [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
 *   [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
@@ -104,7 +108,7 @@ Groups may be used to implement access control for decentralized digital assets.
 
 <br/>
 
-### 3.2. Information: Branes, Spaces, and Nodes
+### 3.3. Information: Branes, Spaces, and Nodes
 
 The DMG consists of millions of interconnected globally identifiable database instances called ***Spaces***.
 
@@ -127,7 +131,7 @@ The complete set of interconnected spaces accessible by an agent is called a ***
 
 > *   TODO: Are Node IDs GUIDs -- or local to the Space, whereby the GUID is constructed with the Space identifier.
 
-#### 3.2.1. Consistency and Consensus
+#### 3.3.1. Consistency and Consensus
 
 Each ECHO instance is a graph database composed of elemental data structures called nodes.
 Nodes can be queried using the ECHO Graph API.
@@ -161,7 +165,7 @@ This provide a mechanism for data compression and consistency.
 > *   Explain concensus implications of epochs.
 > *   Forking
 
-#### 3.2.2. Data Model
+#### 3.3.2. Data Model
 
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
@@ -184,18 +188,18 @@ The total set of all such spaces is called a ***Brane***.
 > *   Interspace links
 > *   Brane indexing
 
-#### 3.2.3. Data Federation
+#### 3.3.3. Data Federation
 
 > *   Branes
 > *   Personal search agent
 
-#### 3.2.4. References
+#### 3.3.4. References
 
 *   [Interplanetary Linked Data IPLD](https://ipld.io/docs)
 
 <br/>
 
-### 3.3. Decentralized Networks
+### 3.4. Decentralized Networks
 
 The DMG is realized by a peer-to-peer network of services called [MESH](./mesh-spec.md).
 MESH services are coordinated by KUBE nodes that run the KORE OS daemon.
