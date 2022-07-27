@@ -3375,6 +3375,7 @@ importers:
       '@types/protocol-buffers-schema': ^3.4.1
       '@types/yargs': ~16.0.1
       array-iterate: ~2.0.1
+      chalk: ^4.1.0
       debug: ^4.3.3
       diff: ~5.1.0
       eslint: ^7.12.1
@@ -3401,6 +3402,7 @@ importers:
     dependencies:
       '@microsoft/tsdoc': 0.14.1
       array-iterate: 2.0.1
+      chalk: 4.1.2
       debug: 4.3.4
       glob: 7.1.7
       js-yaml: 4.1.0
