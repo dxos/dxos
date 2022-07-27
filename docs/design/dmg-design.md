@@ -130,7 +130,7 @@ The following example, defines a script.
         "method": "POST",
         "entry": "exec.js"
       }
-    }
+    ]
   }
 }
 ```
