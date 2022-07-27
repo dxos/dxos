@@ -25,13 +25,15 @@ export interface AddPartyOptions {
   genesisFeed: PublicKey
 }
 
+const emptyEchoMetadata = (): EchoMetadata =>({
+  version: STORAGE_VERSION,
+  parties: [],
+  created: new Date(),
+  updated: new Date()
+});
+
 export class MetadataStore {
-  private _metadata: EchoMetadata = {
-    version: STORAGE_VERSION,
-    parties: [],
-    created: new Date(),
-    updated: new Date()
-  };
+  private _metadata: EchoMetadata = emptyEchoMetadata();
 
   constructor (
     private readonly _directory: Directory
@@ -69,6 +71,7 @@ export class MetadataStore {
         if (fileLength < dataSize + 4) {
           log('Error: Metadata storage is corrupted');
           await file.close();
+          this._metadata = emptyEchoMetadata();
           return;
         }
       }
