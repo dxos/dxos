@@ -33,6 +33,7 @@ This document presents the design of the Decentralized Meta Graph (DMG).
 ![Meta Graph](./diagrams/meta-graph-subnet.drawio.svg)
 
 
+<<<<<<< HEAD
 ## Architecture
 
 > - TODO: Synopsis.
@@ -94,6 +95,10 @@ This document presents the design of the Decentralized Meta Graph (DMG).
 
 
 ### DMG Implementation
+=======
+
+### Realms
+>>>>>>> origin/main
 
 - Each KUBE Node creates a single local repo named `dmg` (`~/.kube/dmg.git`).
 - Suppose we have a Subnet controlled by `alice` with three KUBE Nodes (`a1`, `a2`, `a3`).
@@ -102,6 +107,7 @@ This document presents the design of the Decentralized Meta Graph (DMG).
 - The Subnet maintains a locally consistent repo.
 
 
+<<<<<<< HEAD
 ## Issues
 
 2022-07-26 [RB, Zhenya]
@@ -126,6 +132,8 @@ This document presents the design of the Decentralized Meta Graph (DMG).
 ## Notes
 
 
+=======
+>>>>>>> origin/main
 ```
 alice (alice.com) :: [a1, a2, a3]
     /alice/notepad
@@ -138,6 +146,12 @@ bob (bob.com) :: [b1]
         /dev
         /pub
 
+<<<<<<< HEAD
+=======
+
+#####
+
+>>>>>>> origin/main
 Browser
     https://dxos.org/.well-known
                         /status
@@ -156,9 +170,20 @@ Browser
                 - Trust based on account
             - Local (running on pcarrier.com) authority based on ssh keys and mapping within git.
 
+<<<<<<< HEAD
 - Map to realms?
 - Map path to DNS?
 
+=======
+
+
+
+
+- Map to realms?
+- Map path to DNS?
+
+
+>>>>>>> origin/main
 On Alice's workstation
 
     /refs/heads/alice/notepad
@@ -175,6 +200,14 @@ Publishing locally
 
     [DNS domain subnet]/[authority]]/[resource]
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+>>>>>>> origin/main
 //  https://notepad.rich.dxos.org
 
 - Each KUBE Node runs an HTTP server (e.g., ).
@@ -187,3 +220,38 @@ Publishing locally
 - Global namespace for resources (dxn)
 
 ```
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+## Architecture
+
+![Meta Graph](./diagrams/meta-graph-architecture.drawio.svg)
+
+![Meta Graph](./diagrams/meta-graph-schematic.drawio.svg)
+
+![Meta Graph](./diagrams/meta-graph-service-monitor.drawio.svg)
+
+
+
+
+
+## Issues
+
+2022-07-24 [RB]
+
+- What are the relationships between URL => Realm => Refs (and the implied mapping)?
+- Of course URL => Subnet, but the part of the URL that isn't just the host (i.e., subnet) consists of (possibly) a subdomain name (alice.example.com) and a path (/notepad). 
+- That's what i'm calling a "name" or DXN (i.e., alice/notepad). 
+- So a URL identifies both a Subnet and a resource Name (DXN).
+- Names (DXNs) contain both a Realm and a Resource (path). E.g., "alice.notepad" references the Realm "alice" and the Resource "notepad".
+- Questions:
+- 1. Can Realms be hierarchical (e.g., dxos.devnet vs. alice).
+- 2. Are Realms fixed to Subnets? Are they fixed to Domain names? (What if I don't have a domain name? What if I want to transfer them?). I don't think they are. 
+- 3. But if not, then how do we have globally unique Realm names?
+- 4. DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
+>>>>>>> origin/main
