@@ -2,7 +2,7 @@
 
 Generates a table of contents from auto-numbered headings.
 
-## Table of Contents <!-- @ignore -->
+## Table of Contents <!-- @toc-ignore -->
 
 <!-- @toc -->
 

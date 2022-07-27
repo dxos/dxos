@@ -1,22 +1,28 @@
-# ECHO Spec
+# ECHO Spec <!-- omit in toc -->
 
 <!-- @toc -->
 
 ## 1. Introduction
 
-ECHO (The Eventually Consistent Hierrarhical Object-store) is a peer-to-peer database.
+ECHO (The **E**ventually **C**onsistent **H**ierrarhical **O**bject store) is a peer-to-peer graph database.
 
 
-## 2. Terminology
+## 1.2. Terminology
+
+***Atom*** -
 
 ***Party*** -
 Context for collaboration and data replication.
+
+***Epoch*** -
 
 ***Feed*** -
 Append-only hash-linked datastructure containing immutable messages.
 
 ***Item*** -
 Globally addressable data object.
+
+***Link*** -
 
 ***Model*** -
 Type-specific API associated with a data Item.
@@ -25,54 +31,51 @@ Type-specific API associated with a data Item.
 Monotonic sequence number used to order messages across multiple feeds.
 
 
-## 3. Basic Concepts
+## 1.3. Basic Concepts
 
 ECHO is a decentralized graph database. 
 
 The diagram below illustrates the data processing pipeline.
 
-![Pipeline](./diagrams/echo-pipeline.drawio.svg)
 
+## 1.4. Design
 
-### Message Ordering
+### 1.4.1. Message Ordering
 
-#### Timeframes
+#### 1.4.1.1. Timeframes
 
 - Messages are written with the peer's current timeframe. This creates a partial order.
 - Message ordering is determined by available feeds and the timeframes associated with messages.
 - Clients may process messages in different order (potential discrepancies are rectified downstream by the models).
 - DAG; require party key and first feed key.
 
-
 TODO(burdon): Diagram.
 
-
-
-
-
-
-
-
-### Objects
+### 1.4.2. Object Graph
 
 - Identity
 - Hierarchy
 
-### Links
+![Feeds](./diagrams//echo-graph.drawio.svg)
 
-### Models and State Machines
+### 1.4.3. Links
+
+### 1.4.4. Models and State Machines
 
 - Pipeline fan-in/out
 
-### Schema
+### 1.4.5. Schema
 
-### Queries
+### 1.4.6. Queries
 
 - Traversal
 - Filtering
 - Subscriptions
 
-### Epochs
+### 1.4.7. Branes
+
+
+### 1.4.8. Epochs
 
 Epochs are blocks of contiguous messages spanning all peers within a party.
 They enable compression for quicker startup, and provide "sync" points for consensus and consistency.
@@ -81,19 +84,23 @@ Timeframes provide a common reference point for mutations across the feeds withi
 However, when peers are partitioned, they start to diverge from each other.
 TODO(burdon): Write up branch anaolgy.
 
-#### Control feeds
+
+![Feeds](./diagrams//echo-feeds.drawio.svg)
+
+
+#### 1.4.8.1. Control feeds
 
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
 - Each peer has a writable control feed in addition to its data (ECHO) feed.
 - Control feeds can be read and processed independently from data feeds.
 - They are piped into PartyStateMachine.
 
-#### Epoch genesis
+#### 1.4.8.2. Epoch genesis
 
 - When a peer wants to start a new epoch they write an `EpochGensisMessage` into the control feed.
 - It contains the timeframe of when the new epoch starts and CID of the data snapshot at that timeframe.
 
-#### Snapshots
+#### 1.4.8.3. Snapshots
 
 - Snapshots allow peers to bootstrap the ECHO state machine from that point in time without reading feed messages before it.
 - Snapshots are content-addressed blobs consisting of a hierarchical set of reified HALO and ECHO models.
@@ -115,9 +122,9 @@ TODO(burdon): Write up branch anaolgy.
   i.e,. that the snapshot currently being created omits certain data.
 - Bots may become file storage servers for large data sets, e.g., implementing proxy models (for thin clients).
 
-## Milestones
+## 1.5. Milestones
 
-### V0
+### 1.5.1. V0
 
 - [ ] Each model implements to/from snaphost (defined by protobuf).
   - [ ] Models may decide to discard information.
@@ -137,15 +144,6 @@ ISSUES
 - [ ] Who initiates an epoch? E.g., leadership election; hardcoded (bot)?
 - [ ] What happens if peers join, but get "stale" messages from peers that have not yet joined the epoch?
 - [ ] What if the code changes for models.
-
-
-
-
-
-
-
-
-
 
 
 <br/><br/><br/><br/>
