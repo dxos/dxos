@@ -67,7 +67,8 @@ export class MetadataStore {
       // Sanity check.
       {
         if (fileLength < dataSize + 4) {
-          console.log('Sanity!!!');
+          log('Error: Metadata storage is corrupted');
+          await file.close();
           return;
         }
       }
