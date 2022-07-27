@@ -34,6 +34,8 @@
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",
