@@ -16,8 +16,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha 'src/**/*.browser-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
