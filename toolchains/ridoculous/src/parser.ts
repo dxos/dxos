@@ -17,12 +17,18 @@ interface Options {
   autoNumber?: boolean
   baseDir?: string
   html?: boolean
+  verbose?: boolean
 }
 
 /**
- * Generate parser.
+ * Create remark parser with plugins.
  */
-export const createParser = ({ autoNumber, baseDir, html }: Options): any => {
+export const createParser = ({
+  autoNumber,
+  baseDir,
+  html,
+  verbose
+}: Options): any => {
   // https://github.com/remarkjs/awesome-remark
   const unified = remark()
     // https://github.com/remarkjs/remark-gfm
@@ -35,11 +41,11 @@ export const createParser = ({ autoNumber, baseDir, html }: Options): any => {
     // TODO(burdon): Why TS errors?
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    .use(remarkSnippets, { baseDir })
+    .use(remarkSnippets)
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    .use(remarkLinker, { baseDir })
+    .use(remarkLinker)
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -51,5 +57,6 @@ export const createParser = ({ autoNumber, baseDir, html }: Options): any => {
       .use(rehypeStringify as any);
   }
 
-  return unified;
+  // NOTE: Call .data() to set custom options.
+  return unified.data('config', { baseDir, verbose });
 };

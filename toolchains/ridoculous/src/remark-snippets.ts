@@ -3,15 +3,17 @@
 //
 
 import { TSDocParser } from '@microsoft/tsdoc';
+import assert from 'assert';
+import chalk from 'chalk';
 import debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as process from 'process';
 import * as protobuf from 'protocol-buffers-schema';
 import { u } from 'unist-builder';
 
 import { removeTrailing, visitDirectives } from './util.js';
 
+const log = debug('dxos:ridoculous:debug');
 const error = debug('dxos:ridoculous:error');
 
 type Type = {
@@ -68,73 +70,78 @@ const langType: { [key: string]: Type } = {
   }
 };
 
-interface Options {
-  baseDir?: string
-}
-
 /**
  * Import snippets.
  * See https://www.gatsbyjs.com/plugins/gatsby-remark-embed-snippet/?=snippet
  * Snippets are contains within comment blocks.
  * The resulting code snippet is inserted above or replaces an existing block.
  */
-// TODO(burdon): Create test.
-export const remarkSnippets = ({ baseDir = process.cwd() }: Options = {}) => (tree: any) => {
-  // visit(tree, 'code', (node, i, parent) => {
-  //   console.log('>>>', node);
-  // });
+export function remarkSnippets () {
+  const { config } = this.data();
+  assert(config);
 
-  visitDirectives(tree, (directive, args, node, i, parent) => {
-    try {
-      switch (directive) {
-        case 'code': {
-          const [file, hash] = args[0].split('#');
-          const addLink = args[1] === 'link';
-          const filePath = path.join(baseDir, file);
-          let content = fs.readFileSync(filePath, 'utf8');
-          const { ext } = path.parse(file);
-          const { lang, parser } = langType[ext];
-          if (lang) {
-            content = removeTrailing(parser?.(content, { hash }) ?? content);
+  return (tree: any, file) => {
+    const { baseDir = file.dirname } = config;
 
-            // Check for code block.
-            const next = parent.children[i! + 1];
-            const link = parent.children[i! + 2];
-            if (next?.type === 'code') {
-              Object.assign(next, {
-                lang,
-                value: content
-              });
-            } else {
-              // https://github.com/syntax-tree/unist-builder
-              const code = u('code', { lang, value: content });
-              parent.children.splice(i! + 1, 0, code);
+    // visit(tree, 'code', (node, i, parent) => {
+    //   console.log('>>>', node);
+    // });
+
+    visitDirectives(tree, (directive, args, node, i, parent) => {
+      try {
+        switch (directive) {
+          case 'code': {
+            const [file, hash] = args[0].split('#');
+            const addLink = args[1] === 'link';
+
+            const { ext } = path.parse(file);
+            const { lang, parser } = langType[ext];
+            const filePath = path.join(baseDir, file);
+            log(`Reading snippet: ${chalk.yellow(filePath)}`);
+
+            let content = fs.readFileSync(filePath, 'utf8');
+            if (lang) {
+              content = removeTrailing(parser?.(content, { hash }) ?? content);
+
+              // Check for code block.
+              const next = parent.children[i! + 1];
+              const link = parent.children[i! + 2];
+              if (next?.type === 'code') {
+                Object.assign(next, {
+                  lang,
+                  value: content
+                });
+              } else {
+                // https://github.com/syntax-tree/unist-builder
+                const code = u('code', { lang, value: content });
+                parent.children.splice(i! + 1, 0, code);
+              }
+
+              if (addLink && false) {
+                // Check exists.
+                const exists = (link?.type === 'paragraph' &&
+                  link.children[0]?.type === 'html' &&
+                  link.children[0]?.value === '<sup>');
+
+                // TODO(burdon): Create realtive link.
+                const newLink = u('paragraph', {}, [
+                  u('html', { value: '<sup>' }),
+                  u('link', { url: filePath }, [
+                    u('text', { value: 'source code' })
+                  ]),
+                  u('html', { value: '</sup>' })
+                ]);
+
+                parent.children.splice(i! + 2, exists ? 1 : 0, newLink);
+              }
             }
 
-            if (addLink && false) {
-              // Check exists.
-              const exists = (link?.type === 'paragraph' &&
-                link.children[0]?.type === 'html' &&
-                link.children[0]?.value === '<sup>');
-
-              // TODO(burdon): Create realtive link.
-              const newLink = u('paragraph', {}, [
-                u('html', { value: '<sup>' }),
-                u('link', { url: filePath }, [
-                  u('text', { value: 'source code' })
-                ]),
-                u('html', { value: '</sup>' })
-              ]);
-
-              parent.children.splice(i! + 2, exists ? 1 : 0, newLink);
-            }
+            break;
           }
-
-          break;
         }
+      } catch (err) {
+        error(String(err));
       }
-    } catch (err) {
-      error(String(err));
-    }
-  });
-};
+    });
+  };
+}

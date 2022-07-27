@@ -19,7 +19,7 @@ test('remarkHeadings', () => {
     ]),
     u('heading', { depth: 2 }, [
       u('text', { value: 'TOC' }),
-      u('html', { value: '<!-- @ignore -->' })
+      u('html', { value: '<!-- @toc-ignore -->' })
     ]),
     u('html', { value: '<!-- @toc -->' }),
     u('heading', { depth: 2 }, [
