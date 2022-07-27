@@ -32,9 +32,12 @@ Example of the config in an individual package:
       // Includes default passes such as tsc, protobuf, linter...
       "@dxos/toolchain/defaults", 
     ],
+    // Per-pass configuration
     "config": {
-      "entrypoint": "src/index.ts",
-      "out": "dist/bundle.js"
+      "@dxos/toolchain-esbuild": {
+        "entrypoint": "src/index.ts",
+        "out": "dist/bundle.js"
+      }
     },
     "tasks": {
       "build": [
