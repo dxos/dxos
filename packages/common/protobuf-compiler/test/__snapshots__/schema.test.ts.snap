@@ -66,8 +66,8 @@ export interface WithDefaultField {
  *   {@link file://./../../../extensions.proto}
  */
 export interface ContainingMessageWithExtensions {
-    str: string;
-    msg: WithDefaultField;
+    str?: string;
+    msg?: WithDefaultField;
 }
 
 dxos/test/testfoo.ts:
