@@ -69,21 +69,15 @@ export class MetadataStore {
       // Sanity check.
       {
         if (fileLength < dataSize + 4) {
-          log('Error: Metadata storage is corrupted');
-          await file.close();
-          this._metadata = emptyEchoMetadata();
-          return;
+          throw new Error('Metadata storage is corrupted');
         }
       }
 
       const data = await file.read(4, dataSize);
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
-      if (err.code === 'ENOENT') {
-        return;
-      } else {
-        throw err;
-      }
+      log(`Error loading metadata: ${err}`);
+      this._metadata = emptyEchoMetadata();
     } finally {
       await file.close();
     }
