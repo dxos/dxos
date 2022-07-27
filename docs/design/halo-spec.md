@@ -1,4 +1,4 @@
-# HALO Spec <!-- omit in toc -->
+# HALO Spec <!-- @toc-skip -->
 
 <!-- @toc -->
 
