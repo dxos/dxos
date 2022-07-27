@@ -82,23 +82,26 @@ They enable compression for quicker startup, and provide "sync" points for conse
 
 Timeframes provide a common reference point for mutations across the feeds within a party.
 However, when peers are partitioned, they start to diverge from each other.
-TODO(burdon): Write up branch anaolgy.
+
+> - TODO(burdon): Write up branch anaolgy.
 
 
 ![Feeds](./diagrams//echo-feeds.drawio.svg)
 
 
-#### 1.4.8.1. Control feeds
+#### 1.4.8.1. Control Feeds
 
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
 - Each peer has a writable control feed in addition to its data (ECHO) feed.
 - Control feeds can be read and processed independently from data feeds.
-- They are piped into PartyStateMachine.
+- They are piped into `PartyStateMachine`.
 
-#### 1.4.8.2. Epoch genesis
+
+#### 1.4.8.2. Epoch Genesis
 
 - When a peer wants to start a new epoch they write an `EpochGensisMessage` into the control feed.
 - It contains the timeframe of when the new epoch starts and CID of the data snapshot at that timeframe.
+
 
 #### 1.4.8.3. Snapshots
 
