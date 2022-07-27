@@ -56,12 +56,23 @@ export class MetadataStore {
   async load (): Promise<void> {
     const file = this._directory.createOrOpen('EchoMetadata');
     try {
-      const { size } = await file.stat();
-      if (size === 0) {
+      const { size: fileLength } = await file.stat();
+      if (fileLength < 4) {
         return;
       }
+      // Loading file size from first 4 bytes.
+      const dataSize = fromBytesInt32(await file.read(0, 4));
+      log(`Load: data size ${dataSize}`);
 
-      const data = await file.read(0, size);
+      // Sanity check.
+      {
+        if (fileLength < dataSize + 4) {
+          console.log('Sanity!!!');
+          return;
+        }
+      }
+
+      const data = await file.read(4, dataSize);
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
@@ -87,22 +98,14 @@ export class MetadataStore {
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
-      await file.write(0, encoded);
 
-      // Truncate the rest of the file.
-      {
-        const { size } = await file.stat();
-        if (size > encoded.length) {
-          await file.truncate(encoded.length, size);
-        }
-      }
+      // Saving file size at first 4 bytes.
+      log(`Save: data size ${encoded.length}`);
+      await file.write(0, toBytesInt32(encoded.length));
 
-      // Sanity check.
-      const { size } = await file.stat();
-      if (size !== encoded.length) {
-        console.log('SANITY!');
-      }
-      assert(size === encoded.length);
+      // Saving data.
+      await file.write(4, encoded);
+
     } finally {
       await file.close();
     }
@@ -196,3 +199,11 @@ export class MetadataStore {
     await this._save();
   }
 }
+
+const toBytesInt32 = (num: number) => {
+  const buf = Buffer.alloc(4);
+  buf.writeInt32LE(num);
+  return buf;
+};
+
+const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE();
