@@ -18,7 +18,7 @@ const tree = u('root', [
 
 test('remarkSnippets', () => {
   // Process content.
-  remarkSnippets({ baseDir: './testing' })(tree);
+  remarkSnippets()(tree, { baseDir: './testing' });
 
   const { type, lang } = tree.children[1] as any;
   expect(type).toBe('code');
