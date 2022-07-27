@@ -202,8 +202,8 @@ export class MetadataStore {
 
 const toBytesInt32 = (num: number) => {
   const buf = Buffer.alloc(4);
-  buf.writeInt32LE(num);
+  buf.writeInt32LE(num, 0);
   return buf;
 };
 
-const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE();
+const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
