@@ -21,7 +21,11 @@ Example of the config in an individual package:
   "name": "@dxos/echo-db",
   "version": "1.2.3",
   "scripts": {
-    "build"
+    // Just aliases for commands in toolchain. We shouldn't 
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "test": "toolchain test",
+    "lint": "toolchain lint",
   },
   "toolchain": {
     "extends": [
@@ -37,6 +41,13 @@ Example of the config in an individual package:
         // Can use + to add a pass, or - to remove a pass.
         // Existing passes can be referenced for ordering.
         "+@dxos/toolchain-esbuild"
+      ],
+      "test": [
+        // A custom shell pass that will be executed before jest.
+        "shell:echo 'Before test'",
+        // Use jest instead of mocha.
+        "-@dxos/toolchain/pass/mocha",
+        "+@dxos/toolchain/pass/jest"
       ]
     }
   },
@@ -53,10 +64,10 @@ The each pass exports functions to:
 
 - Generate config files: used to generate repeated config files like tsconfig.json or .eslintrc.js.
 Those configs should be put in .gitignore. And preferably hidden from project view in IDEs.
-- Execute the build step: building package files, running the linter or running other checks.
+- Execute the pass: building package files, running the linter or running other checks.
 
 
-Example of a step definition:
+Example of a pass definition:
 
 ```typescript
 // In @dxos/toolchain-tsc
@@ -76,8 +87,8 @@ export async function generateConfig(package: Package, config: any) {
   await package.writeJson('tsconfig.json', mergedConfig)
 }
 
-export async function build(package: Package, config: any, args: string[]) {
-  await exec('tsc');
+export async function run(package: Package, config: any, args: string[]) {
+  await exec('tsc', args);
 }
 ```
 
@@ -98,6 +109,8 @@ toolchain --generate build
 # Execute a specific job.
 toolchain --job @dxos/toolchain-eslint
 ```
+
+Toolchain can be installed globally so that toolchain commands can be executed without `yarn`, `npm`, `rushx`, or others.
 
 ## Package resolution
 
