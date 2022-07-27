@@ -811,10 +811,6 @@
       "projectFolder": "packages/demos/lexical-editor"
     },
     {
-      "packageName": "@dxos/todos",
-      "projectFolder": "packages/demos/todos"
-    },
-    {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/demos/tutorials-tasks-app"
     },
@@ -842,6 +838,10 @@
     // NOTE: KEEP SORTED
     //
 
+    {
+      "packageName": "@dxos/wallet",
+      "projectFolder": "packages/wallet/wallet"
+    },
     {
       "packageName": "@dxos/wallet-extension",
       "projectFolder": "packages/wallet/wallet-extension"
