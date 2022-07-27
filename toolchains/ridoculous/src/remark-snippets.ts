@@ -117,6 +117,7 @@ export function remarkSnippets () {
                 parent.children.splice(i! + 1, 0, code);
               }
 
+              // eslint-disable-next-line no-constant-condition
               if (addLink && false) {
                 // Check exists.
                 const exists = (link?.type === 'paragraph' &&
