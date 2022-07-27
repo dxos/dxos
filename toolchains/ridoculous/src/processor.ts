@@ -31,7 +31,7 @@ export const processFiles = async ({
 }: Options = {}) => {
   const parser = createParser({ autoNumber, baseDir, html, verbose });
 
-  const globFiles = glob.sync(files);
+  const globFiles = glob.sync(path.join(baseDir ?? '', files));
   for (const filename of globFiles) {
     if (dryRun || verbose) {
       console.log(`Parsing: ${chalk.green(filename)}`);

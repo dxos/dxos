@@ -17,7 +17,7 @@ const main = () => {
       type: 'boolean'
     })
     .option('baseDir', {
-      description: 'Root directory for referenced files (otherwise assumes relative)',
+      description: 'Root directory (otherwise assumes relative)',
       type: 'string'
     })
     .option('dryRun', {

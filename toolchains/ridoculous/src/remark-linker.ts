@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { visit } from 'unist-util-visit';
 
 // TODO(burdon): Link line number in Github?
@@ -11,10 +10,8 @@ import { visit } from 'unist-util-visit';
 /**
  * Validate links.
  */
+// eslint-disable-next-line
 export function remarkLinker () {
-  const { config } = this.data();
-  assert(config);
-
   return (tree: any) => {
     visit(tree, 'link', (node) => {
       // const { url } = node;
