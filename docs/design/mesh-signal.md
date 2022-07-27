@@ -2,6 +2,12 @@
 
 <!-- @toc -->
 
+*   [1. Introduction](#1-introduction)
+*   [2. Basic Concepts](#2-basic-concepts)
+*   [3. Protocols](#3-protocols)
+*   [4. Design](#4-design)
+    *   [4.1. Signaling](#41-signaling)
+
 ## 1. Introduction
 
 Please see the [MESH spec](mesh-spec.md) for background and terminology.
@@ -12,7 +18,7 @@ KUBE instances, hence the need for the signaling service to work across hosts. T
 of such a distributed signaling service by revising the client-host protocol and introducing host-to-host
 communication.
 
-## Design overview
+## 2. Basic Concepts
 
 Signaling hosts participate in a signaling network, and discover each other through libp2p's DHT, possibly bootstrapped only
 from other signaling hosts and/or kubes only.
@@ -31,8 +37,7 @@ Messages can be ciphered and/or signed; this is left as an application concern.
 
 Peer to peer messages (unlike swarm events) could use point-to-point connections rather than Pub/Sub.
 
-
-## Protocols
+## 3. Protocols
 
 ```protobuf
 syntax = "proto3";
@@ -106,50 +111,53 @@ service Signal {
 }
 ```
 
-## Kube state
+## 4. Design
 
 Each kube maintains:
-- as needed, a subscription to their own topic;
-- per local participant, lists of:
-  - swarm memberships with their announcement timeout (announcements must be broadcast periodically, and exits are
-    made explicit whenever possible, including at kube soft shutdown);
-  - subscriptions for messages;
-- per swarm with local participants (with a grace period after disconnects so participants can reconnect smoothly):
-  - a subscription to the swarm's topic;
-  - a list of known participants, updated through announcements and their expiries;
 
-## A P2P connection: sequence diagram
+*   as needed, a subscription to their own topic;
+*   per local participant, lists of:
+    *   swarm memberships with their announcement timeout (announcements must be broadcast periodically, and exits are
+        made explicit whenever possible, including at kube soft shutdown);
+    *   subscriptions for messages;
+*   per swarm with local participants (with a grace period after disconnects so participants can reconnect smoothly):
+    *   a subscription to the swarm's topic;
+    *   a list of known participants, updated through announcements and their expiries;
 
+### 4.1. Signaling
+
+The sequence diagram below illustrates communications between peers.
 This omits STUN/TURN to focus on communications between peers, their signaling services, and the signaling network.
 
 ![Diagram of a P2P connection](diagrams/puml/mesh-signal-multi-host-join.svg)
 
-1. *Prelude: Bob joins.* Bob is already listening for their messages, and has joined `s0`.
+1.  *Prelude: Bob joins.* Bob is already listening for their messages, and has joined `s0`.
 
-2. *Alice's arrival.* Upon arrival, Alice subscribes to receive her messages. She joins `s0`.
-   This causes the kube to request announces back, and the family's kube announces back Bob.
-   This also causes the kube to announce her, which gets to Bob.
+2.  *Alice's arrival.* Upon arrival, Alice subscribes to receive her messages. She joins `s0`.
+    This causes the kube to request announces back, and the family's kube announces back Bob.
+    This also causes the kube to announce her, which gets to Bob.
 
-3. *Messaging.* As Alice initiates a connection with Bob, she sends a message to him.
-   Further messages might be exchanged between Alice and Bob through their respective kubes and topics.
+3.  *Messaging.* As Alice initiates a connection with Bob, she sends a message to him.
+    Further messages might be exchanged between Alice and Bob through their respective kubes and topics.
 
-4. *Alice's departure.*
-   Later, Alice leaves the swarm.
-   This leads her kube to announce her departure,
-   letting Bob's kube refresh its swarm membership table such that future joiners do not discover her immediately,
-   and notifying Bob of her departure immediately.
-   Because Alice was the last active member of `s0` on her kube, it unsubscribes from `s0`.
-   Because it no longer needs to receive lookup responses, it unsubscribes from `akube`.
+4.  *Alice's departure.*
+    Later, Alice leaves the swarm.
+    This leads her kube to announce her departure,
+    letting Bob's kube refresh its swarm membership table such that future joiners do not discover her immediately,
+    and notifying Bob of her departure immediately.
+    Because Alice was the last active member of `s0` on her kube, it unsubscribes from `s0`.
+    Because it no longer needs to receive lookup responses, it unsubscribes from `akube`.
 
-5. Charlie joins the family's kube.
+5.  Charlie joins the family's kube.
 
-6. *Bob's re-broadcast.*
-   After a while, Bob's kube reannounces Bob's swarm membership such that any kube's swarm membership table considers it
-   fresh enough to be discovered by incoming clients and not announced as having left to existing ones.
-   
-7. *Bob's departure.*
-   Eventually, Bob gets disconnected from their kube. After a timeout, Bob's kube proceeds to announce the departure to
-  the network and Charlie, and unsubscribe from their peer events.
+6.  *Bob's re-broadcast.*
+    After a while, Bob's kube reannounces Bob's swarm membership such that any kube's swarm membership table considers it
+    fresh enough to be discovered by incoming clients and not announced as having left to existing ones.
 
-8. *The family kube shuts down.*
-   Client streams are closed and topics unsubscribed from. Departures are announced.
+7.  *Bob's departure.*
+    Eventually, Bob gets disconnected from their kube. After a timeout, Bob's kube proceeds to announce the departure to
+    the network and Charlie, and unsubscribe from their peer events.
+
+8.  *The family kube shuts down.*
+    Client streams are closed and topics unsubscribed from. Departures are announced.
+

@@ -2,12 +2,27 @@
 
 This document outlines the DXOS Decentralized Meta Graph (DMG).
 
+<!-- @toc -->
 
-<br/>
+*   [1. Introduction](#1-introduction)
+    *   [1.1. Motivation](#11-motivation)
+        *   [1.1.1. Information Management](#111-information-management)
+        *   [1.1.2. Collaboration](#112-collaboration)
+*   [2. Terminology](#2-terminology)
+*   [3. Basic Concepts](#3-basic-concepts)
+    *   [3.1. Identity: Circles, Groups, and Agents](#31-identity-circles-groups-and-agents)
+        *   [3.1.1. References](#311-references)
+    *   [3.2. Information: Branes, Spaces, and Nodes](#32-information-branes-spaces-and-nodes)
+        *   [3.2.1. Consistency and Consensus](#321-consistency-and-consensus)
+        *   [3.2.2. Data Model](#322-data-model)
+        *   [3.2.3. Data Federation](#323-data-federation)
+        *   [3.2.4. References](#324-references)
+    *   [3.3. Decentralized Networks](#33-decentralized-networks)
+*   [4. Notes](#4-notes)
 
 ## 1. Introduction
 
-### 1.1 Motivation
+### 1.1. Motivation
 
 As humans we interact with many different applications and services, each of which have different user interfaces.
 Many systems share similar conceptual aspects, for example with respect to identity and access control, and the representation of data (files, tables, etc.)
@@ -17,23 +32,21 @@ Some smaller subset of activities may share a common implementation (e.g., Notio
 The first user-facing applications were created on early operating systems such as the [Alto Exec](https://en.wikipedia.org/wiki/Xerox_Alto) developed by Xeros PARC, which introduced for the first time the [desktop metaphor](https://en.wikipedia.org/wiki/Desktop_metaphor).
 The Apple Lisa and then Macintosh borrowed these concepts and brought them to the mainstream market.
 
-
 Industrial age metaphors
 
 Post symbolic communication is when we can instead of sequencing symbols (words and sentences) to ascribe ideas, we can just materialize the thing we're talking about
 
-#### Personal Information Management
+#### 1.1.1. Information Management
 
-#### Team Collaboration
+#### 1.1.2. Collaboration
 
-- Our professional and social networks are one of our most valuable assets.
-- Social networks suck; they don't serve us.
-- We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
-- HALO and ECHO define low-level protocols that represent identity and information;
-  MESH and KUBE provide the building blocks to support such systems.
+*   Our professional and social networks are one of our most valuable assets.
+*   Social networks suck; they don't serve us.
+*   We need fundamental internet-scale protocols to build more advanced applicaitons and systems.
+*   HALO and ECHO define low-level protocols that represent identity and information;
+    MESH and KUBE provide the building blocks to support such systems.
 
-> - TODO: Motivate tangible and evocative first steps towards a new class of social networks.
-
+> *   TODO: Motivate tangible and evocative first steps towards a new class of social networks.
 
 <br/>
 
@@ -51,7 +64,6 @@ Module application component.
 ***Space*** -
 A collaborative database realm controlled by one or more agents within the network.
 
-
 <br/>
 
 ## 3. Basic Concepts
@@ -60,8 +72,7 @@ The DMG is made up of Circles (decentralized identity) and Branes (decentralized
 
 <img src="./diagrams/dxns-ontology.drawio.svg" />
 
-
-### 3.1 Identity: Circles, Groups, and Agents
+### 3.1. Identity: Circles, Groups, and Agents
 
 Participants within the DMG (both humans and autonomous systems) are called ***Agents***,
 which control their own [self-sovereign identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18) (SSI).
@@ -83,49 +94,46 @@ The system also enables the creation of ***Groups***, which are ad hoc collectio
 Groups are also referenced by Peer DIDs; the corresponding DID Document may be used to verify the management rights to the group.
 Groups may be used to implement access control for decentralized digital assets.
 
+#### 3.1.1. References
 
-#### References
-
-- [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
-- [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
-- [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec)
-- [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
-- [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
-
+*   [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
+*   [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
+*   [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec)
+*   [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
+*   [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
 
 <br/>
 
-### 3.2 Information: Branes, Spaces, and Nodes
+### 3.2. Information: Branes, Spaces, and Nodes
 
 The DMG consists of millions of interconnected globally identifiable database instances called ***Spaces***.
 
 Spaces are graph databases that contain atomic data elements called ***Nodes***.
 Spaces are implemented using secure and privacy-preserving [ECHO](./echo-spec.md) peer-to-peer databases.
-The graph is traversable using the [LINK] ECHO Graph API.
+The graph is traversable using the \[LINK] ECHO Graph API.
 
-> - TODO: Spaces were previously called Parties. Change use of Party for ad hoc sessions?
-> - TODO: Rename Nodes to Atoms?
-> - TODO: Spaces are globally addressable digital assets.
-> - TODO: Define Branespace.
+> *   TODO: Spaces were previously called Parties. Change use of Party for ad hoc sessions?
+> *   TODO: Rename Nodes to Atoms?
+> *   TODO: Spaces are globally addressable digital assets.
+> *   TODO: Define Branespace.
 
 Nodes are identifiable data structures that are constructed and accessed using one of an extensible set of ***Model*** APIs.
 Models provide convenient APIs representing different complex data structures with specific distributed consensus mechanisms.
 For example, models may represent text documents, hierarchical structured documents, messaging channels, game states, and other state machines.
 
 Spaces are digital assets that are created and controlled by groups of agents.
-Agents maintain ownership and access control credentials within their HALO. 
+Agents maintain ownership and access control credentials within their HALO.
 The complete set of interconnected spaces accessible by an agent is called a ***Brane***.
 
-> - TODO: Are Node IDs GUIDs -- or local to the Space, whereby the GUID is constructed with the Space identifier.
+> *   TODO: Are Node IDs GUIDs -- or local to the Space, whereby the GUID is constructed with the Space identifier.
 
-
-#### 3.2.1 Consistency and Consensus
+#### 3.2.1. Consistency and Consensus
 
 Each ECHO instance is a graph database composed of elemental data structures called nodes.
 Nodes can be queried using the ECHO Graph API.
 
-- TODO: Individual nodes are accessed using their associated model API.
-- TODO: Different model APIs provide different consistency capabilities.
+*   TODO: Individual nodes are accessed using their associated model API.
+*   TODO: Different model APIs provide different consistency capabilities.
 
 Nodes are constructed and updated by ***mutations***.
 Mutations are atomic transformations that are applied to the associated node's state machine.
@@ -150,67 +158,62 @@ These snapshots are stored persistently.
 Peers are then able to discard the preceeding mutation logs leading up to the start of the current epoch.
 This provide a mechanism for data compression and consistency.
 
-> - Explain concensus implications of epochs.
-> - Forking
+> *   Explain concensus implications of epochs.
+> *   Forking
 
-
-#### 3.2.2 Data Model
+#### 3.2.2. Data Model
 
 Each ECHO database instance is represented as a shared ***Space***.
 It consists of a graph of linked nodes.
 
 <img src="./diagrams/graph/echo-space.svg" width="480" />
 
-> - Graph Queries, subscriptions, filtering
-> - Schema, protocol buffers, versions
-> - CRDTs (key-value, structured, text, custom)
-> - DXNS type system
-> - Nodes, links, and files
-> - IPLD, codecs, protocol buffers
-> - Models and state machine
-
+> *   Graph Queries, subscriptions, filtering
+> *   Schema, protocol buffers, versions
+> *   CRDTs (key-value, structured, text, custom)
+> *   DXNS type system
+> *   Nodes, links, and files
+> *   IPLD, codecs, protocol buffers
+> *   Models and state machine
 
 Agents may have access to an unlimited number of private and collaborative spaces.
 The total set of all such spaces is called a ***Brane***.
 
 <img src="./diagrams/graph/echo-brane.svg" width="480" />
 
-> - Interspace links
-> - Brane indexing
+> *   Interspace links
+> *   Brane indexing
 
+#### 3.2.3. Data Federation
 
-#### 3.2.3 Data Federation
+> *   Branes
+> *   Personal search agent
 
-> - Branes
-> - Personal search agent
+#### 3.2.4. References
 
-
-#### References
-
-- [Interplanetary Linked Data IPLD](https://ipld.io/docs)
-
+*   [Interplanetary Linked Data IPLD](https://ipld.io/docs)
 
 <br/>
 
-### 3.3 Decentralized Networks
+### 3.3. Decentralized Networks
 
 The DMG is realized by a peer-to-peer network of services called [MESH](./mesh-spec.md).
 MESH services are coordinated by KUBE nodes that run the KORE OS daemon.
 
 DXOS clients may connect to each other directly via a peer-to-peer transport such as WebRTC.
-These connections are mediated by a network of signaling services which implement a DHT using libp2p PubSub. 
+These connections are mediated by a network of signaling services which implement a DHT using libp2p PubSub.
 
 <img src="./diagrams/graph/mesh-signaling.svg" width="480" />
 
 Client applications connect to one or more signaling servers and register their IP address (and other metadata) using a ***discovery key*** shared by other peers with which they want to connect,.
 The discovery key is typically the hash of a public key associated with a decentralized digital asset, such as an ECHO Space.
 
-> - TODO: Generalize DHT for discoverable digital assets? I.e., not just peers? E.g., local/global DXNS?
-
+> *   TODO: Generalize DHT for discoverable digital assets? I.e., not just peers? E.g., local/global DXNS?
 
 <br/>
 
-## Notes
+## 4. Notes
 
-> - TODO: Reconcile with HALO, ECHO, MESH specs.
-> - https://www.inkandswitch.com/local-first 
+> *   TODO: Reconcile with HALO, ECHO, MESH specs.
+> *   <https://www.inkandswitch.com/local-first>
+

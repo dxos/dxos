@@ -4,7 +4,7 @@ Here is a typescript file:
 
 <!-- @code(../src/test.ts) -->
 
-Here is a [protobuf](./src/test.proto) schema:
+Here is a [protobuf](../src/test.proto) schema:
 
 <!-- @code(../src/test.proto, link) -->
 

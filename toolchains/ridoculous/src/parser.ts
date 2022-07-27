@@ -57,6 +57,7 @@ export const createParser = ({
       .use(rehypeStringify as any);
   }
 
-  // NOTE: Call .data() to set custom options.
-  return unified.data('config', { baseDir, verbose });
+  return unified
+    // Custom options available to plugins.
+    .data('config', { baseDir, verbose });
 };

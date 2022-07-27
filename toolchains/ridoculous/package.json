@@ -15,7 +15,7 @@
     "info": "tsc --showConfig | jq",
     "lint": "eslint .",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
-    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md'",
+    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose",
     "test": "mocha"
   },
   "dependencies": {

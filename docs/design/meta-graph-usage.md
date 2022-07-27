@@ -1,18 +1,30 @@
 # The DXOS Meta Graph
 
+<!-- @toc -->
+
+*   [1. Introduction](#1-introduction)
+*   [2. Basic Concepts](#2-basic-concepts)
+    *   [2.1. Decentralized Identity (HALO)](#21-decentralized-identity-halo)
+        *   [2.1.1. Self-Sovereign Identity](#211-self-sovereign-identity)
+        *   [2.1.2. Social Networks](#212-social-networks)
+    *   [2.2. Decentralized Data (ECHO)](#22-decentralized-data-echo)
+    *   [2.3. Decentralized Services (KUBE + MESH)](#23-decentralized-services-kube--mesh)
+    *   [2.4. Decentralized Naming Service (DXNS)](#24-decentralized-naming-service-dxns)
+*   [3. Reference](#3-reference)
+*   [4. Notes](#4-notes)
+
 ## 1. Introduction
 
 The DMG is a decentralized social network.
 It consists of multiple interconnected decentralized networks:
 
-1. `HALO`: Identity and social networks
-2. `ECHO`: Realtime data
-3. `MESH`: Peer-to-peer networks
-4. `KUBE`: Peer-to-peer services
-5. `DXNS`: Discovery and naming service
+1.  `HALO`: Identity and social networks
+2.  `ECHO`: Realtime data
+3.  `MESH`: Peer-to-peer networks
+4.  `KUBE`: Peer-to-peer services
+5.  `DXNS`: Discovery and naming service
 
-> - TDOO: Explain in more detail. 
-
+> *   TDOO: Explain in more detail.
 
 ## 2. Basic Concepts
 
@@ -28,12 +40,11 @@ To install the OS/X desktop app and menubar, install the native application.
 brew install dx
 ```
 
-> - TODO: dx is still available.
+> *   TODO: dx is still available.
 
+### 2.1. Decentralized Identity (HALO)
 
-### 2.1 Decentralized Identity (HALO)
-
-#### 2.1.1 Self-Sovereign Identity
+#### 2.1.1. Self-Sovereign Identity
 
 Create your identity.
 
@@ -50,10 +61,9 @@ id_dxos
 id_dxos.pub
 ```
 
-> - TODO: Password to encrypt local HALO.
+> *   TODO: Password to encrypt local HALO.
 
-
-#### 2.1.2 Social Networks
+#### 2.1.2. Social Networks
 
 Create a URL containing a one-time use invitation token.
 
@@ -72,11 +82,11 @@ Alternativerly, create a QR code and send this to your friend.
 Created: ~/dxos-qr.png
 ```
 
-> - TODO: Link contains token but also link to download client.
+> *   TODO: Link contains token but also link to download client.
 
 Connect to the MESH network and ACK the incoming friend requests.
 
-> - TODO: Interactive vs. non-interactive mode?
+> *   TODO: Interactive vs. non-interactive mode?
 
 ```bash
 > dx mesh connect
@@ -92,11 +102,10 @@ List friends stored in your HALO address book.
 $ Bob
 ```
 
-> - TODO: Keybase-like Mobile app, OSX menubar, browser extension, etc.
-> - TODO: DIDs
+> *   TODO: Keybase-like Mobile app, OSX menubar, browser extension, etc.
+> *   TODO: DIDs
 
-
-### 2.2 Decentralized Data (ECHO)
+### 2.2. Decentralized Data (ECHO)
 
 Create a new ECHO party and create some data.
 
@@ -166,12 +175,11 @@ Create a read-only feed for the party.
 https://example.com/echo/Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u
 ```
 
-> - TODO: ECHO streams/feeds; KUBE servers support WebSub.
-> - TODO: IPLD graph: ECHO + IPFS.
-> - TODO: Messaging.
+> *   TODO: ECHO streams/feeds; KUBE servers support WebSub.
+> *   TODO: IPLD graph: ECHO + IPFS.
+> *   TODO: Messaging.
 
-
-### 2.3 Decentralized Services (KUBE + MESH)
+### 2.3. Decentralized Services (KUBE + MESH)
 
 Install and start a KUBE daemon.
 
@@ -189,41 +197,36 @@ Ping the daemon.
 }
 ```
 
-> - TODO: Detect part of MESH network.
-> - TODO: List services .well-known.
+> *   TODO: Detect part of MESH network.
+> *   TODO: List services .well-known.
 
-
-### 2.4 Decentralized Naming Service (DXNS)
+### 2.4. Decentralized Naming Service (DXNS)
 
 ```bash
 > dx ns list
 ```
 
-> - TODO: Discovery.
-> - TODO: Security concerns?
+> *   TODO: Discovery.
+> *   TODO: Security concerns?
 
+## 3. Reference
 
-## Reference
+*   [FOAF](https://en.wikipedia.org/wiki/FOAF_\(ontology\))
+*   [Keybase](https://keybase.io)
+*   [Diaspora](https://diasporafoundation.org/)
+*   [WebSub](https://www.w3.org/TR/websub)
+*   [IPLD](https://ipld.io)
+*   [Decentralized Identifiers](https://www.w3.org/TR/did-core)
+*   [Verifiable Credentials](https://www.w3.org/TR/vc-data-model)
+*   [Semantic Web](https://www.w3.org/standards/semanticweb)
+*   [Solid](https://solidproject.org)
 
-- [FOAF](https://en.wikipedia.org/wiki/FOAF_(ontology))
-- [Keybase](https://keybase.io)
-- [Diaspora](https://diasporafoundation.org/)
-- [WebSub](https://www.w3.org/TR/websub)
-- [IPLD](https://ipld.io)
-- [Decentralized Identifiers](https://www.w3.org/TR/did-core)
-- [Verifiable Credentials](https://www.w3.org/TR/vc-data-model)
-- [Semantic Web](https://www.w3.org/standards/semanticweb)
-- [Solid](https://solidproject.org)
-  
+## 4. Notes
 
+#### 4.1. 2022-07-13
 
-<hr/>
+*   HALO encrypted local storage
+*   DXNS API/abstraction (e.g., signal network discovery)
+*   Domain specific credentials (e.g., friends)
+*   ephemeral messaging between friends (chat, invitations)
 
-## Notes
-
-#### 2022-07-13
-
-- HALO encrypted local storage
-- DXNS API/abstraction (e.g., signal network discovery)
-- Domain specific credentials (e.g., friends)
-- ephemeral messaging between friends (chat, invitations)
