@@ -125,7 +125,6 @@ The following example, defines a script.
 {
   "type": "/dxos/schema/webapp",
   "manifest": {
-    ...
     "exec": [
       "data": {
         "method": "POST",
