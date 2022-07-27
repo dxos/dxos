@@ -221,8 +221,6 @@ Ping the daemon.
 *   [Semantic Web](https://www.w3.org/standards/semanticweb)
 *   [Solid](https://solidproject.org)
 
-<hr/>
-
 ## 4. Notes
 
 #### 4.1. 2022-07-13

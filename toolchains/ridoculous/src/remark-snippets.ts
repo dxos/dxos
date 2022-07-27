@@ -89,7 +89,7 @@ export function remarkSnippets () {
             const { ext } = path.parse(file);
             const { lang, parser } = langType[ext];
 
-            const rootDir = config.baseDir ?? inputFile.dirname;
+            const rootDir = inputFile?.dirname ?? config.baseDir;
             const filePath = path.join(rootDir, file);
             let content = fs.readFileSync(filePath, 'utf8');
 

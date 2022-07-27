@@ -30,6 +30,9 @@
     *   [6.1. Aspects of Trust](#61-aspects-of-trust)
     *   [6.2. Trust Models](#62-trust-models)
 *   [7. References](#7-references)
+*   [8. Appendix](#8-appendix)
+    *   [8.1. Protocol Schema](#81-protocol-schema)
+    *   [8.2. Example](#82-example)
 
 ## 1. Introduction
 
@@ -38,8 +41,6 @@ The HALO protocols enable self-sovereign identity, decentralized identifiers, ve
 HALO is implemented useing cryptographically secure, privacy respecting, and machine-verifiable messages.
 
 Users and other network participants (Agents) maintain a HALO, which encompasses their identity, digital address book, and access control rights to digital assets withint the DXOS ecosystem.
-
-<hr/>
 
 ## 2. Terminology
 
@@ -135,8 +136,6 @@ Entity about which Claims are made.
 ***Verifier*** -
 Entity that is able to verify a Credential (or Presentation).
 
-<hr/>
-
 ## 3. Specification
 
 A HALO is a secure, replicated, peer-to-peer database containing an Agent's decentralized credentials.
@@ -168,8 +167,6 @@ The HALO protocols are implemented by components that form part of smart clients
 5.  ***Circles***
     *   Agents can maintain a decentralized set of contacts and profile documents for other agents across the network.
 
-<hr/>
-
 ## 4. Design
 
 ### 4.1. HALO
@@ -184,19 +181,29 @@ The HALO contains:
 
 #### 4.1.1. Protocol Definitions
 
-The HALO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/halo).
-
-<!-- @snippet ./refs/credentials.proto -->
+The HALO protocol definitions are defined in the [References](#8-appendix) section.
 
 > *   TODO(burdon): Reorganize below with respect to examples (extract process descriptions from features.)
-
-<!-- @snippet ./refs/example.yml -->
 
 #### 4.1.2. Credentials
 
 *   Credentials are represented by a schema defined by the HALO protocol.
     The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 *   Claims may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
+
+<!-- @code(./refs/credentials.proto#Credential) -->
+
+```protobuf
+message Credential {
+  optional PubKey id = 1;
+  optional PubKey issuer = 2;
+  optional Timestamp issuanceDate = 3;
+  optional Timestamp expirationDate = 4;
+  optional bytes expirationRef = 5;
+  optional Claim subject = 10;
+  optional Proof proof = 11;
+}
+```
 
 #### 4.1.3. HALO Genesis
 
@@ -313,8 +320,6 @@ The diagram below illustrates the chain of trust formed when a Space is construc
 *   TODO: Peer DID resolution?
 *   TODO: Optionally publish Github credential (claim) to HALO as backup-recovery?
 *   TODO: Consider integration with hardware wallets?
-
-<hr/>
 
 ## 5. Implementation Details
 
@@ -455,4 +460,288 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 4.  [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
 5.  [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
 6.  [Keybase](https://book.keybase.io/docs)
+
+## 8. Appendix
+
+The protocol protocol buffer schema are defined [here](./refs/credentials.proto).
+
+### 8.1. Protocol Schema
+
+<!-- @code(./refs/credentials.proto) -->
+
+```protobuf
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo.credentials;
+
+import "google/protobuf/timestamp.proto";
+import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+
+//
+// TODO(burdon): Move these notes to the design doc commentary.
+// Peers maintain Feeds that are admitted to HALO and ECHO Parties.
+// Peers act as Verifiers for Credentials that may be Presented from other Peers.
+// Since Feeds implement a signed hash-linked data structure, they constitute a chain-of-authority for chained Credentials.
+// Credentials written to HALO Feeds may be Presented to Peers Verifying ECHO Parties.
+//
+
+//
+// **PartyGenesis** -
+//  First message written to initial Feed in a new Party.
+//
+
+message PartyGenesis {
+  PubKey partyKey = 1; // Feeds belong to Parties.
+  PubKey identityKey = 2; // Devices belong to Identities.
+}
+
+//
+// **Claim** - 
+//  Statement about a subject.
+//  Claims can be written directly to a feed or used within Credentials.
+//
+
+// Agent is authorized to access Party.
+message PartyMember {
+  enum Role {
+    MEMBER = 0;
+    WRITER = 1;
+    ADMIN = 2;
+  }
+
+  PubKey partyKey = 1;
+  repeated Role roles = 2;
+}
+
+// Device is authorized to sign messages for a given Agent (Identity).
+// NOTE: Devices are Admitted to Identities.
+message AuthorizedDevice {
+  PubKey identityKey = 1;
+  PubKey deviceKey = 2; // Existing authorized device.
+}
+
+// Feed is admitted to the Party for replication.
+// NOTE: Feeds are Admitted to Parties.
+message AdmittedFeed {
+  PubKey partyKey = 1;
+  PubKey deviceKey = 2;
+}
+
+//
+// **Claim** - 
+//  Statement about a subject.
+//  Claims can be written directly to a feed or used within Credentials.
+//
+
+message Claim {
+  PubKey id = 1; // Subject of claim (e.g., Agent, Device, Feed).
+  google.protobuf.any assertion = 2;
+}
+
+//
+// **Proof** -
+//  Signature that makes Credential tamper-evident.
+//  The proof is signed by the issuer of the Credential.
+//  Ref: https://www.w3.org/TR/vc-data-model/#proofs-signatures
+//
+
+message Proof {
+  string type = 1; // Type of proof (e.g., "Ed25519Signature2020").
+  Timestamp creationDate = 2;
+  bytes nonce = 3; // Used in Presentations to protect against replay attacks.
+  bytes value = 4; // Signature.
+}
+
+//
+// **Credential** -
+//  Set of claims containing a proof signed by the issuer.
+//  Credentials may be stored in a Credential Repository (e.g., digital wallet.)
+//  Credentials may also be store within feeds (e.g., an agent's HALO).
+//
+
+message Credential {
+  PubKey id = 1; // Credential identifier (e.g., for storage indexing).
+  PubKey issuer = 2; // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
+  Timestamp issuanceDate = 3;
+  Timestamp expirationDate = 4;
+  bytes expirationRef = 5; // Could reference blockchain or epoch number.
+  Claim subject = 10;
+  Proof proof = 11;
+}
+
+//
+// **Presentation** -
+//  Signed Credential(s) sent to a Verifier.
+//  Presentations are typically NOT stored any may include a challenge (e.g., nonce).
+//  Presentations may contain multiple Credentials (and require multiple proofs).
+//
+
+message Presentation {
+  repeated Credential credentials = 1;
+  repeated Proof proofs = 2;
+}
+```
+
+### 8.2. Example
+
+<!-- @code(./refs/example.yml) -->
+
+```yaml
+#
+# Copyright 2022 DXOS.org
+#
+
+#
+# Party Genesis: Creating a new Party.
+#
+
+feed:
+  key: Alice/Device-1/Feed-1
+  messages:
+    - id: 1
+      data:
+        # Self-signed Credential by the Party.
+        @type halo.party.PartyGenesis
+        partyKey: Alice-Halo # ISSUE: Different from IdentityKey?
+        identityKey: Alice
+    - id: 2
+      data:
+        # Authorizes device to sign on behalf of Identity
+        # NOTE: This Credential SHOULD be Presented on joining a Party.
+        @type halo.credential.Credential
+        issuer: Alice # Self-signed.
+        subject:
+          id: Alice/Device-1
+          assertion:
+            @type halo.credentials.AuthorizedDevice
+            identityKey: Alice
+    - id: 3
+      data:
+        # Admits the feed to the feed graph.
+        @type halo.credential.Credential
+        issuer: Alice/Device-1
+        subject:
+          id: Alice/Device-1/Feed-1
+          assertion:
+            @type halo.credentials.AdmittedFeed
+            partyKey: Alice-Halo
+            deviceKey: Alice/Device-1
+
+#
+# Device Admission: Adding a new Device to a HALO.
+# NOTE: This is the same as the initial Device Admission above, but with a different Issuer.
+#
+
+feed:
+  key: Alice/Device-1/Feed-1
+  messages:
+    - id: 100
+      data:
+        @type halo.credential.Credential
+        issuer: Alice/Device-1
+        subject:
+          id: Alice/Device-2
+          assertion:
+            @type halo.credentials.AuthorizedDevice
+            identityKey: Alice
+    - id: 101
+      data:
+        # NOTE: This MUST have been Presented from an authorized Device.
+        @type halo.credential.Credential
+        issuer: Alice/Device-2
+        subject:
+          id: Alice/Device-2/Feed-2 # New Feed.
+          assertion:
+            @type halo.credentials.AdmittedFeed
+            partyKey: Alice-Halo
+            deviceKey: Alice/Device-2
+
+#
+# ECHO Genesis: Creating a new Space.
+#
+
+feed:
+  key: Alice/Device-1/Feed-3
+  messages:
+    - id: 1
+      data:
+        # Self-signed Credential by the Party.
+        @type halo.party.Genesis # NOTE: Same as HALO.
+        partyKey: Party-1
+        identityKey: Alice
+    - id: 2
+      data:
+        # Authorizes Agent.
+        @type halo.credential.Credential
+        issuer: Alice # Self-signed.
+        subject:
+          id: Alice
+          assertion:
+            @type halo.credentials.PartyMember
+            partyKey: Party-1
+            role: ADMIN
+
+#
+# Feed Admission: Device admits a new feed.
+# NOTE: This happens as part of Genesis, but is exactly the same mechanism as any
+#   Authorized Agent presenting a nested Feed Admission Credential.
+# Any authorized Peer can Verify a Feed Admin Presentation.
+#   ISSUE: How to detect and avoid multiple Peers from doing this concurrently? (e.g., Direct P2P Requests?)
+#
+
+feed:
+  key: Alice/Device-1/Feed-3
+    - id: 3
+      data:
+        # Admits Feed.
+        # Credential Presented by Alice/Device-1
+        # Records chain-of-trust from Alice's Halo: Alice => Alice/Device-1 => Alice/Device-1/Feed-3
+        @type halo.credential.Presentation
+        credentials:
+          - issuer: Alice
+            subject:
+              id: Alice/Device-1
+              assertion:
+                @type halo.credentials.AuthorizedDevice
+                identityKey: Alice
+            proof:
+              # Proof generated by Alice
+              - value: eyJhbGci...yHUdBBPM
+          - issuer: Alice/Device-1
+            subject:
+              id: Alice/Device-1/Feed-3 # NOTE: This Feed.
+              assertion:
+                @type halo.credentials.AdmittedFeed
+                partyKey: Party-1
+                deviceKey: Alice/Device-1
+            proof:
+              # Proof generated by Alice/Device-1
+              - value: eyJhbGci...yHUdBBPM
+        proofs:
+          # Proof generated by Alice/Device-1
+          - value: eyJhbGci...yHUdBBPM
+
+#
+# Member Admission: Adding a new Member to a Space.
+# The joining Agent will Present a Credential representing a Feed Admission.
+#
+
+feed:
+  key: Alice/Device-1/Feed-3
+  messages:
+    - id: 100
+      data:
+        @type halo.credential.Credential
+        issuer: Alice/Device-1
+        subject:
+          id: Bob
+          assertion:
+            @type halo.credentials.PartyMember
+            partyKey: Party-1
+            role: WRITER
+```
 
