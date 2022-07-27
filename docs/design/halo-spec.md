@@ -1,47 +1,6 @@
-# HALO Spec <!-- omit in TOC -->
+# HALO Spec <!-- omit in toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Terminology](#2-terminology)
-- [3. Specification](#3-specification)
-- [4. Design](#4-design)
-  - [4.1. HALO](#41-halo)
-    - [4.1.1. Protocol Definitions](#411-protocol-definitions)
-    - [4.1.2. Credentials](#412-credentials)
-    - [4.1.3. HALO Genesis](#413-halo-genesis)
-    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
-    - [4.1.5. HALO Recovery](#415-halo-recovery)
-    - [4.1.6. Profiles](#416-profiles)
-    - [4.1.7. Circles](#417-circles)
-    - [4.1.8. DID Documents](#418-did-documents)
-  - [4.2. ECHO Spaces](#42-echo-spaces)
-    - [4.2.1. Protocol Definitions](#421-protocol-definitions)
-    - [4.2.2. Genesis](#422-genesis)
-    - [4.2.3. Agent Authorization](#423-agent-authorization)
-    - [4.2.4. Device Authentication](#424-device-authentication)
-  - [4.3. Design Issues](#43-design-issues)
-- [5. Security](#5-security)
-  - [5.1. Aspects of Trust](#51-aspects-of-trust)
-  - [5.2. Trust Models](#52-trust-models)
-- [6. References](#6-references)
-- [7. Deprecated Notes](#7-deprecated-notes)
-  - [7.1. Credential message](#71-credential-message)
-  - [7.2. Key chain](#72-key-chain)
-  - [7.3. Credential message types](#73-credential-message-types)
-    - [7.3.1. Envelope](#731-envelope)
-    - [7.3.2. Genesis](#732-genesis)
-    - [7.3.3. KeyAdmit](#733-keyadmit)
-    - [7.3.4. FeedAdmit](#734-feedadmit)
-    - [7.3.5. FeedGenesis](#735-feedgenesis)
-    - [7.3.6. IdentityInfo](#736-identityinfo)
-    - [7.3.7. DeviceInfo](#737-deviceinfo)
-    - [7.3.8. Invitations](#738-invitations)
-  - [7.4. HALO creation](#74-halo-creation)
-  - [7.5. ECHO Space creation](#75-echo-space-creation)
-  - [7.6. Credentials state machine](#76-credentials-state-machine)
-  - [7.7. Authenticator](#77-authenticator)
-  - [7.8. Proposal: Genesis feed.](#78-proposal-genesis-feed)
-
-<hr/>
+<!-- @toc -->
 
 ## 1. Introduction
 
@@ -197,34 +156,42 @@ The HALO contains:
 
 The HALO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/halo).
 
+<!-- @snippet ./refs/credentials.proto -->
+
+> - TODO(burdon): Reorganize below with respect to examples (extract process descriptions from features.)
+
+<!-- @snippet ./refs/example.yml -->
+
+
+
 #### 4.1.2. Credentials
 
 - Credentials are represented by a schema defined by the HALO protocol.
   The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
-- Credentials may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
+- Claims may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
 
 #### 4.1.3. HALO Genesis
 
-- Agents first create an Ed25519 key pair that represents an Identity key.
-- The key pair can be recovered from a [TODO: 24-word] seed phrase.
-- The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
-- A second key pair is generated for the Space and both this key and the Identity are used to sign Genesis messages (see below).
-- A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
-- **NOTE**: The identity private key is only used to generate the HALO and to recover an identity.
+1. Agents first create an Ed25519 key pair that represents an Identity key.
+1. The key pair can be recovered from a [TODO: 24-word] seed phrase.
+1. The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
+1. A second key pair is generated for the Space and both this key and the Identity are used to sign Genesis messages (see below).
+1. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
+1. **NOTE**: The identity private key is only used to generate the HALO and to recover an identity.
 
 #### 4.1.4. Device Authorization and Authentication
 
-- Each Device creates a Ed25519 key pair and maintains a secure key store.
-- The key store is encrypted and optionally protected by a password and/or second factor authenticator.
-- Devices must be authorized and authenticated before joining a HALO.
-- Devices may only join one HALO.
-- Authorization requires a peer-to-peer session where the existing and joining Devices exchange public keys. This handshake may require a second factor authentication.
-- The existing Device writes a `Device Auth` message to the HALO that includes the joining Device's public key.
+1. Each Device creates a Ed25519 key pair and maintains a secure key store.
+1. The key store is encrypted and optionally protected by a password and/or second factor authenticator.
+1. Devices must be authorized and authenticated before joining a HALO.
+1. Devices may only join one HALO.
+1. Authorization requires a peer-to-peer session where the existing and joining Devices exchange public keys. This handshake may require a second factor authentication.
+1. The existing Device writes a `Device Auth` message to the HALO that includes the joining Device's public key.
   - The `Device Auth` message may contain permissions that scope the capabilities of the Device (e.g., Admin, Write, Read), and an expiration time that necessitates re-authorization later on.
-- The joining Device authenticates by presenting a signed message using the Device key corresponding to the `Device Auth` message. 
+1. The joining Device authenticates by presenting a signed message using the Device key corresponding to the `Device Auth` message. 
   - The message contains the Device's feed keys; the existing Device writes a `Feed Admit` message containing these keys to the HALO.
   - This determines which feeds replicated by each Device peer.
-- Devices may write revocation messages to the HALO, which cancel prior authorizations.
+1. Devices may write revocation messages to the HALO, which cancel prior authorizations.
   - ISSUE: There is the potential for a race, whereby two Devices may attempt to revoke access to the other. Revocation may require a multi-Device "vote" or a second factor authentication method.
 
 The diagram below illustrates the chain of trust formed when a HALO is constructed and the Agent authorizes and authenticates a second device.
@@ -318,59 +285,11 @@ The diagram below illustrates the chain of trust formed when a Space is construc
 
 <hr/>
 
-## 5. Security
+## 5. Implementation Details
 
-- TODO: Privacy, Trust Models, and Threats
-- TODO(pierre): Privacy review (for Spaces and Peer signaling).
-  - ISSUE: A time-salted hash of the associated Public key may be used to discover the Space (i.e., MESH discovery key).
-  - This hash may be transmitted publicly (e.g., as a discovery key for signaling) and provides one degree of privacy.
+> - TODO(burdon): Add UML and state machine diagram.
 
-### 5.1. Aspects of Trust
-
-| Aspect                  | Description |
-|-------------------------|-------------|
-| Availability            | Can the information be found from any node within the network?  |
-| Correctness             | Is the information tamper-resistent and verifiable?             |
-| Consensus and Finality  | Can agreement across all peers be determined (and when)?        |
-| Privacy                 | Can the information be seen by others on a public network?      |
-| Censorship Resistance   | Is all current information visible?                             |
-
-> TODO: Find another reference for this?
-
-### 5.2. Trust Models
-
-| System  | Description |
-|---------|-------------|
-| KUBE    | Trusted server controlled by authenticated and authorized Agent.                |
-| ECHO    | Trustless peer-to-peer network controlled by HALO.                              |
-| MESH    | Trusted subnet or decentralized network (e.g., DXOS).                           |
-| IPFS    | Trusted subnet of blockchain controlled network (e.g., Filecoin, DXOS)          |
-| DXNS    | Trusted subnet or decentralized network (e.g., DXOS).                           |
-| DNS     | Trusted subnet or global network controlled by root servers.                    |
-
-> TODO: Document trust model and threats.
-
-<hr/>
-
-## 6. References
-
-1. [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
-1. [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
-1. [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec)
-1. [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
-1. [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
-2. [Keybase](https://book.keybase.io/docs)
-
-<hr/>
-
-<br/><br/><br/><br/><br/>
-
-## 7. Deprecated Notes
-
-TODO: Clean-up.
-TODO: Add UML and state machine diagram.
-
-### 7.1. Credential message
+### 5.1. Credential message
  
 A Credential message consists of:
 - Signed part:
@@ -384,7 +303,8 @@ A Credential message consists of:
 
 Ed25519 curve is used for signatures via [hypercore-crypto](https://www.npmjs.com/package/hypercore-crypto) package.
 
-### 7.2. Key chain
+
+### 5.2. Keychain
 
 > See packages/common/protocols/src/proto/dxos/halo/keys.proto
 
@@ -405,81 +325,10 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
-### 7.3. Credential message types
 
-TODO: Remove and reference the protobuf instead.
+### 5.3. HALO creation
 
-#### 7.3.1. Envelope 
-
-> See packages/common/protocols/src/proto/dxos/halo/party.proto
-
-Wraps another credential message specifying the Space key and allowing to add more signatures.
-
-#### 7.3.2. Genesis
-
-> See packages/common/protocols/src/proto/dxos/halo/party.proto
-
-The start-of-Issuer record for the Space.
-Contains:
-- Space key.
-- Key of the initial feed to be admitted.
-- Key of the initial member to be admitted.
-
-Signed by the Space key itself, as well as the subject keys.
-
-#### 7.3.3. KeyAdmit
-
-> See packages/common/protocols/src/proto/dxos/halo/party.proto
-
-Admits a new member key (identity or Device key) to the Space.
-
-Must be signed by previously admitted member.
-
-#### 7.3.4. FeedAdmit
-
-> See packages/common/protocols/src/proto/dxos/halo/party.proto
-
-Admit a single feed to the Space.
-This message must be signed by the feed key to be admitted, also by some other key which has already been admitted (usually by a Device pseudonym key).
-
-FeedAdmit messages are used to incrementally build the Feed DAG.
-
-#### 7.3.5. FeedGenesis
-
-> See packages/common/protocols/src/proto/dxos/halo/party.proto
-
-The start-of-Issuer record for the Feed.
-Contains information about the owner of the feed.
-The owner must be a key previously admitted to the Space
-
-> NOTE: Currently unused.
-
-#### 7.3.6. IdentityInfo
-
-> See packages/common/protocols/src/proto/dxos/halo/identity.proto
-
-Additional, descriptive information about an Identity. Must be signed by the Identity's key.
-
-#### 7.3.7. DeviceInfo
-
-> See packages/common/protocols/src/proto/dxos/halo/identity.proto
-
-Additional, descriptive information about a Device. Must be signed by the Device's key.
-
-#### 7.3.8. Invitations
-
-> TODO: describe credentials used in invitations
-
-Ephemeral credential message that is sent during handshake for replication authentication.
-
-Contains:
- - Space key.
- - Device key.
- - Identity key.
- - Feed key.
- - Optional FeedAdmit credential to be notarized by the authenticator so that new peers can get their feeds included in the Feed DAG.
-
-### 7.4. HALO creation
+> - TODO(burdon): Reconcile with above.
 
 1. Generate identity key-pair.
 1. Generate Device key-pair.
@@ -508,7 +357,9 @@ Contains:
 
 > Genesis feed
 
-### 7.5. ECHO Space creation
+### 5.4. ECHO Space creation
+
+> - TODO(burdon): Reconcile with above.
 
 1. Generate Space key-pair.
 1. Generate feed key-pair.
@@ -530,30 +381,48 @@ Contains:
 1. Create Space metadata item in the database.
 1. Destroy the secret key for the Space key.
 
-> TODO: Difference between KeyAdmit and FeedAdmit messages.
-> TODO: Separate feed keys into their own domain, disallow feed keys to sign credentials.
+> - TODO: Difference between KeyAdmit and FeedAdmit messages.
+> - TODO: Separate feed keys into their own domain, disallow feed keys to sign credentials.
 
-### 7.6. Credentials state machine
 
-> TODO
-> - Initial state
-> - Sets of keys tracked
-> - Trusted keys
-> - Invitations
-> - Info messages
-> - Admitted by
-> - Use by message selector (i.e. message orderer).
+## 6. Security Concerns
 
-### 7.7. Authenticator
+> - TODO: Privacy, Trust Models, and Threats
+> - TODO(pierre): Privacy review (for Spaces and Peer signaling).
+> - ISSUE: A time-salted hash of the associated Public key may be used to discover the Space (i.e., MESH discovery key).
+> - This hash may be transmitted publicly (e.g., as a discovery key for signaling) and provides one degree of privacy.
 
-> TODO
+### 6.1. Aspects of Trust
 
-### 7.8. Proposal: Genesis feed.
+| Aspect                  | Description |
+|-------------------------|-------------|
+| Availability            | Can the information be found from any node within the network?  |
+| Correctness             | Is the information tamper-resistent and verifiable?             |
+| Consensus and Finality  | Can agreement across all peers be determined (and when)?        |
+| Privacy                 | Can the information be seen by others on a public network?      |
+| Censorship Resistance   | Is all current information visible?                             |
 
-Special feed that is identified and signed by the Space key.
+> - TODO: Find another reference for this?
 
-Contains credential messages that establish the Space genesis, admit the first member and the first member's feed.
+### 6.2. Trust Models
 
-Genesis feed is the root of the feed DAG.
-Genesis feed is the definitive starting point for the Space state machine.
-Only the Space public key, which is also the genesis feed key, is required to discover nodes on the network, authenticate with them, start replicating, and processing the Space credentials in the Space state machine.
+| System  | Description |
+|---------|-------------|
+| KUBE    | Trusted server controlled by authenticated and authorized Agent.                |
+| ECHO    | Trustless peer-to-peer network controlled by HALO.                              |
+| MESH    | Trusted subnet or decentralized network (e.g., DXOS).                           |
+| IPFS    | Trusted subnet of blockchain controlled network (e.g., Filecoin, DXOS)          |
+| DXNS    | Trusted subnet or decentralized network (e.g., DXOS).                           |
+| DNS     | Trusted subnet or global network controlled by root servers.                    |
+
+> - TODO: Document trust model and threats.
+
+
+## 7. References
+
+1. [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
+1. [Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model)
+1. [Peer DID Method Specification](https://identity.foundation/peer-did-method-spec)
+1. [Compare and Contrast — Federated Identity vs Self-sovereign Identity](https://academy.affinidi.com/compare-and-contrast-federated-identity-vs-self-sovereign-identity-227a85cbab18)
+1. [Peer DIDs - What Can You Do With It?](https://academy.affinidi.com/peer-dids-an-off-ledger-did-implementation-5cb6ee6eb168)
+1. [Keybase](https://book.keybase.io/docs)

@@ -1,0 +1,2 @@
+dest: "./out"
+docs: "./testing/**/*.md"

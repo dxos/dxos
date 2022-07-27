@@ -7,7 +7,6 @@
       "DOM",
       "ESNext"
     ],
-    "module": "CommonJS",
     "outDir": "dist"
   },
   "exclude": [
