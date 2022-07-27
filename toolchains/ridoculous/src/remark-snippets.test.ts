@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import expect from 'expect';
 import * as fs from 'fs';
 import { toMarkdown } from 'mdast-util-to-markdown';
@@ -13,8 +12,6 @@ import { u } from 'unist-builder';
 
 import { remarkSnippets } from './remark-snippets.js';
 import { removeTrailing } from './util.js';
-
-debug.enable('error:*');
 
 test('remarkSnippets with remark', async () => {
   const tree = u('root', [

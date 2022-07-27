@@ -3,16 +3,12 @@
 //
 
 import { TSDocParser } from '@microsoft/tsdoc';
-import debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as protobuf from 'protocol-buffers-schema';
 import { u } from 'unist-builder';
 
 import { removeTrailing, visitDirectives } from './util.js';
-
-const log = debug('dxos:ridoculous:debug');
-const error = debug('dxos:ridoculous:error');
 
 type Type = {
   lang: string

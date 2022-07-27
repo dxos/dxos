@@ -10,4 +10,4 @@ yarn ts-node --esm ./src/main.ts \
   --base-dir $BASE_DIR/docs \
   --out-dir $BASE_DIR/docs \
   --auto-number \
-  --dry-run
+#  --dry-run

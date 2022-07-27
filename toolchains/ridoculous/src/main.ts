@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -61,7 +60,6 @@ const main = () => {
         outDir: string,
         verbose: boolean
       }) => {
-        debug.enable(process.env.DEBUG ?? verbose ? 'dxos:ridoculous:*' : 'dxos:ridoculous:error');
         void processFiles({
           autoNumber,
           baseDir,
