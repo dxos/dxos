@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import { u } from 'unist-builder';
 import { visit } from 'unist-util-visit';
 
@@ -19,10 +18,8 @@ interface Options {
 /**
  * Create heading numbers.
  */
+// eslint-disable-next-line
 export function remarkHeadings ({ autoNumber }: Options = {}) {
-  const { config } = this.data();
-  assert(config);
-
   return (tree: any) => {
     const numbers = [0];
     const root: Node = u('list', { spread: false }, []);

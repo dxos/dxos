@@ -31,7 +31,7 @@ export const processFiles = async ({
 }: Options = {}) => {
   const parser = createParser({ autoNumber, baseDir, html, verbose });
 
-  const globFiles = glob.sync(files);
+  const globFiles = glob.sync(path.join(baseDir ?? '', files));
   for (const filename of globFiles) {
     if (dryRun || verbose) {
       console.log(`Parsing: ${chalk.green(filename)}`);
@@ -41,17 +41,17 @@ export const processFiles = async ({
     // https://github.com/vfile/vfile#filehistory
     const text = await parser.process(await read(filename));
 
-    if (!dryRun) {
-      const parts = path.parse(filename);
-      const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
-      const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
-      const dirname = path.dirname(outFilename);
-      if (!fs.existsSync(dirname)) {
-        fs.mkdirSync(dirname, { recursive: true });
-      }
+    const parts = path.parse(filename);
+    const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
+    const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
+    const dirname = path.dirname(outFilename);
+    if (!fs.existsSync(dirname)) {
+      fs.mkdirSync(dirname, { recursive: true });
+    }
 
+    console.log(`Writing: ${chalk.green(outFilename)}`);
+    if (!dryRun) {
       fs.writeFileSync(outFilename, text.toString() + '\n', 'utf8');
-      console.log(`Updated: ${chalk.green(outFilename)}`);
     }
   }
 };

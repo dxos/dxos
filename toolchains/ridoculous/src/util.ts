@@ -3,11 +3,7 @@
 //
 
 import { arrayIterate } from 'array-iterate';
-import chalk from 'chalk';
-import debug from 'debug';
 import { visit } from 'unist-util-visit';
-
-const log = debug('dxos:ridoculous:debug');
 
 /**
  * Util to remove trailing blank lines.
@@ -70,7 +66,6 @@ export const visitDirectives = (tree: any, callback: VisitorCallback) => {
     const match = node.value.trim().match(directiveRegex);
     if (match) {
       const [, directive, args] = match;
-      log(`Directive: ${chalk.yellow('@' + directive)} ${chalk.blue(args ?? '')}}`);
       callback(directive, args ? args.split(/\s*,\s*/) : [], node, i, parent);
     }
   });

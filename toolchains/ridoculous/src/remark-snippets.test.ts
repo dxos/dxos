@@ -6,31 +6,27 @@ import expect from 'expect';
 import * as fs from 'fs';
 import { toMarkdown } from 'mdast-util-to-markdown';
 import { it as test } from 'mocha';
+import * as path from 'path';
 import { remark } from 'remark';
 import { u } from 'unist-builder';
 
 import { remarkSnippets } from './remark-snippets.js';
 import { removeTrailing } from './util.js';
 
-const tree = u('root', [
-  u('html', { value: '<!-- @code(./src/test.proto) -->' })
-]);
+test('remarkSnippets with remark', async () => {
+  const tree = u('root', [
+    u('html', { value: '<!-- @code(../src/test.proto) -->' })
+  ]);
 
-test('remarkSnippets', () => {
-  // Process content.
-  remarkSnippets()(tree, { baseDir: './testing' });
-
-  const { type, lang } = tree.children[1] as any;
-  expect(type).toBe('code');
-  expect(lang).toBe('protobuf');
-});
-
-test('remarkSnippets with remark', () => {
   // Process content.
   const original = toMarkdown(tree as any);
-  const { value } = remark()
-    .use(remarkSnippets)
-    .processSync(original);
+  const processor = remark()
+    .use(remarkSnippets);
+
+  processor
+    .data({ config: { baseDir: path.join(process.cwd(), './testing/docs') } });
+
+  const { value } = await processor.process(original);
 
   // Test markdown.
   const processed = String(value);
