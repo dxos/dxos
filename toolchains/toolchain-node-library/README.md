@@ -108,4 +108,15 @@ Resolving other packages referenced in config files should be done using `requir
 Configs can be extended using the `"extends"` key.
 It should contain an array of strings pointing to json or js files that when loaded will return the config.
 
+## Generated configuration files
 
+Tasks can generate configuration files in packages.
+This is useful for config files such as `tsconfig.json` or `.eslintrc.js`.
+They are often the same for every package but still must be present for tools to function correctly.
+
+Generated configs should be placed in .gitignore and not be commited to the repository.
+They could also be hidden from the project view in IDEs. Most IDEs have settings or plugins that hide files ignored from git.
+Toolchain orchestrator can automatically generate per-package `.gitignore` files based on the configuration generated.
+
+Configuration regeneration should be quick to execute.
+We can run it automatically before executing a task (e.g. build, or test).
