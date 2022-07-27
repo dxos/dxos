@@ -25,7 +25,7 @@ export interface AddPartyOptions {
   genesisFeed: PublicKey
 }
 
-const emptyEchoMetadata = (): EchoMetadata =>({
+const emptyEchoMetadata = (): EchoMetadata => ({
   version: STORAGE_VERSION,
   parties: [],
   created: new Date(),
