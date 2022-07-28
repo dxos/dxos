@@ -45,9 +45,9 @@ message StreamClose {
 }
 
 message Error {
-  string name = 1;
-  string message = 2;
-  string stack = 3;
+  optional string name = 1;
+  optional string message = 2;
+  optional string stack = 3;
 }
 
 message MessageTrace {

@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { sleep, synchronized, Trigger } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { exponentialBackoffInterval } from '@dxos/util';
@@ -143,7 +143,12 @@ export class RpcPeer {
     if (decoded.request) {
       if (!this._open) {
         log('Received request while not open.');
-        await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
+        await this._sendMessage({
+          response: {
+            id: decoded.request.id,
+            error: encodeError(new RpcClosedError())
+          }
+        });
         return;
       }
 
@@ -240,15 +245,21 @@ export class RpcPeer {
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
     promise.catch(() => {});
 
-    await this._sendMessage({
+    void this._sendMessage({
       request: {
         id,
         method,
-        payload: request
+        payload: request,
+        stream: false
       }
     });
 
-    const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')));
+    const timeoutPromise = new Promise<any>((resolve, reject) => {
+      setTimeout(
+        () => reject(new Error('Timeout')),
+        this._options.timeout ?? DEFAULT_TIMEOUT
+      ).unref();
+    });
     timeoutPromise.catch(() => {}); // Mute the promise.
 
     let response: Response;

@@ -23,8 +23,8 @@ message Auth {
   PubKey identityKey = 3;  
   
   /// The publicKey of the authenticating Identity.
-  PubKey feedKey = 4;      
+  optional PubKey feedKey = 4;      
 
   /// FeedAdmit message to the should be written to a control feed in case the `feedKey` is not admitted to the party.
-  google.protobuf.Any feed_admit = 5;
+  optional google.protobuf.Any feed_admit = 5;
 }

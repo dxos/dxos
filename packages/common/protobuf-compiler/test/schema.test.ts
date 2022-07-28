@@ -108,7 +108,24 @@ test('encodes empty repeated fields as empty arrays', () => {
 
   const initial: ComplexFields = {
     repeatedField: [],
-    requiredField: new MyKey(Buffer.from('foo'))
+    requiredField: new MyKey(Buffer.from('foo')),
+     inner: {
+      bar: ComplexFields.InnerEnum.BAR,
+      foo: 'foo'
+    },
+    myAny: {
+      foo: 'foo'
+    },
+    googleAny: {
+      '@type': 'dxos.test.Task',
+      id: 'baz',
+      title: 'Baz',
+      key: new MyKey(Buffer.from('foo')),
+      type: TaskType.IN_PROGRESS
+    },
+    importedAny: {
+      bar: 123
+    }
   };
 
   const encoded = codec.encode(initial);

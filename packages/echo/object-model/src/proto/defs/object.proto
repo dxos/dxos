@@ -78,8 +78,8 @@ message Predicate {
   }
 
   Operation op                        = 1;
-  string key                          = 2;
-  Value value                         = 3;
+  optional string key                          = 2;
+  optional Value value                         = 3;
   repeated Predicate predicates       = 4;
 }
 
@@ -114,7 +114,7 @@ message ObjectMutation {
 
   Operation operation                 = 1;
   string key                          = 2;
-  Value value                         = 3;
+  optional Value value                         = 3;
 }
 
 /**
