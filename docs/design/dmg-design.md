@@ -81,6 +81,70 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
+Records are retrieved via the DMG Record Service, which defines the following API.
+
+```protobuf
+service DMG {
+  rpc Lookup(LookupRequest) returns (LookupResponse);
+  rpc getRecords(RecordRequest) returns (RecordResponse);
+}
+
+message LookupRequest {
+  string url = 1;
+}
+
+message LookupResponse {
+  message Part {
+    string path = 1;
+    Ref record = 2;
+    Ref resource = 3;
+  } 
+
+  repeated Part parts = 1;
+}
+
+message RecordRequest {
+  repeated Ref records = 1;  
+}
+
+message RecordResponse {
+  repeated bytes records = 1;
+}
+```
+
+**Example**
+
+```ts
+api.LookupRequest({ url: 'https://beta.example.com/app/notepad/index.html' })
+```
+
+Returns
+
+```json
+{
+  "parts": [
+    {
+      "path": "beta",
+      "record": "2ec5b45edb99d4e0f902e1d77201d6e580e62493"
+    },
+    {
+      "path": "app",
+      "record": "95de870800728425d7b2e6f95c2cea69a17d12d3"
+    },
+    {
+      "path": "notepad",
+      "record": "28bcd4589ab5183209e36978c1f3b21de760fe30"
+    }
+    {
+      "path": "index.html",
+      "resource": "804e56b5a95ebf3030d605751b0340124cbc896f"
+    }
+  ]
+}
+```
+
+Note: The path may return a hierarchical list of Record refs.
+
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**
