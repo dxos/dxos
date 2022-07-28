@@ -51,7 +51,7 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             c`;`;
           }
         } c`}`;
-        if (!field.getOption('proto3_optional') && !field.repeated && !field.map) {
+        if (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf) {
           c`else {`; {
             c`${ref(throwMissingFieldError)}('${field.name}', '${field.parent!.fullName.slice(1)}')`;
           } c`}`;

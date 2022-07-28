@@ -23,12 +23,12 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
     undefined,
     undefined,
     type.fieldsArray.map(field => {
-      const isRequired = field.required || (!field.getOption('proto3_optional') && !field.repeated && !field.map);
+      const isRequired = field.required || (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf);
 
       const signature = f.createPropertySignature(
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
-        isRequired && !field.partOf ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
+        isRequired ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
         getFieldType(field, ctx.subs)
       );
 
