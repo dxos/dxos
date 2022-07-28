@@ -18,5 +18,5 @@ message Alive {
 
   bytes peerId = 1;
   repeated Connection connections = 2;
-  bytes metadata = 3;
+  optional bytes metadata = 3;
 }
