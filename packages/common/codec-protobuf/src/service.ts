@@ -9,8 +9,8 @@ import type { Schema } from './schema';
 import { Stream } from './stream';
 
 export interface Any {
-  'type_url'?: string;
-  value?: Uint8Array;
+  'type_url': string;
+  value: Uint8Array;
 }
 
 export interface ServiceBackend {
