@@ -4,18 +4,19 @@ This document presents the design of the Decentralized Meta Graph (DMG).
 
 <!-- @toc -->
 
-*   [1. Terminology](#1-terminology)
-*   [2. Basic Concepts](#2-basic-concepts)
-    *   [2.1. Graph](#21-graph)
-        *   [2.1.1. Resources](#211-resources)
-        *   [2.1.2. Computation](#212-computation)
-        *   [2.1.3. Issues](#213-issues)
-    *   [2.2. Subnets](#22-subnets)
-*   [3. Architecture](#3-architecture)
-    *   [3.1. KUBE Services](#31-kube-services)
-    *   [3.2. KUBE Architecture](#32-kube-architecture)
-    *   [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
-*   [4. Notes](#4-notes)
+- [Meta Graph Design Document](#meta-graph-design-document)
+  - [1. Terminology](#1-terminology)
+  - [2. Basic Concepts](#2-basic-concepts)
+    - [2.1. Graph](#21-graph)
+      - [2.1.1. Resources](#211-resources)
+      - [2.1.2. Computation](#212-computation)
+      - [2.1.3. Issues](#213-issues)
+    - [2.2. Subnets](#22-subnets)
+  - [3. Architecture](#3-architecture)
+    - [3.1. KUBE Services](#31-kube-services)
+    - [3.2. KUBE Architecture](#32-kube-architecture)
+    - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
+  - [4. Notes](#4-notes)
 
 ## 1. Terminology
 
@@ -72,9 +73,9 @@ The URL's `path` components is split into `record` and `resource` parts.
 The `path` is used to traverse the DMG graph from the root associated with the `realm` until a DMG Record is found.
 The remainder of the `path` is then considered to be a `resource` path within the associated record.
 
-The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
+![URL](./diagrams/dmg-tree.drawio.svg)
 
-> *   TODO: DMG Record protocol buffer schema.
+The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**
 
@@ -95,6 +96,8 @@ The following example illustrates a DMG Record that represents a Web application
   }
 }
 ```
+
+> - TODO: DMG Record protocol buffer schema.
 
 The DMG Record can be retrieved as a JSON document via a TCP or HTTP request:
 
