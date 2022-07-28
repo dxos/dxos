@@ -4,10 +4,10 @@
 
 BASE_DIR=$(realpath "$PWD/../../")
 
-echo $BASE_DIR
-
 yarn ts-node --esm ./src/main.ts \
-  --files $BASE_DIR/docs/**/*.md \
+  --verbose \
+  --files "design/**/*.md" \
+  --base-dir $BASE_DIR/docs \
   --out-dir $BASE_DIR/docs \
-  --base-dir $BASE_DIR \
-  --auto-number
+  --auto-number \
+#  --dry-run

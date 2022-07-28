@@ -7,6 +7,9 @@ import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
+import { MetadataStore } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 describe('Client - persistent', () => {
   it('reset storage', async () => {
@@ -46,4 +49,24 @@ describe('Client - persistent', () => {
       expect(client2.echo.queryParties().value.length).toBe(0);
     }
   }).timeout(10_000).retries(2);
+
+  it('MetadataStore save/load', async () => {
+    const storage = createStorage('', StorageType.IDB);
+    const directory = storage.directory('metadata');
+    const partyKey = PublicKey.random();
+
+    // Create a new metadata store. And adding party.
+    {
+      const metadataStore = new MetadataStore(directory);
+      await metadataStore.addParty(partyKey);
+    }
+
+    // Create a new metadata store in same directory. And check if loads party.
+    {
+      const metadataStore = new MetadataStore(directory);
+      await metadataStore.load();
+      const partyLoaded = metadataStore.getParty(partyKey);
+      expect(partyLoaded?.key).toEqual(partyKey);
+    }
+  });
 });

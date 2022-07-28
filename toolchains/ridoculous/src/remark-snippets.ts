@@ -3,18 +3,12 @@
 //
 
 import { TSDocParser } from '@microsoft/tsdoc';
-import assert from 'assert';
-import chalk from 'chalk';
-import debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as protobuf from 'protocol-buffers-schema';
 import { u } from 'unist-builder';
 
 import { removeTrailing, visitDirectives } from './util.js';
-
-const log = debug('dxos:ridoculous:debug');
-const error = debug('dxos:ridoculous:error');
 
 type Type = {
   lang: string
@@ -76,13 +70,11 @@ const langType: { [key: string]: Type } = {
  * Snippets are contains within comment blocks.
  * The resulting code snippet is inserted above or replaces an existing block.
  */
+// eslint-disable-next-line
 export function remarkSnippets () {
-  const { config } = this.data();
-  assert(config);
+  const { config } = this.data() ?? {};
 
-  return (tree: any, file) => {
-    const { baseDir = file.dirname } = config;
-
+  return (tree: any, inputFile) => {
     // visit(tree, 'code', (node, i, parent) => {
     //   console.log('>>>', node);
     // });
@@ -96,10 +88,11 @@ export function remarkSnippets () {
 
             const { ext } = path.parse(file);
             const { lang, parser } = langType[ext];
-            const filePath = path.join(baseDir, file);
-            log(`Reading snippet: ${chalk.yellow(filePath)}`);
 
+            const rootDir = inputFile?.dirname ?? config.baseDir;
+            const filePath = path.join(rootDir, file);
             let content = fs.readFileSync(filePath, 'utf8');
+
             if (lang) {
               content = removeTrailing(parser?.(content, { hash }) ?? content);
 
@@ -141,7 +134,7 @@ export function remarkSnippets () {
           }
         }
       } catch (err) {
-        error(String(err));
+        console.error(String(err));
       }
     });
   };
