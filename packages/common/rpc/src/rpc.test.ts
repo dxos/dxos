@@ -314,6 +314,32 @@ describe('RpcPeer', () => {
       await expect(req).toBeRejected();
     });
 
+    test('requests failing on timeout', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          await sleep(50);
+          return msg;
+        },
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        port: bobPort,
+        timeout: 10
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const req = bob.call('method', createPayload('request'));
+      await expect(req).toBeRejected();
+    });
+
   });
 
   describe('streaming responses', () => {
