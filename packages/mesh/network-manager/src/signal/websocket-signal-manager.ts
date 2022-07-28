@@ -9,7 +9,7 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
 import { SignalManager } from './signal-manager';
@@ -28,11 +28,11 @@ export class WebsocketSignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
-  readonly onSignal = new Event<Message>();
+  readonly onSignal = new Event<SignalMessage>();
 
   constructor (
     private readonly _hosts: string[],
-    private readonly _onOffer: (message: Message) => Promise<Answer>
+    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
   ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
@@ -138,13 +138,13 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
-  offer (msg: Message) {
+  offer (msg: SignalMessage) {
     log(`Offer ${msg.remoteId}`);
     // TODO(marik-d): Broadcast to all signal servers.
     return Array.from(this._servers.values())[0].offer(msg);
   }
 
-  async signal (msg: Message) {
+  async signal (msg: SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {
       void server.signal(msg);

@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
 
 describe('SignalApi', () => {
@@ -48,7 +48,7 @@ describe('SignalApi', () => {
   });
 
   test('message between 2 clients', async () => {
-    const signalMock1 = mockFn<(msg: Message) => Promise<void>>()
+    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
     api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, signalMock1);
     api2 = new SignalClient(signalApiUrl1, (async () => {}) as any, (async () => {}) as any);
@@ -56,7 +56,7 @@ describe('SignalApi', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const msg: Message = {
+    const msg: SignalMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -82,13 +82,13 @@ describe('SignalApi', () => {
   }).timeout(1_000);
 
   test('offer', async () => {
-    const offerMock = mockFn<(msg: Message) => Promise<Answer>>()
+    const offerMock = mockFn<(msg: SignalMessage) => Promise<Answer>>()
       .resolvesTo({ accept: true });
     api1 = new SignalClient(signalApiUrl1, offerMock, async () => {});
 
     await api1.join(topic, peer1);
 
-    const offer: Message = {
+    const offer: SignalMessage = {
       data: { offer: {} },
       id: peer2,
       remoteId: peer1,
@@ -101,13 +101,13 @@ describe('SignalApi', () => {
   }).timeout(5_000);
 
   test('signal', async () => {
-    const signalMock = mockFn<(msg: Message) => Promise<void>>()
+    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
     api1 = new SignalClient(signalApiUrl1, (async () => {}) as any, signalMock);
 
     await api1.join(topic, peer1);
 
-    const msg: Message = {
+    const msg: SignalMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -143,9 +143,9 @@ describe('SignalApi', () => {
 
   // Skip because communication between signal servers is not yet implemented.
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
-    const offerMock = mockFn<(msg: Message) => Promise<Answer>>()
+    const offerMock = mockFn<(msg: SignalMessage) => Promise<Answer>>()
       .resolvesTo({ accept: true });
-    const signalMock = mockFn<(msg: Message) => Promise<void>>()
+    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
 
     api1 = new SignalClient(signalApiUrl1, offerMock, async () => {});
@@ -165,7 +165,7 @@ describe('SignalApi', () => {
     });
     expect(answer).toEqual({ accept: true });
 
-    const msg: Message = {
+    const msg: SignalMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId,

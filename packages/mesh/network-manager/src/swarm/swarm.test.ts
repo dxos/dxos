@@ -12,7 +12,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { Message } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalMessaging } from '../signal';
 import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
@@ -27,12 +27,12 @@ class MockSignalConnection implements SignalMessaging {
     readonly _delay = 10
   ) {}
 
-  async offer (msg: Message) {
+  async offer (msg: SignalMessage) {
     await sleep(this._delay);
     return this._swarm().onOffer(msg);
   }
 
-  async signal (msg: Message) {
+  async signal (msg: SignalMessage) {
     await sleep(this._delay);
     await this._swarm().onSignal(msg);
   }

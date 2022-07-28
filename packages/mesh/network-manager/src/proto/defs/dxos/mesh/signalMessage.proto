@@ -6,9 +6,9 @@ syntax = "proto3";
 
 import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 
-package dxos.mesh.signal;
+package dxos.mesh.signalMessage;
 
-message Message {
+message SignalMessage {
   /// Sender's public key.
   PubKey id = 1;
   /// Receiver`s public key.

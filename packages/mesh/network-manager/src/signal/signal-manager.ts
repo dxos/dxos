@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 
 /**
@@ -35,19 +35,19 @@ export interface SignalMessaging {
   /**
    * Offer/answer RPC.
    */
-  offer (msg: Message): Promise<Answer>
+  offer (msg: SignalMessage): Promise<Answer>
 
   /**
    * Send message to peer.
    */
-  signal (msg: Message): Promise<void>
+  signal (msg: SignalMessage): Promise<void>
 }
 
 export interface SignalManager extends SignalConnection, SignalMessaging {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
-  onSignal: Event<Message>
+  onSignal: Event<SignalMessage>
 
   getStatus (): SignalApi.Status[]
   destroy(): Promise<void>

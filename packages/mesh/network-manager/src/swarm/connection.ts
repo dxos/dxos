@@ -10,7 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
-import { Message } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
@@ -51,7 +51,7 @@ export enum ConnectionState {
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
-  private _bufferedSignals: Message[] = [];
+  private _bufferedSignals: SignalMessage[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
@@ -62,7 +62,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _sendSignal: (msg: Message) => Promise<void>,
+    private readonly _sendSignal: (msg: SignalMessage) => Promise<void>,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -116,7 +116,7 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal (msg: Message) {
+  async signal (msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');

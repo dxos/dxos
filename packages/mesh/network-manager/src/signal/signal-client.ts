@@ -9,7 +9,7 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
 import { schema } from '../proto/gen';
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { WebsocketRpc } from './websocket-rpc';
 
@@ -56,8 +56,8 @@ export class SignalClient {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onOffer: (message: Message) => Promise<Answer>,
-    private readonly _onSignal: (message: Message) => Promise<void>
+    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>,
+    private readonly _onSignal: (message: SignalMessage) => Promise<void>
   ) {
     this._setState(SignalApi.State.CONNECTING);
     this._createClient();
@@ -92,13 +92,13 @@ export class SignalClient {
       data: message.data
     }));
 
-    this._client.subscribe('signal', (msg: SignalMessage) => {
+    this._client.subscribe('signal', (msg: EncodedMessage) => {
       return this._onSignal({
         id: PublicKey.from(msg.id!),
         remoteId: PublicKey.from(msg.remoteId!),
         topic: PublicKey.from(msg.topic!),
         sessionId: PublicKey.from(msg.sessionId!),
-        data: schema.getCodecForType('dxos.mesh.signal.MessageData').decode(msg.data ?? failUndefined()),
+        data: schema.getCodecForType('dxos.mesh.signalMessage.MessageData').decode(msg.data ?? failUndefined()),
         // Field that MessageRouter adds, so on lower level it not always defined.
         messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
       });
@@ -218,7 +218,7 @@ export class SignalClient {
    * @returns Other peer's _onOffer callback return value.
    * @deprecated
    */
-  async offer (msg: Message): Promise<Answer> {
+  async offer (msg: SignalMessage): Promise<Answer> {
     return this._client.call('offer', {
       id: msg.id?.asBuffer(),
       remoteId: msg.remoteId?.asBuffer(),
@@ -231,14 +231,14 @@ export class SignalClient {
   /**
    * Routes an offer to the other peer's _onSignal callback.
    */
-  async signal (message: Message): Promise<void> {
-    const signalMessage: SignalMessage = {
+  async signal (message: SignalMessage): Promise<void> {
+    const signalMessage: EncodedMessage = {
       messageId: message.messageId?.asBuffer(),
       id: message.id?.asBuffer(),
       remoteId: message.remoteId?.asBuffer(),
       topic: message.topic?.asBuffer(),
       sessionId: message.sessionId?.asBuffer(),
-      data: Buffer.from(schema.getCodecForType('dxos.mesh.signal.MessageData').encode(message.data ?? failUndefined()))
+      data: Buffer.from(schema.getCodecForType('dxos.mesh.signalMessage.MessageData').encode(message.data ?? failUndefined()))
     };
     return this._client.emit('signal', signalMessage);
   }
@@ -247,7 +247,7 @@ export class SignalClient {
 /**
  * Messages as processed by the signal server.
  */
-interface SignalMessage{
+interface EncodedMessage{
   /**
    * Sender's public key.
    */

@@ -12,7 +12,7 @@ import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 import { randomInt } from '@dxos/util';
 
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 
@@ -46,15 +46,15 @@ describe('MessageRouter', () => {
     onOffer = async () => ({ accept: true })
   }: {
     signalApiUrl: string;
-    onSignal?: (msg: Message) => Promise<void>;
-    onOffer?: (msg: Message) => Promise<Answer>;
+    onSignal?: (msg: SignalMessage) => Promise<void>;
+    onOffer?: (msg: SignalMessage) => Promise<Answer>;
   }) => {
 
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: (msg: Message) => api.signal(msg).catch((_) => { }),
+      sendMessage: (msg: SignalMessage) => api.signal(msg).catch((_) => { }),
       onSignal: onSignal,
       onOffer: onOffer
     });
@@ -63,7 +63,7 @@ describe('MessageRouter', () => {
     api = new SignalClient(
       signalApiUrl,
       (async () => {}) as any,
-      async (msg: Message) => router.receiveMessage(msg)
+      async (msg: SignalMessage) => router.receiveMessage(msg)
     );
 
     afterTest(() => api.close());
@@ -74,14 +74,14 @@ describe('MessageRouter', () => {
   };
 
   test('signaling between 2 clients', async () => {
-    const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const msg: Message = {
+    const msg: SignalMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -125,7 +125,7 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   test('signaling between 3 clients', async () => {
-    const signalMock1 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: signalApiUrl1,
@@ -133,7 +133,7 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock2 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const signalMock2 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: signalApiUrl1,
@@ -141,7 +141,7 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock3 = mockFn<(msg: Message) => Promise<void>>().resolvesTo();
+    const signalMock3 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: signalApiUrl1,
@@ -156,7 +156,7 @@ describe('MessageRouter', () => {
     await api3.join(topic, peer3);
 
     // sending signal from peer1 to peer3.
-    const msg1to3: Message = {
+    const msg1to3: SignalMessage = {
       id: peer1,
       remoteId: peer3,
       sessionId: PublicKey.random(),
@@ -169,7 +169,7 @@ describe('MessageRouter', () => {
     }, 4_000);
 
     // sending signal from peer2 to peer3.
-    const msg2to3: Message = {
+    const msg2to3: SignalMessage = {
       id: peer2,
       remoteId: peer3,
       sessionId: PublicKey.random(),
@@ -182,7 +182,7 @@ describe('MessageRouter', () => {
     }, 4_000);
 
     // sending signal from peer3 to peer1.
-    const msg3to1: Message = {
+    const msg3to1: SignalMessage = {
       id: peer3,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -242,9 +242,9 @@ describe('MessageRouter', () => {
       // Imitates signal network disruptions (e. g. message doubling, ).
       messageDisruption = msg => [msg]
     }: {
-      onSignal1?: (msg: Message) => Promise<void>;
-      onSignal2?: (msg: Message) => Promise<void>;
-      messageDisruption?: (msg: Message) => Message[];
+      onSignal1?: (msg: SignalMessage) => Promise<void>;
+      onSignal2?: (msg: SignalMessage) => Promise<void>;
+      messageDisruption?: (msg: SignalMessage) => SignalMessage[];
     }): {mr1: MessageRouter; mr2: MessageRouter} => {
 
       const mr1: MessageRouter = new MessageRouter({
@@ -268,7 +268,7 @@ describe('MessageRouter', () => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
-      const unreliableConnection = (msg: Message): Message[] => {
+      const unreliableConnection = (msg: SignalMessage): SignalMessage[] => {
         i++;
         if (i % 3 !== 0) {
           return [msg];
@@ -276,8 +276,8 @@ describe('MessageRouter', () => {
         return [];
       };
 
-      const received: Message[] = [];
-      const signalMock1 = async (msg: Message) => {
+      const received: SignalMessage[] = [];
+      const signalMock1 = async (msg: SignalMessage) => {
         received.push(msg);
       };
 
@@ -305,10 +305,10 @@ describe('MessageRouter', () => {
 
     test('ignoring doubled messages', async () => {
       // Message got doubled going through signal network.
-      const doublingMessage = (msg: Message) => [msg, msg];
+      const doublingMessage = (msg: SignalMessage) => [msg, msg];
 
-      const received: Message[] = [];
-      const signalMock1 = async (msg: Message) => {
+      const received: SignalMessage[] = [];
+      const signalMock1 = async (msg: SignalMessage) => {
         received.push(msg);
       };
 
