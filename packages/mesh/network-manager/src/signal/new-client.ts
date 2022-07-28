@@ -67,7 +67,7 @@ export class NewSignalClient {
           subscribe: cb => {
             this._socket.onmessage = msg => {
               console.log('rcv', msg.data);
-              cb(msg.data);
+              cb(msg.data as any);
             };
           }
         }
