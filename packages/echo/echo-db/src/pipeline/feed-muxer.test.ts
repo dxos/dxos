@@ -139,7 +139,8 @@ describe('FeedMuxer', () => {
     expect((echoMessages[0] as any).data).toEqual({
       itemId: '123',
       genesis: {
-        itemType: 'foo'
+        itemType: 'foo',
+        modelType: 'bar'
       }
     });
   });
