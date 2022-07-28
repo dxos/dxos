@@ -1,10 +1,16 @@
-import WebSocket from "ws";
-import { Signal } from "../proto/gen/dxos/mesh/signal";
-import { createBundledRpcClient, createBundledRpcServer, ProtoRpcClient } from '@dxos/rpc'
-import { schema } from "../proto/gen";
-import debug  from "debug";
-import { PubKey, PublicKey } from "@dxos/protocols";
-import { Trigger } from "@dxos/async";
+//
+// Copyright 2022 DXOS.org
+//
+
+import debug from 'debug';
+import WebSocket from 'ws';
+
+import { Trigger } from '@dxos/async';
+import { PublicKey } from '@dxos/protocols';
+import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
+
+import { schema } from '../proto/gen';
+import { Signal } from '../proto/gen/dxos/mesh/signal';
 
 interface Services {
   Signal: Signal
@@ -17,8 +23,8 @@ export class NewSignalClient {
   private readonly _rpc: ProtoRpcClient<Services>
   private readonly _connectTrigger = new Trigger();
 
-  constructor(
-    private readonly _url: string,
+  constructor (
+    private readonly _url: string
   ) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
@@ -49,35 +55,35 @@ export class NewSignalClient {
 
     this._rpc = createBundledRpcClient(
       {
-        Signal: schema.getService('dxos.mesh.signal.Signal'),
+        Signal: schema.getService('dxos.mesh.signal.Signal')
       },
       {
         noHandshake: true,
         port: {
           send: msg => {
-            console.log('send', msg)
-            this._socket.send(msg)
+            console.log('send', msg);
+            this._socket.send(msg);
           },
           subscribe: cb => {
             this._socket.onmessage = msg => {
-              console.log('rcv', msg.data)
-              cb(msg.data)
-            }
+              console.log('rcv', msg.data);
+              cb(msg.data);
+            };
           }
         }
       }
-    )
+    );
   }
 
-  async open() {
+  async open () {
     await this._connectTrigger.wait();
     await this._rpc.open();
   }
 
-  join(topic: PublicKey, peerId: PublicKey) {
+  join (topic: PublicKey, peerId: PublicKey) {
     return this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
-      peer: peerId.asUint8Array(),
-    })
+      peer: peerId.asUint8Array()
+    });
   }
 }
