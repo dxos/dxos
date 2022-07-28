@@ -1,43 +1,49 @@
-# Meta Graph Design Document
+# Meta Graph Design Document <!-- omit in toc -->
 
 This document presents the design of the Decentralized Meta Graph (DMG).
 
+> - TODO: Merge with dmg-spec, dmg-usage.
+
 <!-- @toc -->
 
-- [Meta Graph Design Document](#meta-graph-design-document)
-  - [1. Terminology](#1-terminology)
-  - [2. Basic Concepts](#2-basic-concepts)
-    - [2.1. Graph](#21-graph)
-      - [2.1.1. Resources](#211-resources)
-      - [2.1.2. Computation](#212-computation)
-      - [2.1.3. Issues](#213-issues)
-    - [2.2. Subnets](#22-subnets)
-  - [3. Architecture](#3-architecture)
-    - [3.1. KUBE Services](#31-kube-services)
-    - [3.2. KUBE Architecture](#32-kube-architecture)
-    - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
-  - [4. Notes](#4-notes)
+- [1. Terminology](#1-terminology)
+- [2. Basic Concepts](#2-basic-concepts)
+  - [2.1. Graph](#21-graph)
+    - [2.1.1. Resources](#211-resources)
+    - [2.1.2. Computation](#212-computation)
+    - [2.1.3. Issues](#213-issues)
+  - [2.2. Subnets](#22-subnets)
+- [3. Architecture](#3-architecture)
+  - [3.1. KUBE Services](#31-kube-services)
+  - [3.2. KUBE Architecture](#32-kube-architecture)
+  - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
+- [4. Notes](#4-notes)
 
 ## 1. Terminology
 
-**Credential** - Verifiable credential that enables decentralized access control within the Subnet (e.g., administrative, read/write, replication, control).
+**Credential** - 
+Verifiable credential that enables decentralized access control within the Subnet (e.g., administrative, read/write, replication, control).
 Each KUBE maintains a secure Credential store.
 
 > *   Conceptually part of HALO, but may be implemented via TLS.
 > *   TODO: Disambiguation TLS certificates from credentials (vs. CA/DNS).
 > *   TODO: Connect Pierre with Ben Laurie!
 
-**DNS** - Global authority for domain records.
+**DNS** - 
+Global authority for domain records.
 
-**KUBE** - Individual Host (Subnet Node) running the KUBE daemon.
+**KUBE** - 
+Individual Host (Subnet Node) running the KUBE daemon.
 
-> *   TODO: Consider renaming but used `kube` until determined.
+**Realm** - 
+Logical partition of the federated DMG consistent across the Subnet.
 
-**Realm** - Logical partition of the federated DMG consistent across the Subnet.
+**Root CA** - 
+Root Certification Authority (for the Subnet). 
+Used to enroll KUBEs into the Subnet and is the root for other Credentials used within the Subnet.
 
-**Root CA** - Root Certification (for the Subnet). Used to enroll KUBEs into the Subnet and is the root for other Credentials used within the Subnet.
-
-**Subnet** - A cluster of KUBE nodes under local authority.
+**Subnet** - 
+A cluster of KUBE nodes under local authority.
 
 ## 2. Basic Concepts
 
@@ -143,6 +149,9 @@ The script can be invoked by making an HTTP POST request.
 ```bash
 curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/data
 ```
+
+> - TODO: Note the script would typically be a think adapter to some other compute system.
+> - TODO: How does this relate to bots?
 
 #### 2.1.3. Issues
 

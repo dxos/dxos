@@ -1,25 +1,25 @@
-# The Decentralized Meta Graph (DMG)
+# The Decentralized Meta Graph (DMG) <!-- omit in toc -->
 
 This document outlines the DXOS Decentralized Meta Graph (DMG).
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-    *   [1.1. Motivation](#11-motivation)
-        *   [1.1.1. Information Management](#111-information-management)
-        *   [1.1.2. Collaboration](#112-collaboration)
-*   [2. Terminology](#2-terminology)
-*   [3. Basic Concepts](#3-basic-concepts)
-    *   [3.1. Decentralized Meta Graph](#31-decentralized-meta-graph)
-    *   [3.2. Identity: Circles, Groups, and Agents](#32-identity-circles-groups-and-agents)
-        *   [3.2.1. References](#321-references)
-    *   [3.3. Information: Branes, Spaces, and Nodes](#33-information-branes-spaces-and-nodes)
-        *   [3.3.1. Consistency and Consensus](#331-consistency-and-consensus)
-        *   [3.3.2. Data Model](#332-data-model)
-        *   [3.3.3. Data Federation](#333-data-federation)
-        *   [3.3.4. References](#334-references)
-    *   [3.4. Decentralized Networks](#34-decentralized-networks)
-*   [4. Notes](#4-notes)
+- [1. Introduction](#1-introduction)
+  - [1.1. Motivation](#11-motivation)
+    - [1.1.1. Information Management](#111-information-management)
+    - [1.1.2. Collaboration](#112-collaboration)
+- [2. Terminology](#2-terminology)
+- [3. Basic Concepts](#3-basic-concepts)
+  - [3.1. Decentralized Meta Graph](#31-decentralized-meta-graph)
+  - [3.2. Identity: Circles, Groups, and Agents](#32-identity-circles-groups-and-agents)
+    - [3.2.1. References](#321-references)
+  - [3.3. Information: Branes, Spaces, and Nodes](#33-information-branes-spaces-and-nodes)
+    - [3.3.1. Consistency and Consensus](#331-consistency-and-consensus)
+    - [3.3.2. Data Model](#332-data-model)
+    - [3.3.3. Data Federation](#333-data-federation)
+    - [3.3.4. References](#334-references)
+  - [3.4. Decentralized Networks](#34-decentralized-networks)
+- [4. Notes](#4-notes)
 
 ## 1. Introduction
 
