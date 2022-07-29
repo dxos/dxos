@@ -4,8 +4,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*",
-    "bin/*"
+    "src/**/*"
   ],
   "references": [
     {
