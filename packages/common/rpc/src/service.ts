@@ -86,12 +86,9 @@ export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options
 
   const rpc: S = {} as S;
   for (const serviceName of Object.keys(descriptors) as (keyof S)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = descriptors[serviceName].serviceProto.fullName.slice(1);
-
     rpc[serviceName] = descriptors[serviceName].createClient({
-      call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-      callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
+      call: (method, req) => peer.call(`${String(serviceName)}.${method}`, req),
+      callStream: (method, req) => peer.callStream(`${String(serviceName)}.${method}`, req)
     });
   }
 
