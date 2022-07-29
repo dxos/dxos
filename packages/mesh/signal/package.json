@@ -38,8 +38,12 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
+    "@types/node": "^16.11.27",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@types/debug": "^4.1.7",
+    "debug": "^4.3.3",
     "eslint": "^7.12.1",
     "typescript": "^4.7.2"
   },
