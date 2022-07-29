@@ -93,12 +93,9 @@ The KUBE server contains a Web server that maps conventional HTTP requests onto 
 
 DMG Records may be mapped onto URLs as follows:
 
-
 > Note: Multiple domain names may be mapped to a KUBE Subnet, therefore there may be a many-to-one relationship between Subnet and DMG Realm.
 
-
 ![URL](./diagrams/dmg-url.drawio.svg)
-
 
 > - Note: Realm is just a FQ hostname.
 > - TODO: Resources are "leaf" nodes of the graph and are processed by a `handler` specified by its ancestors Records, which may be inherited.
