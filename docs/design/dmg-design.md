@@ -120,15 +120,15 @@ Records are retrieved via the DMG Record Service, which defines the following AP
 package dxos.dmg.service;
 
 service DMG {
-  rpc Lookup(LookupRequest) returns (LookupResponse);
+  rpc ResolveUrl(ResolveUrlRequest) returns (ResolveUrlResponse);
   rpc getRecords(RecordRequest) returns (RecordResponse);
 }
 
-message LookupRequest {
+message ResolveUrlRequest {
   string url = 1;
 }
 
-message LookupResponse {
+message ResolveUrlResponse {
   message Part {
     string path = 1;
     Hash record = 2;
