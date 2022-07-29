@@ -2277,18 +2277,22 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
+      '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.27
       debug: ^4.3.3
       eslint: ^7.12.1
+      pkg-up: ^3.1.0
       typescript: ^4.7.2
     dependencies:
       debug: 4.3.3
+      pkg-up: 3.1.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/util': link:../../common/util
+      '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       eslint: 7.32.0

@@ -76,7 +76,10 @@ export class NewSignalClient {
   }
 
   async open () {
+    console.log(2);
+
     await this._connectTrigger.wait();
+    console.log(3);
     await this._rpc.open();
   }
 

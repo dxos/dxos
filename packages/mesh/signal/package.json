@@ -16,16 +16,6 @@
   "browser": {
     "node:assert": "assert"
   },
-  "bin": {
-    "dxos-signal": "bin/signal.js",
-    "signal": "bin/signal.js"
-  },
-  "files": [
-    "bin",
-    "src",
-    "index.js",
-    "dist"
-  ],
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
@@ -34,7 +24,8 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "pkg-up": "^3.1.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
@@ -45,7 +36,8 @@
     "@types/debug": "^4.1.7",
     "debug": "^4.3.3",
     "eslint": "^7.12.1",
-    "typescript": "^4.7.2"
+    "typescript": "^4.7.2",
+    "@swc-node/register": "~1.4.2"
   },
   "publishConfig": {
     "access": "public"

@@ -73,7 +73,7 @@ describe('MessageRouter', () => {
     };
   };
 
-  test('signaling between 2 clients', async () => {
+  test.only('signaling between 2 clients', async () => {
     const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });

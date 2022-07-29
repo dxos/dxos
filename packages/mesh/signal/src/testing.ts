@@ -5,18 +5,21 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { debug } from 'debug';
 import * as process from 'process';
+import pkgUp from 'pkg-up';
 
 import { randomInt } from '@dxos/util';
+import path, { dirname } from 'path';
 
-const log = debug('dxos:mesh:signal:testing');
+const log = debug('dxos:signal:testing');
 
 export class TestBroker {
-  private readonly port: number;
-  private serverProcess: ChildProcessWithoutNullStreams;
+  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'); 
+  private readonly _port: number;
+  private _serverProcess: ChildProcessWithoutNullStreams;
 
   constructor (port = 8080) {
-    this.port = port;
-    this.serverProcess = this.startProcess();
+    this._port = port;
+    this._serverProcess = this.startProcess();
   }
 
   public startProcess (): ChildProcessWithoutNullStreams {
@@ -30,25 +33,40 @@ export class TestBroker {
       throw new Error(`Unsupported platform: ${os}`);
     }
 
-    const server = spawn(`signal-test-${os}-${arch} -port ${this.port} server`, [], {});
+    // const server = spawn(`./signal-test-${os}-${arch} -port ${this._port} server`, [], {cwd: this._binPath});
+    log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
+    const server = spawn(
+      `./signal-test-${os}-${arch}`, 
+      [`-port`, this._port.toString(), `server`], 
+      { cwd: this._binPath }
+    );
 
     server.stdout.on('data', (data) => {
-      log(`TestServer: ${data}`);
+      log(`TestServer stdout: ${data}`);
     });
+
+    server.stderr.on('data', (data) => {
+      log(`TestServer stderr: ${data}`);
+    })
 
     server.on('error', (err) => {
       log(`TestServer ERROR: ${err}`);
+    });
+
+    server.on('close', (code) => {
+      log(`TestServer exited with code ${code}`);
     });
 
     return server;
   }
 
   public stop (): void {
-    this.serverProcess.kill('SIGINT');
+    this._serverProcess.kill('SIGINT');
   }
 
   public url (): string {
-    return `wss://localhost:${this.port}/ws`;
+    // console.log(this._serverProcess.st)
+    return `ws://localhost:${this._port}/ws`;
   }
 }
 
