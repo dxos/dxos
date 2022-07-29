@@ -109,6 +109,7 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
+<<<<<<< HEAD
 Records are retrieved via the DMG Record Service, which defines the following API.
 
 > Note: The path may return a hierarchical list of Record refs.
@@ -188,6 +189,8 @@ Returns
 
 > - TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
 
+=======
+>>>>>>> origin/main
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**

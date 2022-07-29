@@ -410,7 +410,7 @@ export class PresencePlugin {
     this._limit.clearQueue();
 
     try {
-      const message = {
+      const message: Alive = {
         peerId: this._peerId,
         connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)

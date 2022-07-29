@@ -23,20 +23,27 @@ message SignedMessage {
   // Provides the common metadata needed for all signed objects.
   //
   message Signed {
-    required string created = 1;                    // RFC-3339 datetime string.
+    /// RFC-3339 datetime string.
+    required string created = 1;                    
     required bytes nonce = 2;
-    required google.protobuf.Any payload = 10;      // The payload to be signed.
+    /// The payload to be signed.
+    required google.protobuf.Any payload = 10;      
   }
 
   //
   // The signature data itself.
   //
   message Signature {
-    required PubKey key = 1;                        // The publicKey of the keypair that made this signature.
-    required bytes signature = 2;                   // The bytes of the signature.
-    KeyChain keyChain = 3;                          // Optional. The certification chain of SignedMessages for this key.
+    /// The publicKey of the keypair that made this signature.
+    required PubKey key = 1;                        
+    /// The bytes of the signature.
+    required bytes signature = 2;                   
+    /// The certification chain of SignedMessages for this key.
+    optional KeyChain keyChain = 3;                 
   }
 
-  required Signed signed = 1;                       // The signed message contents.
-  repeated Signature signatures = 2;                // An array of Signatures, one for each key that signed the message.
+  /// The signed message contents.
+  required Signed signed = 1;                       
+  /// An array of Signatures, one for each key that signed the message.
+  repeated Signature signatures = 2;                
 }

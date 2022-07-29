@@ -9,6 +9,7 @@ import * as ts from 'typescript';
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
 import { SubstitutionsMap } from '../parser';
+import { GeneratorContext } from './context';
 import { createDeclarations, createTypeDictionary } from './declaration-generator';
 import { createSerializerDefinition } from './serializer-definition-generator';
 import { createServicesDictionary } from './service';
@@ -24,7 +25,12 @@ const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context
 
 export const createNamespaceSourceFile = (types: pb.ReflectionObject[], substitutions: SubstitutionsMap, outDir: string, namespace: string, substitutionsModule: ModuleSpecifier | undefined, otherNamespaces: string[]) => {
   const outFile = join(outDir, getFileNameForNamespace(namespace));
-  const declarations: ts.Statement[] = Array.from(createDeclarations(types, substitutions));
+  const ctx: GeneratorContext = {
+    outputFilename: outFile,
+    subs: substitutions
+  };
+
+  const declarations: ts.Statement[] = Array.from(createDeclarations(types, ctx));
 
   const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, dirname(outFile));
 

@@ -8,7 +8,7 @@ import { Timeframe } from '@dxos/protocols';
 import { schema } from '../proto';
 
 export const createSetPropertyMutation = (
-  itemId: ItemID, key: string, value: string, timeframe?: Timeframe
+  itemId: ItemID, key: string, value: string, timeframe = new Timeframe()
 ): FeedMessage => ({
   timeframe,
   echo: {

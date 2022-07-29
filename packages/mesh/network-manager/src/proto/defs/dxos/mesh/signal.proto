@@ -20,7 +20,7 @@ message Message {
   /// Message payload.
   MessageData data = 5;
   /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
-  PubKey messageId = 6;
+  optional PubKey messageId = 6;
 }
 
 message MessageData {
@@ -38,7 +38,7 @@ message Offer {
 message Answer {
   bool accept = 1;
   /// MessageId of the Offer being answered.
-  PubKey offerMessageId = 2;
+  optional PubKey offerMessageId = 2;
 }
 
 message Signal {

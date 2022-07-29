@@ -6,6 +6,7 @@ import { it as test } from 'mocha';
 import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -43,7 +44,7 @@ describe('Client Services', () => {
 
       await invitee.services.ProfileService.authenticateInvitation({
         processId: redeemedInvitation.id,
-        secret: invitation.descriptor.secret
+        secret: invitation.descriptor.secret ?? failUndefined()
       });
 
       const [inviteeProfileLatch, inviteeProfileTrigger] = latch();

@@ -43,33 +43,33 @@ message KeyRecord {
   /**
    * The secret key as a Buffer (this will never be visible outside the Keyring).
    */
-  PrivKey secretKey = 3;
+  optional PrivKey secretKey = 3;
 
   /**
    * Is this key from a Greeting "hint"?
    */
-  bool hint = 4;
+  optional bool hint = 4;
 
   /**
    * Determines if this is our key?
    * Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
    */
-  bool own = 5; // TODO(burdon): Rename "local" or "private".
+  optional bool own = 5; // TODO(burdon): Rename "local" or "private".
 
   /**
    * Is this key to be trusted?
    */
-  bool trusted = 6; // TODO(burdon): Rename "trust". How is this determined?
+  optional bool trusted = 6; // TODO(burdon): Rename "trust". How is this determined?
 
   /**
    * An RFC-3339 date/time string for when the key was added to the Keyring.
    */
-  string added = 7;
+  optional string added = 7;
 
   /**
    * An RFC-3339 date/time string for when the key was created.
    */
-  string created = 8;
+  optional string created = 8;
 }
 
 message KeyRecordList {

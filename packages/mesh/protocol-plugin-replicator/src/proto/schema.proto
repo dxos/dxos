@@ -14,6 +14,6 @@ message Container {
 }
 
 message Feed {
-  bytes key = 1;
-  bytes discoveryKey = 2;
+  optional bytes key = 1;
+  optional bytes discoveryKey = 2;
 }

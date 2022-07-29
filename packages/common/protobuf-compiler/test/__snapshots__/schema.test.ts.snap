@@ -9,6 +9,10 @@ import * as dxos_test_any from \\"./any\\";
 import * as dxos_test_extensions from \\"./extensions\\";
 import * as dxos_test_testfoo from \\"./testfoo\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
+/**
+ * Defined in:
+ *   {@link file://./../../../another.proto}
+ */
 export interface AnotherMessage {
 }
 
@@ -20,8 +24,12 @@ import * as dxos_test_another from \\"./another\\";
 import * as dxos_test_extensions from \\"./extensions\\";
 import * as dxos_test_testfoo from \\"./testfoo\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
+/**
+ * Defined in:
+ *   {@link file://./../../../any.proto}
+ */
 export interface Any {
-    bar?: number;
+    bar: number;
 }
 
 dxos/test/extensions.ts:
@@ -32,9 +40,17 @@ import * as dxos_test_another from \\"./another\\";
 import * as dxos_test_any from \\"./any\\";
 import * as dxos_test_testfoo from \\"./testfoo\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
+/**
+ * Defined in:
+ *   {@link file://./../../../extensions.proto}
+ */
 export interface OptionsObject {
-    field?: number;
+    field: number;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../../extensions.proto}
+ */
 export interface WithDefaultField {
     /**
      * Tag
@@ -43,8 +59,12 @@ export interface WithDefaultField {
      *   - (defaultValue) = \\"latest\\"
      *   - (optionsObj).field = 3
      */
-    tag?: string;
+    tag: string;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../../extensions.proto}
+ */
 export interface ContainingMessageWithExtensions {
     str?: string;
     msg?: WithDefaultField;
@@ -58,9 +78,13 @@ import * as dxos_test_another from \\"./another\\";
 import * as dxos_test_any from \\"./any\\";
 import * as dxos_test_extensions from \\"./extensions\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
+/**
+ * Defined in:
+ *   {@link file://./../../../../../../protobuf-test/src/foo.proto}
+ */
 export interface TestFoo {
-    fizz?: number;
-    bazz?: string;
+    fizz: number;
+    bazz: string;
 }
 
 dxos/test.ts:
@@ -71,60 +95,104 @@ import * as dxos_test_any from \\"./test/any\\";
 import * as dxos_test_extensions from \\"./test/extensions\\";
 import * as dxos_test_testfoo from \\"./test/testfoo\\";
 import * as google_protobuf from \\"../google/protobuf\\";
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface Key {
     data: Uint8Array;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface Any {
-    foo?: string;
+    foo: string;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface Scalars {
-    doubleField?: number;
-    floatField?: number;
-    int32Field?: number;
-    int64Field?: string;
-    uint32Field?: number;
-    uint64Field?: string;
-    sint32Field?: number;
-    sint64Field?: string;
-    fixed32Field?: number;
-    fixed64Field?: string;
-    sfixed32Field?: number;
-    sfixed64Field?: string;
-    boolField?: boolean;
-    stringField?: string;
-    bytesField?: Uint8Array;
+    doubleField: number;
+    floatField: number;
+    int32Field: number;
+    int64Field: string;
+    uint32Field: number;
+    uint64Field: string;
+    sint32Field: number;
+    sint64Field: string;
+    fixed32Field: number;
+    fixed64Field: string;
+    sfixed32Field: number;
+    sfixed64Field: string;
+    boolField: boolean;
+    stringField: string;
+    bytesField: Uint8Array;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface ComplexFields {
     repeatedField?: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>[];
     requiredField: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>;
     mappedField?: Partial<Record<string, ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>>>;
-    inner?: ComplexFields.Inner;
-    myAny?: Any;
-    googleAny?: ReturnType<(typeof substitutions)[\\"google.protobuf.Any\\"][\\"decode\\"]>;
-    importedAny?: dxos_test_any.Any;
+    inner: ComplexFields.Inner;
+    myAny: Any;
+    googleAny: ReturnType<(typeof substitutions)[\\"google.protobuf.Any\\"][\\"decode\\"]>;
+    importedAny: dxos_test_any.Any;
+    /**
+     * Options:
+     *   - proto3_optional = true
+     */
     fooTest?: dxos_test_testfoo.TestFoo;
 }
 export namespace ComplexFields {
+    /**
+     * Defined in:
+     *   {@link file://./../../schema.proto}
+     */
     export interface Inner {
-        foo?: string;
-        bar?: ComplexFields.InnerEnum;
+        foo: string;
+        bar: ComplexFields.InnerEnum;
     }
+    /**
+     * Defined in:
+     *   {@link file://./../../schema.proto}
+     */
     export enum InnerEnum {
         FOO = 1,
         BAR = 2
     }
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface WithTimestamp {
-    timestamp?: ReturnType<(typeof substitutions)[\\"google.protobuf.Timestamp\\"][\\"decode\\"]>;
+    timestamp: ReturnType<(typeof substitutions)[\\"google.protobuf.Timestamp\\"][\\"decode\\"]>;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface Outer {
-    inner?: ComplexFields.Inner;
+    inner: ComplexFields.Inner;
 }
 export namespace Outer {
+    /**
+     * Defined in:
+     *   {@link file://./../../schema.proto}
+     */
     export interface Inner {
-        inner?: ComplexFields.InnerEnum;
+        inner: ComplexFields.InnerEnum;
     }
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export enum TaskType {
     IN_PROGRESS = 1,
     COMPLETED = 2
@@ -132,14 +200,20 @@ export enum TaskType {
 /**
  * Task.
  * Comments can be multiline.
+ *
+ * Defined in:
+ *   {@link file://./../../schema.proto}
  */
 export interface Task {
     /**
      * Task id
      */
-    id?: string;
+    id: string;
     /**
      * Task title
+     *
+     * Options:
+     *   - proto3_optional = true
      */
     title?: string;
     /**
@@ -148,19 +222,38 @@ export interface Task {
      */
     key: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>;
     type: TaskType;
+    /**
+     * Options:
+     *   - proto3_optional = true
+     */
     googleAny?: ReturnType<(typeof substitutions)[\\"google.protobuf.Any\\"][\\"decode\\"]>;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface TaskList {
     tasks?: Task[];
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface SubstitutedByInterface {
-    foo?: string;
+    foo: string;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface TaskCount {
-    count?: number;
+    count: number;
 }
 /**
  * Test service definition.
+ *
+ * Defined in:
+ *   {@link file://./../../schema.proto}
  */
 export interface TestService {
     /**
@@ -172,9 +265,17 @@ export interface TestService {
      */
     subscribeTasks: (request: ReturnType<(typeof substitutions)[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface WithEmptyField {
-    emptyField?: void;
+    emptyField: void;
 }
+/**
+ * Defined in:
+ *   {@link file://./../../schema.proto}
+ */
 export interface ServiceWithEmpty {
     emptyRpc: (request: void) => Promise<void>;
     emptyStreamRpc: (request: void) => Stream<void>;
@@ -189,12 +290,12 @@ import * as dxos_test_any from \\"../dxos/test/any\\";
 import * as dxos_test_extensions from \\"../dxos/test/extensions\\";
 import * as dxos_test_testfoo from \\"../dxos/test/testfoo\\";
 export interface Any {
-    type_url?: string;
-    value?: Uint8Array;
+    type_url: string;
+    value: Uint8Array;
 }
 export interface Timestamp {
-    seconds?: string;
-    nanos?: number;
+    seconds: string;
+    nanos: number;
 }
 export interface Empty {
 }
@@ -202,8 +303,8 @@ export interface FileDescriptorSet {
     file?: FileDescriptorProto[];
 }
 export interface FileDescriptorProto {
-    name?: string;
-    package?: string;
+    name: string;
+    package: string;
     dependency?: string[];
     /**
      * Options:
@@ -219,43 +320,43 @@ export interface FileDescriptorProto {
     enumType?: EnumDescriptorProto[];
     service?: ServiceDescriptorProto[];
     extension?: FieldDescriptorProto[];
-    options?: FileOptions;
-    sourceCodeInfo?: SourceCodeInfo;
-    syntax?: string;
+    options: FileOptions;
+    sourceCodeInfo: SourceCodeInfo;
+    syntax: string;
 }
 export interface DescriptorProto {
-    name?: string;
+    name: string;
     field?: FieldDescriptorProto[];
     extension?: FieldDescriptorProto[];
     nestedType?: DescriptorProto[];
     enumType?: EnumDescriptorProto[];
     extensionRange?: DescriptorProto.ExtensionRange[];
     oneofDecl?: OneofDescriptorProto[];
-    options?: MessageOptions;
+    options: MessageOptions;
     reservedRange?: DescriptorProto.ReservedRange[];
     reservedName?: string[];
 }
 export namespace DescriptorProto {
     export interface ExtensionRange {
-        start?: number;
-        end?: number;
+        start: number;
+        end: number;
     }
     export interface ReservedRange {
-        start?: number;
-        end?: number;
+        start: number;
+        end: number;
     }
 }
 export interface FieldDescriptorProto {
-    name?: string;
-    number?: number;
-    label?: FieldDescriptorProto.Label;
-    type?: FieldDescriptorProto.Type;
-    typeName?: string;
-    extendee?: string;
-    defaultValue?: string;
-    oneofIndex?: number;
-    jsonName?: string;
-    options?: FieldOptions;
+    name: string;
+    number: number;
+    label: FieldDescriptorProto.Label;
+    type: FieldDescriptorProto.Type;
+    typeName: string;
+    extendee: string;
+    defaultValue: string;
+    oneofIndex: number;
+    jsonName: string;
+    options: FieldOptions;
 }
 export namespace FieldDescriptorProto {
     export enum Type {
@@ -285,55 +386,55 @@ export namespace FieldDescriptorProto {
     }
 }
 export interface OneofDescriptorProto {
-    name?: string;
-    options?: OneofOptions;
+    name: string;
+    options: OneofOptions;
 }
 export interface EnumDescriptorProto {
-    name?: string;
+    name: string;
     value?: EnumValueDescriptorProto[];
-    options?: EnumOptions;
+    options: EnumOptions;
 }
 export interface EnumValueDescriptorProto {
-    name?: string;
-    number?: number;
-    options?: EnumValueOptions;
+    name: string;
+    number: number;
+    options: EnumValueOptions;
 }
 export interface ServiceDescriptorProto {
-    name?: string;
+    name: string;
     method?: MethodDescriptorProto[];
-    options?: ServiceOptions;
+    options: ServiceOptions;
 }
 export interface MethodDescriptorProto {
-    name?: string;
-    inputType?: string;
-    outputType?: string;
-    options?: MethodOptions;
-    clientStreaming?: boolean;
-    serverStreaming?: boolean;
+    name: string;
+    inputType: string;
+    outputType: string;
+    options: MethodOptions;
+    clientStreaming: boolean;
+    serverStreaming: boolean;
 }
 export interface FileOptions {
-    javaPackage?: string;
-    javaOuterClassname?: string;
-    javaMultipleFiles?: boolean;
+    javaPackage: string;
+    javaOuterClassname: string;
+    javaMultipleFiles: boolean;
     /**
      * Options:
      *   - deprecated = true
      */
-    javaGenerateEqualsAndHash?: boolean;
-    javaStringCheckUtf8?: boolean;
+    javaGenerateEqualsAndHash: boolean;
+    javaStringCheckUtf8: boolean;
     /**
      * Options:
      *   - default = \\"SPEED\\"
      */
-    optimizeFor?: FileOptions.OptimizeMode;
-    goPackage?: string;
-    ccGenericServices?: boolean;
-    javaGenericServices?: boolean;
-    pyGenericServices?: boolean;
-    deprecated?: boolean;
-    ccEnableArenas?: boolean;
-    objcClassPrefix?: string;
-    csharpNamespace?: string;
+    optimizeFor: FileOptions.OptimizeMode;
+    goPackage: string;
+    ccGenericServices: boolean;
+    javaGenericServices: boolean;
+    pyGenericServices: boolean;
+    deprecated: boolean;
+    ccEnableArenas: boolean;
+    objcClassPrefix: string;
+    csharpNamespace: string;
     uninterpretedOption?: UninterpretedOption[];
 }
 export namespace FileOptions {
@@ -344,10 +445,10 @@ export namespace FileOptions {
     }
 }
 export interface MessageOptions {
-    messageSetWireFormat?: boolean;
-    noStandardDescriptorAccessor?: boolean;
-    deprecated?: boolean;
-    mapEntry?: boolean;
+    messageSetWireFormat: boolean;
+    noStandardDescriptorAccessor: boolean;
+    deprecated: boolean;
+    mapEntry: boolean;
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface FieldOptions {
@@ -355,19 +456,19 @@ export interface FieldOptions {
      * Options:
      *   - default = \\"STRING\\"
      */
-    ctype?: FieldOptions.CType;
-    packed?: boolean;
+    ctype: FieldOptions.CType;
+    packed: boolean;
     /**
      * Options:
      *   - default = \\"JS_NORMAL\\"
      */
-    jstype?: FieldOptions.JSType;
-    lazy?: boolean;
-    deprecated?: boolean;
-    weak?: boolean;
+    jstype: FieldOptions.JSType;
+    lazy: boolean;
+    deprecated: boolean;
+    weak: boolean;
     uninterpretedOption?: UninterpretedOption[];
-    \\".dxos.test.extensions.defaultValue\\"?: string;
-    \\".dxos.test.extensions.optionsObj\\"?: dxos_test_extensions.OptionsObject;
+    \\".dxos.test.extensions.defaultValue\\": string;
+    \\".dxos.test.extensions.optionsObj\\": dxos_test_extensions.OptionsObject;
 }
 export namespace FieldOptions {
     export enum CType {
@@ -385,30 +486,30 @@ export interface OneofOptions {
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface EnumOptions {
-    allowAlias?: boolean;
-    deprecated?: boolean;
+    allowAlias: boolean;
+    deprecated: boolean;
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface EnumValueOptions {
-    deprecated?: boolean;
+    deprecated: boolean;
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface ServiceOptions {
-    deprecated?: boolean;
+    deprecated: boolean;
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface MethodOptions {
-    deprecated?: boolean;
+    deprecated: boolean;
     uninterpretedOption?: UninterpretedOption[];
 }
 export interface UninterpretedOption {
     name?: UninterpretedOption.NamePart[];
-    identifierValue?: string;
-    positiveIntValue?: string;
-    negativeIntValue?: string;
-    doubleValue?: number;
-    stringValue?: Uint8Array;
-    aggregateValue?: string;
+    identifierValue: string;
+    positiveIntValue: string;
+    negativeIntValue: string;
+    doubleValue: number;
+    stringValue: Uint8Array;
+    aggregateValue: string;
 }
 export namespace UninterpretedOption {
     export interface NamePart {
@@ -423,8 +524,8 @@ export namespace SourceCodeInfo {
     export interface Location {
         path?: number[];
         span?: number[];
-        leadingComments?: string;
-        trailingComments?: string;
+        leadingComments: string;
+        trailingComments: string;
         leadingDetachedComments?: string[];
     }
 }
@@ -434,9 +535,9 @@ export interface GeneratedCodeInfo {
 export namespace GeneratedCodeInfo {
     export interface Annotation {
         path?: number[];
-        sourceFile?: string;
-        begin?: number;
-        end?: number;
+        sourceFile: string;
+        begin: number;
+        end: number;
     }
 }
 
@@ -509,7 +610,7 @@ export interface SERVICES {
     \\"dxos.test.ServiceWithEmpty\\": dxos_test.ServiceWithEmpty;
     \\"dxos.test.TestService\\": dxos_test.TestService;
 }
-export const schemaJson = JSON.parse(\\"{\\\\\\"nested\\\\\\":{\\\\\\"dxos\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"test\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"another\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"AnotherMessage\\\\\\":{\\\\\\"fields\\\\\\":{},\\\\\\"comment\\\\\\":null}}},\\\\\\"any\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}},\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"ComplexFields\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"repeatedField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":16,\\\\\\"comment\\\\\\":null},\\\\\\"requiredField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":17,\\\\\\"comment\\\\\\":null},\\\\\\"mappedField\\\\\\":{\\\\\\"keyType\\\\\\":\\\\\\"string\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":18,\\\\\\"comment\\\\\\":null},\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Inner\\\\\\",\\\\\\"id\\\\\\":19,\\\\\\"comment\\\\\\":null},\\\\\\"myAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Any\\\\\\",\\\\\\"id\\\\\\":20,\\\\\\"comment\\\\\\":null},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":21,\\\\\\"comment\\\\\\":null},\\\\\\"importedAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"dxos.test.any.Any\\\\\\",\\\\\\"id\\\\\\":22,\\\\\\"comment\\\\\\":null},\\\\\\"fooTest\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"TestFoo\\\\\\",\\\\\\"id\\\\\\":23,\\\\\\"comment\\\\\\":null}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"InnerEnum\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"InnerEnum\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"FOO\\\\\\":1,\\\\\\"BAR\\\\\\":2},\\\\\\"comment\\\\\\":null,\\\\\\"comments\\\\\\":{\\\\\\"FOO\\\\\\":null,\\\\\\"BAR\\\\\\":null}}},\\\\\\"comment\\\\\\":null},\\\\\\"extensions\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"ContainingMessageWithExtensions\\\\\\":{\\\\\\"oneofs\\\\\\":{\\\\\\"kind\\\\\\":{\\\\\\"oneof\\\\\\":[\\\\\\"str\\\\\\",\\\\\\"msg\\\\\\"],\\\\\\"comment\\\\\\":null}},\\\\\\"fields\\\\\\":{\\\\\\"str\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"msg\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"WithDefaultField\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"defaultValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":5001,\\\\\\"extend\\\\\\":\\\\\\"google.protobuf.FieldOptions\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"optionsObj\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OptionsObject\\\\\\",\\\\\\"id\\\\\\":5002,\\\\\\"extend\\\\\\":\\\\\\"google.protobuf.FieldOptions\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"OptionsObject\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"WithDefaultField\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tag\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"options\\\\\\":{\\\\\\"(defaultValue)\\\\\\":\\\\\\"latest\\\\\\",\\\\\\"(optionsObj).field\\\\\\":3},\\\\\\"comment\\\\\\":\\\\\\"Tag\\\\\\"}},\\\\\\"comment\\\\\\":null}}},\\\\\\"Key\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"data\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Outer\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.Inner\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.InnerEnum\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Scalars\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"doubleField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"floatField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"float\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null},\\\\\\"int32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3,\\\\\\"comment\\\\\\":null},\\\\\\"int64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":4,\\\\\\"comment\\\\\\":null},\\\\\\"uint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":5,\\\\\\"comment\\\\\\":null},\\\\\\"uint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":6,\\\\\\"comment\\\\\\":null},\\\\\\"sint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint32\\\\\\",\\\\\\"id\\\\\\":7,\\\\\\"comment\\\\\\":null},\\\\\\"sint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint64\\\\\\",\\\\\\"id\\\\\\":8,\\\\\\"comment\\\\\\":null},\\\\\\"fixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed32\\\\\\",\\\\\\"id\\\\\\":9,\\\\\\"comment\\\\\\":null},\\\\\\"fixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed64\\\\\\",\\\\\\"id\\\\\\":10,\\\\\\"comment\\\\\\":null},\\\\\\"sfixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed32\\\\\\",\\\\\\"id\\\\\\":11,\\\\\\"comment\\\\\\":null},\\\\\\"sfixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed64\\\\\\",\\\\\\"id\\\\\\":12,\\\\\\"comment\\\\\\":null},\\\\\\"boolField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":13,\\\\\\"comment\\\\\\":null},\\\\\\"stringField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":14,\\\\\\"comment\\\\\\":null},\\\\\\"bytesField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":15,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"ServiceWithEmpty\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"EmptyRpc\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"EmptyStreamRpc\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseStream\\\\\\":true,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"SubstitutedByInterface\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Task\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"id\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":\\\\\\"Task id\\\\\\"},\\\\\\"title\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":\\\\\\"Task title\\\\\\"},\\\\\\"key\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":3,\\\\\\"comment\\\\\\":\\\\\\"Task key.\\\\\\\\nMultiline field comment.\\\\\\"},\\\\\\"type\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"TaskType\\\\\\",\\\\\\"id\\\\\\":4,\\\\\\"comment\\\\\\":null},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":5,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":\\\\\\"Task.\\\\\\\\nComments can be multiline.\\\\\\"},\\\\\\"TaskCount\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"count\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"TaskList\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tasks\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"TaskType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":1,\\\\\\"COMPLETED\\\\\\":2},\\\\\\"comment\\\\\\":null,\\\\\\"comments\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":null,\\\\\\"COMPLETED\\\\\\":null}},\\\\\\"testfoo\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"TestFoo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"fizz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"bazz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}},\\\\\\"TestService\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"CountTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"TaskList\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"TaskCount\\\\\\",\\\\\\"comment\\\\\\":\\\\\\"Count the tasks in the task list.\\\\\\"},\\\\\\"SubscribeTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"responseStream\\\\\\":true,\\\\\\"comment\\\\\\":\\\\\\"Subscribe to task list updates.\\\\\\"}},\\\\\\"comment\\\\\\":\\\\\\"Test service definition.\\\\\\"},\\\\\\"WithEmptyField\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"emptyField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"WithTimestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"timestamp\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Timestamp\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}}}},\\\\\\"google\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"protobuf\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"type_url\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"DescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"field\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"extension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"nestedType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"DescriptorProto\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"enumType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumDescriptorProto\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"extensionRange\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ExtensionRange\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"oneofDecl\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"OneofDescriptorProto\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"MessageOptions\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"reservedRange\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ReservedRange\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"reservedName\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":10}},\\\\\\"nested\\\\\\":{\\\\\\"ExtensionRange\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"start\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"ReservedRange\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"start\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Empty\\\\\\":{\\\\\\"fields\\\\\\":{},\\\\\\"comment\\\\\\":null},\\\\\\"EnumDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumValueDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"EnumOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"EnumOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"allowAlias\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"EnumValueDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"number\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"EnumValueOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"EnumValueOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"FieldDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"number\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"label\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Label\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"type\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Type\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"typeName\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"extendee\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"defaultValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"oneofIndex\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"jsonName\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"FieldOptions\\\\\\",\\\\\\"id\\\\\\":8}},\\\\\\"nested\\\\\\":{\\\\\\"Label\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"LABEL_OPTIONAL\\\\\\":1,\\\\\\"LABEL_REQUIRED\\\\\\":2,\\\\\\"LABEL_REPEATED\\\\\\":3},\\\\\\"comments\\\\\\":{}},\\\\\\"Type\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"TYPE_DOUBLE\\\\\\":1,\\\\\\"TYPE_FLOAT\\\\\\":2,\\\\\\"TYPE_INT64\\\\\\":3,\\\\\\"TYPE_UINT64\\\\\\":4,\\\\\\"TYPE_INT32\\\\\\":5,\\\\\\"TYPE_FIXED64\\\\\\":6,\\\\\\"TYPE_FIXED32\\\\\\":7,\\\\\\"TYPE_BOOL\\\\\\":8,\\\\\\"TYPE_STRING\\\\\\":9,\\\\\\"TYPE_GROUP\\\\\\":10,\\\\\\"TYPE_MESSAGE\\\\\\":11,\\\\\\"TYPE_BYTES\\\\\\":12,\\\\\\"TYPE_UINT32\\\\\\":13,\\\\\\"TYPE_ENUM\\\\\\":14,\\\\\\"TYPE_SFIXED32\\\\\\":15,\\\\\\"TYPE_SFIXED64\\\\\\":16,\\\\\\"TYPE_SINT32\\\\\\":17,\\\\\\"TYPE_SINT64\\\\\\":18},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"FieldOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"ctype\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"CType\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"STRING\\\\\\"}},\\\\\\"packed\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"jstype\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"JSType\\\\\\",\\\\\\"id\\\\\\":6,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"JS_NORMAL\\\\\\"}},\\\\\\"lazy\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"weak\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[4,4]],\\\\\\"nested\\\\\\":{\\\\\\"CType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"STRING\\\\\\":0,\\\\\\"CORD\\\\\\":1,\\\\\\"STRING_PIECE\\\\\\":2},\\\\\\"comments\\\\\\":{}},\\\\\\"JSType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"JS_NORMAL\\\\\\":0,\\\\\\"JS_STRING\\\\\\":1,\\\\\\"JS_NUMBER\\\\\\":2},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"FileDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"package\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"dependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"publicDependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":10,\\\\\\"options\\\\\\":{\\\\\\"packed\\\\\\":false}},\\\\\\"weakDependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":11,\\\\\\"options\\\\\\":{\\\\\\"packed\\\\\\":false}},\\\\\\"messageType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"DescriptorProto\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"enumType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumDescriptorProto\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"service\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ServiceDescriptorProto\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"extension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"FileOptions\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"sourceCodeInfo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"SourceCodeInfo\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"syntax\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":12}},\\\\\\"comment\\\\\\":null},\\\\\\"FileDescriptorSet\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"file\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FileDescriptorProto\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"comment\\\\\\":null},\\\\\\"FileOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"javaPackage\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"javaOuterClassname\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"javaMultipleFiles\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"javaGenerateEqualsAndHash\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":20,\\\\\\"options\\\\\\":{\\\\\\"deprecated\\\\\\":true}},\\\\\\"javaStringCheckUtf8\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":27},\\\\\\"optimizeFor\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OptimizeMode\\\\\\",\\\\\\"id\\\\\\":9,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"SPEED\\\\\\"}},\\\\\\"goPackage\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":11},\\\\\\"ccGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":16},\\\\\\"javaGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":17},\\\\\\"pyGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":18},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":23},\\\\\\"ccEnableArenas\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":31},\\\\\\"objcClassPrefix\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":36},\\\\\\"csharpNamespace\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":37},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[38,38]],\\\\\\"nested\\\\\\":{\\\\\\"OptimizeMode\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"SPEED\\\\\\":1,\\\\\\"CODE_SIZE\\\\\\":2,\\\\\\"LITE_RUNTIME\\\\\\":3},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"GeneratedCodeInfo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"annotation\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Annotation\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Annotation\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"path\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"sourceFile\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"begin\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":4}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"MessageOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"messageSetWireFormat\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"noStandardDescriptorAccessor\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"mapEntry\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[8,8]],\\\\\\"comment\\\\\\":null},\\\\\\"MethodDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"inputType\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"outputType\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"MethodOptions\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"clientStreaming\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"serverStreaming\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":6}},\\\\\\"comment\\\\\\":null},\\\\\\"MethodOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":33},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"OneofDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OneofOptions\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"OneofOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"ServiceDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"method\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"MethodDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ServiceOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"ServiceOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":33},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"SourceCodeInfo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"location\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Location\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Location\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"path\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"span\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"leadingComments\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"trailingComments\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"leadingDetachedComments\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":6}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Timestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"seconds\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"nanos\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"UninterpretedOption\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"NamePart\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"identifierValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"positiveIntValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"negativeIntValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"doubleValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"stringValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"aggregateValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":8}},\\\\\\"nested\\\\\\":{\\\\\\"NamePart\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"namePart\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"isExtension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}}}}}}\\");
+export const schemaJson = JSON.parse(\\"{\\\\\\"nested\\\\\\":{\\\\\\"dxos\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"test\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"another\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"AnotherMessage\\\\\\":{\\\\\\"fields\\\\\\":{},\\\\\\"comment\\\\\\":null}}},\\\\\\"any\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}},\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"ComplexFields\\\\\\":{\\\\\\"oneofs\\\\\\":{\\\\\\"_fooTest\\\\\\":{\\\\\\"oneof\\\\\\":[\\\\\\"fooTest\\\\\\"]}},\\\\\\"fields\\\\\\":{\\\\\\"repeatedField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":16,\\\\\\"comment\\\\\\":null},\\\\\\"requiredField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":17,\\\\\\"comment\\\\\\":null},\\\\\\"mappedField\\\\\\":{\\\\\\"keyType\\\\\\":\\\\\\"string\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":18,\\\\\\"comment\\\\\\":null},\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Inner\\\\\\",\\\\\\"id\\\\\\":19,\\\\\\"comment\\\\\\":null},\\\\\\"myAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Any\\\\\\",\\\\\\"id\\\\\\":20,\\\\\\"comment\\\\\\":null},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":21,\\\\\\"comment\\\\\\":null},\\\\\\"importedAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"dxos.test.any.Any\\\\\\",\\\\\\"id\\\\\\":22,\\\\\\"comment\\\\\\":null},\\\\\\"fooTest\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"TestFoo\\\\\\",\\\\\\"id\\\\\\":23,\\\\\\"options\\\\\\":{\\\\\\"proto3_optional\\\\\\":true},\\\\\\"comment\\\\\\":null}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"InnerEnum\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"InnerEnum\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"FOO\\\\\\":1,\\\\\\"BAR\\\\\\":2},\\\\\\"comment\\\\\\":null,\\\\\\"comments\\\\\\":{\\\\\\"FOO\\\\\\":null,\\\\\\"BAR\\\\\\":null}}},\\\\\\"comment\\\\\\":null},\\\\\\"extensions\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"ContainingMessageWithExtensions\\\\\\":{\\\\\\"oneofs\\\\\\":{\\\\\\"kind\\\\\\":{\\\\\\"oneof\\\\\\":[\\\\\\"str\\\\\\",\\\\\\"msg\\\\\\"],\\\\\\"comment\\\\\\":null}},\\\\\\"fields\\\\\\":{\\\\\\"str\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"msg\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"WithDefaultField\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"defaultValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":5001,\\\\\\"extend\\\\\\":\\\\\\"google.protobuf.FieldOptions\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"optionsObj\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OptionsObject\\\\\\",\\\\\\"id\\\\\\":5002,\\\\\\"extend\\\\\\":\\\\\\"google.protobuf.FieldOptions\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"OptionsObject\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"WithDefaultField\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tag\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"options\\\\\\":{\\\\\\"(defaultValue)\\\\\\":\\\\\\"latest\\\\\\",\\\\\\"(optionsObj).field\\\\\\":3},\\\\\\"comment\\\\\\":\\\\\\"Tag\\\\\\"}},\\\\\\"comment\\\\\\":null}}},\\\\\\"Key\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"data\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Outer\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.Inner\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.InnerEnum\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Scalars\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"doubleField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"floatField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"float\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null},\\\\\\"int32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3,\\\\\\"comment\\\\\\":null},\\\\\\"int64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":4,\\\\\\"comment\\\\\\":null},\\\\\\"uint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":5,\\\\\\"comment\\\\\\":null},\\\\\\"uint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":6,\\\\\\"comment\\\\\\":null},\\\\\\"sint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint32\\\\\\",\\\\\\"id\\\\\\":7,\\\\\\"comment\\\\\\":null},\\\\\\"sint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint64\\\\\\",\\\\\\"id\\\\\\":8,\\\\\\"comment\\\\\\":null},\\\\\\"fixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed32\\\\\\",\\\\\\"id\\\\\\":9,\\\\\\"comment\\\\\\":null},\\\\\\"fixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed64\\\\\\",\\\\\\"id\\\\\\":10,\\\\\\"comment\\\\\\":null},\\\\\\"sfixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed32\\\\\\",\\\\\\"id\\\\\\":11,\\\\\\"comment\\\\\\":null},\\\\\\"sfixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed64\\\\\\",\\\\\\"id\\\\\\":12,\\\\\\"comment\\\\\\":null},\\\\\\"boolField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":13,\\\\\\"comment\\\\\\":null},\\\\\\"stringField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":14,\\\\\\"comment\\\\\\":null},\\\\\\"bytesField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":15,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"ServiceWithEmpty\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"EmptyRpc\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"comment\\\\\\":null},\\\\\\"EmptyStreamRpc\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"responseStream\\\\\\":true,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"SubstitutedByInterface\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Task\\\\\\":{\\\\\\"oneofs\\\\\\":{\\\\\\"_title\\\\\\":{\\\\\\"oneof\\\\\\":[\\\\\\"title\\\\\\"]},\\\\\\"_googleAny\\\\\\":{\\\\\\"oneof\\\\\\":[\\\\\\"googleAny\\\\\\"]}},\\\\\\"fields\\\\\\":{\\\\\\"id\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":\\\\\\"Task id\\\\\\"},\\\\\\"title\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"options\\\\\\":{\\\\\\"proto3_optional\\\\\\":true},\\\\\\"comment\\\\\\":\\\\\\"Task title\\\\\\"},\\\\\\"key\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":3,\\\\\\"comment\\\\\\":\\\\\\"Task key.\\\\\\\\nMultiline field comment.\\\\\\"},\\\\\\"type\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"TaskType\\\\\\",\\\\\\"id\\\\\\":4,\\\\\\"comment\\\\\\":null},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":5,\\\\\\"options\\\\\\":{\\\\\\"proto3_optional\\\\\\":true},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":\\\\\\"Task.\\\\\\\\nComments can be multiline.\\\\\\"},\\\\\\"TaskCount\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"count\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"TaskList\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tasks\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"TaskType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":1,\\\\\\"COMPLETED\\\\\\":2},\\\\\\"comment\\\\\\":null,\\\\\\"comments\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":null,\\\\\\"COMPLETED\\\\\\":null}},\\\\\\"testfoo\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"TestFoo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"fizz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null},\\\\\\"bazz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}},\\\\\\"TestService\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"CountTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"TaskList\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"TaskCount\\\\\\",\\\\\\"comment\\\\\\":\\\\\\"Count the tasks in the task list.\\\\\\"},\\\\\\"SubscribeTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"responseStream\\\\\\":true,\\\\\\"comment\\\\\\":\\\\\\"Subscribe to task list updates.\\\\\\"}},\\\\\\"comment\\\\\\":\\\\\\"Test service definition.\\\\\\"},\\\\\\"WithEmptyField\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"emptyField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Empty\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"WithTimestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"timestamp\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Timestamp\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}}}},\\\\\\"google\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"protobuf\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"type_url\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"DescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"field\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"extension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"nestedType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"DescriptorProto\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"enumType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumDescriptorProto\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"extensionRange\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ExtensionRange\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"oneofDecl\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"OneofDescriptorProto\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"MessageOptions\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"reservedRange\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ReservedRange\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"reservedName\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":10}},\\\\\\"nested\\\\\\":{\\\\\\"ExtensionRange\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"start\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"ReservedRange\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"start\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Empty\\\\\\":{\\\\\\"fields\\\\\\":{},\\\\\\"comment\\\\\\":null},\\\\\\"EnumDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumValueDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"EnumOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"EnumOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"allowAlias\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"EnumValueDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"number\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"EnumValueOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"EnumValueOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"FieldDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"number\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"label\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Label\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"type\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Type\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"typeName\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"extendee\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"defaultValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"oneofIndex\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"jsonName\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"FieldOptions\\\\\\",\\\\\\"id\\\\\\":8}},\\\\\\"nested\\\\\\":{\\\\\\"Label\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"LABEL_OPTIONAL\\\\\\":1,\\\\\\"LABEL_REQUIRED\\\\\\":2,\\\\\\"LABEL_REPEATED\\\\\\":3},\\\\\\"comments\\\\\\":{}},\\\\\\"Type\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"TYPE_DOUBLE\\\\\\":1,\\\\\\"TYPE_FLOAT\\\\\\":2,\\\\\\"TYPE_INT64\\\\\\":3,\\\\\\"TYPE_UINT64\\\\\\":4,\\\\\\"TYPE_INT32\\\\\\":5,\\\\\\"TYPE_FIXED64\\\\\\":6,\\\\\\"TYPE_FIXED32\\\\\\":7,\\\\\\"TYPE_BOOL\\\\\\":8,\\\\\\"TYPE_STRING\\\\\\":9,\\\\\\"TYPE_GROUP\\\\\\":10,\\\\\\"TYPE_MESSAGE\\\\\\":11,\\\\\\"TYPE_BYTES\\\\\\":12,\\\\\\"TYPE_UINT32\\\\\\":13,\\\\\\"TYPE_ENUM\\\\\\":14,\\\\\\"TYPE_SFIXED32\\\\\\":15,\\\\\\"TYPE_SFIXED64\\\\\\":16,\\\\\\"TYPE_SINT32\\\\\\":17,\\\\\\"TYPE_SINT64\\\\\\":18},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"FieldOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"ctype\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"CType\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"STRING\\\\\\"}},\\\\\\"packed\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"jstype\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"JSType\\\\\\",\\\\\\"id\\\\\\":6,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"JS_NORMAL\\\\\\"}},\\\\\\"lazy\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"weak\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[4,4]],\\\\\\"nested\\\\\\":{\\\\\\"CType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"STRING\\\\\\":0,\\\\\\"CORD\\\\\\":1,\\\\\\"STRING_PIECE\\\\\\":2},\\\\\\"comments\\\\\\":{}},\\\\\\"JSType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"JS_NORMAL\\\\\\":0,\\\\\\"JS_STRING\\\\\\":1,\\\\\\"JS_NUMBER\\\\\\":2},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"FileDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"package\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"dependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"publicDependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":10,\\\\\\"options\\\\\\":{\\\\\\"packed\\\\\\":false}},\\\\\\"weakDependency\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":11,\\\\\\"options\\\\\\":{\\\\\\"packed\\\\\\":false}},\\\\\\"messageType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"DescriptorProto\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"enumType\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"EnumDescriptorProto\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"service\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"ServiceDescriptorProto\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"extension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FieldDescriptorProto\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"FileOptions\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"sourceCodeInfo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"SourceCodeInfo\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"syntax\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":12}},\\\\\\"comment\\\\\\":null},\\\\\\"FileDescriptorSet\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"file\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"FileDescriptorProto\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"comment\\\\\\":null},\\\\\\"FileOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"javaPackage\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"javaOuterClassname\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"javaMultipleFiles\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"javaGenerateEqualsAndHash\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":20,\\\\\\"options\\\\\\":{\\\\\\"deprecated\\\\\\":true}},\\\\\\"javaStringCheckUtf8\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":27},\\\\\\"optimizeFor\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OptimizeMode\\\\\\",\\\\\\"id\\\\\\":9,\\\\\\"options\\\\\\":{\\\\\\"default\\\\\\":\\\\\\"SPEED\\\\\\"}},\\\\\\"goPackage\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":11},\\\\\\"ccGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":16},\\\\\\"javaGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":17},\\\\\\"pyGenericServices\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":18},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":23},\\\\\\"ccEnableArenas\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":31},\\\\\\"objcClassPrefix\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":36},\\\\\\"csharpNamespace\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":37},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[38,38]],\\\\\\"nested\\\\\\":{\\\\\\"OptimizeMode\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"SPEED\\\\\\":1,\\\\\\"CODE_SIZE\\\\\\":2,\\\\\\"LITE_RUNTIME\\\\\\":3},\\\\\\"comments\\\\\\":{}}},\\\\\\"comment\\\\\\":null},\\\\\\"GeneratedCodeInfo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"annotation\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Annotation\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Annotation\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"path\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"sourceFile\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"begin\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"end\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":4}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"MessageOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"messageSetWireFormat\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"noStandardDescriptorAccessor\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"mapEntry\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"reserved\\\\\\":[[8,8]],\\\\\\"comment\\\\\\":null},\\\\\\"MethodDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"inputType\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"outputType\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"MethodOptions\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"clientStreaming\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"serverStreaming\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":6}},\\\\\\"comment\\\\\\":null},\\\\\\"MethodOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":33},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"OneofDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"OneofOptions\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"OneofOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"ServiceDescriptorProto\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"method\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"MethodDescriptorProto\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"options\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ServiceOptions\\\\\\",\\\\\\"id\\\\\\":3}},\\\\\\"comment\\\\\\":null},\\\\\\"ServiceOptions\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"deprecated\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":33},\\\\\\"uninterpretedOption\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"UninterpretedOption\\\\\\",\\\\\\"id\\\\\\":999}},\\\\\\"extensions\\\\\\":[[1000,536870911]],\\\\\\"comment\\\\\\":null},\\\\\\"SourceCodeInfo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"location\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Location\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Location\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"path\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"span\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"leadingComments\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"trailingComments\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"leadingDetachedComments\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":6}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null},\\\\\\"Timestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"seconds\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"nanos\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null},\\\\\\"UninterpretedOption\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"name\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"NamePart\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"identifierValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"positiveIntValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"negativeIntValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"doubleValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"stringValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"aggregateValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":8}},\\\\\\"nested\\\\\\":{\\\\\\"NamePart\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"namePart\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"isExtension\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":2}},\\\\\\"comment\\\\\\":null}},\\\\\\"comment\\\\\\":null}}}}}}}\\");
 export const schema = Schema.fromJson<TYPES, SERVICES>(schemaJson, substitutions);
 
 "
