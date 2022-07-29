@@ -1,8 +1,8 @@
-# Bots
+# Bots <!-- omit in toc -->
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
+- [1. Introduction](#1-introduction)
 
 ## 1. Introduction
 
