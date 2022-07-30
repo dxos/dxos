@@ -64,6 +64,93 @@ conversely, some Subnets may not be associated with any domain name.
 ![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
 
 
+```
+Case 1: Single new KUBE (DX instance) (local laptop, doing development)
+
+Alice
+- Develops source code in Linus file system using git and regular toolchain
+  Literally use git to leverage knowledge and toolchain.
+  - Use uses git for their source code => github.com
+  - Creates regular git repo: ~/code/notepad
+  - git remote -v => origin	git@github.com:alice/notepad.git (fetch)
+
+- Installs DX and publishes build artifacts
+  - ~/code/notepad/dx.yml has github actions for build/deploy
+    - when update main, run esbuild
+
+    pub:
+      main:
+        target: dx://app/notepad
+
+
+  - dx publish kube.local/notepad
+    dx remote -v => kube.local/notepad
+
+  - dx ls
+    dx://notepad
+
+
+
+
+
+- Map to https://notepad.kube.local (require TLS Cert)
+
+- Map to https://notepad.example.com
+
+[SOURCE REPO] => [FILE REPO] <= URL
+~/code                          http://
+
+
+- 1 single DX repo per KUBE machine
+
+
+
+
+
+
+
+
+
+
+
+Browser                               CLI
+
+
+    dx --help
+    dx repo create main
+    mkdir -p app/notepad
+    touch app/notepad/index.html
+    echo "console.log('hello world')" > app/notepad/main.js
+    dx commit -a
+    dx push
+
+    dx://   main  app/notepad => { index.html, main.js }
+
+
+
+
+notepad.kube.local                    dx://local/kube/nodepad => dmg:/app/notepad
+
+
+                                              /textapp => { index.html, main.js }
+
+notepad.foo.com     => [[Subnet]]  => dmg:/com/foo/notepad
+notepad.bar.com                       dmg:/com/bar/notepad
+
+textapp.foo.com                       dmg:[pierre.com]/app/textapp
+
+```
+
+> - ISSUE: Load balancing (FE/BE)
+
+- Each KUBE machine has a Repo (snowflake)
+- Repo can mount and share hierarchies (within subnet and across subnets)
+  - ISSUE: How to reference other subnets? DNS primary mechanism for global names. In theory could have non-DNS.
+
+
+
+
+
 #### 2.1.1. Realms
 
 The DMG is a global federated graph made up of physical partitions called Realms.
