@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Add as CreateIcon } from '@mui/icons-material';
-import { Box, Fab } from '@mui/material';
+import { Box, Fab, Typography } from '@mui/material';
 
 import { useClient, useParties } from '@dxos/react-client';
 
@@ -29,12 +29,23 @@ export const MainPage = () => {
           margin: '0 auto'
         }}
       >
-        <PartyList
-          parties={parties}
-          onSelect={partyKey => {
-            navigate(`/${partyKey.toHex()}`);
-          }}
-        />
+        {parties?.length === 0 && (
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <Typography sx={{ paddingY: 4 }}>Create a party!</Typography>
+          </Box>
+        )}
+        {parties?.length > 0 && (
+          <PartyList
+            parties={parties}
+            onSelect={partyKey => {
+              navigate(`/${partyKey.toHex()}`);
+            }}
+          />
+        )}
         <Fab
           onClick={handleCreateParty}
           sx={{
