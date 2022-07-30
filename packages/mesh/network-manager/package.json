@@ -29,6 +29,7 @@
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
@@ -38,9 +39,7 @@
     "nanomessage-rpc": "^3.0.0",
     "simple-peer": "9.11.0",
     "ws": "^7.4.4",
-    "xor-distance": "^2.0.0",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "xor-distance": "^2.0.0"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
