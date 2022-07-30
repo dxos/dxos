@@ -82,6 +82,7 @@ export const AppToolbar = ({
       </Box>
       {profile?.username && (
         <Tooltip title={profile.username}>
+          {/* TODO(wittjosiah): Fix alignment with IconButton. */}
           <Link
             component={RouterLink}
             to='/profile'
