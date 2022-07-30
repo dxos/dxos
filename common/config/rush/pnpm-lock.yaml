@@ -2755,6 +2755,7 @@ importers:
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
@@ -2788,6 +2789,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.7.1_@babel+core@7.13.16
       debug: 4.3.3
