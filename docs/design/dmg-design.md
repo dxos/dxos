@@ -78,9 +78,14 @@ Alice
   - ~/code/notepad/dx.yml has github actions for build/deploy
     - when update main, run esbuild
 
+    dx.yml
     pub:
       main:
-        target: dx://app/notepad
+        target: dx://notepad            ## notepad.kube.local
+
+      dev:
+        target: dx://notepad/dev        ## dev.notepad.hostname
+        target: dx://notepad:dev        ## notepad.hostname/dev
 
 
   - dx publish kube.local/notepad
@@ -88,6 +93,12 @@ Alice
 
   - dx ls
     dx://notepad
+
+
+https://notepad.kube.local      => /refs/notepad/@dx      <= git@github.com:alice/notepad.git#main
+
+https://dev.kube.local/notepad  => /refs/notepad/dev/@dx  <= git@github.com:alice/notepad.git#dev
+
 
 
 
@@ -196,7 +207,6 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
-<<<<<<< HEAD
 Records are retrieved via the DMG Record Service, which defines the following API.
 
 > Note: The path may return a hierarchical list of Record refs.
@@ -276,8 +286,6 @@ Returns
 
 > - TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
 
-=======
->>>>>>> origin/main
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**
@@ -356,7 +364,6 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 *   Hierarchical records (e.g., /app/notepad, /app/notepad/beta)
 *   Lambda and other compute (e.g., invoking other platforms)
 *   IPLD? DXLD?
-
 
 ## 3. Architecture
 
@@ -451,8 +458,7 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 *   3.  But if not, then how do we have globally unique Realm names?
 *   4.  DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
 
-<!---->
-
+<!--
         alice (alice.com) :: [a1, a2, a3]
             /alice/notepad
             /alice/tasklist
@@ -498,4 +504,4 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
         Publishing locally
 
             [DNS domain subnet]/[authority]]/[resource]
-
+-->
