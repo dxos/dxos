@@ -448,15 +448,90 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 2022-07-24 \[RB, Pierre]
 
 *   What are the relationships between URL => Realm => Refs (and the implied mapping)?
+
 *   Of course URL => Subnet, but the part of the URL that isn't just the host (i.e., subnet) consists of (possibly) a subdomain name (alice.example.com) and a path (/notepad).
 *   That's what i'm calling a "name" or DXN (i.e., alice/notepad).
 *   So a URL identifies both a Subnet and a resource Name (DXN).
 *   Names (DXNs) contain both a Realm and a Resource (path). E.g., "alice.notepad" references the Realm "alice" and the Resource "notepad".
 *   Questions:
 *   1.  Can Realms be hierarchical (e.g., dxos.devnet vs. alice).
+
+Yes.
+
 *   2.  Are Realms fixed to Subnets? Are they fixed to Domain names? (What if I don't have a domain name? What if I want to transfer them?). I don't think they are.
+
+Yes and yes, but I can replicate a realm and mount inside my realm. Transfer -> read in, write out.
+
 *   3.  But if not, then how do we have globally unique Realm names?
+
+Well-defined roots, like /dnsaddr/ams-2.bootstrap.libp2p.io/tcp/4001/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb in multiaddr,
+except we have a few well-defined roots (eg /onion/) and fall back onto DNS.
+
 *   4.  DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
+
+It works like mountpoints. I might mount a realm as a participant or as something I want to expose (but have no control over) or as a mere observer.
+
+## Example of DMG mappings
+
+A browser loads https://alice.pcarrier.com/notepad.
+It connects to one of the servers returned by the pcarrier.com DNS servers for alice.pcarrier.com,
+hence trusted members of the pcarrier.com subnet and a primary source of authority for refs/com/pcarrier (ie, people would pull from there).
+
+They look up locally, in order:
+```
+  refs/!meta
+  refs/com/!meta
+  refs/com/pcarrier/!meta
+  refs/com/pcarrier/alice/!meta
+  refs/com/pcarrier/alice/notepad/!meta
+```
+
+Any of those meta can choose to redirect to another meta, for example 'refs/com/pcarrier/:meta` could say `refs/com/pcarrier/alice`
+is in fact `refs/org/dxos/alice` (or `refs/com/alice`) which would fork the traversal into:
+
+```
+  refs/!meta
+  refs/com/!meta
+  refs/com/pcarrier/!meta
+  refs/org/dxos/alice/!meta
+  refs/org/dxos/alice/notepad/!meta
+```
+
+`refs/org/dxos/alice/notepad/!meta`
+could be a ref to a commit that contains the file `dx.yml` with:
+```
+https:
+  serve:
+    !https:
+  fallback:
+    !https:index.html
+actions:
+  writes:
+    - name: admin-publishes
+      from: /org/dxos/admins:keys
+      only:
+      - !code
+      - !dev/*
+    - name: https propagation:
+      publish-https:
+        after: !code:build
+        from: !code:public
+        to: !https
+```
++
++Which we merge with `refs/org/dxos/alice/!meta : dx.yml`, `refs/org/dxos/!meta : dx.yml`
++
++`/refs/org/dx/alice/notepad/!https` is a ref to a commit that contains:
++```
++index.html
++0636c948994da120435f13158ab4bb8466b7c435.js
++0636c948994da120435f13158ab4bb8466b7c435.css
++```
++
+signed by the user/kube that performed the build (eg through `dx build` automatically creating the local ref ready to be
+pushed. Note that commits can be created and referred to by multiple `tag` objects inside one transaction efficiently, allowing
+for quiescent operation of the blockchain outside of big push events (intermediates could prepare then perform them at once;
+eg could have a bag of `refs/org/dxos/!changeset/$account/v2.0/$ref` updates transacted atomically).
 
 <!--
         alice (alice.com) :: [a1, a2, a3]
