@@ -283,16 +283,17 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protobuf-test': workspace:*
+      '@swc-node/register': ~1.4.2
       '@types/argparse': ^2.0.0
-      '@types/jest': ^28.1.6
+      '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       argparse: ^2.0.1
       chalk: ^4.1.0
       eslint: ^7.12.1
-      jest: ^28.1.3
+      expect: ~27.0.2
+      mocha: ~8.4.0
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
-      ts-jest: ^28.0.7
       ts-morph: ~10.0.2
       ts-node: ^10.8.2
       typescript: ^4.7.2
@@ -304,14 +305,15 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.34_viatfrb5ob6mgyau3rstyhe5pe
+      '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protobuf-test': link:../protobuf-test
+      '@swc-node/register': 1.4.2
       '@types/argparse': 2.0.10
-      '@types/jest': 28.1.6
+      '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       eslint: 7.32.0
-      jest: 28.1.3_n5iwv4rvtvnpm3zoiig6d6yksu
-      ts-jest: 28.0.7_bi2kohzqnxavgozw3csgny5hju
+      expect: 27.0.6
+      mocha: 8.4.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
 
@@ -12735,7 +12737,7 @@ packages:
     dev: false
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -15987,7 +15989,7 @@ packages:
       '@nodelib/fs.walk': 1.2.8
       glob-parent: 5.1.2
       merge2: 1.4.1
-      micromatch: 4.0.4
+      micromatch: 4.0.5
 
   /fast-json-patch/2.2.1:
     resolution: {integrity: sha512-4j5uBaTnsYAV5ebkidvxiLUYOwjQ+JSFljeqfTxCrH9bDmlCQaOJFS84oDJ2rAXZq2yskmk3ORfoP9DCwqFNig==}
@@ -19381,7 +19383,7 @@ packages:
       '@jest/types': 27.4.2
       '@types/stack-utils': 2.0.1
       chalk: 4.1.2
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
       micromatch: 4.0.5
       pretty-format: 27.4.2
       slash: 3.0.0
@@ -21658,7 +21660,7 @@ packages:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
 
   /mkdirp/0.5.1:
-    resolution: {integrity: sha512-SknJC52obPfGQPnjIkXbmA6+5H15E+fR+E4iR2oQ3zzCLbd7/ONua69R/Gw7AgkTLsRG+r5fzksYwWe1AgTyWA==}
+    resolution: {integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=}
     deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
     hasBin: true
     dependencies:

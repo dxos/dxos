@@ -4,6 +4,8 @@
 
 import { readFileSync, readdirSync, lstatSync } from 'fs';
 import { join } from 'path';
+import { it as test } from 'mocha'
+import expect from 'expect'
 
 import { MyKey } from './my-key';
 import { schema } from './proto/gen';
@@ -180,29 +182,3 @@ test('timestamp', () => {
 
   expect(decoded).toEqual(initial);
 });
-
-test('definitions', () => {
-  expect(readDirectoryFiles(join(__dirname, 'proto/gen'))).toMatchSnapshot();
-});
-
-function readDirectoryFiles (dir: string) {
-  let res = '';
-  for (const file of listFilesRecursive(dir)) {
-    res += `${file}:\n`;
-    res += readFileSync(join(dir, file), { encoding: 'utf-8' });
-    res += '\n';
-  }
-  return res;
-}
-
-function * listFilesRecursive (dir: string): Generator<string> {
-  for (const file of readdirSync(dir)) {
-    if (lstatSync(join(dir, file)).isDirectory()) {
-      for (const sub of listFilesRecursive(join(dir, file))) {
-        yield join(file, sub);
-      }
-    } else {
-      yield file;
-    }
-  }
-}
