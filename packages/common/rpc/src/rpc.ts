@@ -174,16 +174,19 @@ export class RpcPeer {
         return; // Ignore when not open.
       }
 
-      assert(typeof decoded.response.id === 'number');
-      if (!this._outgoingRequests.has(decoded.response.id)) {
-        log(`Received response with incorrect id: ${decoded.response.id}`);
+      // Default to 0 as protobuf skips integers that are 0.
+      const responseId = decoded.response.id ?? 0;
+
+      assert(typeof responseId === 'number');
+      if (!this._outgoingRequests.has(responseId)) {
+        log(`Received response with incorrect id: ${responseId}`);
         return; // Ignore requests with incorrect id.
       }
 
-      const item = this._outgoingRequests.get(decoded.response.id)!;
+      const item = this._outgoingRequests.get(responseId)!;
       // Delete the request record if no more responses are expected.
       if (!item.stream) {
-        this._outgoingRequests.delete(decoded.response.id);
+        this._outgoingRequests.delete(responseId);
       }
 
       log(`Response: ${decoded.response.payload?.type_url}`);
@@ -274,7 +277,7 @@ export class RpcPeer {
       }
       throw err;
     }
-    assert(response.id === id);
+    assert((response.id ?? 0) === id);
 
     if (response.payload) {
       return response.payload;
