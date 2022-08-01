@@ -9,20 +9,24 @@ import { Trigger } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
+import { Event } from '@dxos/async';
 
 import { schema } from '../proto/gen';
 import { Signal } from '../proto/gen/dxos/mesh/signal';
-
 interface Services {
   Signal: Signal
 }
 
 const log = debug('dxos:network-manager:signal-client');
 
-export class NewSignalClient {
+export class SignalRPCClient {
   private readonly _socket: WebSocket
   private readonly _rpc: ProtoRpcClient<Services>
   private readonly _connectTrigger = new Trigger();
+
+  readonly connected = new Event();
+  readonly disconnected = new Event();
+  readonly error = new Event<Error>();
 
   constructor (
     private readonly _url: string
@@ -32,26 +36,26 @@ export class NewSignalClient {
       try {
         await this._rpc.open();
         log(`RPC open ${this._url}`);
+        this.connected.emit();
         this._connectTrigger.wake();
-        // this.connected.emit();
       } catch (err: any) {
-        // this.error.emit(err);
+        this.error.emit(err);
       }
     };
 
     this._socket.onclose = async () => {
       log(`Disconnected ${this._url}`);
-      // this.disconnected.emit();
+      this.disconnected.emit();
       try {
         await this._rpc.close();
       } catch (err: any) {
-        // this.error.emit(err);
+        this.error.emit(err);
       }
     };
 
     this._socket.onerror = e => {
       log(`Signal socket error ${this._url} ${e.message}`);
-      // this.error.emit(e.error ?? new Error(e.message));
+      this.error.emit(e.error ?? new Error(e.message));
     };
 
     this._rpc = createBundledRpcClient(
@@ -76,29 +80,24 @@ export class NewSignalClient {
     );
   }
 
-  async open () {
-    console.log(2);
-
+  async join (topic: PublicKey, peerId: PublicKey) {
     await this._connectTrigger.wait();
-    console.log(3);
-    await this._rpc.open();
-  }
-
-  join (topic: PublicKey, peerId: PublicKey) {
     return this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array()
     });
   }
 
-  receiveMessages (peerId: PublicKey) {
+  async receiveMessages (peerId: PublicKey) {
+    await this._connectTrigger.wait();
     return this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array()
     });
   }
 
-  sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {
-    return this._rpc.rpc.Signal.sendMessage({
+  async sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {
+    await this._connectTrigger.wait();
+    await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload: message

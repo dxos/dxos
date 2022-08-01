@@ -5,11 +5,11 @@
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 
-import { NewSignalClient } from './signal/new-client';
+import { SignalRPCClient } from './signal/signal-rpc-client';
 
 const main = async () => {
   const broker = createTestBroker();
-  const client = new NewSignalClient(broker.url());
+  const client = new SignalRPCClient(broker.url());
 
   console.log(1);
   await client.open();
