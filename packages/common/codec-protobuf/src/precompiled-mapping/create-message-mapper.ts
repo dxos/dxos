@@ -8,6 +8,8 @@ import * as pb from 'protobufjs';
 import { MapingDescriptors } from '../mapping';
 import { codegen, ref } from './codegen';
 
+const ENABLE_EMPTY_FIELD_CHECK = false;
+
 export type Mapper = (obj: any, extraArgs: any[]) => any;
 
 export const createMessageMapper = (type: pb.Type, substitutions: MapingDescriptors): Mapper => createMessageMapperCached(type, substitutions, {}).map;
@@ -51,7 +53,7 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             c`;`;
           }
         } c`}`;
-        if (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf) {
+        if (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf && ENABLE_EMPTY_FIELD_CHECK) {
           c`else {`; {
             c`${ref(throwMissingFieldError)}('${field.name}', '${field.parent!.fullName.slice(1)}')`;
           } c`}`;
