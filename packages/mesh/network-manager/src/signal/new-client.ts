@@ -6,6 +6,7 @@ import debug from 'debug';
 import WebSocket from 'ws';
 
 import { Trigger } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
@@ -87,6 +88,20 @@ export class NewSignalClient {
     return this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array()
+    });
+  }
+
+  receiveMessages (peerId: PublicKey) {
+    return this._rpc.rpc.Signal.receiveMessages({
+      peer: peerId.asUint8Array()
+    });
+  }
+
+  sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {
+    return this._rpc.rpc.Signal.sendMessage({
+      author: author.asUint8Array(),
+      recipient: recipient.asUint8Array(),
+      payload: message
     });
   }
 }
