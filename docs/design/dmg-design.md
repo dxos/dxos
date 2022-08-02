@@ -108,6 +108,8 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
+> - TODO: Illustrate inheritance and overriding props (e.g., /app/notepad/dev)
+
 Records are retrieved via the DMG Record Service, which defines the following API.
 
 > Note: The path may return a hierarchical list of Record refs.
@@ -118,6 +120,7 @@ package dxos.dmg.service;
 service DMG {
   rpc ResolveUrl(ResolveUrlRequest) returns (ResolveUrlResponse);
   rpc getRecords(RecordRequest) returns (RecordResponse);
+  rpc setRecord() returns ();
 }
 
 message ResolveUrlRequest {
@@ -411,7 +414,7 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 
 ## User Model
 
-This section illustrates the developer model.
+This section illustrates the User Model for developers.
 
 > - ISSUE: We need to map Source => Build Artifacts => Publishing Address (and published metadata; hierarchical records)
 
@@ -423,7 +426,7 @@ Developers use conventional source code managements systems and tools, such as `
 **Example**
 
 Alice is developing a new Web applications called Notepad.
-She creates a Github repo that is published at `github.com/aclice/notepad`.
+She creates a Github repo that is published at `github.com/alice/notepad`.
 She maintains a local clone of the repo on her developer workstation.
 Alice uses feature branches, which are merged back to a primary `main` branch once all tests are passing.
 She also maintains a `prod` branch and periodically merges changes here from the `main` branch.
@@ -463,9 +466,11 @@ project:
 
   endpoints:
     - url: https://kube.local/notepad
-      resource: index.html
+      resource: /index.html
     - url: https://notepad.alice.com
-      resource: index.html
+      resource: /index.html
+    - url: https://alice.com/dsuite/notepad
+      resource: /index.html
 ```
 
 Alice installs the `kubed` daemon on her workstation.
