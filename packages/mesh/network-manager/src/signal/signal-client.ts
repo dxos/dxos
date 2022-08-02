@@ -5,23 +5,42 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
+import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
+import { ComplexMap, ComplexSet, SubscriptionGroup } from '@dxos/util';
 
 import { schema } from '../proto/gen';
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
-import { WebsocketRpc } from './websocket-rpc';
+import { SignalRPCClient } from './signal-rpc-client';
 
 const log = debug('dxos:network-manager:signal-client');
 
 const DEFAULT_RECONNECT_TIMEOUT = 1000;
 
+enum State {
+  /** Connection is being established. */
+  CONNECTING = 'CONNECTING',
+
+  /** Connection is being re-established. */
+  RE_CONNECTING = 'RE_CONNECTING',
+
+  /** Connected. */
+  CONNECTED = 'CONNECTED',
+
+  /** Server terminated the connection. Socket will be reconnected. */
+  DISCONNECTED = 'DISCONNECTED',
+
+  /** Socket was closed. */
+  CLOSED = 'CLOSED'
+}
+
 /**
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
 export class SignalClient {
-  private _state = SignalApi.State.CONNECTING;
+  private _state = State.CONNECTING;
 
   private _lastError?: Error;
 
@@ -42,28 +61,30 @@ export class SignalClient {
 
   private _reconnectIntervalId?: NodeJS.Timeout;
 
-  private _client!: WebsocketRpc;
+  private _client!: SignalRPCClient;
 
-  private _clientCleanup: (() => void)[] = [];
+  private _cleanupSubscriptions = new SubscriptionGroup();
 
   readonly statusChanged = new Event<SignalApi.Status>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
 
+  private readonly _topicPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
+  private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
+  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(key => key.toHex());
+
   /**
    * @param _host Signal server websocket URL.
-   * @param _onOffer See `SignalApi.offer`.
    * @param _onSignal See `SignalApi.signal`.
    */
   constructor (
     private readonly _host: string,
-    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>,
     private readonly _onSignal: (message: SignalMessage) => Promise<void>
   ) {
-    this._setState(SignalApi.State.CONNECTING);
+    this._setState(State.CONNECTING);
     this._createClient();
   }
 
-  private _setState (newState: SignalApi.State) {
+  private _setState (newState: State) {
     this._state = newState;
     this._lastStateChange = Date.now();
     log(`Signal state changed ${JSON.stringify(this.getStatus())}`);
@@ -73,111 +94,84 @@ export class SignalClient {
   private _createClient () {
     this._connectionStarted = Date.now();
     try {
-      this._client = new WebsocketRpc(this._host);
+      this._client = new SignalRPCClient(this._host);
     } catch (error: any) {
-      if (this._state === SignalApi.State.RE_CONNECTING) {
+      if (this._state === State.RE_CONNECTING) {
         this._reconnectAfter *= 2;
       }
 
       this._lastError = error;
-      this._setState(SignalApi.State.DISCONNECTED);
+      this._setState(State.DISCONNECTED);
       this._reconnect();
     }
-
-    this._client.addHandler('offer', (message: any) => this._onOffer({
-      id: PublicKey.from(message.id),
-      remoteId: PublicKey.from(message.remoteId),
-      topic: PublicKey.from(message.topic),
-      sessionId: PublicKey.from(message.sessionId),
-      data: message.data
-    }));
-
-    this._client.subscribe('signal', (msg: EncodedMessage) => {
-      return this._onSignal({
-        id: PublicKey.from(msg.id!),
-        remoteId: PublicKey.from(msg.remoteId!),
-        topic: PublicKey.from(msg.topic!),
-        sessionId: PublicKey.from(msg.sessionId!),
-        data: schema.getCodecForType('dxos.mesh.signalMessage.MessageData').decode(msg.data ?? failUndefined()),
-        // Field that MessageRouter adds, so on lower level it not always defined.
-        messageId: msg.messageId ? PublicKey.from(msg.messageId) : undefined
-      });
-    });
-
-    this._clientCleanup.push(this._client.connected.on(() => {
-      log('Socket connected');
-      this._lastError = undefined;
-      this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
-      this._setState(SignalApi.State.CONNECTED);
-    }));
-
-    this._clientCleanup.push(this._client.error.on(error => {
+    
+    // TODO(mykola): do we need this?
+    this._cleanupSubscriptions.push(this._client.error.on(error => {
       log(`Socket error: ${error.message}`);
-      if (this._state === SignalApi.State.CLOSED) {
+      if (this._state === State.CLOSED) {
         return;
       }
 
-      if (this._state === SignalApi.State.RE_CONNECTING) {
+      if (this._state === State.RE_CONNECTING) {
         this._reconnectAfter *= 2;
       }
 
       this._lastError = error;
-      this._setState(SignalApi.State.DISCONNECTED);
+      this._setState(State.DISCONNECTED);
 
       this._reconnect();
     }));
 
-    this._clientCleanup.push(this._client.disconnected.on(() => {
+    // TODO(mykola): do we need this?
+    this._cleanupSubscriptions.push(this._client.disconnected.on(() => {
       log('Socket disconnected');
       // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-      if (this._state !== SignalApi.State.CONNECTING && this._state !== SignalApi.State.RE_CONNECTING) {
+      if (this._state !== State.CONNECTING && this._state !== State.RE_CONNECTING) {
         return;
       }
 
-      if (this._state === SignalApi.State.RE_CONNECTING) {
+      if (this._state === State.RE_CONNECTING) {
         this._reconnectAfter *= 2;
       }
 
-      this._setState(SignalApi.State.DISCONNECTED);
+      this._setState(State.DISCONNECTED);
       this._reconnect();
     }));
-
-    this._clientCleanup.push(this._client.commandTrace.on(trace => this.commandTrace.emit(trace)));
   }
 
   private _reconnect () {
+    log(`Reconnecting in ${this._reconnectAfter}ms`);
     if (this._reconnectIntervalId !== undefined) {
       console.error('Signal api already reconnecting.');
       return;
     }
-    if (this._state === SignalApi.State.CLOSED) {
+    if (this._state === State.CLOSED) {
       return;
     }
 
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._clientCleanup.forEach(cb => cb());
-      this._clientCleanup = [];
+      this._cleanupSubscriptions.unsubscribe();
 
       // Close client if it wasn't already closed.
       this._client.close().catch(() => {});
 
-      this._setState(SignalApi.State.RE_CONNECTING);
+      this._setState(State.RE_CONNECTING);
       this._createClient();
     }, this._reconnectAfter);
   }
 
   async close () {
-    this._clientCleanup.forEach(cb => cb());
-    this._clientCleanup = [];
+    this._cleanupSubscriptions.unsubscribe();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);
     }
 
     await this._client.close();
-    this._setState(SignalApi.State.CLOSED);
+    this._setState(State.CLOSED);
+    log('Closed.');
   }
 
   getStatus (): SignalApi.Status {
@@ -192,72 +186,75 @@ export class SignalClient {
   }
 
   async join (topic: PublicKey, peerId: PublicKey): Promise<PublicKey[]> {
-    const peers: Buffer[] = await this._client.call('join', {
-      id: peerId.asBuffer(),
-      topic: topic.asBuffer()
-    });
-    return peers.map(id => PublicKey.from(id));
+    await this._subscribeSwarmEvents(topic, peerId);
+    await this._subscribeMessages(peerId);
+    return Array.from(this._topicPeers.get(topic)!);
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
-    await this._client.call('leave', {
-      id: peerId.asBuffer(),
-      topic: topic.asBuffer()
-    });
   }
 
   async lookup (topic: PublicKey): Promise<PublicKey[]> {
-    const peers: Buffer[] = await this._client.call('lookup', {
-      topic: topic.asBuffer()
-    });
-    return peers.map(id => PublicKey.from(id));
+    if (!this._topicPeers.has(topic)) {
+      return [];
+    } else {
+      console.log('topic peers: ' + JSON.stringify(this._topicPeers.get(topic)));
+      return Array.from(this._topicPeers.get(topic)!);
+    }
   }
 
-  /**
-   * Routes an offer to the other peer's _onOffer callback.
-   * @returns Other peer's _onOffer callback return value.
-   * @deprecated
-   */
-  async offer (msg: SignalMessage): Promise<Answer> {
-    return this._client.call('offer', {
-      id: msg.id?.asBuffer(),
-      remoteId: msg.remoteId?.asBuffer(),
-      topic: msg.topic?.asBuffer(),
-      sessionId: msg.sessionId?.asBuffer(),
-      data: msg.data
-    });
-  }
-
-  /**
-   * Routes an offer to the other peer's _onSignal callback.
-   */
   async signal (message: SignalMessage): Promise<void> {
-    const signalMessage: EncodedMessage = {
-      messageId: message.messageId?.asBuffer(),
-      id: message.id?.asBuffer(),
-      remoteId: message.remoteId?.asBuffer(),
-      topic: message.topic?.asBuffer(),
-      sessionId: message.sessionId?.asBuffer(),
-      data: Buffer.from(schema.getCodecForType('dxos.mesh.signalMessage.MessageData').encode(message.data ?? failUndefined()))
+    const payload: Any = {
+      type_url: 'dxos.mesh.signalMessage.SignalMessage',
+      value: schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').encode(message)
     };
-    return this._client.emit('signal', signalMessage);
+    return this._client.sendMessage(message.id, message.remoteId, payload);
   }
-}
 
-/**
- * Messages as processed by the signal server.
- */
-interface EncodedMessage{
-  /**
-   * Sender's public key.
-   */
-  id?: Buffer;
-  /**
-   * Receiver`s public key.
-   */
-  remoteId?: Buffer;
-  topic?: Buffer;
-  sessionId?: Buffer;
-  data?: Buffer;
-  messageId?: Buffer;
+  private async _subscribeSwarmEvents (topic: PublicKey, peerId: PublicKey): Promise<void> {
+    const swarmStream = await this._client.join(topic, peerId);
+
+    // Adding current peer to the list of peers for this topic.
+    if (this._topicPeers.has(topic)) {
+      this._topicPeers.get(topic)!.add(peerId);
+    } else {
+      this._topicPeers.set(topic, new ComplexSet(key => key.toHex(), [peerId]));
+    }
+
+    // Subscribing to swarm events.
+    swarmStream.subscribe(async (swarmEvent: SwarmEvent) => {
+      log(`Swarm event on ${topic}: ${JSON.stringify(swarmEvent)}`);
+      if (swarmEvent.peerAvailable) {
+        this._topicPeers.get(topic)?.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+      } else if (swarmEvent.peerLeft) {
+        this._topicPeers.get(topic)?.delete(PublicKey.from(swarmEvent.peerLeft.peer));
+      }
+    });
+
+    // Saving swarm stream.
+    // TODO(mykola): Cleanup?
+    if (!this._swarmStreams.has(topic)) {
+      this._swarmStreams.set(topic, swarmStream);
+    }
+  }
+
+  private async _subscribeMessages (peerId: PublicKey) {
+    // Subscribing to messages.
+    const messageStream = await this._client.receiveMessages(peerId);
+    messageStream.subscribe(async (message: Message) => {
+      if (message.payload.type_url === 'dxos.mesh.signalMessage.SignalMessage') {
+        const signalMessage = schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').decode(message.payload.value);
+        log('Message received: ' + JSON.stringify(signalMessage));
+        await this._onSignal(signalMessage);
+      } else {
+        log('Unknown message type: ' + message.payload.type_url);
+      }
+    });
+    // Saving message stream.
+    // TODO(mykola): Cleanup?
+    if (!this._messageStreams.has(peerId)) {
+      this._messageStreams.set(peerId, messageStream);
+    }
+  }
+
 }
