@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 import { expect } from 'earljs';
-import { Message } from '../proto/gen/dxos/mesh/signal';
+import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalRPCClient } from './signal-rpc-client';
 
 
@@ -27,7 +27,7 @@ describe('SignalRPCClient', () => {
     return client;
   }
 
-  it.only('signal between 2 peers', async () => {
+  it('signal between 2 peers', async () => {
     const client1 = await setup();
     const client2 = await setup();
     
@@ -51,5 +51,27 @@ describe('SignalRPCClient', () => {
       })
     })
     expect(received.author).toEqual(peerId2.asUint8Array());
+  }).timeout(10000);
+
+  it('join', async () => {
+    const client1 = await setup();
+    const client2 = await setup();
+    
+    const peerId1 = PublicKey.random();
+    const peerId2 = PublicKey.random();
+    const topic = PublicKey.random();
+
+    const stream1 = await client1.join(topic, peerId1);
+    const promise = new Promise<SwarmEvent>(resolve => {
+      stream1.subscribe((event: SwarmEvent) => {
+        resolve(event)
+      }, (error) => {
+      console.log(error)
+      throw error;
+      })
+    });
+    await client2.join(topic, peerId2);
+
+    expect((await promise).peerAvailable?.peer).toEqual(peerId2.asUint8Array());
   }).timeout(10000);
 });

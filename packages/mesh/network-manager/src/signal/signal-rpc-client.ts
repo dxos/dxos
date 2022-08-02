@@ -17,7 +17,7 @@ interface Services {
   Signal: Signal
 }
 
-const log = debug('dxos:network-manager:signal-client');
+const log = debug('dxos:network-manager:signal-rpc-client');
 
 export class SignalRPCClient {
   private readonly _socket: WebSocket
@@ -66,12 +66,12 @@ export class SignalRPCClient {
         noHandshake: true,
         port: {
           send: msg => {
-            console.log('send', msg);
+            log('send', msg);
             this._socket.send(msg);
           },
           subscribe: cb => {
             this._socket.onmessage = msg => {
-              console.log('rcv', msg.data);
+              log('rcv', msg.data);
               cb(msg.data as any);
             };
           }
@@ -81,6 +81,7 @@ export class SignalRPCClient {
   }
 
   async join (topic: PublicKey, peerId: PublicKey) {
+    log('join', topic, peerId);
     await this._connectTrigger.wait();
     return this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
@@ -96,11 +97,20 @@ export class SignalRPCClient {
   }
 
   async sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {
+    log('sendMessage', author, recipient, message);
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload: message
     });
+  }
+
+  async close () {
+    try {
+      await this._rpc.close();
+    } finally {
+      this._socket.close();
+    }
   }
 }
