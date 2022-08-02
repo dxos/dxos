@@ -10,7 +10,7 @@ import { Awaited, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { NewSignalClient } from './new-client';
 
 describe('SignalApi', () => {
@@ -39,6 +39,7 @@ describe('SignalApi', () => {
     this.timeout(0);
     await broker1.stop();
     await api1.close();
+    await api2.close();
     // code await broker2.stop();
   });
 
@@ -95,6 +96,18 @@ describe('SignalApi', () => {
     }, 4_000);
   }).timeout(5_000);
 
+  test('lookup', async () => {
+    api1 = new NewSignalClient(broker1.url(), async () => {});
+    api2 = new NewSignalClient(broker1.url(), async () => {});
+
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+
+    const lookup = await api1.lookup(topic);
+
+    await waitForExpect(() => expect(lookup).toEqual([peer1, peer2]), 4_000);
+  });
+
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.
     api1 = new NewSignalClient(broker1.url(), async () => {});
@@ -116,27 +129,17 @@ describe('SignalApi', () => {
 
   // Skip because communication between signal servers is not yet implemented.
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
-    const offerMock = mockFn<(msg: SignalMessage) => Promise<Answer>>()
-      .resolvesTo({ accept: true });
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
 
-    api1 = new SignalClient(signalApiUrl1, offerMock, async () => {});
-    api2 = new SignalClient(signalApiUrl2, (async () => {}) as any, signalMock);
+    api1 = new NewSignalClient(broker1.url(), async () => {});
+    api2 = new NewSignalClient(broker2.url(), signalMock);
 
     await api1.join(topic, peer1);
     await sleep(3000);
     await api2.join(topic, peer2);
 
     const sessionId = PublicKey.random();
-    const answer = await api2.offer({
-      remoteId: peer1,
-      id: peer2,
-      topic,
-      sessionId,
-      data: { offer: {} }
-    });
-    expect(answer).toEqual({ accept: true });
 
     const msg: SignalMessage = {
       id: peer2,

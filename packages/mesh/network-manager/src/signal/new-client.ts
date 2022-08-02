@@ -104,7 +104,8 @@ export class NewSignalClient {
       this._setState(State.DISCONNECTED);
       this._reconnect();
     }
-
+    
+    // TODO(mykola): do we need this?
     this._cleanupSubscriptions.push(this._client.error.on(error => {
       log(`Socket error: ${error.message}`);
       if (this._state === State.CLOSED) {
@@ -121,6 +122,7 @@ export class NewSignalClient {
       this._reconnect();
     }));
 
+    // TODO(mykola): do we need this?
     this._cleanupSubscriptions.push(this._client.disconnected.on(() => {
       log('Socket disconnected');
       // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
@@ -189,6 +191,26 @@ export class NewSignalClient {
     return Array.from(this._topicPeers.get(topic)!);
   }
 
+  async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
+  }
+
+  async lookup (topic: PublicKey): Promise<PublicKey[]> {
+    if (!this._topicPeers.has(topic)) {
+      return [];
+    } else {
+      console.log('topic peers: ' + JSON.stringify(this._topicPeers.get(topic)));
+      return Array.from(this._topicPeers.get(topic)!);
+    }
+  }
+
+  async signal (message: SignalMessage): Promise<void> {
+    const payload: Any = {
+      type_url: 'dxos.mesh.signalMessage.SignalMessage',
+      value: schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').encode(message)
+    };
+    return this._client.sendMessage(message.id, message.remoteId, payload);
+  }
+
   private async _subscribeSwarmEvents (topic: PublicKey, peerId: PublicKey): Promise<void> {
     const swarmStream = await this._client.join(topic, peerId);
 
@@ -235,22 +257,4 @@ export class NewSignalClient {
     }
   }
 
-  async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
-  }
-
-  async lookup (topic: PublicKey): Promise<PublicKey[]> {
-    if (!this._topicPeers.has(topic)) {
-      return [];
-    } else {
-      return Array.from(this._topicPeers.get(topic)!);
-    }
-  }
-
-  async signal (message: SignalMessage): Promise<void> {
-    const payload: Any = {
-      type_url: 'dxos.mesh.signalMessage.SignalMessage',
-      value: schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').encode(message)
-    };
-    return this._client.sendMessage(message.id, message.remoteId, payload);
-  }
 }
