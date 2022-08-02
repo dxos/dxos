@@ -18,7 +18,7 @@ import { Timeframe } from '@dxos/protocols';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { clientServiceBundle } from '../services';
+import { clientServiceBundle } from '../packlets/services';
 import { Client } from './client';
 
 describe('Client', () => {

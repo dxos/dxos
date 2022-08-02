@@ -2381,6 +2381,7 @@ importers:
   ../../packages/sdk/client:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2445,6 +2446,7 @@ importers:
       readable-stream: 3.6.0
       uuid: 8.3.2
     devDependencies:
+      '@dxos/client-protocol': link:../client-protocol
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
@@ -2472,6 +2474,29 @@ importers:
       mocha: 8.4.0
       typescript: 4.7.4
       wait-for-expect: 3.0.2
+
+  ../../packages/sdk/client-protocol:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/eslint-plugin': ~1.0.34
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      eslint: ^7.12.1
+      typescript: ^4.7.2
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/debug': link:../../common/debug
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/protocols': link:../../common/protocols
+    devDependencies:
+      '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      eslint: 7.32.0
+      typescript: 4.7.4
 
   ../../packages/sdk/client-testing:
     specifiers:
@@ -2600,6 +2625,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -2648,6 +2674,7 @@ importers:
       debug: 4.3.3
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
+      '@dxos/client-protocol': link:../client-protocol
       '@dxos/esbuild-plugins': 2.28.11
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -3060,6 +3087,7 @@ importers:
   ../../packages/sdk/registry-client:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/client-protocol': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -3111,6 +3139,7 @@ importers:
       util: 0.12.4
     devDependencies:
       '@dxos/client': link:../client
+      '@dxos/client-protocol': link:../client-protocol
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@polkadot/api': 4.17.1
@@ -21039,7 +21068,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1

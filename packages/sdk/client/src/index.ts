@@ -41,8 +41,8 @@ export {
 } from '@dxos/network-manager';
 
 export * from './api';
-export * from './devtools';
+export * from './packlets/devtools';
+export * from './packlets/services';
 export * from './proto';
-export * from './services';
 export * from './util';
 export * from './version';

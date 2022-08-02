@@ -3,8 +3,7 @@
 //
 
 import { RpcPort } from '@dxos/rpc';
-
-import { isNode } from './platform';
+import { isNode } from '@dxos/util';
 
 export const createWindowMessagePort = (): RpcPort => {
   if (isNode()) {

@@ -6,18 +6,19 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import { InvalidConfigurationError, RemoteServiceConnectionTimeout } from '@dxos/client-protocol';
 import { Config, ConfigObject } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
+import { isNode } from '@dxos/util';
 
-import { createDevtoolsRpcServer } from '../devtools';
+import { ClientServiceProvider, ClientServices, ClientServiceHost, ClientServiceProxy, HaloSigner } from '../packlets/services';
 import { Runtime } from '../proto/gen/dxos/config';
-import { ClientServiceProvider, ClientServices, ClientServiceHost, ClientServiceProxy, HaloSigner } from '../services';
-import { createWindowMessagePort, isNode } from '../util';
+import { createWindowMessagePort } from '../util';
 import { DXOS_VERSION } from '../version';
-import { InvalidConfigurationError, RemoteServiceConnectionTimeout } from './errors';
+import { createDevtoolsRpcServer } from './devtools-rpc-server';
 import { Echo, EchoProxy, Halo, HaloProxy } from './proxies';
 
 const log = debug('dxos:client');
@@ -207,7 +208,7 @@ export class Client {
 
   private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
-    this._serviceProvider = new ClientServiceHost(this._config, this._options);
+    this._serviceProvider = new ClientServiceHost(this._config, this._options.signer);
     await this._serviceProvider.open(onProgressCallback);
   }
 

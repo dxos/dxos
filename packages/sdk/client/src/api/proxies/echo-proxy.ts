@@ -13,7 +13,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost, ClientServiceProvider } from '../../services';
+import { ClientServiceHost, ClientServiceProvider } from '../../packlets/services';
 import { Invitation, InvitationProxy } from '../invitations';
 import { HaloProxy } from './halo-proxy';
 import { Party, PartyProxy } from './party-proxy';

@@ -8,8 +8,8 @@ import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, Resul
 import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { ClientServiceProvider } from '../../packlets/services';
 import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';
-import { ClientServiceProvider } from '../../services';
 import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
 
 /**

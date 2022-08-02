@@ -11,16 +11,16 @@ import {
   Item,
   RemoteDatabaseBackend,
   ResultSet,
-  PartyMember
+  PartyMember,
+  streamToResultSet
 } from '@dxos/echo-db';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 
+import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../packlets/services';
 import { Party as PartyProto, PartyDetails } from '../../proto/gen/dxos/client';
-import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../services';
-import { streamToResultSet } from '../../util';
 import { InvitationRequest, InvitationProxy } from '../invitations';
 
 export interface CreationInvitationOptions {

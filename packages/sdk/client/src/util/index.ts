@@ -1,7 +1,5 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 export * from './messages';
-export * from './platform';
-export * from './subscription';

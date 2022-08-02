@@ -41,6 +41,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -74,6 +75,7 @@
   },
   "toolchain": {
     "bundlePackages": [
+      "@dxos/client-protocol",
       "@dxos/credentials",
       "@dxos/crypto",
       "@dxos/echo-db",
