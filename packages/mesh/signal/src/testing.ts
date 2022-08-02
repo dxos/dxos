@@ -4,16 +4,16 @@
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { debug } from 'debug';
-import * as process from 'process';
+import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
+import * as process from 'process';
 
 import { randomInt } from '@dxos/util';
-import path, { dirname } from 'path';
 
 const log = debug('dxos:signal:testing');
 
 export class TestBroker {
-  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin'); 
+  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
   private readonly _port: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
@@ -36,8 +36,8 @@ export class TestBroker {
     // const server = spawn(`./signal-test-${os}-${arch} -port ${this._port} server`, [], {cwd: this._binPath});
     log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
     const server = spawn(
-      `./signal-test-${os}-${arch}`, 
-      [`-port`, this._port.toString(), `server`], 
+      `./signal-test-${os}-${arch}`,
+      ['-port', this._port.toString(), 'server'],
       { cwd: this._binPath }
     );
 
@@ -47,7 +47,7 @@ export class TestBroker {
 
     server.stderr.on('data', (data) => {
       log(`TestServer stderr: ${data}`);
-    })
+    });
 
     server.on('error', (err) => {
       log(`TestServer ERROR: ${err}`);
