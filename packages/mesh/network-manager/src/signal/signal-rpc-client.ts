@@ -5,11 +5,10 @@
 import debug from 'debug';
 import WebSocket from 'ws';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
-import { Event } from '@dxos/async';
 
 import { schema } from '../proto/gen';
 import { Signal } from '../proto/gen/dxos/mesh/signal';
