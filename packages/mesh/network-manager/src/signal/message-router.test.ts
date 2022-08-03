@@ -22,11 +22,9 @@ describe('MessageRouter', () => {
   let peer2: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
-  const signalApiPort1 = randomInt(10000, 50000);
-  const signalApiUrl1 = 'http://0.0.0.0:' + signalApiPort1;
 
   before(async () => {
-    broker1 = await createTestBroker(signalApiPort1);
+    broker1 = await createTestBroker();
   });
 
   beforeEach(() => {
@@ -62,7 +60,6 @@ describe('MessageRouter', () => {
 
     api = new SignalClient(
       signalApiUrl,
-      (async () => {}) as any,
       async (msg: SignalMessage) => router.receiveMessage(msg)
     );
 
@@ -75,8 +72,8 @@ describe('MessageRouter', () => {
 
   test('signaling between 2 clients', async () => {
     const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
-    const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1, onSignal: signalMock1 });
-    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: signalApiUrl1 });
+    const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url(), onSignal: signalMock1 });
+    const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url() });
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -98,14 +95,14 @@ describe('MessageRouter', () => {
   test('offer/answer', async () => {
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: (async () => { }) as any,
         onOffer:
           async () => ({ accept: true })
       });
     const { api: api2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: (async () => { }) as any,
         onOffer:
           async () => ({ accept: true })
@@ -128,7 +125,7 @@ describe('MessageRouter', () => {
     const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: signalMock1,
         onOffer:
           async () => ({ accept: true })
@@ -136,7 +133,7 @@ describe('MessageRouter', () => {
     const signalMock2 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: signalMock2,
         onOffer:
           async () => ({ accept: true })
@@ -144,7 +141,7 @@ describe('MessageRouter', () => {
     const signalMock3 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: signalMock3,
         onOffer:
           async () => ({ accept: true })
@@ -198,14 +195,14 @@ describe('MessageRouter', () => {
   test('two offers', async () => {
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: (async () => { }) as any,
         onOffer:
           async () => ({ accept: true })
       });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
-        signalApiUrl: signalApiUrl1,
+        signalApiUrl: broker1.url(),
         onSignal: (async () => { }) as any,
         onOffer:
           async () => ({ accept: true })
