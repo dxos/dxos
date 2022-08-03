@@ -42,7 +42,6 @@ describe('SignalRPCClient', () => {
 
     const received: Message = await new Promise(resolve => {
       stream1.subscribe(message => {
-        console.log(`Received ${message}`);
         resolve(message);
       }, (error) => {
         console.log(error);

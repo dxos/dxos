@@ -2,24 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Awaited } from '@dxos/async';
-import { createTestBroker } from '@dxos/signal';
+import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests } from './network-manager.blueprint-test';
 
 describe('Network manager', () => {
   describe('WebRTC transport', () => {
-    let broker: Awaited<ReturnType<typeof createTestBroker>>;
+    let broker: TestBroker;
+    const port = 12098;
 
     before(async () => {
-      broker = await createTestBroker(12098);
+      broker = await createTestBroker(port);
     });
 
     after(async () => {
       await broker?.stop();
     });
 
-    webRTCTests();
+    webRTCTests({ signalUrl: `ws://localhost:${port}/.well-known/dx/signal` });
   }).timeout(10_000);
 
   describe('In-memory transport', () => {
