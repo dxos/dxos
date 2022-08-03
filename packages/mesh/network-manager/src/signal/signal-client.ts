@@ -104,7 +104,7 @@ export class SignalClient {
       this._setState(State.DISCONNECTED);
       this._reconnect();
     }
-    
+
     // TODO(mykola): do we need this?
     this._cleanupSubscriptions.push(this._client.error.on(error => {
       log(`Socket error: ${error.message}`);
@@ -198,7 +198,6 @@ export class SignalClient {
     if (!this._topicPeers.has(topic)) {
       return [];
     } else {
-      console.log('topic peers: ' + JSON.stringify(this._topicPeers.get(topic)));
       return Array.from(this._topicPeers.get(topic)!);
     }
   }

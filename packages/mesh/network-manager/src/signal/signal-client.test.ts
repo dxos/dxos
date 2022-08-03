@@ -6,9 +6,9 @@ import { expect, mockFn } from 'earljs';
 import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { Awaited, sleep } from '@dxos/async';
+import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-import { createTestBroker } from '@dxos/signal';
+import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
@@ -20,9 +20,9 @@ describe('SignalApi', () => {
   let api1: SignalClient;
   let api2: SignalClient;
 
-  let broker1: Awaited<ReturnType<typeof createTestBroker>>;
+  let broker1: TestBroker;
 
-  // code let broker2: ReturnType<typeof createBroker>;
+  let broker2: TestBroker;
 
   before(async () => {
     broker1 = await createTestBroker();
@@ -103,10 +103,10 @@ describe('SignalApi', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const lookup = await api1.lookup(topic);
-
-    await waitForExpect(() => expect(lookup).toEqual([peer1, peer2]), 4_000);
+    await waitForExpect(async () => expect(await api1.lookup(topic)).toEqual([peer1, peer2]), 4_000);
+    await waitForExpect(async () => expect(await api2.lookup(topic)).toEqual([peer2, peer1]), 4_000);
   });
+
 
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.
