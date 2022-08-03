@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import assert from 'node:assert';
+import assert, { throws } from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
@@ -32,16 +32,15 @@ export class WebsocketSignalManager implements SignalManager {
 
   constructor (
     private readonly _hosts: string[],
-    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
   ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async msg => this._onOffer(msg),
         async msg => this.onSignal.emit(msg)
       );
+      server.peerCandidatesChanged.on((data) => this.peerCandidatesChanged.emit(data));
 
       this._servers.set(host, server);
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
@@ -137,13 +136,8 @@ export class WebsocketSignalManager implements SignalManager {
       );
     }
   }
-
-  offer (msg: SignalMessage) {
-    log(`Offer ${msg.remoteId}`);
-    // TODO(marik-d): Broadcast to all signal servers.
-    return Array.from(this._servers.values())[0].offer(msg);
-  }
-
+  
+  // TODO(mykola): rename to message
   async signal (msg: SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {

@@ -14,6 +14,7 @@ import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
+import { throws } from 'assert';
 
 const log = debug('dxos:network-manager:signal-client');
 
@@ -67,11 +68,11 @@ export class SignalClient {
 
   readonly statusChanged = new Event<SignalApi.Status>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>();
 
   private readonly _topicPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
   private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(key => key.toHex());
-
   /**
    * @param _host Signal server websocket URL.
    * @param _onSignal See `SignalApi.signal`.
@@ -105,7 +106,12 @@ export class SignalClient {
       this._reconnect();
     }
 
-    // TODO(mykola): do we need this?
+    this._cleanupSubscriptions.push(this._client.connected.on(() => {
+      this._lastError = undefined;
+      this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
+      this._setState(State.CONNECTED);
+    }));
+
     this._cleanupSubscriptions.push(this._client.error.on(error => {
       log(`Socket error: ${error.message}`);
       if (this._state === State.CLOSED) {
@@ -122,7 +128,6 @@ export class SignalClient {
       this._reconnect();
     }));
 
-    // TODO(mykola): do we need this?
     this._cleanupSubscriptions.push(this._client.disconnected.on(() => {
       log('Socket disconnected');
       // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
@@ -228,6 +233,7 @@ export class SignalClient {
       } else if (swarmEvent.peerLeft) {
         this._topicPeers.get(topic)?.delete(PublicKey.from(swarmEvent.peerLeft.peer));
       }
+      this.peerCandidatesChanged.emit([topic, Array.from(this._topicPeers.get(topic)!)]);
     });
 
     // Saving swarm stream.

@@ -43,7 +43,7 @@ export interface SignalMessaging {
   signal (msg: SignalMessage): Promise<void>
 }
 
-export interface SignalManager extends SignalConnection, SignalMessaging {
+export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
@@ -51,4 +51,8 @@ export interface SignalManager extends SignalConnection, SignalMessaging {
 
   getStatus (): SignalApi.Status[]
   destroy(): Promise<void>
+  /**
+   * Send message to peer.
+   */
+  signal (msg: SignalMessage): Promise<void>
 }

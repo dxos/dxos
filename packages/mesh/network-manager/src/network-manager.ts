@@ -52,7 +52,7 @@ export class NetworkManager {
       await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal
-      ? new WebsocketSignalManager(options.signal, onOffer)
+      ? new WebsocketSignalManager(options.signal)
       : new InMemorySignalManager(onOffer);
 
     this._signalManager.peerCandidatesChanged
