@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsHost, Event as ClientAPIEvent } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 
+import { DevtoolsHost, Event as ClientAPIEvent } from '../proto';
 import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';

@@ -5,43 +5,11 @@
 import { Event } from '@dxos/async';
 import { DeviceInfo, keyPairFromSeedPhrase, KeyRecord } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceProvider } from '../../packlets/services';
-import { Profile, SignRequest, SignResponse } from '../../proto/gen/dxos/client';
-import { Invitation, InvitationProxy, InvitationRequest } from '../invitations';
-
-/**
- * HALO API.
- */
-// TODO(burdon): Separate public API form implementation (move comments here).
-export interface Halo {
-  info (): { key?: PublicKey }
-
-  get profile (): Profile | undefined
-  createProfile (options?: CreateProfileOptions): Promise<Profile>
-  recoverProfile (seedPhrase: string): Promise<Profile>
-
-  sign (request: SignRequest): Promise<SignResponse>
-  addKeyRecord (keyRecord: KeyRecord): Promise<void>
-
-  /**
-   * @deprecated
-   */
-  subscribeToProfile (callback: (profile: Profile) => void): void
-
-  queryContacts (): ResultSet<Contact>
-  createInvitation (): Promise<InvitationRequest>
-  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation
-
-  queryDevices (): Promise<DeviceInfo[]>
-  setDevicePreference (key: string, value: string): Promise<void>
-  getDevicePreference (key: string): Promise<string | undefined>
-
-  setGlobalPreference (key: string, value: string): Promise<void>
-  getGlobalPreference (key: string): Promise<string | undefined>
-}
+import { ClientServiceProvider, Halo, Invitation, InvitationRequest } from '../api';
+import { Profile, SignRequest } from '../proto';
+import { InvitationProxy } from './invitation-proxy';
 
 /**
  * Client proxy to local/remote HALO service.
@@ -61,10 +29,10 @@ export class HaloProxy implements Halo {
   ) {}
 
   toString () {
-    return `HaloProxy(${JSON.stringify(this.info())})`;
+    return `HaloProxy(${JSON.stringify(this.info)})`;
   }
 
-  info () {
+  get info () {
     return {
       key: this._profile?.publicKey
     };

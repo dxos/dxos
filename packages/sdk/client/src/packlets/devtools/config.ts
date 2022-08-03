@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { GetConfigResponse } from '@dxos/client-protocol';
-
+import { GetConfigResponse } from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const getConfig = (hook: DevtoolsServiceDependencies): GetConfigResponse => ({

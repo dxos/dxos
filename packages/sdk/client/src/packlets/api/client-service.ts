@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PartyService, ProfileService, SystemService, HaloService, DevtoolsHost, TracingService, schema } from '@dxos/client-protocol';
 import { OpenProgress } from '@dxos/echo-db';
 import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
 import { createServiceBundle } from '@dxos/rpc';
+
+import { PartyService, ProfileService, SystemService, HaloService, DevtoolsHost, TracingService, schema } from '../proto';
 
 // TODO(burdon): Change to lowercase?
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?

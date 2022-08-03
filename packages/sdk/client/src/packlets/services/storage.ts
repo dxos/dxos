@@ -6,12 +6,12 @@ import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
-import { InvalidConfigurationError } from '@dxos/client-protocol';
 import { defs } from '@dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { isNode } from '@dxos/util';
 
 import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
+import { InvalidConfigurationError } from '../api';
 
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 

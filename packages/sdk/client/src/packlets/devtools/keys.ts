@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
+import { SubscriptionGroup } from '@dxos/util';
+
 import {
   SubscribeToCredentialMessagesRequest,
   SubscribeToCredentialMessagesResponse,
   SubscribeToKeyringKeysResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-import { SubscriptionGroup } from '@dxos/util';
-
+} from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToKeyringKeys = ({ keyring }: DevtoolsServiceDependencies) => new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {

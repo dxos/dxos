@@ -1,6 +1,7 @@
 module.exports = {
   ignorePatterns: [
-    'src/version.ts' // Generated file.
+    'src/packlets/proto/gen/*',
+    'src/packlets/proxy/version.ts' // Generated file.
   ],
   extends: [
     'plugin:@dxos/recomended'

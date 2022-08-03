@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsHost } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 
+import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import { ClientServiceProvider, ClientServices } from './client-service';
-import { createServices, HaloSigner } from './impl';
+import { DevtoolsHost } from '../proto';
+import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 
 /**

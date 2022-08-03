@@ -6,6 +6,11 @@ import assert from 'node:assert';
 import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
+import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
+import { InvalidStateError, raise } from '@dxos/debug';
+import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
+
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
@@ -25,12 +30,7 @@ import {
   SubscribePartiesResponse,
   SubscribePartyRequest,
   SubscribePartyResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
-
+} from '../../proto';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**

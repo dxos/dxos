@@ -580,12 +580,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/client-protocol",
-      "projectFolder": "packages/sdk/client-protocol",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/client-testing",
       "projectFolder": "packages/sdk/client-testing",
       "shouldPublish": true,

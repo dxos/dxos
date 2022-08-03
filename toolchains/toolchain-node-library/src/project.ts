@@ -10,6 +10,7 @@ import { Config } from './config';
 
 export interface ToolchainConfig {
   bundlePackages?: string[]
+  protoPacklet?: boolean
   forceCloseTests?: boolean
   testingFramework?: 'mocha' | 'jest'
   additionalTestSteps?: string[]

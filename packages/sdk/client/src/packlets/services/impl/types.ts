@@ -2,16 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SignRequest, SignResponse, KeyRecord } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { ECHO } from '@dxos/echo-db';
 
-/**
- * Signer plugin.
- */
-export interface HaloSigner {
-  sign: (request: SignRequest, key: KeyRecord) => Promise<SignResponse>
-}
+import { HaloSigner } from '../../api';
 
 export type CreateServicesOpts = {
   config: Config

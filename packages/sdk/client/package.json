@@ -14,7 +14,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "build": "npm run prebuild && toolchain bundle:library",
     "build:test": "toolchain build:test --bundle",
     "lint": "toolchain lint",
@@ -41,7 +41,6 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@dxos/client-protocol": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -75,7 +74,6 @@
   },
   "toolchain": {
     "bundlePackages": [
-      "@dxos/client-protocol",
       "@dxos/credentials",
       "@dxos/crypto",
       "@dxos/echo-db",
@@ -84,6 +82,7 @@
       "@dxos/network-manager",
       "@dxos/object-model"
     ],
+    "protoPacklet": true,
     "testingFramework": "mocha"
   }
 }

@@ -4,16 +4,16 @@
 
 import { Readable } from 'readable-stream';
 
+import { Stream } from '@dxos/codec-protobuf';
+import { createBatchStream } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/protocols';
+
 import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,
   SubscribeToFeedBlocksRequest,
   SubscribeToFeedBlocksResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-import { createBatchStream } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
-
+} from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToFeeds = (

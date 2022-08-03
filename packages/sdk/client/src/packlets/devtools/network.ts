@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
+import { SignalApi } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
+
 import {
   GetNetworkPeersRequest,
   GetNetworkPeersResponse,
@@ -9,11 +13,7 @@ import {
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse,
   SubscribeToSwarmInfoResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-import { SignalApi } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
-
+} from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {

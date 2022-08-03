@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SubscribeToItemsResponse } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf';
 
+import { SubscribeToItemsResponse } from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsResponse => {

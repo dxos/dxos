@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
+
 import {
   GetPartySnapshotRequest,
   GetPartySnapshotResponse,
@@ -9,9 +11,7 @@ import {
   SavePartySnapshotResponse,
   SubscribeToPartiesRequest,
   SubscribeToPartiesResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-
+} from '../proto';
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToParties = (

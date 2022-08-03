@@ -48,5 +48,7 @@ export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
     substitutions[name] = type.getText();
   }
 
+  console.log({ substitutions });
+
   return substitutions;
 };

@@ -10,8 +10,8 @@ import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor, InvitationDescriptorType } from '@dxos/echo-db';
 import { RpcClosedError } from '@dxos/rpc';
 
-import { AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto } from '../../proto/gen/dxos/client';
-import { InvitationRequest } from './invitation-request';
+import { InvitationRequest } from '../api';
+import { AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto } from '../proto';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>

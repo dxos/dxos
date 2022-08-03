@@ -10,65 +10,17 @@ import {
   Database,
   Item,
   RemoteDatabaseBackend,
-  ResultSet,
-  PartyMember,
   streamToResultSet
 } from '@dxos/echo-db';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 
-import { ClientServiceHost, ClientServiceProvider, ClientServiceProxy } from '../../packlets/services';
-import { Party as PartyProto, PartyDetails } from '../../proto/gen/dxos/client';
-import { InvitationRequest, InvitationProxy } from '../invitations';
-
-export interface CreationInvitationOptions {
-  inviteeKey?: PublicKey
-}
-
-/**
- * Party API.
- */
-// TODO(burdon): Separate public API form implementation (move comments here).
-export interface Party {
-  get key (): PublicKey
-  get isOpen (): boolean
-  get isActive (): boolean
-
-  // TODO(burdon): Verbs should be on same interface.
-  get database (): Database
-  get select (): Database['select']
-  get reduce (): Database['reduce']
-
-  initialize (): Promise<void>
-  destroy (): Promise<void>
-
-  open (): Promise<void>
-  close (): Promise<void>
-  setActive (active: boolean, options: ActivationOptions): Promise<void>
-
-  setTitle (title: string): Promise<void>
-  getTitle (): string
-
-  // TODO(burdon): Rename (info?)
-  getDetails(): Promise<PartyDetails>
-
-  get properties (): ObjectProperties
-  /**
-   * @deprecated
-   */
-  setProperty (key: string, value?: any): Promise<void>
-  /**
-   * @deprecated
-   */
-  getProperty (key: string, defaultValue?: any): any
-
-  queryMembers (): ResultSet<PartyMember>
-  createInvitation (options?: CreationInvitationOptions): Promise<InvitationRequest>
-
-  createSnapshot (): Promise<PartySnapshot>
-}
+import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
+import { Party as PartyProto, PartyDetails } from '../proto';
+import { InvitationProxy } from './invitation-proxy';
+import { ClientServiceProxy } from './service-proxy';
 
 /**
  * Main public Party API.
@@ -105,8 +57,9 @@ export class PartyProxy implements Party {
         new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
         memberKey
       );
-    } else if (this._serviceProvider instanceof ClientServiceHost) {
-      const party = this._serviceProvider.echo.getParty(this._key) ?? failUndefined();
+    } else if ((this._serviceProvider as any).echo) {
+      // TODO(wittjosiah): Reconcile service provider host with interface.
+      const party = (this._serviceProvider as any).echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
     } else {
       throw new Error('Unrecognized service provider.');

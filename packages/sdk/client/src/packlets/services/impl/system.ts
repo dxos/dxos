@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { SystemService } from '@dxos/client-protocol';
-
+import { SystemService } from '../../proto';
 import { CreateServicesOpts } from './types';
 
 export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => ({

@@ -13,33 +13,11 @@ import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceHost, ClientServiceProvider } from '../../packlets/services';
-import { Invitation, InvitationProxy } from '../invitations';
+import { ClientServiceProvider, Echo, Party, PartyInvitation } from '../api';
 import { HaloProxy } from './halo-proxy';
-import { Party, PartyProxy } from './party-proxy';
-
-export class PartyInvitation extends Invitation<Party> {
-  /**
-   * Wait for the invitation flow to complete and return the target party.
-   */
-  getParty (): Promise<Party> {
-    return this.wait();
-  }
-}
-
-/**
- * ECHO API.
- */
-// TODO(burdon): Separate public API form implementation (move comments here).
-export interface Echo {
-  info (): { parties: number }
-  registerModel (constructor: ModelConstructor<any>): void
-  createParty (): Promise<Party>
-  cloneParty (snapshot: PartySnapshot): Promise<Party>
-  getParty (partyKey: PartyKey): Party | undefined
-  queryParties (): ResultSet<Party>
-  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation
-}
+import { InvitationProxy } from './invitation-proxy';
+import { PartyProxy } from './party-proxy';
+import { ClientServiceProxy } from './service-proxy';
 
 /**
  * Client proxy to local/remote ECHO service.
@@ -54,14 +32,15 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    this._modelFactory = _serviceProvider instanceof ClientServiceHost
-      ? _serviceProvider.echo.modelFactory : new ModelFactory();
+    // TODO(wittjosiah): Reconcile service provider host with interface.
+    this._modelFactory = _serviceProvider instanceof ClientServiceProxy
+      ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
 
   toString () {
-    return `EchoProxy(${JSON.stringify(this.info())})`;
+    return `EchoProxy(${JSON.stringify(this.info)})`;
   }
 
   get modelFactory (): ModelFactory {
@@ -69,15 +48,16 @@ export class EchoProxy implements Echo {
   }
 
   get networkManager () {
-    if (this._serviceProvider instanceof ClientServiceHost) {
-      return this._serviceProvider.echo.networkManager;
+    if (this._serviceProvider instanceof ClientServiceProxy) {
+      throw new Error('Network Manager not available in service proxy.');
     }
 
-    throw new Error('Network Manager not available in service proxy.');
+    // TODO(wittjosiah): Reconcile service provider host with interface.
+    return (this._serviceProvider as any).echo.networkManager;
   }
 
   // TODO(burdon): Client ID?
-  info () {
+  get info () {
     return {
       parties: this._parties.size
     };

@@ -18,9 +18,10 @@ import { Timeframe } from '@dxos/protocols';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { clientServiceBundle } from '../packlets/services';
-import { Client } from './client';
+import { clientServiceBundle } from '../api';
+import { Client } from './client-proxy';
 
+// TODO(wittjosiah): Need test setup with remote client.
 describe('Client', () => {
   //
   // Suite is called for local and remote client configurations.

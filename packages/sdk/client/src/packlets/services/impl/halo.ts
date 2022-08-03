@@ -4,6 +4,12 @@
 
 import assert from 'node:assert';
 
+import { Stream } from '@dxos/codec-protobuf';
+import { ECHO, resultSetToStream } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
+import { SubscriptionGroup } from '@dxos/util';
+
+import { HaloSigner } from '../../api';
 import {
   AddKeyRecordRequest,
   Contacts,
@@ -13,13 +19,8 @@ import {
   SetPreferenceRequest,
   GetPreferenceRequest,
   GetPreferenceResponse
-} from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
-import { ECHO, resultSetToStream } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
-import { SubscriptionGroup } from '@dxos/util';
-
-import { CreateServicesOpts, HaloSigner } from './types';
+} from '../../proto';
+import { CreateServicesOpts } from './types';
 
 /**
  * HALO service implementation.

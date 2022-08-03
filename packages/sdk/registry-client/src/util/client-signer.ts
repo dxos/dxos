@@ -8,8 +8,7 @@ import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import assert from 'node:assert';
 
-import { Client, KeyRecord, KeyType, HaloSigner } from '@dxos/client';
-import type { SignRequest, SignResponse } from '@dxos/client-protocol';
+import { Client, KeyRecord, KeyType, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 
 /**

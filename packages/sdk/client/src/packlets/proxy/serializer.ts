@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { schema } from '../proto/gen';
-import { Client } from './client';
-import { Party } from './proxies';
+import { Party } from '../api';
+import { schema } from '../proto';
+import { Client } from './client-proxy';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 

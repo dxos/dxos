@@ -51,17 +51,34 @@ export interface BuildOptions {
 }
 
 const buildProto = async (config: Config, project: Project) => {
+  // TODO(wittjosiah): Simplify config with path prefix.
+  const protoConfig = project.toolchainConfig.protoPacklet
+    ? {
+        src: './src/packlets/proto/**/*.proto',
+        output: './src/packlets/proto/gen',
+        substitutions: './src/packlets/proto/substitutions.ts'
+      }
+    : config.protobuf;
+
+  try {
+    fs.rmSync(join(project.packageRoot, protoConfig.output), { recursive: true, force: true });
+  } catch (err: any) {
+    err(err.message);
+  }
+
   // Compile protocol buffer definitions.
-  const protoFiles = glob(config.protobuf.src, { cwd: project.packageRoot });
+  const protoFiles = glob(protoConfig.src, { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
 
     // Substitution classes for protobuf parsing.
-    const file = join(project.packageRoot, config.protobuf.substitutions);
+    const file = join(project.packageRoot, protoConfig.substitutions);
     const substitutions = fs.existsSync(file) ? join(file) : undefined;
 
+    console.log({ substitutions });
+
     await execTool('build-protobuf', [
-      '-o', join(project.packageRoot, config.protobuf.output),
+      '-o', join(project.packageRoot, protoConfig.output),
       ...(substitutions ? ['-s', substitutions] : []),
       ...protoFiles
     ]);
@@ -75,7 +92,6 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
 
   try {
-    fs.rmSync(join(project.packageRoot, config.protobuf.output), { recursive: true, force: true });
     fs.rmSync(join(project.packageRoot, config.tsc.output), { recursive: true, force: true });
   } catch (err: any) {
     err(err.message);
