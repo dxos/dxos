@@ -254,17 +254,9 @@ export class RpcPeer {
       }
     });
 
-    const timeoutPromise = new Promise<any>((resolve, reject) => {
-      setTimeout(
-        () => reject(new Error('Timeout')),
-        this._options.timeout ?? DEFAULT_TIMEOUT
-      ).unref();
-    });
-    timeoutPromise.catch(() => {}); // Mute the promise.
-
     let response: Response;
     try {
-      response = await Promise.race([promise, timeoutPromise]);
+      response = await Promise.race([promise, createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))]);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -420,4 +412,25 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
+};
+
+/**
+ * Creates a promise that will be rejected after a certain timeout.
+ * The promise will never cause unhandledPromiseRejection.
+ * The timeout will not block the Node.JS process from exiting.
+ */
+const createTimeoutPromise = (timeout: number, error: Error) => {
+  const timeoutPromise = new Promise<any>((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () => reject(new Error('Timeout')),
+      timeout
+    );
+
+    // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
+    if ('unref' in timeoutId) {
+      timeoutId.unref();
+    }
+  });
+  timeoutPromise.catch(() => {}); // Mute the promise.
+  return timeoutPromise;
 };
