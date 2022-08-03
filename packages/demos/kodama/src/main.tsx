@@ -19,6 +19,7 @@ import { ClientProvider } from '@dxos/react-client';
 // @ts-ignore
 import { name, version } from '../package.json';
 import { App } from './App';
+import { AppStateProvider } from './hooks';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
@@ -101,7 +102,9 @@ const main = async () => {
               <VersionUpdate name={name} version={newVersion} />
             )}
 
-            <App />
+            <AppStateProvider>
+              <App />
+            </AppStateProvider>
           </ClientProvider>
         ));
 

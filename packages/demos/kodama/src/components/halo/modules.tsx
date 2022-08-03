@@ -58,7 +58,7 @@ export const createHaloModule = (client: Client): Module => {
       },
       {
         id: 'halo.share',
-        label: 'Share',
+        label: 'Add Device',
         component: () => (
           <Share
             onCreate={() => {
@@ -69,7 +69,7 @@ export const createHaloModule = (client: Client): Module => {
       },
       {
         id: 'halo.join',
-        label: 'Join',
+        label: 'Auth Device',
         component: () => (
           <Join />
         )

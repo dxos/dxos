@@ -6,8 +6,8 @@ import { useFocusManager } from 'ink';
 import * as process from 'process';
 import React, { useEffect, useMemo } from 'react';
 
-import { Client } from '@dxos/client';
-import { useClient, useProfile } from '@dxos/react-client';
+import { Client, Party } from '@dxos/client';
+import { useClient, useParty, useProfile } from '@dxos/react-client';
 
 import {
   createEchoModule,
@@ -17,15 +17,15 @@ import {
   ModulePanel,
   Panel
 } from './components';
-import { AppStateProvider } from './hooks';
+import { useAppState } from './hooks';
 
-const createRootModule = (client: Client): Module => {
+const createRootModule = (client: Client, party?: Party): Module => {
   return {
     id: 'root',
     label: 'Root',
     modules: [
       createHaloModule(client),
-      createEchoModule(client),
+      createEchoModule(client, party),
       {
         id: 'config',
         label: 'Config',
@@ -52,7 +52,9 @@ const createRootModule = (client: Client): Module => {
 export const App = () => {
   const client = useClient();
   const profile = useProfile();
-  const module = useMemo<Module>(() => createRootModule(client), [profile]);
+  const [{ partyKey }] = useAppState();
+  const party = useParty(partyKey);
+  const module = useMemo<Module>(() => createRootModule(client, party), [profile, party]);
   const { focusNext } = useFocusManager();
 
   useEffect(() => {
@@ -60,10 +62,8 @@ export const App = () => {
   }, []);
 
   return (
-    <AppStateProvider>
-      <ModulePanel
-        module={module}
-      />
-    </AppStateProvider>
+    <ModulePanel
+      module={module}
+    />
   );
 };
