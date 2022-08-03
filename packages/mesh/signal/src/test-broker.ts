@@ -10,7 +10,7 @@ import * as process from 'process';
 
 import { randomInt } from '@dxos/util';
 
-const log = debug('dxos:signal:testing');
+const log = debug('dxos:signal:test-broker');
 
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
