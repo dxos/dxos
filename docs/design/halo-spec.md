@@ -588,7 +588,7 @@ message Presentation {
 
 ### 8.2. Example
 
-<!-- @code(./refs/example.yml) -->
+<!-- @code(./refs/example.yml, { validate: true }) -->
 
 ```yaml
 #
@@ -665,7 +665,7 @@ feed:
 #
 
 feed:
-  key: Alice/Device-2/Feed-3
+  key: Party-1/Alice/Device-2/Feed-3
   messages:
     - id: 1
       data:
