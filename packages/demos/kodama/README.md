@@ -7,6 +7,14 @@ The word kodama (こだま) is the Japanese word for echo.
 
 https://user-images.githubusercontent.com/3523355/181782019-20aea084-8ee5-4e44-926a-e3f98bd6b052.mov
 
+## Build
+
+```bash
+rushx build
+```
+
+> - TODO: Configure to use `esbuild` directly.
+
 ## Usage
 
 To start the `kodama` CLI in interactive mode:

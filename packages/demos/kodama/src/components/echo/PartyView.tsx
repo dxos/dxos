@@ -34,61 +34,65 @@ export const PartyView: FC<{
 
   // TODO(burdon): Standardize use of <Panel>?
 
-  const modules: Module[] = useMemo(() => party ? [
-    {
-      id: 'items',
-      label: 'Items',
-      component: () => (
-        <ItemList
-          party={party}
-          type={type}
-        />
-      )
-    },
-    {
-      id: 'types',
-      label: 'Types',
-      component: () => (
-        <ItemTypeList
-          party={party}
-          onChange={setType}
-        />
-      )
-    },
-    {
-      id: 'members',
-      label: 'Members',
-      component: () => (
-        <Panel>
-          <PartyMembers
+  const module: Module = useMemo(() => ({
+    id: 'party',
+    label: 'Party View',
+    modules: !party ? [] : [
+      {
+        id: 'party.items',
+        label: 'Items',
+        component: () => (
+          <ItemList
             party={party}
+            type={type}
           />
-        </Panel>
-      )
-    },
-    {
-      id: 'feeds',
-      label: 'Feeds',
-      component: () => (
-        <Panel>
-          <PartyFeeds
+        )
+      },
+      {
+        id: 'party.types',
+        label: 'Types',
+        component: () => (
+          <ItemTypeList
             party={party}
+            onChange={setType}
           />
-        </Panel>
-      )
-    },
-    {
-      id: 'share',
-      label: 'Share',
-      component: () => (
-        <Share
-          onCreate={() => {
-            return party.createInvitation();
-          }}
-        />
-      )
-    }
-  ] : [], [party, type]);
+        )
+      },
+      {
+        id: 'party.members',
+        label: 'Members',
+        component: () => (
+          <Panel>
+            <PartyMembers
+              party={party}
+            />
+          </Panel>
+        )
+      },
+      {
+        id: 'party.feeds',
+        label: 'Feeds',
+        component: () => (
+          <Panel>
+            <PartyFeeds
+              party={party}
+            />
+          </Panel>
+        )
+      },
+      {
+        id: 'party.share',
+        label: 'Share',
+        component: () => (
+          <Share
+            onCreate={() => {
+              return party.createInvitation();
+            }}
+          />
+        )
+      }
+    ]
+  }), [party, type]);
 
   if (!party) {
     return null;
@@ -104,7 +108,7 @@ export const PartyView: FC<{
 
       <Box marginTop={1}>
         <ModulePanel
-          modules={modules}
+          module={module}
         />
       </Box>
     </Box>

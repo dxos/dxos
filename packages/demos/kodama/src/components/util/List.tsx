@@ -106,10 +106,6 @@ export const List: FC<{
   const { isFocused } = useFocus({ id: focusId });
 
   useInput((input, key) => {
-    if (!isFocused) {
-      return;
-    }
-
     // Escape.
     if (key.escape) {
       onCancel?.();
@@ -152,7 +148,7 @@ export const List: FC<{
         });
       }
     }
-  });
+  }, { isActive: isFocused });
 
   // Paging.
   const visibleItems = items.slice(startIndex, startIndex + pageSize);

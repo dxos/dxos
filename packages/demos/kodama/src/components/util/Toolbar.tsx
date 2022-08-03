@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
+import { Box, Text, useFocusManager, useInput } from 'ink';
 import React, { FC, useEffect, useState } from 'react';
 
 /**
@@ -13,11 +13,13 @@ export const Toolbar: FC<{
   value?: string
   onChange: (id: string) => void
   onSelect: () => void
+  isFocused: boolean
 }> = ({
   items,
   value: controlledValue,
   onChange,
-  onSelect
+  onSelect,
+  isFocused
 }) => {
   const [selected, setSelected] = useState(controlledValue);
   useEffect(() => {
@@ -31,13 +33,9 @@ export const Toolbar: FC<{
     }
   };
 
-  const { isFocused } = useFocus({ autoFocus: true });
+  // const { isFocused } = useFocus({ autoFocus: true });
   const { focusPrevious, focusNext } = useFocusManager();
   useInput((input, key) => {
-    if (!isFocused) {
-      return;
-    }
-
     if (key.return) {
       onSelect();
     }
@@ -61,7 +59,7 @@ export const Toolbar: FC<{
       const next = i === items.length - 1 ? 0 : i + 1;
       handleChange(items[next].id);
     }
-  });
+  }, { isActive: isFocused });
 
   return (
     <Box>
