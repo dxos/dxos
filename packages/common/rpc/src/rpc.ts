@@ -422,7 +422,7 @@ const encodeError = (err: any): ErrorResponse => {
 const createTimeoutPromise = (timeout: number, error: Error) => {
   const timeoutPromise = new Promise<any>((resolve, reject) => {
     const timeoutId = setTimeout(
-      () => reject(new Error('Timeout')),
+      () => reject(error),
       timeout
     );
 
