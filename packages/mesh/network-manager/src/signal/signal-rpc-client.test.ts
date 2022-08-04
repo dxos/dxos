@@ -40,8 +40,8 @@ describe('SignalRPCClient', () => {
       value: Uint8Array.from([1, 2, 3])
     };
 
-  // Waiting for server to create stream.
-  // TODO(dmaretskyi): Add stream acknowledgement.
+    // Waiting for server to create stream.
+    // TODO(dmaretskyi): Add stream acknowledgement.
     await sleep(10);
     await client2.sendMessage(peerId2, peerId1, message);
 
