@@ -8,6 +8,8 @@ import "google/protobuf/any.proto";
 
 package dxos.rpc;
 
+option go_package = "github.com/dxos/kube/go/dxrpc/pb";
+
 message RpcMessage {
   oneof content {
     Request request = 1;
@@ -34,8 +36,16 @@ message Response {
   oneof content {
     google.protobuf.Any payload = 2;
     Error error = 3;
-    // Sent when stream is closed without an error.
+    /// Sent when stream is closed without an error.
     bool close = 4;
+
+    /**
+     * Sent when the server has processed a request with a streaming response.
+     *
+     * Can be skipped by the server.
+     * In this case the first payload should be treated as the server being ready.
+     */
+    bool stream_ready = 5;
   }
 }
 
