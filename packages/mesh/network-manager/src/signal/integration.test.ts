@@ -74,19 +74,38 @@ describe('Signal Integration Test', () => {
       },
     })).toBeAnObjectWith({ accept: true });
     
-    const message1: SignalMessage = {
-      topic,
-      id: peer1,
-      remoteId: peer2,
-      sessionId: PublicKey.random(),
-      data: {
-        signal: {json: '{"foo": "bar"}'}
+    {
+      const message: SignalMessage = {
+        topic,
+        id: peer1,
+        remoteId: peer2,
+        sessionId: PublicKey.random(),
+        data: {
+          signal: {json: '{"foo": "bar"}'}
+        }
       }
-    }
-    await peerNetworking1.messageRouter.signal(message1);
+      await peerNetworking1.messageRouter.signal(message);
 
-    await waitForExpect(() => {
-      expect(peerNetworking2.signalMock).toHaveBeenCalledWith([message1]);
-    });
+      await waitForExpect(() => {
+        expect(peerNetworking2.signalMock).toHaveBeenCalledWith([message]);
+      });
+    }
+
+    {  
+      const message: SignalMessage = {
+        topic,
+        id: peer2,
+        remoteId: peer1,
+        sessionId: PublicKey.random(),
+        data: {
+          signal: {json: '{"foo": "bar"}'}
+        }
+      }
+      await peerNetworking2.messageRouter.signal(message);
+
+      await waitForExpect(() => {
+        expect(peerNetworking1.signalMock).toHaveBeenCalledWith([message]);
+      });
+    }
   });
 });
