@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Text, useFocus } from 'ink';
+import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
-import TextInput from 'ink-text-input';
 import React, { FC, useState } from 'react';
 
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
+import { TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
@@ -18,7 +18,7 @@ export const Join: FC<{
   onJoin
 }) => {
   const client = useClient();
-  const { isFocused } = useFocus();
+  const [focused, setFocused] = useState(false);
   const [descriptor, setDescriptor] = useState<string>();
   const [secret, setSecret] = useState<string>();
   const [processing, setProcessing] = useState(false);
@@ -58,24 +58,30 @@ export const Join: FC<{
   };
 
   return (
-    <Panel focused={isFocused}>
+    <Panel highlight={focused}>
       {!invitation && !processing && (
         <TextInput
-          placeholder='Enter invitation code'
+          placeholder='Enter invitation code.'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
+          onFocus={setFocused}
         />
       )}
 
       {invitation && !processing && (
         <TextInput
-          placeholder='Enter verification code'
+          placeholder='Enter verification code.'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
+          onFocus={setFocused}
         />
       )}
+
+      <Box marginTop={1}>
+        <Text>Authenticate your device.</Text>
+      </Box>
 
       {status && (
         <Text>{status}</Text>

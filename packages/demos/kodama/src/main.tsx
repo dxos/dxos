@@ -18,7 +18,7 @@ import { ClientProvider } from '@dxos/react-client';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { name, version } from '../package.json';
-import { Test } from './Test';
+import { App } from './App';
 import { AppStateProvider } from './hooks';
 
 // Note: nodemon interferes with input.
@@ -103,8 +103,7 @@ const main = async () => {
             )}
 
             <AppStateProvider>
-              <Test />
-              {/* <App /> */}
+              <App />
             </AppStateProvider>
           </ClientProvider>
         ));

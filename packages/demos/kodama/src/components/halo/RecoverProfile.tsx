@@ -2,30 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useFocus } from 'ink';
-import TextInput from 'ink-text-input';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 
+import { Status, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const RecoverProfile = () => {
-  const [seedPhrase, setSeedPhrase] = useState<string>();
-  const { isFocused } = useFocus();
+  const [recoveryPhrase, setRecoveryPhrase] = useState<string>();
+  const [[processing, error], setStatus] = useState<[boolean, Error | undefined]>([false, undefined]);
+  const [focused, setFocused] = useState(false);
   const client = useClient();
 
   const handleSubmit = async (keyPhrase: string) => {
-    await client.halo.recoverProfile(keyPhrase);
+    try {
+      setStatus([true, undefined]);
+      // TODO(burdon): Validate keyPrase is well-formed.
+      await client.halo.recoverProfile(keyPhrase);
+      setStatus([false, undefined]);
+    } catch (err) {
+      // TODO(burdon): Error object is not well-formed (type Error, no name, message props).
+      setStatus([false, new Error('Recovery failed.')]);
+    }
   };
 
   return (
-    <Panel focused={isFocused}>
+    <Panel highlight={focused}>
       <TextInput
-        value={seedPhrase ?? ''}
-        onChange={setSeedPhrase}
+        focus={!processing}
+        value={recoveryPhrase ?? ''}
+        onChange={setRecoveryPhrase}
         onSubmit={handleSubmit}
-        placeholder='Enter seed phrase'
+        onFocus={setFocused}
+        placeholder='Enter recovery phrase.'
+      />
+
+      <Status
+        error={error}
+        processing={processing ? 'Authenticating' : undefined}
+        marginTop={1}
       />
     </Panel>
   );

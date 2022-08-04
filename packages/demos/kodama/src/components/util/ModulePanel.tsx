@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocus } from 'ink';
+import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import React, { FC, useEffect, useState } from 'react';
 
 import { useAppState } from '../../hooks';
@@ -33,23 +33,24 @@ export const ModulePanel: FC<{
   const { modules = [] } = module;
   const [option, setOption] = useState<string>();
   const [Component, setComponent] = useState<FC>();
-  const { isFocused } = useFocus();
-  const [{ path: focus }, { setPath }] = useAppState();
+  const { focus, isFocused } = useFocus({ id: module.id });
+  const { focusPrevious, focusNext } = useFocusManager();
 
   // Test that we are at least an ancestor of the current path focus.
+  const [{ path: currentPath }, { setPath }] = useAppState();
   const path = [...ancestors, module.id];
-  const showContent = path.filter((part, i) => part === focus[i]).length === path.length;
+  const showContent = path.filter((part, i) => part === currentPath[i]).length === path.length;
 
+  // Set the app focus state when focused.
   useEffect(() => {
     if (isFocused) {
       setPath(path);
     }
   }, [isFocused]);
 
+  // Change selection when toolbar option changes.
   useEffect(() => {
-    // Selected module.
     const module = modules.find(module => module.id === option);
-
     if (module?.component) {
       const Component = module.component;
       setComponent(() => () => <Component />);
@@ -65,6 +66,25 @@ export const ModulePanel: FC<{
     }
   }, [modules, option]);
 
+  useInput((input, key) => {
+    if (key.escape) {
+      // Refocus this module.
+      focus(module.id);
+    } if (key.return) {
+      // Execute handler.
+      const module = modules.find(module => module.id === option);
+      module?.exec?.();
+    } else if (key.upArrow) {
+      // Select previous level.
+      if (ancestors.length) {
+        focusPrevious();
+      }
+    } else if (key.downArrow) {
+      // TODO(burdon): Prevent wrap to top if container doesn't accept focus.
+      focusNext();
+    }
+  }, { isActive: isFocused });
+
   return (
     <Box flexDirection='column' flexGrow={1}>
       {debug && (
@@ -76,13 +96,9 @@ export const ModulePanel: FC<{
       <Box marginBottom={1}>
         <Toolbar
           items={modules}
-          isFocused={isFocused}
           value={option}
           onChange={setOption}
-          onSelect={() => {
-            const module = modules.find(module => module.id === option);
-            module?.exec?.();
-          }}
+          isFocused={isFocused}
         />
       </Box>
 

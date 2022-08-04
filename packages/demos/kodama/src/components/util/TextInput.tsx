@@ -4,26 +4,37 @@
 
 import { useInput, useFocus, useFocusManager } from 'ink';
 import WrappedTextInput from 'ink-text-input';
-import React, { FC } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 
-// TODO(burdon): Wrap input to support up/down focus.
 // https://github.com/vadimdemedes/ink-text-input
 export const TextInput: FC<{
+  focus?: boolean
   value: string
   onChange: (value: string) => void
   onSubmit?: (value: string) => void
+  onFocus?: (value: boolean) => void
   placeholder?: string
 }> = ({
+  focus,
   value,
   onChange,
   onSubmit,
+  onFocus,
   placeholder
 }) => {
-  const { isFocused } = useFocus();
+  const focusId = useMemo(() => `text-input-${Date.now()}`, []);
+  const { focus: setFocus, isFocused } = useFocus({ id: focusId, isActive: focus });
   const { focusPrevious, focusNext } = useFocusManager();
 
+  useEffect(() => {
+    onFocus?.(isFocused);
+  }, [isFocused]);
+
   useInput((input, key) => {
-    if (key.upArrow) {
+    if (key.escape) {
+      onChange(''); // TODO(burdon): Revert value.
+      setFocus(focusId);
+    } else if (key.upArrow) {
       focusPrevious();
     } else if (key.downArrow) {
       focusNext();
@@ -32,10 +43,12 @@ export const TextInput: FC<{
 
   return (
     <WrappedTextInput
+      focus={isFocused}
       value={value}
       onChange={onChange}
       onSubmit={onSubmit}
       placeholder={placeholder}
+      showCursor={isFocused}
     />
   );
 };

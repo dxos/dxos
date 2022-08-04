@@ -155,7 +155,7 @@ export const List: FC<{
   const showInput = onUpdate && isFocused;
 
   return (
-    <Panel focused={isFocused}>
+    <Panel highlight={isFocused}>
       <Box flexDirection='column'>
         {title && (
           <Box marginBottom={1}>

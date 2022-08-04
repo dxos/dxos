@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocusManager, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import React, { FC, useEffect, useState } from 'react';
 
 /**
@@ -12,13 +12,11 @@ export const Toolbar: FC<{
   items: { id: string, label: string }[]
   value?: string
   onChange: (id: string) => void
-  onSelect: () => void
   isFocused: boolean
 }> = ({
   items,
   value: controlledValue,
   onChange,
-  onSelect,
   isFocused
 }) => {
   const [selected, setSelected] = useState(controlledValue);
@@ -33,32 +31,13 @@ export const Toolbar: FC<{
     }
   };
 
-  // const { isFocused } = useFocus({ autoFocus: true });
-  const { focusPrevious, focusNext } = useFocusManager();
   useInput((input, key) => {
-    if (key.return) {
-      console.log('??????????');
-      onSelect();
-    }
-
-    if (key.upArrow) {
-      focusPrevious();
-    }
-
-    if (key.downArrow) {
-      focusNext();
-    }
-
     if (key.leftArrow) {
       const i = items.findIndex(item => item.id === selected);
-      const next = i === 0 ? items.length - 1 : i - 1;
-      handleChange(items[next].id);
-    }
-
-    if (key.rightArrow) {
+      handleChange(items[Math.max(0, i - 1)].id);
+    } else if (key.rightArrow) {
       const i = items.findIndex(item => item.id === selected);
-      const next = i === items.length - 1 ? 0 : i + 1;
-      handleChange(items[next].id);
+      handleChange(items[Math.min(items.length - 1, i + 1)].id);
     }
   }, { isActive: isFocused });
 

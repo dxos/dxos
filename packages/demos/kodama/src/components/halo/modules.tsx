@@ -60,11 +60,13 @@ export const createHaloModule = (client: Client): Module => {
         id: 'halo.share',
         label: 'Add Device',
         component: () => (
-          <Share
-            onCreate={() => {
-              return client.halo.createInvitation();
-            }}
-          />
+          <Panel>
+            <Share
+              onCreate={() => {
+                return client.halo.createInvitation();
+              }}
+            />
+          </Panel>
         )
       },
       {

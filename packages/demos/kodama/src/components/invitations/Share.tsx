@@ -3,13 +3,11 @@
 //
 
 import copypaste from 'copy-paste';
-import { Box, Text, useFocus } from 'ink';
+import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
-
-import { Panel } from '../util';
 
 export const Share: FC<{
   onCreate: () => Promise<InvitationRequest>
@@ -17,7 +15,6 @@ export const Share: FC<{
   onCreate
 }) => {
   const isMounted = useMounted();
-  const { isFocused } = useFocus();
   const [invitation, setInvitation] = useState<InvitationRequest>();
   const [status, setStatus] = useState<string>();
 
@@ -42,7 +39,7 @@ export const Share: FC<{
   }, []);
 
   return (
-    <Panel focused={isFocused}>
+    <Box flexDirection='column'>
       {invitation && (
         <Box flexDirection='column'>
           <Box flexDirection='column'>
@@ -59,6 +56,6 @@ export const Share: FC<{
       {status && (
         <Text>{status}</Text>
       )}
-    </Panel>
+    </Box>
   );
 };

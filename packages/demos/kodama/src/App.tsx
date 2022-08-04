@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useFocusManager } from 'ink';
+import { useFocus } from 'ink';
 import * as process from 'process';
 import React, { useEffect, useMemo } from 'react';
 
@@ -55,11 +55,12 @@ export const App = () => {
   const [{ partyKey }] = useAppState();
   const party = useParty(partyKey);
   const module = useMemo<Module>(() => createRootModule(client, party), [profile, party]);
-  const { focusNext } = useFocusManager();
+  const { focus } = useFocus({ isActive: false });
 
+  // Focus first element.
   useEffect(() => {
-    focusNext();
-  }, []);
+    focus(module.id);
+  }, [module]);
 
   return (
     <ModulePanel
