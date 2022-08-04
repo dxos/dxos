@@ -37,7 +37,7 @@ describe('Signal Integration Test', () => {
     }
   }
 
-  it.only('two peers connecting', async () => {
+  it('two peers connecting', async () => {
     const peerNetworking1 = setup();
     const peerNetworking2 = setup();
     
@@ -73,7 +73,7 @@ describe('Signal Integration Test', () => {
         offer: {}
       },
     })).toBeAnObjectWith({ accept: true });
-    
+
     {
       const message: SignalMessage = {
         topic,
