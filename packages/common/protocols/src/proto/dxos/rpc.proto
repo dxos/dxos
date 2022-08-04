@@ -36,8 +36,11 @@ message Response {
   oneof content {
     google.protobuf.Any payload = 2;
     Error error = 3;
-    // Sent when stream is closed without an error.
+    /// Sent when stream is closed without an error.
     bool close = 4;
+
+    /// Sent when the server has processed a request with a streaming response.
+    bool stream_ready = 5;
   }
 }
 
