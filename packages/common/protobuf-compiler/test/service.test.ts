@@ -2,6 +2,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { schema } from './proto/gen'
 import { TaskType } from './proto/gen/dxos/test';
 import { MyKey } from './my-key';
+import { it as test } from 'mocha'
+import expect from 'expect'
 
 test('services', async () => {
   const service = schema.getService('dxos.test.TestService');
