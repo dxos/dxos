@@ -7,7 +7,7 @@ import React from 'react';
 import { Client } from '@dxos/client';
 
 import { Join, Share } from '../invitations';
-import { Module, Panel } from '../util';
+import { ModuleDef, Panel } from '../util';
 import { Contacts } from './Contacts';
 import { CreateProfile } from './CreateProfile';
 import { Devices } from './Devices';
@@ -15,7 +15,7 @@ import { Keychain } from './Keychain';
 import { Profile } from './Profile';
 import { RecoverProfile } from './RecoverProfile';
 
-export const createHaloModule = (client: Client): Module => {
+export const createHaloModule = (client: Client): ModuleDef => {
   return {
     id: 'halo',
     label: 'HALO',

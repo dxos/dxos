@@ -8,10 +8,10 @@ import React, { FC, useEffect, useState } from 'react';
 import { useAppState } from '../../hooks';
 import { Toolbar } from './Toolbar';
 
-export type Module = {
+export type ModuleDef = {
   id: string
   label: string
-  modules?: Module[]
+  modules?: ModuleDef[]
   component?: FC
   exec?: () => void
 }
@@ -22,7 +22,7 @@ const Blank = () => <div />;
  * Represents a module including Toolbar menu and contained panel.
  */
 export const ModulePanel: FC<{
-  module: Module
+  module: ModuleDef
   ancestors?: string[]
   debug?: boolean
 }> = ({

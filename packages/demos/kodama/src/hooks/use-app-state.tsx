@@ -7,6 +7,7 @@ import React, { FC, ReactNode, createContext, useContext, useMemo, useReducer } 
 import { PublicKey } from '@dxos/protocols';
 
 export type AppState = {
+  debug?: boolean
   path: string[] // TODO(burdon): Change to hierarchical module dot string.
   partyKey?: PublicKey
 }
@@ -50,10 +51,12 @@ const AppStateContext = createContext<[AppState, ActionHandler] | undefined>(und
 
 export const AppStateProvider: FC<{
   children: ReactNode
+  debug?: boolean
 }> = ({
-  children
+  children,
+  debug
 }) => {
-  const [state, dispatch] = useReducer(appStateReducer, { path: [] });
+  const [state, dispatch] = useReducer(appStateReducer, { debug, path: [] });
   const handler = useMemo<ActionHandler>(() => ({
     setPath: (path: string[]) => {
       dispatch({ type: ActionType.SET_PATH, value: path });

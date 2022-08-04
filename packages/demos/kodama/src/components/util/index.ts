@@ -3,6 +3,7 @@
 //
 
 export * from './List';
+export * from './Module';
 export * from './ModulePanel';
 export * from './Panel';
 export * from './Status';

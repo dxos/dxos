@@ -7,7 +7,7 @@ import React from 'react';
 import { Client, Party } from '@dxos/client';
 
 import { Join, Share } from '../invitations';
-import { Module, Panel } from '../util';
+import { ModuleDef, Panel } from '../util';
 import { CreateParty } from './CreateParty';
 import { PartyFeeds } from './PartyFeeds';
 import { PartyMembers } from './PartyMembers';
@@ -15,7 +15,7 @@ import { PartyView } from './PartyView';
 
 // TODO(burdon): Dynamically change module render based on party.
 //  Configure module as React component (similar to <Menu><MenuItem /></Menu>)
-export const createEchoModule = (client: Client, party?: Party): Module | undefined => {
+export const createEchoModule = (client: Client, party?: Party): ModuleDef | undefined => {
   if (client.halo.profile) {
     const partyModules = party ? [
       {

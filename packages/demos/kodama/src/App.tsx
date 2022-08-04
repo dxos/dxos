@@ -13,13 +13,13 @@ import {
   createEchoModule,
   createHaloModule,
   Config,
-  Module,
+  ModuleDef,
   ModulePanel,
   Panel
 } from './components';
 import { useAppState } from './hooks';
 
-const createRootModule = (client: Client, party?: Party): Module => {
+const createRootModule = (client: Client, party?: Party): ModuleDef => {
   return {
     id: 'root',
     label: 'Root',
@@ -42,7 +42,7 @@ const createRootModule = (client: Client, party?: Party): Module => {
           process.exit();
         }
       }
-    ].filter(Boolean) as Module[]
+    ].filter(Boolean) as ModuleDef[]
   };
 };
 
@@ -55,7 +55,7 @@ export const App = () => {
   const [{ partyKey }] = useAppState();
   const party = useParty(partyKey);
   // TODO(burdon): Party change reset's entire state.
-  const module = useMemo<Module>(() => createRootModule(client, party), [profile, party]);
+  const module = useMemo<ModuleDef>(() => createRootModule(client, party), [profile, party]);
   const { focus } = useFocus({ isActive: false });
 
   // Focus first element.
