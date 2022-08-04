@@ -82,7 +82,7 @@
       "@dxos/network-manager",
       "@dxos/object-model"
     ],
-    "protoPacklet": true,
+    "protoBase": "./src/packlets/proto",
     "testingFramework": "mocha"
   }
 }

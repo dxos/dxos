@@ -51,33 +51,26 @@ export interface BuildOptions {
 }
 
 const buildProto = async (config: Config, project: Project) => {
-  // TODO(wittjosiah): Simplify config with path prefix.
-  const protoConfig = project.toolchainConfig.protoPacklet
-    ? {
-        src: './src/packlets/proto/**/*.proto',
-        output: './src/packlets/proto/gen',
-        substitutions: './src/packlets/proto/substitutions.ts'
-      }
-    : config.protobuf;
+  const protoBase = project.toolchainConfig.protoBase ?? config.protobuf.base;
+  const output = join(project.packageRoot, protoBase, config.protobuf.output);
+  const src = join(project.packageRoot, protoBase, config.protobuf.src);
+  const substitutions = join(project.packageRoot, protoBase, config.protobuf.substitutions);
 
   try {
-    fs.rmSync(join(project.packageRoot, protoConfig.output), { recursive: true, force: true });
+    fs.rmSync(output, { recursive: true, force: true });
   } catch (err: any) {
     err(err.message);
   }
 
   // Compile protocol buffer definitions.
-  const protoFiles = glob(protoConfig.src, { cwd: project.packageRoot });
+  const protoFiles = glob(src, { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
 
-    // Substitution classes for protobuf parsing.
-    const file = join(project.packageRoot, protoConfig.substitutions);
-    const substitutions = fs.existsSync(file) ? join(file) : undefined;
-
     await execTool('build-protobuf', [
-      '-o', join(project.packageRoot, protoConfig.output),
-      ...(substitutions ? ['-s', substitutions] : []),
+      '-o', output,
+      // Substitution classes for protobuf parsing.
+      ...(fs.existsSync(substitutions) ? ['-s', substitutions] : []),
       ...protoFiles
     ]);
   }
