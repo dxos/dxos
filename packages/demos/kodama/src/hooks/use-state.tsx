@@ -7,7 +7,7 @@ import React, { FC, ReactNode, createContext, useContext, useMemo, useReducer } 
 import { PublicKey } from '@dxos/protocols';
 
 export type AppState = {
-  path: string[]
+  path: string[] // TODO(burdon): Change to hierarchical module dot string.
   partyKey?: PublicKey
 }
 

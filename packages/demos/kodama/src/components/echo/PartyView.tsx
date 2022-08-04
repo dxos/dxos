@@ -30,19 +30,14 @@ export const PartyView: FC<{
           partyKey={party.key}
         />
       </Box>
-      <Box flexGrow={1} flexDirection='column'>
-        {/* <Panel> */}
-        {/*  <PartyInfo */}
-        {/*    party={party} */}
-        {/*  /> */}
-        {/* </Panel> */}
-        <ItemTypeList
-          party={party}
-          onChange={setType}
-        />
+      <Box flexDirection='column' flexGrow={1}>
         <ItemList
           party={party}
           type={type}
+        />
+        <ItemTypeList
+          party={party}
+          onChange={setType}
         />
       </Box>
     </Box>

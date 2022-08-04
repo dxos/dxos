@@ -6,31 +6,31 @@ import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { Status, TextInput } from '../../components';
+import { Status, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const RecoverProfile = () => {
   const [recoveryPhrase, setRecoveryPhrase] = useState<string>();
-  const [[processing, error], setStatus] = useState<[boolean, Error | undefined]>([false, undefined]);
+  const [status, setStatus] = useState<StatusState>();
   const [focused, setFocused] = useState(false);
   const client = useClient();
 
   const handleSubmit = async (keyPhrase: string) => {
     try {
-      setStatus([true, undefined]);
+      setStatus({ processing: 'Recovering HALO...' });
       // TODO(burdon): Validate keyPrase is well-formed.
       await client.halo.recoverProfile(keyPhrase);
-      setStatus([false, undefined]);
+      setStatus({ success: 'OK' });
     } catch (err) {
       // TODO(burdon): Error object is not well-formed (type Error, no name, message props).
-      setStatus([false, new Error('Recovery failed.')]);
+      setStatus({ error: new Error('Recovery failed.') });
     }
   };
 
   return (
     <Panel highlight={focused}>
       <TextInput
-        focus={!processing}
+        focus={!status?.processing}
         value={recoveryPhrase ?? ''}
         onChange={setRecoveryPhrase}
         onSubmit={handleSubmit}
@@ -39,8 +39,7 @@ export const RecoverProfile = () => {
       />
 
       <Status
-        error={error}
-        processing={processing ? 'Authenticating' : undefined}
+        status={status}
         marginTop={1}
       />
     </Panel>

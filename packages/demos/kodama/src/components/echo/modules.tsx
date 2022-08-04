@@ -13,6 +13,8 @@ import { PartyFeeds } from './PartyFeeds';
 import { PartyMembers } from './PartyMembers';
 import { PartyView } from './PartyView';
 
+// TODO(burdon): Dynamically change module render based on party.
+//  Configure module as React component (similar to <Menu><MenuItem /></Menu>)
 export const createEchoModule = (client: Client, party?: Party): Module | undefined => {
   if (client.halo.profile) {
     const partyModules = party ? [
@@ -42,11 +44,13 @@ export const createEchoModule = (client: Client, party?: Party): Module | undefi
         id: 'echo.share',
         label: 'Share Party',
         component: () => (
-          <Share
-            onCreate={() => {
-              return party.createInvitation();
-            }}
-          />
+          <Panel>
+            <Share
+              onCreate={() => {
+                return party.createInvitation();
+              }}
+            />
+          </Panel>
         )
       }
     ] : [];

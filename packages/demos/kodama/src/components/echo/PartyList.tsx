@@ -18,12 +18,11 @@ export const PartyList: FC<{
   partyKey: controlledPartyKey
 }) => {
   const parties = useParties();
-  const [, { setPartyKey }] = useAppState();
+  const [, { setPartyKey }] = useAppState(); // TODO(burdon): Move to container.
 
   return (
     <List
       showCount
-      focusId='party-list'
       onSelect={partyKey => setPartyKey(PublicKey.from(partyKey))}
       items={parties.map(party => ({
         id: party.key.toHex(),

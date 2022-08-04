@@ -6,24 +6,33 @@ import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import React, { FC } from 'react';
 
+export type StatusState = {
+  processing?: string
+  success?: string
+  error?: string | Error
+}
+
 /**
  * Status
  */
 export const Status: FC<{
-  error?: string | Error
-  processing?: string
+  status?: StatusState
   marginTop?: number
 }> = ({
-  error,
-  processing,
+  status = {},
   marginTop = 0
 }) => {
-  if (!error && !processing) {
+  const { processing, success, error } = status;
+  if (!error && !success && !processing) {
     return null;
   }
 
   return (
     <Box marginTop={marginTop}>
+      {success && (
+        <Text color='green'>{success}</Text>
+      )}
+
       {error && (
         <Text color='red'>{String(error)}</Text>
       )}

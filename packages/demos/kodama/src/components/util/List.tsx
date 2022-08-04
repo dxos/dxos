@@ -87,7 +87,6 @@ export const List: FC<{
   items: ListItem[]
   pageSize?: number
   title?: string
-  focusId?: string
   showCount?: boolean
   onUpdate?: (item: { id?: string, text: string }) => void
   onSelect?: (id: string) => void
@@ -96,14 +95,13 @@ export const List: FC<{
   items = [],
   pageSize = 10,
   title,
-  focusId,
   showCount,
   onUpdate,
   onSelect,
   onCancel
 }) => {
   const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
-  const { isFocused } = useFocus({ id: focusId });
+  const { isFocused } = useFocus();
 
   useInput((input, key) => {
     // Escape.
@@ -144,6 +142,7 @@ export const List: FC<{
             startIndex = i + 1 - pageSize;
           }
 
+          // TODO(burdon): Don't set -1 if created item isn't selected.
           return { cursor: i, startIndex };
         });
       }

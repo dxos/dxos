@@ -54,6 +54,7 @@ export const App = () => {
   const profile = useProfile();
   const [{ partyKey }] = useAppState();
   const party = useParty(partyKey);
+  // TODO(burdon): Party change reset's entire state.
   const module = useMemo<Module>(() => createRootModule(client, party), [profile, party]);
   const { focus } = useFocus({ isActive: false });
 

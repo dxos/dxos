@@ -35,7 +35,7 @@ export const ItemTypeList: FC<{
   const { isFocused } = useFocus();
 
   return (
-    <Panel>
+    <Panel highlight={isFocused}>
       {types.length === 0 && (
         <Text color='gray'>Empty</Text>
       )}
