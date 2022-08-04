@@ -194,6 +194,30 @@ describe('Schema', () => {
       expect(decoded).toEqual(initial);
     });
 
+    test('required fields are assigned their default values when missing on the wire', () => {
+      const codec = schema.getCodecForType('dxos.test.Scalars');
+
+      const expected: Scalars = {
+        doubleField: 0.0,
+        floatField: 0.0,
+        int32Field: 0,
+        int64Field: '0',
+        uint32Field: 0,
+        uint64Field: '0',
+        sint32Field: 0,
+        sint64Field: '0',
+        fixed32Field: 0,
+        fixed64Field: '0',
+        sfixed32Field: 0,
+        sfixed64Field: '0',
+        boolField: false,
+        stringField: '',
+        bytesField: new Uint8Array()
+      };
+      const decoded = codec.decode(Buffer.from(''));
+      expect(decoded).toEqual(expected);
+    })
+
     test('optional', () => {
       const codec = schema.getCodecForType('dxos.test.OptionalScalars');
 
@@ -231,6 +255,15 @@ describe('Schema', () => {
       const decoded = codec.decode(encoded);
       expect(decoded).toEqual(initial);
     });
+
+    describe('optional fields are assigned undefined when missing on the wire', () => {
+      const codec = schema.getCodecForType('dxos.test.OptionalScalars');
+
+      const expected: OptionalScalars = {
+      };
+      const decoded = codec.decode(Buffer.from(''));
+      expect(decoded).toEqual(expected);
+    })
   })
 
 
