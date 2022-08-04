@@ -8,11 +8,26 @@ import assert from 'node:assert';
 const log = debug('dxos:codec-protobuf:stream');
 
 type Producer<T> = (callbacks: {
+  /**
+   * Advises that the producer is ready to stream the data.
+   * Called automatically with the first call to `next`.
+   */
+  ready: () => void
+
+  /**
+   * Sends a message into the stream.
+   */
   next: (message: T) => void
+
+  /**
+   * Closes the stream.
+   * Optional error can be provided.
+   */
   close: (error?: Error) => void
 }) => (() => void) | void
 
 export type StreamItem<T> =
+  | { ready: true }
   | { data: T }
   | { closed: true, error?: Error }
 
@@ -31,6 +46,7 @@ export class Stream<T> {
     return new Promise(resolve => {
       const items: StreamItem<T>[] = [];
 
+      stream.onReady(() => { items.push({ ready: true })})
       stream.subscribe(
         data => {
           items.push({ data });
@@ -49,10 +65,15 @@ export class Stream<T> {
 
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
+  private _readyHandler?: () => void;
 
   private _isClosed = false;
   private _closeError: Error | undefined;
   private _dispose: (() => void) | undefined;
+  private _readyPromise: Promise<void>;
+  private _resolveReadyPromise!: () => void;
+  private _isReady = false;
+
 
   /**
    * Buffer messages before subscription. Set to null when buffer is no longer needed.
@@ -60,12 +81,20 @@ export class Stream<T> {
   private _buffer: T[] | null = [];
 
   constructor (producer: Producer<T>) {
+    this._readyPromise = new Promise(resolve => { this._resolveReadyPromise = resolve; })
+
     const disposeCallback = producer({
+      ready: () => {
+        this._markAsReady();
+      },
+
       next: msg => {
         if (this._isClosed) {
           log('Stream is closed, dropping message.');
           return;
         }
+
+        this._markAsReady();
 
         if (this._messageHandler) {
           try {
@@ -102,6 +131,14 @@ export class Stream<T> {
     }
   }
 
+  private _markAsReady() {
+    if(!this._isReady) {
+      this._isReady = true;
+      this._readyHandler?.();
+      this._resolveReadyPromise();
+    }
+  }
+
   subscribe (onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
@@ -126,6 +163,25 @@ export class Stream<T> {
 
     this._messageHandler = onMessage;
     this._closeHandler = onClose;
+  }
+
+  /**
+   * Resolves when stream is ready.
+   */
+  waitUntilReady(): Promise<void> {
+    return this._readyPromise;
+  }
+
+  /**
+   * Registers a callback to be called when stream is ready.
+   */
+  onReady(onReady: () => void): void {
+    assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
+    this._readyHandler = onReady;
+
+    if(this._isReady) {
+      onReady();
+    }
   }
 
   /**
