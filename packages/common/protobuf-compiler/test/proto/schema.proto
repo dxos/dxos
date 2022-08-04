@@ -82,10 +82,10 @@ message WithTimestamp {
 }
 
 message Outer {
-  ComplexFields.Inner inner = 1;
+  Inner inner = 1;
   
   message Inner {
-    ComplexFields.InnerEnum inner = 1;
+    int32 num = 1;
   }
 }
 

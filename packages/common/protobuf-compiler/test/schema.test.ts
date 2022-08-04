@@ -9,7 +9,7 @@ import expect from 'expect'
 
 import { MyKey } from './my-key';
 import { schema } from './proto/gen';
-import { ComplexFields, OptionalScalars, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test';
+import { ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test';
 import { TestFoo } from './proto/gen/dxos/test/testfoo';
 
 describe('Schema', () => {
@@ -264,6 +264,18 @@ describe('Schema', () => {
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
     })
+  })
+
+  test('default values for missing message-typed fields', () => {
+    const codec = schema.getCodecForType('dxos.test.Outer');
+
+    const expected: Outer = {
+      inner: {
+        num: 0,
+      }
+    };
+    const decoded = codec.decode(Buffer.from(''));
+    expect(decoded).toEqual(expected);
   })
 
 
