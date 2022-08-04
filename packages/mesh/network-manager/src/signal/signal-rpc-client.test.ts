@@ -9,7 +9,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalRPCClient } from './signal-rpc-client';
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 
 describe('SignalRPCClient', () => {
   let broker: TestBroker;
@@ -39,6 +39,10 @@ describe('SignalRPCClient', () => {
       'type_url': 'test',
       value: Uint8Array.from([1, 2, 3])
     };
+
+  // Waiting for server to create stream.
+  // TODO(dmaretskyi): Add stream acknowledgement.
+    await sleep(10);
     await client2.sendMessage(peerId2, peerId1, message);
 
     const received: Message = await new Promise(resolve => {
