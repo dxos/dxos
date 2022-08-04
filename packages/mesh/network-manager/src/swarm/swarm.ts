@@ -18,6 +18,7 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -34,7 +35,6 @@ export class Swarm {
 
   private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
-  private readonly _peerCandidatesUpdated = new Event();
 
   get connections () {
     return Array.from(this._connections.values());
@@ -87,16 +87,14 @@ export class Swarm {
     return this._topic;
   }
 
-  onPeerCandidatesChanged (candidates: PublicKey[]) {
-    log(`New peers for ${this._topic} ${candidates}`);
-    this._discoveredPeers.clear();
-    for (const candidate of candidates) {
-      if (candidate.equals(this._ownPeerId)) {
-        continue;
-      }
-      this._discoveredPeers.add(candidate);
+  onSwarmEvent (swarmEvent: SwarmEvent) {
+    log(`Swarm event ${JSON.stringify(swarmEvent)}`);
+    if (swarmEvent.peerAvailable) {
+      log(`New peer for ${this._topic} ${swarmEvent.peerAvailable.peer}`);
+      this._discoveredPeers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+    } else if (swarmEvent.peerLeft) {
+      this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
     }
-    this._peerCandidatesUpdated.emit();
     this._topology.update();
   }
 

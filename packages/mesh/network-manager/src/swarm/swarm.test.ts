@@ -18,10 +18,11 @@ import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
+import { Any } from '@dxos/codec-protobuf';
 
 const log = debug('dxos:network-manager:swarm:test');
 
-describe('Swarm', () => {
+describe.only('Swarm', () => {
   class MockSignalConnection implements SignalMessaging {
     constructor (
       readonly _swarm: () => Swarm,
@@ -107,7 +108,12 @@ describe('Swarm', () => {
       promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
-    swarm1.onPeerCandidatesChanged([peerId2]);
+    swarm1.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId2.asUint8Array(),
+        since: new Date()
+      }
+    });
 
     log('Candidates changed');
     await promise;
@@ -131,8 +137,19 @@ describe('Swarm', () => {
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
 
-    swarm1.onPeerCandidatesChanged([peerId2]);
-    swarm2.onPeerCandidatesChanged([peerId1]);
+    swarm1.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId2.asUint8Array(),
+        since: new Date()
+      }
+    });
+
+    swarm2.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId1.asUint8Array(),
+        since: new Date()
+      }
+    });
 
     await Promise.all([
       swarm1.connected.waitForCount(1),
@@ -146,9 +163,19 @@ describe('Swarm', () => {
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
 
-    swarm1.onPeerCandidatesChanged([peerId2]);
+    swarm1.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId2.asUint8Array(),
+        since: new Date()
+      }
+    });
     await sleep(15);
-    swarm2.onPeerCandidatesChanged([peerId1]);
+    swarm2.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId1.asUint8Array(),
+        since: new Date()
+      }
+    });
 
     await Promise.all([
       swarm1.connected.waitForCount(1),
@@ -175,7 +202,12 @@ describe('Swarm', () => {
       promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
-    swarm1.onPeerCandidatesChanged([peerId2]);
+    swarm1.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId2.asUint8Array(),
+        since: new Date()
+      }
+    });
 
     log('Candidates changed');
     await promise;
