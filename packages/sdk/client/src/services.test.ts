@@ -11,8 +11,7 @@ import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
-import { InvitationRequest } from './packlets/api';
-import { RedeemedInvitation } from './packlets/proto';
+import { InvitationRequest, RedeemedInvitation } from './packlets/proto';
 
 const setup = async () => {
   const client = new Client();
@@ -35,7 +34,6 @@ describe('Client Services', () => {
 
       await inviter.services.ProfileService.createProfile({ username: 'test-user' });
       const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
-        // TODO(wittjosiah): Why aren't sustitutions working?
         inviter.services.ProfileService.createInvitation().subscribe(resolve, reject);
       });
 
