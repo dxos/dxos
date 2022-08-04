@@ -70,7 +70,6 @@ export class SignalClient {
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
 
-  private readonly _topicPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
   private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(key => key.toHex());
   /**
@@ -190,10 +189,9 @@ export class SignalClient {
     };
   }
 
-  async join (topic: PublicKey, peerId: PublicKey): Promise<PublicKey[]> {
+  async join (topic: PublicKey, peerId: PublicKey): Promise<void> {
     await this._subscribeSwarmEvents(topic, peerId);
     await this._subscribeMessages(peerId);
-    return Array.from(this._topicPeers.get(topic)!);
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
@@ -201,12 +199,12 @@ export class SignalClient {
     this._swarmStreams.delete(topic);
   }
 
+  /**
+   * @deprecated
+   */
   async lookup (topic: PublicKey): Promise<PublicKey[]> {
-    if (!this._topicPeers.has(topic)) {
-      return [];
-    } else {
-      return Array.from(this._topicPeers.get(topic)!);
-    }
+    console.log("DEPRECATED!!!");
+    return [];
   }
 
   async signal (message: SignalMessage): Promise<void> {
@@ -219,27 +217,13 @@ export class SignalClient {
 
   private async _subscribeSwarmEvents (topic: PublicKey, peerId: PublicKey): Promise<void> {
     const swarmStream = await this._client.join(topic, peerId);
-
-    // Adding current peer to the list of peers for this topic.
-    if (this._topicPeers.has(topic)) {
-      this._topicPeers.get(topic)!.add(peerId);
-    } else {
-      this._topicPeers.set(topic, new ComplexSet(key => key.toHex(), [peerId]));
-    }
-
     // Subscribing to swarm events.
+    // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
     swarmStream.subscribe((swarmEvent: SwarmEvent) => {
       this.swarmEvent.emit([topic, swarmEvent]);
-      log(`Swarm event on ${topic}: ${JSON.stringify(swarmEvent)}`);
-      if (swarmEvent.peerAvailable) {
-        this._topicPeers.get(topic)?.add(PublicKey.from(swarmEvent.peerAvailable.peer));
-      } else if (swarmEvent.peerLeft) {
-        this._topicPeers.get(topic)?.delete(PublicKey.from(swarmEvent.peerLeft.peer));
-      }
     });
 
     // Saving swarm stream.
-    // TODO(mykola): Cleanup?
     if (!this._swarmStreams.has(topic)) {
       this._swarmStreams.set(topic, swarmStream);
     }
@@ -257,8 +241,8 @@ export class SignalClient {
         log('Unknown message type: ' + message.payload.type_url);
       }
     });
+
     // Saving message stream.
-    // TODO(mykola): Cleanup?
     if (!this._messageStreams.has(peerId)) {
       this._messageStreams.set(peerId, messageStream);
     }

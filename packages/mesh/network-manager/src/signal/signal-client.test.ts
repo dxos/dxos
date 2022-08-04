@@ -13,7 +13,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
 
-describe('SignalApi', () => {
+describe('SignalClient', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
@@ -67,15 +67,19 @@ describe('SignalApi', () => {
 
   test('join', async () => {
     api1 = new SignalClient(broker1.url(), async () => {});
+    api2 = new SignalClient(broker1.url(), async () => {});
 
-    const join = await api1.join(topic, peer1);
-    expect(join).toEqual([peer1]);
+    const promise1 = api1.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
+    const promise2 = api2.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
 
-    const join2 = await api1.join(topic, peer2);
-    expect(join2).toEqual([peer1, peer2]);
+    await api1.join(topic, peer1);
+    await api2.join(topic, peer2);
+
+    await promise1;
+    await promise2;
   }).timeout(1_000);
 
-  test('signal', async () => {
+  test('signal to self', async () => {
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
     api1 = new SignalClient(broker1.url(), signalMock);
@@ -95,18 +99,6 @@ describe('SignalApi', () => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
   }).timeout(5_000);
-
-  test('lookup', async () => {
-    api1 = new SignalClient(broker1.url(), async () => {});
-    api2 = new SignalClient(broker1.url(), async () => {});
-
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
-
-    await waitForExpect(async () => expect(await api1.lookup(topic)).toEqual([peer1, peer2]), 4_000);
-    await waitForExpect(async () => expect(await api2.lookup(topic)).toEqual([peer2, peer1]), 4_000);
-  });
-
 
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.

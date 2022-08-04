@@ -18,6 +18,10 @@ describe('Signal Integration Test', () => {
   before(() => {
     broker = createTestBroker();
   });
+
+  after(() => {
+    broker.stop();
+  });
   
   const setup = () => {
     const signalManager = new WebsocketSignalManager([broker.url()]);

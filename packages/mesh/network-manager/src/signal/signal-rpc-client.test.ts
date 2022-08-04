@@ -45,11 +45,14 @@ describe('SignalRPCClient', () => {
       stream1.subscribe(message => {
         resolve(message);
       }, (error) => {
-        console.log(error);
-        throw error;
+        if (error) {
+          console.log(error);
+          throw error;
+        }
       });
     });
     expect(received.author).toEqual(peerId2.asUint8Array());
+    stream1.close();
   }).timeout(10000);
 
   it('join', async () => {
@@ -67,12 +70,16 @@ describe('SignalRPCClient', () => {
           resolve(event);
         }
       }, (error) => {
-        console.log(error);
-        throw error;
+        if (error) {
+          console.log(error);
+          throw error;
+        }
       });
     });
-    await client2.join(topic, peerId2);
+    const stream2 = await client2.join(topic, peerId2);
 
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
+    stream1.close();
+    stream2.close();
   }).timeout(10000);
 });
