@@ -5,7 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Client, Party, InvitationDescriptor } from '@dxos/client';
+import { Party, InvitationDescriptor } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { Stream } from '@dxos/codec-protobuf';
 
 import {
