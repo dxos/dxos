@@ -17,12 +17,14 @@ import { Runtime } from '../proto';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
-import { createWindowMessagePort } from './messages';
 import { ClientServiceProxy } from './service-proxy';
+import { createSingletonPort } from './singleton-port';
 import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
 
+// TODO(wittjosiah): Should be kube.local or equivalent.
+const DEFAULT_SINGLETON_HOST = 'http://localhost:8080';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigObject = { version: 1 };
@@ -90,8 +92,9 @@ export class Client {
     if (options.serviceProvider) {
       this._serviceProvider = options.serviceProvider;
     } else {
+      const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
       this._serviceProvider = new ClientServiceProxy(
-        this._options.rpcPort ?? createWindowMessagePort(),
+        this._options.rpcPort ?? createSingletonPort(singletonSource),
         this._options.timeout
       );
     }
@@ -156,6 +159,7 @@ export class Client {
   /**
    * Client services that can be proxied.
    */
+  // TODO(burdon): Remove from API?
   get services (): ClientServices {
     return this._serviceProvider.services;
   }
