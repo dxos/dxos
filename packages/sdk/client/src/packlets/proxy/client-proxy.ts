@@ -87,10 +87,15 @@ export class Client {
     this._config = (config instanceof Config) ? config : new Config(config);
     this._options = options;
 
-    this._serviceProvider = new ClientServiceProxy(
-      this._options.rpcPort ?? createWindowMessagePort(),
-      this._options.timeout
-    );
+    if (options.serviceProvider) {
+      this._serviceProvider = options.serviceProvider;
+    } else {
+      this._serviceProvider = new ClientServiceProxy(
+        this._options.rpcPort ?? createWindowMessagePort(),
+        this._options.timeout
+      );
+    }
+
     this._halo = new HaloProxy(this._serviceProvider);
     this._echo = new EchoProxy(this._serviceProvider, this._halo);
 

@@ -18,15 +18,15 @@ import { Timeframe } from '@dxos/protocols';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { clientServiceBundle } from '../api';
-import { Client } from './client-proxy';
+import { Client } from './client';
+import { clientServiceBundle } from './packlets/api';
+import { Client as ClientProxy } from './packlets/proxy';
 
-// TODO(wittjosiah): Need test setup with remote client.
 describe('Client', () => {
   //
   // Suite is called for local and remote client configurations.
   //
-  const testSuite = (createClient: () => Promise<Client>) => {
+  const testSuite = (createClient: () => Promise<ClientProxy>) => {
     describe('initialization', () => {
       test('initialize and destroy', async () => {
         const client = await createClient();
@@ -309,7 +309,7 @@ describe('Client', () => {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({ }, { rpcPort: proxyPort });
+      return new ClientProxy({ }, { rpcPort: proxyPort });
     });
   });
 
