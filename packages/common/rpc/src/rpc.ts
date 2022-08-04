@@ -291,7 +291,7 @@ export class RpcPeer {
 
     return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if(response.streamReady) {
+        if (response.streamReady) {
           ready();
         } else if (response.close) {
           close();
@@ -370,9 +370,9 @@ export class RpcPeer {
       responseStream.onReady(() => {
         callback({
           id: req.id,
-          streamReady: true,
-        })
-      })
+          streamReady: true
+        });
+      });
       responseStream.subscribe(
         msg => {
           callback({

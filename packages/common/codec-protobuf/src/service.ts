@@ -122,7 +122,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     return Stream.map(responseStream, (data): Any => ({
       value: responseCodec.encode(data),
       type_url: method.resolvedResponseType!.fullName
-     }))
+    }));
   }
 
   private _getMethodInfo (methodName: string) {

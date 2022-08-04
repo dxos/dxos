@@ -46,7 +46,9 @@ export class Stream<T> {
     return new Promise(resolve => {
       const items: StreamItem<T>[] = [];
 
-      stream.onReady(() => { items.push({ ready: true })})
+      stream.onReady(() => {
+        items.push({ ready: true });
+      });
       stream.subscribe(
         data => {
           items.push({ data });
@@ -66,7 +68,7 @@ export class Stream<T> {
   /**
    * Maps all data coming through the stream.
    */
-  static map<T, U>(source: Stream<T>, map: (data: T) => U): Stream<U> {
+  static map<T, U> (source: Stream<T>, map: (data: T) => U): Stream<U> {
     return new Stream(({ ready, next, close }) => {
       source.onReady(ready);
       source.subscribe(data => next(map(data)), close);
@@ -86,14 +88,15 @@ export class Stream<T> {
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
 
-
   /**
    * Buffer messages before subscription. Set to null when buffer is no longer needed.
    */
   private _buffer: T[] | null = [];
 
   constructor (producer: Producer<T>) {
-    this._readyPromise = new Promise(resolve => { this._resolveReadyPromise = resolve; })
+    this._readyPromise = new Promise(resolve => {
+      this._resolveReadyPromise = resolve;
+    });
 
     const disposeCallback = producer({
       ready: () => {
@@ -143,8 +146,8 @@ export class Stream<T> {
     }
   }
 
-  private _markAsReady() {
-    if(!this._isReady) {
+  private _markAsReady () {
+    if (!this._isReady) {
       this._isReady = true;
       this._readyHandler?.();
       this._resolveReadyPromise();
@@ -180,18 +183,18 @@ export class Stream<T> {
   /**
    * Resolves when stream is ready.
    */
-  waitUntilReady(): Promise<void> {
+  waitUntilReady (): Promise<void> {
     return this._readyPromise;
   }
 
   /**
    * Registers a callback to be called when stream is ready.
    */
-  onReady(onReady: () => void): void {
+  onReady (onReady: () => void): void {
     assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
 
-    if(this._isReady) {
+    if (this._isReady) {
       onReady();
     }
   }

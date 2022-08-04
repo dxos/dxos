@@ -454,7 +454,7 @@ describe('RpcPeer', () => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(Buffer.from('request'));
           return new Stream<Any>(({ ready, close }) => {
-            ready()
+            ready();
             close();
           });
         },
