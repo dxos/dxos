@@ -11,16 +11,17 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
+  readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onSignal = new Event<SignalMessage>();
 
   constructor (
     private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
-  ) {}
+  ) {console.log('In memory Signal Manager');}
 
   getStatus (): SignalApi.Status[] {
     return [];
@@ -34,7 +35,14 @@ export class InMemorySignalManager implements SignalManager {
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
 
-    setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
+    const swarmEvent: SwarmEvent = {
+      peerAvailable: {
+        peer: peerId.asUint8Array(),
+        since: '' as any,
+      }
+    }
+
+    this.swarmEvent.emit([topic, swarmEvent]);
   }
 
   leave (topic: PublicKey, peerId: PublicKey) {
@@ -43,10 +51,18 @@ export class InMemorySignalManager implements SignalManager {
     }
 
     state.swarms.get(topic)!.delete(peerId);
+
+    const swarmEvent: SwarmEvent = {
+      peerLeft: {
+        peer: peerId.asUint8Array()
+      }
+    }
+
+    this.swarmEvent.emit([topic, swarmEvent]);
   }
 
   lookup (topic: PublicKey) {
-    setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
+    // setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
   }
 
   offer (msg: SignalMessage) {

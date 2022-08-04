@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
@@ -46,7 +47,7 @@ export interface SignalMessaging {
 export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
-  peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
+  swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
   onSignal: Event<SignalMessage>
 
   getStatus (): SignalApi.Status[]

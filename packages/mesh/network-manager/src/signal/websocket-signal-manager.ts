@@ -13,9 +13,11 @@ import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
 import { SignalManager } from './signal-manager';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
+//TODO(mykola): rename
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
@@ -27,7 +29,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
+  readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onSignal = new Event<SignalMessage>();
 
   constructor (
@@ -40,7 +42,8 @@ export class WebsocketSignalManager implements SignalManager {
         host,
         async msg => this.onSignal.emit(msg)
       );
-      server.peerCandidatesChanged.on((data) => this.peerCandidatesChanged.emit(data));
+      // TODO(mykola): Add subscription group
+      server.swarmEvent.on(data => this.swarmEvent.emit(data));
 
       this._servers.set(host, server);
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
@@ -78,9 +81,9 @@ export class WebsocketSignalManager implements SignalManager {
               log(`Joined successfully ${host}`);
               this._topicsJoinedPerSignal.get(host)!.set(topic, peerId);
 
-              log(`Peer candidates changed ${topic} ${peers}`);
-              // TODO(marik-d): Deduplicate peers.
-              this.peerCandidatesChanged.emit([topic, peers]);
+              // log(`Peer candidates changed ${topic} ${peers}`);
+              // // TODO(marik-d): Deduplicate peers.
+              // this.peerCandidatesChanged.emit([topic, peers]);
             },
             err => {
               log(`Join error ${host} ${err.message}`);
@@ -127,8 +130,8 @@ export class WebsocketSignalManager implements SignalManager {
       server.lookup(topic).then(
         peers => {
           log(`Peer candidates changed ${topic} ${peers}`);
-          // TODO(marik-d): Deduplicate peers.
-          this.peerCandidatesChanged.emit([topic, peers]);
+          // // TODO(marik-d): Deduplicate peers.
+          // this.peerCandidatesChanged.emit([topic, peers]);
         },
         () => {
           // Error will already be reported in devtools. No need to do anything here.
