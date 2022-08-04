@@ -53,10 +53,10 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
         } c`}`;
         if (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf) {
           c`else {`; {
-            if(field.resolvedType instanceof pb.Type) {
+            if (field.resolvedType instanceof pb.Type) {
               const mapper = createMessageMapperCached(field.resolvedType, substitutions, cache);
               c`res.${field.name} = ${ref(mapper)}.map({}, extraArgs);`;
-            } else if(field.resolvedType instanceof pb.Enum) {
+            } else if (field.resolvedType instanceof pb.Enum) {
               `res.${field.name} = 0;`;
             } else {
               c`res.${field.name} = ${getDefaultValue(field.type)};`;
@@ -80,20 +80,20 @@ const getDefaultValue = (type: string): string => {
     case 'uint32':
     case 'sint32':
     case 'fixed32':
-      return '0'
+      return '0';
     case 'sint64':
     case 'int64':
     case 'uint64':
     case 'fixed64':
     case 'sfixed64':
-      return '"0"'
+      return '"0"';
     case 'bool':
       return 'false';
     case 'string':
-      return '""'
+      return '""';
     case 'bytes':
-      return 'new Uint8Array()'
+      return 'new Uint8Array()';
     default:
-      throw new Error(`Unknown type: ${type}`)
+      throw new Error(`Unknown type: ${type}`);
   }
-}
+};
