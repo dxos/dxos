@@ -97,7 +97,7 @@ describe('Swarm', () => {
     return { swarm1, swarm2, peerId1, peerId2 };
   };
 
-  test.only('connects two peers in a swarm', async () => {
+  test('connects two peers in a swarm', async () => {
     const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
     expect(swarm1.connections.length).toEqual(0);
