@@ -9,21 +9,21 @@ import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { useParties } from '@dxos/react-client';
 
-import { useAppState } from '../../hooks';
 import { List } from '../util';
 
 export const PartyList: FC<{
   partyKey?: PartyKey
+  onSelect: (partyKey: PartyKey) => void
 }> = ({
-  partyKey: controlledPartyKey
+  partyKey: controlledPartyKey,
+  onSelect
 }) => {
   const parties = useParties();
-  const [, { setPartyKey }] = useAppState(); // TODO(burdon): Move to container.
 
   return (
     <List
       showCount
-      onSelect={partyKey => setPartyKey(PublicKey.from(partyKey))}
+      onSelect={partyKey => onSelect(PublicKey.from(partyKey))}
       items={parties.map(party => ({
         id: party.key.toHex(),
         key: truncateKey(party.key, 4),
