@@ -12,13 +12,12 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
+import { afterTest } from '@dxos/testutils';
 
 describe('SignalClient', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
-  let api1: SignalClient;
-  let api2: SignalClient;
 
   let broker1: TestBroker;
 
@@ -38,16 +37,16 @@ describe('SignalClient', () => {
   after(async function () {
     this.timeout(0);
     await broker1.stop();
-    await api1.close();
-    await api2.close();
     // code await broker2.stop();
   });
 
   test('message between 2 clients', async () => {
     const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
-    api1 = new SignalClient(broker1.url(), signalMock1);
-    api2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    const api1 = new SignalClient(broker1.url(), signalMock1);
+    afterTest(() => api1.close());
+    const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
+    afterTest(() => api2.close());
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -66,8 +65,10 @@ describe('SignalClient', () => {
   }).timeout(5_000);
 
   test('join', async () => {
-    api1 = new SignalClient(broker1.url(), async () => {});
-    api2 = new SignalClient(broker1.url(), async () => {});
+    const api1 = new SignalClient(broker1.url(), async () => {});
+    afterTest(() => api1.close());
+    const api2 = new SignalClient(broker1.url(), async () => {});
+    afterTest(() => api2.close());
 
     const promise1 = api1.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
     const promise2 = api2.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
@@ -82,9 +83,14 @@ describe('SignalClient', () => {
   test('signal to self', async () => {
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
-    api1 = new SignalClient(broker1.url(), signalMock);
+    const api1 = new SignalClient(broker1.url(), signalMock);
+    afterTest(() => api1.close());
 
     await api1.join(topic, peer1);
+
+    // Waiting for server to create stream.
+    // TODO(dmaretskyi): Add stream acknowledgement.
+    await sleep(10);
 
     const msg: SignalMessage = {
       id: peer2,
@@ -102,8 +108,10 @@ describe('SignalClient', () => {
 
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.
-    api1 = new SignalClient(broker1.url(), async () => {});
-    api2 = new SignalClient(broker2.url(), async () => {});
+    const api1 = new SignalClient(broker1.url(), async () => {});
+    afterTest(() => api1.close());
+    const api2 = new SignalClient(broker2.url(), async () => {});
+    afterTest(() => api2.close());
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -124,8 +132,10 @@ describe('SignalClient', () => {
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
 
-    api1 = new SignalClient(broker1.url(), async () => {});
-    api2 = new SignalClient(broker2.url(), signalMock);
+    const api1 = new SignalClient(broker1.url(), async () => {});
+    afterTest(() => api1.close());
+    const api2 = new SignalClient(broker2.url(), signalMock);
+    afterTest(() => api2.close());
 
     await api1.join(topic, peer1);
     await sleep(3000);
