@@ -97,8 +97,8 @@ describe('Swarm', () => {
     return { swarm1, swarm2, peerId1, peerId2 };
   };
 
-  test('connects two peers in a swarm', async () => {
-    const { swarm1, swarm2, peerId2 } = setup();
+  test.only('connects two peers in a swarm', async () => {
+    const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -107,6 +107,14 @@ describe('Swarm', () => {
       promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
       promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
+
+    // Behavior of the Signal Server.
+    swarm1.onSwarmEvent({
+      peerAvailable: {
+        peer: peerId1.asUint8Array(),
+        since: new Date()
+      }
+    });
 
     swarm1.onSwarmEvent({
       peerAvailable: {

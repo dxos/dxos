@@ -91,7 +91,10 @@ export class Swarm {
     log(`Swarm event ${JSON.stringify(swarmEvent)}`);
     if (swarmEvent.peerAvailable) {
       log(`New peer for ${this._topic} ${swarmEvent.peerAvailable.peer}`);
-      this._discoveredPeers.add(PublicKey.from(swarmEvent.peerAvailable.peer));
+      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
+      if (!peerId.equals(this._ownPeerId)) {
+        this._discoveredPeers.add(peerId);
+      }
     } else if (swarmEvent.peerLeft) {
       this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
     }
