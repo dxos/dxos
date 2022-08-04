@@ -373,6 +373,7 @@ describe('RpcPeer', () => {
       expect(stream).toBeA(Stream);
 
       expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
         { data: createPayload('res1') },
         { data: createPayload('res2') },
         { closed: true }

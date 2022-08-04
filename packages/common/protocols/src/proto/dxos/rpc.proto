@@ -39,7 +39,12 @@ message Response {
     /// Sent when stream is closed without an error.
     bool close = 4;
 
-    /// Sent when the server has processed a request with a streaming response.
+    /**
+     * Sent when the server has processed a request with a streaming response.
+     *
+     * Can be skipped by the server.
+     * In this case the first payload should be treated as the server being ready.
+     */
     bool stream_ready = 5;
   }
 }

@@ -66,15 +66,11 @@ export class Service {
       } else {
         (this as any)[methodName] = (request: unknown) => {
           const encoded = requestCodec.encode(request);
-          return new Stream(({ next, close }) => {
-            const stream = backend.callStream(method.name, {
-              value: encoded,
-              type_url: method.resolvedRequestType!.fullName
-            });
-            stream.subscribe(data => next(responseCodec.decode(data.value!)), close);
-
-            return () => stream.close();
+          const stream = backend.callStream(method.name, {
+            value: encoded,
+            type_url: method.resolvedRequestType!.fullName
           });
+          return Stream.map(stream, data => responseCodec.decode(data.value!));
         };
       }
 
@@ -123,13 +119,10 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const requestDecoded = requestCodec.decode(request.value!);
     const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
-    return new Stream<Any>(({ next, close }) => {
-      responseStream.subscribe(data => next({
-        value: responseCodec.encode(data),
-        type_url: method.resolvedResponseType!.fullName
-      }), close);
-      return () => responseStream.close();
-    });
+    return Stream.map(responseStream, (data): Any => ({
+      value: responseCodec.encode(data),
+      type_url: method.resolvedResponseType!.fullName
+     }))
   }
 
   private _getMethodInfo (methodName: string) {

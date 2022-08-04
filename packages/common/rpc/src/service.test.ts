@@ -161,6 +161,7 @@ describe('Protobuf service', () => {
       const stream = client.rpc.testCall({ data: 'requestData' });
 
       expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
         { data: { data: 'foo' } },
         { data: { data: 'bar' } },
         { data: { data: 'baz' } },

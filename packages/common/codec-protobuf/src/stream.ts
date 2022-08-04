@@ -63,6 +63,18 @@ export class Stream<T> {
     });
   }
 
+  /**
+   * Maps all data coming through the stream.
+   */
+  static map<T, U>(source: Stream<T>, map: (data: T) => U): Stream<U> {
+    return new Stream(({ ready, next, close }) => {
+      source.onReady(ready);
+      source.subscribe(data => next(map(data)), close);
+
+      return () => source.close();
+    });
+  }
+
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
   private _readyHandler?: () => void;
