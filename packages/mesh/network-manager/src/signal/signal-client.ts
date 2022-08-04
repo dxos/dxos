@@ -68,7 +68,7 @@ export class SignalClient {
 
   readonly statusChanged = new Event<SignalApi.Status>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>();
+  readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
 
   private readonly _topicPeers = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
   private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
@@ -197,6 +197,8 @@ export class SignalClient {
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
+    this._swarmStreams.get(topic)?.close();
+    this._swarmStreams.delete(topic);
   }
 
   async lookup (topic: PublicKey): Promise<PublicKey[]> {
@@ -226,14 +228,14 @@ export class SignalClient {
     }
 
     // Subscribing to swarm events.
-    swarmStream.subscribe(async (swarmEvent: SwarmEvent) => {
+    swarmStream.subscribe((swarmEvent: SwarmEvent) => {
+      this.swarmEvent.emit([topic, swarmEvent]);
       log(`Swarm event on ${topic}: ${JSON.stringify(swarmEvent)}`);
       if (swarmEvent.peerAvailable) {
         this._topicPeers.get(topic)?.add(PublicKey.from(swarmEvent.peerAvailable.peer));
       } else if (swarmEvent.peerLeft) {
         this._topicPeers.get(topic)?.delete(PublicKey.from(swarmEvent.peerLeft.peer));
       }
-      this.peerCandidatesChanged.emit([topic, Array.from(this._topicPeers.get(topic)!)]);
     });
 
     // Saving swarm stream.

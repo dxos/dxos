@@ -22,7 +22,7 @@ import { Any } from '@dxos/codec-protobuf';
 
 const log = debug('dxos:network-manager:swarm:test');
 
-describe.only('Swarm', () => {
+describe('Swarm', () => {
   class MockSignalConnection implements SignalMessaging {
     constructor (
       readonly _swarm: () => Swarm,
