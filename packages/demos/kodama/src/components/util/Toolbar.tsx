@@ -37,6 +37,7 @@ export const Toolbar: FC<{
   const { focusPrevious, focusNext } = useFocusManager();
   useInput((input, key) => {
     if (key.return) {
+      console.log('??????????');
       onSelect();
     }
 

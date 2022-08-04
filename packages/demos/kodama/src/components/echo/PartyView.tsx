@@ -8,10 +8,8 @@ import React, { FC, useState } from 'react';
 import { PartyKey } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
-import { Panel } from '../util';
 import { ItemList } from './ItemList';
 import { ItemTypeList } from './ItemTypeList';
-import { PartyInfo } from './PartyInfo';
 import { PartyList } from './PartyList';
 
 export const PartyView: FC<{
@@ -26,18 +24,18 @@ export const PartyView: FC<{
   }
 
   return (
-    <Box flexDirection='row' flexGrow={1}>
+    <Box flexDirection='column' flexGrow={1}>
       <Box flexGrow={1}>
         <PartyList
           partyKey={party.key}
         />
       </Box>
       <Box flexGrow={1} flexDirection='column'>
-        <Panel>
-          <PartyInfo
-            party={party}
-          />
-        </Panel>
+        {/* <Panel> */}
+        {/*  <PartyInfo */}
+        {/*    party={party} */}
+        {/*  /> */}
+        {/* </Panel> */}
         <ItemTypeList
           party={party}
           onChange={setType}

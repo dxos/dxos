@@ -70,7 +70,9 @@ export const createEchoModule = (client: Client, party?: Party): Module | undefi
           component: () => (
             <CreateParty
               // TODO(burdon): Set toolbar state.
-              onCreate={() => {}}
+              onCreate={() => {
+                console.log('!!!!!!!!!!!!');
+              }}
             />
           )
         },
