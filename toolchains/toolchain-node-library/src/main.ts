@@ -75,8 +75,6 @@ const buildProto = async (config: Config, project: Project) => {
     const file = join(project.packageRoot, protoConfig.substitutions);
     const substitutions = fs.existsSync(file) ? join(file) : undefined;
 
-    console.log({ substitutions });
-
     await execTool('build-protobuf', [
       '-o', join(project.packageRoot, protoConfig.output),
       ...(substitutions ? ['-s', substitutions] : []),
