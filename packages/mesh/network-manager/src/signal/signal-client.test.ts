@@ -55,7 +55,7 @@ describe('SignalClient', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: "foo: 'bar'" } }
+      data: { signal: { json: JSON.stringify({"asd": "asd"}) } }
     };
     await api2.signal(msg);
     await waitForExpect(() => {
@@ -96,7 +96,7 @@ describe('SignalClient', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: 'bar' } }
+      data: { signal: { json: JSON.stringify({"asd": "asd"}) } }
     };
     await api1.signal(msg);
 
