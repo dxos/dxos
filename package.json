@@ -12,6 +12,9 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "MIT",
+  "scripts": {
+    "nx": "nx"
+  },
   "workspaces": [
     "packages/*/*"
   ],

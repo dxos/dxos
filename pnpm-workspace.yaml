@@ -1,7 +1,9 @@
 packages:
-  # - 'packages/common/debug'
-  # - 'toolchains/protocols-toolchain'
-  # - 'toolchains/toolchain-node-library'
+  - 'packages/common/eslint-plugin'
+  - 'packages/common/debug'
+  - 'packages/common/protocols'
+  - 'toolchains/protocols-toolchain'
+  - 'toolchains/toolchain-node-library'
   - 'packages/common/codec-protobuf'
   - 'packages/common/protobuf-compiler'
   - 'packages/common/protobuf-test'
