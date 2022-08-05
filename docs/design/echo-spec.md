@@ -1,26 +1,26 @@
-# ECHO Spec
+# ECHO Spec <!-- omit in toc -->
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Terminology](#2-terminology)
-*   [3. Basic Concepts](#3-basic-concepts)
-*   [4. Design](#4-design)
-    *   [4.1. Message Ordering](#41-message-ordering)
-        *   [4.1.1. Timeframes](#411-timeframes)
-    *   [4.2. Object Graph](#42-object-graph)
-    *   [4.3. Links](#43-links)
-    *   [4.4. Models and State Machines](#44-models-and-state-machines)
-    *   [4.5. Schema](#45-schema)
-    *   [4.6. Queries](#46-queries)
-    *   [4.7. Branes](#47-branes)
-    *   [4.8. Epochs](#48-epochs)
-        *   [4.8.1. Control Feeds](#481-control-feeds)
-        *   [4.8.2. Epoch Genesis](#482-epoch-genesis)
-        *   [4.8.3. Snapshots](#483-snapshots)
-*   [5. Milestones](#5-milestones)
-    *   [5.1. V0](#51-v0)
-*   [6. Deprecated](#6-deprecated)
+- [1. Introduction](#1-introduction)
+- [2. Terminology](#2-terminology)
+- [3. Basic Concepts](#3-basic-concepts)
+- [4. Design](#4-design)
+  - [4.1. Message Ordering](#41-message-ordering)
+    - [4.1.1. Timeframes](#411-timeframes)
+  - [4.2. Object Graph](#42-object-graph)
+  - [4.3. Links](#43-links)
+  - [4.4. Models and State Machines](#44-models-and-state-machines)
+  - [4.5. Schema](#45-schema)
+  - [4.6. Queries](#46-queries)
+  - [4.7. Branes](#47-branes)
+  - [4.8. Epochs](#48-epochs)
+    - [4.8.1. Control Feeds](#481-control-feeds)
+    - [4.8.2. Epoch Genesis](#482-epoch-genesis)
+    - [4.8.3. Snapshots](#483-snapshots)
+- [5. Milestones](#5-milestones)
+  - [5.1. V0](#51-v0)
+- [6. Deprecated](#6-deprecated)
 
 ## 1. Introduction
 

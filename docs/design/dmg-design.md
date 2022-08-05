@@ -1,70 +1,104 @@
-# Meta Graph Design Document
+# Meta Graph Design Document <!-- omit in toc -->
 
 This document presents the design of the Decentralized Meta Graph (DMG).
 
+> - TODO: Merge with dmg-spec, dmg-usage.
+
 <!-- @toc -->
 
-- [Meta Graph Design Document](#meta-graph-design-document)
-  - [1. Terminology](#1-terminology)
-  - [2. Basic Concepts](#2-basic-concepts)
-    - [2.1. Graph](#21-graph)
-      - [2.1.1. Resources](#211-resources)
-      - [2.1.2. Computation](#212-computation)
-      - [2.1.3. Issues](#213-issues)
-    - [2.2. Subnets](#22-subnets)
-  - [3. Architecture](#3-architecture)
-    - [3.1. KUBE Services](#31-kube-services)
-    - [3.2. KUBE Architecture](#32-kube-architecture)
-    - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
-  - [4. Notes](#4-notes)
+- [1. Terminology](#1-terminology)
+- [2. Basic Concepts](#2-basic-concepts)
+  - [2.1. Subnets](#21-subnets)
+    - [2.1.1. Realms](#211-realms)
+    - [2.1.2. Records](#212-records)
+    - [2.1.3. Computation](#213-computation)
+    - [2.1.4. Issues](#214-issues)
+- [3. Architecture](#3-architecture)
+  - [3.1. KUBE Services](#31-kube-services)
+  - [3.2. KUBE Architecture](#32-kube-architecture)
+  - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
+- [4. Notes](#4-notes)
 
 ## 1. Terminology
 
-**Credential** - Verifiable credential that enables decentralized access control within the Subnet (e.g., administrative, read/write, replication, control).
+**Credential** - 
+Verifiable credential that enables decentralized access control within the Subnet (e.g., administrative, read/write, replication, control).
 Each KUBE maintains a secure Credential store.
 
 > *   Conceptually part of HALO, but may be implemented via TLS.
 > *   TODO: Disambiguation TLS certificates from credentials (vs. CA/DNS).
 > *   TODO: Connect Pierre with Ben Laurie!
 
-**DNS** - Global authority for domain records.
+**DNS** - 
+Global authority for domain records.
 
-**KUBE** - Individual Host (Subnet Node) running the KUBE daemon.
+**KUBE** - 
+Individual Host (Subnet Node) running the KUBE daemon.
 
-> *   TODO: Consider renaming but used `kube` until determined.
+**Realm** - 
+Logical partition of the federated DMG consistent across the Subnet.
 
-**Realm** - Logical partition of the federated DMG consistent across the Subnet.
+**Root CA** - 
+Root Certification Authority (for the Subnet). 
+Used to enroll KUBEs into the Subnet and is the root for other Credentials used within the Subnet.
 
-**Root CA** - Root Certification (for the Subnet). Used to enroll KUBEs into the Subnet and is the root for other Credentials used within the Subnet.
-
-**Subnet** - A cluster of KUBE nodes under local authority.
+**Subnet** - 
+A cluster of KUBE nodes under local authority.
 
 ## 2. Basic Concepts
 
 *   DMG is a decentralized federated graph.
 *   It consists of locally controlled subnets that are made up of KUBE nodes.
 
-### 2.1. Graph
+### 2.1. Subnets
 
-Each DMG subnet consists of a graph of Records called Nodes.
+A KUBE Subnet is a collection of devices running the KUBE daemon.
+Subnets implement a coordinated set of services and may span network boundaries.
+
+> - TODO: Centralized vs. decentralized autority.
+
+Typically, domain records point to the IP address of a Subnet device.
+Multiple domain names may reference the same Subnet;
+conversely, some Subnets may not be associated with any domain name.
+
+![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
+
+
+#### 2.1.1. Realms
+
+The DMG is a global federated graph made up of physical partitions called Realms.
+Each Subnet operates a DMG Service, which manages a Realm.
+A Realm can be thought of as decentralized file system that is consistent across the Subnet.
+Each KUBE within the Subnet replicates changes to all other KUBEs, which form a peer-to-peer network.
+
+Directories within the Realm may be mapped onto domain and subdomain names managed by the Subnet.
+
+**Example**
+
+```
+https://beta.example.com => /com/example/beta
+```
+
+> - TODO: Can this mapping be arbitrary?
+> - TODO: What if change domain name?
+> - TODO: mDNS (kube.local)
+
+
+#### 2.1.2. Records
+
 Nodes are typed protocol buffer encoded data structures.
 Different Record types represent different Graph resources and may be handled differently by the KUBE Web server in a manner similar to [MIME types](https://mimetype.io/all-types).
-
-#### 2.1.1. Resources
 
 The KUBE server contains a Web server that maps conventional HTTP requests onto files represented within the graph.
 
 DMG Records may be mapped onto URLs as follows:
 
+> Note: Multiple domain names may be mapped to a KUBE Subnet, therefore there may be a many-to-one relationship between Subnet and DMG Realm.
+
 ![URL](./diagrams/dmg-url.drawio.svg)
 
-| Part       | Description                                                                  |
-| ---------- | ---------------------------------------------------------------------------- |
-| `scheme`   | The KUBE server manages wildcard TLS certs.                                  |
-| `realm`    | Subdomains are used to demark DMG partitions called Realms.                  |
-| `subnet`   | Each subnet is mapped onto a DNS domain name.                                |
-| `record`   | Part of the URL path maps onto a DMG record.                                 |
-| `resource` | The remainder of the path maps onto a resource determined by the DMG record. |
+> - Note: Realm is just a FQ hostname.
+> - TODO: Resources are "leaf" nodes of the graph and are processed by a `handler` specified by its ancestors Records, which may be inherited.
 
 Realms represent a logical partition of the KUBE subnet's DMG.
 They map directly onto a root folder within the graph.
@@ -75,6 +109,88 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
+<<<<<<< HEAD
+Records are retrieved via the DMG Record Service, which defines the following API.
+
+> Note: The path may return a hierarchical list of Record refs.
+
+```protobuf
+package dxos.dmg.service;
+
+service DMG {
+  rpc ResolveUrl(ResolveUrlRequest) returns (ResolveUrlResponse);
+  rpc getRecords(RecordRequest) returns (RecordResponse);
+}
+
+message ResolveUrlRequest {
+  string url = 1;
+}
+
+message ResolveUrlResponse {
+  message Part {
+    string path = 1;
+    Hash record = 2;
+    Hash resource = 3;
+  } 
+
+  repeated Part parts = 1;
+}
+
+message RecordRequest {
+  repeated Ref records = 1;  
+}
+
+message RecordResponse {
+  repeated google.protobuf.any records = 1;
+}
+```
+
+> Note: The API support both git and blockchain/IPFS implementations.
+
+**Example**
+
+```ts
+api.LookupRequest({ url: 'https://beta.example.com/app/notepad/index.html' })
+```
+
+Returns
+
+```json
+{
+  "@type": "dxos.dmg.service.LookupRequest",
+  "parts": [
+    {
+      "path": "com",
+      "record": "3fc2b23fed0ac15fa5cb79d545e5a508a1c20e48"
+    },
+    {
+      "path": "example",
+      "record": "d5b0ed624cdc8d6a11793cea81fb400d3f9c4878"
+    },
+    {
+      "path": "beta",
+      "record": "2ec5b45edb99d4e0f902e1d77201d6e580e62493"
+    },
+    {
+      "path": "app",
+      "record": "95de870800728425d7b2e6f95c2cea69a17d12d3"
+    },
+    {
+      "path": "notepad",
+      "record": "28bcd4589ab5183209e36978c1f3b21de760fe30"
+    }
+    {
+      "path": "index.html",
+      "resource": "804e56b5a95ebf3030d605751b0340124cbc896f"
+    }
+  ]
+}
+```
+
+> - TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
+
+=======
+>>>>>>> origin/main
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**
@@ -116,7 +232,7 @@ curl https://beta.example.com/app/notepad/index.html
 curl https://beta.example.com/app/notepad/main.js
 ```
 
-#### 2.1.2. Computation
+#### 2.1.3. Computation
 
 DMG Records may also reference serverless compute endpoints that can be invoked by HTTP requests.
 
@@ -144,16 +260,16 @@ The script can be invoked by making an HTTP POST request.
 curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/data
 ```
 
-#### 2.1.3. Issues
+> - TODO: Note the script would typically be a think adapter to some other compute system.
+> - TODO: How does this relate to bots?
+
+#### 2.1.4. Issues
 
 *   Realms, Subnets, Domains, Logical partitions, mapping
 *   Hierarchical records (e.g., /app/notepad, /app/notepad/beta)
 *   Lambda and other compute (e.g., invoking other platforms)
 *   IPLD? DXLD?
 
-### 2.2. Subnets
-
-![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
 
 ## 3. Architecture
 
