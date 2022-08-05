@@ -2,49 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useFocus } from 'ink';
 import * as process from 'process';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Client, Party } from '@dxos/client';
-import { useClient, useParty, useProfile } from '@dxos/react-client';
+import { useClient, useProfile } from '@dxos/react-client';
 
 import {
-  createEchoModule,
-  createHaloModule,
+  createEchoMenu,
+  createHaloMenu,
   Config,
-  ModuleDef,
-  ModulePanel,
-  Panel
+  Module,
+  Panel, MenuItem
 } from './components';
-import { useAppState } from './hooks';
-
-const createRootModule = (client: Client, party?: Party): ModuleDef => {
-  return {
-    id: 'root',
-    label: 'Root',
-    modules: [
-      createHaloModule(client),
-      createEchoModule(client, party),
-      {
-        id: 'config',
-        label: 'Config',
-        component: () => (
-          <Panel>
-            <Config />
-          </Panel>
-        )
-      },
-      {
-        id: 'quit',
-        label: 'Quit',
-        exec: () => {
-          process.exit();
-        }
-      }
-    ].filter(Boolean) as ModuleDef[]
-  };
-};
+import { ModuleProvider } from './hooks';
 
 /**
  * Top-level app with menu.
@@ -52,20 +22,36 @@ const createRootModule = (client: Client, party?: Party): ModuleDef => {
 export const App = () => {
   const client = useClient();
   const profile = useProfile();
-  const [{ partyKey }] = useAppState();
-  const party = useParty(partyKey);
-  // TODO(burdon): Party change reset's entire state.
-  const module = useMemo<ModuleDef>(() => createRootModule(client, party), [profile, party]);
-  const { focus } = useFocus({ isActive: false });
 
-  // Focus first element.
-  useEffect(() => {
-    focus(module.id);
-  }, [module]);
+  // TODO(burdon): Allow selection of menu item within menu.
+  // TODO(burdon): Change focus when profile created (and menu changes).
+  const items = useMemo<MenuItem[]>(() => [
+    createHaloMenu(client),
+    profile && createEchoMenu(),
+    {
+      id: 'config',
+      label: 'Config',
+      component: () => (
+        <Panel>
+          <Config />
+        </Panel>
+      )
+    },
+    {
+      id: 'quit',
+      label: 'Quit',
+      exec: () => {
+        process.exit();
+      }
+    }
+  ].filter(Boolean) as MenuItem[], [profile]);
 
   return (
-    <ModulePanel
-      module={module}
-    />
+    <ModuleProvider value='root'>
+      <Module
+        id='root'
+        items={items}
+      />
+    </ModuleProvider>
   );
 };

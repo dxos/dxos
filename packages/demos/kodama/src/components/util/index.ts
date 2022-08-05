@@ -4,9 +4,7 @@
 
 export * from './List';
 export * from './Module';
-export * from './ModulePanel';
 export * from './Panel';
 export * from './Status';
 export * from './Table';
 export * from './TextInput';
-export * from './Toolbar';

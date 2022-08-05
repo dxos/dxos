@@ -8,17 +8,14 @@ import { PublicKey } from '@dxos/protocols';
 
 export type AppState = {
   debug?: boolean
-  path: string[] // TODO(burdon): Change to hierarchical module dot string.
   partyKey?: PublicKey
 }
 
 export interface ActionHandler {
-  setPath (path: string[]): void
   setPartyKey (partyKey: PublicKey): void
 }
 
 enum ActionType {
-  SET_PATH,
   SET_PARTY_KEY
 }
 
@@ -29,13 +26,6 @@ type Action = {
 
 const appStateReducer = (state: AppState, action: Action) => {
   switch (action.type) {
-    case ActionType.SET_PATH: {
-      return {
-        ...state,
-        path: action.value
-      };
-    }
-
     case ActionType.SET_PARTY_KEY: {
       return {
         ...state,
@@ -56,11 +46,8 @@ export const AppStateProvider: FC<{
   children,
   debug
 }) => {
-  const [state, dispatch] = useReducer(appStateReducer, { debug, path: [] });
+  const [state, dispatch] = useReducer(appStateReducer, { debug });
   const handler = useMemo<ActionHandler>(() => ({
-    setPath: (path: string[]) => {
-      dispatch({ type: ActionType.SET_PATH, value: path });
-    },
     setPartyKey: (partyKey: PublicKey) => {
       dispatch({ type: ActionType.SET_PARTY_KEY, value: partyKey });
     }

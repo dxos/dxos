@@ -93,6 +93,7 @@ export const Module: FC<{
       const item = items.find(item => item.id === selected);
       item?.exec?.(item);
     } if (key.upArrow) {
+      // TODO(burdon): Test path.
       focusPrevious();
     } if (key.downArrow) {
       focusNext();
@@ -104,7 +105,7 @@ export const Module: FC<{
   }, { isActive: isFocused });
 
   return (
-    <Box flexDirection='column'>
+    <Box flexDirection='column' flexGrow={1}>
       <Box>
         {debug && (
           <Text dimColor color='blue'>[{path}] </Text>

@@ -18,7 +18,7 @@ import { ClientProvider } from '@dxos/react-client';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { name, version } from '../package.json';
-import { Test } from './Test';
+import { App } from './App';
 import { AppStateProvider } from './hooks';
 
 // Note: nodemon interferes with input.
@@ -76,13 +76,19 @@ const main = async () => {
       description: 'Debug mode (run in-memory)',
       type: 'boolean'
     })
+    .option('username', {
+      description: 'Create initial profile',
+      type: 'string'
+    })
     .command({
       command: '*',
       handler: async ({
         config: configFile,
+        username,
         debug
       }: {
         config: string,
+        username: string
         debug: boolean
       }) => {
         const newVersion = await versionCheck(name, version);
@@ -92,8 +98,8 @@ const main = async () => {
         const client = new Client(config);
         await client.initialize();
 
-        if (debug) {
-          await client.halo.createProfile({ username: 'Test' });
+        if (username) {
+          await client.halo.createProfile({ username });
         }
 
         const { waitUntilExit } = render((
@@ -103,7 +109,7 @@ const main = async () => {
             )}
 
             <AppStateProvider debug={debug}>
-              <Test />
+              <App />
             </AppStateProvider>
           </ClientProvider>
         ));

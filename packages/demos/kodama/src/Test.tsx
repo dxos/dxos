@@ -2,24 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Text, useFocus } from 'ink';
-import React, { useEffect, useState } from 'react';
+import { Text } from 'ink';
+import React, { useState } from 'react';
 
 import { MenuItem, Module } from './components';
 import { ModuleProvider } from './hooks';
 
 export const Test = () => {
   const [initialized, setInitialized] = useState(true);
-
-  // TODO(burdon): Remove ModulePanel/Toolbar.
-  // TODO(burdon): Remove module from app-state.
-
-  // TODO(burdon): Use module hook.
-  // TODO(burdon): Able to select menu + subitem (via hook).
-  const { focus } = useFocus({ isActive: false });
-  useEffect(() => {
-    focus('root');
-  }, []);
 
   return (
     <ModuleProvider value='root'>

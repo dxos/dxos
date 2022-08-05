@@ -2,91 +2,96 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Client, Party } from '@dxos/client';
+import { useParty } from '@dxos/react-client';
 
+import { useAppState } from '../../hooks';
 import { Join, Share } from '../invitations';
-import { ModuleDef, Panel } from '../util';
+import { MenuItem, Module, Panel } from '../util';
 import { CreateParty } from './CreateParty';
 import { PartyFeeds } from './PartyFeeds';
 import { PartyMembers } from './PartyMembers';
 import { PartyView } from './PartyView';
 
-// TODO(burdon): Dynamically change module render based on party.
-//  Configure module as React component (similar to <Menu><MenuItem /></Menu>)
-export const createEchoModule = (client: Client, party?: Party): ModuleDef | undefined => {
-  if (client.halo.profile) {
-    const partyModules = party ? [
-      {
-        id: 'echo.members',
-        label: 'Members',
-        component: () => (
-          <Panel>
-            <PartyMembers
-              partyKey={party.key}
-            />
-          </Panel>
-        )
-      },
-      {
-        id: 'echo.feeds',
-        label: 'Feeds',
-        component: () => (
-          <Panel>
-            <PartyFeeds
-              partyKey={party.key}
-            />
-          </Panel>
-        )
-      },
-      {
-        id: 'echo.share',
-        label: 'Share Party',
-        component: () => (
-          <Panel>
-            <Share
-              onCreate={() => {
-                return party.createInvitation();
-              }}
-            />
-          </Panel>
-        )
-      }
-    ] : [];
-
-    return {
-      id: 'echo',
-      label: 'ECHO',
-      modules: [
+export const createEchoMenu = (): MenuItem | undefined => {
+  return {
+    id: 'echo',
+    label: 'ECHO',
+    component: ({ parent }) => {
+      const [{ partyKey }] = useAppState();
+      const party = useParty(partyKey);
+      const partyItems = useMemo(() => party ? [
         {
-          id: 'echo.parties',
-          label: 'Parties',
+          id: 'members',
+          label: 'Members',
           component: () => (
-            <PartyView
-              partyKey={party?.key}
-            />
+            <Panel>
+              <PartyMembers
+                partyKey={party.key}
+              />
+            </Panel>
           )
         },
         {
-          id: 'echo.create',
-          label: 'Create Party',
+          id: 'feeds',
+          label: 'Feeds',
           component: () => (
-            <CreateParty
-              // TODO(burdon): Set toolbar state.
-              onCreate={() => {}}
-            />
+            <Panel>
+              <PartyFeeds
+                partyKey={party.key}
+              />
+            </Panel>
           )
         },
-        ...partyModules,
         {
-          id: 'echo.join',
-          label: 'Join Party',
+          id: 'share',
+          label: 'Share Party',
           component: () => (
-            <Join />
+            <Panel>
+              <Share
+                onCreate={() => {
+                  return party.createInvitation();
+                }}
+              />
+            </Panel>
           )
         }
-      ]
-    };
-  }
+      ] : [], [party]);
+
+      return (
+        <Module
+          id='echo'
+          parent={parent}
+          items={[
+            {
+              id: 'parties',
+              label: 'Parties',
+              component: () => (
+                <PartyView />
+              )
+            },
+            {
+              id: 'create',
+              label: 'Create Party',
+              component: () => (
+                <CreateParty
+                  // TODO(burdon): Set toolbar state.
+                  onCreate={() => {}}
+                />
+              )
+            },
+            ...partyItems,
+            {
+              id: 'join',
+              label: 'Join Party',
+              component: () => (
+                <Join />
+              )
+            }
+          ]}
+        />
+      );
+    }
+  };
 };
