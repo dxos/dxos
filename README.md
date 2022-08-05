@@ -92,8 +92,6 @@ prettier (via eslint-plugin-prettier)?
 
 ### Required (feature-party with Rush setup)
 
-
-
 - [ ] Add all packages
 - [ ] Update CI to run build:test
 - [ ] CI
@@ -102,7 +100,7 @@ prettier (via eslint-plugin-prettier)?
   - [ ] Evaluate CI perf on full monorepo
   - [ ] Beefy self-hosted runners
 - [ ] Fix other targets: test, lint..
-- [x] Publishing
+- [x] Publishing `pnpm publish --filter '@dxos/*'`
 - [ ] Update https://github.com/dxos/release-please
 - [ ] Run build up to a concrete package
 
