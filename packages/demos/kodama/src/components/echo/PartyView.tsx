@@ -29,7 +29,6 @@ export const PartyView = () => {
           partyKey={party.key}
           onSelect={partyKey => {
             setPartyKey(partyKey);
-            // focus('item-list');
             focusNext();
           }}
         />
@@ -41,7 +40,6 @@ export const PartyView = () => {
           type={type}
           onCancel={() => {
             focus('party-list');
-            // focusPrevious();
           }}
         />
 
