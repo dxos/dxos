@@ -64,13 +64,11 @@ export class SignalRPCClient {
       {
         noHandshake: true,
         port: {
-          send: msg => {
-            log('send', msg);
+          send: msg => {  
             this._socket.send(msg);
           },
           subscribe: cb => {
             this._socket.onmessage = msg => {
-              log('rcv', msg.data);
               cb(msg.data as any);
             };
           }
