@@ -13,8 +13,8 @@
     "packages/*/*"
   ],
   "devDependencies": {
-    "nx": "14.5.4",
-    "@nrwl/nx-cloud": "latest"
+    "@nrwl/nx-cloud": "^14.3.0",
+    "nx": "14.5.4"
   },
   "publishConfig": {
     "registry": "http://localhost:4873/"
