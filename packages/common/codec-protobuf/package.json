@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "2.33.9",
+  "version": "2.33.10",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
