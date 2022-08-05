@@ -59,3 +59,5 @@ MIT
 
 - [ ] Caching PNPM deps on CI
 - [ ] Run build up to a concrete package
+- [ ] Publishing
+- [ ] https://nx.dev/structure/monorepo-tags
