@@ -12,7 +12,8 @@
   "workspaces": [
     "packages/*/*"
   ],
-  "scripts": {
-    "preinstall": "echo 'This project is using the Rush Stack. More details in the README.' && false"
+  "devDependencies": {
+    "nx": "14.5.4",
+    "@nrwl/nx-cloud": "latest"
   }
 }
