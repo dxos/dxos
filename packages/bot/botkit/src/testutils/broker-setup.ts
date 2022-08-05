@@ -14,7 +14,7 @@ export interface BrokerSetup {
 
 export const setupBroker: () => Promise<BrokerSetup> = async () => {
   const port = randomInt(40000, 10000);
-  const broker = await createTestBroker(port);
+  const broker = createTestBroker(port);
   const config = new Config({
     version: 1,
     runtime: {

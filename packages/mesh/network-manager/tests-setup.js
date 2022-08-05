@@ -6,6 +6,6 @@
 
 const { createTestBroker } = require('@dxos/signal');
 
-module.exports = async () => {
-  await createTestBroker(12098);
+module.exports = () => {
+  createTestBroker(12098);
 };

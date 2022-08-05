@@ -35,7 +35,7 @@ export class Orchestrator {
 
   async initialize () {
     const port = randomInt(40000, 10000);
-    this._broker = await createTestBroker(port);
+    this._broker = createTestBroker(port);
     this._config = new Config({
       version: 1,
       runtime: {

@@ -22,8 +22,8 @@ describe('MessageRouter', () => {
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
 
-  before(async () => {
-    broker1 = await createTestBroker();
+  before(() => {
+    broker1 = createTestBroker();
   });
 
   beforeEach(() => {
@@ -32,9 +32,8 @@ describe('MessageRouter', () => {
     peer2 = PublicKey.random();
   });
 
-  after(async function () {
-    this.timeout(0);
-    await broker1.stop();
+  after(() => {
+    broker1.stop();
   });
 
   const createSignalClientAndMessageRouter = async ({

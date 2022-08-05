@@ -23,8 +23,8 @@ describe('SignalClient', () => {
 
   let broker2: TestBroker;
 
-  before(async () => {
-    broker1 = await createTestBroker();
+  before(() => {
+    broker1 = createTestBroker();
     // broker2 = await createTestBroker(signalApiPort2);
   });
 
@@ -34,9 +34,8 @@ describe('SignalClient', () => {
     peer2 = PublicKey.random();
   });
 
-  after(async function () {
-    this.timeout(0);
-    await broker1.stop();
+  after(() => {
+    broker1.stop();
     // code await broker2.stop();
   });
 

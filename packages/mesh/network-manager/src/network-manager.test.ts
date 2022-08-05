@@ -6,20 +6,21 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests } from './network-manager.blueprint-test';
 
+export const PORT = 12098 
+
 describe('Network manager', () => {
   describe('WebRTC transport', () => {
     let broker: TestBroker;
-    const port = 12098;
 
-    before(async () => {
-      broker = await createTestBroker(port);
+    before(() => {
+      broker = createTestBroker(PORT);
     });
 
-    after(async () => {
-      await broker?.stop();
+    after(() => {
+      broker?.stop();
     });
 
-    webRTCTests({ signalUrl: `ws://localhost:${port}/.well-known/dx/signal` });
+    webRTCTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal` });
   }).timeout(10_000);
 
   describe('In-memory transport', () => {
