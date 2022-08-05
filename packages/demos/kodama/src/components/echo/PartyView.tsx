@@ -14,7 +14,7 @@ import { PartyList } from './PartyList';
 
 export const PartyView = () => {
   const { focus } = useFocus({ isActive: false });
-  const { focusPrevious, focusNext } = useFocusManager();
+  const { focusNext } = useFocusManager();
   const [{ partyKey }, { setPartyKey }] = useAppState();
   const [type, setType] = useState<string>();
   const party = useParty(partyKey);
