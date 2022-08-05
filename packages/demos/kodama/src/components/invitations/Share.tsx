@@ -3,13 +3,13 @@
 //
 
 import copypaste from 'copy-paste';
-import { Box, Text, useFocus } from 'ink';
+import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
-import { Panel } from '../util';
+import { Status, StatusState } from '../util';
 
 export const Share: FC<{
   onCreate: () => Promise<InvitationRequest>
@@ -17,32 +17,30 @@ export const Share: FC<{
   onCreate
 }) => {
   const isMounted = useMounted();
-  const { isFocused } = useFocus();
   const [invitation, setInvitation] = useState<InvitationRequest>();
-  const [status, setStatus] = useState<string>();
+  const [status, setStatus] = useState<StatusState>();
 
   useAsyncEffect(async () => {
+    // TODO(burdon): Set timeout to process invitation? Separate method to start?
     const invitation = await onCreate();
-    // const invitation = await party.createInvitation();
-    // const invitation = await client.halo.createInvitation();
     setInvitation(invitation);
     copypaste.copy(invitation.descriptor.encode());
 
     const handleDone = () => {
       if (isMounted()) {
         setInvitation(undefined);
-        setStatus('Success');
+        setStatus({ success: 'OK' });
       }
     };
 
     // TODO(burdon): Change API: single status event.
     invitation.canceled.on(handleDone);
     invitation.finished.on(handleDone); // TODO(burdon): Called even when fails.
-    invitation.error.on(err => setStatus(`Error: ${err}`));
+    invitation.error.on(err => setStatus({ error: err as Error }));
   }, []);
 
   return (
-    <Panel focused={isFocused}>
+    <Box flexDirection='column'>
       {invitation && (
         <Box flexDirection='column'>
           <Box flexDirection='column'>
@@ -56,9 +54,10 @@ export const Share: FC<{
         </Box>
       )}
 
-      {status && (
-        <Text>{status}</Text>
-      )}
-    </Panel>
+      <Status
+        status={status}
+        marginTop={1}
+      />
+    </Box>
   );
 };

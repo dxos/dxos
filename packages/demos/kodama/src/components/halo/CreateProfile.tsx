@@ -3,19 +3,19 @@
 //
 
 import copypaste from 'copy-paste';
-import { Box, Text, useFocus } from 'ink';
-import TextInput from 'ink-text-input';
+import { Box, Text } from 'ink';
 import React, { useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
+import { TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const CreateProfile = () => {
   const client = useClient();
-  const { isFocused } = useFocus();
   const [username, setUsername] = useState<string>();
+  const [focused, setFocused] = useState(false);
 
   const handleSubmit = async (text: string) => {
     const username = text.trim();
@@ -27,18 +27,17 @@ export const CreateProfile = () => {
   };
 
   return (
-    <Panel focused={isFocused}>
-      <Box flexDirection='column'>
-        <TextInput
-          value={username ?? ''}
-          onChange={setUsername}
-          onSubmit={handleSubmit}
-          placeholder='Enter username'
-        />
+    <Panel highlight={focused}>
+      <TextInput
+        value={username ?? ''}
+        onChange={setUsername}
+        onSubmit={handleSubmit}
+        onFocus={setFocused}
+        placeholder='Enter username.'
+      />
 
-        <Box marginTop={1}>
-          <Text color='gray'>key phrase will be copied to the clipboard.</Text>
-        </Box>
+      <Box marginTop={1}>
+        <Text color='gray'>The recovery phrase will be copied to the clipboard.</Text>
       </Box>
     </Panel>
   );

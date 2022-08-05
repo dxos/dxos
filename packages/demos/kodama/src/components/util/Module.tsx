@@ -2,64 +2,129 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box } from 'ink';
-import React, { FC, useEffect, useState } from 'react';
+import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 
-import { Toolbar } from './Toolbar';
+import { useAppState, useModule } from '../../hooks';
 
-export type Module = {
+export type MenuItem = {
   id: string
   label: string
-  modules?: Module[]
-  component?: FC
-  exec?: () => void
+  component?: FC<{ parent: string }>
+  exec?: (item: MenuItem) => void
 }
 
-const Blank = () => <div />;
-
-export const ModulePanel: FC<{
-  modules: Module[]
+/**
+ * Horizontal menu item selector.
+ */
+const Toolbar: FC<{
+  focused: boolean
+  items: MenuItem[]
+  selected?: string
 }> = ({
-  modules
+  focused,
+  items,
+  selected
 }) => {
-  const [option, setOption] = useState<string>();
-  const [Component, setComponent] = useState<FC>();
+  return (
+    <Box>
+      {items.map(({ id, label }, i) => (
+        <Box
+          key={id}
+          marginRight={1}
+        >
+          {i !== 0 && (
+            <Text color='#666'>| </Text>
+          )}
 
+          <Text
+            dimColor={!focused}
+            color={selected === id ? 'green' : 'white'}
+            underline={selected === id}
+          >
+            {label}
+          </Text>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+/**
+ * Modules support horizontal toolbars, which can display components, which can be other Modules.
+ */
+export const Module: FC<{
+  id: string
+  items: MenuItem[]
+  parent?: string
+}> = ({
+  id,
+  items,
+  parent
+}) => {
+  const [{ debug }] = useAppState();
+  const { isFocused } = useFocus({ id });
+  const { focusPrevious, focusNext } = useFocusManager();
+  const [selected, setSelected] = useState<string>();
+  const Component = useMemo(() => items.find(item => item.id === selected)?.component, [selected]);
+  const [module, setModule] = useModule();
+
+  const path = [parent, id].filter(Boolean).join('.');
+  const showContent = module?.startsWith(path);
+
+  // Set global context on focus.
   useEffect(() => {
-    const module = modules.find(module => module.id === option);
-    if (module?.component) {
-      const Component = module.component;
-      setComponent(() => () => <Component />);
-    } else if (module?.modules) {
-      setComponent(() => () => (
-        <ModulePanel
-          modules={module.modules!}
-        />
-      ));
-    } else {
-      setComponent(() => Blank);
+    if (isFocused) {
+      setModule(path);
     }
-  }, [modules, option]);
+  }, [isFocused]);
+
+  // Init.
+  useEffect(() => {
+    if (!selected) {
+      setSelected(items[0]?.id);
+    }
+  }, []);
+
+  // Navigation.
+  useInput((input, key) => {
+    const i = items.findIndex(item => item.id === selected);
+    if (key.return) {
+      const item = items.find(item => item.id === selected);
+      item?.exec?.(item);
+    } if (key.upArrow) {
+      // TODO(burdon): Test path.
+      focusPrevious();
+    } if (key.downArrow) {
+      focusNext();
+    } if (key.leftArrow) {
+      setSelected(items[Math.max(0, i - 1)].id);
+    } else if (key.rightArrow) {
+      setSelected(items[Math.min(items.length - 1, i + 1)].id);
+    }
+  }, { isActive: isFocused });
 
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Box marginBottom={1}>
+      <Box>
+        {debug && (
+          <Text dimColor color='blue'>[{path}] </Text>
+        )}
+
+        <Text dimColor={!isFocused}>{'> '}</Text>
+
         <Toolbar
-          items={modules}
-          value={option}
-          onChange={setOption}
-          onSelect={() => {
-            const module = modules.find(module => module.id === option);
-            module?.exec?.();
-          }}
+          focused={isFocused}
+          items={items}
+          selected={selected}
         />
       </Box>
 
-      <Box>
-        {Component && (
-          <Component />
-        )}
-      </Box>
+      {showContent && Component && (
+        <Box marginTop={1}>
+          <Component parent={path} />
+        </Box>
+      )}
     </Box>
   );
 };
