@@ -55,11 +55,47 @@ Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
 MIT
 
 
+## Per-package targets (scripts)
+
+- build:
+    codegen
+    protobuf
+    tsc
+    esbuild?
+
+- check (or other verb):
+    mocha
+    eslint
+    browser-mocha?
+    ???
+
+build before publish
+
+
+- validate (or other verb, typecheck?):
+  tsc --no emit
+  esbuild --no emit?
+  ... and pipe into vscode problem matcher
+  todo: Integrate into toolchain spec
+
+
+- test:
+  mocha or jest
+
+- lint:
+  eslint
+
+prettier (via eslint-plugin-prettier)?
+
+
 ## NX tasks
 
 ### Required (feature-party with Rush setup)
 
+
+
 - [ ] Add all packages
+- [ ] Update CI to run build:test
 - [ ] CI
   - [ ] Caching PNPM deps on CI
   - [ ] System deps (for playwright, etc.)
@@ -72,6 +108,9 @@ MIT
 
 ### Follow-up
 
+- [ ] Update toolchain
+  - [ ] Add `check` script to toolchain that runs tests, lint ... but without build.
+  - [ ] Reference 
 - [ ] https://nx.dev/structure/monorepo-tags
 - [ ] Parralelizing CI onto multiple machines
 - [ ] Putting dependencies in a single package

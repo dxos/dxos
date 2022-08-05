@@ -19,6 +19,11 @@
       "dependsOn": [
         "^build"
       ]
+    },
+    "build:test": {
+      "dependsOn": [
+        "^build:test"
+      ]
     }
   },
   "affected": {
