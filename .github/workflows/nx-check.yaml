@@ -12,10 +12,12 @@ jobs:
         with:
           fetch-depth: 0
       - uses: nrwl/nx-set-shas@v2
-      - run: pnpm ci
+      - name: Setup
+        run: npm install -g pnpm
+      - run: pnpm install
 
       # - run: npx nx workspace-lint
       # - run: npx nx format:check
       # - run: npx nx affected --target=lint --parallel=3
       # - run: npx nx affected --target=test --parallel=3 --ci --code-coverage
-      - run: npx nx affected --target=build --parallel=3
+      - run: pnpx nx affected --target=build --parallel=3
