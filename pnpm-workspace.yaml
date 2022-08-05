@@ -3,3 +3,5 @@ packages:
   # - 'toolchains/protocols-toolchain'
   # - 'toolchains/toolchain-node-library'
   - 'packages/common/codec-protobuf'
+  - 'packages/common/protobuf-compiler'
+  - 'packages/common/protobuf-test'

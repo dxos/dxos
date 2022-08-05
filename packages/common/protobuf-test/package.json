@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "build": "",
+    "build": "true",
     "build:test": "",
     "lint": "",
     "test": ""
