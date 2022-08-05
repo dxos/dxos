@@ -198,14 +198,6 @@ export class SignalClient {
     this._swarmStreams.delete(topic);
   }
 
-  /**
-   * @deprecated
-   */
-  async lookup (topic: PublicKey): Promise<PublicKey[]> {
-    console.log('DEPRECATED!!!');
-    return [];
-  }
-
   async signal (message: SignalMessage): Promise<void> {
     const payload: Any = {
       type_url: 'dxos.mesh.signalMessage.SignalMessage',
