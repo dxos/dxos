@@ -10,9 +10,9 @@
   ],
   "scripts": {
     "build": "true",
-    "build:test": "",
-    "lint": "",
-    "test": ""
+    "build:test": "true",
+    "lint": "true",
+    "test": "true"
   },
   "protobuf": "src/foo.proto"
 }
