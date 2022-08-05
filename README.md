@@ -55,9 +55,23 @@ Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
 MIT
 
 
-## NX notes
+## NX tasks
 
-- [ ] Caching PNPM deps on CI
+### Required (feature-party with Rush setup)
+
+- [ ] Add all packages
+- [ ] CI
+  - [ ] Caching PNPM deps on CI
+  - [ ] System deps (for playwright, etc.)
+  - [ ] Beefy self-hosted runners
+- [ ] Fix other targets: test, lint..
+- [x] Publishing
+- [ ] Update https://github.com/dxos/release-please
 - [ ] Run build up to a concrete package
-- [ ] Publishing
+
+### Follow-up
+
 - [ ] https://nx.dev/structure/monorepo-tags
+- [ ] Parralelizing CI onto multiple machines
+- [ ] Putting dependencies in a single package
+- [ ] Enforcing single-version for dependencies
