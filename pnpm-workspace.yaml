@@ -1,0 +1,5 @@
+packages:
+  # - 'packages/common/debug'
+  # - 'toolchains/protocols-toolchain'
+  # - 'toolchains/toolchain-node-library'
+  - 'packages/common/codec-protobuf'

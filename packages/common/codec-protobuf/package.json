@@ -36,7 +36,6 @@
     "lodash.merge": "^4.6.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.6",
     "@types/lodash.merge": "^4.6.6",
