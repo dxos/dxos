@@ -18,7 +18,6 @@ import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
-import { Any } from '@dxos/codec-protobuf';
 
 const log = debug('dxos:network-manager:swarm:test');
 

@@ -12,13 +12,13 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalMessaging } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 const log = debug('dxos:network-manager:swarm');
 

@@ -8,10 +8,10 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
@@ -41,7 +41,7 @@ export class InMemorySignalManager implements SignalManager {
         this.swarmEvent.emit([topic, {
           peerAvailable: {
             peer: peerId.asUint8Array(),
-            since: new Date(),
+            since: new Date()
           }
         }]);
       });
@@ -59,7 +59,7 @@ export class InMemorySignalManager implements SignalManager {
       peerLeft: {
         peer: peerId.asUint8Array()
       }
-    }
+    };
 
     this.swarmEvent.emit([topic, swarmEvent]);
   }

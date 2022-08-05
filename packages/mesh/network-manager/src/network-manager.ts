@@ -54,7 +54,7 @@ export class NetworkManager {
     this._signalManager = options.signal
       ? new WebsocketSignalManager(options.signal)
       : new InMemorySignalManager(onOffer);
-      
+
     this._signalManager.swarmEvent
       .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
 

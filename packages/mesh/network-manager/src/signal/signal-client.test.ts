@@ -9,10 +9,10 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterTest } from '@dxos/testutils';
 
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
-import { afterTest } from '@dxos/testutils';
 
 describe('SignalClient', () => {
   let topic: PublicKey;

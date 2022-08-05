@@ -7,14 +7,13 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap, ComplexSet, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { schema } from '../proto/gen';
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
-import { throws } from 'assert';
 
 const log = debug('dxos:network-manager:signal-client');
 
@@ -203,7 +202,7 @@ export class SignalClient {
    * @deprecated
    */
   async lookup (topic: PublicKey): Promise<PublicKey[]> {
-    console.log("DEPRECATED!!!");
+    console.log('DEPRECATED!!!');
     return [];
   }
 

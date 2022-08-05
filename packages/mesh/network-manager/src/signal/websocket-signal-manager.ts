@@ -3,21 +3,21 @@
 //
 
 import debug from 'debug';
-import assert, { throws } from 'node:assert';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
 import { SignalManager } from './signal-manager';
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
-//TODO(mykola): rename
+// TODO(mykola): rename
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
@@ -32,7 +32,7 @@ export class WebsocketSignalManager implements SignalManager {
   readonly onSignal = new Event<SignalMessage>();
 
   constructor (
-    private readonly _hosts: string[],
+    private readonly _hosts: string[]
   ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
@@ -117,7 +117,7 @@ export class WebsocketSignalManager implements SignalManager {
       await this._reconcileJoinedTopics();
     }, 3_000);
   }
-  
+
   // TODO(mykola): rename to message
   async signal (msg: SignalMessage) {
     log(`Signal ${msg.remoteId}`);

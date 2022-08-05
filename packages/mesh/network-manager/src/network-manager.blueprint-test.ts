@@ -83,8 +83,8 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined  });
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined  });
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -234,7 +234,7 @@ export function inMemoryTests () {
 
       await Promise.all(range(peersPerTopic).map(async (_, index) => {
         const peerId = PublicKey.random();
-        const { plugin } = await createPeer({ topic, peerId,});
+        const { plugin } = await createPeer({ topic, peerId });
 
         const [done, pongReceived] = latch(peersPerTopic - 1);
 

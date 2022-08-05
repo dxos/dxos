@@ -3,13 +3,13 @@
 //
 import { expect } from 'earljs';
 
-import { Any, Stream } from '@dxos/codec-protobuf';
+import { sleep } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalRPCClient } from './signal-rpc-client';
-import { Event, sleep } from '@dxos/async';
 
 describe('SignalRPCClient', () => {
   let broker: TestBroker;
@@ -70,7 +70,8 @@ describe('SignalRPCClient', () => {
     const stream1 = await client1.join(topic, peerId1);
     const promise = new Promise<SwarmEvent>(resolve => {
       stream1.subscribe((event: SwarmEvent) => {
-        if(peerId2.equals(event.peerAvailable?.peer!)) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        if (peerId2.equals(event.peerAvailable?.peer!)) {
           resolve(event);
         }
       }, (error) => {

@@ -10,7 +10,6 @@ import { Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
-import { randomInt } from '@dxos/util';
 
 import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
