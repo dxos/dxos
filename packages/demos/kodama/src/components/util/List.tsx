@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocus, useInput } from 'ink';
+import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
+import { useAppState } from '../../hooks';
 import { Panel } from './Panel';
 
 export type ListItem = {
@@ -100,8 +101,14 @@ export const List: FC<{
   onSelect,
   onCancel
 }) => {
-  const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
+  const [{ debug }] = useAppState();
   const { isFocused } = useFocus();
+  const { focusPrevious, focusNext } = useFocusManager();
+  const [{ cursor, startIndex }, setPosition] = useState({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+
+  // Paging.
+  const visibleItems = items.slice(startIndex, startIndex + pageSize);
+  const showInput = onUpdate && isFocused;
 
   useInput((input, key) => {
     // Escape.
@@ -119,7 +126,9 @@ export const List: FC<{
 
     // Up.
     if (key.upArrow) {
-      if (cursor !== 0) {
+      if (cursor === 0) {
+        focusPrevious();
+      } else {
         setPosition(({ cursor, startIndex }) => {
           const i = (cursor === -1) ? items.length - 1 : cursor - 1;
           if (i < startIndex) {
@@ -133,6 +142,11 @@ export const List: FC<{
 
     // Down.
     if (key.downArrow) {
+      if (cursor === -1 || (!showInput && cursor === items.length - 1)) {
+        focusNext();
+        return;
+      }
+
       if (cursor !== -1) {
         setPosition(({ cursor, startIndex }) => {
           const i = (cursor === items.length - 1) ? -1 : cursor + 1;
@@ -148,10 +162,6 @@ export const List: FC<{
       }
     }
   }, { isActive: isFocused });
-
-  // Paging.
-  const visibleItems = items.slice(startIndex, startIndex + pageSize);
-  const showInput = onUpdate && isFocused;
 
   return (
     <Panel highlight={isFocused}>
@@ -190,6 +200,9 @@ export const List: FC<{
         {showCount && (
           <Box marginTop={showInput || visibleItems.length ? 1 : 0}>
             <Text color='gray'>{items.length} items</Text>
+            {debug && (
+              <Text color='gray'> {cursor}</Text>
+            )}
           </Box>
         )}
       </Box>

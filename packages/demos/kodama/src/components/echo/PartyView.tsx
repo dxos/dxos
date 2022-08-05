@@ -37,6 +37,7 @@ export const PartyView = () => {
           party={party}
           type={type}
         />
+
         <ItemTypeList
           party={party}
           onChange={setType}
