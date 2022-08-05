@@ -35,14 +35,17 @@ export class InMemorySignalManager implements SignalManager {
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
 
-    Array.from(state.swarms.get(topic)!).forEach(peerId => {
-      this.swarmEvent.emit([topic, {
-        peerAvailable: {
-          peer: peerId.asUint8Array(),
-          since: new Date(),
-        }
-      }]);
-    });
+    // Emitting swarm events for each peer.
+    for (const [topic, peerIds] of state.swarms) {
+      Array.from(peerIds).forEach(peerId => {
+        this.swarmEvent.emit([topic, {
+          peerAvailable: {
+            peer: peerId.asUint8Array(),
+            since: new Date(),
+          }
+        }]);
+      });
+    }
   }
 
   leave (topic: PublicKey, peerId: PublicKey) {

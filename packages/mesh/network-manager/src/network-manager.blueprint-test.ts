@@ -52,9 +52,6 @@ const createPeer = async ({
 
 const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: string }) => {
   it('two peers connect to each other', async () => {
-    if (!inMemory) {
-      return;
-    }
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -79,7 +76,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     });
     await nm1.destroy();
     await nm2.destroy();
-  }).timeout(10_000);
+  }).timeout(10_000).retries(3);
 
   it('join and leave swarm', async () => {
     const topic = PublicKey.random();
