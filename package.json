@@ -1,4 +1,5 @@
 {
+  "name": "dxos-protocols",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "homepage": "https://github.com/dxos/protocols",
