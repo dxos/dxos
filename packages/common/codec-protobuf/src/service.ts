@@ -61,7 +61,7 @@ export class Service {
             value: encoded,
             type_url: method.resolvedRequestType!.fullName
           });
-          return responseCodec.decode(response.value ?? new Uint8Array());
+          return responseCodec.decode(response.value);
         };
       } else {
         (this as any)[methodName] = (request: unknown) => {
