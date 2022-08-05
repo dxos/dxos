@@ -289,9 +289,11 @@ export class RpcPeer {
 
     const id = this._nextId++;
 
-    return new Stream(({ next, close }) => {
+    return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if (response.close) {
+        if (response.streamReady) {
+          ready();
+        } else if (response.close) {
           close();
         } else if (response.error) {
           assert(response.error.name);
@@ -365,6 +367,12 @@ export class RpcPeer {
       assert(req.payload);
       assert(req.method);
       const responseStream = this._options.streamHandler(req.method, req.payload);
+      responseStream.onReady(() => {
+        callback({
+          id: req.id,
+          streamReady: true
+        });
+      });
       responseStream.subscribe(
         msg => {
           callback({

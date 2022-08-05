@@ -373,6 +373,7 @@ describe('RpcPeer', () => {
       expect(stream).toBeA(Stream);
 
       expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
         { data: createPayload('res1') },
         { data: createPayload('res2') },
         { closed: true }
@@ -442,6 +443,42 @@ describe('RpcPeer', () => {
       await sleep(1);
 
       expect(closeCalled).toEqual(true);
+    });
+
+    test('reports stream being ready', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        streamHandler: (method, msg) => {
+          expect(method).toEqual('method');
+          expect(msg.value!).toEqual(Buffer.from('request'));
+          return new Stream<Any>(({ ready, close }) => {
+            ready();
+            close();
+          });
+        },
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        port: bobPort
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const stream = await bob.callStream('method', createPayload('request'));
+      expect(stream).toBeA(Stream);
+
+      await stream.waitUntilReady();
+
+      expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
+        { closed: true }
+      ]);
     });
   });
 

@@ -5,7 +5,7 @@
 import { Stream } from './stream';
 
 describe('Stream', () => {
-  test('can consume a stream that immediately closes', async () => {
+  test.only('can consume a stream that immediately closes', async () => {
     const stream = new Stream(({ next, close }) => {
       next('foo');
       next('bar');
@@ -14,6 +14,7 @@ describe('Stream', () => {
     });
 
     expect(await Stream.consume(stream)).toEqual([
+      { ready: true },
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },
@@ -36,6 +37,7 @@ describe('Stream', () => {
     });
 
     expect(await Stream.consume(stream)).toEqual([
+      { ready: true },
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },
