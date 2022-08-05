@@ -27,7 +27,6 @@ export class WebsocketSignalManager implements SignalManager {
 
   private _reconcileTimeoutId?: NodeJS.Timeout;
 
-  readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onSignal = new Event<SignalMessage>();
@@ -46,7 +45,6 @@ export class WebsocketSignalManager implements SignalManager {
       server.swarmEvent.on(data => this.swarmEvent.emit(data));
 
       this._servers.set(host, server);
-      server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
       server.commandTrace.on(trace => this.commandTrace.emit(trace));
       this._topicsJoinedPerSignal.set(host, new ComplexMap(x => x.toHex()));
     }
@@ -77,13 +75,9 @@ export class WebsocketSignalManager implements SignalManager {
         if (!this._topicsJoinedPerSignal.get(host)!.has(topic)) {
           log(`Join ${topic} as ${peerId} on ${host}`);
           promises.push(server.join(topic, peerId).then(
-            peers => {
+            () => {
               log(`Joined successfully ${host}`);
               this._topicsJoinedPerSignal.get(host)!.set(topic, peerId);
-
-              // log(`Peer candidates changed ${topic} ${peers}`);
-              // // TODO(marik-d): Deduplicate peers.
-              // this.peerCandidatesChanged.emit([topic, peers]);
             },
             err => {
               log(`Join error ${host} ${err.message}`);
@@ -122,22 +116,6 @@ export class WebsocketSignalManager implements SignalManager {
       this._reconcileTimeoutId = undefined;
       await this._reconcileJoinedTopics();
     }, 3_000);
-  }
-
-  lookup (topic: PublicKey) {
-    log(`Lookup ${topic}`);
-    for (const server of this._servers.values()) {
-      server.lookup(topic).then(
-        peers => {
-          log(`Peer candidates changed ${topic} ${peers}`);
-          // // TODO(marik-d): Deduplicate peers.
-          // this.peerCandidatesChanged.emit([topic, peers]);
-        },
-        () => {
-          // Error will already be reported in devtools. No need to do anything here.
-        }
-      );
-    }
   }
   
   // TODO(mykola): rename to message

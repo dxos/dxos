@@ -14,11 +14,6 @@ import { SignalApi } from './signal-api';
  */
 export interface SignalConnection {
   /**
-   * Find peers (triggers async event).
-   */
-  lookup (topic: PublicKey): void
-
-  /**
    * Join topic on signal network, to be discoverable by other peers.
    */
   join (topic: PublicKey, peerId: PublicKey): void
@@ -45,7 +40,6 @@ export interface SignalMessaging {
 }
 
 export interface SignalManager extends SignalConnection {
-  statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
   onSignal: Event<SignalMessage>
