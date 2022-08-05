@@ -10,7 +10,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
-import { WebsocketSignalManager } from './websocket-signal-manager';
+import { SignalManagerImpl } from './signal-manager-impl';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;
@@ -24,7 +24,7 @@ describe('Signal Integration Test', () => {
   });
 
   const setup = () => {
-    const signalManager = new WebsocketSignalManager([broker.url()]);
+    const signalManager = new SignalManagerImpl([broker.url()]);
     signalManager.onSignal.on(msg => messageRouter.receiveMessage(msg));
 
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();

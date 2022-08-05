@@ -13,7 +13,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
 import { SignalMessage } from './proto/gen/dxos/mesh/signalMessage';
-import { InMemorySignalManager, SignalManager, WebsocketSignalManager } from './signal';
+import { InMemorySignalManager, SignalManager, SignalManagerImpl } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
@@ -52,7 +52,7 @@ export class NetworkManager {
       await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal
-      ? new WebsocketSignalManager(options.signal)
+      ? new SignalManagerImpl(options.signal)
       : new InMemorySignalManager(onOffer);
 
     this._signalManager.swarmEvent

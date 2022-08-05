@@ -18,7 +18,7 @@ import { SignalManager } from './signal-manager';
 const log = debug('dxos:network-manager:websocket-signal-manager');
 
 // TODO(mykola): rename
-export class WebsocketSignalManager implements SignalManager {
+export class SignalManagerImpl implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
