@@ -63,4 +63,12 @@ In the **second** peer join the Party.
 Paste the invitation key, then enter the 4-digit code.
 Next navigate to the Party and enter some items.
 
+## Development
 
+To run in development mode with a pre-created profile:
+
+```bash
+rushx build && ./bin/kodama.js --username Test --debug
+```
+
+Note: the `watch` script is flaky and interferes with stdin.
