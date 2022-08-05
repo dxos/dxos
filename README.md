@@ -53,3 +53,9 @@ Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
 ## License
 
 MIT
+
+
+## NX notes
+
+- [ ] Caching PNPM deps on CI
+- [ ] Run build up to a concrete package
