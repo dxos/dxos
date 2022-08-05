@@ -118,8 +118,6 @@ export class NetworkManager {
       topology,
       protocol,
       this._messageRouter,
-      // TODO(mykola): Remove lookup.
-      () => {},
       transportFactory,
       options.label
     );

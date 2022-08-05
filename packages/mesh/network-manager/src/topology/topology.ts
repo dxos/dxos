@@ -19,13 +19,6 @@ export interface SwarmController {
    * Disconnect from a peer.
    */
   disconnect(peer: PublicKey): void;
-
-  /**
-   * Trigger a lookup of any other peers swarming on this topic.
-   *
-   * Updates will be propagated through `update` method.
-   */
-  lookup(): void;
 }
 
 export interface SwarmState {

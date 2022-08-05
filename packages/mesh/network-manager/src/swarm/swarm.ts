@@ -64,7 +64,6 @@ export class Swarm {
     private _topology: Topology,
     private readonly _protocolProvider: ProtocolProvider,
     private readonly _signalMessaging: SignalMessaging,
-    private readonly _lookupPeers: (topic: PublicKey) => void,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
@@ -187,9 +186,6 @@ export class Swarm {
           this.errors.raise(err);
         }
         this._topology.update();
-      },
-      lookup: () => {
-        this._lookupPeers(this._topic);
       }
     };
   }

@@ -72,7 +72,6 @@ describe('Swarm', () => {
       new FullyConnectedTopology(),
       () => new Protocol(),
       sm1,
-      () => {},
       createWebRTCTransportFactory(),
       undefined
     );
@@ -83,7 +82,6 @@ describe('Swarm', () => {
       new FullyConnectedTopology(),
       () => new Protocol(),
       sm2,
-      () => {},
       createWebRTCTransportFactory(),
       undefined
     );
