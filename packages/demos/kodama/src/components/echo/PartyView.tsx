@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box } from 'ink';
+import { Box, Text, useFocus, useFocusManager } from 'ink';
 import React, { useState } from 'react';
 
 import { useParty } from '@dxos/react-client';
@@ -13,6 +13,8 @@ import { ItemTypeList } from './ItemTypeList';
 import { PartyList } from './PartyList';
 
 export const PartyView = () => {
+  const { focus } = useFocus({ isActive: false });
+  const { focusPrevious, focusNext } = useFocusManager();
   const [{ partyKey }, { setPartyKey }] = useAppState();
   const [type, setType] = useState<string>();
   const party = useParty(partyKey);
@@ -20,14 +22,15 @@ export const PartyView = () => {
     return null;
   }
 
-  // TODO(burdon): List item isn't selected.
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Box flexGrow={1}>
+      <Box flexDirection='column' flexGrow={1}>
         <PartyList
           partyKey={party.key}
           onSelect={partyKey => {
             setPartyKey(partyKey);
+            // focus('item-list');
+            focusNext();
           }}
         />
       </Box>
@@ -36,12 +39,20 @@ export const PartyView = () => {
         <ItemList
           party={party}
           type={type}
+          onCancel={() => {
+            focus('party-list');
+            // focusPrevious();
+          }}
         />
 
         <ItemTypeList
           party={party}
           onChange={setType}
         />
+
+        <Box padding={1}>
+          <Text>ENTER to select; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
+        </Box>
       </Box>
     </Box>
   );

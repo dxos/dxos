@@ -34,6 +34,7 @@ export const ItemTypeList: FC<{
 
   return (
     <List
+      id={'item-type-list'}
       items={types.map(type => ({ id: type, text: type }))}
       onSelect={id => onChange(id)}
     />

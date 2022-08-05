@@ -85,6 +85,8 @@ const ListItem: FC<{
 };
 
 export const List: FC<{
+  id: string // Identifies source of data.
+  focusId?: string // If dynamic then the focus position will change each time.
   items: ListItem[]
   pageSize?: number
   title?: string
@@ -93,6 +95,8 @@ export const List: FC<{
   onSelect?: (id: string) => void
   onCancel?: () => void
 }> = ({
+  id,
+  focusId,
   items = [],
   pageSize = 10,
   title,
@@ -102,9 +106,14 @@ export const List: FC<{
   onCancel
 }) => {
   const [{ debug }] = useAppState();
-  const { isFocused } = useFocus();
+  const { isFocused } = useFocus({ id: focusId });
   const { focusPrevious, focusNext } = useFocusManager();
   const [{ cursor, startIndex }, setPosition] = useState({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+
+  // Reset if data changed.
+  useEffect(() => {
+    setPosition({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+  }, [id]);
 
   // Paging.
   const visibleItems = items.slice(startIndex, startIndex + pageSize);
@@ -113,7 +122,9 @@ export const List: FC<{
   useInput((input, key) => {
     // Escape.
     if (key.escape) {
-      onCancel?.();
+      setTimeout(() => { // Hack to avoid React state update on TextInput.
+        onCancel?.();
+      });
     }
 
     // Select.

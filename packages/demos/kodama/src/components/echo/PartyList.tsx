@@ -15,13 +15,15 @@ export const PartyList: FC<{
   partyKey?: PartyKey
   onSelect: (partyKey: PartyKey) => void
 }> = ({
-  partyKey: controlledPartyKey,
+  partyKey, // TODO(burdon): Selection not set.
   onSelect
 }) => {
   const parties = useParties();
 
   return (
     <List
+      id='party-list'
+      focusId='party-list'
       showCount
       onSelect={partyKey => onSelect(PublicKey.from(partyKey))}
       items={parties.map(party => ({
