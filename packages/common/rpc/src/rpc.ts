@@ -174,8 +174,7 @@ export class RpcPeer {
         return; // Ignore when not open.
       }
 
-      // Default to 0 as protobuf skips integers that are 0.
-      const responseId = decoded.response.id ?? 0;
+      const responseId = decoded.response.id;
 
       assert(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
@@ -269,7 +268,7 @@ export class RpcPeer {
       }
       throw err;
     }
-    assert((response.id ?? 0) === id);
+    assert(response.id === id);
 
     if (response.payload) {
       return response.payload;
