@@ -19,6 +19,7 @@ import { ClientProvider } from '@dxos/react-client';
 // @ts-ignore
 import { name, version } from '../package.json';
 import { App } from './App';
+import { AppStateProvider } from './hooks';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
@@ -75,13 +76,19 @@ const main = async () => {
       description: 'Debug mode (run in-memory)',
       type: 'boolean'
     })
+    .option('username', {
+      description: 'Create initial profile',
+      type: 'string'
+    })
     .command({
       command: '*',
       handler: async ({
         config: configFile,
+        username,
         debug
       }: {
         config: string,
+        username: string
         debug: boolean
       }) => {
         const newVersion = await versionCheck(name, version);
@@ -91,8 +98,8 @@ const main = async () => {
         const client = new Client(config);
         await client.initialize();
 
-        if (debug) {
-          await client.halo.createProfile({ username: 'Test' });
+        if (username) {
+          await client.halo.createProfile({ username });
         }
 
         const { waitUntilExit } = render((
@@ -101,7 +108,9 @@ const main = async () => {
               <VersionUpdate name={name} version={newVersion} />
             )}
 
-            <App />
+            <AppStateProvider debug={debug}>
+              <App />
+            </AppStateProvider>
           </ClientProvider>
         ));
 

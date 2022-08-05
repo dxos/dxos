@@ -16,10 +16,11 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "debug": "yarn build && ./bin/kodama.js",
+    "debug": "npm run build && ./bin/kodama.js",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "watch": "supervisor -w src -e ts,tsx -x yarn debug"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -57,9 +58,10 @@
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "mocha": "~8.4.0",
-    "nodemon": "~2.0.19",
+    "supervisor": "~0.12.0",
     "ts-node": "^10.8.2",
-    "typescript": "^4.7.2"
+    "typescript": "^4.7.2",
+    "esbuild": "^0.14.49"
   },
   "publishConfig": {
     "access": "public"

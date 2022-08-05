@@ -4,19 +4,19 @@
 
 import React, { FC } from 'react';
 
-import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Table } from '../util';
 
 export const PartyFeeds: FC<{
-  party: Party
+  partyKey: PublicKey
 }> = ({
-  party
+  partyKey
 }) => {
   const devtoolsHost = useDevtools();
-  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey: party.key }), {});
+  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
 
   return (
     <Table

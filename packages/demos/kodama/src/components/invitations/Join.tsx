@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Text, useFocus } from 'ink';
-import Spinner from 'ink-spinner';
-import TextInput from 'ink-text-input';
+import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
+import { Status, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
@@ -18,12 +17,11 @@ export const Join: FC<{
   onJoin
 }) => {
   const client = useClient();
-  const { isFocused } = useFocus();
+  const [focused, setFocused] = useState(false);
   const [descriptor, setDescriptor] = useState<string>();
   const [secret, setSecret] = useState<string>();
-  const [processing, setProcessing] = useState(false);
   const [invitation, setInvitation] = useState<PartyInvitation>();
-  const [status, setStatus] = useState<string>();
+  const [status, setStatus] = useState<StatusState>();
 
   const handleDecode = () => {
     try {
@@ -39,55 +37,54 @@ export const Join: FC<{
         const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
-        setStatus(`Error: ${err}`);
+        setStatus({ error: err as Error });
       }
     }
   };
 
   const handleSubmit = async (invitation: PartyInvitation, secret: string) => {
     try {
+      setStatus({});
       // TODO(burdon): Exception not caught.
       invitation!.authenticate(Buffer.from(secret));
-      setProcessing(true);
       const party = await invitation!.getParty();
-      setStatus('Success');
+      setStatus({ success: 'OK' });
       onJoin?.(party.key);
     } catch (err) {
-      setStatus(`Error: ${err}`);
+      setStatus({ error: err as Error });
     }
   };
 
   return (
-    <Panel focused={isFocused}>
-      {!invitation && !processing && (
+    <Panel highlight={focused}>
+      {!invitation && !status?.processing && (
         <TextInput
-          placeholder='Enter invitation code'
+          placeholder='Enter invitation code.'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
+          onFocus={setFocused}
         />
       )}
 
-      {invitation && !processing && (
+      {invitation && !status?.processing && (
         <TextInput
-          placeholder='Enter verification code'
+          placeholder='Enter verification code.'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
+          onFocus={setFocused}
         />
       )}
 
-      {status && (
-        <Text>{status}</Text>
-      )}
-      {processing && !status && (
-        <Text>
-          <Text color='green'>
-            <Spinner type='dots' />
-          </Text>
-          {' Authenticating'}
-        </Text>
-      )}
+      <Box marginTop={1}>
+        <Text>Authenticate your device.</Text>
+      </Box>
+
+      <Status
+        status={status}
+        marginTop={1}
+      />
     </Panel>
   );
 };
