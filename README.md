@@ -63,6 +63,7 @@ MIT
 - [ ] CI
   - [ ] Caching PNPM deps on CI
   - [ ] System deps (for playwright, etc.)
+  - [ ] Evaluate CI perf on full monorepo
   - [ ] Beefy self-hosted runners
 - [ ] Fix other targets: test, lint..
 - [x] Publishing
