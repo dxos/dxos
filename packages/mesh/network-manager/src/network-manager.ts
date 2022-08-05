@@ -54,9 +54,9 @@ export class NetworkManager {
     this._signalManager = options.signal
       ? new WebsocketSignalManager(options.signal)
       : new InMemorySignalManager(onOffer);
-
-    this._signalManager.peerCandidatesChanged
-      .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
+      
+    this._signalManager.swarmEvent
+      .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
 
     this._signalManager.onSignal.on(msg => this._messageRouter.receiveMessage(msg));
 
@@ -118,7 +118,8 @@ export class NetworkManager {
       topology,
       protocol,
       this._messageRouter,
-      this._signalManager.lookup.bind(this._signalManager),
+      // TODO(mykola): Remove lookup.
+      () => {},
       transportFactory,
       options.label
     );

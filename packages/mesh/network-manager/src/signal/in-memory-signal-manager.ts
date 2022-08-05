@@ -21,7 +21,7 @@ export class InMemorySignalManager implements SignalManager {
 
   constructor (
     private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
-  ) {console.log('In memory Signal Manager');}
+  ) {}
 
   getStatus (): SignalApi.Status[] {
     return [];
@@ -35,14 +35,14 @@ export class InMemorySignalManager implements SignalManager {
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
 
-    const swarmEvent: SwarmEvent = {
-      peerAvailable: {
-        peer: peerId.asUint8Array(),
-        since: '' as any,
-      }
-    }
-
-    this.swarmEvent.emit([topic, swarmEvent]);
+    Array.from(state.swarms.get(topic)!).forEach(peerId => {
+      this.swarmEvent.emit([topic, {
+        peerAvailable: {
+          peer: peerId.asUint8Array(),
+          since: new Date(),
+        }
+      }]);
+    });
   }
 
   leave (topic: PublicKey, peerId: PublicKey) {
@@ -59,10 +59,6 @@ export class InMemorySignalManager implements SignalManager {
     }
 
     this.swarmEvent.emit([topic, swarmEvent]);
-  }
-
-  lookup (topic: PublicKey) {
-    // setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
   }
 
   offer (msg: SignalMessage) {

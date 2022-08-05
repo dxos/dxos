@@ -30,9 +30,6 @@ interface CreatePeerOptions {
   ice?: any
 }
 
-const signalApiPort = 12098;
-const signalApiUrl = 'ws://0.0.0.0:' + signalApiPort;
-
 const createPeer = async ({
   topic,
   peerId,
@@ -55,7 +52,7 @@ const createPeer = async ({
 
 const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: string }) => {
   it('two peers connect to each other', async () => {
-    if (inMemory) {
+    if (!inMemory) {
       return;
     }
     const topic = PublicKey.random();
@@ -82,15 +79,15 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     });
     await nm1.destroy();
     await nm2.destroy();
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000);
 
   it('join and leave swarm', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, inMemory, signal: !inMemory ? [signalUrl!] : undefined  });
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, inMemory, signal: !inMemory ? [signalUrl!] : undefined  });
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined  });
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined  });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -116,7 +113,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000);
 };
 
 // eslint-disable-next-line jest/no-export
@@ -196,10 +193,10 @@ export function inMemoryTests () {
     const peerB1Id = PublicKey.random();
     const peerB2Id = PublicKey.random();
 
-    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id, inMemory: true });
-    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id, inMemory: true });
-    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id, inMemory: true });
-    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id, inMemory: true });
+    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id });
+    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id });
+    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id });
+    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id });
 
     const receivedA: any[] = [];
     const mockReceiveA = (p: Protocol, s: string) => {
@@ -240,7 +237,7 @@ export function inMemoryTests () {
 
       await Promise.all(range(peersPerTopic).map(async (_, index) => {
         const peerId = PublicKey.random();
-        const { plugin } = await createPeer({ topic, peerId, inMemory: true });
+        const { plugin } = await createPeer({ topic, peerId,});
 
         const [done, pongReceived] = latch(peersPerTopic - 1);
 
