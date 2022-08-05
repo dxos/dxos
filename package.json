@@ -15,5 +15,8 @@
   "devDependencies": {
     "nx": "14.5.4",
     "@nrwl/nx-cloud": "latest"
+  },
+  "publishConfig": {
+    "registry": "http://localhost:4873/"
   }
 }
