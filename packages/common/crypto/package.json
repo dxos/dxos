@@ -26,7 +26,7 @@
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/crypto-js": "~4.0.2",
     "@types/jest": "^28.1.6",

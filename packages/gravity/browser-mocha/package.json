@@ -41,7 +41,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/glob": "~7.1.3",
     "@types/node": "^16.11.27",

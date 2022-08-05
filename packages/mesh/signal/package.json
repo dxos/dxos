@@ -69,7 +69,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",

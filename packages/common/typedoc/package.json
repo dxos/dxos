@@ -19,7 +19,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "eslint": "^7.12.1",
     "typedoc": "^0.22.18",

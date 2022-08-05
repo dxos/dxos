@@ -28,7 +28,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
     "eslint": "^7.12.1",

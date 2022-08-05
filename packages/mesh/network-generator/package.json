@@ -36,7 +36,7 @@
     "ngraph.graph": "^19.0.1"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/assert": "^1.5.4",
     "@types/end-of-stream": "^1.4.0",

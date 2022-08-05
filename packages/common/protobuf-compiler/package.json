@@ -30,6 +30,7 @@
     "ts-morph": "~10.0.2"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "^2.0.0",
