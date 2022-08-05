@@ -65,7 +65,6 @@ export class TestBroker {
   }
 
   public url (): string {
-    // console.log(this._serverProcess.st)
     return `ws://localhost:${this._port}/.well-known/dx/signal`;
   }
 }
