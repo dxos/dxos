@@ -14,7 +14,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v2
       - name: Setup
         run: npm install -g pnpm
-      - run: pnpm ci
+      - run: pnpm install
 
       # - run: npx nx workspace-lint
       # - run: npx nx format:check
