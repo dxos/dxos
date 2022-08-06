@@ -23,7 +23,7 @@ export const TextInput: FC<{
   placeholder
 }) => {
   const focusId = useMemo(() => `text-input-${Date.now()}`, []);
-  const { focus: setFocus, isFocused } = useFocus({ id: focusId, isActive: focus });
+  const { focus: setFocus, isFocused } = useFocus({ id: focusId, isActive: focus, autoFocus: true });
   const { focusPrevious, focusNext } = useFocusManager();
 
   useEffect(() => {

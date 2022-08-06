@@ -5,6 +5,7 @@
 import { Box, Text, render } from 'ink';
 import React from 'react';
 
+import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
 import { Join, Module } from './components';
@@ -65,9 +66,13 @@ const Test = () => {
   );
 };
 
-const init = () => {
+const init = async () => {
+  const client = new Client({});
+  await client.initialize();
+  await client.halo.createProfile({ username: 'Test' });
+
   render(
-    <ClientProvider config={{}}>
+    <ClientProvider client={client}>
       <AppStateProvider debug={true}>
         <ModuleProvider root='root'>
           <Test />
@@ -77,4 +82,4 @@ const init = () => {
   );
 };
 
-init();
+void init();

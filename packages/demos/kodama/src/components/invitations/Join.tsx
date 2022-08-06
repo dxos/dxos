@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
@@ -22,10 +23,14 @@ export const Join: FC<{
   const [invitation, setInvitation] = useState<PartyInvitation>();
   const [status, setStatus] = useState<StatusState>();
 
+  // Sample code for testing.
+  // 2Jfg6YbVr56jMcKBfXefCkSfvAG73UIJYft2ORDOlNof0iAPCqNrvLH6A1lsZKVO9VGKzKzZlU60yjrlvNIfCsUdihG0sJsLesWHBSbyOs2flkEbQPaxPucsuBxalb7J5nGow5Dcn8rERUqOQEIBkve5hzATC60y9rooOnCflZ7k5MIOFjM7KZt7kkmGyOcNumzK0jayOV882TfEZuYrCOM0zilOnDDTZaOACEEMotiWYForVzdb9QtxnpxYcwbSdfZQeGTdZTSjTy9VYAwo0FYoDCNlpXSwCBto1vgJ2JV6kjFb9TLyN4SGbv0CHhkD6JziDHVk7vxo5ebll2P4psfSuLaw7Xxj9xRRnj2dxUp3yg5s4051fpRhli6b4D6tNKwgcEAtnSeRzazrArM85
+
   const handleDecode = () => {
     try {
       // TODO(burdon): Detect URL.
       // TODO(burdon): Define JSON type.
+      // TODO(burdon): Errors not caught
       // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
       const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
@@ -44,8 +49,8 @@ export const Join: FC<{
 
   const handleSubmit = async (invitation: PartyInvitation, secret: string) => {
     try {
-      setStatus({});
-      // TODO(burdon): Exception not caught.
+      setStatus({ processing: 'Authenticating...' });
+      // TODO(burdon): Exceptions not propagated to here (e.g., IDENTITY_NOT_INITIALIZED, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT)
       invitation!.authenticate(Buffer.from(secret));
       const party = await invitation!.getParty();
       setStatus({ success: 'OK' });
@@ -57,25 +62,27 @@ export const Join: FC<{
 
   return (
     <Panel highlight={focused}>
-       {/* {!invitation && !status?.processing && ( */}
-        <TextInput
-          placeholder='Enter invitation code.'
-          value={descriptor ?? ''}
-          onChange={setDescriptor}
-          onSubmit={handleDecode}
-          // onFocus={setFocused}
-        />
-       {/* )} */}
+      <TextInput
+        focus={!invitation && !status?.processing}
+        placeholder='Enter invitation code.'
+        value={descriptor ?? ''}
+        onChange={setDescriptor}
+        onSubmit={handleDecode}
+        onFocus={setFocused}
+      />
 
-        {invitation && !status?.processing && (
-        <TextInput
-          placeholder='Enter verification code.'
-          value={secret ?? ''}
-          onChange={setSecret}
-          onSubmit={() => handleSubmit(invitation!, secret!)}
-          // onFocus={setFocused}
-        />
-        )}
+      {invitation && !status?.processing && (
+        <Box marginTop={1}>
+          <TextInput
+            focus={invitation && !status?.processing}
+            placeholder='Enter verification code.'
+            value={secret ?? ''}
+            onChange={setSecret}
+            onSubmit={() => handleSubmit(invitation!, secret!)}
+            onFocus={setFocused}
+          />
+        </Box>
+      )}
 
       <Status
         status={status}
