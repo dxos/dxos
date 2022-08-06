@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { useFocusManager } from 'ink';
 import React, { useMemo } from 'react';
 
 import { useParty } from '@dxos/react-client';
@@ -74,12 +75,16 @@ export const createEchoMenu = (): MenuItem | undefined => {
             {
               id: 'create',
               label: 'Create Party',
-              component: () => (
-                <CreateParty
-                  // TODO(burdon): Set toolbar state.
-                  onCreate={() => {}}
-                />
-              )
+              component: () => {
+                const { focusPrevious } = useFocusManager();
+                return (
+                  <CreateParty
+                    onCreate={() => {
+                      focusPrevious();
+                    }}
+                  />
+                );
+              }
             },
             ...partyItems,
             {

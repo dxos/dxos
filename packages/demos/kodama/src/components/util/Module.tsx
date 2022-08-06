@@ -8,9 +8,13 @@ import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useAppState, useModule } from '../../hooks';
 
 export type MenuItem = {
+  // Module ID must match parent item.
   id: string
+  // Display label.
   label: string
+  // Child component or module.
   component?: FC<{ parent: string }>
+  // Command to exec on ENTER.
   exec?: (item: MenuItem) => void
 }
 

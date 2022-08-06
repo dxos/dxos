@@ -5,11 +5,13 @@
 import { useFocus } from 'ink';
 import React, { FC, ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
+// Currently active path.
 type ModuleState = string
 
 type Context = [
   ModuleState,
   (state: ModuleState) => void,
+  // Currently rendered modules.
   Set<string>
 ];
 
