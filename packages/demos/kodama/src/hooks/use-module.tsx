@@ -3,32 +3,42 @@
 //
 
 import { useFocus } from 'ink';
-import React, { FC, ReactNode, createContext, useContext, useState, useEffect } from 'react';
+import React, { FC, ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
-const ModuleContext = createContext<[string | undefined, (value: string) => void] | undefined>(undefined);
+// Currently active path.
+type ModuleState = string
+
+type Context = [
+  ModuleState,
+  (state: ModuleState) => void,
+  // Currently rendered modules.
+  Set<string>
+];
+
+const ModuleContext = createContext<Context | undefined>(undefined);
 
 export const ModuleProvider: FC<{
   children: ReactNode
-  value: string
+  root: string
 }> = ({
   children,
-  value: initialValue
+  root
 }) => {
   const { focus } = useFocus({ isActive: false });
-  const [value, setValue] = useState<string | undefined>();
+  const [path, setPath] = useState<ModuleState>();
+  const modules = useMemo(() => new Set<string>(), []);
   useEffect(() => {
-    if (!value) {
-      focus(initialValue);
-    }
-  }, [value]);
+    focus(path ?? root);
+  }, [path]);
 
   return (
-    <ModuleContext.Provider value={[value, setValue]}>
+    <ModuleContext.Provider value={[path ?? root, setPath, modules]}>
       {children}
     </ModuleContext.Provider>
   );
 };
 
-export const useModule = () => {
-  return useContext(ModuleContext)!;
+export const useModule = (): Context => {
+  const [path, setPath, modules] = useContext(ModuleContext)!;
+  return [path, setPath, modules];
 };

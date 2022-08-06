@@ -28,7 +28,6 @@ export const Share: FC<{
 
     const handleDone = () => {
       if (isMounted()) {
-        setInvitation(undefined);
         setStatus({ success: 'OK' });
       }
     };

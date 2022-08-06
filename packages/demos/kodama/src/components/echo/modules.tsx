@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { useFocusManager } from 'ink';
 import React, { useMemo } from 'react';
 
 import { useParty } from '@dxos/react-client';
@@ -71,23 +72,38 @@ export const createEchoMenu = (): MenuItem | undefined => {
                 <PartyView />
               )
             },
-            {
-              id: 'create',
-              label: 'Create Party',
-              component: () => (
-                <CreateParty
-                  // TODO(burdon): Set toolbar state.
-                  onCreate={() => {}}
-                />
-              )
-            },
             ...partyItems,
             {
               id: 'join',
               label: 'Join Party',
-              component: () => (
-                <Join />
-              )
+              component: () => {
+                const [, { setPartyKey }] = useAppState();
+                const { focusPrevious } = useFocusManager();
+                return (
+                  <Join
+                    onJoin={partyKey => {
+                      setPartyKey(partyKey);
+                      focusPrevious();
+                    }}
+                  />
+                );
+              }
+            },
+            {
+              id: 'create',
+              label: 'Create Party',
+              component: () => {
+                const [, { setPartyKey }] = useAppState();
+                const { focusPrevious } = useFocusManager();
+                return (
+                  <CreateParty
+                    onCreate={partyKey => {
+                      setPartyKey(partyKey);
+                      focusPrevious();
+                    }}
+                  />
+                );
+              }
             }
           ]}
         />

@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Client } from '@dxos/client';
 
+import { useModule } from '../../hooks';
 import { Join, Share } from '../invitations';
 import { MenuItem, Module, Panel } from '../util';
 import { Contacts } from './Contacts';
@@ -28,9 +29,16 @@ export const createHaloMenu = (client: Client): MenuItem => {
             {
               id: 'create-profile',
               label: 'Create Profile',
-              component: () => (
-                <CreateProfile />
-              )
+              component: () => {
+                const [, setPath] = useModule();
+                return (
+                  <CreateProfile
+                    onCreate={() => {
+                      setPath('root');
+                    }}
+                  />
+                );
+              }
             },
             {
               id: 'recover-profile',

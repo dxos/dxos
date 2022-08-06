@@ -20,7 +20,8 @@
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
     "test": "toolchain test",
-    "watch": "supervisor -w src -e ts,tsx -x yarn debug"
+    "test:app": "npm run build && ./bin/test.js",
+    "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
