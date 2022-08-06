@@ -63,21 +63,26 @@ export const Module: FC<{
   parent
 }) => {
   const [{ debug }] = useAppState();
-  const { isFocused } = useFocus({ id });
-  const { focusPrevious, focusNext } = useFocusManager();
-  const [activePath, setPath] = useModule();
+  const { focusNext } = useFocusManager();
+  const [activePath, setPath, modules] = useModule();
   const [activeItem, setActiveItem] = useState<string>();
 
-  const Component = useMemo(() => items.find(item => item.id === activeItem)?.component, [activeItem]);
-
   const ourPath = [parent, id].filter(Boolean).join('.');
+  const { isFocused } = useFocus({ id: ourPath });
+
   const showContent = activePath?.startsWith(ourPath);
+  const Component = useMemo(() => items.find(item => item.id === activeItem)?.component, [activeItem]);
 
   // Init.
   useEffect(() => {
+    modules.add(ourPath);
     if (!activeItem) {
       setActiveItem(items[0]?.id);
     }
+
+    return () => {
+      modules.delete(ourPath);
+    };
   }, []);
 
   // Set global context on focus.
@@ -95,10 +100,15 @@ export const Module: FC<{
       item?.exec?.(item);
     } if (key.upArrow) {
       if (parent) {
-        focusPrevious();
+        setPath(parent);
       }
     } if (key.downArrow) {
-      focusNext();
+      const childPath = [ourPath, activeItem].join('.');
+      if (modules.has(childPath)) {
+        setPath(childPath); // Child module.
+      } else {
+        focusNext();
+      }
     } if (key.leftArrow) {
       setActiveItem(items[Math.max(0, i - 1)].id);
     } else if (key.rightArrow) {
@@ -124,7 +134,9 @@ export const Module: FC<{
 
       {showContent && Component && (
         <Box marginTop={1}>
-          <Component parent={ourPath} />
+          <Component
+            parent={ourPath}
+          />
         </Box>
       )}
     </Box>

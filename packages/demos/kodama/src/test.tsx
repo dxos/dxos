@@ -5,20 +5,27 @@
 import { Box, Text, render } from 'ink';
 import React from 'react';
 
-import { Module } from './components';
-import { AppStateProvider, ModuleProvider } from './hooks';
+import { ClientProvider } from '@dxos/react-client';
+
+import { Join, Module } from './components';
+import { AppStateProvider, ModuleProvider, useModule } from './hooks';
 
 const Test = () => {
+  const [activePath] = useModule();
+
   return (
     <Box flexDirection='column'>
+      <Box marginBottom={1}>
+        <Text>{activePath}</Text>
+      </Box>
       <Module
         id='root'
         items={[
           {
             id: 'test',
             label: 'Test',
-            component: () => (
-              <Text>Test</Text>
+            component: () => ( // TODO(burdon): Client Context.
+              <Join />
             )
           },
           {
@@ -60,11 +67,13 @@ const Test = () => {
 
 const init = () => {
   render(
-    <AppStateProvider debug={true}>
-      <ModuleProvider root='root'>
-        <Test />
-      </ModuleProvider>
-    </AppStateProvider>
+    <ClientProvider config={{}}>
+      <AppStateProvider debug={true}>
+        <ModuleProvider root='root'>
+          <Test />
+        </ModuleProvider>
+      </AppStateProvider>
+    </ClientProvider>
   );
 };
 

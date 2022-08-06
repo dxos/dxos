@@ -3,11 +3,17 @@
 //
 
 import { useFocus } from 'ink';
-import React, { FC, ReactNode, createContext, useContext, useState, useEffect } from 'react';
+import React, { FC, ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 type ModuleState = string
 
-const ModuleContext = createContext<[ModuleState, (state: ModuleState) => void] | undefined>(undefined);
+type Context = [
+  ModuleState,
+  (state: ModuleState) => void,
+  Set<string>
+];
+
+const ModuleContext = createContext<Context | undefined>(undefined);
 
 export const ModuleProvider: FC<{
   children: ReactNode
@@ -18,19 +24,19 @@ export const ModuleProvider: FC<{
 }) => {
   const { focus } = useFocus({ isActive: false });
   const [path, setPath] = useState<ModuleState>();
+  const modules = useMemo(() => new Set<string>(), []);
   useEffect(() => {
-    if (!path) {
-      focus(root);
-    }
+    focus(path ?? root);
   }, [path]);
 
   return (
-    <ModuleContext.Provider value={[root, setPath]}>
+    <ModuleContext.Provider value={[path ?? root, setPath, modules]}>
       {children}
     </ModuleContext.Provider>
   );
 };
 
-export const useModule = () => {
-  return useContext(ModuleContext)!;
+export const useModule = (): Context => {
+  const [path, setPath, modules] = useContext(ModuleContext)!;
+  return [path, setPath, modules];
 };

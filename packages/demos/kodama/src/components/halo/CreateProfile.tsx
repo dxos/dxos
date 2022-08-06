@@ -4,15 +4,19 @@
 
 import copypaste from 'copy-paste';
 import { Box, Text } from 'ink';
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 
-import { generateSeedPhrase } from '@dxos/client';
+import { generateSeedPhrase, Profile } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { TextInput } from '../../components';
 import { Panel } from '../util';
 
-export const CreateProfile = () => {
+export const CreateProfile:FC<{
+  onCreate: (profile: Profile) => void
+}> = ({
+  onCreate
+}) => {
   const client = useClient();
   const [username, setUsername] = useState<string>();
   const [focused, setFocused] = useState(false);
@@ -21,8 +25,9 @@ export const CreateProfile = () => {
     const username = text.trim();
     if (username.length) {
       const seedphrase = generateSeedPhrase();
-      await client.halo.createProfile({ seedphrase, username });
+      const profile = await client.halo.createProfile({ seedphrase, username });
       copypaste.copy(seedphrase);
+      onCreate(profile);
     }
   };
 
