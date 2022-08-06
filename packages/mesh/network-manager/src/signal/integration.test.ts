@@ -85,7 +85,7 @@ describe('Signal Integration Test', () => {
         remoteId: peer2,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({"foo": "bar"}) }
+          signal: { json: JSON.stringify({ 'foo': 'bar' }) }
         }
       };
       await peerNetworking1.messageRouter.signal(message);
@@ -102,7 +102,7 @@ describe('Signal Integration Test', () => {
         remoteId: peer1,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({"foo": "bar"}) }
+          signal: { json: JSON.stringify({ 'foo': 'bar' }) }
         }
       };
       await peerNetworking2.messageRouter.signal(message);

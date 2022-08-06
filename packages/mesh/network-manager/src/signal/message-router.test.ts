@@ -81,7 +81,7 @@ describe('MessageRouter', () => {
       remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({"asd": "asd"}) } }
+      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
     await router2.signal(msg);
 
@@ -289,7 +289,7 @@ describe('MessageRouter', () => {
           remoteId: PublicKey.random(),
           sessionId: PublicKey.random(),
           topic: PublicKey.random(),
-          data: { signal: { json: JSON.stringify({"asd": "asd"}) } }
+          data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
         });
       });
       // expect to receive 3 messages.
