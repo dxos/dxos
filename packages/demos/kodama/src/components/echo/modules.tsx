@@ -74,13 +74,15 @@ export const createEchoMenu = (): MenuItem | undefined => {
             },
             ...partyItems,
             {
-              id: 'create',
-              label: 'Create Party',
+              id: 'join',
+              label: 'Join Party',
               component: () => {
+                const [, { setPartyKey }] = useAppState();
                 const { focusPrevious } = useFocusManager();
                 return (
-                  <CreateParty
-                    onCreate={() => {
+                  <Join
+                    onJoin={partyKey => {
+                      setPartyKey(partyKey);
                       focusPrevious();
                     }}
                   />
@@ -88,11 +90,20 @@ export const createEchoMenu = (): MenuItem | undefined => {
               }
             },
             {
-              id: 'join',
-              label: 'Join Party',
-              component: () => (
-                <Join />
-              )
+              id: 'create',
+              label: 'Create Party',
+              component: () => {
+                const [, { setPartyKey }] = useAppState();
+                const { focusPrevious } = useFocusManager();
+                return (
+                  <CreateParty
+                    onCreate={partyKey => {
+                      setPartyKey(partyKey);
+                      focusPrevious();
+                    }}
+                  />
+                );
+              }
             }
           ]}
         />
