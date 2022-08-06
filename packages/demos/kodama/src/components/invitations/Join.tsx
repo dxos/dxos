@@ -53,6 +53,7 @@ export const Join: FC<{
       //  https://github.com/dxos/protocols/issues/1423
       await invitation!.authenticate(Buffer.from(secret));
       const party = await invitation!.getParty();
+      setInvitation(undefined);
       setStatus({ success: 'OK' });
       onJoin?.(party.key);
     } catch (err) {

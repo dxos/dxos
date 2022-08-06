@@ -72,6 +72,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                 <PartyView />
               )
             },
+            ...partyItems,
             {
               id: 'create',
               label: 'Create Party',
@@ -86,7 +87,6 @@ export const createEchoMenu = (): MenuItem | undefined => {
                 );
               }
             },
-            ...partyItems,
             {
               id: 'join',
               label: 'Join Party',

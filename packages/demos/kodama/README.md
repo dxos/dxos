@@ -5,8 +5,8 @@ The word kodama (こだま) is the Japanese word for echo.
 
 ## Demo
 
-https://user-images.githubusercontent.com/3523355/181782019-20aea084-8ee5-4e44-926a-e3f98bd6b052.mov
 
+https://user-images.githubusercontent.com/3523355/183262324-c33e147a-943c-40c3-9b7f-13c3ccb99f8d.mov
 ## Build
 
 ```bash
