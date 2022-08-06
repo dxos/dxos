@@ -8,9 +8,13 @@ import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useAppState, useModule } from '../../hooks';
 
 export type MenuItem = {
+  // Module ID must match parent item.
   id: string
+  // Display label.
   label: string
+  // Child component or module.
   component?: FC<{ parent: string }>
+  // Command to exec on ENTER.
   exec?: (item: MenuItem) => void
 }
 
@@ -63,52 +67,64 @@ export const Module: FC<{
   parent
 }) => {
   const [{ debug }] = useAppState();
-  const { isFocused } = useFocus({ id });
-  const { focusPrevious, focusNext } = useFocusManager();
-  const [selected, setSelected] = useState<string>();
-  const Component = useMemo(() => items.find(item => item.id === selected)?.component, [selected]);
-  const [module, setModule] = useModule();
+  const { focusNext } = useFocusManager();
+  const [activePath, setPath, modules] = useModule();
+  const [activeItem, setActiveItem] = useState<string>();
 
-  const path = [parent, id].filter(Boolean).join('.');
-  const showContent = module?.startsWith(path);
+  const ourPath = [parent, id].filter(Boolean).join('.');
+  const { isFocused } = useFocus({ id: ourPath });
+
+  const showContent = activePath?.startsWith(ourPath);
+  const Component = useMemo(() => items.find(item => item.id === activeItem)?.component, [activeItem]);
+
+  // Init.
+  useEffect(() => {
+    modules.add(ourPath);
+    if (!activeItem) {
+      setActiveItem(items[0]?.id);
+    }
+
+    return () => {
+      modules.delete(ourPath);
+    };
+  }, []);
 
   // Set global context on focus.
   useEffect(() => {
     if (isFocused) {
-      setModule(path);
+      setPath(ourPath);
     }
   }, [isFocused]);
 
-  // Init.
-  useEffect(() => {
-    if (!selected) {
-      setSelected(items[0]?.id);
-    }
-  }, []);
-
   // Navigation.
   useInput((input, key) => {
-    const i = items.findIndex(item => item.id === selected);
+    const i = items.findIndex(item => item.id === activeItem);
     if (key.return) {
-      const item = items.find(item => item.id === selected);
+      const item = items.find(item => item.id === activeItem);
       item?.exec?.(item);
     } if (key.upArrow) {
-      // TODO(burdon): Test path.
-      focusPrevious();
+      if (parent) {
+        setPath(parent);
+      }
     } if (key.downArrow) {
-      focusNext();
+      const childPath = [ourPath, activeItem].join('.');
+      if (modules.has(childPath)) {
+        setPath(childPath); // Child module.
+      } else {
+        focusNext();
+      }
     } if (key.leftArrow) {
-      setSelected(items[Math.max(0, i - 1)].id);
+      setActiveItem(items[Math.max(0, i - 1)].id);
     } else if (key.rightArrow) {
-      setSelected(items[Math.min(items.length - 1, i + 1)].id);
+      setActiveItem(items[Math.min(items.length - 1, i + 1)].id);
     }
   }, { isActive: isFocused });
 
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Box>
+      <Box flexGrow={1}>
         {debug && (
-          <Text dimColor color='blue'>[{path}] </Text>
+          <Text dimColor color='blue'>[{ourPath}] </Text>
         )}
 
         <Text dimColor={!isFocused}>{'> '}</Text>
@@ -116,13 +132,15 @@ export const Module: FC<{
         <Toolbar
           focused={isFocused}
           items={items}
-          selected={selected}
+          selected={activeItem}
         />
       </Box>
 
       {showContent && Component && (
         <Box marginTop={1}>
-          <Component parent={path} />
+          <Component
+            parent={ourPath}
+          />
         </Box>
       )}
     </Box>

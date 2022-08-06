@@ -18,42 +18,39 @@ export const PartyView = () => {
   const [{ partyKey }, { setPartyKey }] = useAppState();
   const [type, setType] = useState<string>();
   const party = useParty(partyKey);
-  if (!party) {
-    return null;
-  }
 
   return (
     <Box flexDirection='column' flexGrow={1}>
       <Box flexDirection='column' flexGrow={1}>
         <PartyList
-          partyKey={party.key}
+          partyKey={party?.key}
           onSelect={partyKey => {
             setPartyKey(partyKey);
-            // focus('item-list');
             focusNext();
           }}
         />
       </Box>
 
-      <Box flexDirection='column' flexGrow={1}>
-        <ItemList
-          party={party}
-          type={type}
-          onCancel={() => {
-            focus('party-list');
-            // focusPrevious();
-          }}
-        />
+      {party && (
+        <Box flexDirection='column' flexGrow={1}>
+          <ItemList
+            party={party}
+            type={type}
+            onCancel={() => {
+              focus('party-list');
+            }}
+          />
 
-        <ItemTypeList
-          party={party}
-          onChange={setType}
-        />
+          <ItemTypeList
+            party={party}
+            onChange={setType}
+          />
 
-        <Box padding={1}>
-          <Text>ENTER to select; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
+          <Box padding={1}>
+            <Text>ENTER to select party; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   );
 };
