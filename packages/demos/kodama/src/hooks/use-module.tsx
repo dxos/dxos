@@ -5,25 +5,27 @@
 import { useFocus } from 'ink';
 import React, { FC, ReactNode, createContext, useContext, useState, useEffect } from 'react';
 
-const ModuleContext = createContext<[string | undefined, (value: string) => void] | undefined>(undefined);
+type ModuleState = string
+
+const ModuleContext = createContext<[ModuleState, (state: ModuleState) => void] | undefined>(undefined);
 
 export const ModuleProvider: FC<{
   children: ReactNode
-  value: string
+  root: string
 }> = ({
   children,
-  value: initialValue
+  root
 }) => {
   const { focus } = useFocus({ isActive: false });
-  const [value, setValue] = useState<string | undefined>();
+  const [path, setPath] = useState<ModuleState>();
   useEffect(() => {
-    if (!value) {
-      focus(initialValue);
+    if (!path) {
+      focus(root);
     }
-  }, [value]);
+  }, [path]);
 
   return (
-    <ModuleContext.Provider value={[value, setValue]}>
+    <ModuleContext.Provider value={[root, setPath]}>
       {children}
     </ModuleContext.Provider>
   );

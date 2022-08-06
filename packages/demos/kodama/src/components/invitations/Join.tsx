@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
@@ -25,14 +24,15 @@ export const Join: FC<{
 
   const handleDecode = () => {
     try {
-      // Detect if JSON.
       // TODO(burdon): Detect URL.
       // TODO(burdon): Define JSON type.
+      // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
       const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
       try {
+        // Decode regular token.
         const stripped = descriptor!.replace(/[\W]/g, '');
         const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
         setInvitation(invitation);
@@ -57,29 +57,25 @@ export const Join: FC<{
 
   return (
     <Panel highlight={focused}>
-      {!invitation && !status?.processing && (
+       {/* {!invitation && !status?.processing && ( */}
         <TextInput
           placeholder='Enter invitation code.'
           value={descriptor ?? ''}
           onChange={setDescriptor}
           onSubmit={handleDecode}
-          onFocus={setFocused}
+          // onFocus={setFocused}
         />
-      )}
+       {/* )} */}
 
-      {invitation && !status?.processing && (
+        {invitation && !status?.processing && (
         <TextInput
           placeholder='Enter verification code.'
           value={secret ?? ''}
           onChange={setSecret}
           onSubmit={() => handleSubmit(invitation!, secret!)}
-          onFocus={setFocused}
+          // onFocus={setFocused}
         />
-      )}
-
-      <Box marginTop={1}>
-        <Text>Authenticate your device.</Text>
-      </Box>
+        )}
 
       <Status
         status={status}

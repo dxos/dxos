@@ -47,7 +47,7 @@ export const App = () => {
   ].filter(Boolean) as MenuItem[], [profile]);
 
   return (
-    <ModuleProvider value='root'>
+    <ModuleProvider root='root'>
       <Module
         id='root'
         items={items}
