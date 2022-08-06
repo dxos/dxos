@@ -15,6 +15,14 @@ rushx build
 
 > - TODO: Configure to use `esbuild` directly.
 
+## Build
+
+```bash
+rushx build
+```
+
+> - TODO: Configure to use `esbuild` directly.
+
 ## Usage
 
 To start the `kodama` CLI in interactive mode:
