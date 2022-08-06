@@ -35,6 +35,24 @@ message Scalars {
   bytes bytesField = 15;
 }
 
+message OptionalScalars {
+  optional double doubleField = 1;
+  optional float floatField = 2;
+  optional int32 int32Field = 3;
+  optional int64 int64Field = 4;
+  optional uint32 uint32Field = 5;
+  optional uint64 uint64Field = 6;
+  optional sint32 sint32Field = 7;
+  optional sint64 sint64Field = 8;
+  optional fixed32 fixed32Field = 9;
+  optional fixed64 fixed64Field = 10;
+  optional sfixed32 sfixed32Field = 11;
+  optional sfixed64 sfixed64Field = 12;
+  optional bool boolField = 13;
+  optional string stringField = 14;
+  optional bytes bytesField = 15;
+}
+
 message ComplexFields {
   repeated Key repeatedField = 16;
   required Key requiredField = 17;
@@ -64,10 +82,10 @@ message WithTimestamp {
 }
 
 message Outer {
-  ComplexFields.Inner inner = 1;
+  Inner inner = 1;
   
   message Inner {
-    ComplexFields.InnerEnum inner = 1;
+    int32 num = 1;
   }
 }
 

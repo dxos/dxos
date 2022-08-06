@@ -10,15 +10,18 @@ import { useSelection } from '@dxos/react-client';
 
 import { List } from '../util';
 
-const LABEL_PROPERTY = 'name'; // TODO(burdon): To make compatable with kitchen-sink/client-test.
+// TODO(burdon): To make compatable with kitchen-sink/client-test.
+const LABEL_PROPERTY = 'name';
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
   party: Party
   type?: string
+  onCancel?: () => void
 }> = ({
   party,
-  type = TYPE_ITEM
+  type = TYPE_ITEM,
+  onCancel
 }) => {
   // TODO(burdon): Select should not return party item by default.
   // TODO(burdon): Clean-up API (e.g., provide default value as empty list).
@@ -46,7 +49,9 @@ export const ItemList: FC<{
   return (
     <Box flexDirection='column' flexGrow={1}>
       <List
+        id={`item-list-${party.key.toHex()}`}
         showCount
+        onCancel={onCancel}
         onUpdate={handleUpdate}
         items={items.map(item => ({
           id: item.id,

@@ -12,6 +12,9 @@ const {
 
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
+  entryPoints: [
+    'src/main.tsx'
+  ],
   plugins: [
     FixMemdownPlugin(),
     NodeGlobalsPolyfillPlugin(),
