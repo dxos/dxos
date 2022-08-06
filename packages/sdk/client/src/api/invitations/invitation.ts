@@ -19,6 +19,7 @@ export class Invitation<T = void> {
     return this._descriptor;
   }
 
+  // TODO(burdon): Change to async API that blocks here.
   authenticate (secret: Uint8Array) {
     this._onAuthenticate(secret);
   }

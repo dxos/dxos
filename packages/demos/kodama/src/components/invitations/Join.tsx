@@ -28,11 +28,10 @@ export const Join: FC<{
 
   const handleDecode = () => {
     try {
-      // TODO(burdon): Detect URL.
-      // TODO(burdon): Define JSON type.
-      // TODO(burdon): Errors not caught
+      // TODO(burdon): Detect and parse URL.
       // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
+      // TODO(burdon): Errors not caught
       const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
@@ -51,7 +50,8 @@ export const Join: FC<{
     try {
       setStatus({ processing: 'Authenticating...' });
       // TODO(burdon): Exceptions not propagated to here (e.g., IDENTITY_NOT_INITIALIZED, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT)
-      invitation!.authenticate(Buffer.from(secret));
+      //  https://github.com/dxos/protocols/issues/1423
+      await invitation!.authenticate(Buffer.from(secret));
       const party = await invitation!.getParty();
       setStatus({ success: 'OK' });
       onJoin?.(party.key);
