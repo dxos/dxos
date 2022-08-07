@@ -15,6 +15,7 @@ import { ConfigObject } from '@dxos/config';
 import { name, version } from '../package.json';
 import { start } from './start';
 import { clear, versionCheck } from './util';
+import { showVersion } from './version';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
@@ -24,8 +25,6 @@ import { clear, versionCheck } from './util';
  * Command line parser.
  */
 const main = async () => {
-  clear();
-
   yargs
     .scriptName('kodama')
     .option('config', {
@@ -41,20 +40,34 @@ const main = async () => {
       description: 'Create initial profile',
       type: 'string'
     })
+    .option('skip-version-check', {
+      description: 'Don\'t check for new NPM version',
+      type: 'boolean',
+      default: false
+    })
     .command({
       command: '*',
       handler: async ({
         config: configFile,
         username,
-        debug
+        debug,
+        skipVersionCheck
       }: {
         config: string,
         username: string
-        debug: boolean
+        debug: boolean,
+        skipVersionCheck: boolean
       }) => {
-        const newVersion = await versionCheck(name, version);
+        if (!skipVersionCheck) {
+          console.log('Checking version...');
+          const newVersion = await versionCheck(name, version);
+          if (newVersion) {
+            showVersion(name, newVersion);
+            process.exit();
+          }
+        }
 
-        // TODO(burdon): Persistence option.
+        // Create client.
         const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
         const client = new Client(config);
         await client.initialize();
@@ -63,14 +76,8 @@ const main = async () => {
           await client.halo.createProfile({ username });
         }
 
-        await start(client, {
-          debug,
-          update: newVersion ? {
-            name,
-            version: newVersion
-          } : undefined
-        });
-
+        clear();
+        await start(client, { debug });
         process.exit();
       }
     })

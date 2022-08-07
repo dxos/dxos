@@ -6,3 +6,4 @@ export * from './components';
 export * from './hooks';
 export * from './start';
 export * from './util';
+export * from './version';
