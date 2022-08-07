@@ -91,6 +91,10 @@ export const Module: FC<{
 
   // Set global context on focus.
   useEffect(() => {
+    if (!items.find(item => item.id === activeItem)) {
+      setActiveItem(items[0]?.id);
+    }
+
     if (isFocused) {
       setPath(ourPath);
     }
