@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocus, useInput } from 'ink';
+import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
+import { useAppState } from '../../hooks';
 import { Panel } from './Panel';
 
 export type ListItem = {
@@ -84,35 +85,46 @@ const ListItem: FC<{
 };
 
 export const List: FC<{
+  id: string // Identifies source of data.
+  focusId?: string // If dynamic then the focus position will change each time.
   items: ListItem[]
   pageSize?: number
   title?: string
-  focusId?: string
   showCount?: boolean
   onUpdate?: (item: { id?: string, text: string }) => void
   onSelect?: (id: string) => void
   onCancel?: () => void
 }> = ({
+  id,
+  focusId,
   items = [],
   pageSize = 10,
   title,
-  focusId,
   showCount,
   onUpdate,
   onSelect,
   onCancel
 }) => {
-  const [{ cursor, startIndex }, setPosition] = useState({ cursor: -1, startIndex: 0 });
+  const [{ debug }] = useAppState();
   const { isFocused } = useFocus({ id: focusId });
+  const { focusPrevious, focusNext } = useFocusManager();
+  const [{ cursor, startIndex }, setPosition] = useState({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+
+  // Reset if data changed.
+  useEffect(() => {
+    setPosition({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+  }, [id]);
+
+  // Paging.
+  const visibleItems = items.slice(startIndex, startIndex + pageSize);
+  const showInput = onUpdate && isFocused;
 
   useInput((input, key) => {
-    if (!isFocused) {
-      return;
-    }
-
     // Escape.
     if (key.escape) {
-      onCancel?.();
+      setTimeout(() => { // Hack to avoid React state update on TextInput.
+        onCancel?.();
+      });
     }
 
     // Select.
@@ -125,7 +137,9 @@ export const List: FC<{
 
     // Up.
     if (key.upArrow) {
-      if (cursor !== 0) {
+      if (cursor === 0) {
+        focusPrevious();
+      } else {
         setPosition(({ cursor, startIndex }) => {
           const i = (cursor === -1) ? items.length - 1 : cursor - 1;
           if (i < startIndex) {
@@ -139,6 +153,11 @@ export const List: FC<{
 
     // Down.
     if (key.downArrow) {
+      if (cursor === -1 || (!showInput && cursor === items.length - 1)) {
+        focusNext();
+        return;
+      }
+
       if (cursor !== -1) {
         setPosition(({ cursor, startIndex }) => {
           const i = (cursor === items.length - 1) ? -1 : cursor + 1;
@@ -148,18 +167,15 @@ export const List: FC<{
             startIndex = i + 1 - pageSize;
           }
 
+          // TODO(burdon): Don't set -1 if created item isn't selected.
           return { cursor: i, startIndex };
         });
       }
     }
-  });
-
-  // Paging.
-  const visibleItems = items.slice(startIndex, startIndex + pageSize);
-  const showInput = onUpdate && isFocused;
+  }, { isActive: isFocused });
 
   return (
-    <Panel focused={isFocused}>
+    <Panel highlight={isFocused}>
       <Box flexDirection='column'>
         {title && (
           <Box marginBottom={1}>
@@ -195,6 +211,9 @@ export const List: FC<{
         {showCount && (
           <Box marginTop={showInput || visibleItems.length ? 1 : 0}>
             <Text color='gray'>{items.length} items</Text>
+            {debug && (
+              <Text color='gray'> {cursor}</Text>
+            )}
           </Box>
         )}
       </Box>
