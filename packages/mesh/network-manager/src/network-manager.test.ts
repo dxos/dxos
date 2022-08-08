@@ -6,7 +6,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests } from './network-manager.blueprint-test';
 
-export const PORT = 12098 
+const PORT = 12098;
 
 describe('Network manager', () => {
   describe('WebRTC transport', () => {

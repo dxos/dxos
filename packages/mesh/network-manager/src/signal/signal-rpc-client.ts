@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import WebSocket from 'ws';
+import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
@@ -52,7 +52,7 @@ export class SignalRPCClient {
       }
     };
 
-    this._socket.onerror = e => {
+    this._socket.onerror = (e: WebSocket.ErrorEvent) => {
       log(`Signal socket error ${this._url} ${e.message}`);
       this.error.emit(e.error ?? new Error(e.message));
     };
@@ -64,12 +64,16 @@ export class SignalRPCClient {
       {
         noHandshake: true,
         port: {
-          send: msg => {  
+          send: msg => {
             this._socket.send(msg);
           },
           subscribe: cb => {
-            this._socket.onmessage = msg => {
-              cb(msg.data as any);
+            this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
+              if (msg.data instanceof Blob) {
+                cb(Buffer.from(await msg.data.arrayBuffer()));
+              } else {
+                cb(msg.data as any);
+              }
             };
           }
         }
