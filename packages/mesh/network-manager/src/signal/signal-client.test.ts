@@ -23,9 +23,9 @@ describe('SignalClient', () => {
 
   let broker2: TestBroker;
 
-  before(() => {
-    broker1 = createTestBroker();
-    // broker2 = await createTestBroker(signalApiPort2);
+  before(async () => {
+    broker1 = await createTestBroker();
+    // broker2 = await await createTestBroker(signalApiPort2);
   });
 
   beforeEach(() => {

@@ -7,6 +7,8 @@ import { debug } from 'debug';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
 import * as process from 'process';
+import fetch from 'node-fetch';
+import { sleep } from '@dxos/async';
 
 import { randomInt } from '@dxos/util';
 
@@ -56,8 +58,20 @@ export class TestBroker {
     server.on('close', (code) => {
       log(`TestServer exited with code ${code}`);
     });
-
+    
     return server;
+  }
+
+  public async waitUntilStarted (): Promise<void> {
+    let online = false;
+    while (!online) {
+      try {
+        await fetch(this.url());
+        online = true;
+      } catch (err) {
+        await sleep(20);
+      }
+    }
   }
 
   public stop (): void {
@@ -74,7 +88,8 @@ export class TestBroker {
  *
  * @param port Port to start the signal server on, random by default.
  */
-export const createTestBroker = (port?: number): TestBroker => {
+export const createTestBroker = async (port?: number): Promise<TestBroker> => {
   const server = new TestBroker(port ?? randomInt(10000, 50000));
+  await server.waitUntilStarted();
   return server;
 };

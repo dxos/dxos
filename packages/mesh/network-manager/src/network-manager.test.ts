@@ -12,8 +12,8 @@ describe('Network manager', () => {
   describe('WebRTC transport', () => {
     let broker: TestBroker;
 
-    before(() => {
-      broker = createTestBroker(PORT);
+    before(async () => {
+      broker = await createTestBroker(PORT);
     });
 
     after(() => {

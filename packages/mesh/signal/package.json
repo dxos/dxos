@@ -24,8 +24,10 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "debug": "^4.3.3",
-    "pkg-up": "^3.1.0"
+    "pkg-up": "^3.1.0",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
@@ -34,6 +36,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
+    "@types/node-fetch": "^2.5.10",
     "debug": "^4.3.3",
     "eslint": "^7.12.1",
     "typescript": "^4.7.2",

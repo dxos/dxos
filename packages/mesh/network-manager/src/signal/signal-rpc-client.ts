@@ -6,12 +6,13 @@ import debug from 'debug';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
+import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
-import { Signal } from '../proto/gen/dxos/mesh/signal';
+import { Message, Signal } from '../proto/gen/dxos/mesh/signal';
+import { stream } from 'fast-check';
 interface Services {
   Signal: Signal
 }
@@ -84,17 +85,21 @@ export class SignalRPCClient {
   async join (topic: PublicKey, peerId: PublicKey) {
     log('join', topic, peerId);
     await this._connectTrigger.wait();
-    return this._rpc.rpc.Signal.join({
+    const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array()
     });
+    await swarmStream.waitUntilReady();
+    return swarmStream;
   }
 
-  async receiveMessages (peerId: PublicKey) {
+  async receiveMessages (peerId: PublicKey): Promise<Stream<Message>> {
     await this._connectTrigger.wait();
-    return this._rpc.rpc.Signal.receiveMessages({
+    const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array()
     });
+    await messageStream.waitUntilReady();
+    return messageStream;
   }
 
   async sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {

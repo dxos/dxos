@@ -15,7 +15,7 @@ describe('SignalRPCClient', () => {
   let broker: TestBroker;
 
   before(async () => {
-    broker = createTestBroker();
+    broker = await createTestBroker();
   });
 
   after(() => {

@@ -22,8 +22,8 @@ describe('MessageRouter', () => {
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
 
-  before(() => {
-    broker1 = createTestBroker();
+  before(async () => {
+    broker1 = await createTestBroker();
   });
 
   beforeEach(() => {
