@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
+
+import { useAsyncEffect } from '@dxos/react-async';
 
 import { Client } from '../packlets/proxy';
 
@@ -11,11 +13,17 @@ export default {
 };
 
 export const Primary = () => {
-  const client = useMemo(() => new Client(), []);
+  const [client, setClient] = useState<Client>();
 
-  useEffect(() => {
-    void client.initialize();
-  }, [client]);
+  useAsyncEffect(async () => {
+    const client = new Client();
+    await client.initialize();
+    setClient(client);
+  }, []);
+
+  if (!client) {
+    return null;
+  }
 
   return (
     <pre>

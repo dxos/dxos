@@ -9,7 +9,7 @@ const { ConfigPlugin } = require('@dxos/config/esbuild-plugin');
 module.exports = {
   entryPoints: [
     'src/singleton/main.ts',
-    'src/singleton/service-worker.ts'
+    'src/singleton/shared-worker.ts'
   ],
   outdir: 'out',
   overrides: {

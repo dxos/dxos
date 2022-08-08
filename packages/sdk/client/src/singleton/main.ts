@@ -25,7 +25,6 @@ const windowPort = (): RpcPort => ({
         return;
       }
 
-      console.log('Received message from app:', message);
       callback(new Uint8Array(message.data));
     };
 
@@ -34,8 +33,8 @@ const windowPort = (): RpcPort => ({
   }
 });
 
-const serviceWorkerPort = (sourceId: string): RpcPort => ({
-  send: async message => navigator.serviceWorker.controller!.postMessage({
+const serviceWorkerPort = (sendPort: MessagePort, sourceId: string): RpcPort => ({
+  send: async message => sendPort.postMessage({
     type: SingletonMessage.CLIENT_MESSAGE,
     sourceId,
     data: Array.from(message)
@@ -50,32 +49,26 @@ let client: Client;
 const activeProxies = new Map<string, (msg: Uint8Array) => void>();
 
 if ('serviceWorker' in navigator) {
-  console.log('Initializing singleton...');
   void (async () => {
     // TODO(wittjosiah): Ensure two instances starting up simultaneously results in a single host instance.
-    console.log(1);
-    await navigator.serviceWorker.register('./service-worker.js');
-    console.log(2);
-    await navigator.serviceWorker.ready;
-    console.log(3);
+    const worker = new SharedWorker('./shared-worker.js');
+    worker.port.start();
 
-    const messageChannel = new MessageChannel();
-    console.log(4, navigator.serviceWorker.controller);
-    navigator.serviceWorker.controller!.postMessage({ type: SingletonMessage.INITIALIZE_CHANNEL }, [
-      messageChannel.port2
-    ]);
-    console.log(5);
-
-    messageChannel.port1.onmessage = async event => {
+    worker.port.addEventListener('message', async event => {
       const message = event.data;
-      console.log('main', { message });
       switch (message?.type) {
         case SingletonMessage.SETUP_CLIENT: {
           const config = new Config(await Dynamics(), Defaults());
-          client = new Client(config, { rpcPort: windowPort() });
+          client = new Client(config);
           await client.initialize();
-          navigator.serviceWorker.controller!.postMessage({ type: SingletonMessage.CLIENT_READY });
+          const server = createBundledRpcServer({
+            services: clientServiceBundle,
+            handlers: client.services,
+            port: windowPort()
+          });
+          worker.port.postMessage({ type: SingletonMessage.CLIENT_READY });
           window.parent.postMessage({ type: SingletonMessage.CLIENT_READY }, '*');
+          await server.open();
           break;
         }
 
@@ -83,9 +76,9 @@ if ('serviceWorker' in navigator) {
           const server = createBundledRpcServer({
             services: clientServiceBundle,
             handlers: client.services,
-            port: serviceWorkerPort(message.sourceId)
+            port: serviceWorkerPort(worker.port, message.sourceId)
           });
-          navigator.serviceWorker.controller!.postMessage({
+          worker.port.postMessage({
             type: SingletonMessage.PORT_READY,
             sourceId: message.sourceId
           });
@@ -105,8 +98,7 @@ if ('serviceWorker' in navigator) {
               return;
             }
 
-            console.log('Received message from app:', message);
-            navigator.serviceWorker.controller!.postMessage(message);
+            worker.port.postMessage(message);
           });
           window.parent.postMessage({ type: SingletonMessage.CLIENT_READY }, '*');
           break;
@@ -122,7 +114,7 @@ if ('serviceWorker' in navigator) {
           break;
         }
       }
-    };
+    });
   })();
 } else {
   console.error('DXOS Client singleton requires access to service workers');

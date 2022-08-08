@@ -2327,6 +2327,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
@@ -2340,6 +2341,7 @@ importers:
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/readable-stream': ^2.3.9
+      '@types/sharedworker': ~0.0.79
       '@types/uuid': ~8.3.3
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
@@ -2389,6 +2391,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/testutils': link:../../common/testutils
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
@@ -2400,6 +2403,7 @@ importers:
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/readable-stream': 2.3.9
+      '@types/sharedworker': 0.0.79
       '@types/uuid': 8.3.3
       eslint: 7.32.0
       expect: 27.0.6
@@ -9692,6 +9696,10 @@ packages:
 
   /@types/scheduler/0.16.2:
     resolution: {integrity: sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==}
+
+  /@types/sharedworker/0.0.79:
+    resolution: {integrity: sha512-61wwh1PLXU23hWN/CUZKnoGMU9DSatmRgBDfk5B+HG6zzX4cdnyW6F6w/SS+1nSKa1NquyRqudywS+WLI284vA==}
+    dev: true
 
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
