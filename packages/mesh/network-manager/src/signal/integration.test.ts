@@ -11,7 +11,6 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
-import { sleep } from '@dxos/async';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;

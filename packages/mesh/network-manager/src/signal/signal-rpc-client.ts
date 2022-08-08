@@ -12,7 +12,6 @@ import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
 import { Message, Signal } from '../proto/gen/dxos/mesh/signal';
-import { stream } from 'fast-check';
 interface Services {
   Signal: Signal
 }
