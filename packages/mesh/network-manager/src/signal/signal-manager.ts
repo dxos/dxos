@@ -40,6 +40,7 @@ export interface SignalMessaging {
 }
 
 export interface SignalManager extends SignalConnection {
+  statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
   onSignal: Event<SignalMessage>

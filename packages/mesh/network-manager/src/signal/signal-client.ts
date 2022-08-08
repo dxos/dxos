@@ -36,6 +36,15 @@ enum State {
   CLOSED = 'CLOSED'
 }
 
+export type Status = {
+  host: string
+  state: State
+  error?: string
+  reconnectIn: number
+  connectionStarted: number
+  lastStateChange: number
+}
+
 /**
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
@@ -64,8 +73,8 @@ export class SignalClient {
   private _client!: SignalRPCClient;
 
   private _cleanupSubscriptions = new SubscriptionGroup();
+  readonly statusChanged = new Event<Status>();
 
-  readonly statusChanged = new Event<SignalApi.Status>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
 

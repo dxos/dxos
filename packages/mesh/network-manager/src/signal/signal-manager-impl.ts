@@ -26,6 +26,7 @@ export class SignalManagerImpl implements SignalManager {
 
   private _reconcileTimeoutId?: NodeJS.Timeout;
 
+  readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onSignal = new Event<SignalMessage>();
@@ -42,6 +43,7 @@ export class SignalManagerImpl implements SignalManager {
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on(data => this.swarmEvent.emit(data));
+      server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host, server);
       server.commandTrace.on(trace => this.commandTrace.emit(trace));
