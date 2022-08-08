@@ -7,9 +7,10 @@ syntax = "proto3";
 package dxos.credentials.identity;
 
 import "google/protobuf/any.proto";
-import "greet.proto";
-import "keys.proto";
-import "signed.proto";
+
+import "./greet.proto";
+import "./keys.proto";
+import "./signed.proto";
 
 // Additional, descriptive information about an Identity. Must be signed by the Identity's key.
 message IdentityInfo {
