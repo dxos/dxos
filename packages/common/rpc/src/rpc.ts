@@ -437,7 +437,7 @@ const createTimeoutPromise = (timeout: number, error: Error) => {
     );
 
     // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
-    if ('unref' in timeoutId) {
+    if (typeof timeoutId === "object" && 'unref' in timeoutId) {
       timeoutId.unref();
     }
   });
