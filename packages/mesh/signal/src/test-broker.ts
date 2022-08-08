@@ -4,12 +4,12 @@
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { debug } from 'debug';
+import fetch from 'node-fetch';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
 import * as process from 'process';
-import fetch from 'node-fetch';
-import { sleep } from '@dxos/async';
 
+import { sleep } from '@dxos/async';
 import { randomInt } from '@dxos/util';
 
 const log = debug('dxos:signal:test-broker');
@@ -58,7 +58,7 @@ export class TestBroker {
     server.on('close', (code) => {
       log(`TestServer exited with code ${code}`);
     });
-    
+
     return server;
   }
 
