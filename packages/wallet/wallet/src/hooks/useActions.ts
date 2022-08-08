@@ -4,27 +4,16 @@
 
 import { createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
 
-import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
-import { MaybePromise } from '@dxos/util';
-
-import { ImportOption } from '../components';
 
 // TODO(wittjosiah): Just use strings?
 export enum ActionType {
   RESET,
   HALO_SHARING,
-  PARTY_SETTINGS,
   PARTY_SHARING,
   PARTY_JOIN,
   NOTIFICATION,
   DANGEROUSLY_RESET_STORAGE,
-}
-
-export type PartySettingsParams = {
-  party?: Party
-  importOptions?: ImportOption[]
-  onCreate?: (party: Party) => MaybePromise<void>
 }
 
 export type PartySharingParams = {
@@ -44,7 +33,6 @@ export type ResetParams = {
 export type AppAction =
   | { type: ActionType.RESET }
   | { type: ActionType.HALO_SHARING }
-  | { type: ActionType.PARTY_SETTINGS, params?: PartySettingsParams }
   | { type: ActionType.PARTY_SHARING, params: PartySharingParams }
   | { type: ActionType.PARTY_JOIN }
   | { type: ActionType.NOTIFICATION, params: NotificationParams }
