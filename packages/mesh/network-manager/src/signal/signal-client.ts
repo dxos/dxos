@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
@@ -199,13 +199,21 @@ export class SignalClient {
   }
 
   async join (topic: PublicKey, peerId: PublicKey): Promise<void> {
-    await this._subscribeSwarmEvents(topic, peerId);
+    log(`Join: topic=${topic} peerId=${peerId}`)
     await this._subscribeMessages(peerId);
+    console.log('JOINED MESSAGES')
+    await this._subscribeSwarmEvents(topic, peerId);
+    console.log('JOINED EVENTS')
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
+    log(`Leave: topic=${topic} peerId=${peerId}`)
+
     this._swarmStreams.get(topic)?.close();
     this._swarmStreams.delete(topic);
+    
+    this._messageStreams.get(topic)?.close();
+    this._messageStreams.delete(topic);
   }
 
   async signal (message: SignalMessage): Promise<void> {
@@ -216,7 +224,9 @@ export class SignalClient {
     return this._client.sendMessage(message.id, message.remoteId, payload);
   }
 
+  @synchronized
   private async _subscribeSwarmEvents (topic: PublicKey, peerId: PublicKey): Promise<void> {
+    assert(!this._swarmStreams.has(topic));
     const swarmStream = await this._client.join(topic, peerId);
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
@@ -225,9 +235,7 @@ export class SignalClient {
     });
 
     // Saving swarm stream.
-    if (!this._swarmStreams.has(topic)) {
-      this._swarmStreams.set(topic, swarmStream);
-    }
+    this._swarmStreams.set(topic, swarmStream);
   }
 
   private async _subscribeMessages (peerId: PublicKey) {

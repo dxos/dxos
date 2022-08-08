@@ -89,8 +89,8 @@ export class Swarm {
   onSwarmEvent (swarmEvent: SwarmEvent) {
     log(`Swarm event ${JSON.stringify(swarmEvent)}`);
     if (swarmEvent.peerAvailable) {
-      log(`New peer for ${this._topic} ${swarmEvent.peerAvailable.peer}`);
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
+      log(`New peer for ${this._topic} ${peerId}`);
       if (!peerId.equals(this._ownPeerId)) {
         this._discoveredPeers.add(peerId);
       }
@@ -105,8 +105,16 @@ export class Swarm {
     // Id of the peer offering us the connection.
     assert(message.id);
     const remoteId = message.id;
-    assert(message.remoteId?.equals(this._ownPeerId));
-    assert(message.topic?.equals(this._topic));
+    // console.log(`Offer ${JSON.stringify(message)}`);
+    // console.log(`Own peer id ${this._ownPeerId}`);
+    if(!message.remoteId?.equals(this._ownPeerId)) {
+      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`)
+      return { accept: false }
+    }
+    if(!message.topic?.equals(this._topic)) {
+      log(`Rejecting offer with incorrect topic: ${message.topic}`)
+      return { accept: false }
+    }
 
     // Check if we are already trying to connect to that peer.
     if (this._connections.has(remoteId)) {
@@ -198,6 +206,7 @@ export class Swarm {
 
     const sessionId = PublicKey.random();
 
+    log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
     const connection = this._createConnection(true, remoteId, sessionId);
     this._signalMessaging.offer({
       id: this._ownPeerId,
@@ -233,7 +242,7 @@ export class Swarm {
   }
 
   private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
-    log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
+    log(`Create connection topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected.');
 
     const connection = new Connection(

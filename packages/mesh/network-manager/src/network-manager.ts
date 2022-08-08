@@ -96,6 +96,7 @@ export class NetworkManager {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
+    // console.log('NetworkManager.joinProtocolSwarm', options);
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
     assert(topology);
