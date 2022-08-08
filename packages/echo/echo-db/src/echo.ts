@@ -25,7 +25,7 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DataServiceRouter } from './packlets/database';
 import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
-import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
+import { STORAGE_VERSION, MetadataStore, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
 
 const log = debug('dxos:echo');

@@ -26,14 +26,14 @@ export interface ModelConstructionOptions {
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined,
-  parentId?: ItemID,
+  itemType: ItemType | undefined
+  parentId?: ItemID
 }
 
 export interface LinkConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined,
-  source: ItemID;
-  target: ItemID;
+  itemType: ItemType | undefined
+  source: ItemID
+  target: ItemID
 }
 
 /**

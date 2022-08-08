@@ -25,9 +25,9 @@ export const CONTACT_DEBOUNCE_INTERVAL = 500;
 const log = debug('dxos:echo-db:party-manager');
 
 export interface OpenProgress {
-  haloOpened: boolean;
-  partiesOpened?: number;
-  totalParties?: number;
+  haloOpened: boolean
+  partiesOpened?: number
+  totalParties?: number
 }
 
 /**
@@ -41,10 +41,6 @@ export class PartyManager {
 
   // Map of parties by party key.
   private readonly _parties = new ComplexMap<PublicKey, DataParty>(key => key.toHex());
-
-  // Unsubscribe handlers.
-  // TODO(burdon): Never used.
-  private readonly _onCloseHandlers: (() => void)[] = [];
 
   private _open = false;
 
@@ -128,9 +124,6 @@ export class PartyManager {
       return;
     }
     this._open = false;
-
-    // Clean-up.
-    this._onCloseHandlers.forEach(callback => callback());
 
     // Close parties.
     for (const party of this._parties.values()) {
