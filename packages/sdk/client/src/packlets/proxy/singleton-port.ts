@@ -9,7 +9,32 @@ import { isNode } from '@dxos/util';
 
 const log = debug('dxos:client:singleton-port');
 
-export const createSingletonPort = (singletonSource: string): RpcPort => {
+// TODO(wittjosiah): Protobuf for boundary?
+export enum SingletonMessage {
+  INITIALIZE_CHANNEL = 'INITIALIZE_CHANNEL',
+  CHANNEL_READY = 'CHANNEL_READY',
+  SETUP_CLIENT = 'SETUP_CLIENT',
+  CLIENT_READY = 'CLIENT_READY',
+  SETUP_PORT = 'SETUP_PORT',
+  PORT_READY = 'PORT_READY',
+  CLIENT_MESSAGE = 'CLIENT_MESSAGE',
+  APP_MESSAGE = 'APP_MESSAGE'
+}
+
+const waitForClient = () => {
+  return new Promise<void>(resolve => {
+    const messageHandler = (event: MessageEvent<any>) => {
+      if (event.data?.type === SingletonMessage.CLIENT_READY) {
+        window.removeEventListener('message', messageHandler);
+        resolve();
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+  });
+};
+
+export const createSingletonPort = async (singletonSource: string): Promise<RpcPort> => {
   if (isNode()) {
     throw new Error('Connecting to singleton client is not available in Node environment.');
   }
@@ -20,10 +45,12 @@ export const createSingletonPort = (singletonSource: string): RpcPort => {
   singleton.setAttribute('style', 'display: none;');
   document.body.appendChild(singleton);
 
+  await waitForClient();
+
   return {
     send: async message => singleton.contentWindow?.postMessage({
       data: Array.from(message),
-      source: 'app'
+      type: SingletonMessage.APP_MESSAGE
     }, '*'),
     subscribe: callback => {
       const handler = (event: MessageEvent<any>) => {
@@ -31,7 +58,7 @@ export const createSingletonPort = (singletonSource: string): RpcPort => {
         if (
           typeof message !== 'object' ||
             message === null ||
-            message.source !== 'client'
+            message.type !== SingletonMessage.CLIENT_MESSAGE
         ) {
           return;
         }

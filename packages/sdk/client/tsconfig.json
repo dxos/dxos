@@ -3,7 +3,8 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "ESNext"
+      "ESNext",
+      "WebWorker"
     ],
     "outDir": "dist",
     "types": [
