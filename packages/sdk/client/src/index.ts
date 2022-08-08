@@ -44,6 +44,7 @@ export {
   proto,
   KeyRecord,
   KeyType,
+  Profile,
   SignRequest,
   SignResponse
 } from './packlets/proto';
