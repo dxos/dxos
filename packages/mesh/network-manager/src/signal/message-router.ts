@@ -103,7 +103,11 @@ export class MessageRouter implements SignalMessaging {
     // Setting retry interval if signal was not acknowledged.
     const cancelRetry = exponentialBackoffInterval(async () => {
       log(`retrying message: ${JSON.stringify(message)}`);
-      await this._sendMessage(message);
+      try {
+        await this._sendMessage(message);
+      } catch (error) {
+        log(`ERROR failed to send message: ${error}`);
+      }
     }, this._retryDelay);
 
     const timeout = setTimeout(() => {

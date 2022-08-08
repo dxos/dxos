@@ -11,6 +11,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
+import { afterTest } from '@dxos/testutils';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;
@@ -33,6 +34,7 @@ describe('Signal Integration Test', () => {
       onSignal: signalMock,
       onOffer: async () => ({ accept: true })
     });
+    afterTest(() => messageRouter.destroy());
 
     return {
       signalManager,

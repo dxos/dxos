@@ -14,6 +14,7 @@ import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
+import assert from 'assert';
 
 const log = debug('dxos:network-manager:signal-client');
 
@@ -236,6 +237,7 @@ export class SignalClient {
       if (message.payload.type_url === 'dxos.mesh.signalMessage.SignalMessage') {
         const signalMessage = schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').decode(message.payload.value);
         log('Message received: ' + JSON.stringify(signalMessage));
+        assert(signalMessage.remoteId.equals(peerId));
         await this._onSignal(signalMessage);
       } else {
         log('Unknown message type: ' + message.payload.type_url);
