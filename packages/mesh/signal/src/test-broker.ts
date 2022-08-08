@@ -66,7 +66,7 @@ export class TestBroker {
     let online = false;
     while (!online) {
       try {
-        await fetch(this.url());
+        await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
         online = true;
       } catch (err) {
         await sleep(20);
