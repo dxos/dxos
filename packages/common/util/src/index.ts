@@ -5,7 +5,6 @@
 export * from './complex';
 export * from './human-hash';
 export * from './interval';
-export * from './isNotNullOrUndefined';
 export * from './json';
 export * from './map';
 export * from './platform';

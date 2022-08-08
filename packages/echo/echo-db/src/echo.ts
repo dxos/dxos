@@ -85,18 +85,19 @@ export interface EchoCreationOptions {
  * Messages are streamed into the pipeline (from the `FeedStore`) in logical order, determined by the
  * `Timeframe` (which implements a vector clock).
  */
-// TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
-  private readonly _halo: HALO;
   private readonly _keyring: Keyring;
+
+  // TODO(burdon): Factor out.
+  private readonly _halo: HALO;
+  private readonly _partyManager: PartyManager;
+  private readonly _subscriptions = new SubscriptionGroup();
 
   private readonly _storage: Storage;
   private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
-  private readonly _partyManager: PartyManager;
-  private readonly _subs = new SubscriptionGroup();
   private readonly _metadataStore: MetadataStore;
   private readonly _dataServiceRouter: DataServiceRouter;
 
@@ -153,7 +154,7 @@ export class ECHO {
     this._partyManager = new PartyManager(
       this._metadataStore,
       this._snapshotStore,
-      () => this.halo.identity,
+      () => this._halo.identity,
       partyFactory
     );
 
@@ -170,7 +171,7 @@ export class ECHO {
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
       if (this.halo.identity?.halo.isOpen) {
-        this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
+        this._subscriptions.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
 
@@ -260,7 +261,7 @@ export class ECHO {
       return;
     }
 
-    this._subs.unsubscribe();
+    this._subscriptions.unsubscribe();
 
     await this.halo.close();
 
@@ -272,7 +273,6 @@ export class ECHO {
 
   /**
    * Removes all data and closes this ECHO instance.
-   *
    * The instance will be in an unusable state at this point and a page refresh is recommended.
    */
   // TODO(burdon): Enable re-open.
@@ -371,7 +371,8 @@ export class ECHO {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ?? raise(new IdentityNotInitializedError()));
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ??
+        raise(new IdentityNotInitializedError()));
 
     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }
