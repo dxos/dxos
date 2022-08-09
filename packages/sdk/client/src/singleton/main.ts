@@ -3,7 +3,7 @@
 //
 
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { createBundledRpcServer, RpcPort } from '@dxos/rpc';
+import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { Client } from '../client';
 import { clientServiceBundle } from '../packlets/api';
@@ -46,6 +46,7 @@ const serviceWorkerPort = (sendPort: MessagePort, sourceId: string): RpcPort => 
 });
 
 let client: Client;
+let server: RpcPeer;
 const activeProxies = new Map<string, (msg: Uint8Array) => void>();
 
 if ('serviceWorker' in navigator) {
@@ -61,10 +62,18 @@ if ('serviceWorker' in navigator) {
           const config = new Config(await Dynamics(), Defaults());
           client = new Client(config);
           await client.initialize();
-          const server = createBundledRpcServer({
+
+          if (server) {
+            server.close();
+          }
+          server = createBundledRpcServer({
             services: clientServiceBundle,
             handlers: client.services,
             port: windowPort()
+          });
+
+          window.addEventListener('beforeunload', () => {
+            worker.port.postMessage({ type: SingletonMessage.CLIENT_CLOSING });
           });
           worker.port.postMessage({ type: SingletonMessage.CLIENT_READY });
           window.parent.postMessage({ type: SingletonMessage.CLIENT_READY }, '*');
@@ -73,7 +82,7 @@ if ('serviceWorker' in navigator) {
         }
 
         case SingletonMessage.SETUP_PORT: {
-          const server = createBundledRpcServer({
+          server = createBundledRpcServer({
             services: clientServiceBundle,
             handlers: client.services,
             port: serviceWorkerPort(worker.port, message.sourceId)
@@ -110,7 +119,7 @@ if ('serviceWorker' in navigator) {
         }
 
         case SingletonMessage.CLIENT_MESSAGE: {
-          window.parent.postMessage(message);
+          window.parent.postMessage(message, '*');
           break;
         }
       }

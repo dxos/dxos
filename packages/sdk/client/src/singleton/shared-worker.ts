@@ -2,13 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
+
 import { SingletonMessage } from '../packlets/proxy';
 
-let nextId = 0;
+const log = debug('dxos:client:shared-worker');
+
+let nextId = 1;
 const communicationPorts = new Map<number, MessagePort>();
-let clientId: number;
+let clientId: number | undefined;
 
 const initializePort = (sourceId: number) => {
+  if (!clientId) {
+    // TODO(wittjosiah): Don't drop message.
+    log(`Failed to initialize port for source ${sourceId}`);
+    return;
+  }
   const clientPort = communicationPorts.get(clientId);
   if (!clientPort) {
     return;
@@ -42,6 +51,15 @@ onconnect = event => {
         break;
       }
 
+      case SingletonMessage.CLIENT_CLOSING: {
+        clientId = undefined;
+        communicationPorts.delete(sourceId);
+        const [port] = [...communicationPorts.values()];
+        port?.postMessage({ type: SingletonMessage.SETUP_CLIENT });
+
+        break;
+      }
+
       case SingletonMessage.PORT_READY: {
         const forwardPort = communicationPorts.get(message.sourceId);
         forwardPort?.postMessage({ type: SingletonMessage.PORT_READY });
@@ -49,6 +67,12 @@ onconnect = event => {
       }
 
       case SingletonMessage.APP_MESSAGE: {
+        if (!clientId) {
+          // TODO(wittjosiah): Don't drop message.
+          log(`Failed to forward message from source ${sourceId}`);
+          return;
+        }
+
         const clientPort = communicationPorts.get(clientId);
         clientPort?.postMessage({ ...message, sourceId });
         break;
