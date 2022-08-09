@@ -2,14 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
+import debug from 'debug';
+
+import { sleep } from '@dxos/async';
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
+import { createBundledRpcServer, RpcPort } from '@dxos/rpc';
 
 import { Client } from '../client';
 import { clientServiceBundle } from '../packlets/api';
 import { SingletonMessage } from '../packlets/proxy';
 
-const windowPort = (): RpcPort => ({
+const log = debug('dxos:client:singleton');
+debug.enable('dxos:client:singleton');
+
+const RECONNECT_BACKOFF = 500;
+const activeProxies = new Map<string, (msg: Uint8Array) => void>();
+let client: Client;
+
+/**
+ * Creates RpcPort for communicating with parent window.
+ */
+const createWindowPort = (): RpcPort => ({
   send: async message => window.parent.postMessage({
     data: Array.from(message),
     type: SingletonMessage.CLIENT_MESSAGE
@@ -17,11 +30,7 @@ const windowPort = (): RpcPort => ({
   subscribe: callback => {
     const handler = (event: MessageEvent<any>) => {
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-          message === null ||
-          message.type !== SingletonMessage.APP_MESSAGE
-      ) {
+      if (message?.type !== SingletonMessage.APP_MESSAGE) {
         return;
       }
 
@@ -33,48 +42,63 @@ const windowPort = (): RpcPort => ({
   }
 });
 
-const serviceWorkerPort = (sendPort: MessagePort, sourceId: string): RpcPort => ({
+/**
+ * Creates RpcPort for communicating with other windows via SharedWorker.
+ */
+const createServiceWorkerPort = (sendPort: MessagePort, sourceId: string): RpcPort => ({
   send: async message => sendPort.postMessage({
     type: SingletonMessage.CLIENT_MESSAGE,
     sourceId,
     data: Array.from(message)
   }),
   subscribe: callback => {
+    // Maintain set of proxies and reuse main port message event handler.
     activeProxies.set(sourceId, callback);
     return () => activeProxies.delete(sourceId);
   }
 });
 
-let client: Client;
-let server: RpcPeer;
-const activeProxies = new Map<string, (msg: Uint8Array) => void>();
-
-if ('serviceWorker' in navigator) {
+if (typeof SharedWorker !== 'undefined') {
   void (async () => {
-    // TODO(wittjosiah): Ensure two instances starting up simultaneously results in a single host instance.
     const worker = new SharedWorker('./shared-worker.js');
     worker.port.start();
 
+    const windowClientProxyHandler = (event: MessageEvent<any>) => {
+      const message = event.data;
+      if (message?.type !== SingletonMessage.APP_MESSAGE) {
+        return;
+      }
+
+      worker.port.postMessage(message);
+    };
+
+    window.addEventListener('beforeunload', () => {
+      worker.port.postMessage({ type: SingletonMessage.PORT_CLOSING });
+    });
+
     worker.port.addEventListener('message', async event => {
       const message = event.data;
+      log('Recieved message from shared worker', message);
       switch (message?.type) {
+        case SingletonMessage.RECONNECT: {
+          await sleep(message.attempt * RECONNECT_BACKOFF);
+          worker.port.postMessage(message);
+          break;
+        }
+
         case SingletonMessage.SETUP_CLIENT: {
           const config = new Config(await Dynamics(), Defaults());
           client = new Client(config);
           await client.initialize();
 
-          if (server) {
-            server.close();
-          }
-          server = createBundledRpcServer({
+          // If proxy previously exists remove it.
+          window.removeEventListener('message', windowClientProxyHandler);
+          const server = createBundledRpcServer({
             services: clientServiceBundle,
             handlers: client.services,
-            port: windowPort()
+            port: createWindowPort()
           });
 
-          window.addEventListener('beforeunload', () => {
-            worker.port.postMessage({ type: SingletonMessage.CLIENT_CLOSING });
-          });
           worker.port.postMessage({ type: SingletonMessage.CLIENT_READY });
           window.parent.postMessage({ type: SingletonMessage.CLIENT_READY }, '*');
           await server.open();
@@ -82,10 +106,10 @@ if ('serviceWorker' in navigator) {
         }
 
         case SingletonMessage.SETUP_PORT: {
-          server = createBundledRpcServer({
+          const server = createBundledRpcServer({
             services: clientServiceBundle,
             handlers: client.services,
-            port: serviceWorkerPort(worker.port, message.sourceId)
+            port: createServiceWorkerPort(worker.port, message.sourceId)
           });
           worker.port.postMessage({
             type: SingletonMessage.PORT_READY,
@@ -96,19 +120,7 @@ if ('serviceWorker' in navigator) {
         }
 
         case SingletonMessage.PORT_READY: {
-          window.addEventListener('message', event => {
-            const message = event.data;
-
-            if (
-              typeof message !== 'object' ||
-              message === null ||
-              message.type !== SingletonMessage.APP_MESSAGE
-            ) {
-              return;
-            }
-
-            worker.port.postMessage(message);
-          });
+          window.addEventListener('message', windowClientProxyHandler);
           window.parent.postMessage({ type: SingletonMessage.CLIENT_READY }, '*');
           break;
         }
@@ -122,9 +134,14 @@ if ('serviceWorker' in navigator) {
           window.parent.postMessage(message, '*');
           break;
         }
+
+        case SingletonMessage.RESEND: {
+          worker.port.postMessage(message);
+          break;
+        }
       }
     });
   })();
 } else {
-  console.error('DXOS Client singleton requires access to service workers');
+  throw new Error('DXOS Client singleton requires a browser with support for shared workers.');
 }

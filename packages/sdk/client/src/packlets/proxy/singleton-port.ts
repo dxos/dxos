@@ -11,15 +11,15 @@ const log = debug('dxos:client:singleton-port');
 
 // TODO(wittjosiah): Protobuf for boundary?
 export enum SingletonMessage {
-  INITIALIZE_CHANNEL = 'INITIALIZE_CHANNEL',
-  CHANNEL_READY = 'CHANNEL_READY',
   SETUP_CLIENT = 'SETUP_CLIENT',
   CLIENT_READY = 'CLIENT_READY',
-  CLIENT_CLOSING = 'CLIENT_CLOSING',
   SETUP_PORT = 'SETUP_PORT',
   PORT_READY = 'PORT_READY',
+  PORT_CLOSING = 'PORT_CLOSING',
   CLIENT_MESSAGE = 'CLIENT_MESSAGE',
-  APP_MESSAGE = 'APP_MESSAGE'
+  APP_MESSAGE = 'APP_MESSAGE',
+  RESEND = 'RESEND',
+  RECONNECT = 'RECONNECT'
 }
 
 const waitForClient = () => {

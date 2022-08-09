@@ -7,55 +7,55 @@ import debug from 'debug';
 import { SingletonMessage } from '../packlets/proxy';
 
 const log = debug('dxos:client:shared-worker');
+const error = log.extend('error');
 debug.enable('dxos:client:shared-worker');
 
 let nextId = 1;
 const communicationPorts = new Map<number, MessagePort>();
-let clientId: number | undefined;
+let clientId: number | null = null;
 
-const initializePort = (sourceId: number) => {
-  if (!clientId) {
-    // TODO(wittjosiah): Don't drop message.
-    log(`Failed to initialize port for source ${sourceId}`);
-    return;
-  }
-  const clientPort = communicationPorts.get(clientId);
-  if (!clientPort) {
-    return;
+const getClientPort = () => {
+  const port = communicationPorts.get(clientId!);
+  if (!port) {
+    throw new Error('clientId defined and port not found');
   }
 
-  clientPort.postMessage({ type: SingletonMessage.SETUP_PORT, sourceId });
+  return port;
 };
 
 onconnect = event => {
   const sourceId = nextId;
-  const port = event.ports[0];
-  communicationPorts.set(sourceId, port);
   nextId++;
 
-  port.onmessage = async event => {
+  const handlePortMessage = async (event: MessageEvent<any>) => {
     const message = event.data;
     log(`Recieved message from source ${sourceId}`, message);
 
     // TODO(wittjosiah): Port cleanup.
     // TODO(wittjosiah): Client host transfer.
     switch (message?.type) {
+      case SingletonMessage.RECONNECT: {
+        if (message.attempt >= 5) {
+          error(`Failed to connect to client for source ${sourceId}`);
+          break;
+        }
+
+        if (!clientId) {
+          port.postMessage({ type: SingletonMessage.RECONNECT, attempt: message.attempt + 1 });
+          break;
+        }
+
+        getClientPort().postMessage({ type: SingletonMessage.SETUP_PORT, sourceId });
+        break;
+      }
+
       case SingletonMessage.CLIENT_READY: {
         clientId = sourceId;
         [...communicationPorts.keys()].forEach(id => {
           if (id !== sourceId) {
-            initializePort(id);
+            getClientPort().postMessage({ type: SingletonMessage.SETUP_PORT, sourceId: id });
           }
         });
-        break;
-      }
-
-      case SingletonMessage.CLIENT_CLOSING: {
-        clientId = undefined;
-        communicationPorts.delete(sourceId);
-        const [port] = [...communicationPorts.values()];
-        port?.postMessage({ type: SingletonMessage.SETUP_CLIENT });
-
         break;
       }
 
@@ -65,11 +65,22 @@ onconnect = event => {
         break;
       }
 
+      case SingletonMessage.PORT_CLOSING: {
+        communicationPorts.delete(sourceId);
+
+        if (sourceId === clientId) {
+          clientId = null;
+          const [port] = [...communicationPorts.values()];
+          port?.postMessage({ type: SingletonMessage.SETUP_CLIENT });
+        }
+
+        break;
+      }
+
       case SingletonMessage.APP_MESSAGE: {
         if (!clientId) {
-          // TODO(wittjosiah): Don't drop message.
-          log(`Failed to forward message from source ${sourceId}`);
-          return;
+          port.postMessage({ type: SingletonMessage.RESEND, message });
+          break;
         }
 
         const clientPort = communicationPorts.get(clientId);
@@ -85,9 +96,15 @@ onconnect = event => {
     }
   };
 
-  if (communicationPorts.size > 1) {
-    initializePort(sourceId);
-  } else {
+  const port = event.ports[0];
+  port.onmessage = handlePortMessage;
+  communicationPorts.set(sourceId, port);
+
+  if (communicationPorts.size === 1) {
     port.postMessage({ type: SingletonMessage.SETUP_CLIENT });
+  } else if (!clientId) {
+    port.postMessage({ type: SingletonMessage.RECONNECT, attempt: 1 });
+  } else {
+    getClientPort().postMessage({ type: SingletonMessage.SETUP_PORT, sourceId });
   }
 };
