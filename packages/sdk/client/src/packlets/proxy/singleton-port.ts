@@ -7,25 +7,14 @@ import debug from 'debug';
 import { RpcPort } from '@dxos/rpc';
 import { isNode } from '@dxos/util';
 
-const log = debug('dxos:client:singleton-port');
+import { SingletonMessage } from '../proto';
 
-// TODO(wittjosiah): Protobuf for boundary?
-export enum SingletonMessage {
-  SETUP_CLIENT = 'SETUP_CLIENT',
-  CLIENT_READY = 'CLIENT_READY',
-  SETUP_PORT = 'SETUP_PORT',
-  PORT_READY = 'PORT_READY',
-  PORT_CLOSING = 'PORT_CLOSING',
-  CLIENT_MESSAGE = 'CLIENT_MESSAGE',
-  APP_MESSAGE = 'APP_MESSAGE',
-  RESEND = 'RESEND',
-  RECONNECT = 'RECONNECT'
-}
+const log = debug('dxos:client:singleton-port');
 
 const waitForClient = () => {
   return new Promise<void>(resolve => {
-    const messageHandler = (event: MessageEvent<any>) => {
-      if (event.data?.type === SingletonMessage.CLIENT_READY) {
+    const messageHandler = (event: MessageEvent<SingletonMessage>) => {
+      if (event.data?.type === SingletonMessage.Type.CLIENT_READY) {
         window.removeEventListener('message', messageHandler);
         resolve();
       }
@@ -50,22 +39,18 @@ export const createSingletonPort = async (singletonSource: string): Promise<RpcP
 
   return {
     send: async message => singleton.contentWindow?.postMessage({
-      data: Array.from(message),
-      type: SingletonMessage.APP_MESSAGE
+      type: SingletonMessage.Type.WINDOW_MESSAGE,
+      data: Array.from(message)
     }, '*'),
     subscribe: callback => {
-      const handler = (event: MessageEvent<any>) => {
+      const handler = (event: MessageEvent<SingletonMessage>) => {
         const message = event.data;
-        if (
-          typeof message !== 'object' ||
-            message === null ||
-            message.type !== SingletonMessage.CLIENT_MESSAGE
-        ) {
+        if (message?.type !== SingletonMessage.Type.WINDOW_MESSAGE) {
           return;
         }
 
         log('Received message from singleton client:', message);
-        callback(new Uint8Array(message.data));
+        callback(new Uint8Array(message.data!));
       };
 
       window.addEventListener('message', handler);
