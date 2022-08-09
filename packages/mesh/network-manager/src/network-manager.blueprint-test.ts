@@ -127,7 +127,6 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
 
     log('Connected');
 
-
     const disconnectPromises = Promise.all([
       Event.wrap(plugin1, 'disconnect').waitForCount(1),
       Event.wrap(plugin2, 'disconnect').waitForCount(1)
@@ -138,15 +137,15 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
       Event.wrap(plugin2, 'connect').waitForCount(1)
     ]);
 
-    log('Disconnecting peer2'); 
+    log('Disconnecting peer2');
     await networkManager2.leaveProtocolSwarm(topic);
 
-    log('Reconnecting peer2'); 
-    const newPeer2Id = PublicKey.random()
-    networkManager2.joinProtocolSwarm({ topic, peerId: newPeer2Id, protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2), topology: new FullyConnectedTopology()});
-    
+    log('Reconnecting peer2');
+    const newPeer2Id = PublicKey.random();
+    networkManager2.joinProtocolSwarm({ topic, peerId: newPeer2Id, protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2), topology: new FullyConnectedTopology() });
+
     await disconnectPromises;
-    
+
     await connectPromises;
 
     await networkManager1.destroy();

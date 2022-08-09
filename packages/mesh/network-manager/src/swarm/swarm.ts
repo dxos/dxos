@@ -105,13 +105,13 @@ export class Swarm {
     // Id of the peer offering us the connection.
     assert(message.id);
     const remoteId = message.id;
-    if(!message.remoteId?.equals(this._ownPeerId)) {
-      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`)
-      return { accept: false }
+    if (!message.remoteId?.equals(this._ownPeerId)) {
+      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`);
+      return { accept: false };
     }
-    if(!message.topic?.equals(this._topic)) {
-      log(`Rejecting offer with incorrect topic: ${message.topic}`)
-      return { accept: false }
+    if (!message.topic?.equals(this._topic)) {
+      log(`Rejecting offer with incorrect topic: ${message.topic}`);
+      return { accept: false };
     }
 
     // Check if we are already trying to connect to that peer.

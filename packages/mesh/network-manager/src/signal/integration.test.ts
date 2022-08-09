@@ -7,11 +7,11 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterTest } from '@dxos/testutils';
 
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
-import { afterTest } from '@dxos/testutils';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;

@@ -15,10 +15,6 @@ import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
-  let topic: PublicKey;
-  let peer1: PublicKey;
-  let peer2: PublicKey;
-
   let broker1: TestBroker;
 
   let broker2: TestBroker;
@@ -28,18 +24,15 @@ describe('SignalClient', () => {
     // broker2 = await await createTestBroker(signalApiPort2);
   });
 
-  beforeEach(() => {
-    topic = PublicKey.random();
-    peer1 = PublicKey.random();
-    peer2 = PublicKey.random();
-  });
-
   after(() => {
     broker1.stop();
     // code await broker2.stop();
   });
 
   test('message between 2 clients', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
     const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
@@ -61,9 +54,12 @@ describe('SignalClient', () => {
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg]);
     }, 4_000);
-  }).timeout(5_000);
+  }).timeout(500);
 
   test('join', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), async () => {});
@@ -77,9 +73,12 @@ describe('SignalClient', () => {
 
     await promise1;
     await promise2;
-  }).timeout(1_000);
+  }).timeout(500);
 
   test('signal to self', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
@@ -103,9 +102,12 @@ describe('SignalClient', () => {
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
-  }).timeout(5_000);
+  }).timeout(500);
 
   test.skip('join across multiple signal servers', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
     // This feature is not implemented yet.
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
@@ -128,6 +130,9 @@ describe('SignalClient', () => {
 
   // Skip because communication between signal servers is not yet implemented.
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
       .resolvesTo();
 
@@ -155,4 +160,4 @@ describe('SignalClient', () => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
   }).timeout(5_000);
-}).timeout(10_000);
+});

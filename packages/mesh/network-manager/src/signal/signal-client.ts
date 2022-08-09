@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
@@ -14,7 +15,6 @@ import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
-import assert from 'assert';
 
 const log = debug('dxos:network-manager:signal-client');
 
@@ -199,17 +199,17 @@ export class SignalClient {
   }
 
   async join (topic: PublicKey, peerId: PublicKey): Promise<void> {
-    log(`Join: topic=${topic} peerId=${peerId}`)
+    log(`Join: topic=${topic} peerId=${peerId}`);
     await this._subscribeMessages(peerId);
     await this._subscribeSwarmEvents(topic, peerId);
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
-    log(`Leave: topic=${topic} peerId=${peerId}`)
+    log(`Leave: topic=${topic} peerId=${peerId}`);
 
     this._swarmStreams.get(topic)?.close();
     this._swarmStreams.delete(topic);
-    
+
     this._messageStreams.get(topic)?.close();
     this._messageStreams.delete(topic);
   }
