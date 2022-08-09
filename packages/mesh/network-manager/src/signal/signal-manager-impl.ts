@@ -22,7 +22,7 @@ export class SignalManagerImpl implements SignalManager {
 
   /** Topics joined: topic => peerId */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(topic => topic.toHex());
-  /** host => topic => peerId */  
+  /** host => topic => peerId */
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconciling?: boolean = false;
@@ -72,8 +72,8 @@ export class SignalManagerImpl implements SignalManager {
     this._scheduleReconcile();
   }
 
-  private _scheduleReconcile() {
-    if(this._destroyed) {
+  private _scheduleReconcile () {
+    if (this._destroyed) {
       return;
     }
 
@@ -85,64 +85,65 @@ export class SignalManagerImpl implements SignalManager {
         },
         err => {
           this._reconciling = false;
-          log(`Error while reconciling: ${err}`)
-          this._reconcileLater()
+          log(`Error while reconciling: ${err}`);
+          this._reconcileLater();
         }
       );
     } else {
-      this._reconcileLater()
+      this._reconcileLater();
     }
   }
 
-  private _reconcileLater() {
-    if(this._destroyed) {
+  private _reconcileLater () {
+    if (this._destroyed) {
       return;
     }
-    
-    if(!this._reconcileTimeoutId) {
+
+    if (!this._reconcileTimeoutId) {
       this._reconcileTimeoutId = setTimeout(async () => this._scheduleReconcile(), 3000);
     }
   }
 
   @synchronized
-  private async _reconcileJoinedTopics() {
-    log(`Reconciling..`)
-    for(const [host, server] of this._servers) {
+  private async _reconcileJoinedTopics () {
+    // TODO(mykola): Handle reconnects to SS. Maybe move map of joined topics to signal-client.
+    log('Reconciling..');
+    for (const [host, server] of this._servers) {
       const actualJoinedTopics = this._topicsJoinedPerSignal.get(host)!;
 
       // Leave swarms
-      for(const [topic, actualPeerId] of actualJoinedTopics) {
+      for (const [topic, actualPeerId] of actualJoinedTopics) {
         try {
           const desiredPeerId = this._topicsJoined.get(topic);
           if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
-            await server.leave(topic, actualPeerId)
+            await server.leave(topic, actualPeerId);
             actualJoinedTopics.delete(topic);
           }
-        } catch(err) {
+        } catch (err) {
           log(`Error leaving swarm: ${err}`);
           this._scheduleReconcile();
         }
       }
-      
+
       // Join swarms
-      for(const [topic, desiredPeerId] of this._topicsJoined) {
+      for (const [topic, desiredPeerId] of this._topicsJoined) {
         try {
           const actualPeerId = actualJoinedTopics.get(topic);
-          if(!actualPeerId) {
-            await server.join(topic, desiredPeerId)
+          if (!actualPeerId) {
+            await server.join(topic, desiredPeerId);
             actualJoinedTopics.set(topic, desiredPeerId);
           } else {
-            if(!actualPeerId.equals(desiredPeerId)) {
-              throw new Error(`Joined with peerId different from desired: ${JSON.stringify({ actualPeerId, desiredPeerId })}`)
+            if (!actualPeerId.equals(desiredPeerId)) {
+              throw new Error(`Joined with peerId different from desired: ${JSON.stringify({ actualPeerId, desiredPeerId })}`);
             }
           }
-        } catch(err) {
+        } catch (err) {
           log(`Error joining swarm: ${err}`);
           this._scheduleReconcile();
         }
       }
     }
-    log(`Done reconciling..`)
+    log('Done reconciling..');
     this._reconciling = false;
   }
 
@@ -150,8 +151,9 @@ export class SignalManagerImpl implements SignalManager {
   async signal (msg: SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {
-      void server.signal(msg);
-      // TODO(marik-d): Error handling.
+      server.signal(msg).catch(err => {
+        log(`Error signaling: ${err}`);
+      });
     }
   }
 
