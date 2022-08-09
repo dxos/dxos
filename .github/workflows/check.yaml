@@ -123,3 +123,5 @@ jobs:
           sudo apt-get install -y lsof
           kill $(lsof -t -i:3000) || true
           kill $(lsof -t -i:8080) || true
+          kill $(lsof -t -i:12098) || true
+          kill $(lsof -t -i:4000) || true
