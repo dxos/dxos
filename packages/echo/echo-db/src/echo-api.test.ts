@@ -27,6 +27,7 @@ class Handler<T> {
 
   constructor (
     private readonly _parent?: Handler<any>,
+    protected readonly _property?: string,
     protected readonly _callback?: (value: T) => void
   ) {}
 
@@ -80,7 +81,7 @@ class ContactNameHandler extends Handler<any> {
     switch (p) {
       case 'first':
       case 'last': {
-        this.addMutation([p, value]);
+        this.addMutation([`${this._property}.${p}`, value]);
         obj[p] = value;
         this._callback?.(obj);
         return true;
@@ -100,7 +101,7 @@ class ContactHandler extends Handler<Contact['name']> {
 
     switch (p) {
       case 'name': {
-        return new Proxy(obj[p] ?? {}, new ContactNameHandler(this, value => {
+        return new Proxy(obj[p] ?? {}, new ContactNameHandler(this, p, value => {
           obj[p] = value;
         }));
       }
@@ -127,6 +128,11 @@ describe('API', () => {
     item.name!.first = 'Alice';
     expect(item.$mutations).toHaveLength(2);
     expect(item).toEqual({ age: 64, name: { first: 'Alice' } });
+
+    expect(item.$mutations).toStrictEqual([
+      ['age', 64],
+      ['name.first', 'Alice']
+    ]);
 
     // TODO(burdon): Get item id, state, mutations, etc.
   });
