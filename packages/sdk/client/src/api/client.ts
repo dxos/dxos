@@ -31,7 +31,7 @@ export const defaultTestingConfig: ConfigObject = {
   runtime: {
     services: {
       signal: {
-        server: 'ws://localhost:4000'
+        server: 'ws://localhost:4000/.well-known/dx/signal'
       }
     }
   }
