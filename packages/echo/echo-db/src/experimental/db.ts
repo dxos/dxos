@@ -10,7 +10,13 @@
 //  http://www.jomendez.com/2018/12/29/querying-arrays-with-more-readable-methods-using-javascript-proxy
 // class ArrayHandler<T> extends Handler {}
 
-export type Mutation = [property: string, value: any]
+// TODO(burdon): Prototype new mutation protodefs.
+export enum Operation {
+  SET,
+  REMOVE
+}
+
+export type Mutation = [operation: Operation, property: string, value: any]
 
 export interface BaseObject {
   // Special properties added by proto generator.
