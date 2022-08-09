@@ -67,7 +67,7 @@ interface Contact extends Object {
   fullname?: string // TODO(burdon): Show how to add custom functions.
 }
 
-class ContactNameHandler extends Handler<any> {
+class ContactNameHandler extends Handler<Contact['name']> {
   get (obj: any, p: string) {
     switch (p) {
       case 'first':
@@ -92,7 +92,7 @@ class ContactNameHandler extends Handler<any> {
   }
 }
 
-class ContactHandler extends Handler<Contact['name']> {
+class ContactHandler extends Handler<Contact> {
   get (obj: any, p: string) {
     const result = super.getMeta(p);
     if (result !== undefined) {
@@ -117,15 +117,38 @@ class ContactHandler extends Handler<Contact['name']> {
   }
 }
 
+type ItemType<T extends object> = [string, () => Handler<T>]
+
+const ContactType: ItemType<Contact> = ['example.Contact', () => new ContactHandler()];
+
+class Database {
+  private readonly _types = new Map<ItemType<any>, (value: any) => typeof Proxy>();
+
+  addType (type: ItemType<any>, constructor: (value: any) => any) {
+    this._types.set(type, constructor);
+    return this;
+  }
+
+  create<T extends object> (type: ItemType<T>, value: T = {} as T): T {
+    const constructor = this._types.get(type)!;
+    return constructor(value) as any;
+  }
+}
+
 describe('API', () => {
   test('Pseudo-code', () => {
-    const item = new Proxy<Contact>({}, new ContactHandler());
+    const db = new Database();
+    db.addType(ContactType, value => new Proxy<Contact>(value, new ContactHandler()));
+
+    // Create type-safe proxy.
+    const item = db.create(ContactType);
 
     item.age = 64;
     expect(item.$mutations).toHaveLength(1);
     expect(item).toEqual({ age: 64 });
 
     item.name!.first = 'Alice';
+    expect(item.name?.first).toBe('Alice');
     expect(item.$mutations).toHaveLength(2);
     expect(item).toEqual({ age: 64, name: { first: 'Alice' } });
 
