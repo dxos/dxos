@@ -97,12 +97,7 @@ export class SignalRPCClient {
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array()
     });
-    try {
-      console.log('BEFORE WAIT ')
-      await messageStream.waitUntilReady();
-    } catch (err) {
-      console.log('ERROR', err);
-    }
+    await messageStream.waitUntilReady();
     return messageStream;
   }
 

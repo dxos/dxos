@@ -112,10 +112,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     log('Peer2 destroyed');
   }).timeout(10_000);
 
-  it.only('join and leave swarm and reconnect', async () => {
-    if (inMemory) {
-      return;
-    }
+  it('join and leave swarm and reconnect', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -148,12 +145,9 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     const newPeer2Id = PublicKey.random()
     networkManager2.joinProtocolSwarm({ topic, peerId: newPeer2Id, protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2), topology: new FullyConnectedTopology()});
     
-    console.log(1);
     await disconnectPromises;
-    console.log(2);
     
     await connectPromises;
-    console.log(3);
 
     await networkManager1.destroy();
     log('Peer1 destroyed');

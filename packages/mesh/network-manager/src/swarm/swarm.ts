@@ -105,8 +105,6 @@ export class Swarm {
     // Id of the peer offering us the connection.
     assert(message.id);
     const remoteId = message.id;
-    // console.log(`Offer ${JSON.stringify(message)}`);
-    // console.log(`Own peer id ${this._ownPeerId}`);
     if(!message.remoteId?.equals(this._ownPeerId)) {
       log(`Rejecting offer with incorrect peerId: ${message.remoteId}`)
       return { accept: false }
