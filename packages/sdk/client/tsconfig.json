@@ -3,13 +3,13 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "ESNext",
-      "WebWorker"
+      "ESNext"
     ],
     "outDir": "dist",
     "types": [
       "node",
-      "mocha"
+      "mocha",
+      "sharedworker"
     ]
   },
   "include": [

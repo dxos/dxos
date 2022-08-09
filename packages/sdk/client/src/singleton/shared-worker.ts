@@ -7,6 +7,7 @@ import debug from 'debug';
 import { SingletonMessage } from '../packlets/proxy';
 
 const log = debug('dxos:client:shared-worker');
+debug.enable('dxos:client:shared-worker');
 
 let nextId = 1;
 const communicationPorts = new Map<number, MessagePort>();
@@ -26,17 +27,15 @@ const initializePort = (sourceId: number) => {
   clientPort.postMessage({ type: SingletonMessage.SETUP_PORT, sourceId });
 };
 
-// TODO(wittjosiah): Figure out shared worker typing.
-// eslint-disable-next-line
-// @ts-ignore
 onconnect = event => {
   const sourceId = nextId;
   const port = event.ports[0];
   communicationPorts.set(sourceId, port);
   nextId++;
 
-  port.onmessage = async (event: MessageEvent) => {
+  port.onmessage = async event => {
     const message = event.data;
+    log(`Recieved message from source ${sourceId}`, message);
 
     // TODO(wittjosiah): Port cleanup.
     // TODO(wittjosiah): Client host transfer.
