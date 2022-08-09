@@ -201,9 +201,7 @@ export class SignalClient {
   async join (topic: PublicKey, peerId: PublicKey): Promise<void> {
     log(`Join: topic=${topic} peerId=${peerId}`)
     await this._subscribeMessages(peerId);
-    console.log('JOINED MESSAGES')
     await this._subscribeSwarmEvents(topic, peerId);
-    console.log('JOINED EVENTS')
   }
 
   async leave (topic: PublicKey, peerId: PublicKey): Promise<void> {
@@ -236,6 +234,11 @@ export class SignalClient {
 
     // Saving swarm stream.
     this._swarmStreams.set(topic, swarmStream);
+
+    this._cleanupSubscriptions.push(() => {
+      swarmStream.close();
+      this._swarmStreams.delete(topic);
+    });
   }
 
   private async _subscribeMessages (peerId: PublicKey) {
@@ -256,6 +259,11 @@ export class SignalClient {
     if (!this._messageStreams.has(peerId)) {
       this._messageStreams.set(peerId, messageStream);
     }
+
+    this._cleanupSubscriptions.push(() => {
+      messageStream.close();
+      this._messageStreams.delete(peerId);
+    });
   }
 
 }
