@@ -31,8 +31,6 @@ onconnect = event => {
     const message = event.data;
     log(`Recieved message from source ${sourceId}`, message);
 
-    // TODO(wittjosiah): Port cleanup.
-    // TODO(wittjosiah): Client host transfer.
     switch (message?.type) {
       case SingletonMessage.Type.RECONNECT: {
         const { attempt } = message.reconnect!;
