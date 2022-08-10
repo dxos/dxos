@@ -25,8 +25,6 @@ export class TestBroker {
   }
 
   public startProcess (): ChildProcessWithoutNullStreams {
-    // killing stuck process
-    spawn('kill', [`$(lsof -t -i:${this._port})`]);
     const arch = ['x64', 'amd64', 'ppc64'].includes(process.arch) ? 'amd64' : ['arm64'].includes(process.arch) ? 'arm64' : '32';
     if (arch === '32') {
       throw new Error('32 bit architecture not supported');
