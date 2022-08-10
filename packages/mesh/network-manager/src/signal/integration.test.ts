@@ -31,7 +31,7 @@ describe('Signal Integration Test', () => {
     const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const messageRouter = new MessageRouter({
       sendMessage: msg => signalManager.message(msg),
-      onMessage: signalMock,
+      onSignal: signalMock,
       onOffer: async () => ({ accept: true })
     });
     afterTest(() => messageRouter.destroy());
@@ -90,7 +90,7 @@ describe('Signal Integration Test', () => {
           signal: { json: JSON.stringify({ 'foo': 'bar' }) }
         }
       };
-      await peerNetworking1.messageRouter.message(message);
+      await peerNetworking1.messageRouter.signal(message);
 
       await waitForExpect(() => {
         expect(peerNetworking2.signalMock).toHaveBeenCalledWith([message]);
@@ -107,7 +107,7 @@ describe('Signal Integration Test', () => {
           signal: { json: JSON.stringify({ 'foo': 'bar' }) }
         }
       };
-      await peerNetworking2.messageRouter.message(message);
+      await peerNetworking2.messageRouter.signal(message);
 
       await waitForExpect(() => {
         expect(peerNetworking1.signalMock).toHaveBeenCalledWith([message]);

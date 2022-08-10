@@ -86,10 +86,6 @@ describe('SignalClient', () => {
 
     await api1.join(topic, peer1);
 
-    // Waiting for server to create stream.
-    // TODO(dmaretskyi): Add stream acknowledgement.
-    await sleep(10);
-
     const msg: SignalMessage = {
       id: peer2,
       remoteId: peer1,
