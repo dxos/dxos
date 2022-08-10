@@ -42,7 +42,7 @@ export class Orchestrator {
       runtime: {
         services: {
           signal: {
-            server: `ws://localhost:${port}`
+            server: this._broker.url()
           }
         }
       }

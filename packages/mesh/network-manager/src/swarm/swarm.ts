@@ -12,7 +12,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalMessaging } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
@@ -34,7 +35,6 @@ export class Swarm {
 
   private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
-  private readonly _peerCandidatesUpdated = new Event();
 
   get connections () {
     return Array.from(this._connections.values());
@@ -64,7 +64,6 @@ export class Swarm {
     private _topology: Topology,
     private readonly _protocolProvider: ProtocolProvider,
     private readonly _signalMessaging: SignalMessaging,
-    private readonly _lookupPeers: (topic: PublicKey) => void,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
@@ -87,26 +86,33 @@ export class Swarm {
     return this._topic;
   }
 
-  onPeerCandidatesChanged (candidates: PublicKey[]) {
-    log(`New peers for ${this._topic} ${candidates}`);
-    this._discoveredPeers.clear();
-    for (const candidate of candidates) {
-      if (candidate.equals(this._ownPeerId)) {
-        continue;
+  onSwarmEvent (swarmEvent: SwarmEvent) {
+    log(`Swarm event ${JSON.stringify(swarmEvent)}`);
+    if (swarmEvent.peerAvailable) {
+      const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
+      log(`New peer for ${this._topic} ${peerId}`);
+      if (!peerId.equals(this._ownPeerId)) {
+        this._discoveredPeers.add(peerId);
       }
-      this._discoveredPeers.add(candidate);
+    } else if (swarmEvent.peerLeft) {
+      this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
     }
-    this._peerCandidatesUpdated.emit();
     this._topology.update();
   }
 
-  async onOffer (message: Message): Promise<Answer> {
+  async onOffer (message: SignalMessage): Promise<Answer> {
     log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
     assert(message.id);
     const remoteId = message.id;
-    assert(message.remoteId?.equals(this._ownPeerId));
-    assert(message.topic?.equals(this._topic));
+    if (!message.remoteId?.equals(this._ownPeerId)) {
+      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`);
+      return { accept: false };
+    }
+    if (!message.topic?.equals(this._topic)) {
+      log(`Rejecting offer with incorrect topic: ${message.topic}`);
+      return { accept: false };
+    }
 
     // Check if we are already trying to connect to that peer.
     if (this._connections.has(remoteId)) {
@@ -140,7 +146,7 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: Message): Promise<void> {
+  async onSignal (message: SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
     assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
     assert(message.topic?.equals(this._topic));
@@ -186,9 +192,6 @@ export class Swarm {
           this.errors.raise(err);
         }
         this._topology.update();
-      },
-      lookup: () => {
-        this._lookupPeers(this._topic);
       }
     };
   }
@@ -201,6 +204,7 @@ export class Swarm {
 
     const sessionId = PublicKey.random();
 
+    log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
     const connection = this._createConnection(true, remoteId, sessionId);
     this._signalMessaging.offer({
       id: this._ownPeerId,
@@ -236,7 +240,7 @@ export class Swarm {
   }
 
   private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
-    log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
+    log(`Create connection topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected.');
 
     const connection = new Connection(
@@ -245,7 +249,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: Message) => this._signalMessaging.signal(msg),
+      (msg: SignalMessage) => this._signalMessaging.signal(msg),
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
