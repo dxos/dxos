@@ -5,7 +5,16 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { BaseObject, Database, Handler, ItemType, Operation } from './db';
+import {
+  BaseObject,
+  Database,
+  Handler,
+  ItemType,
+  Operation,
+  propId,
+  propType,
+  propMutations
+} from './db';
 
 //
 // Generated from proto.
@@ -54,10 +63,12 @@ class ContactNameHandler extends Handler<Contact['name']> {
 }
 
 class ContactHandler extends Handler<Contact> {
-  get (obj: any, p: string) {
-    const result = super.getMeta(p);
-    if (result !== undefined) {
-      return result;
+  get (obj: any, p: string | Symbol) {
+    if (typeof p === 'symbol') {
+      const value = this.getProp(obj, p);
+      if (value !== undefined) {
+        return value;
+      }
     }
 
     switch (p) {
@@ -95,22 +106,22 @@ describe('Proxies', () => {
 
     // Create type-safe proxy.
     const item = db.create(ContactType);
-    expect(item.$type).toEqual('example.Contact');
-    expect(item.$id).toBeDefined();
+    expect(item[propType]).toEqual('example.Contact');
+    expect(item[propId]).toBeDefined();
 
     item.age = 64;
-    expect(item.$mutations).toHaveLength(1);
+    expect(item[propMutations]).toHaveLength(1);
     expect(item).toEqual({ age: 64 });
 
     item.name!.first = 'Alice';
     expect(item.name?.first).toBe('Alice');
-    expect(item.$mutations).toHaveLength(2);
+    expect(item[propMutations]).toHaveLength(2);
     expect(item).toEqual({ age: 64, name: { first: 'Alice' } });
 
     // console.log(item);
-    // console.log(item.$mutations);
+    // console.log(item[propMutations]);
 
-    expect(item.$mutations).toStrictEqual([
+    expect(item[propMutations]).toStrictEqual([
       [Operation.SET, 'age', 64],
       [Operation.SET, 'name.first', 'Alice']
     ]);

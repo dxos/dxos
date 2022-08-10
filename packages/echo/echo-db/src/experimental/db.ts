@@ -10,6 +10,11 @@
 //  http://www.jomendez.com/2018/12/29/querying-arrays-with-more-readable-methods-using-javascript-proxy
 // class ArrayHandler<T> extends Handler {}
 
+// Note: Symbols will not show up in `JSON.stringify`.
+export const propId = Symbol('id');
+export const propType = Symbol('type');
+export const propMutations = Symbol('mutations');
+
 // TODO(burdon): Prototype new mutation protodefs.
 export enum Operation {
   SET,
@@ -20,9 +25,9 @@ export type Mutation = [operation: Operation, property: string, value: any]
 
 export interface BaseObject {
   // Special properties added by proto generator.
-  $id?: string
-  $type?: string
-  $mutations?: Mutation[]
+  [propId]?: string
+  [propType]?: string
+  [propMutations]?: Mutation[]
 }
 
 export class Handler<T> {
@@ -44,15 +49,19 @@ export class Handler<T> {
     }
   }
 
-  getMeta (p: string) {
+  getProp (obj: T, p: Symbol) {
+    // TODO(burdon): Add id, type as symbol properties to item.
+    const props = Object.getOwnPropertySymbols(obj);
+    console.log(props);
+
     switch (p) {
-      case '$id': {
+      case propId: {
         return this._id;
       }
-      case '$type': {
+      case propType: {
         return this._type;
       }
-      case '$mutations': {
+      case propMutations: {
         return this._mutations;
       }
     }
@@ -71,6 +80,9 @@ export class Database {
 
   create<T extends BaseObject> (type: ItemType<T>, value: T = {} as T): T {
     const proxyCtor = this._types.get(type)!;
-    return proxyCtor(value) as any;
+    const item = proxyCtor(value) as any;
+    // item[propId] = Date.now();
+    // item[propType] = type[0];
+    return item;
   }
 }
