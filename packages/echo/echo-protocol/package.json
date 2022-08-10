@@ -43,7 +43,7 @@
     "@types/pify": "^3.0.2",
     "@types/pumpify": "~1.4.1",
     "@types/readable-stream": "^2.3.9",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "faker": "^5.1.0",
     "tempy": "~1.0.1",
     "typescript": "^4.7.2"

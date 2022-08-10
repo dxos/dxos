@@ -54,7 +54,7 @@
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/yargs": "~16.0.1",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "mocha": "~8.4.0",
     "nodemon": "~2.0.19",

@@ -80,7 +80,7 @@
     "dotenv": "^8.2.0",
     "electron": "~18.0.4",
     "esbuild-plugin-yaml": "~0.0.1",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "mocha": "~8.4.0",

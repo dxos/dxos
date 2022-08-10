@@ -34,7 +34,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "typescript": "^4.7.2"
   }
 }

@@ -55,7 +55,7 @@
     "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "clsx": "^1.1.0",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "faker": "^5.1.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",

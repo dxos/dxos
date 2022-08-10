@@ -61,7 +61,7 @@
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "memdown": "^5.1.0",

@@ -81,7 +81,7 @@
     "@types/lodash.pick": "^4.4.6",
     "@types/pify": "^3.0.2",
     "@types/yargs": "~16.0.1",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "graphology-canvas": "^0.3.2",
     "graphology-shortest-path": "^1.3.4",
     "graphology-types": "^0.23.0",

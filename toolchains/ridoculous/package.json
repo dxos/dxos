@@ -51,7 +51,7 @@
     "@types/protocol-buffers-schema":  "^3.4.1",
     "@types/yargs": "~16.0.1",
     "diff": "~5.1.0",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "jest": "^28.1.3",
     "mocha": "~8.4.0",

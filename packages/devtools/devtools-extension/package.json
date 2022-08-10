@@ -59,7 +59,7 @@
     "crx": "^5.0.1",
     "download": "^8.0.0",
     "esbuild": "^0.14.49",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "express": "4.17.1",
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
