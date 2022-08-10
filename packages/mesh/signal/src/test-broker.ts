@@ -44,19 +44,19 @@ export class TestBroker {
     );
 
     server.stdout.on('data', (data) => {
-      console.log(`TestServer stdout: ${data}`);
+      log(`TestServer stdout: ${data}`);
     });
 
     server.stderr.on('data', (data) => {
-      console.log(`TestServer stderr: ${data}`);
+      log(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
-      console.log(`TestServer ERROR: ${err}`);
+      log(`TestServer ERROR: ${err}`);
     });
 
     server.on('close', (code) => {
-      console.log(`TestServer exited with code ${code}`);
+      log(`TestServer exited with code ${code}`);
     });
 
     return server;
