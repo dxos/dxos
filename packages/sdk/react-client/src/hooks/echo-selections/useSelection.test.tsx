@@ -9,7 +9,8 @@ import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 
 import { useSelection } from './useSelection';
 

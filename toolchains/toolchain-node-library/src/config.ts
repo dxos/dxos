@@ -14,6 +14,7 @@ export interface Config {
     }
   },
   protobuf: {
+    base: string
     src: string
     output: string
     substitutions: string
@@ -36,9 +37,10 @@ export const defaults: Config = {
     }
   },
   protobuf: {
-    src: './src/proto/**/*.proto',
-    output: './src/proto/gen',
-    substitutions: './src/proto/substitutions.ts'
+    base: './src/proto/',
+    src: '**/*.proto',
+    output: 'gen',
+    substitutions: 'substitutions.ts'
   },
   tsc: {
     output: './dist'

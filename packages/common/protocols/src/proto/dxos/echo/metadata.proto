@@ -7,12 +7,13 @@ syntax = "proto3";
 package dxos.echo.metadata;
 
 import "google/protobuf/timestamp.proto";
+
 import "../halo/keys.proto";
 
 message EchoMetadata {
   /**
    * Version number that is inceremnted every time there's a breaking change to the storage schema.
-   * 
+   *
    * This is used to detect if the storage schema has changed since the last time the client was run.
    * Loading data from a different version will might result in an error.
    */

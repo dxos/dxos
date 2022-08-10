@@ -2,7 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+export type Provider<T> = () => T
+
 export type MaybePromise<T> = T | Promise<T>
+
+export const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;
 
 /**
  * All types that evaluate to false when cast to a boolean.

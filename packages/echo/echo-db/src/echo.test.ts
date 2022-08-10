@@ -31,8 +31,8 @@ describe('ECHO', () => {
 
   const setup = async ({ createProfile, displayName }: SetupOptions = {}) => {
     const echo = new ECHO();
-
     await echo.open();
+
     afterTest(() => echo.close());
 
     if (createProfile) {

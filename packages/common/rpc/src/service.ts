@@ -86,9 +86,12 @@ export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options
 
   const rpc: S = {} as S;
   for (const serviceName of Object.keys(descriptors) as (keyof S)[]) {
+    // Get full service name with the package name without '.' at the beginning.
+    const serviceFqn = descriptors[serviceName].serviceProto.fullName.slice(1);
+
     rpc[serviceName] = descriptors[serviceName].createClient({
-      call: (method, req) => peer.call(`${String(serviceName)}.${method}`, req),
-      callStream: (method, req) => peer.callStream(`${String(serviceName)}.${method}`, req)
+      call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
+      callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
     });
   }
 
@@ -106,7 +109,10 @@ export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messag
 export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
   const rpc: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
-    rpc[serviceName as any] = services[serviceName].createServer(handlers[serviceName] as any);
+    // Get full service name with the package name without '.' at the beginning.
+    const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
+
+    rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 
   const peer = new RpcPeer({
@@ -133,9 +139,11 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
 };
 
 const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
-  const [serviceName, ...rest] = method.split('.');
-  if (rest.length === 0) {
-    throw new Error('Method name required');
+  const separator = method.lastIndexOf('.');
+  const serviceName = method.slice(0, separator);
+  const methodName = method.slice(separator + 1);
+  if (serviceName.length === 0 || methodName.length === 0) {
+    throw new Error(`Invalid method: ${method}`);
   }
-  return [serviceName, rest.join('.')];
+  return [serviceName, methodName];
 };

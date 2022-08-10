@@ -2,111 +2,55 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, useInput } from 'ink';
-import React, { FC, useMemo, useState } from 'react';
+import { Box, Text, useFocus, useFocusManager } from 'ink';
+import React, { useState } from 'react';
 
-import { PartyKey } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
-import { Share } from '../invitations';
-import { Module, ModulePanel, Panel } from '../util';
+import { useAppState } from '../../hooks';
 import { ItemList } from './ItemList';
 import { ItemTypeList } from './ItemTypeList';
-import { PartyFeeds } from './PartyFeeds';
-import { PartyInfo } from './PartyInfo';
-import { PartyMembers } from './PartyMembers';
+import { PartyList } from './PartyList';
 
-export const PartyView: FC<{
-  partyKey: PartyKey
-  onExit: () => void
-}> = ({
-  partyKey,
-  onExit
-}) => {
+export const PartyView = () => {
+  const { focus } = useFocus({ isActive: false });
+  const { focusNext } = useFocusManager();
+  const [{ partyKey }, { setPartyKey }] = useAppState();
   const [type, setType] = useState<string>();
   const party = useParty(partyKey);
 
-  useInput((input, key) => {
-    if (key.escape) {
-      onExit();
-    }
-  });
-
-  // TODO(burdon): Standardize use of <Panel>?
-
-  const modules: Module[] = useMemo(() => party ? [
-    {
-      id: 'items',
-      label: 'Items',
-      component: () => (
-        <ItemList
-          party={party}
-          type={type}
-        />
-      )
-    },
-    {
-      id: 'types',
-      label: 'Types',
-      component: () => (
-        <ItemTypeList
-          party={party}
-          onChange={setType}
-        />
-      )
-    },
-    {
-      id: 'members',
-      label: 'Members',
-      component: () => (
-        <Panel>
-          <PartyMembers
-            party={party}
-          />
-        </Panel>
-      )
-    },
-    {
-      id: 'feeds',
-      label: 'Feeds',
-      component: () => (
-        <Panel>
-          <PartyFeeds
-            party={party}
-          />
-        </Panel>
-      )
-    },
-    {
-      id: 'share',
-      label: 'Share',
-      component: () => (
-        <Share
-          onCreate={() => {
-            return party.createInvitation();
-          }}
-        />
-      )
-    }
-  ] : [], [party, type]);
-
-  if (!party) {
-    return null;
-  }
-
   return (
     <Box flexDirection='column' flexGrow={1}>
-      <Panel>
-        <PartyInfo
-          party={party}
-        />
-      </Panel>
-
-      <Box marginTop={1}>
-        <ModulePanel
-          modules={modules}
+      <Box flexDirection='column' flexGrow={1}>
+        <PartyList
+          partyKey={party?.key}
+          onSelect={partyKey => {
+            setPartyKey(partyKey);
+            focusNext();
+          }}
         />
       </Box>
+
+      {party && (
+        <Box flexDirection='column' flexGrow={1}>
+          <ItemList
+            party={party}
+            type={type}
+            onCancel={() => {
+              focus('party-list');
+            }}
+          />
+
+          <ItemTypeList
+            party={party}
+            onChange={setType}
+          />
+
+          <Box padding={1}>
+            <Text>ENTER to select ECHO Space; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

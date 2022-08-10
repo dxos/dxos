@@ -27,8 +27,6 @@ export interface IdentityCredentials {
   contacts: ContactManager | undefined
 }
 
-export type IdentityCredentialsProvider = () => IdentityCredentials | undefined
-
 export const createTestIdentityCredentials = async (keyring: Keyring): Promise<IdentityCredentials> => {
   const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
