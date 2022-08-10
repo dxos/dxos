@@ -18,6 +18,9 @@ This document presents the design of the Decentralized Meta Graph (DMG).
   - [3.2. KUBE Architecture](#32-kube-architecture)
   - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
 - [4. Notes](#4-notes)
+- [User Model](#user-model)
+  - [Source](#source)
+  - [Publishing](#publishing)
 
 ## 1. Terminology
 
@@ -57,16 +60,20 @@ Subnets implement a coordinated set of services and may span network boundaries.
 
 > - TODO: Centralized vs. decentralized autority.
 
-Typically, domain records point to the IP address of a Subnet device.
+Typically, domain records point to the IP addressese of one or more Subnet devices.
 Multiple domain names may reference the same Subnet;
-conversely, some Subnets may not be associated with any domain name.
+conversely, Subnets are not reqrued to be associated with a domain name.
 
 ![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
 
 
 #### 2.1.1. Realms
 
-The DMG is a global federated graph made up of physical partitions called Realms.
+The DMG is a global federated graph physically partitioned by Subnets.
+Subnets also manage logical partitions called Realms.
+
+
+
 Each Subnet operates a DMG Service, which manages a Realm.
 A Realm can be thought of as decentralized file system that is consistent across the Subnet.
 Each KUBE within the Subnet replicates changes to all other KUBEs, which form a peer-to-peer network.
@@ -74,14 +81,6 @@ Each KUBE within the Subnet replicates changes to all other KUBEs, which form a 
 Directories within the Realm may be mapped onto domain and subdomain names managed by the Subnet.
 
 **Example**
-
-```
-https://beta.example.com => /com/example/beta
-```
-
-> - TODO: Can this mapping be arbitrary?
-> - TODO: What if change domain name?
-> - TODO: mDNS (kube.local)
 
 
 #### 2.1.2. Records
@@ -109,7 +108,8 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
-<<<<<<< HEAD
+> - TODO: Illustrate inheritance and overriding props (e.g., /app/notepad/dev)
+
 Records are retrieved via the DMG Record Service, which defines the following API.
 
 > Note: The path may return a hierarchical list of Record refs.
@@ -120,6 +120,7 @@ package dxos.dmg.service;
 service DMG {
   rpc ResolveUrl(ResolveUrlRequest) returns (ResolveUrlResponse);
   rpc getRecords(RecordRequest) returns (RecordResponse);
+  rpc setRecord() returns ();
 }
 
 message ResolveUrlRequest {
@@ -189,8 +190,6 @@ Returns
 
 > - TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
 
-=======
->>>>>>> origin/main
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
 **Example**
@@ -269,7 +268,6 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 *   Hierarchical records (e.g., /app/notepad, /app/notepad/beta)
 *   Lambda and other compute (e.g., invoking other platforms)
 *   IPLD? DXLD?
-
 
 ## 3. Architecture
 
@@ -364,8 +362,7 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 *   3.  But if not, then how do we have globally unique Realm names?
 *   4.  DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
 
-<!---->
-
+<!--
         alice (alice.com) :: [a1, a2, a3]
             /alice/notepad
             /alice/tasklist
@@ -411,4 +408,173 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
         Publishing locally
 
             [DNS domain subnet]/[authority]]/[resource]
+-->
+
+
+
+## User Model
+
+This section illustrates the User Model for developers.
+
+> - ISSUE: We need to map Source => Build Artifacts => Publishing Address (and published metadata; hierarchical records)
+
+
+### Source
+
+Developers use conventional source code managements systems and tools, such as `git`, during the development phase.
+
+**Example**
+
+Alice is developing a new Web applications called Notepad.
+She creates a Github repo that is published at `github.com/alice/notepad`.
+She maintains a local clone of the repo on her developer workstation.
+Alice uses feature branches, which are merged back to a primary `main` branch once all tests are passing.
+She also maintains a `prod` branch and periodically merges changes here from the `main` branch.
+
+Alice's goal is to have the build artifacts created from both the `main` and `prod` branches available at all times on different URLs.
+
+```bash
+> git clone git@github.com:alice/notepad.git
+> git remote -v
+origin	git@github.com:alice/notepad.git (fetch)
+origin	git@github.com:alice/notepad.git (push)
+> git branch
+* main
+  prod
+```
+
+
+### Publishing
+
+Developers use the `dx` CLI tool to manage publishing build artifacts to the DMG.
+She creates a `dx.yml` configuration file within each project she wants to publish.
+
+**Example**
+
+```yml
+# dx.yml
+project:
+  build:
+    repo: git@github.com:alice/notepad.git
+    command: yarn build
+
+  publish:
+    realm: dx://beta.alice.com/app/notepad
+    files:
+      - public/index.html
+      - dist/main.js
+
+  endpoints:
+    - url: https://kube.local/notepad
+      resource: /index.html
+    - url: https://notepad.alice.com
+      resource: /index.html
+    - url: https://alice.com/dsuite/notepad
+      resource: /index.html
+```
+
+Alice installs the `kubed` daemon on her workstation.
+The daemon provides a DMG service that handles querying and publishing requests.
+
+Alice runs the following command to publish the package.
+
+```bash
+> dx publish
+> dx remote -v
+dx://beta.alice.com/app/notepad
+> dx status
+Published: 2022-07-31 15:05:02
+```
+
+> - ISSUE: URL mapping conflicts across DMG records.
+
+> - TODO: Compare (serverless, lambda, digital ocean, etc.)
+
+
+```
+Case 1: Single new KUBE (DX instance) (local laptop, doing development)
+
+Alice
+- Develops source code in Linus file system using git and regular toolchain
+  Literally use git to leverage knowledge and toolchain.
+  - Use uses git for their source code => github.com
+  - Creates regular git repo: ~/code/notepad
+  - git remote -v => origin	git@github.com:alice/notepad.git (fetch)
+
+- Installs DX and publishes build artifacts
+  - ~/code/notepad/dx.yml has github actions for build/deploy
+    - when update main, run esbuild
+
+    dx.yml
+    pub:
+      main:
+        target: dx://notepad            ## notepad.kube.local
+
+      dev:
+        target: dx://notepad/dev        ## dev.notepad.hostname
+        target: dx://notepad:dev        ## notepad.hostname/dev
+
+
+  - dx publish kube.local/notepad
+    dx remote -v => kube.local/notepad
+
+  - dx ls
+    dx://notepad
+
+
+https://notepad.kube.local      => /refs/notepad/@dx      <= git@github.com:alice/notepad.git#main
+
+https://dev.kube.local/notepad  => /refs/notepad/dev/@dx  <= git@github.com:alice/notepad.git#dev
+
+
+
+
+
+
+- Map to https://notepad.kube.local (require TLS Cert)
+
+- Map to https://notepad.example.com
+
+[SOURCE REPO] => [FILE REPO] <= URL
+~/code                          http://
+
+
+- 1 single DX repo per KUBE machine
+
+
+Browser                               CLI
+
+
+    dx --help
+    dx repo create main
+    mkdir -p app/notepad
+    touch app/notepad/index.html
+    echo "console.log('hello world')" > app/notepad/main.js
+    dx commit -a
+    dx push
+
+    dx://   main  app/notepad => { index.html, main.js }
+
+
+
+
+notepad.kube.local                    dx://local/kube/nodepad => dmg:/app/notepad
+
+
+                                              /textapp => { index.html, main.js }
+
+notepad.foo.com     => [[Subnet]]  => dmg:/com/foo/notepad
+notepad.bar.com                       dmg:/com/bar/notepad
+
+textapp.foo.com                       dmg:[pierre.com]/app/textapp
+
+```
+
+> - ISSUE: Load balancing (FE/BE)
+
+- Each KUBE machine has a Repo (snowflake)
+- Repo can mount and share hierarchies (within subnet and across subnets)
+  - ISSUE: How to reference other subnets? DNS primary mechanism for global names. In theory could have non-DNS.
+
+
 

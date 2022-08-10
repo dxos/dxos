@@ -5,7 +5,7 @@
 import { build } from 'esbuild';
 
 export interface BuildBotOptions {
-  entryPoint: string,
+  entryPoint: string
   outfile: string
 }
 

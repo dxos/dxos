@@ -6,9 +6,9 @@ import { ReadOnlyEvent } from '@dxos/async';
 import { RpcPort } from '@dxos/rpc';
 
 export interface SpawnOptions {
-  id: string;
-  localPath?: string;
-  logFilePath?: string;
+  id: string
+  localPath?: string
+  logFilePath?: string
 }
 
 export interface BotExitStatus {

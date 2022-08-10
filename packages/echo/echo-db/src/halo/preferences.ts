@@ -139,6 +139,7 @@ export class Preferences {
     if (!database) {
       return;
     }
+
     const [partyDesc] = database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.get('publicKey')))

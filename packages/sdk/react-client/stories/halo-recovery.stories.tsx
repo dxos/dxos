@@ -11,7 +11,8 @@ import {
 import { generateSeedPhrase } from '@dxos/client';
 
 import {
-  ClientProvider, useClient,
+  ClientProvider,
+  useClient,
   useParties,
   useProfile
 } from '../src';
