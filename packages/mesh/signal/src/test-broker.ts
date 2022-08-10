@@ -3,7 +3,6 @@
 //
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { debug } from 'debug';
 import fetch from 'node-fetch';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
