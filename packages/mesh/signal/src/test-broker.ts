@@ -3,6 +3,7 @@
 //
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import debug from 'debug';
 import fetch from 'node-fetch';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
@@ -11,7 +12,7 @@ import * as process from 'process';
 import { sleep } from '@dxos/async';
 import { randomInt } from '@dxos/util';
 
-// const log = debug('dxos:signal:test-broker');
+const log = debug('dxos:signal:test-broker');
 
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
@@ -35,7 +36,7 @@ export class TestBroker {
     }
 
     // const server = spawn(`./signal-test-${os}-${arch} -port ${this._port} server`, [], {cwd: this._binPath});
-    console.log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
+    log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
     const server = spawn(
       `./signal-test-${os}-${arch}`,
       ['-port', this._port.toString(), 'server'],
