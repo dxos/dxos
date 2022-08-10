@@ -174,16 +174,18 @@ export class RpcPeer {
         return; // Ignore when not open.
       }
 
-      assert(typeof decoded.response.id === 'number');
-      if (!this._outgoingRequests.has(decoded.response.id)) {
-        log(`Received response with incorrect id: ${decoded.response.id}`);
+      const responseId = decoded.response.id;
+
+      assert(typeof responseId === 'number');
+      if (!this._outgoingRequests.has(responseId)) {
+        log(`Received response with incorrect id: ${responseId}`);
         return; // Ignore requests with incorrect id.
       }
 
-      const item = this._outgoingRequests.get(decoded.response.id)!;
+      const item = this._outgoingRequests.get(responseId)!;
       // Delete the request record if no more responses are expected.
       if (!item.stream) {
-        this._outgoingRequests.delete(decoded.response.id);
+        this._outgoingRequests.delete(responseId);
       }
 
       log(`Response: ${decoded.response.payload?.type_url}`);
@@ -435,7 +437,7 @@ const createTimeoutPromise = (timeout: number, error: Error) => {
     );
 
     // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
-    if ('unref' in timeoutId) {
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
       timeoutId.unref();
     }
   });
