@@ -54,6 +54,11 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
           allow-repeats: false # This is the default
+      - name: Cleanup
+        if: always()
+        run: |
+          kill $(lsof -t -i:12098) || true
+          kill $(lsof -t -i:4000) || true
 
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
@@ -123,5 +128,3 @@ jobs:
           sudo apt-get install -y lsof
           kill $(lsof -t -i:3000) || true
           kill $(lsof -t -i:8080) || true
-          kill $(lsof -t -i:12098) || true
-          kill $(lsof -t -i:4000) || true
