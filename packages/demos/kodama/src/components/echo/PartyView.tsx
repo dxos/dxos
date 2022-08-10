@@ -47,7 +47,7 @@ export const PartyView = () => {
           />
 
           <Box padding={1}>
-            <Text>ENTER to select party; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
+            <Text>ENTER to select ECHO Space; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>
           </Box>
         </Box>
       )}

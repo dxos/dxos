@@ -4,11 +4,11 @@
 
 syntax = "proto3";
 
+package dxos.config;
+
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
-
-package dxos.config;
 
 message Config {
   optional int32 version = 1;
@@ -82,7 +82,7 @@ message Runtime {
         CHROME = 2;
         FIREFOX = 3;
         NODE = 4;
-        
+
         // Only for key storage:
 
         LEVELJS = 11;
@@ -162,7 +162,7 @@ message Runtime {
         optional string services = 2;
         optional string cert = 3;
       }
-    
+
       optional Endpoints endpoints = 1;
       optional string public_url = 2;
     }
@@ -177,21 +177,21 @@ message Runtime {
       optional string server = 1;
 
       /**
-      * Substrate account URI. This is a secret.
-      * KUBEs do not serve this with the config but we store it in profile.yml.
-      *
-      * TODO(dmaretskyi): Deprecate this and move it to keyring.
-      */
+       * Substrate account URI. This is a secret.
+       * KUBEs do not serve this with the config but we store it in profile.yml.
+       *
+       * TODO(dmaretskyi): Deprecate this and move it to keyring.
+       */
       optional string account_uri = 2;
 
       /**
        * Public Polkadot Address.
-      */
+       */
       optional string address = 3;
 
       /**
        * Public address of a DXNS Account.
-      */
+       */
       optional string account = 4;
 
       optional string faucet = 5;

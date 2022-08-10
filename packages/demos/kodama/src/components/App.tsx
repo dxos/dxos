@@ -7,14 +7,11 @@ import React, { useMemo } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
 
-import {
-  createEchoMenu,
-  createHaloMenu,
-  Config,
-  Module,
-  Panel, MenuItem
-} from './components';
-import { ModuleProvider } from './hooks';
+import { ModuleProvider } from '../hooks';
+import { Config } from './Config';
+import { createEchoMenu } from './echo';
+import { createHaloMenu } from './halo';
+import { MenuItem, Module, Panel } from './util';
 
 /**
  * Top-level app with menu.

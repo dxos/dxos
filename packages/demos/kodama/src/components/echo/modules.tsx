@@ -47,7 +47,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
         },
         {
           id: 'share',
-          label: 'Share Party',
+          label: 'Share Space',
           component: () => (
             <Panel>
               <Share
@@ -67,7 +67,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
           items={[
             {
               id: 'parties',
-              label: 'Parties',
+              label: 'Spaces',
               component: () => (
                 <PartyView />
               )
@@ -75,7 +75,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
             ...partyItems,
             {
               id: 'join',
-              label: 'Join Party',
+              label: 'Join Space',
               component: () => {
                 const [, { setPartyKey }] = useAppState();
                 const { focusPrevious } = useFocusManager();
@@ -91,7 +91,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
             },
             {
               id: 'create',
-              label: 'Create Party',
+              label: 'Create Space',
               component: () => {
                 const [, { setPartyKey }] = useAppState();
                 const { focusPrevious } = useFocusManager();

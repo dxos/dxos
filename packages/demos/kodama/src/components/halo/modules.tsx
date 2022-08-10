@@ -34,7 +34,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
                 return (
                   <CreateProfile
                     onCreate={() => {
-                      setPath('root');
+                      setPath('root'); // TODO(burdon): Navigate to 'root.halo' and reset child component.
                     }}
                   />
                 );

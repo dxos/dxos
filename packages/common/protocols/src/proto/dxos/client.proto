@@ -5,7 +5,8 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "config.proto";
+
+import "./config.proto";
 import "./echo/invitation.proto";
 import "./echo/snapshot.proto";
 import "./halo/keys.proto";

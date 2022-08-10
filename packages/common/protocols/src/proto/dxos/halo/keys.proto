@@ -6,8 +6,9 @@ syntax = "proto3";
 
 package dxos.halo.keys;
 
-import "signed.proto";
 import "google/protobuf/any.proto";
+
+import "./signed.proto";
 
 //
 // The type/use of a public key.
