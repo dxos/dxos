@@ -2,9 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-// This is a workaround for https://github.com/eslint/eslint/issues/3458
-require('@rushstack/eslint-patch/modern-module-resolution');
-
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -19,7 +16,7 @@ module.exports = {
     '@typescript-eslint/eslint-plugin',
     'unused-imports',
     '@stayradiated/prefer-arrow-functions',
-    '@dxos'
+    '@dxos/rules'
   ],
   ignorePatterns: [
     // Binaries
@@ -39,8 +36,8 @@ module.exports = {
     'node_modules'
   ],
   rules: {
-    '@dxos/comment': 'off',
-    '@dxos/header': 'error',
+    '@dxos/rules/comment': 'off',
+    '@dxos/rules/header': 'error',
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/func-call-spacing': ['error'],

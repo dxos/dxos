@@ -4,6 +4,7 @@ packages:
   - 'packages/common/protocols'
   - 'toolchains/protocols-toolchain'
   - 'toolchains/toolchain-node-library'
+  - 'toolchains/eslint-plugin-rules'
   - 'packages/common/codec-protobuf'
   - 'packages/common/protobuf-compiler'
   - 'packages/common/protobuf-test'
