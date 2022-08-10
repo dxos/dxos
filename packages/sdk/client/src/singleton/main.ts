@@ -14,7 +14,6 @@ import { SingletonMessage } from '../packlets/proto';
 import { ProxyPort } from './proxy-port';
 
 const log = debug('dxos:client:singleton');
-debug.enable('dxos:client:singleton');
 
 const RECONNECT_BACKOFF = 500;
 const activeProxies = new Map<number, (msg: Uint8Array) => void>();

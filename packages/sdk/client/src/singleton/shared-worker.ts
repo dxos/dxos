@@ -9,7 +9,6 @@ import { ProxyPort } from './proxy-port';
 
 const log = debug('dxos:client:shared-worker');
 const error = log.extend('error');
-debug.enable('dxos:client:shared-worker');
 
 let nextId = 1;
 const communicationPorts = new Map<number, ProxyPort>();
