@@ -69,7 +69,7 @@ export class SignalRPCClient {
           },
           subscribe: cb => {
             this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
-              if (msg.data instanceof Blob) {
+              if (typeof Blob !== "undefined" && msg.data instanceof Blob) {
                 cb(Buffer.from(await msg.data.arrayBuffer()));
               } else {
                 cb(msg.data as any);
