@@ -36,7 +36,7 @@ export class TestBroker {
     }
 
     // const server = spawn(`./signal-test-${os}-${arch} -port ${this._port} server`, [], {cwd: this._binPath});
-    log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
+    console.log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
     const server = spawn(
       `./signal-test-${os}-${arch}`,
       ['-port', this._port.toString(), 'server'],
@@ -44,19 +44,19 @@ export class TestBroker {
     );
 
     server.stdout.on('data', (data) => {
-      log(`TestServer stdout: ${data}`);
+      console.log(`TestServer stdout: ${data}`);
     });
 
     server.stderr.on('data', (data) => {
-      log(`TestServer stderr: ${data}`);
+      console.log(`TestServer stderr: ${data}`);
     });
 
     server.on('error', (err) => {
-      log(`TestServer ERROR: ${err}`);
+      console.log(`TestServer ERROR: ${err}`);
     });
 
     server.on('close', (code) => {
-      log(`TestServer exited with code ${code}`);
+      console.log(`TestServer exited with code ${code}`);
     });
 
     return server;
