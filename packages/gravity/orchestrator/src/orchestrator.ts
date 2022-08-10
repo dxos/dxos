@@ -6,7 +6,8 @@ import assert from 'node:assert';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { Config } from '@dxos/config';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';

@@ -2,15 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-import { useRoutes } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { useRoutes, HashRouter } from 'react-router-dom';
 
-import { AppLayout } from './containers';
+import { Client } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
+import { ClientProvider } from '@dxos/react-client';
+import { ErrorBoundary } from '@dxos/react-toolkit';
+
+import { ActionProvider, AppLayout } from './containers';
 import {
   InvitationPage, MainPage, PartyPage, ProfilePage, RegistrationPage, RequireProfile
 } from './pages';
 
-export const App = () => useRoutes([
+const configProvider = async () => new Config(await Dynamics(), Defaults());
+
+const Routes = () => useRoutes([
   {
     path: '/register/*',
     element: <RegistrationPage />
@@ -34,3 +41,24 @@ export const App = () => useRoutes([
       }]
   }
 ]);
+
+export const App = () => {
+  const clientRef = useRef<Client>();
+
+  return (
+    <ErrorBoundary
+      onError={() => !clientRef.current}
+      onReset={async () => {
+        await clientRef.current!.reset();
+      }}
+    >
+      <ClientProvider config={configProvider}>
+        <ActionProvider>
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </ActionProvider>
+      </ClientProvider>
+    </ErrorBoundary>
+  );
+};
