@@ -3,7 +3,6 @@
 //
 import { expect } from 'earljs';
 
-import { sleep } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
@@ -40,9 +39,6 @@ describe('SignalRPCClient', () => {
       value: Uint8Array.from([1, 2, 3])
     };
 
-    // Waiting for server to create stream.
-    // TODO(dmaretskyi): Add stream acknowledgement.
-    await sleep(10);
     await client2.sendMessage(peerId2, peerId1, message);
 
     const received: Message = await new Promise(resolve => {

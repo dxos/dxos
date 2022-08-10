@@ -116,16 +116,13 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async message (msg: SignalMessage) {
+  async signal (msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
     }
-    assert(msg.data);
-    if (msg.data.offer && this._state === ConnectionState.INITIATING_CONNECTION) {
-      throw new Error('Invalid state: Cannot send offer to an initiating peer.');
-    }
+    assert(msg.data.signal);
     assert(msg.id?.equals(this.remoteId));
     assert(msg.remoteId?.equals(this.ownId));
 

@@ -62,7 +62,7 @@ export class NetworkManager {
 
     this._messageRouter = new MessageRouter({
       sendMessage: msg => this._signalManager.message(msg),
-      onMessage: async (msg) => this._swarms.get(msg.topic!)?.onMessage(msg),
+      onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
       onOffer: msg => onOffer(msg)
     });
 
@@ -96,7 +96,6 @@ export class NetworkManager {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
-    // console.log('NetworkManager.joinProtocolSwarm', options);
     assert(PublicKey.isPublicKey(topic));
     assert(PublicKey.isPublicKey(peerId));
     assert(topology);

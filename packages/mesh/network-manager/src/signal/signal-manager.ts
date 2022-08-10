@@ -34,9 +34,9 @@ export interface SignalMessaging {
   offer (msg: SignalMessage): Promise<Answer>
 
   /**
-   * Send message to peer.
+   * Reliably send a signal to a peer.
    */
-  message (msg: SignalMessage): Promise<void>
+  signal (msg: SignalMessage): Promise<void>
 }
 
 export interface SignalManager extends SignalConnection {

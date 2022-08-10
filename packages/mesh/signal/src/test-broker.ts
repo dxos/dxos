@@ -35,7 +35,6 @@ export class TestBroker {
       throw new Error(`Unsupported platform: ${os}`);
     }
 
-    // const server = spawn(`./signal-test-${os}-${arch} -port ${this._port} server`, [], {cwd: this._binPath});
     log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
     const server = spawn(
       `./signal-test-${os}-${arch}`,

@@ -147,7 +147,6 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  // TODO(mykola): rename to message
   async message (msg: SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {

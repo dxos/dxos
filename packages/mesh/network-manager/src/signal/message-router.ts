@@ -17,9 +17,9 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  onMessage?: (message: SignalMessage) => Promise<void>;
   sendMessage?: (message: SignalMessage) => Promise<void>;
   onOffer?: (message: SignalMessage) => Promise<Answer>;
+  onSignal?: (message: SignalMessage) => Promise<void>;
   retryDelay?: number;
   timeout?: number;
 }
@@ -44,7 +44,7 @@ export class MessageRouter implements SignalMessaging {
 
   constructor ({
     sendMessage,
-    onMessage: onSignal,
+    onSignal,
     onOffer,
     retryDelay = 100,
     timeout = 3000
@@ -81,7 +81,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  async message (message: SignalMessage): Promise<void> {
+  async signal (message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
     await this._sendReliableMessage(message);
   }
