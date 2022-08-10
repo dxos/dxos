@@ -21,7 +21,9 @@ export class InMemorySignalManager implements SignalManager {
 
   constructor (
     private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
-  ) {}
+  ) {
+    state.swarmEvent.on(data => this.swarmEvent.emit(data));
+  }
 
   getStatus (): SignalApi.Status[] {
     return [];
@@ -34,6 +36,13 @@ export class InMemorySignalManager implements SignalManager {
 
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
+
+    state.swarmEvent.emit([topic, {
+      peerAvailable: {
+        peer: peerId.asUint8Array(),
+        since: new Date()
+      }
+    }]);
 
     // Emitting swarm events for each peer.
     for (const [topic, peerIds] of state.swarms) {
@@ -61,7 +70,7 @@ export class InMemorySignalManager implements SignalManager {
       }
     };
 
-    this.swarmEvent.emit([topic, swarmEvent]);
+    state.swarmEvent.emit([topic, swarmEvent]);
   }
 
   offer (msg: SignalMessage) {
@@ -82,6 +91,7 @@ export class InMemorySignalManager implements SignalManager {
 // TODO(burdon): Remove global singleton.
 // This is global state for the in-memory signal manager.
 const state = {
+  swarmEvent: new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>(),
   // Mapping from topic to set of peers.
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(x => x.toHex()),
 
