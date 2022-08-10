@@ -33,9 +33,9 @@ describe('Swarm', () => {
       return this._swarm().onOffer(msg);
     }
 
-    async signal (msg: SignalMessage) {
+    async message (msg: SignalMessage) {
       await sleep(this._delay);
-      await this._swarm().onSignal(msg);
+      await this._swarm().onMessage(msg);
     }
   }
 
@@ -50,14 +50,14 @@ describe('Swarm', () => {
 
     const mr1: MessageRouter = new MessageRouter({
       sendMessage: msg => mr2.receiveMessage(msg),
-      onSignal: msg => swarm1.onSignal(msg),
+      onMessage: msg => swarm1.onMessage(msg),
       onOffer: msg => swarm1.onOffer(msg)
     });
     afterTest(() => mr1.destroy());
 
     const mr2: MessageRouter = new MessageRouter({
       sendMessage: msg => mr1.receiveMessage(msg),
-      onSignal: msg => swarm2.onSignal(msg),
+      onMessage: msg => swarm2.onMessage(msg),
       onOffer: msg => swarm2.onOffer(msg)
     });
     afterTest(() => mr2.destroy());

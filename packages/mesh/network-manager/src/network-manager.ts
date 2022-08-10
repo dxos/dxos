@@ -58,11 +58,11 @@ export class NetworkManager {
     this._signalManager.swarmEvent
       .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
 
-    this._signalManager.onSignal.on(msg => this._messageRouter.receiveMessage(msg));
+    this._signalManager.onMessage.on(msg => this._messageRouter.receiveMessage(msg));
 
     this._messageRouter = new MessageRouter({
-      sendMessage: msg => this._signalManager.signal(msg),
-      onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
+      sendMessage: msg => this._signalManager.message(msg),
+      onMessage: async (msg) => this._swarms.get(msg.topic!)?.onMessage(msg),
       onOffer: msg => onOffer(msg)
     });
 

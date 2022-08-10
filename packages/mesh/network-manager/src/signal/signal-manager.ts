@@ -36,19 +36,19 @@ export interface SignalMessaging {
   /**
    * Send message to peer.
    */
-  signal (msg: SignalMessage): Promise<void>
+  message (msg: SignalMessage): Promise<void>
 }
 
 export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
-  onSignal: Event<SignalMessage>
+  onMessage: Event<SignalMessage>
 
   getStatus (): SignalApi.Status[]
   destroy(): Promise<void>
   /**
    * Send message to peer.
    */
-  signal (msg: SignalMessage): Promise<void>
+  message (msg: SignalMessage): Promise<void>
 }

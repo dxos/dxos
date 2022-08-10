@@ -116,7 +116,7 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal (msg: SignalMessage) {
+  async message (msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');

@@ -17,7 +17,7 @@ export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onSignal = new Event<SignalMessage>();
+  readonly onMessage = new Event<SignalMessage>();
 
   constructor (
     private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
@@ -79,10 +79,10 @@ export class InMemorySignalManager implements SignalManager {
     return state.connections.get(msg.remoteId)!._onOffer(msg);
   }
 
-  async signal (msg: SignalMessage) {
+  async message (msg: SignalMessage) {
     assert(msg.remoteId);
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
-    state.connections.get(msg.remoteId)!.onSignal.emit(msg);
+    state.connections.get(msg.remoteId)!.onMessage.emit(msg);
   }
 
   async destroy () {}

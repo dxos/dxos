@@ -146,7 +146,7 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: SignalMessage): Promise<void> {
+  async onMessage (message: SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
     assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
     assert(message.topic?.equals(this._topic));
@@ -157,7 +157,7 @@ export class Swarm {
       return;
     }
 
-    await connection.signal(message);
+    await connection.message(message);
   }
 
   async setTopology (newTopology: Topology) {
@@ -249,7 +249,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: SignalMessage) => this._signalMessaging.signal(msg),
+      (msg: SignalMessage) => this._signalMessaging.message(msg),
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );

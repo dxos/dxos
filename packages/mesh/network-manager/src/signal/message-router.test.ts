@@ -51,7 +51,7 @@ describe('MessageRouter', () => {
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
       sendMessage: (msg: SignalMessage) => api.signal(msg).catch((_) => { }),
-      onSignal: onSignal,
+      onMessage: onSignal,
       onOffer: onOffer
     });
     afterTest(() => router.destroy());
@@ -83,7 +83,7 @@ describe('MessageRouter', () => {
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
-    await router2.signal(msg);
+    await router2.message(msg);
 
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg]);
@@ -158,7 +158,7 @@ describe('MessageRouter', () => {
       topic,
       data: { signal: { json: '1to3' } }
     };
-    await router1.signal(msg1to3);
+    await router1.message(msg1to3);
     await waitForExpect(() => {
       expect(signalMock3).toHaveBeenCalledWith([msg1to3]);
     }, 4_000);
@@ -171,7 +171,7 @@ describe('MessageRouter', () => {
       topic,
       data: { signal: { json: '2to3' } }
     };
-    await router2.signal(msg2to3);
+    await router2.message(msg2to3);
     await waitForExpect(() => {
       expect(signalMock3).toHaveBeenCalledWith([msg2to3]);
     }, 4_000);
@@ -184,7 +184,7 @@ describe('MessageRouter', () => {
       topic,
       data: { signal: { json: '3to1' } }
     };
-    await router3.signal(msg3to1);
+    await router3.message(msg3to1);
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg3to1]);
     }, 4_000);
@@ -245,14 +245,14 @@ describe('MessageRouter', () => {
       const mr1: MessageRouter = new MessageRouter({
         sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),
         onOffer: async () => ({ accept: true }),
-        onSignal: onSignal1
+        onMessage: onSignal1
       });
       afterTest(() => mr1.destroy());
 
       const mr2: MessageRouter = new MessageRouter({
         sendMessage: async msg => messageDisruption(msg).forEach(msg => mr1.receiveMessage(msg)),
         onOffer: async () => ({ accept: true }),
-        onSignal: onSignal2
+        onMessage: onSignal2
       });
       afterTest(() => mr1.destroy());
 
@@ -284,7 +284,7 @@ describe('MessageRouter', () => {
       // Sending 3 messages.
       // Setup sends messages directly to between. So we don`t need to specify any ids.
       Array(3).fill(0).forEach(async () => {
-        await mr2.signal({
+        await mr2.message({
           id: PublicKey.random(),
           remoteId: PublicKey.random(),
           sessionId: PublicKey.random(),
@@ -313,7 +313,7 @@ describe('MessageRouter', () => {
       });
 
       // sending message.
-      await mr2.signal({
+      await mr2.message({
         id: PublicKey.random(),
         remoteId: PublicKey.random(),
         sessionId: PublicKey.random(),
