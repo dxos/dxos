@@ -1,7 +1,5 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-export * from './broker';
-export * from './transporter';
-export * from './testing';
+export * from './test-broker';
