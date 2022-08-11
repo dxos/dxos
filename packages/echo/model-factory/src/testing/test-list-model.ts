@@ -9,7 +9,7 @@ import { schema } from '../proto';
 import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
 
 class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
-  private _messages: TestListMutation[] = []
+  private _messages: TestListMutation[] = [];
 
   getState (): TestListMutation[] {
     return this._messages;

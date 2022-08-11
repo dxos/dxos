@@ -19,7 +19,7 @@ const log = debug('dxos:echo-db:party-feed-provider');
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
-  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex())
+  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex());
   readonly feedOpened = new Event<FeedDescriptor>();
 
   constructor (

@@ -46,7 +46,7 @@ export interface PartyStateProvider {
 export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private readonly _state: PartyState;
 
-  readonly feedAdded = new Event<FeedKey>()
+  readonly feedAdded = new Event<FeedKey>();
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 

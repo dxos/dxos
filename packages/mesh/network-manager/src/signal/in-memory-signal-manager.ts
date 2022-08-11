@@ -15,7 +15,7 @@ import { SignalManager } from './signal-manager';
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
+  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>();
   readonly onSignal = new Event<Message>();
 
   constructor (

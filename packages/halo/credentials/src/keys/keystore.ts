@@ -25,7 +25,7 @@ const marshaller = {
  * LevelDB key storage.
  */
 export class KeyStore {
-  private readonly _db: LevelUp
+  private readonly _db: LevelUp;
 
   /**
    * Takes the underlying to DB to use (eg, a leveldown, memdown, etc. instance).

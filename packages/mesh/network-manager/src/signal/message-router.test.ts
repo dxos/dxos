@@ -55,8 +55,8 @@ describe('MessageRouter', () => {
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
       sendMessage: (msg: Message) => api.signal(msg).catch((_) => { }),
-      onSignal: onSignal,
-      onOffer: onOffer
+      onSignal,
+      onOffer
     });
     afterTest(() => router.destroy());
 

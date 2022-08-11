@@ -15,7 +15,7 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
   private readonly _graph: GraphData<Item<any>> = {
     nodes: [],
     links: []
-  }
+  };
 
   get graph () {
     return this._graph;

@@ -17,7 +17,7 @@ export interface Connection {
 }
 
 export class Network extends EventEmitter {
-  private readonly _owner: string
+  private readonly _owner: string;
   private readonly _graph: Graph;
   private readonly _limit: pLimit.Limit;
   private readonly _lastUpdate: Lru;

@@ -18,7 +18,7 @@ const log = debug('dxos:echo:model-test-rig');
 
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex())
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex());
 
   private readonly _replicationFinished = new Trigger();
 

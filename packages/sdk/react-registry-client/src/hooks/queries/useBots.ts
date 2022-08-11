@@ -59,6 +59,6 @@ export const useBots = (): Result => {
 
   return {
     bots: data,
-    error: error
+    error
   };
 };
