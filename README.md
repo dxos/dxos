@@ -103,11 +103,12 @@ prettier (via eslint-plugin-prettier)?
 - [x] Publishing `pnpm publish --filter '@dxos/*'`
 - [ ] Update https://github.com/dxos/release-please
 - [ ] Run build up to a concrete package
-- [ ] https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-- [ ] Follow Rush's install structure with global node_module tucked away in a subdir
+
 
 ### Follow-up
 
+- [ ] https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
+- [ ] Follow Rush's install structure with global node_module tucked away in a subdir
 - [ ] Update toolchain
   - [ ] Add `check` script to toolchain that runs tests, lint ... but without build.
   - [ ] Reference 
