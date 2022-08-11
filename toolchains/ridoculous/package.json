@@ -11,7 +11,7 @@
   "types": "./dist/src/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "build:test": "pnpm build && pnpm lint",
+    "check": "pnpm build && pnpm lint",
     "info": "tsc --showConfig | jq",
     "lint": "eslint .",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",

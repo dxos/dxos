@@ -17,7 +17,7 @@
     "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
     "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },

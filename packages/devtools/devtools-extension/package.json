@@ -6,7 +6,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build": "node scripts/build.js",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "check": "pnpm run build && pnpm run lint && pnpm run test",
     "lint": "toolchain lint",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "pack:webext": "web-ext build --source-dir ./dist",

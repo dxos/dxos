@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "pnpm run gen && tsc",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "check": "pnpm run build && pnpm run lint && pnpm run test",
     "gen": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "lint": "eslint 'src/**/*.ts'",
     "test": "mocha -r @swc-node/register '**/*.test.ts'"

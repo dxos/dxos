@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "true",
-    "build:test": "true",
+    "check": "true",
     "lint": "true",
     "test": "true"
   },

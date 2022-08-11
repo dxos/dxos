@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "debug": "npm run build && ./bin/kodama.js",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",

@@ -5,7 +5,7 @@
       "runner": "@nrwl/nx-cloud",
       "options": {
         "cacheableOperations": [
-          "build:test",
+          "check",
           "build",
           "lint",
           "test"
@@ -21,9 +21,9 @@
         "^build"
       ]
     },
-    "build:test": {
+    "check": {
       "dependsOn": [
-        "^build:test"
+        "build"
       ]
     }
   },

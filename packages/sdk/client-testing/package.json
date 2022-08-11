@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "console": "ts-node ./src/console.ts",
     "lint": "toolchain lint",
     "test": "toolchain test"

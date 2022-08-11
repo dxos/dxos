@@ -10,7 +10,7 @@
     "build": "toolchain build",
     "build:book": "toolchain build:book",
     "build:bundle": "toolchain bundle:app --minify",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "config": "toolchain config",
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha --require ts-node/register/transpile-only './playwright/demos/grid.test.ts'",

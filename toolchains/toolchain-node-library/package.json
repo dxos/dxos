@@ -4,7 +4,7 @@
   "main": "./dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "build:test": "pnpm build && pnpm lint",
+    "check": "pnpm build && pnpm lint",
     "lint": "eslint ."
   },
   "dependencies": {

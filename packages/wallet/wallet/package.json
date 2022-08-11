@@ -11,7 +11,7 @@
   "scripts": {
     "book": "toolchain book",
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "start": "toolchain start",
     "test": "true"
