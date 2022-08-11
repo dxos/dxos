@@ -119,7 +119,7 @@ importers:
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/signal': link:../../mesh/signal/dist
       '@dxos/util': link:../../common/util
       '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
@@ -296,7 +296,7 @@ importers:
       chalk: ^4.1.0
       eslint: ^8.21.0
       expect: ~27.0.2
-      mocha: ~10.0.0
+      mocha: ~8.4.0
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
       ts-morph: ~10.0.2
@@ -318,7 +318,7 @@ importers:
       '@types/node': 16.11.47
       eslint: 8.21.0
       expect: 27.0.6
-      mocha: 10.0.0
+      mocha: 8.4.0
       ts-node: 10.9.1_ow5yu25silzxcp7pmv7jv4j54m
       typescript: 4.7.4
 
@@ -809,85 +809,6 @@ importers:
       expect: 27.0.6
       mocha: 8.4.0
       nodemon: 2.0.19
-      ts-node: 10.9.1_ow5yu25silzxcp7pmv7jv4j54m
-      typescript: 4.7.4
-
-  packages/demos/kodama/dist:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ~8.2.2
-      '@types/node': ^16.11.27
-      '@types/react': ^18.0.9
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      compare-semver: ~1.1.0
-      copy-paste: ~1.3.0
-      date-format: ~4.0.11
-      esbuild: ^0.14.49
-      eslint: ^7.12.1
-      expect: ~27.0.2
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ~8.4.0
-      npm-api: ~1.0.1
-      react: ^18.1.0
-      supervisor: ~0.12.0
-      ts-node: ^10.8.2
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-testing': link:../../../sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/protocols': link:../../../common/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      chalk: 4.1.2
-      compare-semver: 1.1.0
-      copy-paste: 1.3.0
-      date-format: 4.0.13
-      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
-      ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
-      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@18.2.0
-      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
-      ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
-      js-yaml: 4.1.0
-      npm-api: 1.0.1
-      react: 18.2.0
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/eslint-plugin': link:../../../../toolchains/eslint-plugin
-      '@dxos/protocols-toolchain': link:../../../../toolchains/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.47
-      '@types/react': 18.0.15
-      '@types/yargs': 16.0.4
-      esbuild: 0.14.53
-      eslint: 7.32.0
-      expect: 27.0.6
-      mocha: 8.4.0
-      supervisor: 0.12.0
       ts-node: 10.9.1_ow5yu25silzxcp7pmv7jv4j54m
       typescript: 4.7.4
 
@@ -1803,7 +1724,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/signal': link:../../mesh/signal/dist
       '@types/mocha': 8.2.3
       eslint: 8.21.0
       expect: 27.0.6
@@ -1857,7 +1778,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/signal': link:../../mesh/signal/dist
       '@dxos/testutils': link:../../common/testutils
       '@dxos/util': link:../../common/util
       '@swc-node/register': 1.4.2
@@ -2128,7 +2049,7 @@ importers:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/signal': link:../signal
+      '@dxos/signal': link:../signal/dist
       '@dxos/testutils': link:../../common/testutils
       '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
@@ -2455,6 +2376,113 @@ importers:
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@geut/discovery-swarm-webrtc': 4.3.1
+      '@koush/wrtc': 0.5.3
+      '@types/debug': 4.1.7
+      '@types/end-of-stream': 1.4.1
+      '@types/jest': 28.1.6
+      '@types/lodash.debounce': 4.0.7
+      '@types/lodash.pick': 4.4.7
+      '@types/pify': 3.0.2
+      '@types/yargs': 16.0.4
+      eslint: 8.21.0
+      graphology-canvas: 0.3.4_graphology-types@0.23.0
+      graphology-shortest-path: 1.5.2_graphology-types@0.23.0
+      graphology-types: 0.23.0
+      jest: 28.1.3
+      typescript: 4.7.4
+
+  packages/mesh/signal/dist:
+    specifiers:
+      '@azure/abort-controller': ^1.0.1
+      '@dxos/broadcast': workspace:*
+      '@dxos/eslint-plugin': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@geut/discovery-swarm-webrtc': ^4.0.2
+      '@hyperswarm/dht': ^4.0.1
+      '@koush/wrtc': ^0.5.3
+      '@types/debug': ^4.1.7
+      '@types/end-of-stream': ^1.4.0
+      '@types/jest': ^28.1.6
+      '@types/lodash.debounce': ^4.0.6
+      '@types/lodash.pick': ^4.4.6
+      '@types/pify': ^3.0.2
+      '@types/yargs': ~16.0.1
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      end-of-stream: ^1.4.1
+      eslint: ^8.21.0
+      graphology: ^0.17.1
+      graphology-canvas: ^0.3.2
+      graphology-shortest-path: ^1.3.4
+      graphology-types: ^0.23.0
+      graphql: ^15.3.0
+      graphql-request: ^3.1.0
+      hypercore-crypto: ^2.3.0
+      hyperswarm: ^2.10.1
+      internal-ip: ^6.0.0
+      jest: ^28.1.3
+      lodash.debounce: ^4.0.8
+      lodash.pick: ^4.4.0
+      moleculer: ^0.14.5
+      moleculer-repl: ^0.6.3
+      moleculer-web: ^0.9.1
+      moment: ^2.24.0
+      monotonic-timestamp: ^0.0.9
+      nanomessage: ^8.4.0
+      nanoresource-promise: ^2.0.0
+      node-fetch: ^2.6.0
+      p-event: ^4.2.0
+      p-limit: ^3.1.0
+      public-ip: ^4.0.1
+      pump: ^3.0.0
+      simple-hypercore-protocol: dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c
+      simple-websocket: ^9.0.0
+      socket-signal: ^9.0.0
+      systeminformation: ^5.7.7
+      tiny-lru: ^7.0.6
+      typescript: ^4.7.2
+      varint: ^5.0.0
+      yargs: ~16.2.0
+    dependencies:
+      '@azure/abort-controller': 1.1.0
+      '@dxos/broadcast': link:../../broadcast
+      '@hyperswarm/dht': 4.0.1
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      end-of-stream: 1.4.4
+      graphology: 0.17.1
+      graphql: 15.8.0
+      graphql-request: 3.7.0_graphql@15.8.0
+      hypercore-crypto: 2.3.2
+      hyperswarm: 2.15.3
+      internal-ip: 6.2.0
+      lodash.debounce: 4.0.8
+      lodash.pick: 4.4.0
+      moleculer: 0.14.21_debug@4.3.4
+      moleculer-repl: 0.6.6
+      moleculer-web: 0.9.1_moleculer@0.14.21
+      moment: 2.29.4
+      monotonic-timestamp: 0.0.9
+      nanomessage: 8.4.0
+      nanoresource-promise: 2.0.0
+      node-fetch: 2.6.7
+      p-event: 4.2.0
+      p-limit: 3.1.0
+      public-ip: 4.0.4
+      pump: 3.0.0
+      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
+      simple-websocket: 9.1.0
+      socket-signal: 9.2.1
+      systeminformation: 5.12.4
+      tiny-lru: 7.0.6
+      varint: 5.0.2
+      yargs: 16.2.0
+    devDependencies:
+      '@dxos/eslint-plugin': link:../../../../toolchains/eslint-plugin
+      '@dxos/protocols': link:../../../common/protocols
+      '@dxos/protocols-toolchain': link:../../../../toolchains/protocols-toolchain
       '@geut/discovery-swarm-webrtc': 4.3.1
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
@@ -3640,6 +3668,7 @@ packages:
     resolution: {integrity: sha512-Zt1yodBx1UcyiePMSkWnU4hPqhwq7hGi2nFL1LeA3EUl+q2LQx16MISgJ0+z7dnmgvP9QtIleuETGOiOH1RcIw==}
     dependencies:
       '@babel/highlight': 7.18.6
+    dev: false
 
   /@babel/code-frame/7.18.6:
     resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}
@@ -5658,6 +5687,7 @@ packages:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@eslint/eslintrc/1.3.0:
     resolution: {integrity: sha512-UWW0TMTmk2d7hLcWD1/e2g5HDM/HQ3csaLSqXCfqwh4uNDuNqlaKWXmEsL4Cs41Z0KnILNvwbHAah3C2yt06kw==}
@@ -5780,6 +5810,7 @@ packages:
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@humanwhocodes/config-array/0.6.0:
     resolution: {integrity: sha512-JQlEKbcgEUjBFhLIF4iqM7u/9lwgHRBcpHrmUNCALK0Q3amXN6lxdoXLnF0sm11E9VqTmBALR87IlUg1bZ8A9A==}
@@ -9534,6 +9565,7 @@ packages:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       acorn: 7.4.1
+    dev: false
 
   /acorn-jsx/5.3.2_acorn@8.8.0:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -9723,6 +9755,7 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
+    dev: false
 
   /alphanum-sort/1.0.2:
     resolution: {integrity: sha512-0FcBfdcmaumGPQ0qPn7Q5qTgz/ooXgIyp1rf8ik5bGX8mpE2YHjC0P/eyQvxu1GURYQgq9ozf2mteQ5ZD9YiyQ==}
@@ -10101,6 +10134,7 @@ packages:
   /astral-regex/2.0.0:
     resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
+    dev: false
 
   /astring/1.8.3:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
@@ -12986,19 +13020,6 @@ packages:
       supports-color: 6.1.0
     dev: false
 
-  /debug/4.3.4_supports-color@8.1.1:
-    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-      supports-color: 8.1.1
-    dev: true
-
   /decamelize/1.2.0:
     resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
     engines: {node: '>=0.10.0'}
@@ -14682,6 +14703,7 @@ packages:
     dependencies:
       esrecurse: 4.3.0
       estraverse: 4.3.0
+    dev: false
 
   /eslint-scope/7.1.1:
     resolution: {integrity: sha512-QKQM/UXpIiHcLqJ5AOyIW7XZmzjkzQXYE54n1++wb0u9V/abW3l9uQnxX8Z5Xd18xyKIMTUAyQ0k1e8pz6LUrw==}
@@ -14695,6 +14717,7 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       eslint-visitor-keys: 1.3.0
+    dev: false
 
   /eslint-utils/3.0.0_eslint@7.32.0:
     resolution: {integrity: sha512-uuQC43IGctw68pJA1RgbQS8/NP7rch6Cwd4j3ZBtgo4/8Flj4eGE7ZYSZRN3iq5pVUv6GPdW5Z1RFleo84uLDA==}
@@ -14728,6 +14751,7 @@ packages:
   /eslint-visitor-keys/1.3.0:
     resolution: {integrity: sha512-6J72N8UNa462wa/KFODt/PJ3IU60SDpC3QXC1Hjc1BXXpfL2C9R5+AU7jhe0F6GREqVMh4Juu+NY7xn+6dipUQ==}
     engines: {node: '>=4'}
+    dev: false
 
   /eslint-visitor-keys/2.1.0:
     resolution: {integrity: sha512-0rSmRBzXgDzIsD6mGdJgevzgezI534Cer5L/vyMX0kHzT/jiB43jRhd9YUlMGYLQy2zprNmoT8qasCGtY+QaKw==}
@@ -14806,6 +14830,7 @@ packages:
       v8-compile-cache: 2.3.0
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /eslint/8.21.0:
     resolution: {integrity: sha512-/XJ1+Qurf1T9G2M5IHrsjp+xrGT73RZf23xA1z5wB1ZzzEAWSZKvRwhWxTFp1rvkvCfwcvAUNAP31bhKTTGfDA==}
@@ -14908,6 +14933,7 @@ packages:
       acorn: 7.4.1
       acorn-jsx: 5.3.2_acorn@7.4.1
       eslint-visitor-keys: 1.3.0
+    dev: false
 
   /espree/9.1.0:
     resolution: {integrity: sha512-ZgYLvCS1wxOczBYGcQT9DDWgicXwJ4dbocr9uYN+/eresBAUuBu+O4WzB21ufQ/JqQT8gyp7hJ3z8SHii32mTQ==}
@@ -16173,6 +16199,7 @@ packages:
       minimatch: 3.0.5
       once: 1.4.0
       path-is-absolute: 1.0.1
+    dev: true
 
   /glob/7.1.6:
     resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
@@ -18120,6 +18147,7 @@ packages:
   /is-unicode-supported/0.1.0:
     resolution: {integrity: sha512-knxG2q4UC3u8stRGyAVJCOdxFmv5DZiRcdlIaAQXAbSfJya+OhopNotLQrstBhququ4ZpuKbDc/8S6mgXgPFPw==}
     engines: {node: '>=10'}
+    dev: false
 
   /is-url/1.2.4:
     resolution: {integrity: sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==}
@@ -19585,6 +19613,7 @@ packages:
 
   /json-schema-traverse/1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+    dev: false
 
   /json-schema/0.4.0:
     resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
@@ -20170,6 +20199,7 @@ packages:
 
   /lodash.truncate/4.4.2:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
+    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -20212,6 +20242,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
+    dev: false
 
   /log-update/3.4.0:
     resolution: {integrity: sha512-ILKe88NeMt4gmDvk/eb615U/IVn7K9KWGkoYbdatQ69Z65nj1ZzjM6fHXfcs0Uge+e+EGnMW7DY4T9yko8vWFg==}
@@ -21133,18 +21164,12 @@ packages:
     resolution: {integrity: sha512-tUpxzX0VAzJHjLu0xUfFv1gwVp9ba3IOuRAVH2EGuRW8a5emA2FlACLqiT/lDVtS1W+TGNwqz3sWaNyLgDJWuw==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: true
 
   /minimatch/3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
       brace-expansion: 1.1.11
-
-  /minimatch/5.0.1:
-    resolution: {integrity: sha512-nLDxIFRyhDblz3qMuq+SoRZED4+miJ/G+tdDrjkkkRnjAsBexeGpgjLEQ0blJy7rHhR2b93rhQY4SvyWu9v03g==}
-    engines: {node: '>=10'}
-    dependencies:
-      brace-expansion: 2.0.1
-    dev: true
 
   /minimatch/5.1.0:
     resolution: {integrity: sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==}
@@ -21255,35 +21280,6 @@ packages:
   /mobile-detect/1.4.5:
     resolution: {integrity: sha512-yc0LhH6tItlvfLBugVUEtgawwFU2sIe+cSdmRJJCTMZ5GEJyLxNyC/NIOAOGk67Fa8GNpOttO3Xz/1bHpXFD/g==}
     dev: false
-
-  /mocha/10.0.0:
-    resolution: {integrity: sha512-0Wl+elVUD43Y0BqPZBzZt8Tnkw9CMUdNYnUsTfOM1vuhJVZL+kiesFYsqwBkEEuEixaiPe5ZQdqDgX2jddhmoA==}
-    engines: {node: '>= 14.0.0'}
-    hasBin: true
-    dependencies:
-      '@ungap/promise-all-settled': 1.1.2
-      ansi-colors: 4.1.1
-      browser-stdout: 1.3.1
-      chokidar: 3.5.3
-      debug: 4.3.4_supports-color@8.1.1
-      diff: 5.0.0
-      escape-string-regexp: 4.0.0
-      find-up: 5.0.0
-      glob: 7.2.0
-      he: 1.2.0
-      js-yaml: 4.1.0
-      log-symbols: 4.1.0
-      minimatch: 5.0.1
-      ms: 2.1.3
-      nanoid: 3.3.3
-      serialize-javascript: 6.0.0
-      strip-json-comments: 3.1.1
-      supports-color: 8.1.1
-      workerpool: 6.2.1
-      yargs: 16.2.0
-      yargs-parser: 20.2.4
-      yargs-unparser: 2.0.0
-    dev: true
 
   /mocha/8.4.0:
     resolution: {integrity: sha512-hJaO0mwDXmZS4ghXsvPVriOhsxQ7ofcpQdm8dE+jISUOKopitvnXFQmpRR7jd2K6VBG6E26gU3IAbXXGIbu4sQ==}
@@ -21637,6 +21633,7 @@ packages:
     resolution: {integrity: sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+    dev: false
 
   /nanoid/3.3.4:
     resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
@@ -25062,6 +25059,7 @@ packages:
   /require-from-string/2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
+    dev: false
 
   /require-main-filename/1.0.1:
     resolution: {integrity: sha512-IqSUtOVP4ksd1C/ej5zeEh/BIP2ajqpn8c5x+q99gvcIG/Qf0cud5raVnE/Dwd0ua9TXYDoDc0RE5hBSdz22Ug==}
@@ -25234,7 +25232,7 @@ packages:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
     hasBin: true
     dependencies:
-      glob: 7.1.4
+      glob: 7.2.3
 
   /ripemd160/2.0.2:
     resolution: {integrity: sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA==}
@@ -25638,12 +25636,6 @@ packages:
     dependencies:
       randombytes: 2.1.0
 
-  /serialize-javascript/6.0.0:
-    resolution: {integrity: sha512-Qr3TosvguFt8ePWqsvRfrKyQXIiW+nGbYpy8XK24NQHE83caxWt+mIymTT19DGFbNWNLfEwsrkSmN64lVWB9ag==}
-    dependencies:
-      randombytes: 2.1.0
-    dev: true
-
   /serialize-to-js/3.1.2:
     resolution: {integrity: sha512-owllqNuDDEimQat7EPG0tH7JjO090xKNzUtYz6X+Sk2BXDnOCilDdNLwjWeFywG9xkJul1ULvtUQa9O4pUaY0w==}
     engines: {node: '>=4.0.0'}
@@ -26005,6 +25997,7 @@ packages:
       ansi-styles: 4.3.0
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
+    dev: false
 
   /slide/1.1.6:
     resolution: {integrity: sha512-NwrtjCg+lZoqhFU8fOwl4ay2ei8PaqCBOUV3/ektPY9trO1yQ1oXEfmHAhKArUVUr/hOHvy5f6AdP17dCM0zMw==}
@@ -26829,12 +26822,6 @@ packages:
       - supports-color
     dev: true
 
-  /supervisor/0.12.0:
-    resolution: {integrity: sha512-iBYeU5Or4WiiIa3+ns1DpHIiHjNNXSuYUiixKcznewwo4ImBJ8EobktaAo2csOcauhrz4SvKRTou8Z2C3W28+A==}
-    engines: {node: '>=0.6.0'}
-    hasBin: true
-    dev: true
-
   /supports-color/2.0.0:
     resolution: {integrity: sha512-KKNVtd6pCYgPIKU4cp2733HWYCpplQhddZLBUryaAHou723x+FRzQ5Df824Fj+IyyuiQTRoub4SnIFfIcrp70g==}
     engines: {node: '>=0.8.0'}
@@ -26931,6 +26918,7 @@ packages:
       slice-ansi: 4.0.0
       string-width: 4.2.3
       strip-ansi: 6.0.1
+    dev: false
 
   /tail/2.2.4:
     resolution: {integrity: sha512-PX8klSxW1u3SdgDrDeewh5GNE+hkJ4h02JvHfV6YrHqWOVJ88nUdSQqtsUf/gWhgZlPAws3fiZ+F1f8euspcuQ==}
@@ -28937,10 +28925,6 @@ packages:
 
   /workerpool/6.1.0:
     resolution: {integrity: sha512-toV7q9rWNYha963Pl/qyeZ6wG+3nnsyvolaNUS8+R5Wtw6qJPTxIlOP1ZSvcGhEJw+l3HMMmtiNo9Gl61G4GVg==}
-
-  /workerpool/6.2.1:
-    resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
-    dev: true
 
   /wrap-ansi/2.1.0:
     resolution: {integrity: sha512-vAaEaDM946gbNpH5pLVNR+vX2ht6n0Bt3GXwVB1AuAqZosOvHNF3P7wDnh8KLkSqgUh0uh77le7Owgoz+Z9XBw==}
