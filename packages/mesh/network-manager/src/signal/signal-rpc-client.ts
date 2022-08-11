@@ -19,8 +19,8 @@ interface Services {
 const log = debug('dxos:network-manager:signal-rpc-client');
 
 export class SignalRPCClient {
-  private readonly _socket: WebSocket
-  private readonly _rpc: ProtoRpcClient<Services>
+  private readonly _socket: WebSocket;
+  private readonly _rpc: ProtoRpcClient<Services>;
   private readonly _connectTrigger = new Trigger();
 
   readonly connected = new Event();
