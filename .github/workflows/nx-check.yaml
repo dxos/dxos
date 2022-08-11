@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apt-get install libxtst-dev libpng++-dev
+          sudo apt-get install libxtst-dev libpng++-dev
           npx playwright install-deps
           pnpm install
 
