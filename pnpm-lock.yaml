@@ -2037,7 +2037,7 @@ importers:
       assert: ^2.0.0
       end-of-stream: ^1.4.1
       eslint: ^8.21.0
-      ngraph.generators: ^18.0.1
+      ngraph.generators: ^19.0.1
       ngraph.graph: ^19.0.1
       typescript: ^4.7.2
       wait-for-expect: ^3.0.2
@@ -2045,7 +2045,7 @@ importers:
       '@dxos/async': link:../../common/async
       assert: 2.0.0
       end-of-stream: 1.4.4
-      ngraph.generators: 18.0.1
+      ngraph.generators: 19.3.1
       ngraph.graph: 19.1.0
     devDependencies:
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
@@ -21361,25 +21361,15 @@ packages:
   /next-tick/1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
 
-  /ngraph.events/0.0.3:
-    resolution: {integrity: sha512-UrewofHOFk/05otBm9GD4DA3PTEY/yaElhCclmGC4IcmAYaSDRrC3lENQxJ00AzeBnz1GY2xH7Ct7AfIdhsdWA==}
-    dev: false
-
   /ngraph.events/1.2.2:
     resolution: {integrity: sha512-JsUbEOzANskax+WSYiAPETemLWYXmixuPAlmZmhIbIj6FH/WDgEGCGnRwUQBK0GjOnVm8Ui+e5IJ+5VZ4e32eQ==}
     dev: false
 
-  /ngraph.generators/18.0.1:
-    resolution: {integrity: sha512-RWV1k6nt/ZyufFfkHpeamTC9f/V4SHZFyuRxhfaA7l5CUrpy7Cm+ERBZMv2Ij273wzvTy4DNHLTGY2ZgBdCvDw==}
+  /ngraph.generators/19.3.1:
+    resolution: {integrity: sha512-fvWtbCDE5/6aJIEOXOD1cE0vVCWCsROVqXPxD5Pe4RspeFz6tdr37ZkwpT+nUEp80i3fQ7aAlYMMLhEpO/7jgg==}
     dependencies:
-      ngraph.graph: 18.0.0
-      ngraph.random: 0.1.0
-    dev: false
-
-  /ngraph.graph/18.0.0:
-    resolution: {integrity: sha512-HH39PulrZrFIcO6Qw4Ts3aYqPauAV/6p2lbbtPiFZoUDAASLtfnfg4wtXohy0ZE9Ik51wUgWaZ+FfyKk/SRlzQ==}
-    dependencies:
-      ngraph.events: 0.0.3
+      ngraph.graph: 19.1.0
+      ngraph.random: 1.1.0
     dev: false
 
   /ngraph.graph/19.1.0:
@@ -21392,8 +21382,8 @@ packages:
     resolution: {integrity: sha512-A78BGNCDo/uMApMx9QRqtSOheV4wMrgxitOVR2+0ZdbTfgzd70IN2WjuSXUFbNh7T2o0fPebPB2AFx39IvP8Gw==}
     dev: true
 
-  /ngraph.random/0.1.0:
-    resolution: {integrity: sha512-KXCfzk/ZB79BxQSWMvYPGayx3Mb+7n5GPnc8SW0rwysqRV/3QxEKrLU/UVC8eGjc2SYGofqX+uhUE6IXfqR5VA==}
+  /ngraph.random/1.1.0:
+    resolution: {integrity: sha512-h25UdUN/g8U7y29TzQtRm/GvGr70lK37yQPvPKXXuVfs7gCm82WipYFZcksQfeKumtOemAzBIcT7lzzyK/edLw==}
     dev: false
 
   /nice-try/1.0.5:
