@@ -36,8 +36,6 @@ export class MMSTTopology implements Topology {
 
   private _controller?: SwarmController;
 
-  private _lookupIntervalId?: NodeJS.Timeout;
-
   private _sampleCollected = false;
 
   constructor ({
@@ -53,10 +51,6 @@ export class MMSTTopology implements Topology {
   init (controller: SwarmController): void {
     assert(!this._controller, 'Already initialized');
     this._controller = controller;
-
-    this._lookupIntervalId = setInterval(() => {
-      controller.lookup();
-    }, 10_000);
   }
 
   update (): void {
@@ -79,9 +73,7 @@ export class MMSTTopology implements Topology {
   }
 
   async destroy (): Promise<void> {
-    if (this._lookupIntervalId !== undefined) {
-      clearInterval(this._lookupIntervalId);
-    }
+    // Nothing to do.
   }
 
   private _runAlgorithm () {

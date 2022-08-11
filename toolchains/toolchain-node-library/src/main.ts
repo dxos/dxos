@@ -51,18 +51,26 @@ export interface BuildOptions {
 }
 
 const buildProto = async (config: Config, project: Project) => {
+  const protoBase = project.toolchainConfig.protoBase ?? config.protobuf.base;
+  const output = join(project.packageRoot, protoBase, config.protobuf.output);
+  const src = join(project.packageRoot, protoBase, config.protobuf.src);
+  const substitutions = join(project.packageRoot, protoBase, config.protobuf.substitutions);
+
+  try {
+    fs.rmSync(output, { recursive: true, force: true });
+  } catch (err: any) {
+    err(err.message);
+  }
+
   // Compile protocol buffer definitions.
-  const protoFiles = glob(config.protobuf.src, { cwd: project.packageRoot });
+  const protoFiles = glob(src, { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
 
-    // Substitution classes for protobuf parsing.
-    const file = join(project.packageRoot, config.protobuf.substitutions);
-    const substitutions = fs.existsSync(file) ? join(file) : undefined;
-
     await execTool('build-protobuf', [
-      '-o', join(project.packageRoot, config.protobuf.output),
-      ...(substitutions ? ['-s', substitutions] : []),
+      '-o', output,
+      // Substitution classes for protobuf parsing.
+      ...(fs.existsSync(substitutions) ? ['-s', substitutions] : []),
       ...protoFiles
     ]);
   }
@@ -75,7 +83,6 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
 
   try {
-    fs.rmSync(join(project.packageRoot, config.protobuf.output), { recursive: true, force: true });
     fs.rmSync(join(project.packageRoot, config.tsc.output), { recursive: true, force: true });
   } catch (err: any) {
     err(err.message);

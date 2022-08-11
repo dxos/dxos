@@ -757,6 +757,7 @@ importers:
       compare-semver: ~1.1.0
       copy-paste: ~1.3.0
       date-format: ~4.0.11
+      esbuild: ^0.14.49
       eslint: ^8.21.0
       expect: ~27.0.2
       ink: ^3.2.0
@@ -767,9 +768,9 @@ importers:
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
       mocha: ~8.4.0
-      nodemon: ~2.0.19
       npm-api: ~1.0.1
       react: ^18.1.0
+      supervisor: ~0.12.0
       ts-node: ^10.8.2
       typescript: ^4.7.2
       yargs: ~16.2.0
@@ -805,86 +806,8 @@ importers:
       '@types/node': 16.11.47
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
-      eslint: 8.21.0
-      expect: 27.0.6
-      mocha: 8.4.0
-      nodemon: 2.0.19
-      ts-node: 10.9.1_ow5yu25silzxcp7pmv7jv4j54m
-      typescript: 4.7.4
-
-  packages/demos/kodama/dist:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ~8.2.2
-      '@types/node': ^16.11.27
-      '@types/react': ^18.0.9
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      compare-semver: ~1.1.0
-      copy-paste: ~1.3.0
-      date-format: ~4.0.11
-      esbuild: ^0.14.49
-      eslint: ^7.12.1
-      expect: ~27.0.2
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ~8.4.0
-      npm-api: ~1.0.1
-      react: ^18.1.0
-      supervisor: ~0.12.0
-      ts-node: ^10.8.2
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-testing': link:../../../sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/protocols': link:../../../common/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      chalk: 4.1.2
-      compare-semver: 1.1.0
-      copy-paste: 1.3.0
-      date-format: 4.0.13
-      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
-      ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
-      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@18.2.0
-      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
-      ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
-      js-yaml: 4.1.0
-      npm-api: 1.0.1
-      react: 18.2.0
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/eslint-plugin': link:../../../../toolchains/eslint-plugin
-      '@dxos/protocols-toolchain': link:../../../../toolchains/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.47
-      '@types/react': 18.0.15
-      '@types/yargs': 16.0.4
       esbuild: 0.14.53
-      eslint: 7.32.0
+      eslint: 8.21.0
       expect: 27.0.6
       mocha: 8.4.0
       supervisor: 0.12.0
@@ -2072,10 +1995,12 @@ importers:
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
+      '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
@@ -2104,6 +2029,7 @@ importers:
       '@dxos/mesh-protocol': link:../protocol
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../common/protocols
+      '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       '@koush/wrtc': 0.5.3
       assert: 2.0.0
@@ -2119,6 +2045,7 @@ importers:
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/signal': link:../signal/dist
       '@dxos/testutils': link:../../common/testutils
+      '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.47
@@ -2355,109 +2282,35 @@ importers:
 
   packages/mesh/signal:
     specifiers:
-      '@azure/abort-controller': ^1.0.1
-      '@dxos/broadcast': workspace:*
-      '@dxos/eslint-plugin': workspace:*
+      '@dxos/async': workspace:*
+      '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@geut/discovery-swarm-webrtc': ^4.0.2
-      '@hyperswarm/dht': ^4.0.1
-      '@koush/wrtc': ^0.5.3
+      '@dxos/util': workspace:*
+      '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
-      '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^28.1.6
-      '@types/lodash.debounce': ^4.0.6
-      '@types/lodash.pick': ^4.4.6
-      '@types/pify': ^3.0.2
-      '@types/yargs': ~16.0.1
-      buffer-json-encoding: ^1.0.2
+      '@types/node': ^16.11.27
+      '@types/node-fetch': ^2.5.10
       debug: ^4.3.3
-      end-of-stream: ^1.4.1
-      eslint: ^8.21.0
-      graphology: ^0.17.1
-      graphology-canvas: ^0.3.2
-      graphology-shortest-path: ^1.3.4
-      graphology-types: ^0.23.0
-      graphql: ^15.3.0
-      graphql-request: ^3.1.0
-      hypercore-crypto: ^2.3.0
-      hyperswarm: ^2.10.1
-      internal-ip: ^6.0.0
-      jest: ^28.1.3
-      lodash.debounce: ^4.0.8
-      lodash.pick: ^4.4.0
-      moleculer: ^0.14.5
-      moleculer-repl: ^0.6.3
-      moleculer-web: ^0.9.1
-      moment: ^2.24.0
-      monotonic-timestamp: ^0.0.9
-      nanomessage: ^8.4.0
-      nanoresource-promise: ^2.0.0
+      eslint: ^7.12.1
       node-fetch: ^2.6.0
-      p-event: ^4.2.0
-      p-limit: ^3.1.0
-      public-ip: ^4.0.1
-      pump: ^3.0.0
-      simple-hypercore-protocol: dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c
-      simple-websocket: ^9.0.0
-      socket-signal: ^9.0.0
-      systeminformation: ^5.7.7
-      tiny-lru: ^7.0.6
+      pkg-up: ^3.1.0
       typescript: ^4.7.2
-      varint: ^5.0.0
-      yargs: ~16.2.0
     dependencies:
-      '@azure/abort-controller': 1.1.0
-      '@dxos/broadcast': link:../broadcast
-      '@hyperswarm/dht': 4.0.1
-      buffer-json-encoding: 1.0.2
+      '@dxos/async': link:../../common/async
       debug: 4.3.4
-      end-of-stream: 1.4.4
-      graphology: 0.17.1
-      graphql: 15.8.0
-      graphql-request: 3.7.0_graphql@15.8.0
-      hypercore-crypto: 2.3.2
-      hyperswarm: 2.15.3
-      internal-ip: 6.2.0
-      lodash.debounce: 4.0.8
-      lodash.pick: 4.4.0
-      moleculer: 0.14.21_debug@4.3.4
-      moleculer-repl: 0.6.6
-      moleculer-web: 0.9.1_moleculer@0.14.21
-      moment: 2.29.4
-      monotonic-timestamp: 0.0.9
-      nanomessage: 8.4.0
-      nanoresource-promise: 2.0.0
       node-fetch: 2.6.7
-      p-event: 4.2.0
-      p-limit: 3.1.0
-      public-ip: 4.0.4
-      pump: 3.0.0
-      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
-      simple-websocket: 9.1.0
-      socket-signal: 9.2.1
-      systeminformation: 5.12.4
-      tiny-lru: 7.0.6
-      varint: 5.0.2
-      yargs: 16.2.0
+      pkg-up: 3.1.0
     devDependencies:
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@geut/discovery-swarm-webrtc': 4.3.1
-      '@koush/wrtc': 0.5.3
+      '@dxos/util': link:../../common/util
+      '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
-      '@types/end-of-stream': 1.4.1
-      '@types/jest': 28.1.6
-      '@types/lodash.debounce': 4.0.7
-      '@types/lodash.pick': 4.4.7
-      '@types/pify': 3.0.2
-      '@types/yargs': 16.0.4
-      eslint: 8.21.0
-      graphology-canvas: 0.3.4_graphology-types@0.23.0
-      graphology-shortest-path: 1.5.2_graphology-types@0.23.0
-      graphology-types: 0.23.0
-      jest: 28.1.3
+      '@types/node': 16.11.47
+      '@types/node-fetch': 2.6.2
+      eslint: 7.32.0
       typescript: 4.7.4
 
   packages/mesh/signal/dist:
@@ -2948,6 +2801,7 @@ importers:
       '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
@@ -2981,6 +2835,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
+      '@dxos/react-async': link:../../common/react-async
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.10.0_@babel+core@7.13.16
       debug: 4.3.4
@@ -7944,7 +7799,6 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
     requiresBuild: true
     optional: true
 
@@ -7953,7 +7807,6 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
     requiresBuild: true
     optional: true
 
@@ -7962,7 +7815,6 @@ packages:
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
     requiresBuild: true
     optional: true
 
@@ -7971,7 +7823,6 @@ packages:
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
     requiresBuild: true
     optional: true
 
@@ -12837,18 +12688,6 @@ packages:
     dependencies:
       ms: 2.1.3
 
-  /debug/3.2.7_supports-color@5.5.0:
-    resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.3
-      supports-color: 5.5.0
-    dev: true
-
   /debug/3.2.7_supports-color@6.1.0:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
     peerDependencies:
@@ -13378,6 +13217,7 @@ packages:
 
   /domexception/1.0.1:
     resolution: {integrity: sha512-raigMkn7CJNNo6Ihro1fzG7wr3fHuYVytzquZKX5n0yizGsTcYgzdIUwj1X9pK0VvjeihV+XiclP+DjwbsSKug==}
+    requiresBuild: true
     dependencies:
       webidl-conversions: 4.0.2
     optional: true
@@ -15948,6 +15788,7 @@ packages:
       minimatch: 3.0.5
       once: 1.4.0
       path-is-absolute: 1.0.1
+    dev: true
 
   /glob/7.1.6:
     resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
@@ -16918,10 +16759,6 @@ packages:
 
   /iferr/0.1.5:
     resolution: {integrity: sha512-DUNFN5j7Tln0D+TxzloUjKB+CtVu6myn0JEFak6dG18mNt9YkQ6lzGCdafwofISZ1lLF3xRHJ98VKy9ynkcFaA==}
-
-  /ignore-by-default/1.0.1:
-    resolution: {integrity: sha512-Ius2VYcGNk7T90CppJqcIkS5ooHUZyIQK+ClZfMfMNFEF9VSE73Fq+906u/CWu92x4gzZMWOwfFYckPObzdEbA==}
-    dev: true
 
   /ignore/4.0.6:
     resolution: {integrity: sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==}
@@ -20771,6 +20608,7 @@ packages:
     resolution: {integrity: sha512-tUpxzX0VAzJHjLu0xUfFv1gwVp9ba3IOuRAVH2EGuRW8a5emA2FlACLqiT/lDVtS1W+TGNwqz3sWaNyLgDJWuw==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: true
 
   /minimatch/3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -21545,24 +21383,6 @@ packages:
       node.extend: 1.0.8
     dev: true
 
-  /nodemon/2.0.19:
-    resolution: {integrity: sha512-4pv1f2bMDj0Eeg/MhGqxrtveeQ5/G/UVe9iO6uTZzjnRluSA4PVWf8CW99LUPwGB3eNIA7zUFoP77YuI7hOc0A==}
-    engines: {node: '>=8.10.0'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      chokidar: 3.5.3
-      debug: 3.2.7_supports-color@5.5.0
-      ignore-by-default: 1.0.1
-      minimatch: 3.1.2
-      pstree.remy: 1.1.8
-      semver: 5.7.1
-      simple-update-notifier: 1.0.7
-      supports-color: 5.5.0
-      touch: 3.1.0
-      undefsafe: 2.0.5
-    dev: true
-
   /noise-protocol/3.0.1:
     resolution: {integrity: sha512-4rQGZvismeb4tMf91O31oDYLGntkEs4p4wa69+14juHTV4A3COtWyDck9PwBqFjg7S8TPZLCUXUdOnOZQJ5UBA==}
     dependencies:
@@ -21573,13 +21393,6 @@ packages:
 
   /noop-logger/0.1.1:
     resolution: {integrity: sha512-6kM8CLXvuW5crTxsAtva2YLrRrDaiTIkIePWs9moLHqbFWT94WpNFjwS/5dfLfECg5i/lkmw3aoqVidxt23TEQ==}
-    dev: true
-
-  /nopt/1.0.10:
-    resolution: {integrity: sha512-NWmpvLSqUrgrAC9HCuxEvb+PSloHpqVu+FqcO4eeF2h5qYRhA7ev6KvelyQAKtegUbC6RypJnlEOhd8vloNKYg==}
-    hasBin: true
-    dependencies:
-      abbrev: 1.1.1
     dev: true
 
   /nopt/5.0.0:
@@ -23433,10 +23246,6 @@ packages:
   /psl/1.9.0:
     resolution: {integrity: sha512-E/ZsdU4HLs/68gYzgGTkMicWTLPdAftJLfJFlLUAAKZGkStNU72sZjT66SnMDVOfOWY/YAoiD7Jxa9iHvngcag==}
 
-  /pstree.remy/1.1.8:
-    resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
-    dev: true
-
   /public-encrypt/4.0.3:
     resolution: {integrity: sha512-zVpa8oKZSz5bTMTFClc1fQOnyyEzpl5ozpi1B5YcvBrdohMjH2rfsBtyXcuNuwjsDIXmBYlF2N5FlJYhR29t8Q==}
     dependencies:
@@ -24591,7 +24400,7 @@ packages:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
     hasBin: true
     dependencies:
-      glob: 7.1.4
+      glob: 7.2.3
 
   /ripemd160/2.0.2:
     resolution: {integrity: sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA==}
@@ -25270,13 +25079,6 @@ packages:
     dependencies:
       is-arrayish: 0.3.2
     dev: false
-
-  /simple-update-notifier/1.0.7:
-    resolution: {integrity: sha512-BBKgR84BJQJm6WjWFMHgLVuo61FBDSj1z/xSFUIozqO6wO7ii0JxCqlIud7Enr/+LhlbNI0whErq96P2qHNWew==}
-    engines: {node: '>=8.10.0'}
-    dependencies:
-      semver: 7.0.0
-    dev: true
 
   /simple-websocket/9.1.0:
     resolution: {integrity: sha512-8MJPnjRN6A8UCp1I+H/dSFyjwJhp6wta4hsVRhjf8w9qBHRzxYt14RaOcjvQnhD1N4yKOddEjflwMnQM4VtXjQ==}
@@ -26544,13 +26346,6 @@ packages:
     engines: {node: '>=0.4.0'}
     dev: true
 
-  /touch/3.1.0:
-    resolution: {integrity: sha512-WBx8Uy5TLtOSRtIq+M03/sKDrXCLHxwDcquSP2c43Le03/9serjQBIztjRz6FkJez9D/hleyAXTBGLwwZUw9lA==}
-    hasBin: true
-    dependencies:
-      nopt: 1.0.10
-    dev: true
-
   /tough-cookie/2.5.0:
     resolution: {integrity: sha512-nlLsUzgm1kfLXSXfRZMc1KLAugd4hqJHDTvc2hDIwS3mZAfMEuMbc03SujMF+GEcpaX/qboeycw6iO8JwVv2+g==}
     engines: {node: '>=0.8'}
@@ -26931,10 +26726,6 @@ packages:
   /unc-path-regex/0.1.2:
     resolution: {integrity: sha512-eXL4nmJT7oCpkZsHZUOJo8hcX3GbsiDOa0Qu9F646fi8dT3XuSVopVqAcEiVzSKKH7UoDti23wNX3qGFxcW5Qg==}
     engines: {node: '>=0.10.0'}
-    dev: true
-
-  /undefsafe/2.0.5:
-    resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}
     dev: true
 
   /unicode-canonical-property-names-ecmascript/2.0.0:

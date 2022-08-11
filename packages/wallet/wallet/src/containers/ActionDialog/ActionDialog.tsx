@@ -11,7 +11,7 @@ import { Snackbar } from '@mui/material';
 import { useClient } from '@dxos/react-client';
 import { JoinPartyDialog, HaloSharingDialog, PartySharingDialog } from '@dxos/react-toolkit';
 
-import { AlertDialog, PartySettingsDialog } from '../../components';
+import { AlertDialog } from '../../components';
 import { ActionType, useActions } from '../../hooks';
 import { getPath } from '../../paths';
 
@@ -51,34 +51,6 @@ export const ActionDialog = () => {
           closeOnSuccess
           onJoin={party => navigate(getPath(party.key))}
           onClose={() => dispatch({ type: ActionType.RESET })}
-        />
-      );
-    }
-
-    case ActionType.PARTY_SETTINGS: {
-      const { party, onCreate } = action.params ?? {};
-
-      return (
-        <PartySettingsDialog
-          open
-          party={party}
-          onClose={() => dispatch({ type: ActionType.RESET })}
-          onUpdate={async (party, title, description) => {
-            if (!party) {
-              party = await client.echo.createParty();
-              await onCreate?.(party);
-            }
-
-            if (title) {
-              await party.properties.set('title', title);
-            }
-
-            if (description) {
-              await party.properties.set('description', description);
-            }
-
-            navigate(getPath(party.key));
-          }}
         />
       );
     }

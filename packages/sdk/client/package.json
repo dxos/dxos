@@ -14,7 +14,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "build": "npm run prebuild && toolchain bundle:library",
     "build:test": "toolchain build:test --bundle",
     "lint": "toolchain lint",
@@ -82,6 +82,7 @@
       "@dxos/network-manager",
       "@dxos/object-model"
     ],
+    "protoBase": "./src/packlets/proto",
     "testingFramework": "mocha"
   }
 }

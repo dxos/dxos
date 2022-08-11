@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { Config } from '@dxos/config';
 
 import * as proto from '../proto/gen/dxos/echo/invitation';

@@ -8,19 +8,22 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { Answer, Message } from '../proto/gen/dxos/mesh/signal';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
-  readonly peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>();
-  readonly onSignal = new Event<Message>();
+  readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
+  readonly onMessage = new Event<SignalMessage>();
 
   constructor (
-    private readonly _onOffer: (message: Message) => Promise<Answer>
-  ) {}
+    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
+  ) {
+    state.swarmEvent.on(data => this.swarmEvent.emit(data));
+  }
 
   getStatus (): SignalApi.Status[] {
     return [];
@@ -34,7 +37,24 @@ export class InMemorySignalManager implements SignalManager {
     state.swarms.get(topic)!.add(peerId);
     state.connections.set(peerId, this);
 
-    setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
+    state.swarmEvent.emit([topic, {
+      peerAvailable: {
+        peer: peerId.asUint8Array(),
+        since: new Date()
+      }
+    }]);
+
+    // Emitting swarm events for each peer.
+    for (const [topic, peerIds] of state.swarms) {
+      Array.from(peerIds).forEach(peerId => {
+        this.swarmEvent.emit([topic, {
+          peerAvailable: {
+            peer: peerId.asUint8Array(),
+            since: new Date()
+          }
+        }]);
+      });
+    }
   }
 
   leave (topic: PublicKey, peerId: PublicKey) {
@@ -43,22 +63,26 @@ export class InMemorySignalManager implements SignalManager {
     }
 
     state.swarms.get(topic)!.delete(peerId);
+
+    const swarmEvent: SwarmEvent = {
+      peerLeft: {
+        peer: peerId.asUint8Array()
+      }
+    };
+
+    state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  lookup (topic: PublicKey) {
-    setTimeout(() => this.peerCandidatesChanged.emit([topic, Array.from(state.swarms.get(topic)!.values())]), 0);
-  }
-
-  offer (msg: Message) {
+  offer (msg: SignalMessage) {
     assert(msg.remoteId);
     assert(state.connections.has(msg.remoteId), 'Peer not connected');
     return state.connections.get(msg.remoteId)!._onOffer(msg);
   }
 
-  async signal (msg: Message) {
+  async message (msg: SignalMessage) {
     assert(msg.remoteId);
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
-    state.connections.get(msg.remoteId)!.onSignal.emit(msg);
+    state.connections.get(msg.remoteId)!.onMessage.emit(msg);
   }
 
   async destroy () {}
@@ -67,6 +91,7 @@ export class InMemorySignalManager implements SignalManager {
 // TODO(burdon): Remove global singleton.
 // This is global state for the in-memory signal manager.
 const state = {
+  swarmEvent: new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>(),
   // Mapping from topic to set of peers.
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(x => x.toHex()),
 

@@ -11,7 +11,7 @@ import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 
-import { CredentialsProvider } from '.';
+import { CredentialsProvider } from './authenticator';
 
 const log = debug('dxos:echo-db:party-protocol-factory');
 
