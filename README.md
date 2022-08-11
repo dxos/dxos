@@ -86,32 +86,3 @@ build before publish
   eslint
 
 prettier (via eslint-plugin-prettier)?
-
-
-## NX tasks
-
-### Required (feature-party with Rush setup)
-
-- [ ] Add all packages
-- [ ] Update CI to run build:test
-- [ ] CI
-  - [ ] Caching PNPM deps on CI
-  - [ ] System deps (for playwright, etc.)
-  - [ ] Evaluate CI perf on full monorepo
-  - [ ] Beefy self-hosted runners
-- [ ] Fix other targets: test, lint..
-- [x] Publishing `pnpm publish --filter '@dxos/*'`
-- [ ] Update https://github.com/dxos/release-please
-- [ ] Run build up to a concrete package
-- [ ] https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-- [ ] Follow Rush's install structure with global node_module tucked away in a subdir
-
-### Follow-up
-
-- [ ] Update toolchain
-  - [ ] Add `check` script to toolchain that runs tests, lint ... but without build.
-  - [ ] Reference 
-- [ ] https://nx.dev/structure/monorepo-tags
-- [ ] Parralelizing CI onto multiple machines
-- [ ] Putting dependencies in a single package
-- [ ] Enforcing single-version for dependencies

@@ -103,6 +103,7 @@ module.exports = {
     ],
     'no-use-before-define': 'off',
     'node/no-callback-literal': 'off',
+    'n/no-callback-literal': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
@@ -124,6 +125,5 @@ module.exports = {
     ],
     '@rushstack/packlets/mechanics': ['error'],
     '@rushstack/packlets/circular-deps': ['error'],
-    'jest/no-standalone-expect': 'off',
   }
 };
