@@ -6,7 +6,7 @@ on:
 
 jobs:
   main:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, dind-actions-runner]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -40,9 +40,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: |
-          npx playwright install-deps
-          pnpm install
+        run: pnpm install
 
       # - run: npx nx workspace-lint
       # - run: npx nx format:check
