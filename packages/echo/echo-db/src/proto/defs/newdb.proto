@@ -1,0 +1,50 @@
+
+syntax = "proto3";
+
+package dxos.test.newdb;
+
+// Platform
+
+extend google.protobuf.MessageOptions {
+  optional bool item = 50002;
+}
+
+extend google.protobuf.FieldOptions {
+  optional bool link = 50003;
+}
+
+// Applcation
+
+message MyDatabase {
+  option item = true;
+
+  string title = 1;
+
+  repeated Organization organizations = 2;
+  repeated Person people = 3;
+
+  Person owner = 4;
+}
+
+message Organization {
+  option item = true;
+
+  string name = 1;
+  string description = 2;
+}
+
+message Project {
+  option item = true;
+
+  string name = 1;
+  string description = 2;
+
+  repeated Person assignees = 3 [link = true];
+}
+
+message Person {
+  option item = true;
+
+  string first_name = 1;
+  string last_name = 2;
+}

@@ -66,7 +66,8 @@
     "faker": "^5.1.0",
     "memdown": "^5.1.0",
     "mocha": "~8.4.0",
-    "typescript": "^4.7.2"
+    "typescript": "^4.7.2",
+    "protobufjs": "^6.9.0"
   },
   "publishConfig": {
     "access": "public"
