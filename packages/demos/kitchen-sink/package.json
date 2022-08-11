@@ -20,7 +20,7 @@
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test",
-    "test:playwright": "mocha --require ts-node/register/transpile-only './playwright/tests/*.test.ts'",
+    "test:playwright": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [
@@ -67,6 +67,7 @@
     "@dxos/esbuild-server": "~2.28.11",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@playwright/test": "^1.14.1",
     "@types/d3": "~7.0.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
@@ -90,5 +91,10 @@
     "robotjs": "~0.6.0",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
+  },
+  "toolchain": {
+    "additionalTestSteps": [
+      "test:playwright"
+    ]
   }
 }

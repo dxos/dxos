@@ -641,6 +641,7 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/system': ^5.8.1
       '@mui/x-data-grid': ^5.12.3
+      '@playwright/test': ^1.14.1
       '@types/d3': ~7.0.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
@@ -711,6 +712,7 @@ importers:
       '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@playwright/test': 1.25.0
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
