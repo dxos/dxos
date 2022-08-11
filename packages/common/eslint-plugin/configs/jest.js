@@ -6,6 +6,7 @@ module.exports = {
   ],
   rules: {
     'jest/no-conditional-expect': 'off',
-    'jest/valid-expect': 'off'
+    'jest/valid-expect': 'off',
+    'jest/no-standalone-expect': 'off'
   }
 }

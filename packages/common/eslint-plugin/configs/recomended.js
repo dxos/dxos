@@ -124,6 +124,5 @@ module.exports = {
     ],
     '@rushstack/packlets/mechanics': ['error'],
     '@rushstack/packlets/circular-deps': ['error'],
-    'jest/no-standalone-expect': 'off',
   }
 };
