@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import * as process from 'process';
 import yargs from 'yargs';
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

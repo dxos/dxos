@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import copypaste from 'copy-paste';
 import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
@@ -10,6 +9,7 @@ import { generateSeedPhrase, Profile } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { TextInput } from '../../components';
+import { copyToClipboard } from '../../util';
 import { Panel } from '../util';
 
 export const CreateProfile:FC<{
@@ -26,7 +26,7 @@ export const CreateProfile:FC<{
     if (username.length) {
       const seedphrase = generateSeedPhrase();
       const profile = await client.halo.createProfile({ seedphrase, username });
-      copypaste.copy(seedphrase);
+      await copyToClipboard(seedphrase);
       onCreate(profile);
     }
   };

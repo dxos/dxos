@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import copypaste from 'copy-paste';
 import { Box, Text } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
+import { copyToClipboard } from '../../util';
 import { Status, StatusState } from '../util';
 
 export const Share: FC<{
@@ -24,7 +24,7 @@ export const Share: FC<{
     // TODO(burdon): Set timeout to process invitation? Separate method to start?
     const invitation = await onCreate();
     setInvitation(invitation);
-    copypaste.copy(invitation.descriptor.encode());
+    await copyToClipboard(invitation.descriptor.encode());
 
     const handleDone = () => {
       if (isMounted()) {
