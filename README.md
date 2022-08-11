@@ -104,6 +104,7 @@ prettier (via eslint-plugin-prettier)?
 - [ ] Update https://github.com/dxos/release-please
 - [ ] Run build up to a concrete package
 - [ ] https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
+- [ ] Follow Rush's install structure with global node_module tucked away in a subdir
 
 ### Follow-up
 
