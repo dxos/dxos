@@ -40,7 +40,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          npx playwright install-deps
+          pnpm install
 
       # - run: npx nx workspace-lint
       # - run: npx nx format:check
