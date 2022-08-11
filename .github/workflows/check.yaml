@@ -45,5 +45,6 @@ jobs:
           npx playwright install-deps
           pnpm install
 
+      - run: echo $NX_BRANCH
       # TODO(wittjosiah): Switch to affected.
       - run: pnpm nx run-many --target=check
