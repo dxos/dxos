@@ -10,7 +10,7 @@
           "lint",
           "test"
         ],
-        "parallel": 6,
+        "parallel": 10,
         "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
       }
     }
