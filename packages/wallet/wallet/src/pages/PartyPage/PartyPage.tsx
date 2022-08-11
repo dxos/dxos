@@ -64,6 +64,7 @@ export const PartyPage = () => {
       }}>
         <TextField
           value={name}
+          placeholder='Add a list item'
           onChange={event => setName(event.target.value)}
           onKeyDown={async ({ key }) => {
             if (key === 'Enter') {

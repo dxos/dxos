@@ -40,9 +40,16 @@ export {
   NetworkManager
 } from '@dxos/network-manager';
 
-export * from './api';
-export * from './devtools';
-export * from './proto';
-export * from './services';
-export * from './util';
-export * from './version';
+export {
+  proto,
+  KeyRecord,
+  KeyType,
+  Profile,
+  SignRequest,
+  SignResponse
+} from './packlets/proto';
+
+export * from './packlets/api';
+export * from './packlets/devtools';
+export * from './packlets/proxy';
+export * from './packlets/services';

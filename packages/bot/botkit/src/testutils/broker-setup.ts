@@ -20,7 +20,7 @@ export const setupBroker: () => Promise<BrokerSetup> = async () => {
     runtime: {
       services: {
         signal: {
-          server: `ws://localhost:${port}`
+          server: broker.url()
         }
       }
     }

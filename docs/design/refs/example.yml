@@ -123,6 +123,7 @@ feed:
               id: Alice/Device-1/Feed-3 # NOTE: This Feed.
               assertion:
                 @type halo.credentials.AdmittedFeed
+                identityKey: Alice
                 partyKey: Party-1
                 deviceKey: Alice/Device-1
             proof:
