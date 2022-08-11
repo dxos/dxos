@@ -7,8 +7,8 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
-    variables:
-      NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    env:
+      NX_BRANCH: ${{ github.event.number }}
     steps:
       - uses: actions/checkout@v2
         with:
