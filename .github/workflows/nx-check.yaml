@@ -47,8 +47,5 @@ jobs:
           npx playwright install-deps
           pnpm install
 
-      # - run: npx nx workspace-lint
-      # - run: npx nx format:check
-      # - run: npx nx affected --target=lint --parallel=3
-      # - run: npx nx affected --target=test --parallel=3 --ci --code-coverage
-      - run: pnpx nx affected --target=check
+      # TODO(wittjosiah): Switch to affected.
+      - run: pnpm nx run-many --target=check
