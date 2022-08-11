@@ -5,7 +5,7 @@
   "scripts": {
     "build": "esbuild-server build",
     "build:test": "npm run build && npm run lint && npm run test",
-    "lint": "",
+    "lint": "true",
     "pack:app": "pnpm pack",
     "start": "esbuild-server dev",
     "test": "exit 0",
