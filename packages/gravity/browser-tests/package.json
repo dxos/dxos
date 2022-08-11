@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test",
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium --browser=firefox --browser=webkit"

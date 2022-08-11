@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild-server build",
-    "build:test": "npm run build && npm run lint && npm run test",
+    "check": "npm run build && npm run lint && npm run test",
     "lint": "true",
     "pack:app": "pnpm pack",
     "start": "esbuild-server dev",

@@ -16,7 +16,7 @@
   "scripts": {
     "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "build": "npm run prebuild && toolchain bundle:library",
-    "build:test": "toolchain build:test --bundle",
+    "check": "toolchain check --bundle",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },

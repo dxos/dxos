@@ -15,7 +15,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },

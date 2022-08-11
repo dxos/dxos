@@ -273,28 +273,17 @@ export const setupCoreCommands = (yargs: Argv) => (
     )
 
     .command(
-      'build:test',
-      'build, lint, and test the package',
+      'check',
+      'lint and test the package',
       yargs => yargs
-        .option('bundle', {
-          type: 'boolean',
-          default: false
-        })
-        .option('polyfill', {
-          type: 'boolean',
-          default: false
-        })
         .strict(),
-      handler<{ bundle: boolean, polyfill: boolean }>('Tests', async (argv) => {
+      handler('Tests', async () => {
         const project = Project.load(defaults);
-        argv.bundle
-          ? await execLibraryBundle(defaults, { polyfill: argv.polyfill })
-          : await execBuild(defaults);
         await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 
         // Additional test steps execution placed here to allow to run tests without additional steps.
-        // Additional test steps are executed by default only when build:test is run.
+        // Additional test steps are executed by default only when check is run.
         for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
           log(chalk`\n{green.bold ${step}}`);
           await execScript(project, step, []);

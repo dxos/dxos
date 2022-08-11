@@ -8,7 +8,7 @@
     "book": "toolchain book",
     "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "build:test": "pnpm run build && pnpm run lint",
+    "check": "pnpm run build && pnpm run lint",
     "lint": "toolchain lint"
   },
   "dependencies": {

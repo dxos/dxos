@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "tsc && ts-node build.ts",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "check": "pnpm run build && pnpm run lint && pnpm run test",
     "lint": "eslint '{src,test}/**/*.ts'",
     "test": "jest 2>&1"
   },

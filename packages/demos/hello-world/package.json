@@ -12,7 +12,7 @@
   "scripts": {
     "book": "esbuild-server book --mdx",
     "build": "tsc --noEmit && npm run book -- --build",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
+    "check": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
