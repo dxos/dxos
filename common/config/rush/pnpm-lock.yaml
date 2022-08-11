@@ -422,7 +422,7 @@ importers:
 
   ../../packages/common/react-async:
     specifiers:
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/mocha': ~8.2.2
@@ -440,7 +440,7 @@ importers:
     dependencies:
       immutability-helper: 3.1.1
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/mocha': 8.2.3
@@ -553,8 +553,8 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -587,8 +587,8 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
@@ -614,10 +614,10 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-core': ~2.2.1-beta.12
       '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -673,7 +673,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/echo-testing': link:../../echo/echo-testing
-      '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
+      '@dxos/gem-core': 2.2.1-beta.12_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../../sdk/react-client
@@ -702,8 +702,8 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/d3': 7.0.0
@@ -815,8 +815,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -875,8 +875,8 @@ importers:
       yjs: 13.5.22
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
@@ -906,8 +906,8 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
@@ -956,8 +956,8 @@ importers:
       type-fest: 0.13.1
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
@@ -983,7 +983,7 @@ importers:
       '@dxos/devtools-mesh': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1052,7 +1052,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
@@ -1079,7 +1079,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -1143,7 +1143,7 @@ importers:
       webextension-polyfill: 0.8.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/chrome': 0.0.125
@@ -1169,9 +1169,9 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-core': ~2.2.1-beta.12
       '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
@@ -1196,7 +1196,7 @@ importers:
       typescript: ^4.7.2
     dependencies:
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
+      '@dxos/gem-core': 2.2.1-beta.12_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
@@ -1212,7 +1212,7 @@ importers:
       react-resize-aware: 3.1.1_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -1650,7 +1650,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@types/glob': ~7.1.3
@@ -1670,7 +1670,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       assert: 2.0.0
       chalk: 4.1.2
       esbuild: 0.14.49
@@ -2533,7 +2533,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2578,7 +2578,7 @@ importers:
       debug: 4.3.3
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
@@ -2615,7 +2615,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -2651,7 +2651,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/client-testing': link:../client-testing
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-async': link:../../common/react-async
@@ -2685,7 +2685,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2737,7 +2737,7 @@ importers:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
       '@dxos/client': link:../client
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -2768,9 +2768,9 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/gem-core': ~2.2.1-beta.11
+      '@dxos/gem-core': ~2.2.1-beta.12
       '@dxos/gem-spore': ~2.2.1-beta.11
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -2793,13 +2793,13 @@ importers:
       react-dom: ^18.1.0
       typescript: ^4.7.2
     dependencies:
-      '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
+      '@dxos/gem-core': 2.2.1-beta.12_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-async': link:../../common/react-async
@@ -2825,7 +2825,7 @@ importers:
   ../../packages/sdk/react-ipfs:
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -2841,7 +2841,7 @@ importers:
       '@dxos/react-client': link:../react-client
       ipfs-http-client: 56.0.2_node-fetch@2.6.7
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/node': 16.11.27
@@ -2857,7 +2857,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/registry-client': workspace:*
@@ -2881,7 +2881,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
@@ -2902,7 +2902,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2962,7 +2962,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client': link:../react-client
@@ -3073,8 +3073,8 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3113,8 +3113,8 @@ importers:
       url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11_@types+react@18.0.15
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12_@types+react@18.0.15
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
@@ -3133,7 +3133,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3191,7 +3191,7 @@ importers:
       webextension-polyfill: 0.8.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/faker': 5.5.9
@@ -3218,7 +3218,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -3243,7 +3243,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/react': 18.0.15
@@ -3274,8 +3274,8 @@ importers:
 
   ../../toolchains/ridoculous:
     specifiers:
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protobuf-compiler': workspace:*
       '@microsoft/tsdoc': ~0.14.1
@@ -3331,8 +3331,8 @@ importers:
       unist-util-visit: 4.1.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_viatfrb5ob6mgyau3rstyhe5pe
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/debug': 4.1.7
@@ -3353,8 +3353,8 @@ importers:
 
   ../../toolchains/toolchain-node-library:
     specifiers:
-      '@dxos/esbuild-plugins': ~2.28.11
-      '@dxos/esbuild-server': ~2.28.11
+      '@dxos/esbuild-plugins': ~2.28.12
+      '@dxos/esbuild-server': ~2.28.12
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protobuf-compiler': workspace:*
       '@swc-node/register': ~1.4.2
@@ -3379,8 +3379,8 @@ importers:
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
-      '@dxos/esbuild-plugins': 2.28.11
-      '@dxos/esbuild-server': 2.28.11
+      '@dxos/esbuild-plugins': 2.28.12
+      '@dxos/esbuild-server': 2.28.12
       '@dxos/eslint-plugin': 1.0.34_viatfrb5ob6mgyau3rstyhe5pe
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@swc-node/register': 1.4.2
@@ -3418,7 +3418,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       '@jridgewell/gen-mapping': 0.1.1
-      '@jridgewell/trace-mapping': 0.3.9
+      '@jridgewell/trace-mapping': 0.3.14
 
   /@babel/code-frame/7.10.4:
     resolution: {integrity: sha512-vG6SvB6oYEhvgisZNFRmRCUkLz11c7rp+tbNTynGqc6mS1d5ATd/sGyV6W0KZZnXRKMTzZDRgQT3Ou9jhpAfUg==}
@@ -6240,8 +6240,8 @@ packages:
       - webpack-command
     dev: true
 
-  /@dxos/esbuild-plugins/2.28.11:
-    resolution: {integrity: sha512-x5YEC3yqwXUtf+J+rX6uzKyJB1kQquYp88ZFzZ1AVBaVbBBAcTQEnUUpUPocBy2a/aeBRcTzCuG/Qj8XUMn7FQ==}
+  /@dxos/esbuild-plugins/2.28.12:
+    resolution: {integrity: sha512-JOX3NzXDF18DPlsbVFHKiLFwHkVhGO+2Kcop1AyoQZ1j3AW9OjuN9i89pD8pjbAGO1FZ66k153D58X+ZJ9lqcQ==}
     dependencies:
       assert: 2.0.0
       crypto-browserify: 3.12.0
@@ -6256,8 +6256,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /@dxos/esbuild-server/2.28.11:
-    resolution: {integrity: sha512-+s2/wMBpKExoRaGoDu8L4Ja0FfXOc1wcXRlJFD5Yza9NICKDhZBo0evZKi2p0mGs49AgGcVzEw52GIvz9nr6rw==}
+  /@dxos/esbuild-server/2.28.12:
+    resolution: {integrity: sha512-I7Fepq6wPzpqREfAqxcdTf5s92+vHp+/YZjj+7tz0GWyJO6tfBsn6jhq3yoRIiuQ3K9Cl6/WClrwSoX29czDLQ==}
     hasBin: true
     dependencies:
       '@babel/core': 7.18.6
@@ -6279,13 +6279,13 @@ packages:
       rehype-highlight: 5.0.1
       styled-components: 5.3.5_7i5myeigehqah43i5u7wbekgba
       theme-ui: 0.14.6_xik3js5bxafftbq3t3yncqqzqq
-      yargs: 17.3.0
+      yargs: 17.5.1
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
 
-  /@dxos/esbuild-server/2.28.11_@types+react@18.0.15:
-    resolution: {integrity: sha512-+s2/wMBpKExoRaGoDu8L4Ja0FfXOc1wcXRlJFD5Yza9NICKDhZBo0evZKi2p0mGs49AgGcVzEw52GIvz9nr6rw==}
+  /@dxos/esbuild-server/2.28.12_@types+react@18.0.15:
+    resolution: {integrity: sha512-I7Fepq6wPzpqREfAqxcdTf5s92+vHp+/YZjj+7tz0GWyJO6tfBsn6jhq3yoRIiuQ3K9Cl6/WClrwSoX29czDLQ==}
     hasBin: true
     dependencies:
       '@babel/core': 7.18.6
@@ -6307,7 +6307,7 @@ packages:
       rehype-highlight: 5.0.1
       styled-components: 5.3.5_7i5myeigehqah43i5u7wbekgba
       theme-ui: 0.14.6_xik3js5bxafftbq3t3yncqqzqq
-      yargs: 17.3.0
+      yargs: 17.5.1
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
@@ -6382,6 +6382,28 @@ packages:
       csstype: 3.0.10
       d3: 7.3.0
       debug: 4.3.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      use-resize-observer: 8.0.0_biqbaboplfbrettd7655fr4n2y
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@dxos/gem-core/2.2.1-beta.12_2z7gpx7w77mn2fduvx4j6f34be:
+    resolution: {integrity: sha512-xM3IImW8dSwfaeTYVgvnGNP/BNRPUW7EKwTpZM3vdTqNTxRsvr3iuFAoO2eixclYkUb2JqRCeOvnyqnqHcfx1Q==}
+    peerDependencies:
+      '@emotion/css': '>=11.0.0'
+      '@emotion/react': '>=11.0.0'
+      react: '*'
+      react-dom: '*'
+    dependencies:
+      '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@emotion/react': 11.9.3_d5bzas45mfehtvmrop73rv3yw4
+      assert: 2.0.0
+      csstype: 3.1.0
+      d3: 7.3.0
+      debug: 4.3.4
+      lodash.defaultsdeep: 4.6.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       use-resize-observer: 8.0.0_biqbaboplfbrettd7655fr4n2y
@@ -27908,6 +27930,7 @@ packages:
   /yargs-parser/21.0.0:
     resolution: {integrity: sha512-z9kApYUOCwoeZ78rfRYYWdiU/iNL6mwwYlkkZfJoyMR1xps+NEBX5X7XmRpxkZHhXJ6+Ey00IwKxBBSW9FIjyA==}
     engines: {node: '>=12'}
+    dev: true
 
   /yargs-parser/21.0.1:
     resolution: {integrity: sha512-9BK1jFpLzJROCI5TzwZL/TU4gqjK5xiHV/RfWLOahrjAko/e4DJkRDZQXfvqAsiZzzYhgAzbgz6lg48jcm4GLg==}
@@ -27995,6 +28018,7 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.0.0
+    dev: true
 
   /yargs/17.5.1:
     resolution: {integrity: sha512-t6YAJcxDkNX7NFYiVtKvWUz8l+PaKTLiL63mJYWR2GnHq2gjEWISzsLp9wg3aY36dY1j+gfIEL3pIF+XlJJfbA==}
