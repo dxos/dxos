@@ -48,7 +48,7 @@ const Story = () => {
           HALO_SHARING
         </Button>
         <Button
-          onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey: partyKey } })}
+          onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey } })}
         >
           PARTY_SHARING
         </Button>
