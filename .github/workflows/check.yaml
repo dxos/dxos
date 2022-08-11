@@ -47,4 +47,4 @@ jobs:
 
       - run: echo $NX_BRANCH
       # TODO(wittjosiah): Switch to affected.
-      - run: pnpm nx run-many --target=check
+      - run: pnpm nx run-many --target=check --parallel=3
