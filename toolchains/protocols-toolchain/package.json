@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "ts-node src/main.ts build",
-    "check": "pnpm build && pnpm lint",
+    "check": "pnpm lint",
     "lint": "ts-node src/main.ts lint"
   },
   "dependencies": {
