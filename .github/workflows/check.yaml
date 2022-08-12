@@ -16,13 +16,18 @@ jobs:
         with:
           node-version: 16
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install libxtst-dev libpng++-dev
+          npx playwright install-deps
+
       - uses: nrwl/nx-set-shas@v2
 
-      - uses: pnpm/action-setup@v2.0.1
+      - uses: pnpm/action-setup@v2.2.2
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 7
+          version: 7.9
           run_install: false
 
       - name: Get pnpm store directory
@@ -39,9 +44,6 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: |
-          sudo apt-get install libxtst-dev libpng++-dev
-          npx playwright install-deps
-          pnpm install
+        run: pnpm install
 
-      - run: pnpm nx affected --target=check --parallel=3
+      - run: pnpm nx affected --target=check
