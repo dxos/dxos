@@ -19,12 +19,14 @@ export const Share: FC<{
   const isMounted = useMounted();
   const [invitation, setInvitation] = useState<InvitationRequest>();
   const [status, setStatus] = useState<StatusState>();
+  const [clipped, setClipped] = useState(false);
 
   useAsyncEffect(async () => {
     // TODO(burdon): Set timeout to process invitation? Separate method to start?
     const invitation = await onCreate();
     setInvitation(invitation);
-    await copyToClipboard(invitation.descriptor.encode());
+    const clipped = await copyToClipboard(invitation.descriptor.encode());
+    setClipped(clipped);
 
     const handleDone = () => {
       if (isMounted()) {
@@ -43,7 +45,11 @@ export const Share: FC<{
       {invitation && (
         <Box flexDirection='column'>
           <Box flexDirection='column'>
-            <Text color='green'>Invitation (copied to clipboard)</Text>
+            <Text color='green'>Invitation
+              {clipped && (
+                <Text> (copied to clipboard)</Text>
+              )}
+              </Text>
             <Text>{invitation.descriptor.encode()}</Text>
           </Box>
           <Box flexDirection='column' marginTop={1}>

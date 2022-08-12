@@ -20,13 +20,15 @@ export const CreateProfile:FC<{
   const client = useClient();
   const [username, setUsername] = useState<string>();
   const [focused, setFocused] = useState(false);
+  const [clipped, setClipped] = useState(false);
 
   const handleSubmit = async (text: string) => {
     const username = text.trim();
     if (username.length) {
       const seedphrase = generateSeedPhrase();
       const profile = await client.halo.createProfile({ seedphrase, username });
-      await copyToClipboard(seedphrase);
+      const clipped = await copyToClipboard(seedphrase);
+      setClipped(clipped);
       onCreate(profile);
     }
   };
@@ -41,9 +43,11 @@ export const CreateProfile:FC<{
         placeholder='Enter username.'
       />
 
-      <Box marginTop={1}>
-        <Text color='gray'>The recovery phrase will be copied to the clipboard.</Text>
-      </Box>
+      {clipped && (
+        <Box marginTop={1}>
+          <Text color='gray'>Recovery phrase copied to clipboard.</Text>
+        </Box>
+      )}
     </Panel>
   );
 };
