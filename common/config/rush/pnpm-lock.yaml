@@ -748,6 +748,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/node-fetch': ^2.5.10
+      '@types/qrcode-terminal': ^0.12.0
       '@types/react': ^18.0.9
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
@@ -767,6 +768,7 @@ importers:
       mocha: ~8.4.0
       node-fetch: ^2.6.0
       npm-api: ~1.0.1
+      qrcode-terminal: ~0.12.0
       react: ^18.1.0
       supervisor: ~0.12.0
       ts-node: ^10.8.2
@@ -795,6 +797,7 @@ importers:
       js-yaml: 4.1.0
       node-fetch: 2.6.7
       npm-api: 1.0.1
+      qrcode-terminal: 0.12.0
       react: 18.2.0
       yargs: 16.2.0
     devDependencies:
@@ -805,6 +808,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
+      '@types/qrcode-terminal': 0.12.0
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
       esbuild: 0.14.49
@@ -9630,6 +9634,10 @@ packages:
   /@types/q/1.5.5:
     resolution: {integrity: sha512-L28j2FcJfSZOnL1WBjDYp2vUHCeIFlyYI/53EwD/rKUBQ7MtUUfbQWiyKJGpcnv4/WgrhWsFKrcPstcAt/J0tQ==}
     dev: false
+
+  /@types/qrcode-terminal/0.12.0:
+    resolution: {integrity: sha512-g0fQKl3IVnUePV8tLkiBTduxAVSZsXts444T2aMfjOEGxd7XoeSIs16/AmRe2NlcJLqbvsOBSXov7dKSo4wigA==}
+    dev: true
 
   /@types/randombytes/2.0.0:
     resolution: {integrity: sha512-bz8PhAVlwN72vqefzxa14DKNT8jK/mV66CSjwdVQM/k3Th3EPKfUtdMniwZgMedQTFuywAsfjnZsg+pEnltaMA==}
@@ -23431,6 +23439,11 @@ packages:
   /q/1.5.1:
     resolution: {integrity: sha1-fjL3W0E4EpHQRhHxvxQQmsAGUdc=}
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
+    dev: false
+
+  /qrcode-terminal/0.12.0:
+    resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
+    hasBin: true
     dev: false
 
   /qrcode.react/3.1.0_react@18.2.0:

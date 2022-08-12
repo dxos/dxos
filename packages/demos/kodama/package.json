@@ -49,11 +49,13 @@
     "node-fetch": "^2.6.0",
     "npm-api": "~1.0.1",
     "react": "^18.1.0",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "qrcode-terminal": "~0.12.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@types/qrcode-terminal": "^0.12.0",
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",

@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
+// import qrcode from 'qrcode-terminal';
 import React, { FC, useState } from 'react';
 
 import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
-import { copyToClipboard } from '../../util';
+import { clear, copyToClipboard } from '../../util';
 import { ActionStatus, StatusState } from '../util';
 
 export const Share: FC<{
@@ -20,6 +21,7 @@ export const Share: FC<{
   const [invitation, setInvitation] = useState<InvitationRequest>();
   const [status, setStatus] = useState<StatusState>();
   const [clipped, setClipped] = useState(false);
+  const { write } = useStdout();
 
   useAsyncEffect(async () => {
     // TODO(burdon): Set timeout to process invitation? Separate method to start?
@@ -27,6 +29,12 @@ export const Share: FC<{
     setInvitation(invitation);
     const clipped = await copyToClipboard(invitation.descriptor.encode());
     setClipped(clipped);
+    if (!clipped) {
+      write(`Invitation (clipboard not available)\n${invitation.descriptor.encode()}\n\n`);
+    }
+    // qrcode.generate(invitation.descriptor.encode(), { small: true }, (str: string) => {
+    //   console.log(str);
+    // });
 
     const handleDone = () => {
       if (isMounted()) {
@@ -38,7 +46,11 @@ export const Share: FC<{
     invitation.canceled.on(handleDone);
     invitation.finished.on(handleDone); // TODO(burdon): Called even when fails.
     invitation.error.on(err => setStatus({ error: err as Error }));
+  }, () => {
+    clear();
   }, []);
+
+  // TODO(burdon): Console QR code.
 
   return (
     <Box flexDirection='column'>

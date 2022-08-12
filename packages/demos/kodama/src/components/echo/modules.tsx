@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Box, Text, useFocusManager } from 'ink';
+import { Box, useFocusManager } from 'ink';
 import React, { FC, ReactNode, useMemo } from 'react';
 
 import { Party } from '@dxos/client';
@@ -27,7 +27,6 @@ const PartyPanel: FC<{
   return (
     <Panel>
       <Box flexDirection='column' marginBottom={1}>
-        <Text>Party</Text>
         <PartyInfo
           party={party}
         />
