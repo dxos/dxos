@@ -44,4 +44,4 @@ jobs:
           npx playwright install-deps
           pnpm install
 
-      - run: pnpm nx affected --target=check --parallel=3
+      - run: pnpm nx affected --target=check --parallel=3 --skip-nx-cache
