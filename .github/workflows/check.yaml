@@ -1,5 +1,6 @@
 name: Check
 on:
+  pull_request:
   push:
 
 jobs:
@@ -46,5 +47,4 @@ jobs:
           pnpm install
 
       - run: echo $NX_BRANCH
-      # TODO(wittjosiah): Switch to affected.
-      - run: pnpm nx run-many --target=check --parallel=3
+      - run: pnpm nx affected --target=check --parallel=3
