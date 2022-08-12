@@ -57,11 +57,6 @@ dx://com.alice.app.tasks    # E.g., represents a deployed app.
 - A given DMG Service may handle OR dispatch query requests for the entire DMG. However, a DMG Service only has AUTHORITY for the domain that is registered with DNS. (e.g., the DMG Service at `alice.com` may respond with non-authoritative results for DXNs outside of the `com.alice` DXN namespace.)
 
 
-
-
-
-
-
 <br/><br/><br/><br/><br/>
 <hr/>
 
