@@ -6,8 +6,6 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
-    env:
-      NX_BRANCH: ${{ github.event.number }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,5 +44,4 @@ jobs:
           npx playwright install-deps
           pnpm install
 
-      - run: echo $NX_BRANCH
       - run: pnpm nx affected --target=check --parallel=3
