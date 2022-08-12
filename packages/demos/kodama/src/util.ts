@@ -29,7 +29,12 @@ export const versionCheck = async (name: string, version: string): Promise<strin
  * Copy to clipboard.
  */
 export const copyToClipboard = async (text: string) => {
-  // eslint-disable-next-line no-eval
-  const clipboard = (await eval('import("clipboardy")')).default;
-  clipboard.writeSync(text);
+  try {
+    // eslint-disable-next-line no-eval
+    const clipboard = (await eval('import("clipboardy")')).default;
+    clipboard.writeSync(text);
+    return true;
+  } catch (err) {
+    return false;
+  }
 };
