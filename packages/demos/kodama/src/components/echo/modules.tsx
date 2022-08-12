@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useFocusManager } from 'ink';
-import React, { useMemo } from 'react';
+import { Box, Text, useFocusManager } from 'ink';
+import React, { FC, ReactNode, useMemo } from 'react';
 
+import { Party } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
@@ -12,8 +13,30 @@ import { Join, Share } from '../invitations';
 import { MenuItem, Module, Panel } from '../util';
 import { CreateParty } from './CreateParty';
 import { PartyFeeds } from './PartyFeeds';
+import { PartyInfo } from './PartyInfo';
 import { PartyMembers } from './PartyMembers';
 import { PartyView } from './PartyView';
+
+const PartyPanel: FC<{
+  children: ReactNode,
+  party: Party
+}> = ({
+  children,
+  party
+}) => {
+  return (
+    <Panel>
+      <Box flexDirection='column' marginBottom={1}>
+        <Text>Party</Text>
+        <PartyInfo
+          party={party}
+        />
+      </Box>
+
+      {children}
+    </Panel>
+  );
+};
 
 export const createEchoMenu = (): MenuItem | undefined => {
   return {
@@ -27,35 +50,35 @@ export const createEchoMenu = (): MenuItem | undefined => {
           id: 'members',
           label: 'Members',
           component: () => (
-            <Panel>
+            <PartyPanel party={party}>
               <PartyMembers
                 partyKey={party.key}
               />
-            </Panel>
+            </PartyPanel>
           )
         },
         {
           id: 'feeds',
           label: 'Feeds',
           component: () => (
-            <Panel>
+            <PartyPanel party={party}>
               <PartyFeeds
                 partyKey={party.key}
               />
-            </Panel>
+            </PartyPanel>
           )
         },
         {
           id: 'share',
           label: 'Share Space',
           component: () => (
-            <Panel>
+            <PartyPanel party={party}>
               <Share
                 onCreate={() => {
                   return party.createInvitation();
                 }}
               />
-            </Panel>
+            </PartyPanel>
           )
         }
       ] : [], [party]);

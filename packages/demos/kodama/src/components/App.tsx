@@ -11,6 +11,7 @@ import { ModuleProvider } from '../hooks';
 import { Config } from './Config';
 import { createEchoMenu } from './echo';
 import { createHaloMenu } from './halo';
+import { createMeshMenu } from './mesh';
 import { MenuItem, Module, Panel } from './util';
 
 /**
@@ -25,6 +26,7 @@ export const App = () => {
   const items = useMemo<MenuItem[]>(() => [
     createHaloMenu(client),
     profile && createEchoMenu(),
+    createMeshMenu(client),
     {
       id: 'config',
       label: 'Config',
