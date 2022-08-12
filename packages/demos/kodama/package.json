@@ -26,6 +26,7 @@
     "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -45,6 +46,7 @@
     "ink-table": "~3.0.0",
     "ink-text-input": "~4.0.3",
     "js-yaml": "^4.1.0",
+    "node-fetch": "^2.6.0",
     "npm-api": "~1.0.1",
     "react": "^18.1.0",
     "yargs": "~16.2.0"
@@ -56,6 +58,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",
+    "@types/node-fetch": "^2.5.10",
     "@types/react": "^18.0.9",
     "@types/yargs": "~16.0.1",
     "eslint": "^7.12.1",

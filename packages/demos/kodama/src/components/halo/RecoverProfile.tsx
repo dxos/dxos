@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { Status, StatusState, TextInput } from '../../components';
+import { ActionStatus, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const RecoverProfile = () => {
@@ -38,7 +38,7 @@ export const RecoverProfile = () => {
         placeholder='Enter recovery phrase.'
       />
 
-      <Status
+      <ActionStatus
         status={status}
         marginTop={1}
       />

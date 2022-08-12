@@ -9,7 +9,7 @@ import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
 import { copyToClipboard } from '../../util';
-import { Status, StatusState } from '../util';
+import { ActionStatus, StatusState } from '../util';
 
 export const Share: FC<{
   onCreate: () => Promise<InvitationRequest>
@@ -53,7 +53,7 @@ export const Share: FC<{
         </Box>
       )}
 
-      <Status
+      <ActionStatus
         status={status}
         marginTop={1}
       />

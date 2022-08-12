@@ -732,6 +732,7 @@ importers:
 
   ../../packages/demos/kodama:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-testing': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -746,6 +747,7 @@ importers:
       '@types/js-yaml': ^4.0.5
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
+      '@types/node-fetch': ^2.5.10
       '@types/react': ^18.0.9
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
@@ -763,6 +765,7 @@ importers:
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
       mocha: ~8.4.0
+      node-fetch: ^2.6.0
       npm-api: ~1.0.1
       react: ^18.1.0
       supervisor: ~0.12.0
@@ -770,6 +773,7 @@ importers:
       typescript: ^4.7.2
       yargs: ~16.2.0
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-testing': link:../../sdk/client-testing
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -789,6 +793,7 @@ importers:
       ink-table: 3.0.0_ink@3.2.0+react@18.2.0
       ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       js-yaml: 4.1.0
+      node-fetch: 2.6.7
       npm-api: 1.0.1
       react: 18.2.0
       yargs: 16.2.0
@@ -799,6 +804,7 @@ importers:
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
+      '@types/node-fetch': 2.5.12
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
       esbuild: 0.14.49

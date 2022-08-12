@@ -21,6 +21,8 @@ import { showVersion } from './version';
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
 
+// TODO(burdon): Global error handler.
+
 /**
  * Command line parser.
  */
