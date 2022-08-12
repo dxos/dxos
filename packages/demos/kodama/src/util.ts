@@ -32,7 +32,8 @@ export const copyToClipboard = async (text: string) => {
   try {
     // eslint-disable-next-line no-eval
     const clipboard = (await eval('import("clipboardy")')).default;
-    clipboard.writeSync(text);
+    const x = await clipboard.write(text);
+    console.log(x);
     return true;
   } catch (err) {
     return false;
