@@ -1,5 +1,9 @@
 {
   "extends": "nx/presets/npm.json",
+  "npmScope": "dxos",
+  "affected": {
+    "defaultBase": "main"
+  },
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -26,8 +30,5 @@
         "build"
       ]
     }
-  },
-  "affected": {
-    "defaultBase": "main"
   }
 }

@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/common/debug/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/debug/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

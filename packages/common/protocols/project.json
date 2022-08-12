@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/common/protocols/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/protocols/dist",
+        "packages/common/protocols/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

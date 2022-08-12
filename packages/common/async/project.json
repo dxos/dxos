@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/common/async/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/async/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}
