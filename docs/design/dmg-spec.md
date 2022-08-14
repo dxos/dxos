@@ -25,7 +25,6 @@ The Decentralized Meta Graph (DMG) is a global federated content-addressable gra
 The database stores **DMG Records** which can be referenced by a **DXN** (URI) or content hash.
 DMG Records can represent various things (e.g., applications, releases, KUBE nodes, services, etc.)
 
-<<<<<<< HEAD
 ### DMG Records
 
 DMG Records are strongly typed immutable documents that can be identified by a globally unique DXN or a CID content hash.
@@ -139,7 +138,8 @@ curl -H "Accept:application/json" https://tasks.alice.com
   v                                                 |
 [URL] -----> [DNS] -----> [App Service] -----> [DMG Service]
 ```
-=======
+
+
 ### DXN
 
 - A DXN is a globally unique dot-delimitered URI.
@@ -239,8 +239,3 @@ curl -H "Accept:application/json" https://tasks.alice.com
   v                                                 |
 [URL] -----> [DNS] -----> [App Service] -----> [DMG Service]
 ```
-
-
-
->>>>>>> origin/main
-
