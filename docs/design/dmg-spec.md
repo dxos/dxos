@@ -139,33 +139,3 @@ curl -H "Accept:application/json" https://tasks.alice.com
 [URL] -----> [DNS] -----> [App Service] -----> [DMG Service]
 ```
 
-
-
-
-## Notes
-
-### 08-13-2022 RB, PC, Z
-
-Scenario
-- Web application developed in TS
-- Code stored in Github
-- Package published to NPM
-- App published to DX
-
-1. Create regular `git` repo.
-2. Push to remote `github.com` repo (only sources).
-3. Build and publish to `npm` package (only build artifacts).
-4. Publish to DMG via `dx`
-  - Tool creates local branch for each DX deployment (e.g., version, remote machine).
-  - Deployment branch has build artifacts (e.g., `dist`) and deployment-specific metadata (e.g., keys).
-  - Github and DX effectively maintain separate "parallel worlds" branches of same repo.
-    - E.g., possible to clone repo from Github, then "overlay" DX branches back onto local clone.
-
-
-
-![Repos](./diagrams/dmg-git.drawio.svg)
-
-**Ideas**
-- All transformations on git graph (e.g., build, publish).
-- CI as DX application that triggers state changes on other applications.
-
