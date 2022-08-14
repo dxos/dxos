@@ -603,6 +603,57 @@ importers:
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
 
+  ../../packages/demos/kai:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/eslint-plugin': ~1.0.34
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
+      '@types/mocha': ~8.2.2
+      '@types/node': ^16.11.27
+      '@types/react': ^18.0.9
+      esbuild: ^0.14.49
+      eslint: ^7.12.1
+      expect: ~27.0.2
+      mocha: ~8.4.0
+      react: ^18.1.0
+      supervisor: ~0.12.0
+      ts-node: ^10.8.2
+      typescript: ^4.7.2
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      react: 18.2.0
+    devDependencies:
+      '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
+      '@types/react': 18.0.15
+      esbuild: 0.14.49
+      eslint: 7.32.0
+      expect: 27.0.6
+      mocha: 8.4.0
+      supervisor: 0.12.0
+      ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
+      typescript: 4.7.4
+
   ../../packages/demos/kitchen-sink:
     specifiers:
       '@babel/core': ~7.13.15
@@ -18895,7 +18946,7 @@ packages:
       '@jest/types': 27.4.2
       '@types/stack-utils': 2.0.1
       chalk: 4.1.2
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
       micromatch: 4.0.5
       pretty-format: 27.4.2
       slash: 3.0.0
