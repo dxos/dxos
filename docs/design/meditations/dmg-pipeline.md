@@ -5,11 +5,11 @@
 Software development is a serious of pipelines mediated by humans and semi-automated processes.
 In this brief meditation, consider three stages: Creation, Packaging, and Delivery.
 
-| Stage         | Description |
-|---------------|-------------|
+| Stage         | Description                                       |
+|---------------|---------------------------------------------------|
 | Creation      | Editing, testing, and debugging code.             |
-| Packaging     | Publsihing comnponents for use by other systems.  |
-| Distribution  | Delivering an operational system.                 |
+| Packaging     | Publishing components for use by other systems.   |
+| Distribution  | Orchestrating and delivering operational systems. |
 
 Of course, there are other stages (e.g., Ideation, Design, Testing, Building, Continuous Integration, Orchestration, Monitoring, User Feedback), which we can be considered later.
 But this documents seeks to expore a foundation around which these processes could be anchored.
@@ -39,7 +39,7 @@ Concretely, let's assume that software is executed in runtime environments such 
 
 In this section consider a user, Alice, creating a Javascript PWA application that incorporates NPM packages, and deployed to a Web server.
 
-### Stage 1.
+### Stage 1. Writing code
 
 Alice creates a new Git repo and creates a simple app.
 
@@ -64,13 +64,13 @@ $ open http://localhost:3000
 After creating and testing the app, Alice pushes the repo to Github:
 
 ```bash
-git push --set-upstream origin alice/notepad
+$ git push --set-upstream origin alice/notepad
 ```
 
 She then publishes the app to NPM.
 
 ```bash
-npm publish
+$ npm publish
 ```
 
 At this point, Alice has the following assets:
@@ -80,7 +80,7 @@ At this point, Alice has the following assets:
 3. A package published to NPM that can be incorporated into other software.
 
 
-### Stage 2.
+### Stage 2. Deployments
 
 So far, Alice has been using simple conventional tools.
 To deploy the app She might consider other conventional tools such as creating and operating her own Web server (e.g., using `express`) or publishing to a manage Web service (e.g., Vercel).
@@ -114,17 +114,22 @@ Alternatively, the daemon can be configured to surface different mDNS enpoints t
 
 > - TODO: Details on /etc/hosts, mDNS, searchdomains, etc.
 > - TODO: Details on alice.com as an authority (which is substituted by alicedev via mDNS.)
+> - TODO: Deployments are Nodes on the DMG. There are different kinds of Nodes.
 
 ```bash
 $ dx kube --name alicedev
 $ open http://notepad.alicedev.local
 ```
 
-**Behing the Scenes**
+**Behind the Scenes**
 
-DX maintains a tree of [refs](https://git-scm.com/book/en/v2/Git-Internals-Git-References) that represent published applications, called **deployments**.
-Deployments are similar to branches, but contain build artifacts and metadata that are not stored on other git remotes (e.g., on Github).
-The DX daemon acts like a git remote for deployments.
+DX maintains a tree of Git References [(refs)](https://git-scm.com/book/en/v2/Git-Internals-Git-References) that represent published applications, called **deployments**.
+
+Deployments are similar to branches, but contain build artifacts and metadata that are ignored and not stored on regular git remotes (e.g., on Github).
+
+The DX daemon runs a git service that acts as a git remote for deployments.
+DX projects are effectively "joins" of disjoint sets of files cloned from conventional git and custom DX remotes.
+DX configures the project's `.gitignore` so that the source code git server ignores DX deployment metadata.
 
 For example, Alice can view local and remote banches using `git`.
 
@@ -177,13 +182,17 @@ The app built from the `release` branch will now be served from `http://notepad.
 
 ### Remote Hosting
 
-> - TODO: Permissions.
-
+> - TODO: Subdomain/path configuration.
+> - TODO: Executing actions/lambdas.
+> - TODO: SSH keys, accounts, permissions.
+> - TODO: TLS
+> - TODO: DMG graph authorities.
+> - TODO: https://git-scm.com/docs/git-worktree (checkout multiple branches?)
 
 ### Actions
 
 DX Actions are similar to Github actions in that the allow the execution of tools in reponse to both `git` and `dx` events.
-Actions can be configured in the repos `.dx/workflows` directory.
+Actions can be configured in the repo's `.dx/workflows` directory.
 
 For example, Alice can configure DX to build, test, and publish her application whenever it is merged to the `release` branch.
 
@@ -202,7 +211,7 @@ jobs:
 
 
 
-
+<br/><br/><br/><br/><br/><br/><br/>
 <hr/>
 
 ![Repos](../diagrams/dmg-git.drawio.svg)
@@ -210,5 +219,5 @@ jobs:
 **Ideas**
 - All transformations on git graph (e.g., build, publish).
 - CI as DX application that triggers state changes on other applications.
-- Graph
-- 
+- Graph Nodes other than applications
+- Normalize name for DX application (repo, project, module, etc.)
