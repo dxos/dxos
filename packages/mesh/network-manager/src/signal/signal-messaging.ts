@@ -14,7 +14,7 @@ export interface SignalMessage extends NetworkMessage {
  * Signal peer messaging interface.
  */
 
-export interface OfferMessage {
+export interface SignalMessaging {
   /**
    * Offer/answer RPC.
    */
