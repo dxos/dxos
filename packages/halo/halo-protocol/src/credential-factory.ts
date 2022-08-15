@@ -6,6 +6,7 @@ import assert from "assert";
 import { ComplexMap } from "../../../common/util/src";
 import { Credential } from "./proto";
 import { TYPES } from "./proto/gen";
+import { getSignData, sign } from "./signing";
 import { MessageType } from "./types";
 import { SIGNATURE_TYPE_ED25519 } from "./verifier";
 
@@ -61,22 +62,4 @@ export async function createCredential(opts: CredentialCreationOpts): Promise<Cr
   }
 
   return credential;
-}
-
-function getSignData(credential: Credential): Uint8Array {
-  const copy = {
-    ...credential,
-    proof: {
-      ...credential.proof,
-      value: new Uint8Array(),
-      chain: undefined,
-    }
-  }
-
-  return Buffer.from(canonicalStringify(copy));
-}
-
-async function sign(keyring: Keyring, key: PublicKey, data: Uint8Array): Promise<Uint8Array> {
-  const fullKey = keyring.getKey(key) ?? raise(new Error('Key not available for signing'))
-  return keyring.rawSign(Buffer.from(data), fullKey)
 }

@@ -3,6 +3,8 @@ import { PublicKey } from '@dxos/protocols';
 import { createCredential } from './credential-factory';
 import { Credential } from './proto';
 import { it as test } from 'mocha'
+import { verifyCredential } from './verifier';
+import expect from 'expect'
 
 describe('verifier', () => {
   describe('no chain', () => {
@@ -22,7 +24,7 @@ describe('verifier', () => {
         subject
       })
 
-      console.log(credential)
+      expect(await verifyCredential(credential)).toEqual({ kind: 'pass' })
     })
   })
 })
