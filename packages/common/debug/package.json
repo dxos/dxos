@@ -24,7 +24,7 @@
     "events": "^3.3.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^28.1.6",

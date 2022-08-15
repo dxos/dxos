@@ -11,7 +11,7 @@ import { Snackbar, Alert as MuiAlert, AlertProps } from '@mui/material';
 const Alert = (props: AlertProps) => <MuiAlert elevation={6} variant='filled' {...props} />;
 
 interface SnackbarMessage {
-  message: string,
+  message: string
   severity: 'error' | 'warning' | 'info' | 'success'
 }
 

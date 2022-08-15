@@ -11,8 +11,8 @@ import { ConnectionInfo } from '@dxos/network-manager';
 import { CopyText } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo: ConnectionInfo,
-  onReturn?: () => void,
+  connectionInfo: ConnectionInfo
+  onReturn?: () => void
 }
 
 // TODO(burdon): Convert to table.

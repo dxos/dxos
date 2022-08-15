@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols": "workspace:*",

@@ -67,9 +67,9 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
 
   const [controlPeer, setControlPeer] = useState<{
-    swarm: Swarm,
-    map: SwarmMapper,
-    signal: SignalManager,
+    swarm: Swarm
+    map: SwarmMapper
+    signal: SignalManager
     log: ConnectionLog
   }>();
 

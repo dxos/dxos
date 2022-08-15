@@ -7,7 +7,7 @@ import { DependencyList, useEffect, useState } from 'react';
 import { MaybePromise } from '@dxos/util';
 
 interface Result<T> {
-  data: T,
+  data: T
   error?: unknown
 }
 

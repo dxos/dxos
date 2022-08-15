@@ -10,8 +10,8 @@ import { Substitutions } from './common';
 export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>
 
 export interface BidirectionalMapingDescriptors {
-  encode: MapingDescriptors,
-  decode: MapingDescriptors,
+  encode: MapingDescriptors
+  decode: MapingDescriptors
 }
 
 export const createMappingDescriptors = (substitutions: Substitutions): BidirectionalMapingDescriptors => {

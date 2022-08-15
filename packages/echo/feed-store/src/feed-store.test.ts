@@ -19,7 +19,7 @@ import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 
 interface KeyPair {
-  key: PublicKey,
+  key: PublicKey
   secretKey: Buffer
 }
 

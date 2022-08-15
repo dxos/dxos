@@ -25,8 +25,8 @@ type MaybePromise<T> = Promise<T> | T
 export interface RpcPeerOptions {
   messageHandler: (method: string, request: Any) => MaybePromise<Any>
   streamHandler?: (method: string, request: Any) => Stream<Any>
-  port: RpcPort,
-  timeout?: number,
+  port: RpcPort
+  timeout?: number
   /**
    * Do not require or send handshake messages.
    */

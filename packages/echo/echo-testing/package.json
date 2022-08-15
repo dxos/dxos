@@ -19,7 +19,7 @@
     "lodash.times": "^4.3.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",

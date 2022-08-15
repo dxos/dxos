@@ -128,8 +128,8 @@ const PartyInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any,
-  party?: string,
+  error?: any
+  party?: string
   invitation?: PartyInvitation
 }
 

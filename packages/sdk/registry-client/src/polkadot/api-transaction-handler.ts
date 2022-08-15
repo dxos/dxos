@@ -14,7 +14,7 @@ type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
 export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
 
 interface SendTransactionResult {
-  events: EventRecord[],
+  events: EventRecord[]
   signer: Address
 }
 

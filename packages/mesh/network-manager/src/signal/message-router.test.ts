@@ -41,9 +41,9 @@ describe('MessageRouter', () => {
     onSignal = (async () => { }) as any,
     onOffer = async () => ({ accept: true })
   }: {
-    signalApiUrl: string;
-    onSignal?: (msg: SignalMessage) => Promise<void>;
-    onOffer?: (msg: SignalMessage) => Promise<Answer>;
+    signalApiUrl: string
+    onSignal?: (msg: SignalMessage) => Promise<void>
+    onOffer?: (msg: SignalMessage) => Promise<Answer>
   }) => {
 
     // eslint-disable-next-line prefer-const
@@ -237,10 +237,10 @@ describe('MessageRouter', () => {
       // Imitates signal network disruptions (e. g. message doubling, ).
       messageDisruption = msg => [msg]
     }: {
-      onSignal1?: (msg: SignalMessage) => Promise<void>;
-      onSignal2?: (msg: SignalMessage) => Promise<void>;
-      messageDisruption?: (msg: SignalMessage) => SignalMessage[];
-    }): {mr1: MessageRouter; mr2: MessageRouter} => {
+      onSignal1?: (msg: SignalMessage) => Promise<void>
+      onSignal2?: (msg: SignalMessage) => Promise<void>
+      messageDisruption?: (msg: SignalMessage) => SignalMessage[]
+    }): {mr1: MessageRouter, mr2: MessageRouter} => {
 
       const mr1: MessageRouter = new MessageRouter({
         sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),

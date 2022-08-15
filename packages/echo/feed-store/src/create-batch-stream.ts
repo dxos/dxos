@@ -8,12 +8,12 @@ import assert from 'node:assert';
 import { HypercoreFeed } from './hypercore-types';
 
 export interface CreateBatchStreamOptions {
-  start?: number,
-  end?: number,
-  live?: boolean,
-  snapshot?: boolean,
-  batch?: number,
-  metadata?: any,
+  start?: number
+  end?: number
+  live?: boolean
+  snapshot?: boolean
+  batch?: number
+  metadata?: any
   tail?: boolean
 }
 

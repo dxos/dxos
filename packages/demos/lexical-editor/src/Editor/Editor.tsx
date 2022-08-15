@@ -55,7 +55,7 @@ const FocusPlugin = () => {
 };
 
 export const Editor: FC<{
-  id: string,
+  id: string
   item: Item<TextModel>
 }> = ({
   id,

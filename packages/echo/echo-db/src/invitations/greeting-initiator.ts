@@ -36,7 +36,7 @@ const log = debug('dxos:echo-db:greeting-initiator');
 const DEFAULT_TIMEOUT = 30_000;
 
 export interface InvitationResult {
-  partyKey: PublicKey;
+  partyKey: PublicKey
   genesisFeedKey: PublicKey
 }
 

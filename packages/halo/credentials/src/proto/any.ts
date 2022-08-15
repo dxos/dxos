@@ -9,13 +9,13 @@ export type WithTypeUrl<T> = T & { '@type': string }
 
 export interface DecodedAny {
   // eslint-disable-next-line camelcase
-  '@type': string,
-  [key: string]: any,
+  '@type': string
+  [key: string]: any
 }
 
 export type KnownAny = {
   [K in keyof TYPES]: {
   // eslint-disable-next-line camelcase
-  '@type': K,
+  '@type': K
 } & TYPES[K]
 }[keyof TYPES]

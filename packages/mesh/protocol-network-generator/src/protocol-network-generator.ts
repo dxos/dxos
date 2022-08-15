@@ -20,10 +20,10 @@ type CreatePeerCallback = (topic: Buffer, id: Buffer, options: any) => Promise<P
 const isStream = (stream: any) => typeof stream === 'object' && typeof stream.pipe === 'function';
 
 interface GenerateOptions {
-  topic?: Buffer,
-  waitForFullConnection?: boolean,
-  peer?: any,
-  protocol?: ProtocolOptions,
+  topic?: Buffer
+  waitForFullConnection?: boolean
+  peer?: any
+  protocol?: ProtocolOptions
   parameters?: any[]
 }
 

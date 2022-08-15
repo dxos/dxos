@@ -10,7 +10,15 @@ import { PublicKey } from '@dxos/protocols';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';
-import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';
+import {
+  BotFactory,
+  BotController,
+  ContentResolver,
+  ContentLoader,
+  DXNSContentResolver,
+  FSBotSnapshotStorage,
+  IPFSContentLoader
+} from './bot-factory';
 import { BOT_SNAPSHOT_DIR, getConfig } from './config';
 
 const log = debug('dxos:botkit:bot-factory:main');

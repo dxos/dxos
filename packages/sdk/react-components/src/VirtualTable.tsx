@@ -46,7 +46,7 @@ type SortDirection = 'up' | 'down' | undefined
 
 interface HeaderCellProps {
   column: Column
-  sortDirection?: SortDirection,
+  sortDirection?: SortDirection
   onSort: (sort: SortDirection) => void
 }
 
