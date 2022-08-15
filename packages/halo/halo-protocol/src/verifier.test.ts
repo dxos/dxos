@@ -1,25 +1,28 @@
 import { Keyring, KeyType } from '@dxos/credentials'
+import { PublicKey } from '@dxos/protocols';
+import { createCredential } from './credential-factory';
 import { Credential } from './proto';
+import { it as test } from 'mocha'
 
 describe('verifier', () => {
   describe('no chain', () => {
     test('pass', async () => {
       const keyring = new Keyring();
-      const key = await keyring.createKeyRecord({ type: KeyType.IDENTITY })
+      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY })
+      const partyKey = PublicKey.random()
+      const subject = PublicKey.random()
 
-      const credential: Credential = {
-        
-      }
+      const credential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.PartyMember',
+          partyKey,
+        },
+        issuer,
+        keyring,
+        subject
+      })
+
+      console.log(credential)
     })
   })
 })
-
-
-type X = number
-const func = <T> (x: T): [T, T] => [x, x]
-
-
-
-const instantiate = <F extends (...args: any) => any, A>() => func(null as any as A);
-
-type Res = ReturnType<typeof instantiate<typeof func, X>>;

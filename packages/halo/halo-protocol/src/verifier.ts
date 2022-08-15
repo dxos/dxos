@@ -1,4 +1,5 @@
-import { Credential } from "./proto";
+import { PublicKey } from "@dxos/protocols";
+import { Chain, Credential } from "./proto";
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
