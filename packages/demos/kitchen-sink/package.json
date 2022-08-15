@@ -65,7 +65,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "~2.28.12",
     "@dxos/esbuild-server": "~2.28.12",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/d3": "~7.0.0",
     "@types/debug": "^4.1.7",

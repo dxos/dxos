@@ -18,7 +18,7 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",
