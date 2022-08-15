@@ -620,11 +620,13 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
+      '@types/react-dom': ^18.0.5
       esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
       mocha: ~8.4.0
       react: ^18.1.0
+      react-dom: ^18.1.0
       supervisor: ~0.12.0
       ts-node: ^10.8.2
       typescript: ^4.7.2
@@ -638,6 +640,7 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
@@ -646,6 +649,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
+      '@types/react-dom': 18.0.6
       esbuild: 0.14.49
       eslint: 7.32.0
       expect: 27.0.6

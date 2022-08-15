@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "name": "Kai",
   "short_name": "kai",
   "description": "Kai Web shell.",
@@ -9,12 +10,11 @@
       "type": "image/png"
     },
     {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "icons/icon-256.png",
+      "sizes": "256x256",
       "type": "image/png"
     }
   ],
-  "start_url": "/kai/js13kpwa/index.html",
   "display": "fullscreen",
   "theme_color": "#B12A34",
   "background_color": "#B12A34"
