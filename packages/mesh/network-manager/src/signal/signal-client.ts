@@ -214,12 +214,12 @@ export class SignalClient {
     this._messageStreams.delete(topic);
   }
 
-  async signal (message: NetworkMessage): Promise<void> {
+  async signal (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
     const payload: Any = {
-      type_url: 'dxos.mesh.signalMessage.SignalMessage',
-      value: schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').encode(message)
+      type_url: 'dxos.mesh.networkMessage.NetworkMessage',
+      value: schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').encode(message)
     };
-    return this._client.sendMessage(message.id, message.remoteId, payload);
+    return this._client.sendMessage(author, recipient, payload);
   }
 
   @synchronized
