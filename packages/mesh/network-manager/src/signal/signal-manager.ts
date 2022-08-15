@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalApi } from './signal-api';
 
 /**
@@ -24,21 +24,6 @@ export interface SignalConnection {
   leave (topic: PublicKey, peerId: PublicKey): void
 }
 
-/**
- * Signal peer messaging interface.
- */
-export interface SignalMessaging {
-  /**
-   * Offer/answer RPC.
-   */
-  offer (msg: NetworkMessage): Promise<Answer>
-
-  /**
-   * Reliably send a signal to a peer.
-   */
-  signal (msg: NetworkMessage): Promise<void>
-}
-
 export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
@@ -50,5 +35,5 @@ export interface SignalManager extends SignalConnection {
   /**
    * Send message to peer.
    */
-  message (msg: NetworkMessage): Promise<void>
+  message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage): Promise<void>
 }
