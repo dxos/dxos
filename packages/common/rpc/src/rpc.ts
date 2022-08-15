@@ -174,16 +174,18 @@ export class RpcPeer {
         return; // Ignore when not open.
       }
 
-      assert(typeof decoded.response.id === 'number');
-      if (!this._outgoingRequests.has(decoded.response.id)) {
-        log(`Received response with incorrect id: ${decoded.response.id}`);
+      const responseId = decoded.response.id;
+
+      assert(typeof responseId === 'number');
+      if (!this._outgoingRequests.has(responseId)) {
+        log(`Received response with incorrect id: ${responseId}`);
         return; // Ignore requests with incorrect id.
       }
 
-      const item = this._outgoingRequests.get(decoded.response.id)!;
+      const item = this._outgoingRequests.get(responseId)!;
       // Delete the request record if no more responses are expected.
       if (!item.stream) {
-        this._outgoingRequests.delete(decoded.response.id);
+        this._outgoingRequests.delete(responseId);
       }
 
       log(`Response: ${decoded.response.payload?.type_url}`);
@@ -254,17 +256,9 @@ export class RpcPeer {
       }
     });
 
-    const timeoutPromise = new Promise<any>((resolve, reject) => {
-      setTimeout(
-        () => reject(new Error('Timeout')),
-        this._options.timeout ?? DEFAULT_TIMEOUT
-      ).unref();
-    });
-    timeoutPromise.catch(() => {}); // Mute the promise.
-
     let response: Response;
     try {
-      response = await Promise.race([promise, timeoutPromise]);
+      response = await Promise.race([promise, createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))]);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -297,9 +291,11 @@ export class RpcPeer {
 
     const id = this._nextId++;
 
-    return new Stream(({ next, close }) => {
+    return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if (response.close) {
+        if (response.streamReady) {
+          ready();
+        } else if (response.close) {
           close();
         } else if (response.error) {
           assert(response.error.name);
@@ -373,6 +369,12 @@ export class RpcPeer {
       assert(req.payload);
       assert(req.method);
       const responseStream = this._options.streamHandler(req.method, req.payload);
+      responseStream.onReady(() => {
+        callback({
+          id: req.id,
+          streamReady: true
+        });
+      });
       responseStream.subscribe(
         msg => {
           callback({
@@ -420,4 +422,25 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
+};
+
+/**
+ * Creates a promise that will be rejected after a certain timeout.
+ * The promise will never cause unhandledPromiseRejection.
+ * The timeout will not block the Node.JS process from exiting.
+ */
+const createTimeoutPromise = (timeout: number, error: Error) => {
+  const timeoutPromise = new Promise<any>((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () => reject(error),
+      timeout
+    );
+
+    // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+      timeoutId.unref();
+    }
+  });
+  timeoutPromise.catch(() => {}); // Mute the promise.
+  return timeoutPromise;
 };

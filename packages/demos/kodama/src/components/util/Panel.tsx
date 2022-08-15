@@ -9,10 +9,10 @@ import React, { FC, ReactNode } from 'react';
  * Focusable panel.
  */
 export const Panel: FC<{
-  focused?: boolean
+  highlight?: boolean
   children: ReactNode
 }> = ({
-  focused,
+  highlight,
   children
 }) => {
   return (
@@ -22,7 +22,7 @@ export const Panel: FC<{
       paddingLeft={1}
       paddingRight={1}
       borderStyle='single'
-      borderColor={focused ? 'green' : '#666'}
+      borderColor={highlight ? 'green' : '#666'}
     >
       {children}
     </Box>

@@ -5,7 +5,23 @@ The word kodama (こだま) is the Japanese word for echo.
 
 ## Demo
 
-https://user-images.githubusercontent.com/3523355/181782019-20aea084-8ee5-4e44-926a-e3f98bd6b052.mov
+https://user-images.githubusercontent.com/3523355/183263486-f6fb3d8e-88f1-4915-a6e7-afbe74e5b20a.mov
+
+## Build
+
+```bash
+rushx build
+```
+
+> - TODO: Configure to use `esbuild` directly.
+
+## Build
+
+```bash
+rushx build
+```
+
+> - TODO: Configure to use `esbuild` directly.
 
 ## Usage
 
@@ -55,4 +71,12 @@ In the **second** peer join the Party.
 Paste the invitation key, then enter the 4-digit code.
 Next navigate to the Party and enter some items.
 
+## Development
 
+To run in development mode with a pre-created profile:
+
+```bash
+rushx build && ./bin/kodama.js --username Test --debug
+```
+
+Note: the `watch` script is flaky and interferes with stdin.

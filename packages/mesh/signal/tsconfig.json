@@ -4,8 +4,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*",
-    "./package.json"
+    "src/**/*"
   ],
   "references": [
     {

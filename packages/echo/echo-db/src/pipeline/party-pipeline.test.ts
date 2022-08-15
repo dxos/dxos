@@ -18,9 +18,10 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MetadataStore, PartyFeedProvider } from '.';
-import { createReplicatorPlugin } from '../protocol/replicator-plugin';
+import { createReplicatorPlugin } from '../protocol';
 import { SnapshotStore } from '../snapshots';
+import { MetadataStore } from './metadata-store';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PartyPipeline } from './party-pipeline';
 
 describe('PartyPipeline', () => {

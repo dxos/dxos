@@ -39,15 +39,10 @@ export class IdentityManager {
     assert(halo.isOpen, 'HALO must be open.');
 
     // Wait for the minimum set of keys and messages we need for proper function:
-    //
     // - KeyAdmit message for the current device so we can build the device KeyChain.
     // - Identity genesis so it can be copied into newly joined parties.
-    //
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
-    await waitForCondition(() =>
-      halo.processor.isMemberKey(deviceKey.publicKey) &&
-      halo.identityGenesis
-    );
+    await waitForCondition(() => halo.processor.isMemberKey(deviceKey.publicKey) && halo.identityGenesis);
 
     this._identity = new Identity(this._keyring, halo);
     this.ready.emit();
