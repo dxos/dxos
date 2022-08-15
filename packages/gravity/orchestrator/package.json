@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",

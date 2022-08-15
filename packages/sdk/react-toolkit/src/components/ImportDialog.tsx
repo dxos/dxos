@@ -17,8 +17,8 @@ export const ImportDialog = ({
   onClose,
   decrypter
 }: {
-  open: boolean,
-  onClose: (text?: string) => void,
+  open: boolean
+  onClose: (text?: string) => void
   decrypter: (text: string, passphrase: string) => Promise<string>
 }) => {
   const buttonRef = useRef(null);

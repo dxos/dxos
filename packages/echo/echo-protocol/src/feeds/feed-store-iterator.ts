@@ -36,10 +36,10 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
   /** Feed key as hex => feed state */
   private readonly _openFeeds = new Map<string, {
-    descriptor: FeedDescriptor,
-    iterator: AsyncIterator<FeedBlock[]>,
-    sendQueue: FeedBlock[], // TODO(burdon): Why "send"?
-    frozen: boolean,
+    descriptor: FeedDescriptor
+    iterator: AsyncIterator<FeedBlock[]>
+    sendQueue: FeedBlock[] // TODO(burdon): Why "send"?
+    frozen: boolean
   }>();
 
   private readonly _trigger = new Trigger();

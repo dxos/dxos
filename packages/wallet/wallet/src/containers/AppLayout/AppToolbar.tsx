@@ -25,7 +25,7 @@ import {
 
 export interface AppBarMenuOption {
   icon: FunctionComponent
-  text: string;
+  text: string
   onClick: () => Promise<void>
 }
 

@@ -8,8 +8,8 @@ import { AccountKey } from './account-key';
  * Accounts with a list of devices.
  */
 export interface Account {
-  id: string,
-  devices: string[],
+  id: string
+  devices: string[]
 }
 
 export interface AccountsClientBackend {

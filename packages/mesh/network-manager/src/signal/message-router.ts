@@ -12,16 +12,16 @@ import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalMessaging } from './signal-manager';
 
 interface OfferRecord {
-  resolve: (answer: Answer) => void;
-  reject: (error?: Error) => void;
+  resolve: (answer: Answer) => void
+  reject: (error?: Error) => void
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (message: SignalMessage) => Promise<void>;
-  onOffer?: (message: SignalMessage) => Promise<Answer>;
-  onSignal?: (message: SignalMessage) => Promise<void>;
-  retryDelay?: number;
-  timeout?: number;
+  sendMessage?: (message: SignalMessage) => Promise<void>
+  onOffer?: (message: SignalMessage) => Promise<Answer>
+  onSignal?: (message: SignalMessage) => Promise<void>
+  retryDelay?: number
+  timeout?: number
 }
 
 const log = debug('dxos:network-manager:message-router');

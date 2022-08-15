@@ -7,7 +7,7 @@ import React, { ReactNode, createContext } from 'react';
 import { Box } from '@mui/material';
 
 interface IconRadioGroupContextProps {
-  value: string,
+  value: string
   onChange: (value: string) => void
 }
 

@@ -23,8 +23,8 @@ const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
-  config?: Config,
-  packageSpecifier?: BotPackageSpecifier,
+  config?: Config
+  packageSpecifier?: BotPackageSpecifier
   partyKey?: PublicKey
 }
 

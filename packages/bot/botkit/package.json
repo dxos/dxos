@@ -46,7 +46,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",

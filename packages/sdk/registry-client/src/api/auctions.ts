@@ -23,7 +23,7 @@ export interface Auction {
    * The highest offer currently winning the auction.
    */
   highestBid: {
-    bidder: string,
+    bidder: string
     amount: BigNumber
   }
 

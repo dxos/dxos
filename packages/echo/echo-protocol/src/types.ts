@@ -25,8 +25,8 @@ export type SwarmKey = Uint8Array;
 export type FeedKey = PublicKey;
 
 export type FeedMeta = {
-  feedKey: FeedKey;
-  seq: number;
+  feedKey: FeedKey
+  seq: number
 }
 
 export interface MutationMeta extends FeedMeta {
@@ -44,11 +44,11 @@ export interface MutationMetaWithTimeframe extends MutationMeta {
 // TODO(burdon): Move to FeedStore (since not a hypercore data structure).
 export interface IFeedGenericBlock<T> {
   // TODO(dmaretskyi): It's a buffer for some reason.
-  key: FeedKey;
-  seq: number;
-  sync: boolean;
-  path: string;
-  data: T;
+  key: FeedKey
+  seq: number
+  sync: boolean
+  path: string
+  data: T
 }
 
 /**

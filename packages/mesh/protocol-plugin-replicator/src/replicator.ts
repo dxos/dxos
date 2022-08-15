@@ -24,7 +24,7 @@ export interface ReplicatorContextInfo {
   /**
    * Passed from protocol.getContext()
    */
-  context: any,
+  context: any
   /**
    * Peer id, loaded from protocol.getSession()
    */
@@ -39,7 +39,7 @@ export interface ReplicatorMiddleware {
   /**
    * Returns a list of local feeds to replicate.
    */
-  load: LoadFunction,
+  load: LoadFunction
 
   /**
    * Subscribe to new local feeds being opened.

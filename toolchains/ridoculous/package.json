@@ -41,7 +41,7 @@
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.28.11",
     "@dxos/esbuild-server": "~2.28.11",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protobuf-compiler": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/glob": "~7.1.3",

@@ -10,7 +10,7 @@
   "dependencies": {
     "@dxos/esbuild-plugins": "~2.28.11",
     "@dxos/esbuild-server": "~2.28.11",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protobuf-compiler": "workspace:*",
     "@swc-node/register": "~1.4.2",
     "chalk": "^4.1.0",

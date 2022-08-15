@@ -23,7 +23,7 @@ export type ItemFilter = {
 }
 
 export type LinkFilter = {
-  type?: OneOrMultiple<string>;
+  type?: OneOrMultiple<string>
 }
 
 export type Predicate<T extends Entity> = (entity: T) => boolean;

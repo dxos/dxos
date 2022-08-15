@@ -21,10 +21,10 @@ import type { ContentLoader } from './ipfs-content-loader';
 const log = debug('dxos:botkit:bot-factory');
 
 export interface BotFactoryOptions {
-  botContainer: BotContainer,
-  config: Config,
-  contentResolver?: ContentResolver,
-  contentLoader?: ContentLoader,
+  botContainer: BotContainer
+  config: Config
+  contentResolver?: ContentResolver
+  contentLoader?: ContentLoader
   botSnapshotStorage?: BotSnapshotStorage
 }
 

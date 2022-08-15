@@ -8,7 +8,7 @@ import { SignalApi } from '@dxos/network-manager';
 import { JsonTreeView } from '@dxos/react-components';
 
 export interface SignalTraceProps {
-  trace: SignalApi.CommandTrace[],
+  trace: SignalApi.CommandTrace[]
 }
 
 export const SignalTrace = ({ trace }: SignalTraceProps) => (

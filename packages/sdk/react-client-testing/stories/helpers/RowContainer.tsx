@@ -10,7 +10,7 @@ interface RowContainerProps {
   leftComponent: ReactNode
   rightComponent: ReactNode
   config: {
-    fixedComponent: 'left' | 'right',
+    fixedComponent: 'left' | 'right'
     width: string
   }
 }

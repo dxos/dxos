@@ -24,9 +24,9 @@ jest.setTimeout(30000);
 const noop = () => {};
 
 interface MiddlewareOptions {
-  feedStore: FeedStore,
-  onUnsubscribe?: (feedStore: FeedStore) => void,
-  onLoad?: (feedStore: FeedStore) => HypercoreFeed[],
+  feedStore: FeedStore
+  onUnsubscribe?: (feedStore: FeedStore) => void
+  onLoad?: (feedStore: FeedStore) => HypercoreFeed[]
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
