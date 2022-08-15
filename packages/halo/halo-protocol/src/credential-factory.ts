@@ -1,14 +1,17 @@
-import { WithTypeUrl } from "@dxos/codec-protobuf";
-import { Keyring, canonicalStringify } from "@dxos/credentials";
-import { raise } from "@dxos/debug";
-import { PublicKey } from "@dxos/protocols";
-import assert from "assert";
-import { ComplexMap } from "../../../common/util/src";
-import { Credential } from "./proto";
-import { TYPES } from "./proto/gen";
-import { getSignData, sign } from "./signing";
-import { MessageType } from "./types";
-import { SIGNATURE_TYPE_ED25519 } from "./verifier";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
+import { Keyring } from '@dxos/credentials';
+import { PublicKey } from '@dxos/protocols';
+
+import { ComplexMap } from '../../../common/util/src';
+import { Credential } from './proto';
+import { getSignData, sign } from './signing';
+import { MessageType } from './types';
+import { SIGNATURE_TYPE_ED25519 } from './verifier';
 
 export interface CredentialCreationOpts {
   subject: PublicKey
@@ -27,19 +30,19 @@ export interface CredentialCreationOpts {
   nonce?: Uint8Array
 }
 
-export async function createCredential(opts: CredentialCreationOpts): Promise<Credential> {
+export const createCredential = async (opts: CredentialCreationOpts): Promise<Credential> => {
   assert(opts.assertion['@type'], 'Invalid assertion.');
   assert(!!opts.signingKey === !!opts.chain, 'Chain must be provided if and only if the signing key differs from the issuer');
 
   // TODO(dmaretskyi): Verify chain.
 
   const signingKey = opts.signingKey ?? opts.issuer;
-  
+
   // Form a temporary credential with signature fields missing. This will act as an input data for the signature.
   const credential: Credential = {
     subject: {
       id: opts.subject,
-      assertion: opts.assertion,
+      assertion: opts.assertion
     },
     issuer: opts.issuer,
     issuanceDate: new Date(),
@@ -49,17 +52,17 @@ export async function createCredential(opts: CredentialCreationOpts): Promise<Cr
       signer: signingKey,
       nonce: opts.nonce,
       value: new Uint8Array(),
-      chain: undefined,
+      chain: undefined
     }
-  }
+  };
 
   const signData = getSignData(credential);
   const signature = await sign(opts.keyring, signingKey, signData);
 
   credential.proof.value = signature;
-  if(opts.chain) {
+  if (opts.chain) {
     credential.proof.chain = Object.fromEntries(Array.from(opts.chain.entries()).map(([key, cred]) => [key.toHex(), cred]));
   }
 
   return credential;
-}
+};
