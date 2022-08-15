@@ -114,11 +114,24 @@ feed:
             identityKey: Alice
             deviceKey: Alice/Device-1
         proofs:
-          - type: 'HALOPresentation'
-            value:
-              @type: halo.credential.Presentation
-              credentials:
-                - issuer: Alice
+          - type: 'ECDSASignature'
+            value: 0x1ba37..3125ab
+            signer: Alice/Device-2
+            # Mapping from the signing key to the credential that establishes it's authority 
+            chain:
+              Alice/Device-2:
+                @type: halo.credential.Credential
+                issuer: Alice/Device-1
+                subject:
+                  id: Alice/Device-2
+                  assertion:
+                    @type halo.credentials.AuthorizedDevice
+                    identityKey: Alice
+                proof:
+                  - type: 'ECDSASignature'
+                    value: eyJhbGci...yHUdBBPM
+              Alice/Device-1:
+                issuer: Alice
                   subject:
                     id: Alice/Device-1
                     assertion:
@@ -127,24 +140,6 @@ feed:
                   proof:
                     - type: 'ECDSASignature'
                       value: eyJhbGci...yHUdBBPM
-                - issuer: Alice/Device-1
-                  subject:
-                    id: Alice/Device-2
-                    assertion:
-                      @type halo.credentials.AuthorizedDevice
-                      identityKey: Alice
-                  proof:
-                    - type: 'ECDSASignature'
-                      value: eyJhbGci...yHUdBBPM
-                - issuer: Alice/Device-2
-                  subject:
-                    id: Alice/Device-2/Feed-3 # NOTE: This Feed.
-                    assertion:
-                      @type: halo.credentials.AdmittedFeed
-                      partyKey: Party-1
-                      identityKey: Alice
-                      deviceKey: Alice/Device-1
-        
 
 #
 # Member Admission: Adding a new Member to a Space.
