@@ -2,7 +2,9 @@
 
 A simple PWA DXOS client demo.
 
-## PWAs
+## PWA
+
+### Refs
 
 - https://w3c.github.io/manifest
 - https://github.com/mdn/pwa-examples/tree/master/a2hs

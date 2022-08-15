@@ -13,7 +13,8 @@ const {
 /** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
   entryPoints: [
-    'src/main.tsx'
+    'src/main.tsx',
+    'src/sw.ts'
   ],
   outdir: 'out',
   overrides: {

@@ -3,6 +3,8 @@
   "name": "Kai",
   "short_name": "kai",
   "description": "Kai Web shell.",
+  "display": "fullscreen",
+  "start_url": ".",
   "icons": [
     {
       "src": "icons/icon-32.png",
@@ -15,7 +17,6 @@
       "type": "image/png"
     }
   ],
-  "display": "fullscreen",
   "theme_color": "#B12A34",
   "background_color": "#B12A34"
 }
