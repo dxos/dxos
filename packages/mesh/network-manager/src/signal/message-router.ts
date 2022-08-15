@@ -8,7 +8,7 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup } from '@dxos/util';
 
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalMessaging } from './signal-manager';
 
 interface OfferRecord {
@@ -17,9 +17,9 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (message: SignalMessage) => Promise<void>;
-  onOffer?: (message: SignalMessage) => Promise<Answer>;
-  onSignal?: (message: SignalMessage) => Promise<void>;
+  sendMessage?: (message: NetworkMessage) => Promise<void>;
+  onOffer?: (message: NetworkMessage) => Promise<Answer>;
+  onSignal?: (message: NetworkMessage) => Promise<void>;
   retryDelay?: number;
   timeout?: number;
 }
@@ -31,9 +31,9 @@ const log = debug('dxos:network-manager:message-router');
 // TODO(mykola): https://github.com/dxos/protocols/issues/1316
 export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
-  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: (message: SignalMessage) => Promise<void>;
-  private readonly _onOffer: (message: SignalMessage) => Promise<Answer>;
+  private readonly _onSignal: (message: NetworkMessage) => Promise<void>;
+  private readonly _sendMessage: (message: NetworkMessage) => Promise<void>;
+  private readonly _onOffer: (message: NetworkMessage) => Promise<Answer>;
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>(key => key.toHex());
@@ -59,7 +59,7 @@ export class MessageRouter implements SignalMessaging {
     this._timeout = timeout;
   }
 
-  async receiveMessage (message: SignalMessage): Promise<void> {
+  async receiveMessage (message: NetworkMessage): Promise<void> {
     log(`receive message: ${JSON.stringify(message)}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
@@ -81,12 +81,12 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  async signal (message: SignalMessage): Promise<void> {
+  async signal (message: NetworkMessage): Promise<void> {
     assert(message.data?.signal);
     await this._sendReliableMessage(message);
   }
 
-  async offer (message: SignalMessage): Promise<Answer> {
+  async offer (message: NetworkMessage): Promise<Answer> {
     message.messageId = PublicKey.random();
     const promise = new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
@@ -95,7 +95,7 @@ export class MessageRouter implements SignalMessaging {
     return promise;
   }
 
-  private async _sendReliableMessage (message: SignalMessage): Promise<PublicKey> {
+  private async _sendReliableMessage (message: NetworkMessage): Promise<PublicKey> {
     // Setting unique messageId if it not specified yet.
     message.messageId = message.messageId ?? PublicKey.random();
     log(`sent message: ${JSON.stringify(message)}`);
@@ -129,7 +129,7 @@ export class MessageRouter implements SignalMessaging {
     return message.messageId;
   }
 
-  private async _resolveAnswers (message: SignalMessage): Promise<void> {
+  private async _resolveAnswers (message: NetworkMessage): Promise<void> {
     assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
@@ -140,10 +140,10 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  private async _handleOffer (message: SignalMessage): Promise<void> {
+  private async _handleOffer (message: NetworkMessage): Promise<void> {
     const answer = await this._onOffer(message);
     answer.offerMessageId = message.messageId;
-    const answerMessage: SignalMessage = {
+    const answerMessage: NetworkMessage = {
       id: message.remoteId,
       remoteId: message.id,
       topic: message.topic,
@@ -153,17 +153,17 @@ export class MessageRouter implements SignalMessaging {
     await this._sendReliableMessage(answerMessage);
   }
 
-  private async _handleSignal (message: SignalMessage): Promise<void> {
+  private async _handleSignal (message: NetworkMessage): Promise<void> {
     assert(message.messageId);
     await this._onSignal(message);
   }
 
-  private async _handleAcknowledgement (message: SignalMessage): Promise<void> {
+  private async _handleAcknowledgement (message: NetworkMessage): Promise<void> {
     assert(message.data?.ack?.messageId);
     this._onAckCallbacks.get(message.data.ack.messageId)?.();
   }
 
-  private async _sendAcknowledgement (message: SignalMessage): Promise<void> {
+  private async _sendAcknowledgement (message: NetworkMessage): Promise<void> {
     assert(message.messageId);
     const ackMessage = {
       id: message.remoteId,

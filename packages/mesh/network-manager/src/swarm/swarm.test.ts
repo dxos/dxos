@@ -12,7 +12,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalMessaging } from '../signal';
 import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
@@ -28,12 +28,12 @@ describe('Swarm', () => {
       readonly _delay = 10
     ) {}
 
-    async offer (msg: SignalMessage) {
+    async offer (msg: NetworkMessage) {
       await sleep(this._delay);
       return this._swarm().onOffer(msg);
     }
 
-    async signal (msg: SignalMessage) {
+    async signal (msg: NetworkMessage) {
       await sleep(this._delay);
       await this._swarm().onSignal(msg);
     }

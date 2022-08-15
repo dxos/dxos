@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
@@ -79,7 +79,7 @@ export class InMemoryTransport implements Transport {
     return this._sessionId;
   }
 
-  async signal (msg: SignalMessage) {
+  async signal (msg: NetworkMessage) {
     // No-op.
   }
 

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
 
@@ -17,10 +17,10 @@ export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<SignalMessage>();
+  readonly onMessage = new Event<NetworkMessage>();
 
   constructor (
-    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
+    private readonly _onOffer: (message: NetworkMessage) => Promise<Answer>
   ) {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
   }
@@ -73,13 +73,13 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  offer (msg: SignalMessage) {
+  offer (msg: NetworkMessage) {
     assert(msg.remoteId);
     assert(state.connections.has(msg.remoteId), 'Peer not connected');
     return state.connections.get(msg.remoteId)!._onOffer(msg);
   }
 
-  async message (msg: SignalMessage) {
+  async message (msg: NetworkMessage) {
     assert(msg.remoteId);
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
     state.connections.get(msg.remoteId)!.onMessage.emit(msg);

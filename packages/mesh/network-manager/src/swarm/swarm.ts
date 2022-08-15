@@ -13,7 +13,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalMessaging } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
@@ -100,7 +100,7 @@ export class Swarm {
     this._topology.update();
   }
 
-  async onOffer (message: SignalMessage): Promise<Answer> {
+  async onOffer (message: NetworkMessage): Promise<Answer> {
     log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
     assert(message.id);
@@ -146,7 +146,7 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: SignalMessage): Promise<void> {
+  async onSignal (message: NetworkMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
     assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
     assert(message.topic?.equals(this._topic));
@@ -249,7 +249,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: SignalMessage) => this._signalMessaging.signal(msg),
+      (msg: NetworkMessage) => this._signalMessaging.signal(msg),
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );

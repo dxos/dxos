@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
@@ -33,7 +33,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>()
+    const signalMock1 = mockFn<(msg: NetworkMessage) => Promise<void>>()
       .resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
     afterTest(() => api1.close());
@@ -43,7 +43,7 @@ describe('SignalClient', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const msg: SignalMessage = {
+    const msg: NetworkMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -79,14 +79,14 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
+    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>()
       .resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
     await api1.join(topic, peer1);
 
-    const msg: SignalMessage = {
+    const msg: NetworkMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId: PublicKey.random(),
@@ -129,7 +129,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
+    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>()
       .resolvesTo();
 
     const api1 = new SignalClient(broker1.url(), async () => {});
@@ -143,7 +143,7 @@ describe('SignalClient', () => {
 
     const sessionId = PublicKey.random();
 
-    const msg: SignalMessage = {
+    const msg: NetworkMessage = {
       id: peer2,
       remoteId: peer1,
       sessionId,

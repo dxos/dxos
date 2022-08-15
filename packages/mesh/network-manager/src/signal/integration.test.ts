@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
 
@@ -28,7 +28,7 @@ describe('Signal Integration Test', () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
     signalManager.onMessage.on(msg => messageRouter.receiveMessage(msg));
 
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>().resolvesTo();
     const messageRouter = new MessageRouter({
       sendMessage: msg => signalManager.message(msg),
       onSignal: signalMock,
@@ -81,7 +81,7 @@ describe('Signal Integration Test', () => {
     })).toBeAnObjectWith({ accept: true });
 
     {
-      const message: SignalMessage = {
+      const message: NetworkMessage = {
         topic,
         id: peer1,
         remoteId: peer2,
@@ -98,7 +98,7 @@ describe('Signal Integration Test', () => {
     }
 
     {
-      const message: SignalMessage = {
+      const message: NetworkMessage = {
         topic,
         id: peer2,
         remoteId: peer1,

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { SignalMessage } from './proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from './proto/gen/dxos/mesh/networkMessage';
 import { InMemorySignalManager, SignalManager, SignalManagerImpl } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
@@ -48,7 +48,7 @@ export class NetworkManager {
   constructor (options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: SignalMessage) =>
+    const onOffer = async (message: NetworkMessage) =>
       await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal

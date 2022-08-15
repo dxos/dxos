@@ -12,7 +12,7 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { schema } from '../proto/gen';
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -87,7 +87,7 @@ export class SignalClient {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onSignal: (message: SignalMessage) => Promise<void>
+    private readonly _onSignal: (message: NetworkMessage) => Promise<void>
   ) {
     this._setState(State.CONNECTING);
     this._createClient();
@@ -214,7 +214,7 @@ export class SignalClient {
     this._messageStreams.delete(topic);
   }
 
-  async signal (message: SignalMessage): Promise<void> {
+  async signal (message: NetworkMessage): Promise<void> {
     const payload: Any = {
       type_url: 'dxos.mesh.signalMessage.SignalMessage',
       value: schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').encode(message)
