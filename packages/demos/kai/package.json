@@ -26,7 +26,6 @@
     "@dxos/client-testing": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "react": "^18.1.0",
@@ -35,8 +34,6 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/copy-paste": "^1.1.30",
-    "@types/js-yaml": "^4.0.5",
     "@types/mocha": "~8.2.2",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
