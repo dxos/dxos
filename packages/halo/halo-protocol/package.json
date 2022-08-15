@@ -24,8 +24,10 @@
   ],
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@dxos/credentials": "workspace:*"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",

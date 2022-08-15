@@ -626,7 +626,7 @@ export class Keyring implements Signer {
    * @return {Promise<KeyRecord>} New KeyRecord, without secretKey
    */
   @meter
-  async createKeyRecord (attributes = {}): Promise<KeyRecord> {
+  async createKeyRecord (attributes: Partial<KeyRecord> = {}): Promise<KeyRecord> {
     assert(arguments.length <= 1);
     const keyRecord = createKeyRecord(attributes);
     await this.addKeyRecord(keyRecord as KeyRecord & KeyPair);

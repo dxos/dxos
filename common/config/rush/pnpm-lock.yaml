@@ -1889,8 +1889,10 @@ importers:
   ../../packages/halo/halo-protocol:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/mocha': ~8.2.2
@@ -1899,7 +1901,9 @@ importers:
       typescript: ^4.7.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../credentials
       '@dxos/debug': link:../../common/debug
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
