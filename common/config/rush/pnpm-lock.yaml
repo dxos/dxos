@@ -611,12 +611,9 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
-      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
@@ -636,7 +633,6 @@ importers:
       '@dxos/client-testing': link:../../sdk/client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       react: 18.2.0
@@ -644,8 +640,6 @@ importers:
     devDependencies:
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
@@ -20583,7 +20577,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
