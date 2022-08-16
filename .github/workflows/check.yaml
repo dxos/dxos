@@ -6,6 +6,8 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    env:
+      DXOS_CACHE_NAMESPACE: github-actions
     steps:
       - uses: actions/checkout@v2
         with:

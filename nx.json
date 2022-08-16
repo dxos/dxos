@@ -14,6 +14,9 @@
           "lint",
           "test"
         ],
+        "runtimeCacheInputs": [
+          "echo $DXOS_CACHE_NAMESPACE"
+        ],
         "parallel": 6,
         "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
       }
