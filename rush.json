@@ -448,6 +448,12 @@
       "projectFolder": "toolchains/protocols-toolchain"
     },
     {
+      "packageName": "@dxos/ridoculous",
+      "projectFolder": "toolchains/ridoculous",
+//      "shouldPublish": true,
+//      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/toolchain-node-library",
       "shouldPublish": true,
@@ -791,8 +797,8 @@
       "projectFolder": "packages/demos/hello-world"
     },
     {
-      "packageName": "@dxos/dx-cli",
-      "projectFolder": "packages/demos/dx-cli"
+      "packageName": "@dxos/kai",
+      "projectFolder": "packages/demos/kai"
     },
     {
       "packageName": "@dxos/kitchen-sink",
@@ -807,10 +813,6 @@
     {
       "packageName": "@dxos/lexical-editor",
       "projectFolder": "packages/demos/lexical-editor"
-    },
-    {
-      "packageName": "@dxos/todos",
-      "projectFolder": "packages/demos/todos"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",
@@ -840,6 +842,10 @@
     // NOTE: KEEP SORTED
     //
 
+    {
+      "packageName": "@dxos/wallet",
+      "projectFolder": "packages/wallet/wallet"
+    },
     {
       "packageName": "@dxos/wallet-extension",
       "projectFolder": "packages/wallet/wallet-extension"

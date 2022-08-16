@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { timed } from '@dxos/debug';
@@ -28,9 +28,9 @@ export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/prefere
 /**
  * A record in HALO party representing a party that user is currently a member of.
  */
-export interface JoinedParty {
-  partyKey: PublicKey,
-  genesisFeed: PublicKey,
+export type JoinedParty = {
+  partyKey: PublicKey
+  genesisFeed: PublicKey
 }
 
 /**

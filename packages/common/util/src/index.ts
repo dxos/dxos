@@ -4,12 +4,13 @@
 
 export * from './complex';
 export * from './human-hash';
+export * from './interval';
 export * from './json';
 export * from './map';
-export * from './range';
-export * from './types';
+export * from './platform';
 export * from './randomInt';
+export * from './range';
 export * from './subscription';
-export * from './uint8array';
 export * from './typeguards';
-export * from './isNotNullOrUndefined';
+export * from './types';
+export * from './uint8array';

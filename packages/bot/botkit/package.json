@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "bin": {
     "bot-factory": "bin/main.js"
   },
@@ -31,6 +34,7 @@
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "abort-controller": "~3.0.0",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "download": "^8.0.0",
     "esbuild": "^0.14.49",
@@ -54,7 +58,6 @@
     "@types/node": "^16.11.27",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1",
-    "assert": "^2.0.0",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "ts-node": "^10.8.2",

@@ -7,18 +7,19 @@ syntax = "proto3";
 package dxos.credentials.identity;
 
 import "google/protobuf/any.proto";
-import "greet.proto";
-import "keys.proto";
-import "signed.proto";
+
+import "./greet.proto";
+import "./keys.proto";
+import "./signed.proto";
 
 // Additional, descriptive information about an Identity. Must be signed by the Identity's key.
 message IdentityInfo {
-  PubKey publicKey = 1;          // The publicKey of the Identity (must be signed by this key).
-  string displayName = 2;       // The display name to use for this key.
+  PubKey publicKey = 1;           // The publicKey of the Identity (must be signed by this key).
+  string displayName = 2;         // The display name to use for this key.
 }
 
 // Additional, descriptive information about a Device. Must be signed by the Device's key.
 message DeviceInfo {
-  PubKey publicKey = 1;          // The publicKey of the Device (must be signed by this key).
-  string displayName = 2;       // The display name to use for this key.
+  PubKey publicKey = 1;           // The publicKey of the Device (must be signed by this key).
+  string displayName = 2;         // The display name to use for this key.
 }

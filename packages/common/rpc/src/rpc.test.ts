@@ -13,17 +13,22 @@ import { Any } from './proto/gen/google/protobuf';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
 
+const createPayload = (value = ''): Any => ({
+  type_url: '',
+  value: Buffer.from(value)
+});
+
 describe('RpcPeer', () => {
   describe('handshake', () => {
     test('can open', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -36,11 +41,11 @@ describe('RpcPeer', () => {
     test('open waits for the other peer to call open', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
       const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -64,7 +69,7 @@ describe('RpcPeer', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: alicePort
       });
       const aliceOpen = alice.open();
@@ -72,7 +77,7 @@ describe('RpcPeer', () => {
       await sleep(5);
 
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -88,7 +93,7 @@ describe('RpcPeer', () => {
       let portOpen = false;
 
       const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: {
           send: msg => {
             portOpen && alicePort.send(msg);
@@ -98,7 +103,7 @@ describe('RpcPeer', () => {
       });
 
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: {
           send: msg => {
             portOpen && bobPort.send(msg);
@@ -123,7 +128,7 @@ describe('RpcPeer', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: {
           send: msg => { },
           subscribe: alicePort.subscribe
@@ -131,7 +136,7 @@ describe('RpcPeer', () => {
       });
 
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -160,12 +165,12 @@ describe('RpcPeer', () => {
         messageHandler: async (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(Buffer.from('request'));
-          return { value: Buffer.from('response') };
+          return createPayload('response');
         },
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async (method, msg) => ({}),
+        messageHandler: async (method, msg) => createPayload(),
         port: bobPort
       });
 
@@ -174,8 +179,8 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const response = await bob.call('method', { value: Buffer.from('request') });
-      expect(response).toEqual({ value: Buffer.from('response') });
+      const response = await bob.call('method', createPayload('request'));
+      expect(response).toEqual(createPayload('response'));
     });
 
     test('can send multiple requests', async () => {
@@ -197,7 +202,7 @@ describe('RpcPeer', () => {
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -206,14 +211,14 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      expect((await bob.call('method', { value: Buffer.from('request') })).value).toEqual(Buffer.from('request'));
+      expect((await bob.call('method', createPayload('request'))).value).toEqual(Buffer.from('request'));
 
-      const parallel1 = bob.call('method', { value: Buffer.from('p1') });
-      const parallel2 = bob.call('method', { value: Buffer.from('p2') });
-      const error = bob.call('method', { value: Buffer.from('error') });
+      const parallel1 = bob.call('method', createPayload('p1'));
+      const parallel2 = bob.call('method', createPayload('p2'));
+      const error = bob.call('method', createPayload('error'));
 
-      await expect(await parallel1).toEqual({ value: Buffer.from('p1') });
-      await expect(await parallel2).toEqual({ value: Buffer.from('p2') });
+      await expect(await parallel1).toEqual(createPayload('p1'));
+      await expect(await parallel2).toEqual(createPayload('p2'));
       await expect(error).toBeRejected();
     });
 
@@ -232,7 +237,7 @@ describe('RpcPeer', () => {
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -243,7 +248,7 @@ describe('RpcPeer', () => {
 
       let error!: Error;
       try {
-        await bob.call('RpcMethodName', { value: Buffer.from('request') });
+        await bob.call('RpcMethodName', createPayload('request'));
       } catch (err: any) {
         error = err;
       }
@@ -266,7 +271,7 @@ describe('RpcPeer', () => {
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -275,7 +280,7 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const req = bob.call('method', { value: Buffer.from('request') });
+      const req = bob.call('method', createPayload('request'));
       bob.close();
 
       await expect(req).toBeRejected();
@@ -293,7 +298,7 @@ describe('RpcPeer', () => {
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort,
         timeout: 50
       });
@@ -304,8 +309,34 @@ describe('RpcPeer', () => {
       ]);
 
       alice.close();
-      const req = bob.call('method', { value: Buffer.from('request') });
+      const req = bob.call('method', createPayload('request'));
 
+      await expect(req).toBeRejected();
+    });
+
+    test('requests failing on timeout', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice: RpcPeer = new RpcPeer({
+        messageHandler: async (method, msg) => {
+          expect(method).toEqual('method');
+          await sleep(50);
+          return msg;
+        },
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        port: bobPort,
+        timeout: 10
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const req = bob.call('method', createPayload('request'));
       await expect(req).toBeRejected();
     });
 
@@ -316,20 +347,20 @@ describe('RpcPeer', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(Buffer.from('request'));
           return new Stream<Any>(({ next, close }) => {
-            next({ value: Buffer.from('res1') });
-            next({ value: Buffer.from('res2') });
+            next(createPayload('res1'));
+            next(createPayload('res2'));
             close();
           });
         },
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -338,12 +369,13 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const stream = await bob.callStream('method', { value: Buffer.from('request') });
+      const stream = await bob.callStream('method', createPayload('request'));
       expect(stream).toBeA(Stream);
 
       expect(await Stream.consume(stream)).toEqual([
-        { data: { value: Buffer.from('res1') } },
-        { data: { value: Buffer.from('res2') } },
+        { ready: true },
+        { data: createPayload('res1') },
+        { data: createPayload('res2') },
         { closed: true }
       ]);
     });
@@ -352,7 +384,7 @@ describe('RpcPeer', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(Buffer.from('request'));
@@ -363,7 +395,7 @@ describe('RpcPeer', () => {
         port: alicePort
       });
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -372,7 +404,7 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const stream = await bob.callStream('method', { value: Buffer.from('request') });
+      const stream = await bob.callStream('method', createPayload('request'));
       expect(stream).toBeA(Stream);
 
       const msgs = await Stream.consume(stream);
@@ -388,7 +420,7 @@ describe('RpcPeer', () => {
 
       let closeCalled = false;
       const alice = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         streamHandler: (method, msg) => new Stream<Any>(({ next, close }) => () => {
           closeCalled = true;
         }),
@@ -396,7 +428,7 @@ describe('RpcPeer', () => {
       });
 
       const bob = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: bobPort
       });
 
@@ -405,12 +437,48 @@ describe('RpcPeer', () => {
         bob.open()
       ]);
 
-      const stream = bob.callStream('method', { value: Buffer.from('request') });
+      const stream = bob.callStream('method', createPayload('request'));
       stream.close();
 
       await sleep(1);
 
       expect(closeCalled).toEqual(true);
+    });
+
+    test('reports stream being ready', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        streamHandler: (method, msg) => {
+          expect(method).toEqual('method');
+          expect(msg.value!).toEqual(Buffer.from('request'));
+          return new Stream<Any>(({ ready, close }) => {
+            ready();
+            close();
+          });
+        },
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => createPayload(),
+        port: bobPort
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const stream = await bob.callStream('method', createPayload('request'));
+      expect(stream).toBeA(Stream);
+
+      await stream.waitUntilReady();
+
+      expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
+        { closed: true }
+      ]);
     });
   });
 
@@ -419,7 +487,7 @@ describe('RpcPeer', () => {
       const [alicePort] = createLinkedPorts();
 
       const alice = new RpcPeer({
-        messageHandler: async msg => ({}),
+        messageHandler: async msg => createPayload(),
         port: alicePort,
         noHandshake: true
       });
@@ -434,13 +502,13 @@ describe('RpcPeer', () => {
         messageHandler: async (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(Buffer.from('request'));
-          return { value: Buffer.from('response') };
+          return createPayload('response');
         },
         port: alicePort,
         noHandshake: true
       });
       const bob = new RpcPeer({
-        messageHandler: async (method, msg) => ({}),
+        messageHandler: async (method, msg) => createPayload(),
         port: bobPort,
         noHandshake: true
       });
@@ -448,8 +516,8 @@ describe('RpcPeer', () => {
       await alice.open();
       await bob.open();
 
-      const response = await bob.call('method', { value: Buffer.from('request') });
-      expect(response).toEqual({ value: Buffer.from('response') });
+      const response = await bob.call('method', createPayload('request'));
+      expect(response).toEqual(createPayload('response'));
     });
   });
 });

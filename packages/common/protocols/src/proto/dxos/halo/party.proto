@@ -6,9 +6,10 @@ syntax = "proto3";
 
 package dxos.credentials.party;
 
-import "keys.proto";
-import "signed.proto";
 import "google/protobuf/any.proto";
+
+import "./keys.proto";
+import "./signed.proto";
 
 //
 // Party Credentials are messages that, by virtue of their being signed by a key that is a

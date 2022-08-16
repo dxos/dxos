@@ -9,13 +9,13 @@ import { TypeRegistry } from '@polkadot/types';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
-import assert from 'assert';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import assert from 'node:assert';
 
-import { Client } from '@dxos/client';
+import { KeyType } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
-import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 
 import {

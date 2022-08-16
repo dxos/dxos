@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/protocols';
 
@@ -13,7 +13,6 @@ const log = debug('dxos:network-manager:topology:star');
 
 export class StarTopology implements Topology {
   private _controller?: SwarmController;
-  private _intervalId?: NodeJS.Timeout;
 
   constructor (
     private readonly _centralPeer: PublicKey
@@ -26,9 +25,6 @@ export class StarTopology implements Topology {
   init (controller: SwarmController): void {
     assert(!this._controller, 'Already initialized.');
     this._controller = controller;
-    this._intervalId = setInterval(() => {
-      controller.lookup();
-    }, 10_000);
   }
 
   update (): void {
@@ -62,8 +58,6 @@ export class StarTopology implements Topology {
   }
 
   async destroy (): Promise<void> {
-    if (this._intervalId !== undefined) {
-      clearInterval(this._intervalId);
-    }
+    // Nothing to do.
   }
 }

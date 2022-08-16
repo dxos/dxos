@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash.defaultsdeep';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
@@ -139,6 +139,7 @@ export class Preferences {
     if (!database) {
       return;
     }
+
     const [partyDesc] = database
       .select({ type: HALO_PARTY_DESCRIPTOR_TYPE })
       .filter(partyMarker => joinedParty.partyKey.equals(partyMarker.model.get('publicKey')))

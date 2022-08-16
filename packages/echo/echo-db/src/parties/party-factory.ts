@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import {
   createEnvelopeMessage,
@@ -19,7 +19,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { humanize } from '@dxos/util';
+import { humanize, Provider } from '@dxos/util';
 
 import {
   createDataPartyAdmissionMessages,
@@ -27,7 +27,7 @@ import {
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
 import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
-import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
@@ -38,7 +38,7 @@ const log = debug('dxos:echo-db:party-factory');
  */
 export class PartyFactory {
   constructor (
-    private readonly _identityProvider: IdentityCredentialsProvider,
+    private readonly _identityProvider: Provider<IdentityCredentials | undefined>,
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,

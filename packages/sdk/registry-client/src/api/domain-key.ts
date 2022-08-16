@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import randomBytes from 'randombytes';
 
 export const DOMAIN_KEY_LENGTH = 32;

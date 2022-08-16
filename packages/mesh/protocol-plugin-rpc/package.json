@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
@@ -16,7 +19,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "assert": "^2.0.0"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",

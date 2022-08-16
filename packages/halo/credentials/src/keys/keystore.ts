@@ -2,14 +2,14 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import encode from 'encoding-down';
 import levelup, { LevelUp } from 'levelup';
 import memdown from 'memdown';
-import toArray from 'stream-to-array';
+import assert from 'node:assert';
 
+import { streamToArray } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
 import { KeyRecord } from '../proto';
@@ -67,14 +67,14 @@ export class KeyStore {
    * Returns all lookup key strings.
    */
   async getKeys (): Promise<string[]> {
-    return toArray(this._db.createKeyStream({ asBuffer: false }));
+    return streamToArray(this._db.createKeyStream({ asBuffer: false }));
   }
 
   /**
    * Returns all KeyRecord values.
    */
   async getRecords (): Promise<KeyRecord[]> {
-    const records = await toArray(this._db.createValueStream({ asBuffer: false }));
+    const records = await streamToArray(this._db.createValueStream({ asBuffer: false }));
     return records.map(record => marshaller.unmarshall(record));
   }
 
@@ -82,7 +82,7 @@ export class KeyStore {
    * Returns all entries as key/value pairs.
    */
   async getRecordsWithKey (): Promise<[string, KeyRecord][]> {
-    const entries = await toArray(this._db.createReadStream({ keyAsBuffer: false, valueAsBuffer: false }));
+    const entries = await streamToArray(this._db.createReadStream({ keyAsBuffer: false, valueAsBuffer: false }));
     return entries.map(pair => [pair.key, marshaller.unmarshall(pair.value)]);
   }
 }

@@ -2,9 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
+import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';

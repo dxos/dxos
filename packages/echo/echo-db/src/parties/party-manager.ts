@@ -2,20 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import unionWith from 'lodash.unionwith';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap, boolGuard } from '@dxos/util';
+import { ComplexMap, boolGuard, Provider } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
-import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
@@ -25,9 +25,9 @@ export const CONTACT_DEBOUNCE_INTERVAL = 500;
 const log = debug('dxos:echo-db:party-manager');
 
 export interface OpenProgress {
-  haloOpened: boolean;
-  partiesOpened?: number;
-  totalParties?: number;
+  haloOpened: boolean
+  partiesOpened?: number
+  totalParties?: number
 }
 
 /**
@@ -42,16 +42,12 @@ export class PartyManager {
   // Map of parties by party key.
   private readonly _parties = new ComplexMap<PublicKey, DataParty>(key => key.toHex());
 
-  // Unsubscribe handlers.
-  // TODO(burdon): Never used.
-  private readonly _onCloseHandlers: (() => void)[] = [];
-
   private _open = false;
 
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _identityProvider: IdentityCredentialsProvider,
+    private readonly _identityProvider: Provider<IdentityCredentials | undefined>,
     private readonly _partyFactory: PartyFactory
   ) {}
 
@@ -128,9 +124,6 @@ export class PartyManager {
       return;
     }
     this._open = false;
-
-    // Clean-up.
-    this._onCloseHandlers.forEach(callback => callback());
 
     // Close parties.
     for (const party of this._parties.values()) {

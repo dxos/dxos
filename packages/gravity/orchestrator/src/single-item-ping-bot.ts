@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Bot, createIpcPort, startBot } from '@dxos/botkit';
 import { Item } from '@dxos/echo-db';

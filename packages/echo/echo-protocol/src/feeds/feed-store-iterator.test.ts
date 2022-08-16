@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import faker from 'faker';
+import assert from 'node:assert';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';

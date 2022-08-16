@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { Message } from './proto/gen/dxos/mesh/signal';
-import { InMemorySignalManager, SignalManager, WebsocketSignalManager } from './signal';
+import { SignalMessage } from './proto/gen/dxos/mesh/signalMessage';
+import { InMemorySignalManager, SignalManager, SignalManagerImpl } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
@@ -48,20 +48,20 @@ export class NetworkManager {
   constructor (options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: Message) =>
+    const onOffer = async (message: SignalMessage) =>
       await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal
-      ? new WebsocketSignalManager(options.signal, onOffer)
+      ? new SignalManagerImpl(options.signal)
       : new InMemorySignalManager(onOffer);
 
-    this._signalManager.peerCandidatesChanged
-      .on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
+    this._signalManager.swarmEvent
+      .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
 
-    this._signalManager.onSignal.on(msg => this._messageRouter.receiveMessage(msg));
+    this._signalManager.onMessage.on(msg => this._messageRouter.receiveMessage(msg));
 
     this._messageRouter = new MessageRouter({
-      sendMessage: msg => this._signalManager.signal(msg),
+      sendMessage: msg => this._signalManager.message(msg),
       onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
       onOffer: msg => onOffer(msg)
     });
@@ -118,7 +118,6 @@ export class NetworkManager {
       topology,
       protocol,
       this._messageRouter,
-      this._signalManager.lookup.bind(this._signalManager),
       transportFactory,
       options.label
     );
@@ -177,6 +176,7 @@ export class NetworkManager {
       });
     }
 
+    await this._messageRouter.destroy();
     await this._signalManager.destroy();
   }
 }

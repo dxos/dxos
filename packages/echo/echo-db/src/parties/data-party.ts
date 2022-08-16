@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
@@ -30,7 +30,7 @@ export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {
-  publicKey: PublicKey,
+  publicKey: PublicKey
   displayName?: string
 }
 
@@ -142,7 +142,7 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
-  get genesisFeedKey () {
+  get genesisFeedKey (): PublicKey {
     assert(this._genesisFeedKey);
     return this._genesisFeedKey;
   }

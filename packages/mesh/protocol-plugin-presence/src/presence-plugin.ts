@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
+import assert from 'node:assert';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
@@ -410,7 +410,7 @@ export class PresencePlugin {
     this._limit.clearQueue();
 
     try {
-      const message = {
+      const message: Alive = {
         peerId: this._peerId,
         connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)

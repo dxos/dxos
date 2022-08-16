@@ -5,29 +5,29 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/index.js": "./dist/browser.js",
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-    "build": "npm run prebuild && toolchain build",
-    "build:test": "toolchain build:test",
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
+    "book": "toolchain book",
+    "build": "npm run prebuild && toolchain bundle:library && toolchain bundle:app",
+    "build:test": "toolchain build:test --bundle",
     "lint": "toolchain lint",
+    "start": "toolchain start",
     "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/feed-store": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
-    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -43,22 +43,36 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/react-async": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^28.1.6",
     "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
+    "@types/react": "^18.0.9",
     "@types/readable-stream": "^2.3.9",
+    "@types/sharedworker": "~0.0.79",
     "@types/uuid": "~8.3.3",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
+    "jsonify": "^0.0.0",
     "mocha": "^8.4.0",
+    "react": "^18.1.0",
     "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"
   },
@@ -66,6 +80,16 @@
     "access": "public"
   },
   "toolchain": {
+    "bundlePackages": [
+      "@dxos/credentials",
+      "@dxos/crypto",
+      "@dxos/echo-db",
+      "@dxos/echo-protocol",
+      "@dxos/feed-store",
+      "@dxos/network-manager",
+      "@dxos/object-model"
+    ],
+    "protoBase": "./src/packlets/proto",
     "testingFramework": "mocha"
   }
 }

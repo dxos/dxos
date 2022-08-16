@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
@@ -26,14 +26,14 @@ export interface ModelConstructionOptions {
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined,
-  parentId?: ItemID,
+  itemType: ItemType | undefined
+  parentId?: ItemID
 }
 
 export interface LinkConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined,
-  source: ItemID;
-  target: ItemID;
+  itemType: ItemType | undefined
+  source: ItemID
+  target: ItemID
 }
 
 /**

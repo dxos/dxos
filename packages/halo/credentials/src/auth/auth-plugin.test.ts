@@ -4,10 +4,10 @@
 
 // DXOS testing browser.
 
-import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import expect from 'expect';
+import assert from 'node:assert';
 import pify from 'pify';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';

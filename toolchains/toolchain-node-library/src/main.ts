@@ -3,10 +3,14 @@
 //
 
 import chalk from 'chalk';
+import { build } from 'esbuild';
+import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
 import { Arguments, Argv } from 'yargs';
+
+import { FixMemdownPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 import { Config, defaults } from './config';
 import { Project } from './project';
@@ -46,6 +50,32 @@ export interface BuildOptions {
   watch?: boolean
 }
 
+const buildProto = async (config: Config, project: Project) => {
+  const protoBase = project.toolchainConfig.protoBase ?? config.protobuf.base;
+  const output = join(project.packageRoot, protoBase, config.protobuf.output);
+  const src = join(project.packageRoot, protoBase, config.protobuf.src);
+  const substitutions = join(project.packageRoot, protoBase, config.protobuf.substitutions);
+
+  try {
+    fs.rmSync(output, { recursive: true, force: true });
+  } catch (err: any) {
+    err(err.message);
+  }
+
+  // Compile protocol buffer definitions.
+  const protoFiles = glob(src, { cwd: project.packageRoot });
+  if (protoFiles.length > 0) {
+    process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
+
+    await execTool('build-protobuf', [
+      '-o', output,
+      // Substitution classes for protobuf parsing.
+      ...(fs.existsSync(substitutions) ? ['-s', substitutions] : []),
+      ...protoFiles
+    ]);
+  }
+};
+
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
  */
@@ -53,7 +83,6 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
 
   try {
-    fs.rmSync(join(project.packageRoot, config.protobuf.output), { recursive: true, force: true });
     fs.rmSync(join(project.packageRoot, config.tsc.output), { recursive: true, force: true });
   } catch (err: any) {
     err(err.message);
@@ -63,24 +92,46 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
     process.stdout.write(`Config = ${JSON.stringify(config, undefined, 2)}\n`);
   }
 
-  // Compile protocol buffer definitions.
-  const protoFiles = glob(config.protobuf.src, { cwd: project.packageRoot });
-  if (protoFiles.length > 0) {
-    process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
-
-    // Substitution classes for protobuf parsing.
-    const file = join(project.packageRoot, config.protobuf.substitutions);
-    const substitutions = fs.existsSync(file) ? join(file) : undefined;
-
-    await execTool('build-protobuf', [
-      '-o', join(project.packageRoot, config.protobuf.output),
-      ...(substitutions ? ['-s', substitutions] : []),
-      ...protoFiles
-    ]);
-  }
-
+  await buildProto(config, project);
   process.stdout.write(chalk`\n{green.bold Typescript}\n`);
   await execTool('tsc', options.watch ? ['--watch'] : []);
+};
+
+export interface BundleOptions {
+  polyfill?: boolean
+}
+
+export const execLibraryBundle = async (config: Config, options: BundleOptions = {}) => {
+  const project = Project.load(config);
+  const outdir = 'dist';
+  const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
+
+  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+
+  await buildProto(config, project);
+  await execTool('tsc', []);
+
+  // TODO(wittjosiah): Bundle for node as well.
+
+  await build({
+    entryPoints: ['src/index.ts'],
+    outfile: `${outdir}/browser.js`,
+    format: 'cjs',
+    write: true,
+    bundle: true,
+    // https://esbuild.github.io/api/#log-override
+    logOverride: {
+      // @polkadot/api/augment/rpc was generating this warning.
+      // It is specifically type related and has no effect on the final bundle behavior.
+      'ignored-bare-import': 'info'
+    },
+    plugins: [
+      nodeExternalsPlugin({ allowList: bundlePackages }),
+      FixMemdownPlugin(),
+      NodeModulesPlugin(),
+      ...(options.polyfill ? [NodeGlobalsPolyfillPlugin()] : [])
+    ]
+  });
 };
 
 /**
@@ -136,9 +187,9 @@ export const execBook = async (userArgs?: string[]) => {
 /**
  * Runs a dev server for the current package.
  */
-export const execStart = async (userArgs?: string[]) => {
+export const execServer = async (userArgs?: string[]) => {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
-  await execTool('esbuild-server', ['dev', ...userArgs ?? []]);
+  await execTool('esbuild-server', ['server', ...userArgs ?? []]);
 };
 
 /**
@@ -194,8 +245,22 @@ export const setupCoreCommands = (yargs: Argv) => (
     )
 
     .command(
-      'build:bundle',
-      'Build a bundle for the package.',
+      'bundle:library',
+      'Build the library package.',
+      yargs => yargs
+        .option('polyfill', {
+          type: 'boolean',
+          default: false
+        })
+        .strict(),
+      handler<{ polyfill: boolean }>('Bundle', async (argv) => {
+        await execLibraryBundle(defaults, { polyfill: argv.polyfill });
+      })
+    )
+
+    .command(
+      'bundle:app',
+      'Bundle the app package.',
       yargs => yargs
         .option('minify', {
           type: 'boolean',
@@ -211,18 +276,34 @@ export const setupCoreCommands = (yargs: Argv) => (
       'build:test',
       'build, lint, and test the package',
       yargs => yargs
+        .option('bundle', {
+          type: 'boolean',
+          default: false
+        })
+        .option('polyfill', {
+          type: 'boolean',
+          default: false
+        })
+        .options('additional', {
+          type: 'boolean',
+          default: false
+        })
         .strict(),
-      handler('Tests', async () => {
+      handler<{ bundle: boolean, polyfill: boolean, additional: boolean }>('Tests', async (argv) => {
         const project = Project.load(defaults);
-        await execBuild(defaults);
+        argv.bundle
+          ? await execLibraryBundle(defaults, { polyfill: argv.polyfill })
+          : await execBuild(defaults);
         await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 
         // Additional test steps execution placed here to allow to run tests without additional steps.
         // Additional test steps are executed by default only when build:test is run.
-        for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-          log(chalk`\n{green.bold ${step}}`);
-          await execScript(project, step, []);
+        if (argv.additional) {
+          for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+            log(chalk`\n{green.bold ${step}}`);
+            await execScript(project, step, []);
+          }
         }
       }, true)
     )
@@ -256,12 +337,11 @@ export const setupCoreCommands = (yargs: Argv) => (
     )
 
     .command(
-      'start',
+      'start', // TODO(burdon): Rename server (or alias).
       'Run a dev server for the package.',
-      yargs => yargs
-        .strict(),
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ _ }) => {
-        await execStart(_.slice(1).map(String));
+        await execServer(_.slice(1).map(String));
       }
     )
 

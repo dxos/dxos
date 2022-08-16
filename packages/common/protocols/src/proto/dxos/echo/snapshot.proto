@@ -6,8 +6,8 @@ syntax = "proto3";
 
 package dxos.echo.snapshot;
 
-import "./feed.proto";
 import "../halo/keys.proto";
+import "./feed.proto";
 
 //
 // Snapshots define full party state at a given point in time.
@@ -20,10 +20,11 @@ import "../halo/keys.proto";
 
 message PartySnapshot {
   bytes partyKey = 1;
-  TimeframeVector timeframe = 2;
+  optional TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.
-  int32 timestamp = 3;
+  // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
+  optional int32 timestamp = 3;
 
   HaloStateSnapshot halo = 11;
   // TODO(dmaretskyi): Rename to EchoSnapshot.
@@ -48,7 +49,7 @@ message DatabaseSnapshot {
 message ItemSnapshot {
   optional string itemId = 1;
   optional string itemType = 2;
-  optional string modelType = 3;
+  string modelType = 3;
   optional string modelVersion = 4;
   optional string parentId = 5;
   optional ModelSnapshot model = 6;
@@ -57,7 +58,7 @@ message ItemSnapshot {
 message LinkSnapshot {
   optional string linkId = 1;
   optional string linkType = 2;
-  optional string modelType = 3;
+  string modelType = 3;
   optional string modelVersion = 4;
   required string source = 5;
   required string target = 6;

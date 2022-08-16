@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { KeyType, Message as HaloMessage } from '@dxos/credentials';
@@ -14,20 +14,23 @@ import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { createMessageSelector, PartyProcessor, PartyFeedProvider, FeedMuxer } from '.';
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
+import { FeedMuxer } from './feed-muxer';
+import { createMessageSelector } from './message-selector';
+import { PartyFeedProvider } from './party-feed-provider';
+import { PartyProcessor } from './party-processor';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
 export interface PipelineOptions {
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
-  readOnly?: boolean;
+  readLogger?: (msg: any) => void
+  writeLogger?: (msg: any) => void
+  readOnly?: boolean
   // TODO(burdon): Hierarchical options.
   // snapshots: { enabled: true, interval: 100 } }
-  snapshots?: boolean;
-  snapshotInterval?: number;
+  snapshots?: boolean
+  snapshotInterval?: number
 }
 
 export interface OpenOptions {

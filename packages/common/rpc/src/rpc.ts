@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
-import { sleep, synchronized, Trigger } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
+import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -142,7 +143,12 @@ export class RpcPeer {
     if (decoded.request) {
       if (!this._open) {
         log('Received request while not open.');
-        await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
+        await this._sendMessage({
+          response: {
+            id: decoded.request.id,
+            error: encodeError(new RpcClosedError())
+          }
+        });
         return;
       }
 
@@ -168,16 +174,18 @@ export class RpcPeer {
         return; // Ignore when not open.
       }
 
-      assert(typeof decoded.response.id === 'number');
-      if (!this._outgoingRequests.has(decoded.response.id)) {
-        log(`Received response with incorrect id: ${decoded.response.id}`);
+      const responseId = decoded.response.id;
+
+      assert(typeof responseId === 'number');
+      if (!this._outgoingRequests.has(responseId)) {
+        log(`Received response with incorrect id: ${responseId}`);
         return; // Ignore requests with incorrect id.
       }
 
-      const item = this._outgoingRequests.get(decoded.response.id)!;
+      const item = this._outgoingRequests.get(responseId)!;
       // Delete the request record if no more responses are expected.
       if (!item.stream) {
-        this._outgoingRequests.delete(decoded.response.id);
+        this._outgoingRequests.delete(responseId);
       }
 
       log(`Response: ${decoded.response.payload?.type_url}`);
@@ -239,20 +247,18 @@ export class RpcPeer {
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
     promise.catch(() => {});
 
-    await this._sendMessage({
+    void this._sendMessage({
       request: {
         id,
         method,
-        payload: request
+        payload: request,
+        stream: false
       }
     });
 
-    const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')));
-    timeoutPromise.catch(() => {}); // Mute the promise.
-
     let response: Response;
     try {
-      response = await Promise.race([promise, timeoutPromise]);
+      response = await Promise.race([promise, createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))]);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -285,9 +291,11 @@ export class RpcPeer {
 
     const id = this._nextId++;
 
-    return new Stream(({ next, close }) => {
+    return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if (response.close) {
+        if (response.streamReady) {
+          ready();
+        } else if (response.close) {
           close();
         } else if (response.error) {
           assert(response.error.name);
@@ -361,6 +369,12 @@ export class RpcPeer {
       assert(req.payload);
       assert(req.method);
       const responseStream = this._options.streamHandler(req.method, req.payload);
+      responseStream.onReady(() => {
+        callback({
+          id: req.id,
+          streamReady: true
+        });
+      });
       responseStream.subscribe(
         msg => {
           callback({
@@ -411,16 +425,22 @@ const encodeError = (err: any): ErrorResponse => {
 };
 
 /**
- * Runs the callback in an exponentially increasing interval
- * @returns Callback to clear the interval.
+ * Creates a promise that will be rejected after a certain timeout.
+ * The promise will never cause unhandledPromiseRejection.
+ * The timeout will not block the Node.JS process from exiting.
  */
-const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
-  let interval = initialInterval;
-  const repeat = () => {
-    cb();
-    interval *= 2;
-    timeoutId = setTimeout(repeat, interval);
-  };
-  let timeoutId = setTimeout(repeat, interval);
-  return () => clearTimeout(timeoutId);
+const createTimeoutPromise = (timeout: number, error: Error) => {
+  const timeoutPromise = new Promise<any>((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () => reject(error),
+      timeout
+    );
+
+    // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+      timeoutId.unref();
+    }
+  });
+  timeoutPromise.catch(() => {}); // Mute the promise.
+  return timeoutPromise;
 };

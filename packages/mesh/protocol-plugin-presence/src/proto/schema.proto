@@ -13,10 +13,10 @@ import "google/protobuf/any.proto";
 message Alive {
   message Connection {
     bytes peerId = 1;
-    bool initiator = 2;
+    optional bool initiator = 2;
   }
 
   bytes peerId = 1;
   repeated Connection connections = 2;
-  bytes metadata = 3;
+  optional bytes metadata = 3;
 }

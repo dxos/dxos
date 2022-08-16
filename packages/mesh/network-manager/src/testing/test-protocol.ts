@@ -4,9 +4,9 @@
 
 // Test/mock Protocol implementation used in network-manager tests.
 
-import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
+import assert from 'node:assert';
 
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';

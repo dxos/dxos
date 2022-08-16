@@ -27,28 +27,28 @@ message App {
    * Optional **semver 2.0** compliant record version.
    * Should conform to the semver regex (see https://semver.org/).
    */
-  string version = 1;
+  optional string version = 1;
 
-  string license = 2;
+  optional string license = 2;
 
   repeated Repo repos = 3;
 
   /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
-  bytes bundle = 4;
+  optional bytes bundle = 4;
 
   message Web {
-    /// Optional relative path in resource to entrypoint, defaults to index.html.
-    string index_file = 1;
+    /// Relative path in resource to entrypoint, defaults to index.html.
+    optional string index_file = 1;
   
-    /// Optional relative path in resource to entrypoint, defaults to main.js.
-    string entry_point = 2;
+    /// Relative path in resource to entrypoint, defaults to main.js.
+    optional string entry_point = 2;
   }
 
   oneof kind {
     Web web = 100;
   }
 
-  Record.Extension extension = 200;
+  optional Record.Extension extension = 200;
 }
 
 //

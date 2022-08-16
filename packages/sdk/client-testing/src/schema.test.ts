@@ -6,10 +6,9 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Client, Party } from '@dxos/client';
+import { Item, ObjectModel, Party, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { truncate, truncateKey } from '@dxos/debug';
-import { Item, Schema, SchemaField, TYPE_SCHEMA } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 
 import { log, SchemaBuilder, TestType } from './builders';
 

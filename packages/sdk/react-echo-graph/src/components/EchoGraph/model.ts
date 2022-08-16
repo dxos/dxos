@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Item, PARTY_ITEM_TYPE } from '@dxos/echo-db';
+import { Item, PARTY_ITEM_TYPE } from '@dxos/client';
 import { GraphData, GraphModel } from '@dxos/gem-spore';
 
 /**

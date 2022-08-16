@@ -1,9 +1,11 @@
 {
   "name": "@dxos/kodama",
   "version": "2.33.8",
-  "description": "Command line for ECHO.",
+  "description": "Interactive DXOS shell.",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "kodama": "./bin/kodama.js"
   },
@@ -16,12 +18,15 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "debug": "yarn build && ./bin/kodama.js",
+    "debug": "npm run build && ./bin/kodama.js",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "test:app": "npm run build && ./bin/test.js",
+    "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -31,8 +36,8 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "chalk": "^4.1.0",
+    "clipboardy": "^3.0.0",
     "compare-semver": "~1.1.0",
-    "copy-paste": "~1.3.0",
     "date-format": "~4.0.11",
     "ink": "^3.2.0",
     "ink-select-input": "~4.2.1",
@@ -41,24 +46,28 @@
     "ink-table": "~3.0.0",
     "ink-text-input": "~4.0.3",
     "js-yaml": "^4.1.0",
+    "node-fetch": "^2.6.0",
     "npm-api": "~1.0.1",
+    "qrcode-terminal": "~0.12.0",
     "react": "^18.1.0",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@types/qrcode-terminal": "^0.12.0",
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
+    "@types/node-fetch": "^2.5.10",
     "@types/react": "^18.0.9",
     "@types/yargs": "~16.0.1",
     "esbuild": "^0.14.49",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "mocha": "^8.4.0",
-    "nodemon": "~2.0.19",
+    "supervisor": "~0.12.0",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
   },

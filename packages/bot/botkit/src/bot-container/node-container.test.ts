@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 import { existsSync } from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 
 import { createId } from '@dxos/crypto';
@@ -166,7 +166,10 @@ describe('Node container', function () {
         await rpc.open();
 
         const command = PublicKey.random().asUint8Array();
-        const { response } = await rpc.rpc.command({ command });
+        const { response } = await rpc.rpc.command({
+          botId: PublicKey.random().toHex(),
+          command
+        });
         assert(response);
         expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
 

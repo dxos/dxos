@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import streamFrom from 'from2';
+import assert from 'node:assert';
 
 import { HypercoreFeed } from './hypercore-types';
 

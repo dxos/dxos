@@ -5,7 +5,7 @@
 import { BTreeMap, Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { isNotNullOrUndefined } from '@dxos/util';
 

@@ -4,3 +4,4 @@
 
 export * from './result-set';
 export * from './schema';
+export * from './subscription';
