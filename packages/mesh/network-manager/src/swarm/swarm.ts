@@ -250,7 +250,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: NetworkMessage) => this._signalMessaging.signal(msg),
+      (msg: SignalMessage) => this._signalMessaging.signal(msg),
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
