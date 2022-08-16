@@ -24,3 +24,17 @@ export const versionCheck = async (name: string, version: string): Promise<strin
   const max = version !== compare.max([repo.version, version]);
   return max ? repo.version : undefined;
 };
+
+/**
+ * Copy to clipboard.
+ */
+export const copyToClipboard = async (text: string) => {
+  try {
+    // eslint-disable-next-line no-eval
+    const clipboard = (await eval('import("clipboardy")')).default;
+    await clipboard.write(text);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};

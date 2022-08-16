@@ -15,7 +15,7 @@ export type StatusState = {
 /**
  * Status
  */
-export const Status: FC<{
+export const ActionStatus: FC<{
   status?: StatusState
   marginTop?: number
 }> = ({

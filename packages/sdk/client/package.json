@@ -47,7 +47,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/feed-store": "workspace:*",
     "@dxos/network-manager": "workspace:*",
