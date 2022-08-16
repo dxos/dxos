@@ -117,7 +117,7 @@ describe.only('MessageRouter', () => {
       topic,
       data: { offer: { } }
     });
-    
+
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 
@@ -254,7 +254,7 @@ describe.only('MessageRouter', () => {
       afterTest(() => mr1.destroy());
 
       const mr2: MessageRouter = new MessageRouter({
-        sendMessage: async (...data) => messageDisruption(data).forEach(data => mr2.receiveMessage(...data)),
+        sendMessage: async (...data) => messageDisruption(data).forEach(data => mr1.receiveMessage(...data)),
         onOffer: async () => ({ accept: true }),
         onSignal: onSignal2
       });
