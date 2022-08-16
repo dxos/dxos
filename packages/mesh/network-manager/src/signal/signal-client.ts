@@ -223,7 +223,7 @@ export class SignalClient {
 
   @synchronized
   private async _subscribeSwarmEvents (topic: PublicKey, peerId: PublicKey): Promise<void> {
-    assert(!this._swarmStreams.has(topic));
+    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
     const swarmStream = await this._client.join(topic, peerId);
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
@@ -247,7 +247,7 @@ export class SignalClient {
       if (message.payload.type_url === 'dxos.mesh.networkMessage.NetworkMessage') {
         const networkMessage = schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').decode(message.payload.value);
         log('Message received: ' + JSON.stringify(networkMessage));
-        assert(peerId.equals(message.author));
+        assert(peerId.equals(message.recipient), 'Message author does not match peer id.');
         await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), networkMessage);
       } else {
         log('Unknown message type: ' + message.payload.type_url);

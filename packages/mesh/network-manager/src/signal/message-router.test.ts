@@ -16,7 +16,7 @@ import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 import { OfferMessage, SignalMessage } from './signal-messaging';
 
-describe('MessageRouter', () => {
+describe.only('MessageRouter', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;
@@ -117,6 +117,7 @@ describe('MessageRouter', () => {
       topic,
       data: { offer: { } }
     });
+    
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 

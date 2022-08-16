@@ -10,6 +10,7 @@ import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup }
 
 import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
+import { sleep } from '@dxos/async';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -89,7 +90,7 @@ export class MessageRouter implements SignalMessaging {
 
   async offer (message: OfferMessage): Promise<Answer> {
     message.messageId = PublicKey.random();
-    return new Promise<Answer>((resolve, reject) => {
+    return new Promise<Answer>(async (resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
       // TODO(mykola): need  to cast OfferMessage to NetworkMessage?
       return this._sendReliableMessage(message.author, message.recipient, message);
@@ -112,7 +113,7 @@ export class MessageRouter implements SignalMessaging {
     }, this._retryDelay);
 
     const timeout = setTimeout(() => {
-      log('Signal was not delivered!');
+      log(`Message ${message.messageId} was not delivered!`);
       this._onAckCallbacks.delete(message.messageId!);
       cancelRetry();
     }, this._timeout);
@@ -152,7 +153,7 @@ export class MessageRouter implements SignalMessaging {
       sessionId: message.sessionId,
       data: { answer }
     };
-    await this._sendReliableMessage(author, recipient, answerMessage);
+    await this._sendReliableMessage(recipient, author, answerMessage);
   }
 
   private async _handleSignal (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
