@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/mesh/protocol-plugin-presence/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/protocol-plugin-presence/dist",
+        "packages/mesh/protocol-plugin-presence/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

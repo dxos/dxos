@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/sdk/registry-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/sdk/registry-client/dist",
+        "packages/sdk/registry-client/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}
