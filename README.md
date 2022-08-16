@@ -29,7 +29,7 @@ To run the demo:
 
 ```bash
 cd packages/demos/kichchen-sink
-rushx demo:grid
+pnpm run demo:grid
 ```
 
 
@@ -53,36 +53,3 @@ Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
 ## License
 
 MIT
-
-
-## Per-package targets (scripts)
-
-- build:
-    codegen
-    protobuf
-    tsc
-    esbuild?
-
-- check (or other verb):
-    mocha
-    eslint
-    browser-mocha?
-    ???
-
-build before publish
-
-
-- validate (or other verb, typecheck?):
-  tsc --no emit
-  esbuild --no emit?
-  ... and pipe into vscode problem matcher
-  todo: Integrate into toolchain spec
-
-
-- test:
-  mocha or jest
-
-- lint:
-  eslint
-
-prettier (via eslint-plugin-prettier)?
