@@ -39,8 +39,8 @@
     "chalk": "^4.1.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.28.11",
-    "@dxos/esbuild-server": "~2.28.11",
+    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-server": "~2.28.12",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@types/debug": "^4.1.7",

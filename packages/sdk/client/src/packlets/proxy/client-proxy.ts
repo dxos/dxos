@@ -17,12 +17,14 @@ import { Runtime } from '../proto';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
-import { createWindowMessagePort } from './messages';
 import { ClientServiceProxy } from './service-proxy';
+import { createSingletonPort } from './singleton-port';
 import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
 
+// TODO(wittjosiah): Should be kube.local or equivalent.
+const DEFAULT_SINGLETON_HOST = 'http://localhost:8080';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigObject = { version: 1 };
@@ -68,9 +70,9 @@ export class Client {
   private readonly _mode: Runtime.Client.Mode;
 
   private _initialized = false;
-  private _serviceProvider: ClientServiceProvider;
-  private _halo: HaloProxy;
-  private _echo: EchoProxy;
+  private _serviceProvider!: ClientServiceProvider;
+  private _halo!: HaloProxy;
+  private _echo!: EchoProxy;
 
   // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
 
@@ -86,18 +88,6 @@ export class Client {
 
     this._config = (config instanceof Config) ? config : new Config(config);
     this._options = options;
-
-    if (options.serviceProvider) {
-      this._serviceProvider = options.serviceProvider;
-    } else {
-      this._serviceProvider = new ClientServiceProxy(
-        this._options.rpcPort ?? createWindowMessagePort(),
-        this._options.timeout
-      );
-    }
-
-    this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
       throw new InvalidConfigurationError(
@@ -156,6 +146,7 @@ export class Client {
   /**
    * Client services that can be proxied.
    */
+  // TODO(burdon): Remove from API?
   get services (): ClientServices {
     return this._serviceProvider.services;
   }
@@ -175,6 +166,19 @@ export class Client {
       // TODO(burdon): Tie to global error handling (or event).
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
+
+    if (this._options.serviceProvider) {
+      this._serviceProvider = this._options.serviceProvider;
+    } else {
+      const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
+      this._serviceProvider = new ClientServiceProxy(
+        this._options.rpcPort ?? await createSingletonPort(singletonSource),
+        this._options.timeout
+      );
+    }
+
+    this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
     await this._serviceProvider.open(onProgressCallback);
     await this._halo._open();
