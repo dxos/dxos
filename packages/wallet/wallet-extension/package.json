@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",

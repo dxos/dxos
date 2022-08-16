@@ -22,7 +22,7 @@
     "immutability-helper": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "~8.2.2",

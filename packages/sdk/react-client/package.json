@@ -30,7 +30,7 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.40",
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
