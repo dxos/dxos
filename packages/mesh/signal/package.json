@@ -30,7 +30,7 @@
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@types/node": "^16.11.27",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
