@@ -50,7 +50,7 @@ describe('SignalClient', () => {
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
-    await api2.signal(msg);
+    await api2.message(msg);
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([msg]);
     }, 4_000);
@@ -93,7 +93,7 @@ describe('SignalClient', () => {
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
-    await api1.signal(msg);
+    await api1.message(msg);
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
@@ -150,7 +150,7 @@ describe('SignalClient', () => {
       topic,
       data: { offer: { json: 'bar' } }
     };
-    await api1.signal(msg);
+    await api1.message(msg);
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);

@@ -213,7 +213,7 @@ export class SignalClient {
     this._messageStreams.delete(topic);
   }
 
-  async signal (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  async message (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
     const payload: Any = {
       type_url: 'dxos.mesh.networkMessage.NetworkMessage',
       value: schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').encode(message)
@@ -248,7 +248,7 @@ export class SignalClient {
         const networkMessage = schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').decode(message.payload.value);
         log('Message received: ' + JSON.stringify(networkMessage));
         assert(peerId.equals(message.author));
-        await this._onMessage(message.author, message.recipient, networkMessage);
+        await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), networkMessage);
       } else {
         log('Unknown message type: ' + message.payload.type_url);
       }

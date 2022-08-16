@@ -50,7 +50,7 @@ describe('MessageRouter', () => {
     let api: SignalClient;
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: (msg: NetworkMessage) => api.signal(msg).catch((_) => { }),
+      sendMessage: (msg: NetworkMessage) => api.message(msg).catch((_) => { }),
       onSignal: onSignal,
       onOffer: onOffer
     });

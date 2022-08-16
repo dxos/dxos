@@ -32,7 +32,7 @@ export class SignalManagerImpl implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<NetworkMessage>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
 
   constructor (
     private readonly _hosts: string[]
@@ -42,7 +42,7 @@ export class SignalManagerImpl implements SignalManager {
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async msg => this.onMessage.emit(msg)
+        async (author, recipient, msg) => this.onMessage.emit([author, recipient, msg])
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on(data => this.swarmEvent.emit(data));
@@ -150,7 +150,7 @@ export class SignalManagerImpl implements SignalManager {
   async message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage) {
     log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
-      server.signal(author, recipient, msg).catch(err => {
+      server.message(author, recipient, msg).catch(err => {
         log(`Error signaling: ${err}`);
       });
     }
